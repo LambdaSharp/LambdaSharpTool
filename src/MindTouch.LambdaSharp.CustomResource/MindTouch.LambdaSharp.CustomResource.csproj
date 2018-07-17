@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>MindTouch.LambdaSharp.CustomResource</RootNamespace>
+
+    <PackageId>MindTouch.LambdaSharp.CustomResource</PackageId>
+    <Version>0.1.0</Version>
+    <Title>MindTouch λ# Custom Resource</Title>
+    <Description>A serverless framework for rapid application development of AWS CloudFormation custom resources</Description>
+    <Company>MindTouch, Inc.</Company>
+    <Copyright>Copyright (C) 2018 MindTouch, Inc.</Copyright>
+    <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
+
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
+    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;MindTouch;Serverless</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.18.3"/>
+    <PackageReference Include="MindTouch.LambdaSharp" Version="0.1"/>
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
+  </ItemGroup>
+</Project>

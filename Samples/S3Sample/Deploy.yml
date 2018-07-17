@@ -1,0 +1,37 @@
+Version: "2018-07-04"
+
+Name: S3Sample
+
+Description: A sample app integrating with S3 Bucket events
+
+Parameters:
+
+  - Name: MyFirstBucket
+    Description: The S3 Bucket the function is listening to
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+
+  - Name: MySecondBucket
+    Description: The S3 Bucket the function is listening to
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+
+Functions:
+
+  - Name: MyFunction
+    Memory: 128
+    Timeout: 30
+    Sources:
+
+      # listen to `s3:ObjectCreated:*` on the bucket
+      - S3: MyFirstBucket
+
+      # listen to custom events on specific S3 keys
+      - S3: MySecondBucket
+        Events:
+          - "s3:ObjectCreated:*"
+          - "s3:ObjectRemoved:*"
+        Prefix: images/
+        Suffix: .png

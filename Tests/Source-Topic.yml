@@ -1,0 +1,21 @@
+Version: "2018-07-04"
+
+Name: Test
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: Topic
+    Description: Description for Topic resource
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Topic: Topic

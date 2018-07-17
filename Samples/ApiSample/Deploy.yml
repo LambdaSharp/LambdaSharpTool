@@ -1,0 +1,16 @@
+Version: "2018-07-04"
+
+Name: ApiSample
+
+Description: A sample app integrating with API Gateway
+
+Functions:
+  - Name: MyFunction
+    Description: This function is invoked by API Gateway
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Api: GET:/items
+      - Api: POST:/items
+      - Api: GET:/items/{id}
+      - Api: DELETE:/items/{id}

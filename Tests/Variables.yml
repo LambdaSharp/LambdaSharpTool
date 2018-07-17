@@ -1,0 +1,26 @@
+Version: "2018-07-04"
+
+Name: Test
+
+Description: LambdaSharp CloudFormation Test
+
+Variables:
+  Greeting: Hello
+  Who: World
+  Where: Do {{What}} {{When}}
+  What: The {{Greeting}}
+  When: Should {{What}}
+
+Parameters:
+
+  - Name: SampleParameter
+    Description: Description for function parameter
+    Value: "{{Greeting}} {{Who}}!"
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Environment:
+      TEST: "{{Where}}"

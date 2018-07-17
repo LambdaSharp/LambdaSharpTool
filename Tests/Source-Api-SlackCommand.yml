@@ -1,0 +1,13 @@
+Version: "2018-07-04"
+
+Name: Test
+
+Description: LambdaSharp CloudFormation Test
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - SlackCommand: /slack

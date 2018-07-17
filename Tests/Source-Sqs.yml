@@ -1,0 +1,29 @@
+Version: "2018-07-04"
+
+Name: Test
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: Sqs1
+    Description: Description for SQS resource
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: Receive
+
+  - Name: Sqs2
+    Description: Description for SQS resource
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: Receive
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Sqs: Sqs1
+      - Sqs: Sqs2
+        BatchSize: 1

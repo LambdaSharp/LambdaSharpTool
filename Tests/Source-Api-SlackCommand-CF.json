@@ -1,0 +1,316 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test",
+  "Resources": {
+    "RollbarToken": {
+      "Type": "Custom::LambdaSharpRollbarProject",
+      "Properties": {
+        "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
+        "Project": "Test",
+        "Deployment": "test"
+      }
+    },
+    "AppRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                }
+              ]
+            },
+            "PolicyName": "test-Test-policy"
+          }
+        ]
+      }
+    },
+    "Function": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "lambdsharp-bucket-name",
+          "S3Key": "test/Test/Test.Function-NOCOMPILE.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+        },
+        "Environment": {
+          "Variables": {
+            "DEPLOYMENT": "test",
+            "APPNAME": "Test",
+            "STACKNAME": "test-Test",
+            "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
+            "LAMBDARUNTIME": "dotnetcore2.1",
+            "STACK_ROLLBARTOKEN": {
+              "Fn::GetAtt": [
+                "RollbarToken",
+                "Result"
+              ]
+            }
+          }
+        },
+        "FunctionName": "test-Test-Function",
+        "Handler": "Test.Function::MindTouch.LambdaSharpTest.Function.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "AppRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "lambdasharp:deployment",
+            "Value": "test"
+          },
+          {
+            "Key": "lambdasharp:app",
+            "Value": "Test"
+          }
+        ],
+        "Timeout": "30"
+      }
+    },
+    "TestRestApi": {
+      "Type": "AWS::ApiGateway::RestApi",
+      "Properties": {
+        "Description": "API for Test: LambdaSharp CloudFormation Test",
+        "FailOnWarnings": true,
+        "Name": "Test API (test)"
+      }
+    },
+    "TestRestApiRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup",
+                    "logs:CreateLogStream",
+                    "logs:DescribeLogGroups",
+                    "logs:DescribeLogStreams",
+                    "logs:PutLogEvents",
+                    "logs:GetLogEvents",
+                    "logs:FilterLogEvents"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": "TestRestApiRolePolicy"
+          }
+        ]
+      }
+    },
+    "TestRestApiAccount": {
+      "Type": "AWS::ApiGateway::Account",
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "TestRestApiRole",
+            "Arn"
+          ]
+        }
+      }
+    },
+    "TestRestApiSlackResource": {
+      "Type": "AWS::ApiGateway::Resource",
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "TestRestApi",
+            "RootResourceId"
+          ]
+        },
+        "PathPart": "slack",
+        "RestApiId": {
+          "Ref": "TestRestApi"
+        }
+      }
+    },
+    "TestRestApiSlackPOST": {
+      "Type": "AWS::ApiGateway::Method",
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "IntegrationResponses": [
+            {
+              "ResponseTemplates": {
+                "application/json": "{\r\n    \"response_type\": \"in_channel\",\r\n    \"text\": \"\"\r\n}"
+              },
+              "StatusCode": 200
+            }
+          ],
+          "RequestParameters": {
+            "integration.request.header.X-Amz-Invocation-Type": "'Event'"
+          },
+          "RequestTemplates": {
+            "application/x-www-form-urlencoded": "{\r\n    #foreach($token in $input.path('$').split('&'))\r\n        #set($keyVal = $token.split('='))\r\n        #set($keyValSize = $keyVal.size())\r\n        #if($keyValSize == 2)\r\n            #set($key = $util.escapeJavaScript($util.urlDecode($keyVal[0])))\r\n            #set($val = $util.escapeJavaScript($util.urlDecode($keyVal[1])))\r\n            \"$key\": \"$val\"#if($foreach.hasNext),#end\r\n        #end\r\n    #end\r\n}"
+          },
+          "Type": "AWS",
+          "Uri": {
+            "Fn::Sub": [
+              "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${Arn}/invocations",
+              {
+                "Arn": {
+                  "Fn::GetAtt": [
+                    "Function",
+                    "Arn"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "MethodResponses": [
+          {
+            "ResponseModels": {
+              "application/json": "Empty"
+            },
+            "StatusCode": 200
+          }
+        ],
+        "ResourceId": {
+          "Ref": "TestRestApiSlackResource"
+        },
+        "RestApiId": {
+          "Ref": "TestRestApi"
+        }
+      }
+    },
+    "FunctionTestRestApiSlackPOSTPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": [
+            "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/POST/slack",
+            {
+              "RestApi": {
+                "Ref": "TestRestApi"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "TestRestApiDeployment513F765C98FF456F343280B8094C0E04": {
+      "Type": "AWS::ApiGateway::Deployment",
+      "Properties": {
+        "Description": "Test API (test) [513F765C98FF456F343280B8094C0E04]",
+        "RestApiId": {
+          "Ref": "TestRestApi"
+        }
+      },
+      "DependsOn": [
+        "TestRestApiSlackPOST"
+      ]
+    },
+    "TestRestApiStage": {
+      "Type": "AWS::ApiGateway::Stage",
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "TestRestApiDeployment513F765C98FF456F343280B8094C0E04"
+        },
+        "MethodSettings": [
+          {
+            "DataTraceEnabled": true,
+            "HttpMethod": "*",
+            "LoggingLevel": "INFO",
+            "ResourcePath": "/*"
+          }
+        ],
+        "RestApiId": {
+          "Ref": "TestRestApi"
+        },
+        "StageName": "LATEST"
+      },
+      "DependsOn": [
+        "TestRestApiAccount"
+      ]
+    }
+  },
+  "Outputs": {
+    "RestApi": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "TestRestApi"
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region"
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix"
+            },
+            "/LATEST/"
+          ]
+        ]
+      },
+      "Description": "API for Test: LambdaSharp CloudFormation Test"
+    }
+  }
+}

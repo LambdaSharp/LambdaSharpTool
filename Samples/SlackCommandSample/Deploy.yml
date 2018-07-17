@@ -1,0 +1,13 @@
+Version: "2018-07-04"
+
+Name: SlackCommandSample
+
+Description: A sample app integrating with Slack
+
+Functions:
+  - Name: MyFunction
+    Description: This function is invoked by a Slack command
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - SlackCommand: /slack
