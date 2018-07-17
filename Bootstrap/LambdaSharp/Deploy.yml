@@ -1,0 +1,28 @@
+Version: "2018-07-04"
+
+Name: LambdaSharp
+
+Description: AWS assets required by LambdaSharp apps
+
+Parameters:
+
+  - Name: DeadLetterQueue
+    Description: SQS queue used by LambdaSharp functions for failed messages
+    Export: DeadLetterQueue
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: None
+
+  - Name: DeploymentBucket
+    Description: S3 bucket used by LambdaSharp tool to deploy function code
+    Export: DeploymentBucket
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: None
+
+  - Name: DeploymentNotificationTopic
+    Description: SNS topic for LambdaSharp CloudFormation notifications
+    Export: DeploymentNotificationTopic
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: None

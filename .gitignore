@@ -1,0 +1,10 @@
+# Visual Studio Code
+.vscode
+
+# .NET Core
+bin
+obj
+
+# LambdaSharpTool
+cloudformation.json
+*-*.zip

@@ -1,0 +1,30 @@
+Version: "2018-07-04"
+
+Name: SqsSample
+
+Description: A sample app using SQS queues
+
+Parameters:
+
+  - Name: MyFirstQueue
+    Description: A sample SQS queue
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: Receive
+
+  - Name: MySecondQueue
+    Description: A sample SQS queue
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: Receive
+
+Functions:
+
+  - Name: MyFunction
+    Description: This function is invoked by an SQS queue
+    Memory: 128
+    Timeout: 15
+    Sources:
+      - Sqs: MyFirstQueue
+      - Sqs: MySecondQueue
+        BatchSize: 1

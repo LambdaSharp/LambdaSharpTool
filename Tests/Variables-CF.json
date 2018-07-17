@@ -1,0 +1,110 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test",
+  "Resources": {
+    "RollbarToken": {
+      "Type": "Custom::LambdaSharpRollbarProject",
+      "Properties": {
+        "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
+        "Project": "Test",
+        "Deployment": "test"
+      }
+    },
+    "AppRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                }
+              ]
+            },
+            "PolicyName": "test-Test-policy"
+          }
+        ]
+      }
+    },
+    "Function": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "lambdsharp-bucket-name",
+          "S3Key": "test/Test/Test.Function-NOCOMPILE.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+        },
+        "Environment": {
+          "Variables": {
+            "TEST": "Do The Hello Should The Hello",
+            "DEPLOYMENT": "test",
+            "APPNAME": "Test",
+            "STACKNAME": "test-Test",
+            "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
+            "LAMBDARUNTIME": "dotnetcore2.1",
+            "STACK_ROLLBARTOKEN": {
+              "Fn::GetAtt": [
+                "RollbarToken",
+                "Result"
+              ]
+            }
+          }
+        },
+        "FunctionName": "test-Test-Function",
+        "Handler": "Test.Function::MindTouch.LambdaSharpTest.Function.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "AppRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "lambdasharp:deployment",
+            "Value": "test"
+          },
+          {
+            "Key": "lambdasharp:app",
+            "Value": "Test"
+          }
+        ],
+        "Timeout": "30"
+      }
+    }
+  }
+}

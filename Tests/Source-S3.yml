@@ -1,0 +1,26 @@
+Version: "2018-07-04"
+
+Name: Test
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: Bucket
+    Description: Description for Bucket resource
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - S3: Bucket
+        Events:
+          - "s3:ObjectCreated:*"
+          - "s3:ObjectRemoved:*"
+        Prefix: images/
+        Suffix: .png
