@@ -2,7 +2,7 @@
 
 # LambdaSharp (Beta)
 
-λ# is a .NET Core 2.0 framework and tooling for streamlining the development, deployment, and management of [AWS Lambda](https://aws.amazon.com/lambda/) functions and serverless infrastructure.
+λ# is a .NET Core 2.x framework and tooling for the rapid application development, deployment, and management of [AWS Lambda](https://aws.amazon.com/lambda/) functions and serverless infrastructure. Resources are automatically converted into parameters for easy access by AWS Lambda functions written in C#. Furthermore, λ# apps are composed by exchanging resource references using the [AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/).
 
 When creating a λ# app, you only need to worry about three files:
 * The AWS Lambda C# code
