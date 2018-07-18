@@ -9,7 +9,7 @@
   * `GettingStarted.SlackCommand`
     * `GettingStarted.SlackCommand.csproj`
 
-Furthermore, the project file SHOULD contain the `<RooNamespace>` element to define the root namespace of the project. When missing, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
+Furthermore, the project file SHOULD contain the `<RootNamespace>` element to define the root namespace of the project. When missing, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
