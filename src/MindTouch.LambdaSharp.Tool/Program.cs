@@ -293,9 +293,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     };
                     process.Start();
                     gitSha = process.StandardOutput.ReadToEnd().Trim();
+                    process.WaitForExit();
                     if(process.ExitCode != 0) {
-                        AddError($"unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
-                        return null;
+                        Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                        gitSha = null;
                     }
                 }
 
