@@ -54,6 +54,14 @@ Functions:
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [λ# Tool Reference](src/MindTouch.LambdaSharp.Tool/)
 
+# Releases
+
+Releases are named after Greek philosophers.
+
+## Acrion (v0.1) - 2018-07-17
+
+Initial release of λ#.
+
 # License
 
 > Copyright (c) 2018 MindTouch
