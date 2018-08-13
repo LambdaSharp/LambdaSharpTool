@@ -26,6 +26,7 @@ using System.Globalization;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class RollbarData {
         
         //--- Constants ---

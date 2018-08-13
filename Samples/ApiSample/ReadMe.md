@@ -1,21 +1,17 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-> * how API gateway stages are auto-deployed
-
 # LambdaSharp API Gateway Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
-## Deployment
+## Module File
 
-An API Gateway instance is automatically created for the app when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. THe λ# tool creates all required resources and methods using for each function using `AWS_PROXY` as integration.
+An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. THe λ# tool creates all required resources and methods using for each function using `AWS_PROXY` as integration.
 
 ```yaml
-Version: "2018-07-04"
-
 Name: ApiSample
 
-Description: A sample app integrating with API Gateway
+Description: A sample module integrating with API Gateway
 
 Functions:
   - Name: MyFunction

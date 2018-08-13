@@ -49,19 +49,19 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
 
-        private App _app;
+        private Module _module;
         private Stack _stack;
         private List<Statement> _resourceStatements;
         private List<ApiRoute> _apiGatewayRoutes;
 
         //--- Methods ---
-        public Stack Generate(App app) {
-            _app = app;
+        public Stack Generate(Module module) {
+            _module = module;
 
             // stack header
             _stack = new Stack {
                 AWSTemplateFormatVersion = "2010-09-09",
-                Description = _app.Description
+                Description = _module.Description
             };
 
             // create generic resource statement; additional resource statements can be added by resources
@@ -84,33 +84,40 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
             // add decryption permission for requested keys
-            if(_app.Secrets.Any()) {
+            if(_module.Secrets.Any()) {
                 _resourceStatements.Add(new Statement {
                     Effect = "Allow",
-                    Resource = _app.Secrets,
+                    Resource = _module.Secrets,
                     Action = "kms:Decrypt"
                 });
             }
 
             // add resources and parameters
             var environmentRefVariable = new Dictionary<string, object>();
-            foreach(var parameter in _app.Parameters) {
+            foreach(var parameter in _module.Parameters) {
                 AddParameter(parameter, "", "STACK_", environmentRefVariable);
             }
 
-            // check if we need to create an IAM role for the app (only needed by functions)
-            if(_app.Functions.Any()) {
+            // check if we need to create a module IAM role (only needed by functions)
+            if(_module.Functions.Any()) {
                 _apiGatewayRoutes = new List<ApiRoute>();
                 _resourceStatements.Add(new Statement {
                     Effect = "Allow",
-                    Resource = _app.Settings.DeadLetterQueueArn,
+                    Resource = _module.Settings.DeadLetterQueueArn,
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
                 });
+                _resourceStatements.Add(new Statement {
+                    Effect = "Allow",
+                    Resource = _module.Settings.LoggingTopicArn,
+                    Action = new List<string> {
+                        "sns:Publish"
+                    }
+                });
 
-                // create IAM role use by all app functions
-                _stack.Add("AppRole", new IAM.Role {
+                // create module IAM role used by all functions
+                _stack.Add("ModuleRole", new IAM.Role {
                     AssumeRolePolicyDocument = new PolicyDocument {
                         Statement = new List<Statement> {
                             new Statement {
@@ -124,7 +131,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = $"{_app.Settings.Deployment}-{_app.Name}-policy",
+                            PolicyName = $"{_module.Settings.Tier}-{_module.Name}-policy",
                             PolicyDocument = new PolicyDocument {
 
                                 // NOTE: additional resource statements can be added by resources
@@ -133,7 +140,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     }
                 });
-                foreach(var function in _app.Functions) {
+                foreach(var function in _module.Functions) {
                     AddFunction(function, environmentRefVariable);
                 }
 
@@ -141,10 +148,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(_apiGatewayRoutes.Any()) {
 
                     // create a RestApi
-                    var restApiName = $"{_app.Name}RestApi";
-                    var restApiDescription = $"API for {_app.Name}: {_app.Description}";
+                    var restApiName = $"{_module.Name}RestApi";
+                    var restApiDescription = $"API for {_module.Name}: {_module.Description}";
                     _stack.Add(restApiName, new ApiGateway.RestApi {
-                        Name = $"{_app.Name} API ({_app.Settings.Deployment})",
+                        Name = $"{_module.Name} API ({_module.Settings.Tier})",
                         Description = restApiDescription,
                         FailOnWarnings = true
                     });
@@ -180,7 +187,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         },
                         Policies = new List<IAM.Policy> {
                             new IAM.Policy {
-                                PolicyName = $"{_app.Name}RestApiRolePolicy",
+                                PolicyName = $"{_module.Name}RestApiRolePolicy",
                                 PolicyDocument = new PolicyDocument {
                                     Statement = new List<Statement> {
                                         new Statement {
@@ -220,13 +227,13 @@ namespace MindTouch.LambdaSharp.Tool {
                     string methodsHash = methodSignature.ToMD5Hash();
                     var restApiDeploymentName = restApiName + "Deployment" + methodsHash;
 
-                    // NOTE (2018-06-21, bjorg): the deployment resource depends on ALL methods resources having been created
+                    // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created
                     _stack.Add(restApiDeploymentName, new ApiGateway.Deployment {
                         RestApiId = Fn.Ref(restApiName),
-                        Description = $"{_app.Name} API ({_app.Settings.Deployment}) [{methodsHash}]"
+                        Description = $"{_module.Name} API ({_module.Settings.Tier}) [{methodsHash}]"
                     }, dependsOn: apiMethods.Select(kv => kv.Key).ToArray());
 
-                    // RestApi stage depends on deployment and account
+                    // RestApi stage depends on API gateway deployment and API gateway account
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
                     // the necessary permissions for logging
                     var restApiStageName = restApiName + "Stage";
@@ -343,9 +350,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         FunctionName = Fn.GetAtt(method.Function.Name, "Arn"),
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = Fn.Sub(
-                            $"arn:aws:execute-api:{_app.Settings.AwsRegion}:{_app.Settings.AwsAccountId}:${{RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}",
+                            $"arn:aws:execute-api:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:${{RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}",
                             new Dictionary<string, dynamic> {
-                                ["RestApi"] = Fn.Ref($"{_app.Name}RestApi")
+                                ["RestApi"] = Fn.Ref($"{_module.Name}RestApi")
                             }
                         )
                     });
@@ -373,10 +380,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
             var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
-            environmentVariables["DEPLOYMENT"] = _app.Settings.Deployment;
-            environmentVariables["APPNAME"] = _app.Name;
-            environmentVariables["STACKNAME"] = $"{_app.Settings.Deployment}-{_app.Name}";
-            environmentVariables["DEADLETTERQUEUE"] = _app.Settings.DeadLetterQueueUrl;
+            environmentVariables["TIER"] = _module.Settings.Tier;
+            environmentVariables["MODULE"] = _module.Name;
+            environmentVariables["DEADLETTERQUEUE"] = _module.Settings.DeadLetterQueueUrl;
+            environmentVariables["LOGGINGTOPIC"] = _module.Settings.LoggingTopicArn;
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
@@ -400,13 +407,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 Timeout = function.Timeout,
                 MemorySize = function.Memory,
                 ReservedConcurrentExecutions = function.ReservedConcurrency,
-                Role = Fn.GetAtt("AppRole", "Arn"),
+                Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
-                    S3Bucket = _app.Settings.DeploymentBucketName,
+                    S3Bucket = _module.Settings.DeploymentBucketName,
                     S3Key = function.PackageS3Key
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = _app.Settings.DeadLetterQueueArn
+                    TargetArn = _module.Settings.DeadLetterQueueArn
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
@@ -414,12 +421,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 VpcConfig = vpcConfig,
                 Tags = new List<Tag> {
                     new Tag {
-                        Key = "lambdasharp:deployment",
-                        Value = _app.Settings.Deployment
+                        Key = "lambdasharp:tier",
+                        Value = _module.Settings.Tier
                     },
                     new Tag {
-                        Key = "lambdasharp:app",
-                        Value = _app.Name
+                        Key = "lambdasharp:module",
+                        Value = _module.Name
                     }
                 }
             });
@@ -430,7 +437,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var topicSource in topicSources) {
 
                     // find the resource that matches the declared topic name
-                    var parameter = _app.Parameters
+                    var parameter = _module.Parameters
                         .OfType<AResourceParameter>()
                         .FirstOrDefault(p => p.Name == topicSource.TopicName);
 
@@ -501,7 +508,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 _stack.Add(function.Name + "ScheduleEventPermission", new Lambda.Permission {
                     Action = "lambda:InvokeFunction",
-                    SourceAccount = _app.Settings.AwsAccountId,
+                    SourceAccount = _module.Settings.AwsAccountId,
                     FunctionName = Fn.GetAtt(function.Name, "Arn"),
                     Principal = "events.amazonaws.com"
                 });
@@ -526,7 +533,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var source in s3Sources.Distinct(source => source.BucketArn)) {
                     _stack.Add($"{function.Name}{source.Bucket}S3Permission", new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
-                        SourceAccount = _app.Settings.AwsAccountId,
+                        SourceAccount = _module.Settings.AwsAccountId,
                         SourceArn = source.BucketArn,
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
@@ -543,6 +550,24 @@ namespace MindTouch.LambdaSharp.Tool {
                         Enabled = true,
                         EventSourceArn = Fn.GetAtt(source.Queue, "Arn"),
                         FunctionName = Fn.Ref(function.Name)
+                    });
+                }
+            }
+
+            // check if function has any Alexa event sources
+            var alexaSources = function.Sources.OfType<AlexaSource>().ToList();
+            if(alexaSources.Any()) {
+                var index = 0;
+                foreach(var source in alexaSources) {
+                    ++index;
+                    var suffix = (source.EventSourceToken != null)
+                        ? source.EventSourceToken.ToMD5Hash().Substring(0, 7)
+                        : index.ToString();
+                    _stack.Add($"{function.Name}AlexaPermission{suffix}", new Lambda.Permission {
+                        Action = "lambda:InvokeFunction",
+                        FunctionName = Fn.GetAtt(function.Name, "Arn"),
+                        Principal = "alexa-appkit.amazon.com",
+                        EventSourceToken = source.EventSourceToken
                     });
                 }
             }
@@ -579,6 +604,17 @@ namespace MindTouch.LambdaSharp.Tool {
             case StringParameter stringParameter:
                 exportValue = stringParameter.Value;
                 break;
+            case PackageParameter packageParameter: {
+                    _stack.Add(packageParameter.Name, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
+                        ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
+                        ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
+                        ["DestinationKeyPrefix"] = packageParameter.Prefix,
+                        ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
+                        ["SourcePackageKey"] = packageParameter.PackageS3Key,
+                    }));
+                    environmentRefVariable[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
+                }
+                break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
                     exportValue = resource.ResourceArn;
@@ -603,7 +639,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         resourceArn = null;
                         resourceParamFn = Fn.GetAtt(resourceName, "Result");
                         resourceTemplate = new Model.CustomResource(resource.Type, resource.Properties);
-                    } else if(!_app.Settings.ResourceMapping.TryParseResourceProperties(
+                    } else if(!_module.Settings.ResourceMapping.TryParseResourceProperties(
                         resource.Type,
                         resourceName,
                         resource.Properties,
@@ -617,7 +653,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // for S3 buckets, we need to check if any functions use the bucket as an event source
                     if(resource.Type == "AWS::S3::Bucket") {
                         var s3Template = (Humidifier.S3.Bucket)resourceTemplate;
-                        var s3Sources = _app.Functions.SelectMany(function => function.Sources
+                        var s3Sources = _module.Functions.SelectMany(function => function.Sources
                                 .OfType<S3Source>()
                                 .Where(source => source.Bucket == resourceName)
                                 .Select(source => new {
@@ -634,8 +670,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // check if we need to create a hashed bucket name and set `BucketName` in template
                             if(s3Template.BucketName == null) {
-                                var bucketName = $"{_app.Settings.Deployment}-{_app.Name}-{resourceName}-".ToLowerInvariant();
-                                bucketName += $"{_app.Settings.AwsAccountId}-{_app.Settings.AwsRegion}-{bucketName}".ToMD5Hash().Substring(0, 7).ToLowerInvariant();
+                                var bucketName = $"{_module.Settings.Tier}-{_module.Name}-{resourceName}-".ToLowerInvariant();
+                                bucketName += $"{_module.Settings.AwsAccountId}-{_module.Settings.AwsRegion}-{bucketName}".ToMD5Hash().Substring(0, 7).ToLowerInvariant();
                                 s3Template.BucketName = bucketName;
                                 var arn = $"arn:aws:s3:::{bucketName}";
                                 resourceArn = new object[] {
@@ -707,7 +743,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(parameter.Export != null) {
                 var export = parameter.Export.StartsWith("/")
                     ? parameter.Export
-                    : $"/{_app.Settings.Deployment}/{_app.Name}/{parameter.Export}";
+                    : $"/{_module.Settings.Tier}/{_module.Name}/{parameter.Export}";
                 _stack.Add(resourcePrefix + parameter.Name + "SsmParameter", new SSM.Parameter {
                     Name = export,
                     Description = parameter.Description,
@@ -717,6 +753,6 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private string ToAppResourceName(string name) => (name != null) ? $"{_app.Settings.Deployment}-{_app.Name}-{name}" : null;
+        private string ToAppResourceName(string name) => (name != null) ? $"{_module.Settings.Tier}-{_module.Name}-{name}" : null;
    }
 }

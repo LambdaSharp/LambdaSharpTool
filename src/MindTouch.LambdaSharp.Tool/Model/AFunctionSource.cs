@@ -69,4 +69,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Queue { get; set; }
         public int BatchSize { get; set; }
     }
+
+    public class AlexaSource : AFunctionSource {
+
+        //--- Properties ---
+        public string EventSourceToken { get; set; }
+    }
 }

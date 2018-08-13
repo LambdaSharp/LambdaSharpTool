@@ -1,11 +1,6 @@
-Version: "2018-07-04"
-
 Name: Demo
 
-Description: LambdaSharp demo app
-
-Secrets:
-  - developer-encryption-key
+Description: LambdaSharp Demo
 
 Parameters:
 
@@ -53,13 +48,4 @@ Functions:
     Memory: 128
     Timeout: 30
     Sources:
-      - Api: POST:/slack
-        Integration: SlackCommand
-
-  - Name: GenericFunction
-    Description: Generic function use to show various event integrations
-    Memory: 128
-    Timeout: 30
-    Sources:
-      - Sqs: SqsQueue
-      - Schedule: rate(1 day)
+      - SlackCommand: /slack

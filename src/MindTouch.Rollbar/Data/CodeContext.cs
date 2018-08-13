@@ -23,6 +23,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class CodeContext {
         
         //--- Fields ---

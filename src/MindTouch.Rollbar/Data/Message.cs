@@ -24,6 +24,7 @@ using System;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class Message {
         
         //--- Fields ---

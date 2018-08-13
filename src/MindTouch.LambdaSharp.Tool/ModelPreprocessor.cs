@@ -68,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var variables = new Dictionary<string, string>();
             if(outputDocument.Values.FirstOrDefault() is YamlMap rootMap) {
 
-                // find `Variables` section
+                // find optional `Variables` section
                 var variablesEntry = rootMap.Entries.FirstOrDefault(entry => entry.Key.Scalar.Value == "Variables");
                 if(variablesEntry.Value != null) {
 
@@ -99,15 +99,27 @@ namespace MindTouch.LambdaSharp.Tool {
                 var nameEntry = rootMap.Entries.FirstOrDefault(entry => entry.Key.Scalar.Value == "Name");
                 AtLocation("Name", () => {
                     if(nameEntry.Value is YamlScalar nameScaler) {
-                        variables["Name"] = nameScaler.Scalar.Value;
+                        variables["Module"] = nameScaler.Scalar.Value;
                     } else {
                         AddError("`Name` attribute expected to be a string");
                     }
                 });
+
+                // find optional `Version` attribute
+                var versionEntry = rootMap.Entries.FirstOrDefault(entry => entry.Key.Scalar.Value == "Version");
+                if(versionEntry.Value != null) {
+                    AtLocation("Version", () => {
+                        if(versionEntry.Value is YamlScalar versionScalar) {
+                            variables["Version"] = versionScalar.Scalar.Value;
+                        } else {
+                            AddError("`Version` attribute expected to be a string");
+                        }
+                    });
+                }
             }
 
             // add built-in variables
-            variables["Deployment"] = Settings.Deployment;
+            variables["Tier"] = Settings.Tier;
             variables["GitSha"] = Settings.GitSha;
             variables["AwsRegion"] = Settings.AwsRegion;
             variables["AwsAccountId"] = Settings.AwsAccountId;
@@ -122,7 +134,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 .Where(kv => !Regex.IsMatch(kv.Value, VARIABLE_PATTERN))
                 .ToDictionary(kv => kv.Key, kv => kv.Value);
 
-            // attempt to converte all bound variables to free variables
+            // attempt to convert all bound variables to free variables
             AtLocation("Variables", () => {
                 bool progress;
                 do {
@@ -193,15 +205,15 @@ namespace MindTouch.LambdaSharp.Tool {
                         End = inputMap.End
                     };
                     Tuple<string, AYamlValue> choice = null;
-                    var deploymentKey = ":" + Settings.Deployment;
+                    var tierKey = ":" + Settings.Tier;
                     foreach(var inputEntry in inputMap.Entries) {
 
-                        // entries that start with `:` are considered a conditional based on the current deployment value
+                        // entries that start with `:` are considered a conditional based on the current deployment tier value
                         if(inputEntry.Key.Scalar.Value.StartsWith(":")) {
 
-                            // check if the key matches the deployment value or the key is `:Default` and no choice has been made yet
+                            // check if the key matches the deployment tier value or the key is `:Default` and no choice has been made yet
                             if(
-                                (inputEntry.Key.Scalar.Value == deploymentKey)
+                                (inputEntry.Key.Scalar.Value == tierKey)
                                 || (
                                     (inputEntry.Key.Scalar.Value == ":Default") 
                                     && (choice == null)

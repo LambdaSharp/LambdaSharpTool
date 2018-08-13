@@ -1,8 +1,6 @@
-Version: "2018-07-04"
-
 Name: SnsSample
 
-Description: A sample app using an SNS topic
+Description: A sample module using an SNS topic
 
 Parameters:
 

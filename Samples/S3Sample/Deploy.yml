@@ -1,8 +1,6 @@
-Version: "2018-07-04"
-
 Name: S3Sample
 
-Description: A sample app integrating with S3 Bucket events
+Description: A sample module integrating with S3 Bucket events
 
 Parameters:
 

@@ -2,15 +2,26 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test",
   "Resources": {
+    "VersionSsmParameter": {
+      "Type": "AWS::SSM::Parameter",
+      "Properties": {
+        "Type": "String",
+        "Description": "LambdaSharp module version",
+        "Value": "0.0.0.0",
+        "Name": "/Test/TestModule/Version"
+      }
+    },
     "RollbarToken": {
       "Type": "Custom::LambdaSharpRollbarProject",
       "Properties": {
         "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
-        "Project": "Test",
-        "Deployment": "test"
+        "Tier": "Test",
+        "Module": "TestModule",
+        "Project": "TestModule",
+        "Deployment": "Test"
       }
     },
-    "AppRole": {
+    "ModuleRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -49,10 +60,17 @@
                     "sqs:SendMessage"
                   ],
                   "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic"
                 }
               ]
             },
-            "PolicyName": "test-Test-policy"
+            "PolicyName": "Test-TestModule-policy"
           }
         ]
       }
@@ -62,17 +80,17 @@
       "Properties": {
         "Code": {
           "S3Bucket": "lambdsharp-bucket-name",
-          "S3Key": "test/Test/Test.Function-NOCOMPILE.zip"
+          "S3Key": "TestModule/TestModule.Function-NOCOMPILE.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
         },
         "Environment": {
           "Variables": {
-            "DEPLOYMENT": "test",
-            "APPNAME": "Test",
-            "STACKNAME": "test-Test",
+            "TIER": "Test",
+            "APPNAME": "TestModule",
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
+            "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
             "STACK_ROLLBARTOKEN": {
               "Fn::GetAtt": [
@@ -82,38 +100,38 @@
             }
           }
         },
-        "FunctionName": "test-Test-Function",
-        "Handler": "Test.Function::MindTouch.LambdaSharpTest.Function.Function::FunctionHandlerAsync",
+        "FunctionName": "Test-TestModule-Function",
+        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "AppRole",
+            "ModuleRole",
             "Arn"
           ]
         },
         "Runtime": "dotnetcore2.1",
         "Tags": [
           {
-            "Key": "lambdasharp:deployment",
-            "Value": "test"
+            "Key": "lambdasharp:tier",
+            "Value": "Test"
           },
           {
-            "Key": "lambdasharp:app",
-            "Value": "Test"
+            "Key": "lambdasharp:module",
+            "Value": "TestModule"
           }
         ],
         "Timeout": "30"
       }
     },
-    "TestRestApi": {
+    "TestModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "API for Test: LambdaSharp CloudFormation Test",
+        "Description": "API for TestModule: LambdaSharp CloudFormation Test",
         "FailOnWarnings": true,
-        "Name": "Test API (test)"
+        "Name": "TestModule API (Test)"
       }
     },
-    "TestRestApiRole": {
+    "TestModuleRestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -146,38 +164,38 @@
                 }
               ]
             },
-            "PolicyName": "TestRestApiRolePolicy"
+            "PolicyName": "TestModuleRestApiRolePolicy"
           }
         ]
       }
     },
-    "TestRestApiAccount": {
+    "TestModuleRestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
           "Fn::GetAtt": [
-            "TestRestApiRole",
+            "TestModuleRestApiRole",
             "Arn"
           ]
         }
       }
     },
-    "TestRestApiItemsResource": {
+    "TestModuleRestApiItemsResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "TestRestApi",
+            "TestModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "items",
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "TestRestApiItemsGET": {
+    "TestModuleRestApiItemsGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -200,14 +218,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "TestRestApiItemsResource"
+          "Ref": "TestModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "FunctionTestRestApiItemsGETPermission": {
+    "FunctionTestModuleRestApiItemsGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -223,14 +241,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/GET/items",
             {
               "RestApi": {
-                "Ref": "TestRestApi"
+                "Ref": "TestModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "TestRestApiItemsPOST": {
+    "TestModuleRestApiItemsPOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -253,14 +271,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "TestRestApiItemsResource"
+          "Ref": "TestModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "FunctionTestRestApiItemsPOSTPermission": {
+    "FunctionTestModuleRestApiItemsPOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -276,26 +294,26 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/POST/items",
             {
               "RestApi": {
-                "Ref": "TestRestApi"
+                "Ref": "TestModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "TestRestApiItemsIdResource": {
+    "TestModuleRestApiItemsIdResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "TestRestApiItemsResource"
+          "Ref": "TestModuleRestApiItemsResource"
         },
         "PathPart": "{id}",
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "TestRestApiItemsIdGET": {
+    "TestModuleRestApiItemsIdGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -318,14 +336,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "TestRestApiItemsIdResource"
+          "Ref": "TestModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "FunctionTestRestApiItemsIdGETPermission": {
+    "FunctionTestModuleRestApiItemsIdGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -341,14 +359,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/GET/items/{id}",
             {
               "RestApi": {
-                "Ref": "TestRestApi"
+                "Ref": "TestModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "TestRestApiItemsIdPUT": {
+    "TestModuleRestApiItemsIdPUT": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -371,14 +389,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "TestRestApiItemsIdResource"
+          "Ref": "TestModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "FunctionTestRestApiItemsIdPUTPermission": {
+    "FunctionTestModuleRestApiItemsIdPUTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -394,14 +412,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/PUT/items/{id}",
             {
               "RestApi": {
-                "Ref": "TestRestApi"
+                "Ref": "TestModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "TestRestApiItemsIdDELETE": {
+    "TestModuleRestApiItemsIdDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -424,14 +442,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "TestRestApiItemsIdResource"
+          "Ref": "TestModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       }
     },
-    "FunctionTestRestApiItemsIdDELETEPermission": {
+    "FunctionTestModuleRestApiItemsIdDELETEPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -447,34 +465,34 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/DELETE/items/{id}",
             {
               "RestApi": {
-                "Ref": "TestRestApi"
+                "Ref": "TestModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "TestRestApiDeployment9802718D62AE0271061EA5880DEAF5DE": {
+    "TestModuleRestApiDeployment65D0BD1F698431E7AD0FF99AF0798011": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": "Test API (test) [9802718D62AE0271061EA5880DEAF5DE]",
+        "Description": "TestModule API (Test) [65D0BD1F698431E7AD0FF99AF0798011]",
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         }
       },
       "DependsOn": [
-        "TestRestApiItemsGET",
-        "TestRestApiItemsPOST",
-        "TestRestApiItemsIdGET",
-        "TestRestApiItemsIdPUT",
-        "TestRestApiItemsIdDELETE"
+        "TestModuleRestApiItemsGET",
+        "TestModuleRestApiItemsPOST",
+        "TestModuleRestApiItemsIdGET",
+        "TestModuleRestApiItemsIdPUT",
+        "TestModuleRestApiItemsIdDELETE"
       ]
     },
-    "TestRestApiStage": {
+    "TestModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "TestRestApiDeployment9802718D62AE0271061EA5880DEAF5DE"
+          "Ref": "TestModuleRestApiDeployment65D0BD1F698431E7AD0FF99AF0798011"
         },
         "MethodSettings": [
           {
@@ -485,12 +503,12 @@
           }
         ],
         "RestApiId": {
-          "Ref": "TestRestApi"
+          "Ref": "TestModuleRestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "TestRestApiAccount"
+        "TestModuleRestApiAccount"
       ]
     }
   },
@@ -502,7 +520,7 @@
           [
             "https://",
             {
-              "Ref": "TestRestApi"
+              "Ref": "TestModuleRestApi"
             },
             ".execute-api.",
             {
@@ -516,7 +534,7 @@
           ]
         ]
       },
-      "Description": "API for Test: LambdaSharp CloudFormation Test"
+      "Description": "API for TestModule: LambdaSharp CloudFormation Test"
     }
   }
 }

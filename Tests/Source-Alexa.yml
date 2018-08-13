@@ -1,0 +1,12 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Alexa: "*"
+      - Alexa: amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx

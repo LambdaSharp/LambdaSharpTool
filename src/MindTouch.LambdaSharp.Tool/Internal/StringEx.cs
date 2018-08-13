@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -30,8 +31,11 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
         //--- Extension Methods ---
         public static string ToMD5Hash(this string text) {
             using(var md5 = MD5.Create()) {
-                return string.Concat(md5.ComputeHash(Encoding.UTF8.GetBytes(text)).Select(b => b.ToString("X2")));
+                return md5.ComputeHash(Encoding.UTF8.GetBytes(text)).ToHexString();
             }
         }
+
+        public static string ToHexString(this IEnumerable<byte> bytes)
+            => string.Concat(bytes.Select(x => x.ToString("X2")));
     }
 }

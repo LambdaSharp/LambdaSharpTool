@@ -33,7 +33,16 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<string> Values { get; set; }
         public string Value { get; set; }
         public string Import { get; set; }
+        public PackageNode Package { get; set; }
         public string Export { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
+    }
+
+    public class PackageNode {
+
+        //--- Properties ---
+        public string Files { get; set; }
+        public string Bucket { get; set; }
+        public string Prefix { get; set; }
     }
 }

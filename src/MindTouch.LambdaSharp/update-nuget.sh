@@ -1,7 +1,7 @@
 rm bin/Release/*.nupkg
 
 dotnet pack \
-    --configuration Release
+    --configuration NugetPublish
 
 dotnet nuget push \
     --api-key $LAMBDASHARP_NUGET_KEY \

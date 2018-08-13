@@ -1,8 +1,6 @@
-Version: "2018-07-04"
-
 Name: ApiSample
 
-Description: A sample app integrating with API Gateway
+Description: A sample module integrating with API Gateway
 
 Functions:
   - Name: MyFunction

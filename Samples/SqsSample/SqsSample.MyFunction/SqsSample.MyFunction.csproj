@@ -5,6 +5,7 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>SqsSample.MyFunction</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
+    <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>

@@ -29,17 +29,32 @@ using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
 
+    public class LambdaSharpDeploymentTierSetupException : Exception {
+
+        //--- Fields ---
+        public readonly string Tier;
+
+        //--- Constructors ---
+        public LambdaSharpDeploymentTierSetupException(string tier) : base() {
+            Tier = tier ?? throw new ArgumentNullException(nameof(tier));
+        }
+    }
+
     public class Settings {
 
         //--- Properties ---
-        public string Deployment { get; set; }
+        public Version ToolVersion { get; set; }
+        public Version EnvironmentVersion { get; set; }
+        public string Tier { get; set; }
         public string GitSha { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
         public string DeadLetterQueueUrl { get; set; }
-        public string DeploymentNotificationTopicArn { get; set; }
+        public string LoggingTopicArn { get; set; }
+        public string NotificationTopicArn { get; set; }
         public string RollbarCustomResourceTopicArn { get; set; }
+        public string S3PackageLoaderCustomResourceTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
@@ -47,7 +62,8 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonS3 S3Client { get; set; }
         public Action<string, Exception> ErrorCallback { get; set; }
         public VerboseLevel VerboseLevel { get; set; }
-        public string FileName { get; set; }
+        public string ModuleFileName { get; set; }
+        public string WorkingDirectory { get; set; }
 
         public string DeadLetterQueueArn {
             get {

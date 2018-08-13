@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             var importsByPath = _imports.Where(import => import.EndsWith("/")).ToList();
             foreach(var importByPath in importsByPath) {
                 _imports.Remove(importByPath);
-                var response = _ssmClient.GetAllParametersByPathAsync(importByPath).GetAwaiter().GetResult();
+                var response = _ssmClient.GetAllParametersByPathAsync(importByPath).Result;
                 foreach(var parameter in response) {
                     AddResult(parameter.Key, parameter.Value.Value, parameter.Value.Key);
 

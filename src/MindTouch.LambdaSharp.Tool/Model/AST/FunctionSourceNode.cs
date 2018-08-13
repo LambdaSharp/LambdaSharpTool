@@ -51,5 +51,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // SQS Source
         public string Sqs { get; set; }
         public int? BatchSize { get; set; }
+
+        // Alexa Source
+        public string Alexa { get; set; }
    }
 }

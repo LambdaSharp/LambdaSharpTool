@@ -28,7 +28,7 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp {
 
-    public abstract class ALambdaApiGatewayFunction : ALambdaFunction<APIGatewayProxyRequest> {
+    public abstract class ALambdaApiGatewayFunction : ALambdaFunction<APIGatewayProxyRequest, APIGatewayProxyResponse> {
 
         //--- Constructors ---
         protected ALambdaApiGatewayFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -39,7 +39,7 @@ namespace MindTouch.LambdaSharp {
         public abstract Task<APIGatewayProxyResponse> HandleRequestAsync(APIGatewayProxyRequest request, ILambdaContext context);
 
         //--- Methods ---
-        public override async Task<object> ProcessMessageAsync(APIGatewayProxyRequest request, ILambdaContext context) 
+        public override async Task<APIGatewayProxyResponse> ProcessMessageAsync(APIGatewayProxyRequest request, ILambdaContext context) 
             => await HandleRequestAsync(request, context);
     }
 }

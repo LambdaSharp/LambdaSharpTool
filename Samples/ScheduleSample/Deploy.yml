@@ -1,8 +1,6 @@
-Version: "2018-07-04"
-
 Name: ScheduleSample
 
-Description: A sample app using schedule events
+Description: A sample module using schedule events
 
 Functions:
   - Name: MyFunction

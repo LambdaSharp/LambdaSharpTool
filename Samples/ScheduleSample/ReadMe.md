@@ -4,16 +4,14 @@
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
-## Deployment
+## Module File
 
 An invocations schedule is created by adding a `Schedule` source to each function. The schedule can either be directly a [CloudWatch Events schedule expression](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html) or it can provide an expression and a name. The `Name` attribute is used to distinguish between multiple schedule events when needed.
 
 ```yaml
-Version: "2018-07-04"
-
 Name: ScheduleSample
 
-Description: A sample app using schedule events
+Description: A sample module using schedule events
 
 Functions:
 

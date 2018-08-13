@@ -4,6 +4,7 @@
 
 Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md) to properly organize your code when working with these samples.
 
+1. [Alexa Sample](AlexaSample/)
 1. [API Gateway Sample](ApiSample/)
 1. [CloudWatch Schedule Event Sample](ScheduleSample/)
 1. [S3 Bucket Sample](S3Sample/)

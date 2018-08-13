@@ -2,14 +2,16 @@
 
 # LambdaSharp Tool & Framework (Beta)
 
-The objectives of λ# is to accelerate the innovation velocity of serverless solutions. Developers should be able to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
+The objective of λ# is to accelerate the innovation velocity of serverless solutions. Developers should be able to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
-λ# is a .NET Core 2.x framework and tooling for rapid application development, deployment, and management of [AWS Lambda](https://aws.amazon.com/lambda/) functions and serverless infrastructure. Resources are automatically converted into parameters for easy access by AWS Lambda functions written in C#. Furthermore, λ# apps are composed by exchanging resource references using the [AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/).
+λ# is a .NET Core 2.x framework and tooling for rapid application development, deployment, and management of [AWS Lambda](https://aws.amazon.com/lambda/) functions and serverless infrastructure. Resources are automatically converted into parameters for easy access by AWS Lambda C# functions. Furthermore, λ# modules are composable by exchanging resource references using the [AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/).
 
-When creating a λ# app, you only need to worry about three files:
+When creating a λ# module, you only need to worry about three files:
 * The AWS Lambda C# code
 * The .NET Core project file
-* The λ# deployment file
+* The λ# module file
+
+__Example__
 
 The following AWS Lambda function listens to a [Slack](https://slack.com) command request and responds with a simple message. `ASlackCommandFunction` is one of several base classes that can be used to create lambda functions easily and quickly.
 
@@ -28,14 +30,12 @@ namespace GettingStarted.SlackCommand {
 }
 ```
 
-The λ# deployment tool uses a YAML file to compile, upload, and deploy the CloudFormation stack all in one step. The YAML describes the app, its parameters, resources, and functions.
+The λ# deployment tool uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the parameters, resources, and functions.
 
 ```yaml
-Version: "2018-07-04"
-
 Name: GettingStarted
 
-Description: Intro app that shows a Slack integration
+Description: Sample module that shows a Slack integration
 
 Functions:
   - Name: SlackCommand
@@ -50,13 +50,22 @@ Functions:
 
 1. [Setup λ# Environment **(required)**](Bootstrap/)
 1. [λ# Samples](Samples/)
-1. [Deployment File Reference](Docs/DeploymentFile.md)
+1. [Module File Reference](Docs/ModuleFile.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [λ# Tool Reference](src/MindTouch.LambdaSharp.Tool/)
 
 # Releases
 
 Releases are named after Greek philosophers.
+
+## Brontinus (v0.2) - 2018-08-13
+
+* Revised λ# nomenclature, which introduced breaking changes for the module files
+* Added support for Alexa Skill invocation sources
+* Added custom resource handler for deploying file packages to S3 buckets
+* Added command for listing deployed λ# modules
+* Added default warning/error logging SNS topic for all Lambda functions
+* Streamlined the λ# Environment setup procedure
 
 ## Acrion (v0.1) - 2018-07-17
 

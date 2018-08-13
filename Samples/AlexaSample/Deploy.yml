@@ -1,0 +1,11 @@
+Name: AlexaSample
+
+Description: A sample module using an Alexa skill
+
+Functions:
+
+  - Name: MyFunction
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Alexa: "*"

@@ -24,6 +24,7 @@ using System.Collections.Specialized;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class Request {
         
         //--- Fields ---

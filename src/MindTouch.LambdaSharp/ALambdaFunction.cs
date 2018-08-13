@@ -28,6 +28,8 @@ using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Lambda.Core;
+using Amazon.SimpleNotificationService;
+using Amazon.SimpleNotificationService.Model;
 using Amazon.SQS;
 using MindTouch.LambdaSharp.ConfigSource;
 using MindTouch.Rollbar;
@@ -37,6 +39,9 @@ namespace MindTouch.LambdaSharp {
 
     public abstract class ALambdaFunction {
 
+        //--- Constants ---
+        private const int MAX_SNS_SIZE = 262144;
+
         //--- Class Fields ---
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
         private static int Invocations;
@@ -44,11 +49,14 @@ namespace MindTouch.LambdaSharp {
         //--- Fields ---
         private readonly Func<DateTime> _now;
         private readonly DateTime _started;
-        private readonly IAmazonSQS _sqsClient;
         private readonly IAmazonKeyManagementService _kmsClient;
+        private readonly IAmazonSimpleNotificationService _snsClient;
+        private readonly IAmazonSQS _sqsClient;
         private readonly ILambdaConfigSource _envSource;
         private IRollbarClient _rollbarClient;
+        private bool _rollbarEnabled;
         private string _deadLetterQueueUrl;
+        private string _loggingTopicArn;
         private bool _initialized;
         private LambdaConfig _appConfig;
 
@@ -57,8 +65,9 @@ namespace MindTouch.LambdaSharp {
 
         protected ALambdaFunction(LambdaFunctionConfiguration configuration) {
             _now = configuration.UtcNow ?? (() => DateTime.UtcNow);
-            _sqsClient = configuration.SqsClient ?? throw new ArgumentNullException(nameof(configuration.SqsClient));
             _kmsClient = configuration.KmsClient ?? throw new ArgumentNullException(nameof(configuration.KmsClient));
+            _snsClient = configuration.SnsClient ?? throw new ArgumentNullException(nameof(configuration.SnsClient));
+            _sqsClient = configuration.SqsClient ?? throw new ArgumentNullException(nameof(configuration.SqsClient));
             _envSource = configuration.EnvironmentSource ?? throw new ArgumentNullException(nameof(configuration.EnvironmentSource));
             _started = UtcNow;
         }
@@ -66,6 +75,8 @@ namespace MindTouch.LambdaSharp {
         //--- Properties ---
         protected DateTime UtcNow => _now();
         protected DateTime Started => _started;
+        protected string ModuleName { get; private set; }
+        protected string DeploymentTier { get; private set; }
 
         //--- Abstract Methods ---
         public abstract Task InitializeAsync(LambdaConfig config);
@@ -115,26 +126,25 @@ namespace MindTouch.LambdaSharp {
 
         protected virtual async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
 
-            // read bootstrap configuration from environment
-            var deployment = envSource.Read("DEPLOYMENT");
-            var appName = envSource.Read("APPNAME");
-            var stackName = envSource.Read("STACKNAME");
-            var framework = envSource.Read("LAMBDARUNTIME");
+            // read configuration from environment variables
+            DeploymentTier = envSource.Read("TIER");
+            ModuleName = envSource.Read("MODULE");
             _deadLetterQueueUrl = envSource.Read("DEADLETTERQUEUE");
-            LogInfo($"DEPLOYMENT = {deployment}");
-            LogInfo($"APPNAME = {appName}");
-            LogInfo($"STACKNAME = {stackName}");
+            _loggingTopicArn = envSource.Read("LOGGINGTOPIC");
+            var framework = envSource.Read("LAMBDARUNTIME");
+            LogInfo($"TIER = {DeploymentTier}");
+            LogInfo($"MODULE = {ModuleName}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
-            LogInfo($"LAMBDARUNTIME = {framework}");
+            LogInfo($"LOGGINGTOPIC = {_loggingTopicArn ?? "NONE"}");
 
             // read optional git-sha file
             var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
-            LogInfo($"GITSHA = {gitsha}");
+            LogInfo($"GITSHA = {gitsha ?? "NONE"}");
 
-            // read app configuration values from parameters file
+            // read module parameter values from parameters file
             var parameters = await ParseParameters("/", File.ReadAllText("parameters.json"));
 
-            // use app config where environment variables take precedence over those found in the parameter store
+            // create config where environment variables take precedence over those found in the parameter file
             _appConfig = new LambdaConfig(new LambdaMultiSource(new[] {
                 envSource,
                 new LambdaDictionarySource("", parameters)
@@ -142,21 +152,23 @@ namespace MindTouch.LambdaSharp {
 
             // initialize rollbar
             var rollbarAccessToken = _appConfig.ReadText("RollbarToken", defaultValue: null);
-            if(rollbarAccessToken != null) {
-                const string proxy = "";
-                const string platform = "lambda";
-                _rollbarClient = RollbarClient.Create(new RollbarConfiguration(
-                    rollbarAccessToken,
-                    proxy,
-                    deployment,
-                    platform,
-                    framework,
-                    gitsha
-                ));
-                LogInfo("Rollbar = ENABLED");
-            } else {
-                LogInfo("Rollbar = DISABLED");
-            }
+            const string proxy = "";
+            const string platform = "lambda";
+            _rollbarClient = RollbarClient.Create(new RollbarConfiguration(
+
+                // NOTE (2018-08-06, bjorg): the rollbar access token determines the rollbar project
+                //  the error report is associated with; when rollbar intergration is disabled,
+                //  use the module name instead so the logging recipient can determine the module
+                //  the log entry belongs to.
+                rollbarAccessToken ?? ModuleName,
+                proxy,
+                DeploymentTier,
+                platform,
+                framework,
+                gitsha
+            ));
+            _rollbarEnabled = (rollbarAccessToken != null);
+            LogInfo($"ROLLBAR = {(_rollbarEnabled ? "ENABLED" : "DISABLED")}");
 
             // local functions
             async Task<Dictionary<string, string>> ParseParameters(string parameterPrefix, string json) {
@@ -230,15 +242,38 @@ namespace MindTouch.LambdaSharp {
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
             string message = RollbarClient.FormatMessage(format, args);
             Log(level, $"{message}", exception?.ToString());
-            if((_rollbarClient != null) && (level >= LambdaLogLevel.WARNING)) {
-                try {
-                    Log(LambdaLogLevel.INFO, $"rollbar sending data", extra: null);
-                    var result = _rollbarClient.SendAsync(level.ToString(), exception, format, args).GetAwaiter().GetResult();
-                    if(!result.IsSuccess) {
-                        Log(LambdaLogLevel.ERROR, $"Rollbar payload request failed. {result.Message}. UUID: {result.UUID}", extra: null);
+            if(level >= LambdaLogLevel.WARNING) {
+                if(_rollbarEnabled) {
+                    try {
+                        Log(LambdaLogLevel.INFO, "rollbar sending data", extra: null);
+                        var result = _rollbarClient.SendAsync(level.ToString(), exception, format, args).Result;
+                        if(!result.IsSuccess) {
+                            Log(LambdaLogLevel.ERROR, $"Rollbar payload request failed. {result.Message}. UUID: {result.UUID}", extra: null);
+                        }
+                    } catch(Exception e) {
+                        Log(LambdaLogLevel.ERROR, "rollbar SendAsync exception", e.ToString());
                     }
-                } catch(Exception e) {
-                    Log(LambdaLogLevel.ERROR, $"rollbar client exception", e.ToString());
+                } else if(_loggingTopicArn != null) {
+                    string payload;
+                    try {
+
+                        // send exception to error-topic
+                        payload = _rollbarClient.CreatePayload(MAX_SNS_SIZE, level.ToString(), exception, format, args);
+                    } catch(Exception e) {
+                        Log(LambdaLogLevel.ERROR, "rollbar CreatePayload exception", e.ToString());
+                        return;
+                    }
+                    try {
+
+                        // send exception to error-topic
+                        _snsClient.PublishAsync(new PublishRequest {
+                            TopicArn = _loggingTopicArn,
+                            Message = payload
+                        }).Wait();
+                    } catch(Exception e) {
+                        Log(LambdaLogLevel.ERROR, "SNS publish exception", e.ToString());
+                        Log(LambdaLogLevel.INFO, "logging payload", payload);
+                    }
                 }
             }
         }

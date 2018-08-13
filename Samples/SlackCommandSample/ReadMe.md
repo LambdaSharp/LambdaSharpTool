@@ -4,18 +4,16 @@
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
-## Deployment
+## Module File
 
 An invocations schedule is created by adding a `Schedule` source to each function. The schedule can either be directly a [CloudWatch Events schedule expression](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html) or it can provide an expression and a name. The `Name` attribute is used to distinguish between multiple schedule events when needed.
 
-A [Slack](https://slack.com) command integration is created by adding the `SlackCommand` source to a function. The λ# tool automatically generates the API Gateway scaffolding including resources, methods, stages, and a deployment. In addition, the Slack command requests are converted into asynchronous invocation to avoid timeout errors for slow functions. Additional details on the Slack Command integration can be [found below](#reference).
+A [Slack](https://slack.com) command integration is created by adding the `SlackCommand` source to a function. The λ# tool automatically generates the API Gateway scaffolding including resources, methods, stages, and a RestApi deployment. In addition, the Slack command requests are converted into asynchronous invocation to avoid timeout errors for slow functions. Additional details on the Slack Command integration can be [found below](#reference).
 
 ```yaml
-Version: "2018-07-04"
-
 Name: SlackCommandSample
 
-Description: A sample app integrating with Slack
+Description: A sample module integrating with Slack
 
 Functions:
   - Name: MyFunction
@@ -44,9 +42,8 @@ public class Function : ALambdaSlackCommandFunction {
 
 ## Slack Setup
 
-In order to invoke the Sample app API, we need to know the URL. The easiest way is to copy it
-from the AWS Console, under API Gateway, by selecting the LATEST stage and then the Slack endpoint. The
-API Gateway URL will be shown at the top of the page.
+In order to invoke the Sample API, we need to know the URL. The easiest way is to copy the API Gateway base-URL
+from the λ# tool output after the deployment has completed and append the resource URL path.
 
 Copy the complete URL to the API Gateway endpoint and follow these steps:
 1. Select *Customize Slack* from your Slack client.
