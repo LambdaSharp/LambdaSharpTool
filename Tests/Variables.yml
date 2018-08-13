@@ -1,6 +1,4 @@
-Version: "2018-07-04"
-
-Name: Test
+Name: TestModule
 
 Description: LambdaSharp CloudFormation Test
 

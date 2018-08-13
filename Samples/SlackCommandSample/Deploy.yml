@@ -1,8 +1,6 @@
-Version: "2018-07-04"
-
 Name: SlackCommandSample
 
-Description: A sample app integrating with Slack
+Description: A sample module integrating with Slack
 
 Functions:
   - Name: MyFunction

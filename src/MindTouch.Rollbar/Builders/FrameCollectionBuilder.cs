@@ -37,7 +37,7 @@ namespace MindTouch.Rollbar.Builders {
                 return lines;
             }
 
-            // Process all stack frames
+            // process all stack frames
             foreach(var frame in stackFrames) {
                 var lineNumber = frame.GetFileLineNumber();
                 var fileName = frame.GetFileName();
@@ -47,10 +47,8 @@ namespace MindTouch.Rollbar.Builders {
                 if(method != null) {
                     var methodParams = method.GetParameters();
 
-                    // Method Name
-                    methodName = method.Name;
-
                     // add method parameters to the method name. helpful for resolving overloads.
+                    methodName = method.Name;
                     if(methodParams.Length > 0) {
                         var paramDesc = string.Join(", ", methodParams.Select(p => p.ParameterType + " " + p.Name));
                         methodName = methodName + "(" + paramDesc + ")";
@@ -76,7 +74,7 @@ namespace MindTouch.Rollbar.Builders {
                     fileName = method.ReflectedType.ToString();
                 }
 
-                // NOTE(2014-10-08)(coreyc): Set CodeContext and Code (lines of code above and below the line that raised the exception).
+                // NOTE: Set CodeContext and Code (lines of code above and below the line that raised the exception).
                 lines.Add(new Frame(fileName, lineNumber, null, methodName));
             }
 

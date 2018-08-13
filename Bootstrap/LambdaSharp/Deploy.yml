@@ -1,8 +1,8 @@
-Version: "2018-07-04"
-
 Name: LambdaSharp
 
-Description: AWS assets required by LambdaSharp apps
+Version: 0.2
+
+Description: LambdaSharp Environment
 
 Parameters:
 
@@ -11,6 +11,13 @@ Parameters:
     Export: DeadLetterQueue
     Resource:
       Type: AWS::SQS::Queue
+      Allow: None
+
+  - Name: LoggingTopic
+    Description: SNS topic used by LambdaSharp functions to log warnings and errors
+    Export: LoggingTopic
+    Resource:
+      Type: AWS::SNS::Topic
       Allow: None
 
   - Name: DeploymentBucket

@@ -26,6 +26,7 @@ using System.Linq;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class Trace {
         
         //--- Fields ---

@@ -28,5 +28,6 @@ namespace MindTouch.Rollbar {
 
         //--- Methods ---
         Task<Result> SendAsync(string level, Exception exception, string format = null, params object[] args);
+        string CreatePayload(int maxSize, string level, Exception exception, string format = null, params object[] args);
     }
 }

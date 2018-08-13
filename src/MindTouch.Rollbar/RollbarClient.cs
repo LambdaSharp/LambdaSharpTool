@@ -87,7 +87,10 @@ namespace MindTouch.Rollbar {
         }
 
         //--- Methods ---
-        public Task<Result> SendAsync(string level, Exception exception, string format = null, params object[] args) {
+        public Task<Result> SendAsync(string level, Exception exception, string format = null, params object[] args)
+            => HttpPost(CreatePayload(MAX_SIZE, level, exception, format, args));
+
+        public string CreatePayload(int maxSize, string level, Exception exception, string format = null, params object[] args) {
             var message = FormatMessage(format, args) ?? exception?.Message;
             if(message == null) {
                 throw new ArgumentException("both exception and format are null");
@@ -103,42 +106,7 @@ namespace MindTouch.Rollbar {
             } else {
                 payload = _payloadBuilder.CreateWithFingerprintInput(payload, format);
             }
-            var payloadString = Serialize(ValidatePayload(payload));
-            return HttpPost(payloadString);
-        }
-
-        private Payload ValidatePayload(Payload payload) {
-            var payloadString = Serialize(payload);
-            var fullPayloadSize = _encoding.GetByteCount(payloadString);
-
-            // NOTE (coreyc): Rollbar Payload size cannot exceed 512KB
-            if(fullPayloadSize > MAX_SIZE) {
-
-                // Truncate Request body because it could be larger than 512KB
-                if((payload.RollbarData.Request != null) && !string.IsNullOrWhiteSpace(payload.RollbarData.Request.Body)) {
-                    var bodySize = _encoding.GetByteCount(payload.RollbarData.Request.Body);
-                    var sizeAvailable = MAX_SIZE - (fullPayloadSize - bodySize);
-                    if(sizeAvailable > 0) {
-                        var bodyBytes = _encoding.GetBytes(payload.RollbarData.Request.Body).Take(sizeAvailable).ToArray();
-                        var body = _encoding.GetString(bodyBytes);
-                        var request = new Request(
-                            payload.RollbarData.Request.Url,
-                            payload.RollbarData.Request.Method,
-                            payload.RollbarData.Request.Headers,
-                            payload.RollbarData.Request.QueryString,
-                            body,
-                            payload.RollbarData.Request.UserIpAddress);
-                        var context = new Context(
-                            payload.RollbarData.ApplicationContext,
-                            request,
-                            payload.RollbarData.Person,
-                            payload.RollbarData.Custom);
-                        var data = new RollbarData(payload.RollbarData, context);
-                        return new Payload(payload.AccessToken, data);
-                    }
-                }
-            }
-            return payload;
+            return SerializePayload(payload, maxSize);
         }
 
         private Task<Result> HttpPost(string payload) {
@@ -201,8 +169,39 @@ namespace MindTouch.Rollbar {
             return new Result(responseCode, responseText);
         }
 
-        private string Serialize(object data) {
-            return JsonConvert.SerializeObject(data, _configuration.JsonSettings);
+        private string SerializePayload(Payload payload, int maxSize) {
+            var payloadString = JsonConvert.SerializeObject(payload, _configuration.JsonSettings);
+            var fullPayloadSize = _encoding.GetByteCount(payloadString);
+
+            // NOTE: Rollbar Payload size cannot exceed 512KB
+            if(fullPayloadSize <= maxSize) {
+                return payloadString;
+            }
+
+            // truncate Request body because it could be larger than 512KB
+            if((payload.RollbarData.Request != null) && !string.IsNullOrWhiteSpace(payload.RollbarData.Request.Body)) {
+                var bodySize = _encoding.GetByteCount(payload.RollbarData.Request.Body);
+                var sizeAvailable = maxSize - (fullPayloadSize - bodySize);
+                if(sizeAvailable > 0) {
+                    var bodyBytes = _encoding.GetBytes(payload.RollbarData.Request.Body).Take(sizeAvailable).ToArray();
+                    var body = _encoding.GetString(bodyBytes);
+                    var request = new Request(
+                        payload.RollbarData.Request.Url,
+                        payload.RollbarData.Request.Method,
+                        payload.RollbarData.Request.Headers,
+                        payload.RollbarData.Request.QueryString,
+                        body,
+                        payload.RollbarData.Request.UserIpAddress);
+                    var context = new Context(
+                        payload.RollbarData.ApplicationContext,
+                        request,
+                        payload.RollbarData.Person,
+                        payload.RollbarData.Custom);
+                    var data = new RollbarData(payload.RollbarData, context);
+                    return JsonConvert.SerializeObject(new Payload(payload.AccessToken, data), _configuration.JsonSettings);
+                }
+            }
+            return payloadString;
         }
     }
 }

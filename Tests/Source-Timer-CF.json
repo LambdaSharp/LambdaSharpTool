@@ -2,15 +2,26 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test",
   "Resources": {
+    "VersionSsmParameter": {
+      "Type": "AWS::SSM::Parameter",
+      "Properties": {
+        "Type": "String",
+        "Description": "LambdaSharp module version",
+        "Value": "0.0.0.0",
+        "Name": "/Test/TestModule/Version"
+      }
+    },
     "RollbarToken": {
       "Type": "Custom::LambdaSharpRollbarProject",
       "Properties": {
         "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
-        "Project": "Test",
-        "Deployment": "test"
+        "Tier": "Test",
+        "Module": "TestModule",
+        "Project": "TestModule",
+        "Deployment": "Test"
       }
     },
-    "AppRole": {
+    "ModuleRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -49,10 +60,17 @@
                     "sqs:SendMessage"
                   ],
                   "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic"
                 }
               ]
             },
-            "PolicyName": "test-Test-policy"
+            "PolicyName": "Test-TestModule-policy"
           }
         ]
       }
@@ -62,17 +80,17 @@
       "Properties": {
         "Code": {
           "S3Bucket": "lambdsharp-bucket-name",
-          "S3Key": "test/Test/Test.Function-NOCOMPILE.zip"
+          "S3Key": "TestModule/TestModule.Function-NOCOMPILE.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
         },
         "Environment": {
           "Variables": {
-            "DEPLOYMENT": "test",
-            "APPNAME": "Test",
-            "STACKNAME": "test-Test",
+            "TIER": "Test",
+            "APPNAME": "TestModule",
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
+            "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
             "STACK_ROLLBARTOKEN": {
               "Fn::GetAtt": [
@@ -82,24 +100,24 @@
             }
           }
         },
-        "FunctionName": "test-Test-Function",
-        "Handler": "Test.Function::MindTouch.LambdaSharpTest.Function.Function::FunctionHandlerAsync",
+        "FunctionName": "Test-TestModule-Function",
+        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
-            "AppRole",
+            "ModuleRole",
             "Arn"
           ]
         },
         "Runtime": "dotnetcore2.1",
         "Tags": [
           {
-            "Key": "lambdasharp:deployment",
-            "Value": "test"
+            "Key": "lambdasharp:tier",
+            "Value": "Test"
           },
           {
-            "Key": "lambdasharp:app",
-            "Value": "Test"
+            "Key": "lambdasharp:module",
+            "Value": "TestModule"
           }
         ],
         "Timeout": "30"
@@ -117,7 +135,7 @@
                 "Arn"
               ]
             },
-            "Id": "test-Test-FunctionScheduleEvent01",
+            "Id": "Test-TestModule-FunctionScheduleEvent01",
             "InputTransformer": {
               "InputPathsMap": {
                 "version": "$.version",

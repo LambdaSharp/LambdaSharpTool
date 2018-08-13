@@ -22,6 +22,7 @@
 using System.Collections.Specialized;
 
 namespace MindTouch.Rollbar.Data {
+    
     public class Context {
         
         //--- Fields ---

@@ -4,20 +4,18 @@
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
-## Deployment
+## Module File
 
 Creating a function that is invoked by an SQS queue requires two steps. First, the SQS topic must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Sqs` attribute.
 
 Optionally, the `Sqs` attribute can specify the maximum number of messages to read from SQS.
 
-Beware the Lambda function timeout must be less than the SQS message visibility timeout. otherwise the deployment will fail.
+Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 
 ```yaml
-Version: "2018-07-04"
-
 Name: SqsSample
 
-Description: A sample app using SQS queues
+Description: A sample module using SQS queues
 
 Parameters:
 
@@ -77,6 +75,7 @@ public class Function : ALambdaFunction<SQSEvent> {
     }
 }
 ```
+
 ## Reference
 
 Up to 10 messages can be retrieved at a time from an SQS queue. Depending on the throughput needs, AWS Lambda will instantiate more function invocations to process all messages in the queue. Note that the Lambda function `Timeout` attribute and SQS queue `VisibilityTimeout` property are related. The CloudFormation stack deployment fails when the Lambda timeout is greater than the queue visibility timeout.

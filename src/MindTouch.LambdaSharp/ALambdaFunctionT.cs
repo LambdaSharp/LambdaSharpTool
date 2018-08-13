@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
@@ -26,7 +27,8 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp {
 
-    public abstract class ALambdaFunction<T> : ALambdaFunction {
+    [Obsolete("This class is obsolete. Use ALambdaFunction<TRequest, TResponse> instead.")]
+    public abstract class ALambdaFunction<TRequest> : ALambdaFunction {
 
         //--- Constructors ---
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -34,16 +36,35 @@ namespace MindTouch.LambdaSharp {
         protected ALambdaFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
 
         //--- Abstract Methods ---
-        public abstract Task<object> ProcessMessageAsync(T message, ILambdaContext context);
+        public abstract Task<object> ProcessMessageAsync(TRequest message, ILambdaContext context);
 
         //--- Methods ---
-        public override Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
+        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
             using(var reader = new StreamReader(stream)) {
                 var json = reader.ReadToEnd();
-                var message = JsonConvert.DeserializeObject<T>(json);
-                return ProcessMessageAsync(message, context);
+                var message = JsonConvert.DeserializeObject<TRequest>(json);
+                return await ProcessMessageAsync(message, context);
             }
         }
-        
+    }
+
+    public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction {
+
+        //--- Constructors ---
+        protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
+
+        protected ALambdaFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
+
+        //--- Abstract Methods ---
+        public abstract Task<TResponse> ProcessMessageAsync(TRequest message, ILambdaContext context);
+
+        //--- Methods ---
+        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
+            using(var reader = new StreamReader(stream)) {
+                var json = reader.ReadToEnd();
+                var message = JsonConvert.DeserializeObject<TRequest>(json);
+                return await ProcessMessageAsync(message, context);
+            }
+        }
     }
 }

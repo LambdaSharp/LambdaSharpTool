@@ -30,13 +30,13 @@ using MindTouch.LambdaSharp;
 
 namespace S3Sample.MyFunction {
 
-    public class Function : ALambdaFunction<S3Event> {
+    public class Function : ALambdaFunction<S3Event, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<object> ProcessMessageAsync(S3Event evt, ILambdaContext context) {
+        public override async Task<string> ProcessMessageAsync(S3Event evt, ILambdaContext context) {
             LogInfo($"# S3 Records = {evt.Records.Count}");
             for(var i = 0; i < evt.Records.Count; ++i) {
                 var record = evt.Records[i];

@@ -4,18 +4,16 @@
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
-## Deployment
+## Module File
 
 Creating a function that is invoked by a S3 bucket events requires two steps. First, the S3 topic must be created in the `Parameters` section. Referencing an existing S3 bucket does not work. Second, the function must reference the parameter name in its `Sources` section using the `S3` attribute.
 
 Optionally, the `S3` attribute can specify specific [S3 events](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) to listen to, an S3 key prefix and suffix.
 
 ```yaml
-Version: "2018-07-04"
-
 Name: S3Sample
 
-Description: A sample app integrating with S3 Bucket events
+Description: A sample module integrating with S3 Bucket events
 
 Parameters:
 
@@ -83,6 +81,6 @@ public class Function : ALambdaFunction<S3Event> {
 
 ## Reference
 
-The λ# tool can only listen to S3 events from buckets that are created by the same deployment file. This is due to a limitation in how S3 buckets register event listeners. This is an known issue to AWS and may be solved sometime in the future.
+The λ# tool can only subscribe Lambda functions to S3 buckets that are defined in the same module file. This is due to a limitation in how S3 buckets register event listeners. This is an known issue and AWS may solve it sometime in the future.
 
-In addition, the λ# tool has to create a stable, but random-looking bucket name suffix to avoid circular dependencies in the initialization of the S3 bucket and the Lambda function. To ensure uniqueness of the suffix across accounts and deployments, the suffix is computed from a hash using the AWS account Id, the AWS region, and the desired bucket name.
+In addition, the λ# tool has to create a stable, but random-looking bucket name suffix to avoid circular dependencies in the initialization of the S3 bucket and the Lambda function. To ensure uniqueness of the suffix across accounts and modules, the suffix is computed from a hash using the AWS account Id, the AWS region, and the desired bucket name.
