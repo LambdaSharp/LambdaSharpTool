@@ -1,6 +1,6 @@
 Name: LambdaSharpS3PackageLoader
 
-Version: 0.2
+Version: 0.2.1
 
 Description: LambdaSharp S3 Package Loader
 
@@ -9,8 +9,8 @@ Parameters:
   - Name: S3BucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
-      - "arn:aws:s3:::{{Tier}}-*"
-      - "arn:aws:s3:::{{Tier}}-*/*"
+      - "arn:aws:s3:::{{tier}}-*"
+      - "arn:aws:s3:::{{tier}}-*/*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite

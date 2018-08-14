@@ -120,10 +120,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add built-in variables
             variables["Tier"] = Settings.Tier;
+            variables["tier"] = Settings.Tier.ToLowerInvariant();
             variables["GitSha"] = Settings.GitSha;
             variables["AwsRegion"] = Settings.AwsRegion;
             variables["AwsAccountId"] = Settings.AwsAccountId;
-            
+
             // isolate bound variables (i.e. variables that contain other variables)
             var boundVariables = variables
                 .Where(kv => Regex.IsMatch(kv.Value, VARIABLE_PATTERN))
@@ -215,7 +216,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             if(
                                 (inputEntry.Key.Scalar.Value == tierKey)
                                 || (
-                                    (inputEntry.Key.Scalar.Value == ":Default") 
+                                    (inputEntry.Key.Scalar.Value == ":Default")
                                     && (choice == null)
                                 )
                             ) {
@@ -228,7 +229,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // add the entry to the output map
                             outputMap.Entries.Add(new KeyValuePair<YamlScalar, AYamlValue>(
-                                inputEntry.Key, 
+                                inputEntry.Key,
                                 AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value), inputEntry.Value)
                             ));
                         }
