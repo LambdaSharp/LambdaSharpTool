@@ -17,13 +17,13 @@ __Table of Contents__
 Name: String
 Version: String
 Description: String
-Variables: 
+Variables:
   VariableDefinitions
-Secrets: 
+Secrets:
   - String
-Parameters: 
+Parameters:
   - ParameterDefinition
-Functions: 
+Functions:
   - FunctionDefinition
 ```
 
@@ -100,6 +100,7 @@ The `Variables` sections is an optional mapping of key-value pairs. Variables ar
 
 The following variables are implicitly defined and can be used in text values to dynamically compute the correct value.
 * `{{Tier}}`: the name of the active deployment tier
+* `{{tier}}`: the name of the active deployment tier, but in lowercase letters
 * `{{Module}}`: the name of the λ# module
 * `{{Version}}`: the version of the λ# module
 * `{{AwsAccountId}}`: the AWS account ID
@@ -174,7 +175,7 @@ The computed values are stored in the `parameters.json` file that is included wi
 Name: String
 Description: String
 Value: String
-Values: 
+Values:
   - String
 Secret: String
 Import: String
@@ -494,7 +495,7 @@ The <tt>Alexa</tt> attribute can either specify an Alexa Skill ID or the wildcar
 
 #### API Gateway Source
 
-The λ# tool uses the <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy">API Gateway Lambda Proxy Integration</a> to invoke Lambda functions from API Gateway. See [API Gateway sample](../Samples/ApiSample/) for an example of how to use the API Gateway source. 
+The λ# tool uses the <a href="https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy">API Gateway Lambda Proxy Integration</a> to invoke Lambda functions from API Gateway. See [API Gateway sample](../Samples/ApiSample/) for an example of how to use the API Gateway source.
 
 
 ```yaml

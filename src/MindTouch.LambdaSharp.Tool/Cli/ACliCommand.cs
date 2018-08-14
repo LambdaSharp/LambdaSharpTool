@@ -157,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var result = new List<Settings>();
                 foreach(var moduleFilename in moduleFilenames) {
                     result.Add(new Settings {
-                        ToolVersion = new Version(Version.Major, Version.Minor),
+                        ToolVersion = Version,
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
                         Tier = tier,
                         GitSha = gitSha,

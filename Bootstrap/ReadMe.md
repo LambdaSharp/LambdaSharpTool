@@ -17,8 +17,8 @@ Define the `LAMBDASHARP` environment variable to point to the folder of the `Lam
 __Using PowerShell:__
 ```powershell
 New-Variable -Name LAMBDASHARP -Value \Repos\LambdaSharpTool
-function lash { 
-  dotnet run -p $LAMBDASHARP\src\MindTouch.LambdaSharp.Tool\MindTouch.LambdaSharp.Tool.csproj -- 
+function lash {
+  dotnet run -p $LAMBDASHARP\src\MindTouch.LambdaSharp.Tool\MindTouch.LambdaSharp.Tool.csproj --
 }
 ```
 
@@ -35,7 +35,8 @@ lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.2.0)
+MindTouch LambdaSharp Tool (v0.2)
+
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
 Usage: MindTouch.LambdaSharp.Tool [options] [command]
@@ -46,6 +47,7 @@ Options:
 Commands:
   deploy        Deploy LambdaSharp module
   info          Show LambdaSharp settings
+  list          List LambdaSharp modules
   new           Create new LambdaSharp asset
 
 Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
@@ -73,4 +75,41 @@ lash deploy \
     --tier Demo \
     $LAMBDASHARP/Bootstrap/LambdaSharp/Deploy.yml \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Deploy.yml
+```
+
+## Validate λ# Environment
+
+Run the `list` command to confirm that all λ# modules were deployed successfully:
+
+```bash
+lash list --tier Demo
+```
+
+The following text should appear (or similar):
+```
+MindTouch LambdaSharp Tool (v0.2) - List LambdaSharp modules
+
+MODULE                        STATUS             DATE
+LambdaSharp                   [CREATE_COMPLETE]  2018-08-13 09:47:32
+LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-13 09:48:16
+
+Found 2 modules for deployment tier 'Demo'
+```
+## Use `LAMBDASHARPTIER` Environment Variable
+
+You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARPTIER` environment variable instead.
+
+__Using PowerShell:__
+```powershell
+New-Variable -Name LAMBDASHARPTIER -Value Demo
+```
+
+__Using Bash:__
+```bash
+export LAMBDASHARPTIER=Demo
+```
+
+Once `LAMBDASHARPTIER` is defined, the following command will produce the same result.
+```bash
+lash list
 ```
