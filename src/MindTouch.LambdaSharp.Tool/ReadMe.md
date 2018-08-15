@@ -57,6 +57,8 @@ lash deploy Deploy.yml
 <dd>(optional) Allow CloudFormation resource update operations that could lead to data loss</dd>
 <dt><tt>--protect</tt></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
+<dt><tt>-c|--configuration &lt;CONFIGURATION&gt;</tt></dt>
+<dd>(optional) Build configuration for function projects (default: "Release")</dd>
 <dt><tt>--profile|-P &lt;NAME&gt;</tt></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 <dt><tt>--verbose|-V[:&lt;LEVEL&gt;]</tt></dt>

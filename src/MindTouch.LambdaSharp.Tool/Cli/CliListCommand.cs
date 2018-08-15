@@ -55,11 +55,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // initialize AWS account Id and region
-                    var awsProfile = awsProfileOption.Value();
-                    if(awsProfile != null) {
-
-                        // select an alternate AWS profile by setting the AWS_PROFILE environment variable
-                        Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
+                    var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+                    if(awsAccount == null) {
+                        return;
                     }
                     await List(tier);
                 });

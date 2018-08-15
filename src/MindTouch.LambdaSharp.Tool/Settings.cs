@@ -47,6 +47,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public Version EnvironmentVersion { get; set; }
         public string Tier { get; set; }
         public string GitSha { get; set; }
+        public string BuildConfiguration { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
