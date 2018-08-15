@@ -35,7 +35,7 @@ lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.2)
+MindTouch LambdaSharp Tool (v0.3)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
@@ -87,7 +87,7 @@ lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.2) - List LambdaSharp modules
+MindTouch LambdaSharp Tool (v0.3) - List LambdaSharp modules
 
 MODULE                        STATUS             DATE
 LambdaSharp                   [CREATE_COMPLETE]  2018-08-13 09:47:32

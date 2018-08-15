@@ -103,7 +103,7 @@ Deployment tier: Demo
 Git SHA: 8ec32d267a1fef38e8e133d8ee19cf857d3a0911
 AWS Region: us-east-1
 AWS Account Id: 123456789012
-LambdaSharp Environment Version: 0.2
+LambdaSharp Environment Version: 0.3
 LambdaSharp S3 Bucket: demo-lambdasharp-deploymentbucket
 LambdaSharp Dead-Letter Queue: https://sqs.us-east-1.amazonaws.com/Demo-LambdaSharp-DeadLetterQueue
 LambdaSharp Logging Topic: arn:aws:sns:us-east-1:123456789012:Demo-LambdaSharp-LoggingTopic

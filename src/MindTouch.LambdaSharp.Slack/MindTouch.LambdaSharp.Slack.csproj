@@ -4,7 +4,7 @@
     <RootNamespace>MindTouch.LambdaSharp.Slack</RootNamespace>
 
     <PackageId>MindTouch.LambdaSharp.Slack</PackageId>
-    <Version>0.2.0</Version>
+    <Version>0.3.0-pre</Version>
     <Title>MindTouch λ# Slack</Title>
     <Description>A serverless framework for rapid application development of Slack integrations</Description>
     <Company>MindTouch, Inc.</Company>
@@ -27,7 +27,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-    <PackageReference Include="MindTouch.LambdaSharp" Version="0.2.0"/>
+    <PackageReference Include="MindTouch.LambdaSharp" Version="0.3.0-pre"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'!='NugetPublish' ">
     <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj" />
