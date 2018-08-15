@@ -25,8 +25,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.CloudFormation;
 using Amazon.KeyManagementService;
+using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
@@ -40,8 +42,40 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     public abstract class ACliCommand : CliBase {
 
         //--- Methods ---
+        protected async Task<(string AccountId, string Region)?> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null) {
+
+            // initialize AWS profile
+            if(awsProfile != null) {
+
+                // select an alternate AWS profile by setting the AWS_PROFILE environment variable
+                Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
+            }
+
+            // determine default AWS region
+            if((awsAccountId == null) || (awsRegion == null)) {
+
+                // determine AWS region and account
+                try {
+                    var stsClient = new AmazonSecurityTokenServiceClient();
+                    var response = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
+                    awsAccountId = awsAccountId ?? response.Account;
+                    awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
+                } catch(Exception e) {
+                    AddError("unable to determine the AWS Account Id and Region", e);
+                    return null;
+                }
+            }
+
+            // set AWS region for library and spawned processes
+            AWSConfigs.AWSRegion = awsRegion;
+            Environment.SetEnvironmentVariable("AWS_REGION", awsRegion);
+            Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", awsRegion);
+            return (AccountId: awsAccountId, Region: awsRegion);
+        }
+
         protected Func<Task<IEnumerable<Settings>>> CreateSettingsInitializer(CommandLineApplication cmd) {
             var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARPTIER environment variable)", CommandOptionType.SingleValue);
+            var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
             var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
             var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
@@ -84,42 +118,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(gitSha == null) {
 
                     // read the gitSha using `git` directly
-                    var process = new Process() {
+                    var process = new Process {
                         StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
                             RedirectStandardOutput = true,
                             UseShellExecute = false
                         }
                     };
-                    process.Start();
-                    gitSha = process.StandardOutput.ReadToEnd().Trim();
-                    process.WaitForExit();
-                    if(process.ExitCode != 0) {
-                        Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
-                        gitSha = null;
-                    }
-                }
-
-                // initialize AWS account ID and region
-                var awsProfile = awsProfileOption.Value();
-                if(awsProfile != null) {
-
-                    // select an alternate AWS profile by setting the AWS_PROFILE environment variable
-                    Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
-                }
-                var awsAccountId = awsAccountIdOption.Value();
-                var awsRegion = awsRegionOption.Value();
-                if((awsAccountId == null) || (awsRegion == null)) {
-
-                    // determine AWS region and account
                     try {
-                        var stsClient = new AmazonSecurityTokenServiceClient();
-                        var response = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
-                        awsAccountId = awsAccountId ?? response.Account;
-                        awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName;
-                    } catch(Exception e) {
-                        AddError("unable to determine the AWS Account Id and Region", e);
-                        return null;
+                        process.Start();
+                        gitSha = process.StandardOutput.ReadToEnd().Trim();
+                        process.WaitForExit();
+                        if(process.ExitCode != 0) {
+                            Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                            gitSha = null;
+                        }
+                    } catch {
+                        Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
                     }
+                }
+
+                // initialize AWS profile
+                var awsAccount = await InitializeAwsProfile(awsProfileOption.Value(), awsAccountIdOption.Value(), awsRegionOption.Value());
+                if(awsAccount == null) {
+
+                    // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`
+                    return null;
                 }
 
                 // check if a module file was specified using both the obsolete option and as argument
@@ -160,9 +183,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         ToolVersion = Version,
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
                         Tier = tier,
+                        BuildConfiguration = buildConfigurationOption.Value() ?? "Release",
                         GitSha = gitSha,
-                        AwsRegion = awsRegion,
-                        AwsAccountId = awsAccountId,
+                        AwsRegion = awsAccount.Value.Region,
+                        AwsAccountId = awsAccount.Value.AccountId,
                         DeploymentBucketName = deploymentBucketName,
                         DeadLetterQueueUrl = deploymentDeadletterQueueUrl,
                         LoggingTopicArn = deploymentLoggingTopicArn,

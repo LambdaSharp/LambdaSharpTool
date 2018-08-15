@@ -121,7 +121,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // add built-in variables
             variables["Tier"] = Settings.Tier;
             variables["tier"] = Settings.Tier.ToLowerInvariant();
-            variables["GitSha"] = Settings.GitSha;
+            variables["GitSha"] = Settings.GitSha ?? "";
             variables["AwsRegion"] = Settings.AwsRegion;
             variables["AwsAccountId"] = Settings.AwsAccountId;
 
