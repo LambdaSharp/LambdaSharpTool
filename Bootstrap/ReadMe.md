@@ -18,7 +18,7 @@ __Using PowerShell:__
 ```powershell
 New-Variable -Name LAMBDASHARP -Value \Repos\LambdaSharpTool
 function lash {
-  dotnet run -p $LAMBDASHARP\src\MindTouch.LambdaSharp.Tool\MindTouch.LambdaSharp.Tool.csproj --
+  dotnet run -p $LAMBDASHARP\src\MindTouch.LambdaSharp.Tool\MindTouch.LambdaSharp.Tool.csproj -- $args
 }
 ```
 
