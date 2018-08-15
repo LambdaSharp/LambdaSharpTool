@@ -24,7 +24,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'=='NugetPublish' ">
     <PackageReference Include="MindTouch.LambdaSharp" Version="0.3.0-pre"/>

@@ -23,12 +23,15 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Newtonsoft.Json;
+using Amazon.Lambda.Serialization.Json;
 
 namespace MindTouch.LambdaSharp {
 
     [Obsolete("This class is obsolete. Use ALambdaFunction<TRequest, TResponse> instead.")]
     public abstract class ALambdaFunction<TRequest> : ALambdaFunction {
+
+        //--- Fields ---
+        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
         //--- Constructors ---
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -40,15 +43,15 @@ namespace MindTouch.LambdaSharp {
 
         //--- Methods ---
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            using(var reader = new StreamReader(stream)) {
-                var json = reader.ReadToEnd();
-                var message = JsonConvert.DeserializeObject<TRequest>(json);
-                return await ProcessMessageAsync(message, context);
-            }
+            var message = JsonSerializer.Deserialize<TRequest>(stream);
+            return await ProcessMessageAsync(message, context);
         }
     }
 
     public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction {
+
+        //--- Fields ---
+        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
         //--- Constructors ---
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -60,11 +63,8 @@ namespace MindTouch.LambdaSharp {
 
         //--- Methods ---
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            using(var reader = new StreamReader(stream)) {
-                var json = reader.ReadToEnd();
-                var message = JsonConvert.DeserializeObject<TRequest>(json);
-                return await ProcessMessageAsync(message, context);
-            }
+            var message = JsonSerializer.Deserialize<TRequest>(stream);
+            return await ProcessMessageAsync(message, context);
         }
     }
 }
