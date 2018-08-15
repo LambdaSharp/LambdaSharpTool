@@ -773,7 +773,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             File.Delete(file);
                         } catch { }
                     }
-                    Console.WriteLine($"Building function {projectName} [{targetFramework}]");
+                    var buildConfiguration = _module.Settings.BuildConfiguration;
+                    Console.WriteLine($"Building function {projectName} [{targetFramework}, {buildConfiguration}]");
 
                     // restore project dependencies
                     Console.WriteLine("=> Restoring project dependencies");
@@ -784,7 +785,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // compile project
                     Console.WriteLine("=> Building AWS Lambda package");
-                    if(!DotNetLambdaPackage(targetFramework, projectName, projectDirectory)) {
+                    if(!DotNetLambdaPackage(targetFramework, buildConfiguration, projectName, projectDirectory)) {
                         AddError("`dotnet lambda package` command failed");
                         return null;
                     }
@@ -1320,7 +1321,7 @@ namespace MindTouch.LambdaSharp.Tool {
             );
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string projectName, string projectDirectory) {
+        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string projectName, string projectDirectory) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 AddError("failed to find the \"dotnet\" executable in path.");
@@ -1328,7 +1329,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "lambda", "package", "-c", "Release", "-f", targetFramework, "-o", projectName + ".zip" },
+                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", projectName + ".zip" },
                 projectDirectory,
                 _module.Settings.VerboseLevel >= VerboseLevel.Detailed
             );
