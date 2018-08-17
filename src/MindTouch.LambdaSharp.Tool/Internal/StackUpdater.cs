@@ -235,7 +235,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                 if(outputs.Any()) {
                     Console.WriteLine("Stack output values:");
                     foreach(var output in outputs) {
-                        Console.WriteLine($"{output.OutputKey}{(output.Description != null ? $" ({output.Description})" : "")}: {output.OutputValue}");
+                        Console.WriteLine($"=> {output.Description}: {output.OutputValue}");
                     }
                 }
             }
