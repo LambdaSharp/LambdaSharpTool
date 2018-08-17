@@ -93,9 +93,9 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // add resources and parameters
-            var environmentRefVariable = new Dictionary<string, object>();
+            var environmentRefVariables = new Dictionary<string, object>();
             foreach(var parameter in _module.Parameters) {
-                AddParameter(parameter, "", "STACK_", environmentRefVariable);
+                AddParameter(parameter, "", "STACK_", environmentRefVariables);
             }
 
             // check if we need to create a module IAM role (only needed by functions)
@@ -141,14 +141,14 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 foreach(var function in _module.Functions) {
-                    AddFunction(function, environmentRefVariable);
+                    AddFunction(function, environmentRefVariables);
                 }
 
                 // check if an API gateway needs to be created
                 if(_apiGatewayRoutes.Any()) {
 
                     // create a RestApi
-                    var restApiName = "RestApi";
+                    var restApiName = "ModuleRestApi";
                     var restApiDescription = $"{_module.Name} API (v{_module.Version})";
                     _stack.Add(restApiName, new ApiGateway.RestApi {
                         Name = $"{_module.Name} API ({_module.Settings.Tier})",
@@ -157,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // add output parameter to easily located API
-                    _stack.Add("RestApi", new Output {
+                    _stack.Add("ModuleRestApi", new Output {
                         Description = restApiDescription,
                         Value = Fn.Join(
                             "",
@@ -352,7 +352,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         SourceArn = Fn.Sub(
                             $"arn:aws:execute-api:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:${{RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}",
                             new Dictionary<string, dynamic> {
-                                ["RestApi"] = Fn.Ref("RestApi")
+                                ["RestApi"] = Fn.Ref("ModuleRestApi")
                             }
                         )
                     });
@@ -452,8 +452,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         break;
                     default:
                         throw new ArgumentOutOfRangeException(
-                            nameof(parameter), 
-                            parameter?.GetType().Name ?? "<null>", 
+                            nameof(parameter),
+                            parameter?.GetType().Name ?? "<null>",
                             "parameter resource type must be either ReferencedResourceParameter or CloudFormationResourceParameter"
                         );
                     }
@@ -579,7 +579,7 @@ namespace MindTouch.LambdaSharp.Tool {
             AParameter parameter,
             string resourcePrefix,
             string envPrefix,
-            IDictionary<string, object> environmentRefVariable
+            IDictionary<string, object> environmentRefVariables
         ) {
             object exportValue = null;
             switch(parameter) {
@@ -597,7 +597,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             nestedResource,
                             resourcePrefix + parameter.Name,
                             envPrefix + parameter.Name.ToUpperInvariant() + "_",
-                            environmentRefVariable
+                            environmentRefVariables
                         );
                     }
                     if(collectionParameter.Export != null) {
@@ -618,7 +618,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
                     ["SourcePackageKey"] = packageParameter.PackageS3Key,
                 }));
-                environmentRefVariable[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
+                environmentRefVariables[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
@@ -675,6 +675,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // check if we need to create a hashed bucket name and set `BucketName` in template
                             if(s3Template.BucketName == null) {
+
+                                // NOTE (2018-08-16, bjorg): bucket names must be lowercase
                                 var bucketName = $"{_module.Settings.Tier}-{_module.Name}-{resourceName}-".ToLowerInvariant();
                                 bucketName += $"{_module.Settings.AwsAccountId}-{_module.Settings.AwsRegion}-{bucketName}".ToMD5Hash().Substring(0, 7).ToLowerInvariant();
                                 s3Template.BucketName = bucketName;
@@ -728,10 +730,14 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                     _stack.Add(resourceName, resourceTemplate);
                     exportValue = resourceParamFn;
-                    environmentRefVariable[envPrefix + parameter.Name.ToUpperInvariant()] = resourceParamFn;
+
+                    // only add parameters that the lambda functions are allowed to access
+                    if(resource.Allow?.Any() == true) {
+                        environmentRefVariables[envPrefix + parameter.Name.ToUpperInvariant()] = resourceParamFn;
+                    }
 
                     // add permissions for resource
-                    if((resourceArn != null) && resource.Allow.Any()) {
+                    if((resourceArn != null) && (resource.Allow?.Any() == true)) {
                         _resourceStatements.Add(new Statement {
                             Effect = "Allow",
                             Resource = resourceArn,
