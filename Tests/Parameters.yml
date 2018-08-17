@@ -1,0 +1,39 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: SampleParameterCollection
+    Description: Description for collection parameter
+    Parameters:
+
+      - Name: FirstNestedParameter
+        Description: First nested parameter
+        Value: A literal value
+
+      - Name: SecondNestedParameter
+        Description: Second nested parameter
+        Values:
+          - one
+          - two
+          - three
+
+      - Name: ThirdNestedParameter
+        Description: Third nested parameter
+        Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
+        Resource:
+          Type: AWS::SNS::Topic
+          Allow: Publish
+
+      - Name: FourthNestedParameter
+        Description: Fourth nested parameter
+        Resource:
+          Type: AWS::SNS::Topic
+          Allow: Subscribe
+
+Functions:
+
+  - Name: Function
+    Memory: 128
+    Timeout: 30
