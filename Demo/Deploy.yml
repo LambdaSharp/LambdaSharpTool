@@ -27,12 +27,21 @@ Parameters:
       Type: AWS::SNS::Topic
       Allow: Subscribe
 
-  - Name: SqsQueue
+  - Name: UsagePlan
+    Description: Limit usage for REST API
     Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
+      Type: AWS::ApiGateway::UsagePlan
       Properties:
-        VisibilityTimeout: 600
+        UsagePlanName: DemoUsagePlan
+        ApiStages:
+          - ApiId:
+              Ref: ModuleRestApi
+            Stage:
+              Ref: ModuleRestApiStage
+        Description: Sample usage plan for REST API
+        Quota:
+          Limit: 500
+          Period: MONTH
 
 Functions:
 

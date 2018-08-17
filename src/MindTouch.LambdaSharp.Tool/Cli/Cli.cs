@@ -35,7 +35,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Constructor ---
         static CliBase() {
-            var version = typeof(Program).Assembly.GetName().Version;
+            var version = FullVersion;
             if(version.Build != 0) {
                 _version = new Version(version.Major, version.Minor, version.Build);
             } else {
@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Properties ---
         protected static int ErrorCount => _errors.Count;
+        protected static Version FullVersion => typeof(Program).Assembly.GetName().Version;
         protected static Version Version => _version;
 
         //--- Class Methods ---
