@@ -115,7 +115,8 @@ namespace MindTouch.LambdaSharp.Tool {
             if(module.Version == null) {
                 module.Version = "1.0";
             }
-            if(Version.TryParse(module.Version, out System.Version _)) {
+            if(Version.TryParse(module.Version, out System.Version version)) {
+                _module.Version = version;
                 module.Parameters.Add(new ParameterNode {
                     Name = "Version",
                     Value = module.Version,
@@ -129,6 +130,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             } else {
                 AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
+                _module.Version = new Version(0, 0);
             }
 
             // resolve all imported parameters
@@ -429,6 +431,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
+                        ValidateNotBothStatements("Package", "Export", parameter.Export == null);
 
                         // a package of one or more files
                         var files = new List<string>();
@@ -641,7 +644,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // ensure the local resource name is an ARN or wildcard
             if(resourceArn != null) {
                 if(!resourceArn.StartsWith("arn:") && (resourceArn != "*")) {
-                    AddError("resource name must be in ARN or wildcard format");
+                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
                 }
                 if(resource.Properties != null) {
                     AddError($"referenced resource '{resourceArn}' cannot set properties");

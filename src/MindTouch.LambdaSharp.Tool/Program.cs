@@ -39,14 +39,14 @@ namespace MindTouch.LambdaSharp.Tool {
         Everything,
         CloudFormation
     }
-    
+
     public class Program : CliBase {
 
         //--- Class Methods ---
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
                 Name = "MindTouch.LambdaSharp.Tool",
-                FullName = $"MindTouch LambdaSharp Tool (v{Version})",
+                FullName = $"MindTouch LambdaSharp Tool (v{FullVersion})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();

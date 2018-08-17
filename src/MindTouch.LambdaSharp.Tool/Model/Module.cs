@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
@@ -27,6 +28,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Name { get; set; }
+        public Version Version { get; set; }
         public Settings Settings { get; set; }
         public string Description { get; set; }
         public IList<string> Secrets { get; set; }
