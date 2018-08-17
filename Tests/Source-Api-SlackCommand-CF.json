@@ -1,13 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test",
+  "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Resources": {
     "VersionSsmParameter": {
       "Type": "AWS::SSM::Parameter",
       "Properties": {
         "Type": "String",
         "Description": "LambdaSharp module version",
-        "Value": "0.0.0.0",
+        "Value": "1.0",
         "Name": "/Test/TestModule/Version"
       }
     },
@@ -88,7 +88,7 @@
         "Environment": {
           "Variables": {
             "TIER": "Test",
-            "APPNAME": "TestModule",
+            "MODULE": "TestModule",
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
@@ -123,15 +123,15 @@
         "Timeout": "30"
       }
     },
-    "TestModuleRestApi": {
+    "RestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "API for TestModule: LambdaSharp CloudFormation Test",
+        "Description": "TestModule API (v1.0)",
         "FailOnWarnings": true,
         "Name": "TestModule API (Test)"
       }
     },
-    "TestModuleRestApiRole": {
+    "RestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -169,33 +169,33 @@
         ]
       }
     },
-    "TestModuleRestApiAccount": {
+    "RestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
           "Fn::GetAtt": [
-            "TestModuleRestApiRole",
+            "RestApiRole",
             "Arn"
           ]
         }
       }
     },
-    "TestModuleRestApiSlackResource": {
+    "RestApiSlackResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "TestModuleRestApi",
+            "RestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "slack",
         "RestApiId": {
-          "Ref": "TestModuleRestApi"
+          "Ref": "RestApi"
         }
       }
     },
-    "TestModuleRestApiSlackPOST": {
+    "RestApiSlackPOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -240,14 +240,14 @@
           }
         ],
         "ResourceId": {
-          "Ref": "TestModuleRestApiSlackResource"
+          "Ref": "RestApiSlackResource"
         },
         "RestApiId": {
-          "Ref": "TestModuleRestApi"
+          "Ref": "RestApi"
         }
       }
     },
-    "FunctionTestModuleRestApiSlackPOSTPermission": {
+    "FunctionRestApiSlackPOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -263,30 +263,30 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/POST/slack",
             {
               "RestApi": {
-                "Ref": "TestModuleRestApi"
+                "Ref": "RestApi"
               }
             }
           ]
         }
       }
     },
-    "TestModuleRestApiDeployment926958221BCFFBFC795DF53731BE8FD0": {
+    "RestApiDeployment4E1AA82CA2B86FC621BD08E608388E5B": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": "TestModule API (Test) [926958221BCFFBFC795DF53731BE8FD0]",
+        "Description": "TestModule API (Test) [4E1AA82CA2B86FC621BD08E608388E5B]",
         "RestApiId": {
-          "Ref": "TestModuleRestApi"
+          "Ref": "RestApi"
         }
       },
       "DependsOn": [
-        "TestModuleRestApiSlackPOST"
+        "RestApiSlackPOST"
       ]
     },
-    "TestModuleRestApiStage": {
+    "RestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "TestModuleRestApiDeployment926958221BCFFBFC795DF53731BE8FD0"
+          "Ref": "RestApiDeployment4E1AA82CA2B86FC621BD08E608388E5B"
         },
         "MethodSettings": [
           {
@@ -297,12 +297,12 @@
           }
         ],
         "RestApiId": {
-          "Ref": "TestModuleRestApi"
+          "Ref": "RestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "TestModuleRestApiAccount"
+        "RestApiAccount"
       ]
     }
   },
@@ -314,7 +314,7 @@
           [
             "https://",
             {
-              "Ref": "TestModuleRestApi"
+              "Ref": "RestApi"
             },
             ".execute-api.",
             {
@@ -328,7 +328,7 @@
           ]
         ]
       },
-      "Description": "API for TestModule: LambdaSharp CloudFormation Test"
+      "Description": "TestModule API (v1.0)"
     }
   }
 }

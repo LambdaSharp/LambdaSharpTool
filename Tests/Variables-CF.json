@@ -1,13 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp CloudFormation Test",
+  "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Resources": {
     "VersionSsmParameter": {
       "Type": "AWS::SSM::Parameter",
       "Properties": {
         "Type": "String",
         "Description": "LambdaSharp module version",
-        "Value": "0.0.0.0",
+        "Value": "1.0",
         "Name": "/Test/TestModule/Version"
       }
     },
@@ -89,7 +89,7 @@
           "Variables": {
             "TEST": "Do The Hello Should The Hello",
             "TIER": "Test",
-            "APPNAME": "TestModule",
+            "MODULE": "TestModule",
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",

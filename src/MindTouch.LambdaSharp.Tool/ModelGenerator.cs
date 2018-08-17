@@ -148,8 +148,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(_apiGatewayRoutes.Any()) {
 
                     // create a RestApi
-                    var restApiName = $"{_module.Name}RestApi";
-                    var restApiDescription = $"API for {_module.Name}: {_module.Description}";
+                    var restApiName = "RestApi";
+                    var restApiDescription = $"{_module.Name} API (v{_module.Version})";
                     _stack.Add(restApiName, new ApiGateway.RestApi {
                         Name = $"{_module.Name} API ({_module.Settings.Tier})",
                         Description = restApiDescription,
@@ -352,7 +352,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         SourceArn = Fn.Sub(
                             $"arn:aws:execute-api:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:${{RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}",
                             new Dictionary<string, dynamic> {
-                                ["RestApi"] = Fn.Ref($"{_module.Name}RestApi")
+                                ["RestApi"] = Fn.Ref("RestApi")
                             }
                         )
                     });
@@ -531,13 +531,15 @@ namespace MindTouch.LambdaSharp.Tool {
             var s3Sources = function.Sources.OfType<S3Source>().ToList();
             if(s3Sources.Any()) {
                 foreach(var source in s3Sources.Distinct(source => source.BucketArn)) {
-                    _stack.Add($"{function.Name}{source.Bucket}S3Permission", new Lambda.Permission {
+                    var permissionLogicalId = $"{function.Name}{source.Bucket}S3Permission";
+                    _stack.Add(permissionLogicalId, new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         SourceAccount = _module.Settings.AwsAccountId,
                         SourceArn = source.BucketArn,
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
+                    _stack.AddDependsOn(source.Bucket, permissionLogicalId);
                 }
             }
 
@@ -583,6 +585,8 @@ namespace MindTouch.LambdaSharp.Tool {
             switch(parameter) {
             case SecretParameter secretParameter:
                 if(secretParameter.Export != null) {
+
+                    // TODO (2018-08-16, bjorg): add support for exporting secrets (or error out sooner)
                     throw new NotImplementedException("exporting secrets is not yet supported");
                 }
                 break;
@@ -597,6 +601,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         );
                     }
                     if(collectionParameter.Export != null) {
+
+                        // TODO (2018-08-16, bjorg): add support for exporting collections (or error out sooner)
                         throw new NotImplementedException("exporting collections is not yet supported");
                     }
                 }
@@ -604,23 +610,22 @@ namespace MindTouch.LambdaSharp.Tool {
             case StringParameter stringParameter:
                 exportValue = stringParameter.Value;
                 break;
-            case PackageParameter packageParameter: {
-                    _stack.Add(packageParameter.Name, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
-                        ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
-                        ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
-                        ["DestinationKeyPrefix"] = packageParameter.Prefix,
-                        ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
-                        ["SourcePackageKey"] = packageParameter.PackageS3Key,
-                    }));
-                    environmentRefVariable[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
-                }
+            case PackageParameter packageParameter:
+                _stack.Add(packageParameter.Name, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
+                    ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
+                    ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
+                    ["DestinationKeyPrefix"] = packageParameter.Prefix,
+                    ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
+                    ["SourcePackageKey"] = packageParameter.PackageS3Key,
+                }));
+                environmentRefVariable[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
                     exportValue = resource.ResourceArn;
 
                     // add permissions for resource
-                    if((resource.ResourceArn != null) && resource.Allow.Any()) {
+                    if(resource.Allow?.Any() == true) {
                         _resourceStatements.Add(new Statement {
                             Effect = "Allow",
                             Resource = resource.ResourceArn,
