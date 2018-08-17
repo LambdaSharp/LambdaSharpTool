@@ -507,6 +507,8 @@ Api: String
 <dd>
 The <tt>Api</tt> attribute specifies the HTTP method and resource path that is mapped to the Lambda function. The notation is <nobr><code>METHOD /resource/subresource/{param}</code></nobr>. The API Gateway instance, the API Gateway resources, and the API Gateway methods are automatically created for the module when an API Gateway source is used.
 
+<b>NOTE</b>: The API Gateway resource can be referenced by its logical ID `ModuleRestApi`. Similarly, `ModuleRestApiStage` references the API Gateway stage resource.
+
 <i>Required</i>: Yes
 
 <i>Type</i>: String
