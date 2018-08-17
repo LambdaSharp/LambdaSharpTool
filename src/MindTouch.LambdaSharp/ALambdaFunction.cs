@@ -141,14 +141,10 @@ namespace MindTouch.LambdaSharp {
             var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
             LogInfo($"GITSHA = {gitsha ?? "NONE"}");
 
-            // read module parameter values from parameters file
-            var parameters = await ParseParameters("/", File.ReadAllText("parameters.json"));
-
             // create config where environment variables take precedence over those found in the parameter file
-            _appConfig = new LambdaConfig(new LambdaMultiSource(new[] {
-                envSource,
-                new LambdaDictionarySource("", parameters)
-            }));
+
+            // TODO (2018-08-17, bjorg): this is currently broken (needs `PARAM_` prefix)
+            _appConfig = new LambdaConfig(envSource);
 
             // initialize rollbar
             var rollbarAccessToken = _appConfig.ReadText("RollbarToken", defaultValue: null);
@@ -169,43 +165,6 @@ namespace MindTouch.LambdaSharp {
             ));
             _rollbarEnabled = (rollbarAccessToken != null);
             LogInfo($"ROLLBAR = {(_rollbarEnabled ? "ENABLED" : "DISABLED")}");
-
-            // local functions
-            async Task<Dictionary<string, string>> ParseParameters(string parameterPrefix, string json) {
-                var functionParameters = JsonConvert.DeserializeObject<Dictionary<string, LambdaFunctionParameter>>(json);
-                var flatten = new Dictionary<string, string>();
-                await Flatten(functionParameters, parameterPrefix, "STACK_", flatten);
-                return flatten;
-
-                // local functions
-                async Task Flatten(Dictionary<string, LambdaFunctionParameter> source, string prefix, string envPrefix, Dictionary<string, string> target) {
-                    foreach(var kv in source) {
-                        var value = kv.Value.Value;
-                        switch(kv.Value.Type) {
-                        case LambdaFunctionParameterType.Collection:
-                            await Flatten((Dictionary<string, LambdaFunctionParameter>)value, prefix + kv.Key + "/", envPrefix + kv.Key.ToUpperInvariant() + "_", target);
-                            break;
-                        case LambdaFunctionParameterType.Secret: {
-                                var secret = (string)value;
-                                var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
-                                    CiphertextBlob = new MemoryStream(Convert.FromBase64String(secret)),
-                                    EncryptionContext = kv.Value.EncryptionContext
-                                })).Plaintext;
-                                target.Add(prefix + kv.Key, Encoding.UTF8.GetString(plaintextStream.ToArray()));
-                                break;
-                            }
-                        case LambdaFunctionParameterType.Stack:
-                            target.Add(prefix + kv.Key, envSource.Read(envPrefix + kv.Key.ToUpperInvariant()));
-                            break;
-                        case LambdaFunctionParameterType.Text:
-                            target.Add(prefix + kv.Key, (string)value);
-                            break;
-                        default:
-                            throw new NotSupportedException($"unsupported parameter type: '{kv.Value.Type.ToString()}'");
-                        }
-                    }
-                }
-            }
         }
 
         protected virtual async Task RecordFailedMessageAsync(LambdaLogLevel level, string body, Exception exception) {

@@ -23,13 +23,14 @@
 using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
-    
+
     public abstract class AParameter {
 
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
         public string Export { get; set; }
+        public string FullName { get; set; }
     }
 
     public class SecretParameter : AParameter {

@@ -172,13 +172,6 @@ namespace MindTouch.LambdaSharp.Tool {
             // convert parameters
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
-            // create `parameters.json` serialization
-            var functionParameters = new Dictionary<string, LambdaFunctionParameter>();
-            foreach(var parameter in _module.Parameters) {
-                AddFunctionParameter(parameter, functionParameters);
-            }
-            var functionParametersJson = JsonConvert.SerializeObject(functionParameters);
-
             // create functions
             _module.Functions = new List<Function>();
             if(module.Functions.Any()) {
@@ -201,7 +194,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
                 var functionIndex = 0;
                 _module.Functions = AtLocation("Functions", () => module.Functions
-                    .Select(function => ConvertFunction(++functionIndex, function, functionParametersJson))
+                    .Select(function => ConvertFunction(++functionIndex, function))
                     .Where(function => function != null)
                     .ToList()
                 , null) ?? new List<Function>();
@@ -256,7 +249,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public IList<AParameter> ConvertParameters(
             IList<ParameterNode> parameters,
-            string environmentPrefix = "STACK_",
             string resourcePrefix = ""
         ) {
             var resultList = new List<AParameter>();
@@ -276,12 +268,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
+            // TODO (2018-08-17, bjorg): consider converting all `Import` attributes to `Value`, `Values`, or `Secret` before processing parameters;
+            //  this wil simplify the processing logic by removing all the `Import` handling.
+
             // convert all parameters
             var index = 0;
             foreach(var parameter in parameters) {
                 ++index;
                 var parameterName = parameter.Name ?? $"[{index}]";
                 AParameter result = null;
+                var fullName = resourcePrefix + parameter.Name;
                 AtLocation(parameterName, () => {
                     if(parameter.Name == null) {
                         AddError($"missing parameter name");
@@ -322,13 +318,18 @@ namespace MindTouch.LambdaSharp.Tool {
                                         // existing resource
                                         var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
                                         resultList.Add(new ReferencedResourceParameter {
+
+                                            // TODO (2018-08-17, bjorg): review nested naming convention
                                             Name = parameter.Name + i,
+                                            FullName = resourcePrefix + parameter.Name + i,
                                             Description = parameter.Description,
                                             Resource = resource
                                         });
                                     }
                                 });
                             }
+
+                            // TODO (2018-08-17, bjorg): we need to preserve the nature of the parameter list (i.e. add `StringListParameter` class)
 
                             // convert a `StringList` into `String` parameter by concatenating the values, separated by a comma (`,`)
                             var value = string.Join(",", parameter.Values);
@@ -351,7 +352,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             // keep nested parameters only if they have values
                             var nestedParameters = ConvertParameters(
                                 parameter.Parameters,
-                                environmentPrefix + parameter.Name.ToUpperInvariant() + "_",
                                 resourcePrefix + parameter.Name
                             );
                             if(nestedParameters.Any()) {
@@ -549,7 +549,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // managed resource
                         AtLocation("Resource", () => {
                             result = new CloudFormationResourceParameter {
-                                Name = resourcePrefix + parameter.Name,
+                                Name = parameter.Name,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(null, parameter.Resource)
                             };
@@ -557,6 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 if(result != null) {
+                    result.FullName = resourcePrefix + parameter.Name;
                     result.Export = parameter.Export;
                     resultList.Add(result);
                 }
@@ -658,7 +659,7 @@ namespace MindTouch.LambdaSharp.Tool {
             };
         }
 
-        public Function ConvertFunction(int index, FunctionNode function, string functionParametersJson) {
+        public Function ConvertFunction(int index, FunctionNode function) {
             return AtLocation(function.Name ?? $"[{index}]", () => {
                 Validate(function.Name != null, "missing Name field");
                 Validate(function.Memory != null, "missing Memory field");
@@ -817,10 +818,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                 return null;
                             }
                         }
-
-                        // add `parameters.json` file to temp folder
-                        Console.WriteLine("=> Adding settings file 'parameters.json'");
-                        File.WriteAllText(Path.Combine(tempDirectory, PARAMETERSFILE), functionParametersJson);
 
                         // add `gitsha.txt` if GitSha is supplied
                         if(_module.Settings.GitSha != null) {
@@ -1083,65 +1080,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(!condition) {
                     AddError($"attributes '{attribute1}' and '{attribute2}' are not allowed at the same time");
                 }
-            }
-        }
-
-        private void AddFunctionParameter(
-            AParameter parameter,
-            IDictionary<string, LambdaFunctionParameter> functionParameters
-        ) {
-            switch(parameter) {
-            case SecretParameter secretParameter:
-                functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                    Type = LambdaFunctionParameterType.Secret,
-                    Value = secretParameter.Secret,
-                    EncryptionContext = secretParameter.EncryptionContext
-                });
-                break;
-            case CollectionParameter collectionParameter: {
-                    var nestedFunctionParameters = new Dictionary<string, LambdaFunctionParameter>();
-                    if(collectionParameter.Parameters != null) {
-                        foreach(var nestedResource in collectionParameter.Parameters) {
-                            AddFunctionParameter(
-                                nestedResource,
-                                nestedFunctionParameters
-                            );
-                        }
-                    }
-                    if(nestedFunctionParameters.Any()) {
-                        functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                            Type = LambdaFunctionParameterType.Collection,
-                            Value = nestedFunctionParameters
-                        });
-                    }
-                }
-                break;
-            case StringParameter stringParameter:
-                functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                    Type = LambdaFunctionParameterType.Text,
-                    Value = stringParameter.Value
-                });
-                break;
-            case PackageParameter packageParameter:
-                functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                    Type = LambdaFunctionParameterType.Stack,
-                    Value = null
-                });
-                break;
-            case ReferencedResourceParameter referenceResourceParameter:
-                functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                    Type = LambdaFunctionParameterType.Text,
-                    Value = referenceResourceParameter.Resource.ResourceArn
-                });
-                break;
-            case CloudFormationResourceParameter cloudFormationResourceParameter:
-                functionParameters.Add(parameter.Name, new LambdaFunctionParameter {
-                    Type = LambdaFunctionParameterType.Stack,
-                    Value = null
-                });
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(parameter), parameter, "unknown parameter type");
             }
         }
 
