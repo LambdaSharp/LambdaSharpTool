@@ -123,7 +123,7 @@
         "Timeout": "30"
       }
     },
-    "RestApi": {
+    "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
         "Description": "TestModule API (v1.0)",
@@ -131,7 +131,7 @@
         "Name": "TestModule API (Test)"
       }
     },
-    "RestApiRole": {
+    "ModuleRestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -169,33 +169,33 @@
         ]
       }
     },
-    "RestApiAccount": {
+    "ModuleRestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
           "Fn::GetAtt": [
-            "RestApiRole",
+            "ModuleRestApiRole",
             "Arn"
           ]
         }
       }
     },
-    "RestApiItemsResource": {
+    "ModuleRestApiItemsResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "RestApi",
+            "ModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "items",
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "RestApiItemsGET": {
+    "ModuleRestApiItemsGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -218,14 +218,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "RestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiItemsGETPermission": {
+    "FunctionModuleRestApiItemsGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -241,14 +241,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/GET/items",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiItemsPOST": {
+    "ModuleRestApiItemsPOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -271,14 +271,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "RestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiItemsPOSTPermission": {
+    "FunctionModuleRestApiItemsPOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -294,26 +294,26 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/POST/items",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiItemsIdResource": {
+    "ModuleRestApiItemsIdResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
-          "Ref": "RestApiItemsResource"
+          "Ref": "ModuleRestApiItemsResource"
         },
         "PathPart": "{id}",
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "RestApiItemsIdGET": {
+    "ModuleRestApiItemsIdGET": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -336,14 +336,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "RestApiItemsIdResource"
+          "Ref": "ModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiItemsIdGETPermission": {
+    "FunctionModuleRestApiItemsIdGETPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -359,14 +359,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/GET/items/{id}",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiItemsIdPUT": {
+    "ModuleRestApiItemsIdPUT": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -389,14 +389,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "RestApiItemsIdResource"
+          "Ref": "ModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiItemsIdPUTPermission": {
+    "FunctionModuleRestApiItemsIdPUTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -412,14 +412,14 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/PUT/items/{id}",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiItemsIdDELETE": {
+    "ModuleRestApiItemsIdDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -442,14 +442,14 @@
           }
         },
         "ResourceId": {
-          "Ref": "RestApiItemsIdResource"
+          "Ref": "ModuleRestApiItemsIdResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiItemsIdDELETEPermission": {
+    "FunctionModuleRestApiItemsIdDELETEPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -465,34 +465,34 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/DELETE/items/{id}",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiDeployment114A369FBAF7943C63F05990DCC820AB": {
+    "ModuleRestApiDeployment09A037FE0F91E41A65FC838E69220A76": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": "TestModule API (Test) [114A369FBAF7943C63F05990DCC820AB]",
+        "Description": "TestModule API (Test) [09A037FE0F91E41A65FC838E69220A76]",
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
-        "RestApiItemsGET",
-        "RestApiItemsPOST",
-        "RestApiItemsIdGET",
-        "RestApiItemsIdPUT",
-        "RestApiItemsIdDELETE"
+        "ModuleRestApiItemsGET",
+        "ModuleRestApiItemsPOST",
+        "ModuleRestApiItemsIdGET",
+        "ModuleRestApiItemsIdPUT",
+        "ModuleRestApiItemsIdDELETE"
       ]
     },
-    "RestApiStage": {
+    "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "RestApiDeployment114A369FBAF7943C63F05990DCC820AB"
+          "Ref": "ModuleRestApiDeployment09A037FE0F91E41A65FC838E69220A76"
         },
         "MethodSettings": [
           {
@@ -503,24 +503,24 @@
           }
         ],
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "RestApiAccount"
+        "ModuleRestApiAccount"
       ]
     }
   },
   "Outputs": {
-    "RestApi": {
+    "ModuleRestApi": {
       "Value": {
         "Fn::Join": [
           "",
           [
             "https://",
             {
-              "Ref": "RestApi"
+              "Ref": "ModuleRestApi"
             },
             ".execute-api.",
             {

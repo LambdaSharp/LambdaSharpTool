@@ -732,7 +732,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     exportValue = resourceParamFn;
 
                     // only add parameters that the lambda functions are allowed to access
-                    if(resource.Allow?.Any() == true) {
+                    if(resource.Type.StartsWith("Custom::") || (resource.Allow?.Any() == true)) {
                         environmentRefVariables[envPrefix + parameter.Name.ToUpperInvariant()] = resourceParamFn;
                     }
 

@@ -123,7 +123,7 @@
         "Timeout": "30"
       }
     },
-    "RestApi": {
+    "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
         "Description": "TestModule API (v1.0)",
@@ -131,7 +131,7 @@
         "Name": "TestModule API (Test)"
       }
     },
-    "RestApiRole": {
+    "ModuleRestApiRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
@@ -169,33 +169,33 @@
         ]
       }
     },
-    "RestApiAccount": {
+    "ModuleRestApiAccount": {
       "Type": "AWS::ApiGateway::Account",
       "Properties": {
         "CloudWatchRoleArn": {
           "Fn::GetAtt": [
-            "RestApiRole",
+            "ModuleRestApiRole",
             "Arn"
           ]
         }
       }
     },
-    "RestApiSlackResource": {
+    "ModuleRestApiSlackResource": {
       "Type": "AWS::ApiGateway::Resource",
       "Properties": {
         "ParentId": {
           "Fn::GetAtt": [
-            "RestApi",
+            "ModuleRestApi",
             "RootResourceId"
           ]
         },
         "PathPart": "slack",
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "RestApiSlackPOST": {
+    "ModuleRestApiSlackPOST": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
         "AuthorizationType": "NONE",
@@ -240,14 +240,14 @@
           }
         ],
         "ResourceId": {
-          "Ref": "RestApiSlackResource"
+          "Ref": "ModuleRestApiSlackResource"
         },
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       }
     },
-    "FunctionRestApiSlackPOSTPermission": {
+    "FunctionModuleRestApiSlackPOSTPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -263,30 +263,30 @@
             "arn:aws:execute-api:us-east-1:123456789012:${RestApi}/LATEST/POST/slack",
             {
               "RestApi": {
-                "Ref": "RestApi"
+                "Ref": "ModuleRestApi"
               }
             }
           ]
         }
       }
     },
-    "RestApiDeployment4E1AA82CA2B86FC621BD08E608388E5B": {
+    "ModuleRestApiDeployment1D8D386A4E80C757268C38F00177AA5A": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": "TestModule API (Test) [4E1AA82CA2B86FC621BD08E608388E5B]",
+        "Description": "TestModule API (Test) [1D8D386A4E80C757268C38F00177AA5A]",
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
-        "RestApiSlackPOST"
+        "ModuleRestApiSlackPOST"
       ]
     },
-    "RestApiStage": {
+    "ModuleRestApiStage": {
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "RestApiDeployment4E1AA82CA2B86FC621BD08E608388E5B"
+          "Ref": "ModuleRestApiDeployment1D8D386A4E80C757268C38F00177AA5A"
         },
         "MethodSettings": [
           {
@@ -297,24 +297,24 @@
           }
         ],
         "RestApiId": {
-          "Ref": "RestApi"
+          "Ref": "ModuleRestApi"
         },
         "StageName": "LATEST"
       },
       "DependsOn": [
-        "RestApiAccount"
+        "ModuleRestApiAccount"
       ]
     }
   },
   "Outputs": {
-    "RestApi": {
+    "ModuleRestApi": {
       "Value": {
         "Fn::Join": [
           "",
           [
             "https://",
             {
-              "Ref": "RestApi"
+              "Ref": "ModuleRestApi"
             },
             ".execute-api.",
             {
