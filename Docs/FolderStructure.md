@@ -9,7 +9,7 @@
   * `GettingStarted.SlackCommand`
     * `GettingStarted.SlackCommand.csproj`
 
-Furthermore, the project file SHOULD contain the `<RootNamespace>` element to define the root namespace of the project. When missing, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
+Furthermore, the project file should contain the `<RootNamespace>` element to define the root namespace of the project. When missing, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
 
 ```xml
 <Project Sdk="Microsoft.NET.Sdk">
@@ -26,7 +26,7 @@ Furthermore, the project file SHOULD contain the `<RootNamespace>` element to de
 </Project>
 ```
 
-Furthermore, the function handler SHOULD be in a class called `Function` and the method SHOULD be called `FunctionHandler`. When different, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
+Furthermore, the function handler should be in a class called `Function` and the method should be called `FunctionHandler`. When different, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
 
 In order for the λ# tool to work properly the .NET Core project file must contain a reference to `Amazon.Lambda.Tools`.
 

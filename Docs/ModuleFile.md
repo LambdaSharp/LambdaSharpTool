@@ -167,7 +167,7 @@ Secrets:
 Parameters can be defined inline in plaintext, as secrets, imported from the [AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/#Parameter_Store), or generated dynamically. In addition, parameters can be associated to resources, which will grant the module IAM role the requested permissions. Finally, parameters can also be exported to the Parameter Store where they can be read by other applications.
 
 
-Parameters must have a `Name` and MAY have a `Description`. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+Parameters must have a `Name` and may have a `Description`. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
 The computed values are stored in the `parameters.json` file that is included with every Lambda function deployment, so that they can retrieved during execution.
 
@@ -341,7 +341,7 @@ The <tt>Type</tt> attribute identifies the AWS resource type that is being decla
 
 <dt><tt>Allow</tt></dt>
 <dd>
-The <tt>Allow</tt> attribute can either a comma-separated, single string value or a list of string values. String values that contain a colon (<tt>:</tt>) are interpreted as IAM permission and used as is (e.g. <tt>dynamodb:GetItem</tt>, <tt>s3:GetObject*</tt>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <tt>Allow</tt> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
+The <tt>Allow</tt> attribute can either a comma-separated, single string value or a list of string values. String values that contain a colon (<tt>:</tt>) are interpreted as IAM permission and used as is (e.g. <tt>dynamodb:GetItem</tt>, <tt>s3:GetObject*</tt>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <tt>Allow</tt> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed. Resource parameters without the <tt>Allow</tt> attribute are omitted from the Lambda function configuration.
 
 <i>Required</i>: No
 
