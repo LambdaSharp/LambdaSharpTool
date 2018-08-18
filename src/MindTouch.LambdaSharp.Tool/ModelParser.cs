@@ -277,7 +277,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ++index;
                 var parameterName = parameter.Name ?? $"[{index}]";
                 AParameter result = null;
-                var fullName = resourcePrefix + parameter.Name;
+                var parameterFullName = resourcePrefix + parameter.Name;
                 AtLocation(parameterName, () => {
                     if(parameter.Name == null) {
                         AddError($"missing parameter name");
@@ -318,10 +318,8 @@ namespace MindTouch.LambdaSharp.Tool {
                                         // existing resource
                                         var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
                                         resultList.Add(new ReferencedResourceParameter {
-
-                                            // TODO (2018-08-17, bjorg): review nested naming convention
                                             Name = parameter.Name + i,
-                                            FullName = resourcePrefix + parameter.Name + i,
+                                            FullName = parameterFullName + i,
                                             Description = parameter.Description,
                                             Resource = resource
                                         });
@@ -352,7 +350,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // keep nested parameters only if they have values
                             var nestedParameters = ConvertParameters(
                                 parameter.Parameters,
-                                resourcePrefix + parameter.Name
+                                parameterFullName
                             );
                             if(nestedParameters.Any()) {
                                 result = new CollectionParameter {
@@ -557,7 +555,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 if(result != null) {
-                    result.FullName = resourcePrefix + parameter.Name;
+                    result.FullName = parameterFullName;
                     result.Export = parameter.Export;
                     resultList.Add(result);
                 }

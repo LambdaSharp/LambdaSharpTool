@@ -1,0 +1,150 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Resources": {
+    "SampleParameterCollectionFourthNestedParameter": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "VersionSsmParameter": {
+      "Type": "AWS::SSM::Parameter",
+      "Properties": {
+        "Type": "String",
+        "Description": "LambdaSharp module version",
+        "Value": "1.0",
+        "Name": "/Test/TestModule/Version"
+      }
+    },
+    "RollbarToken": {
+      "Type": "Custom::LambdaSharpRollbarProject",
+      "Properties": {
+        "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
+        "Tier": "Test",
+        "Module": "TestModule",
+        "Project": "TestModule",
+        "Deployment": "Test"
+      }
+    },
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogGroup"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "SampleParameterCollectionFourthNestedParameter"
+                  }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic"
+                }
+              ]
+            },
+            "PolicyName": "Test-TestModule-policy"
+          }
+        ]
+      }
+    },
+    "Function": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "lambdsharp-bucket-name",
+          "S3Key": "TestModule/TestModule.Function-NOCOMPILE.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+        },
+        "Environment": {
+          "Variables": {
+            "TIER": "Test",
+            "MODULE": "TestModule",
+            "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
+            "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
+            "LAMBDARUNTIME": "dotnetcore2.1",
+            "STACK_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
+              "Ref": "SampleParameterCollectionFourthNestedParameter"
+            },
+            "STACK_ROLLBARTOKEN": {
+              "Fn::GetAtt": [
+                "RollbarToken",
+                "Result"
+              ]
+            }
+          }
+        },
+        "FunctionName": "Test-TestModule-Function",
+        "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Tags": [
+          {
+            "Key": "lambdasharp:tier",
+            "Value": "Test"
+          },
+          {
+            "Key": "lambdasharp:module",
+            "Value": "TestModule"
+          }
+        ],
+        "Timeout": "30"
+      }
+    }
+  }
+}

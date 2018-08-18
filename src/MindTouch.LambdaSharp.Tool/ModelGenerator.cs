@@ -595,7 +595,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     foreach(var nestedResource in collectionParameter.Parameters) {
                         AddParameter(
                             nestedResource,
-                            envPrefix + parameter.Name.ToUpperInvariant() + "_",
+                            fullEnvName + "_",
                             environmentRefVariables
                         );
                     }
@@ -612,7 +612,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables[fullEnvName] = Fn.Join("|", "text", Fn.GetAtt(parameter.FullName, "Result"));
-                _stack.Add(packageParameter.Name, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
+                _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
                     ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
                     ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
                     ["DestinationKeyPrefix"] = packageParameter.Prefix,

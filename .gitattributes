@@ -1,0 +1,34 @@
+* text=auto
+*.sh eol=lf
+build/cli eol=lf
+
+# NOTE (20170605, modethirteen): binary files discovered with the following command:
+# diff <(git grep -Ic '') <(git grep -c '') | grep '^>' | cut -d : -f 1 | cut -d ' ' -f 2- | awk -F. '!a[$NF]++{print "*."$NF" binary"}'
+*.dll binary
+*.exe binary
+*.jar binary
+*.zip binary
+*.png binary
+*.pyc binary
+*.plist binary
+*.pdf binary
+*.tiff binary
+*.snk binary
+*.ico binary
+*.nupkg binary
+*.pdb binary
+*.psd1 binary
+*.Dll binary
+*.gif binary
+*.jpg binary
+*.mtdf binary
+*.chm binary
+*.woff binary
+*.fla binary
+*.swf binary
+*.eot binary
+*.ttf binary
+*.docx binary
+*.doc binary
+*.dat binary
+*.psd binary
