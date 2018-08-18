@@ -256,7 +256,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public IList<AParameter> ConvertParameters(
             IList<ParameterNode> parameters,
-            string environmentPrefix = "STACK_",
             string resourcePrefix = ""
         ) {
             var resultList = new List<AParameter>();
@@ -282,6 +281,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ++index;
                 var parameterName = parameter.Name ?? $"[{index}]";
                 AParameter result = null;
+                var parameterFullName = resourcePrefix + parameter.Name;
                 AtLocation(parameterName, () => {
                     if(parameter.Name == null) {
                         AddError($"missing parameter name");
@@ -323,6 +323,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                         var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
                                         resultList.Add(new ReferencedResourceParameter {
                                             Name = parameter.Name + i,
+                                            FullName = parameterFullName + i,
                                             Description = parameter.Description,
                                             Resource = resource
                                         });
@@ -351,8 +352,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // keep nested parameters only if they have values
                             var nestedParameters = ConvertParameters(
                                 parameter.Parameters,
-                                environmentPrefix + parameter.Name.ToUpperInvariant() + "_",
-                                resourcePrefix + parameter.Name
+                                parameterFullName
                             );
                             if(nestedParameters.Any()) {
                                 result = new CollectionParameter {
@@ -549,7 +549,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // managed resource
                         AtLocation("Resource", () => {
                             result = new CloudFormationResourceParameter {
-                                Name = resourcePrefix + parameter.Name,
+                                Name = parameter.Name,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(null, parameter.Resource)
                             };
@@ -557,6 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 if(result != null) {
+                    result.FullName = parameterFullName;
                     result.Export = parameter.Export;
                     resultList.Add(result);
                 }

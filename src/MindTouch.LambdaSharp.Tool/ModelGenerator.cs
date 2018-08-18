@@ -92,10 +92,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
             }
 
-            // add resources and parameters
+            // add parameters
             var environmentRefVariables = new Dictionary<string, object>();
             foreach(var parameter in _module.Parameters) {
-                AddParameter(parameter, "", "STACK_", environmentRefVariables);
+                AddParameter(parameter, "STACK_", environmentRefVariables);
             }
 
             // check if we need to create a module IAM role (only needed by functions)
@@ -577,11 +577,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void AddParameter(
             AParameter parameter,
-            string resourcePrefix,
             string envPrefix,
             IDictionary<string, object> environmentRefVariables
         ) {
             object exportValue = null;
+            var fullEnvName = envPrefix + parameter.Name.ToUpperInvariant();
             switch(parameter) {
             case SecretParameter secretParameter:
                 if(secretParameter.Export != null) {
@@ -591,12 +591,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case CollectionParameter collectionParameter: {
-                    var nestedFunctionParameters = new Dictionary<string, LambdaFunctionParameter>();
                     foreach(var nestedResource in collectionParameter.Parameters) {
                         AddParameter(
                             nestedResource,
-                            resourcePrefix + parameter.Name,
-                            envPrefix + parameter.Name.ToUpperInvariant() + "_",
+                            fullEnvName + "_",
                             environmentRefVariables
                         );
                     }
@@ -611,14 +609,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 exportValue = stringParameter.Value;
                 break;
             case PackageParameter packageParameter:
-                _stack.Add(packageParameter.Name, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
+                environmentRefVariables[fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
+                _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
                     ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
                     ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
                     ["DestinationKeyPrefix"] = packageParameter.Prefix,
                     ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
                     ["SourcePackageKey"] = packageParameter.PackageS3Key,
                 }));
-                environmentRefVariables[envPrefix + parameter.Name.ToUpperInvariant()] = Fn.GetAtt(resourcePrefix + parameter.Name, "Result");
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
@@ -636,7 +634,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
-                    var resourceName = resourcePrefix + parameter.Name;
+                    var resourceName = parameter.FullName;
                     object resourceArn;
                     object resourceParamFn;
                     Humidifier.Resource resourceTemplate;
@@ -733,7 +731,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // only add parameters that the lambda functions are allowed to access
                     if(resource.Type.StartsWith("Custom::") || (resource.Allow?.Any() == true)) {
-                        environmentRefVariables[envPrefix + parameter.Name.ToUpperInvariant()] = resourceParamFn;
+                        environmentRefVariables[fullEnvName] = resourceParamFn;
                     }
 
                     // add permissions for resource
@@ -755,7 +753,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 var export = parameter.Export.StartsWith("/")
                     ? parameter.Export
                     : $"/{_module.Settings.Tier}/{_module.Name}/{parameter.Export}";
-                _stack.Add(resourcePrefix + parameter.Name + "SsmParameter", new SSM.Parameter {
+                _stack.Add(parameter.FullName + "SsmParameter", new SSM.Parameter {
                     Name = export,
                     Description = parameter.Description,
                     Type = "String",
