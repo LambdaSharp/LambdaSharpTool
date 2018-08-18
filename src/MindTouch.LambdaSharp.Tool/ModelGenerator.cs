@@ -626,12 +626,26 @@ namespace MindTouch.LambdaSharp.Tool {
             case StringParameter stringParameter:
                 environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
                 exportValue = stringParameter.Value;
+
+                // add literal string parameter value as CloudFormation parameter so it can be referenced
+                _stack.Add(stringParameter.FullName, new Parameter {
+                    Type = "String",
+                    Default = stringParameter.Value,
+                    Description = stringParameter.Description
+                });
                 break;
             case StringListParameter stringListParameter: {
                     var commaDelimitedValue = string.Join(",", stringListParameter.Values);
                     environmentRefVariables["STR_" + fullEnvName] = commaDelimitedValue;
                     exportValue = commaDelimitedValue;
                 }
+
+                // add literal string list parameter value as CloudFormation parameter so it can be referenced
+                _stack.Add(stringListParameter.FullName, new Parameter {
+                    Type = "StringList",
+                    Default = string.Join(",", stringListParameter.Values),
+                    Description = stringListParameter.Description
+                });
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
@@ -656,6 +670,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             Action = resource.Allow
                         });
                     }
+
+                    // add reference resource parameter value as CloudFormation parameter so it can be referenced
+                    _stack.Add(referenceResourceParameter.FullName, new Parameter {
+                        Type = "String",
+                        Default = resource.ResourceArn,
+                        Description = referenceResourceParameter.Description
+                    });
                 }
                 break;
             case CloudFormationResourceParameter cloudFormationResourceParameter: {

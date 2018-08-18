@@ -1,6 +1,28 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Parameters": {
+    "SampleParameterCollectionFirstNestedParameter": {
+      "Type": "String",
+      "Description": "First nested parameter",
+      "Default": "A literal value"
+    },
+    "SampleParameterCollectionSecondNestedParameter": {
+      "Type": "StringList",
+      "Description": "Second nested parameter",
+      "Default": "one,two,three"
+    },
+    "SampleParameterCollectionThirdNestedParameter": {
+      "Type": "String",
+      "Description": "Third nested parameter",
+      "Default": "arn:aws:sns:us-east-1:123456789012:SampleTopic"
+    },
+    "Version": {
+      "Type": "String",
+      "Description": "LambdaSharp module version",
+      "Default": "1.0"
+    }
+  },
   "Resources": {
     "SampleParameterCollectionFourthNestedParameter": {
       "Type": "AWS::SNS::Topic",

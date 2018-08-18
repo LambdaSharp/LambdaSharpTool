@@ -1,6 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Parameters": {
+    "Version": {
+      "Type": "String",
+      "Description": "LambdaSharp module version",
+      "Default": "1.0"
+    }
+  },
   "Resources": {
     "Topic": {
       "Type": "AWS::SNS::Topic",
