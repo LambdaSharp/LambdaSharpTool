@@ -32,6 +32,17 @@ Parameters:
           Type: AWS::SNS::Topic
           Allow: Subscribe
 
+      - Name: FifthNestedParameter
+        Description: Fifth nested parameter
+        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+
+      - Name: SixthNestedParameter
+        Description: Sixth nested parameter
+        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        EncryptionContext:
+          Purpose: Security
+          "Spe|cial": "Char|acter"
+
 Functions:
 
   - Name: Function

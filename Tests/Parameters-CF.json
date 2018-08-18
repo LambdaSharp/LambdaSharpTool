@@ -112,10 +112,16 @@
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
-            "STACK_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
+            "PVAL_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
+            "PVAL_SAMPLEPARAMETERCOLLECTION_SECONDNESTEDPARAMETER": "one,two,three",
+            "PVAL_SAMPLEPARAMETERCOLLECTION_THIRDNESTEDPARAMETER": "arn:aws:sns:us-east-1:123456789012:SampleTopic",
+            "PVAL_SAMPLEPARAMETERCOLLECTION_FOURTHNESTEDPARAMETER": {
               "Ref": "SampleParameterCollectionFourthNestedParameter"
             },
-            "STACK_ROLLBARTOKEN": {
+            "PSEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
+            "PSEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
+            "PVAL_VERSION": "1.0",
+            "PVAL_ROLLBARTOKEN": {
               "Fn::GetAtt": [
                 "RollbarToken",
                 "Result"

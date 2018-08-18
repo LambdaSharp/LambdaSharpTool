@@ -93,7 +93,9 @@
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
-            "STACK_ROLLBARTOKEN": {
+            "PVAL_SAMPLEPARAMETER": "Hello World!",
+            "PVAL_VERSION": "1.0",
+            "PVAL_ROLLBARTOKEN": {
               "Fn::GetAtt": [
                 "RollbarToken",
                 "Result"

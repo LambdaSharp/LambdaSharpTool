@@ -95,7 +95,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // add parameters
             var environmentRefVariables = new Dictionary<string, object>();
             foreach(var parameter in _module.Parameters) {
-                AddParameter(parameter, "PARAM_", environmentRefVariables);
+                AddParameter(parameter, "", environmentRefVariables);
             }
 
             // check if we need to create a module IAM role (only needed by functions)
@@ -584,7 +584,11 @@ namespace MindTouch.LambdaSharp.Tool {
             var fullEnvName = envPrefix + parameter.Name.ToUpperInvariant();
             switch(parameter) {
             case SecretParameter secretParameter:
-                environmentRefVariables[fullEnvName] = $"secret|{secretParameter.Secret}|{secretParameter.EncryptionContext}";
+                if(secretParameter.EncryptionContext?.Any() == true) {
+                    environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Secret}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeUriString(kv.Key)}={Uri.EscapeUriString(kv.Value)}"))}";
+                } else {
+                    environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Secret;
+                }
                 if(secretParameter.Export != null) {
 
                     // TODO (2018-08-16, bjorg): add support for exporting secrets (or error out sooner)
@@ -607,11 +611,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case StringParameter stringParameter:
-                environmentRefVariables[fullEnvName] = $"text|{stringParameter.Value}";
+                environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
                 exportValue = stringParameter.Value;
                 break;
             case PackageParameter packageParameter:
-                environmentRefVariables[fullEnvName] = Fn.Join("|", "text", Fn.GetAtt(parameter.FullName, "Result"));
+                environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
                 _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
                     ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
                     ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
@@ -622,7 +626,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
-                    environmentRefVariables[fullEnvName] = $"text|{resource.ResourceArn}";
+                    environmentRefVariables["STR_" + fullEnvName] = resource.ResourceArn;
                     exportValue = resource.ResourceArn;
 
                     // add permissions for resource
@@ -734,7 +738,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // only add parameters that the lambda functions are allowed to access
                     if(resource.Type.StartsWith("Custom::") || (resource.Allow?.Any() == true)) {
-                        environmentRefVariables[fullEnvName] = Fn.Join("|", "text", resourceParamFn);
+                        environmentRefVariables["STR_" + fullEnvName] = resourceParamFn;
                     }
 
                     // add permissions for resource
