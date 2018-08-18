@@ -96,7 +96,7 @@ The <tt>Functions</tt> section contains the lambda functions that are part of th
 
 ## Variables
 
-The `Variables` sections is an optional mapping of key-value pairs. Variables are used in string substitutions to make it easy to change settings in the module file.
+The `Variables` section is an optional mapping of key-value pairs. Variables are used in string substitutions to make it easy to change settings in the module file.
 
 The following variables are implicitly defined and can be used in text values to dynamically compute the correct value.
 * `{{Tier}}`: the name of the active deployment tier
@@ -178,6 +178,8 @@ Value: String
 Values:
   - String
 Secret: String
+EncryptionContext:
+  Key-Value Mapping
 Import: String
 Package:
   PackageDefinition
@@ -235,6 +237,15 @@ The <tt>Secret</tt> attribute cannot be used in conjunction with a <tt>Resource<
 <i>Required</i>: No. At most one <tt>Value</tt>, <tt>Values</tt>, <tt>Secret</tt>, <tt>Import</tt>, or <tt>Package</tt> can be specified at a time.
 
 <i>Type</i>: String
+</dd>
+
+<dt><tt>EncryptionContext</tt></dt>
+<dd>
+The <tt>EncryptionContext</tt> section is an optional mapping of key-value pairs used for decrypting the <tt>Secret</tt> value.
+
+<i>Required</i>: No. Can only be used in conjunction with <tt>Secret</tt>.
+
+<i>Type</i>: Key-Value Pair Mapping
 </dd>
 
 <dt><tt>Import</tt></dt>

@@ -300,7 +300,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Description = parameter.Description,
                                 Secret = parameter.Secret,
                                 Export = parameter.Export,
-                                EncryptionContext = null
+                                EncryptionContext = parameter.EncryptionContext
                             };
                         });
                     } else if(parameter.Values != null) {
@@ -308,6 +308,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Values", "Parameters", parameter.Parameters == null);
                         ValidateNotBothStatements("Values", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Values", "Package", parameter.Package == null);
+                        ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // list of values
                         AtLocation("Values", () => {
@@ -343,6 +344,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Parameters", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Parameters", "Package", parameter.Package == null);
                         ValidateNotBothStatements("Parameters", "Resource", parameter.Resource == null);
+                        ValidateNotBothStatements("Parameters", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // nested values
                         AtLocation("Parameters", () => {
@@ -364,6 +366,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(parameter.Import != null) {
                         ValidateNotBothStatements("Import", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Import", "Package", parameter.Package == null);
+                        ValidateNotBothStatements("Import", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // imported value
                         AtLocation("Import", () => {
@@ -430,6 +433,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Package", "Export", parameter.Export == null);
+                        ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // a package of one or more files
                         var files = new List<string>();

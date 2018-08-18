@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public object Secret { get; set; }
-        public Dictionary<string, string> EncryptionContext { get; set; }
+        public IDictionary<string, string> EncryptionContext { get; set; }
     }
 
     public class CollectionParameter : AParameter {

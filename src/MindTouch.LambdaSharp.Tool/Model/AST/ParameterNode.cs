@@ -30,6 +30,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Description { get; set; }
         public ResourceNode Resource { get; set; }
         public string Secret { get; set; }
+        public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<string> Values { get; set; }
         public string Value { get; set; }
         public string Import { get; set; }
