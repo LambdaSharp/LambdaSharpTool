@@ -52,6 +52,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Value { get; set; }
     }
 
+    public class StringListParameter : AParameter {
+
+        //--- Properties ---
+        public IList<string> Values { get; set; }
+    }
+
     public class PackageParameter : AParameter {
 
         //--- Properties ---

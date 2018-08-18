@@ -431,6 +431,19 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             });
 
+            // check if function is exported
+            if(function.Export != null) {
+                var export = function.Export.StartsWith("/")
+                    ? function.Export
+                    : $"/{_module.Settings.Tier}/{_module.Name}/{function.Export}";
+                _stack.Add(function.Name + "SsmParameter", new SSM.Parameter {
+                    Name = export,
+                    Description = function.Description,
+                    Type = "String",
+                    Value = Fn.Ref(function.Name)
+                });
+            }
+
             // check if function has any SNS topic event sources
             var topicSources = function.Sources.OfType<TopicSource>();
             if(topicSources.Any()) {
@@ -613,6 +626,12 @@ namespace MindTouch.LambdaSharp.Tool {
             case StringParameter stringParameter:
                 environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
                 exportValue = stringParameter.Value;
+                break;
+            case StringListParameter stringListParameter: {
+                    var commaDelimitedValue = string.Join(",", stringListParameter.Values);
+                    environmentRefVariables["STR_" + fullEnvName] = commaDelimitedValue;
+                    exportValue = commaDelimitedValue;
+                }
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");

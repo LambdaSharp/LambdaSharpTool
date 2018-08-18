@@ -327,15 +327,10 @@ namespace MindTouch.LambdaSharp.Tool {
                                     }
                                 });
                             }
-
-                            // TODO (2018-08-17, bjorg): we need to preserve the nature of the parameter list (i.e. add `StringListParameter` class)
-
-                            // convert a `StringList` into `String` parameter by concatenating the values, separated by a comma (`,`)
-                            var value = string.Join(",", parameter.Values);
-                            result = new StringParameter {
+                            result = new StringListParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Value = value,
+                                Values = parameter.Values,
                                 Export = parameter.Export
                             };
                         });
@@ -404,10 +399,10 @@ namespace MindTouch.LambdaSharp.Tool {
                                         break;
                                     case "StringList":
                                         Validate(parameter.Resource == null, "cannot have 'Resource' when importing a value of type 'StringList'");
-                                        result = new StringParameter {
+                                        result = new StringListParameter {
                                             Name = parameter.Name,
                                             Description = parameter.Description,
-                                            Value = value.Value
+                                            Values = value.Value.Split(',')
                                         };
                                         break;
                                     case "SecureString":
@@ -901,7 +896,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
-                    Environment = function.Environment ?? new Dictionary<string, string>()
+                    Environment = function.Environment ?? new Dictionary<string, string>(),
+                    Export = function.Export
                 };
             }, null);
         }
