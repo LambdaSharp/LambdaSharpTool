@@ -101,20 +101,41 @@ namespace MindTouch.LambdaSharp.Tool {
             // check if we need to create a module IAM role (only needed by functions)
             if(_module.Functions.Any()) {
                 _apiGatewayRoutes = new List<ApiRoute>();
-                _resourceStatements.Add(new Statement {
-                    Effect = "Allow",
-                    Resource = _module.Settings.DeadLetterQueueArn,
-                    Action = new List<string> {
-                        "sqs:SendMessage"
-                    }
-                });
-                _resourceStatements.Add(new Statement {
-                    Effect = "Allow",
-                    Resource = _module.Settings.LoggingTopicArn,
-                    Action = new List<string> {
-                        "sns:Publish"
-                    }
-                });
+
+                // permissions needed for dead-letter queue
+                if(_module.Settings.DeadLetterQueueArn != null) {
+                    _resourceStatements.Add(new Statement {
+                        Effect = "Allow",
+                        Resource = _module.Settings.DeadLetterQueueArn,
+                        Action = new List<string> {
+                            "sqs:SendMessage"
+                        }
+                    });
+                }
+
+                // permissions needed for logging topic
+                if(_module.Settings.LoggingTopicArn != null) {
+                    _resourceStatements.Add(new Statement {
+                        Effect = "Allow",
+                        Resource = _module.Settings.LoggingTopicArn,
+                        Action = new List<string> {
+                            "sns:Publish"
+                        }
+                    });
+                }
+
+                // permissions needed for lambda functions to exist in a VPC
+                if(_module.Functions.Any(function => function.VPC != null)) {
+                    _resourceStatements.Add(new Statement {
+                        Effect = "Allow",
+                        Resource = "*",
+                        Action = new List<string> {
+                            "ec2:DescribeNetworkInterfaces",
+                            "ec2:CreateNetworkInterface",
+                            "ec2:DeleteNetworkInterface"
+                        }
+                    });
+                }
 
                 // create module IAM role used by all functions
                 _stack.Add("ModuleRole", new IAM.Role {

@@ -286,7 +286,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         AddError($"parameter name is not valid");
                     }
                     if(parameter.Secret != null) {
-                        ValidateNotBothStatements("Secret", "Import", parameter.Import == null);
                         ValidateNotBothStatements("Secret", "Parameters", parameter.Parameters == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
@@ -304,7 +303,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             };
                         });
                     } else if(parameter.Values != null) {
-                        ValidateNotBothStatements("Values", "Import", parameter.Import == null);
                         ValidateNotBothStatements("Values", "Parameters", parameter.Parameters == null);
                         ValidateNotBothStatements("Values", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Values", "Package", parameter.Package == null);
@@ -312,30 +310,33 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // list of values
                         AtLocation("Values", () => {
-                            if(parameter.Resource != null) {
-                                AtLocation("Resource", () => {
-                                    for(var i = 1; i <= parameter.Values.Count; ++i) {
 
-                                        // existing resource
-                                        var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
-                                        resultList.Add(new ReferencedResourceParameter {
-                                            Name = parameter.Name + i,
-                                            FullName = parameterFullName + i,
-                                            Description = parameter.Description,
-                                            Resource = resource
-                                        });
-                                    }
-                                });
-                            }
-                            result = new StringListParameter {
+                            // convert a `StringList` into `String` parameter by concatenating the values, separated by a comma (`,`)
+                            result = new StringParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Values = parameter.Values,
+                                Value = string.Join(",", parameter.Values),
                                 Export = parameter.Export
                             };
                         });
+
+                        // TODO (2018-08-19, bjorg): convert into a nested collection instead
+                        if(parameter.Resource != null) {
+                            AtLocation("Resource", () => {
+
+                                // enumerate values and add the requested permission for each
+                                for(var i = 1; i <= parameter.Values.Count; ++i) {
+                                    var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
+                                    resultList.Add(new ReferencedResourceParameter {
+                                        Name = parameter.Name + i,
+                                        FullName = parameterFullName + i,
+                                        Description = parameter.Description,
+                                        Resource = resource
+                                    });
+                                }
+                            });
+                        }
                     } else if(parameter.Parameters != null) {
-                        ValidateNotBothStatements("Parameters", "Import", parameter.Import == null);
                         ValidateNotBothStatements("Parameters", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Parameters", "Package", parameter.Package == null);
                         ValidateNotBothStatements("Parameters", "Resource", parameter.Resource == null);
@@ -357,72 +358,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                     Export = parameter.Export
                                 };
                             }
-                        });
-                    } else if(parameter.Import != null) {
-                        ValidateNotBothStatements("Import", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Import", "Package", parameter.Package == null);
-                        ValidateNotBothStatements("Import", "EncryptionContext", parameter.EncryptionContext == null);
-
-                        // imported value
-                        AtLocation("Import", () => {
-                            if(parameter.Import.EndsWith("/")) {
-
-                                // TODO (2018-06-03, bjorg): convert multiple imported values into a parameter collection
-                                AddError("importing parameter hierarchies are not yet supported");
-                                if(parameter.Resource != null) {
-                                    AddError($"cannot have 'Resource' for importing parameter hierarchies");
-                                }
-                            } else {
-                                if(!_importer.TryGetValue(parameter.Import, out ResolvedImport value)) {
-                                    AddError($"could not find import");
-                                } else {
-
-                                    // check the imported parameter store type
-                                    switch(value.Type) {
-                                    case "String":
-
-                                        // imported string value could identify a resource
-                                        if(parameter.Resource != null) {
-                                            var resource = AtLocation("Resource", () => ConvertResource(value.Value, parameter.Resource), null);
-                                            result = new ReferencedResourceParameter {
-                                                Name = parameter.Name,
-                                                Description = parameter.Description,
-                                                Resource = resource
-                                            };
-                                        } else {
-                                            result = new StringParameter {
-                                                Name = parameter.Name,
-                                                Description = parameter.Description,
-                                                Value = value.Value
-                                            };
-                                        }
-                                        break;
-                                    case "StringList":
-                                        Validate(parameter.Resource == null, "cannot have 'Resource' when importing a value of type 'StringList'");
-                                        result = new StringListParameter {
-                                            Name = parameter.Name,
-                                            Description = parameter.Description,
-                                            Values = value.Value.Split(',')
-                                        };
-                                        break;
-                                    case "SecureString":
-                                        Validate(parameter.Resource == null, "cannot have 'Resource' when importing a value of type 'SecureString'");
-                                        result = new SecretParameter {
-                                            Name = parameter.Name,
-                                            Description = parameter.Description,
-                                            Secret = value.Value,
-                                            EncryptionContext = new Dictionary<string, string> {
-                                                ["PARAMETER_ARN"] = $"arn:aws:ssm:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:parameter{parameter.Import}"
-                                            }
-                                        };
-                                        break;
-                                    default:
-                                        AddError($"imported parameter has unsupported type '{value.Type}'");
-                                        break;
-                                    }
-                                }
-                            }
-
                         });
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
@@ -666,44 +601,20 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // initialize VPC configuration if provided
                 FunctionVpc vpc = null;
-                if(function.VPC is string vpcName) {
+                if(function.VPC?.Any() ?? false) {
+                    if(
+                        function.VPC.TryGetValue("SubnetIds", out var subnets)
+                        && function.VPC.TryGetValue("SecurityGroupIds", out var securityGroups)
+                    ) {
                     AtLocation("VPC", () => {
-                        if(!_importer.TryGetValue(vpcName, out IEnumerable<ResolvedImport> imports)) {
-                            AddError($"could not find VPC information for {vpcName}");
-                            return;
-                        }
-                        var subnetIdsText = imports.FirstOrDefault(import => import.Key == vpcName + "SubnetIds");
-                        var subnetIds = new string[0];
-                        var securityGroupIdsText = imports.FirstOrDefault(import => import.Key == vpcName + "SecurityGroupsIds");
-                        var securityGroupIds = new string[0];
-                        if(subnetIdsText == null) {
-                            AddError($"{vpcName}SubnetIds is missing");
-                        } else if(subnetIdsText.Type != "StringList") {
-                            AddError($"{vpcName}SubnetIds has type '{subnetIdsText.Type}', expected 'StringList'");
-                        } else {
-                            subnetIds = subnetIdsText.Value.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                            if(!subnetIds.Any()) {
-                                AddError($"{vpcName}SubnetIds is empty'");
-                            }
-                        }
-                        if(securityGroupIdsText == null) {
-                            AddError($"{vpcName}SecurityGroupsIds is missing");
-                        } else if(securityGroupIdsText.Type != "StringList") {
-                            AddError($"{vpcName}SecurityGroupsIds has type '{subnetIdsText.Type}', expected 'StringList'");
-                        } else {
-                            securityGroupIds = securityGroupIdsText.Value.Split(',', StringSplitOptions.RemoveEmptyEntries);
-                            if(!securityGroupIds.Any()) {
-                                AddError($"{vpcName}SecurityGroupsIds is empty'");
-                            }
-                        }
-                        if(!subnetIds.Any() || !securityGroupIds.Any()) {
-                            return;
-                        }
                         vpc = new FunctionVpc {
-                            SubnetIds = subnetIds,
-                            SecurityGroupIds = securityGroupIds
+                            SubnetIds = subnets,
+                            SecurityGroupIds = securityGroups
                         };
                     });
+                    } else {
+                        AddError("Lambda function contains a VPC definition that does not include SubnetIds or SecurityGroupIds");
+                    }
                 }
 
                 // compile function project
@@ -1101,7 +1012,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // find all parameters with an `Import` field
             AtLocation("Parameters", () => FindAllParameterImports());
-            AtLocation("Functions", () => FindAllFunctionImports());
 
             // resolve all imported values
             _importer.BatchResolveImports();
@@ -1224,41 +1134,97 @@ namespace MindTouch.LambdaSharp.Tool {
             void ReplaceAllParameterImports(IList<ParameterNode> @params = null) {
                 var parameterCollection = @params ?? module.Parameters;
                 for(var i = 0; i < parameterCollection.Count; ++i) {
-                    var param = parameterCollection[i];
-                    var paramName = param.Name ?? $"#{i + 1}";
-                    if(param.Import != null) {
+                    var parameter = parameterCollection[i];
+                    var parameterName = parameter.Name ?? $"#{i + 1}";
+                    AtLocation(parameterName, () => {
 
-                        // TODO: replace node
-                        if(param.Import.EndsWith("/", StringComparison.Ordinal)) {
-
-                        } else {
-
+                        // replace nested parameters
+                        if(parameter.Parameters != null) {
+                            ReplaceAllParameterImports(parameter.Parameters);
                         }
-                    }
 
-                    // check if we need to recurse into nested parameters
-                    if(param.Parameters != null) {
-                        AtLocation(paramName, () => {
-                            ReplaceAllParameterImports(param.Parameters);
-                        });
-                    }
-                }
-            }
+                        // replace current parameter
+                        if(parameter.Import != null) {
 
-            void FindAllFunctionImports() {
-                foreach(var function in module.Functions.Where(function => function.VPC != null)) {
-                    AtLocation(function.Name, () => {
-                        var vpc = function.VPC;
-                        if(!string.IsNullOrEmpty(vpc)) {
-                            if(!vpc.StartsWith("/")) {
-                                vpc = $"/{_module.Settings.Tier}/VPC/{vpc}/";
+                            // check if import is a parameter hierarchy
+                            if(parameter.Import.EndsWith("/", StringComparison.Ordinal)) {
+                                var imports = AtLocation("Import", () => {
+                                    _importer.TryGetValue(parameter.Import, out IEnumerable<ResolvedImport> found);
+                                    return found;
+                                }, null);
+                                if(imports?.Any() == true) {
+                                    parameterCollection[i] = ConvertImportedParameter(
+                                        parameter.Import.Substring(0, parameter.Import.Length - 1),
+                                        new ParameterNode(parameter)
+                                    );
+                                } else {
+                                    AddError($"could not find import");
+                                }
+
+                                // local functions
+                                ParameterNode ConvertImportedParameter(string path, ParameterNode node) {
+                                    var current = imports.FirstOrDefault(import => import.Key == path);
+                                    SetImportedParameterNode(path, node, current);
+
+                                    // find nested, imported values
+                                    var subImports = imports.Where(import => import.Key.StartsWith(path + "/", StringComparison.Ordinal)).ToArray();
+                                    if(subImports.Any()) {
+                                        node.Parameters = subImports
+                                            .ToLookup(import => import.Key.Substring(path.Length + 1).Split('/', 2)[0])
+                                            .Select(child => ConvertImportedParameter(
+                                                path + "/" + child.Key,
+                                                new ParameterNode {
+                                                    Name = child.Key
+                                                }
+                                            ))
+                                            .ToArray();
+                                    }
+                                    return node;
+                                }
+                            } else {
+                                var import = AtLocation("Import", () => {
+                                    _importer.TryGetValue(parameter.Import, out ResolvedImport found);
+                                    return found;
+                                }, null);
+                                if(import != null) {
+
+                                    // check the imported parameter store type
+                                    parameterCollection[i] = new ParameterNode(parameter);
+                                    SetImportedParameterNode(parameter.Import, parameterCollection[i], import);
+                                } else {
+                                    AddError($"import key not found '{parameter.Import}'");
+                                }
                             }
-                            _importer.Add(vpc);
                         }
-                        function.VPC = vpc;
+
+                        // local functions
+                        void SetImportedParameterNode(string path, ParameterNode node, ResolvedImport import) {
+                            switch(import?.Type) {
+                            case "String":
+                                node.Value = import.Value;
+                                break;
+                            case "StringList":
+                                node.Values = import.Value.Split(',');
+                                break;
+                            case "SecureString":
+                                node.Secret = import.Value;
+                                node.EncryptionContext = new Dictionary<string, string> {
+                                    ["PARAMETER_ARN"] = $"arn:aws:ssm:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:parameter{import.Key}"
+                                };
+                                break;
+                            case null:
+
+                                // set empty string on non-existing imported nodes
+                                node.Value = "";
+                                break;
+                            default:
+                                AddError($"unrecognized import type '{import?.Type}' for import key '{path}'");
+                                node.Value = "<NOT SET>";
+                                break;
+                            }
+                        }
                     });
                 }
-
             }
 
             string GetLambdaSharpSetting(string name) {

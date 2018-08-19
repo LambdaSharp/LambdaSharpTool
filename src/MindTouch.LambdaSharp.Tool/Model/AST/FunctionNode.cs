@@ -35,7 +35,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Memory { get; set; }
         public string Timeout { get; set; }
         public string ReservedConcurrency { get; set; }
-        public string VPC { get; set; }
+        public Dictionary<string, object> VPC { get; set; }
         public Dictionary<string, string> Environment { get; set; }
         public string Export { get; set; }
    }

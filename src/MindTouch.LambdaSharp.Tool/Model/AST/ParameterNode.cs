@@ -25,6 +25,23 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class ParameterNode {
 
+        //--- Constructors ---
+        public ParameterNode() { }
+
+        public ParameterNode(ParameterNode parameter) {
+            Name = parameter.Name;
+            Description = parameter.Description;
+            Resource = parameter.Resource;
+            Secret = parameter.Secret;
+            EncryptionContext = parameter.EncryptionContext;
+            Values = parameter.Values;
+            Value = parameter.Value;
+            Import = parameter.Import;
+            Package = parameter.Package;
+            Export = parameter.Export;
+            Parameters = parameter.Parameters;
+        }
+
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }

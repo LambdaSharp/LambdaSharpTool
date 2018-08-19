@@ -44,7 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
    public class FunctionVpc {
 
        //--- Properties ---
-       public IList<string> SubnetIds { get; set; }
-       public IList<string> SecurityGroupIds { get; set; }
+       public object SubnetIds { get; set; }
+       public object SecurityGroupIds { get; set; }
    }
 }
