@@ -28,6 +28,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public abstract class AModelProcessor {
 
+        //--- Constants ---
+        protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
+
         //--- Fields ---
         private readonly Settings _settings;
         private Stack<string> _locations = new Stack<string>();

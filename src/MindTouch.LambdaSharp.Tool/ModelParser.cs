@@ -48,14 +48,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
-        private const string PARAMETERSFILE = "parameters.json";
-        private const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
-        private const string IMPORT_PATTERN = "^/?[a-zA-Z][a-zA-Z0-9]*(/[a-zA-Z][a-zA-Z0-9]*)*/?$";
         private const string SECRET_ALIAS_PATTERN = "[0-9a-zA-Z/_\\-]+";
 
         //--- Fields ---
         private Module _module;
-        private ImportResolver _importer;
         private bool _skipCompile;
 
         //--- Constructors ---
@@ -67,7 +63,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Settings = Settings
             };
             _skipCompile = skipCompile;
-            _importer = new ImportResolver(Settings.SsmClient);
 
             // parse YAML file into module AST
             ModuleNode module;
@@ -134,7 +129,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // resolve all imported parameters
-            ImportValuesFromParameterStore(module);
+            new ModelImportProcessor(Settings).Process(module);
 
             // convert secrets
             var secretIndex = 0;
@@ -516,20 +511,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             } else {
                 resourceType = AtLocation("Type", () => {
-                    if(resource.Type.StartsWith("Custom::")) {
-                        if(resource.ImportServiceToken is string importServiceToken) {
-                            if(!_importer.TryGetValue(importServiceToken, out string importedValue)) {
-                                AddError("unable to find custom resource handler topic");
-                                return "<BAD>";
-                            }
-
-                            // add resolved `ServiceToken` to custom resource
-                            if(resource.Properties == null) {
-                                resource.Properties = new Dictionary<string, object>();
-                            }
-                            resource.Properties["ServiceToken"] = importedValue;
-                        }
-                    } else if(!_module.Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)) {
+                    if(
+                        !resource.Type.StartsWith("Custom::")
+                        && !_module.Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
+                    ) {
                         AddError($"unsupported resource type: {resource.Type}");
                         return "<BAD>";
                     }
@@ -989,247 +974,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(!condition) {
                     AddError($"attributes '{attribute1}' and '{attribute2}' are not allowed at the same time");
                 }
-            }
-        }
-
-        private void ImportValuesFromParameterStore(ModuleNode module) {
-
-            // NOTE (2018-08-04, bjorg): we only import lambdasharp parameters when necessary
-            //  to allow tests to use a dummy AWS account ID; since no import will be triggered
-            //  the dummy account id is not an issue.
-            var lambdaSharpPath = $"/{Settings.Tier}/LambdaSharp/";
-            if(
-                (Settings.EnvironmentVersion == null)
-                || (Settings.DeploymentBucketName == null)
-                || (Settings.DeadLetterQueueUrl == null)
-                || (Settings.LoggingTopicArn == null)
-                || (Settings.NotificationTopicArn == null)
-                || (Settings.RollbarCustomResourceTopicArn == null)
-                || (Settings.S3PackageLoaderCustomResourceTopicArn == null)
-            ) {
-                _importer.Add(lambdaSharpPath);
-            }
-
-            // find all parameters with an `Import` field
-            AtLocation("Parameters", () => FindAllParameterImports());
-
-            // resolve all imported values
-            _importer.BatchResolveImports();
-
-            // replace all parameters with an `Import` field
-            AtLocation("Parameters", () => ReplaceAllParameterImports());
-
-            // read missing LambdaSharp settings from the LambdaSharp Environment (unless the 'LambdaSharp` module is being deployed)
-            if(module.Name != "LambdaSharp") {
-                if(Settings.EnvironmentVersion == null) {
-                    var version = GetLambdaSharpSetting("Version");
-                    if(version != null) {
-                        Settings.EnvironmentVersion = new Version(version);
-                    }
-                }
-                Settings.DeploymentBucketName = Settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                Settings.DeadLetterQueueUrl = Settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-                Settings.LoggingTopicArn = Settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
-                Settings.NotificationTopicArn = Settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-                Settings.RollbarCustomResourceTopicArn = Settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-                Settings.S3PackageLoaderCustomResourceTopicArn = Settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
-
-                // check that LambdaSharp Environment & Tool versions match
-                if(Settings.EnvironmentVersion == null) {
-                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                } else {
-                    if(Settings.EnvironmentVersion != Settings.ToolVersion) {
-                        AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                    }
-                }
-            }
-
-            // check if any imports were not found
-            foreach(var missing in _importer.MissingImports) {
-                AddError($"import parameter '{missing}' not found");
-            }
-            return;
-
-            // local functions
-            void FindAllParameterImports(IEnumerable<ParameterNode> @params = null) {
-                var paramIndex = 0;
-                foreach(var param in @params ?? module.Parameters) {
-                    ++paramIndex;
-                    var paramName = param.Name ?? $"#{paramIndex}";
-                    if(param.Import != null) {
-                        AtLocation("Import", () => {
-                            if(!Regex.IsMatch(param.Import, IMPORT_PATTERN)) {
-                                AddError("import value is invalid");
-                                return;
-                            }
-
-                            // check if import requires a deployment tier prefix
-                            if(!param.Import.StartsWith("/")) {
-                                param.Import = $"/{_module.Settings.Tier}/" + param.Import;
-                            }
-                            _importer.Add(param.Import);
-                        });
-                    }
-
-                    // check if we need to import a custom resource handler topic
-                    var resourceType = param?.Resource?.Type;
-                    if((resourceType != null) && !resourceType.StartsWith("AWS::")) {
-                        AtLocation(paramName, () => {
-                            AtLocation("Resource", () => {
-                                AtLocation("Type", () => {
-
-                                    // confirm the custom resource has a `ServiceToken` specified or imports one
-                                    if(resourceType.StartsWith("Custom::") || (resourceType == "AWS::CloudFormation::CustomResource")) {
-                                        if(param.Resource.ImportServiceToken != null) {
-                                            param.Resource.ImportServiceToken = param.Resource.ImportServiceToken;
-                                            _importer.Add(param.Resource.ImportServiceToken);
-                                        } else {
-                                            AtLocation("Properties", () => {
-                                                if(!(param.Resource.Properties?.ContainsKey("ServiceToken") ?? false)) {
-                                                    AddError("missing ServiceToken in custom resource properties");
-                                                }
-                                            });
-                                        }
-                                        return;
-                                    }
-
-                                    // parse resource name as `{MODULE}::{TYPE}` pattern to import the custom resource topic name
-                                    var customResourceHandlerAndType = resourceType.Split("::");
-                                    if(customResourceHandlerAndType.Length != 2) {
-                                        AddError("custom resource type must have format {MODULE}::{TYPE}");
-                                        return;
-                                    }
-                                    if(!Regex.IsMatch(customResourceHandlerAndType[0], CLOUDFORMATION_ID_PATTERN)) {
-                                        AddError($"custom resource prefix must be alphanumeric: {customResourceHandlerAndType[0]}");
-                                        return;
-                                    }
-                                    if(!Regex.IsMatch(customResourceHandlerAndType[1], CLOUDFORMATION_ID_PATTERN)) {
-                                        AddError($"custom resource suffix must be alphanumeric: {customResourceHandlerAndType[1]}");
-                                        return;
-                                    }
-                                    param.Resource.Type = "Custom::" + param.Resource.Type.Replace("::", "");
-
-                                    // check if custom resource needs a service token to be retrieved
-                                    if(!(param.Resource.Properties?.ContainsKey("ServiceToken") ?? false)) {
-                                        var importServiceToken = $"/{_module.Settings.Tier}"
-                                            + $"/{customResourceHandlerAndType[0]}"
-                                            + $"/{customResourceHandlerAndType[1]}CustomResourceTopic";
-                                        param.Resource.ImportServiceToken = importServiceToken;
-                                        _importer.Add(importServiceToken);
-                                    }
-                                });
-                            });
-                        });
-                    }
-
-                    // check if we need to recurse into nested parameters
-                    if(param.Parameters != null) {
-                        AtLocation(paramName, () => {
-                            FindAllParameterImports(param.Parameters);
-                        });
-                    }
-                }
-            }
-            // local functions
-            void ReplaceAllParameterImports(IList<ParameterNode> @params = null) {
-                var parameterCollection = @params ?? module.Parameters;
-                for(var i = 0; i < parameterCollection.Count; ++i) {
-                    var parameter = parameterCollection[i];
-                    var parameterName = parameter.Name ?? $"#{i + 1}";
-                    AtLocation(parameterName, () => {
-
-                        // replace nested parameters
-                        if(parameter.Parameters != null) {
-                            ReplaceAllParameterImports(parameter.Parameters);
-                        }
-
-                        // replace current parameter
-                        if(parameter.Import != null) {
-
-                            // check if import is a parameter hierarchy
-                            if(parameter.Import.EndsWith("/", StringComparison.Ordinal)) {
-                                var imports = AtLocation("Import", () => {
-                                    _importer.TryGetValue(parameter.Import, out IEnumerable<ResolvedImport> found);
-                                    return found;
-                                }, null);
-                                if(imports?.Any() == true) {
-                                    parameterCollection[i] = ConvertImportedParameter(
-                                        parameter.Import.Substring(0, parameter.Import.Length - 1),
-                                        new ParameterNode(parameter)
-                                    );
-                                } else {
-                                    AddError($"could not find import");
-                                }
-
-                                // local functions
-                                ParameterNode ConvertImportedParameter(string path, ParameterNode node) {
-                                    var current = imports.FirstOrDefault(import => import.Key == path);
-                                    SetImportedParameterNode(path, node, current);
-
-                                    // find nested, imported values
-                                    var subImports = imports.Where(import => import.Key.StartsWith(path + "/", StringComparison.Ordinal)).ToArray();
-                                    if(subImports.Any()) {
-                                        node.Parameters = subImports
-                                            .ToLookup(import => import.Key.Substring(path.Length + 1).Split('/', 2)[0])
-                                            .Select(child => ConvertImportedParameter(
-                                                path + "/" + child.Key,
-                                                new ParameterNode {
-                                                    Name = child.Key
-                                                }
-                                            ))
-                                            .ToArray();
-                                    }
-                                    return node;
-                                }
-                            } else {
-                                var import = AtLocation("Import", () => {
-                                    _importer.TryGetValue(parameter.Import, out ResolvedImport found);
-                                    return found;
-                                }, null);
-                                if(import != null) {
-
-                                    // check the imported parameter store type
-                                    parameterCollection[i] = new ParameterNode(parameter);
-                                    SetImportedParameterNode(parameter.Import, parameterCollection[i], import);
-                                } else {
-                                    AddError($"import key not found '{parameter.Import}'");
-                                }
-                            }
-                        }
-
-                        // local functions
-                        void SetImportedParameterNode(string path, ParameterNode node, ResolvedImport import) {
-                            switch(import?.Type) {
-                            case "String":
-                                node.Value = import.Value;
-                                break;
-                            case "StringList":
-                                node.Values = import.Value.Split(',');
-                                break;
-                            case "SecureString":
-                                node.Secret = import.Value;
-                                node.EncryptionContext = new Dictionary<string, string> {
-                                    ["PARAMETER_ARN"] = $"arn:aws:ssm:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:parameter{import.Key}"
-                                };
-                                break;
-                            case null:
-
-                                // set empty string on non-existing imported nodes
-                                node.Value = "";
-                                break;
-                            default:
-                                AddError($"unrecognized import type '{import?.Type}' for import key '{path}'");
-                                node.Value = "<NOT SET>";
-                                break;
-                            }
-                        }
-                    });
-                }
-            }
-
-            string GetLambdaSharpSetting(string name) {
-                _importer.TryGetValue(lambdaSharpPath + name, out string result);
-                return result;
             }
         }
 
