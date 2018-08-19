@@ -1106,6 +1106,9 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve all imported values
             _importer.BatchResolveImports();
 
+            // replace all parameters with an `Import` field
+            AtLocation("Parameters", () => ReplaceAllParameterImports());
+
             // read missing LambdaSharp settings from the LambdaSharp Environment (unless the 'LambdaSharp` module is being deployed)
             if(module.Name != "LambdaSharp") {
                 if(Settings.EnvironmentVersion == null) {
@@ -1213,6 +1216,30 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(param.Parameters != null) {
                         AtLocation(paramName, () => {
                             FindAllParameterImports(param.Parameters);
+                        });
+                    }
+                }
+            }
+            // local functions
+            void ReplaceAllParameterImports(IList<ParameterNode> @params = null) {
+                var parameterCollection = @params ?? module.Parameters;
+                for(var i = 0; i < parameterCollection.Count; ++i) {
+                    var param = parameterCollection[i];
+                    var paramName = param.Name ?? $"#{i + 1}";
+                    if(param.Import != null) {
+
+                        // TODO: replace node
+                        if(param.Import.EndsWith("/", StringComparison.Ordinal)) {
+
+                        } else {
+
+                        }
+                    }
+
+                    // check if we need to recurse into nested parameters
+                    if(param.Parameters != null) {
+                        AtLocation(paramName, () => {
+                            ReplaceAllParameterImports(param.Parameters);
                         });
                     }
                 }
