@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -141,10 +142,8 @@ namespace MindTouch.LambdaSharp {
             var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
             LogInfo($"GITSHA = {gitsha ?? "NONE"}");
 
-            // create config where environment variables take precedence over those found in the parameter file
-
-            // TODO (2018-08-17, bjorg): this is currently broken (needs `PARAM_` prefix)
-            _appConfig = new LambdaConfig(envSource);
+            // convert environment variables to lambda parameters
+            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
             // initialize rollbar
             var rollbarAccessToken = _appConfig.ReadText("RollbarToken", defaultValue: null);
@@ -174,6 +173,47 @@ namespace MindTouch.LambdaSharp {
                 LogWarn("dead letter queue not configured");
                 throw new LambdaFunctionException("dead letter queue not configured", exception);
             }
+        }
+
+        private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
+            var parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach(DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
+                var key = envVar.Key as string;
+                var value = envVar.Value as string;
+                if((key == null) || (value == null)) {
+                    continue;
+                }
+                var paramKey = "/" + key.Substring(4).Replace('_', '/');
+                if(key.StartsWith("STR_", StringComparison.Ordinal)) {
+
+                    // plain string value
+                    parameters.Add(paramKey, value);
+                } else if(key.StartsWith("SEC_", StringComparison.Ordinal)) {
+
+                    // secret with optional encryption context pairs
+                    var parts = value.Split('|');
+                    Dictionary<string, string> encryptionContext = null;
+                    if(parts.Length > 1) {
+                        encryptionContext = new Dictionary<string, string>();
+                        for(var i = 1; i < parts.Length; ++i) {
+                            var pair = parts[i].Split('=', 2);
+                            if(pair.Length != 2) {
+                                continue;
+                            }
+                            encryptionContext.Add(
+                                Uri.UnescapeDataString(pair[0]),
+                                Uri.UnescapeDataString(pair[1])
+                            );
+                        }
+                    }
+                    var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
+                        CiphertextBlob = new MemoryStream(Convert.FromBase64String(value)),
+                        EncryptionContext = encryptionContext
+                    })).Plaintext;
+                    parameters.Add(paramKey, Encoding.UTF8.GetString(plaintextStream.ToArray()));
+                }
+            }
+            return parameters;
         }
 
         #region *** Logging ***

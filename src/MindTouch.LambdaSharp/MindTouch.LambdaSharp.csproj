@@ -2,6 +2,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
     <PackageId>MindTouch.LambdaSharp</PackageId>
     <Version>0.3.0-pre</Version>
     <Title>MindTouch λ#</Title>

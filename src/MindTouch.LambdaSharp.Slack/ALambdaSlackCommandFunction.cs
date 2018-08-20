@@ -132,7 +132,8 @@ namespace MindTouch.LambdaSharp.Slack {
 
         protected async Task<bool> Respond(SlackRequest request, SlackResponse response) {
             using(var stream = new MemoryStream()) {
-                new JsonSerializer().Serialize(response, stream);
+                JsonSerializer.Serialize(response, stream);
+                stream.Position = 0;
                 var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                     RequestUri = new Uri(request.ResponseUrl),
                     Method = HttpMethod.Post,
