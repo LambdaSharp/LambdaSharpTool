@@ -62,6 +62,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
         public Action<string, Exception> ErrorCallback { get; set; }
+        public bool HasErrors { get; set; }
         public VerboseLevel VerboseLevel { get; set; }
         public string ModuleFileName { get; set; }
         public string WorkingDirectory { get; set; }
@@ -77,7 +78,9 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public void AddError(string message, Exception exception = null)
-            => ErrorCallback(message, exception);
+        public void AddError(string message, Exception exception = null) {
+            HasErrors = true;
+            ErrorCallback(message, exception);
+        }
     }
 }

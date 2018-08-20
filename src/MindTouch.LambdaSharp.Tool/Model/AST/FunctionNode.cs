@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
@@ -38,5 +39,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public Dictionary<string, object> VPC { get; set; }
         public Dictionary<string, string> Environment { get; set; }
         public string Export { get; set; }
+        public string Package { get; set; }
    }
 }
