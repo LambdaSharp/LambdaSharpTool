@@ -628,7 +628,7 @@ namespace MindTouch.LambdaSharp.Tool {
             switch(parameter) {
             case SecretParameter secretParameter:
                 if(secretParameter.EncryptionContext?.Any() == true) {
-                    environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Secret}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeUriString(kv.Key)}={Uri.EscapeUriString(kv.Value)}"))}";
+                    environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Secret}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
                 } else {
                     environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Secret;
                 }
@@ -657,7 +657,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // add literal string list parameter value as CloudFormation parameter so it can be referenced
                 _stack.Add(stringListParameter.FullName, new Parameter {
-                    Type = "StringList",
+                    Type = "CommaDelimitedList",
                     Default = string.Join(",", stringListParameter.Values),
                     Description = stringListParameter.Description
                 });
