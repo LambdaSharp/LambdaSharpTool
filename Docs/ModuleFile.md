@@ -382,6 +382,7 @@ Project: String
 Handler: String
 Runtime: String
 ReservedConcurrency: Int
+Export: String
 Environment:
   String: String
 Sources:
@@ -460,6 +461,15 @@ The <tt>ReservedConcurrency</tt> attribute specifies the number of Lambda invoca
 <i>Required</i>: No
 
 <i>Type</i>: Int
+</dd>
+
+<dt><tt>Export</tt></dt>
+<dd>
+The <tt>Export</tt> attribute specifies a path to the AWS Systems Manager Parameter Store. When the CloudFormation stack is deployed, the Lambda ARN is published to the parameter store at the export path. If the export path starts with <tt>/</tt>, it will be used as an absolute path. Otherwise the export path is prefixed with <tt>/{{Tier}}/{{Module}}/</tt> to create an export path specific to the deployment tier.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
 </dd>
 
 <dt><tt>Environment</tt></dt>
