@@ -34,6 +34,7 @@
         "AssumeRolePolicyDocument": {
           "Statement": [
             {
+              "Sid": "LambdaInvocation",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -47,6 +48,7 @@
             "PolicyDocument": {
               "Statement": [
                 {
+                  "Sid": "LambdaLoggingWrite",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -55,6 +57,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "LambdaLoggingCreate",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogGroup"
@@ -62,6 +65,7 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "LambdaDeadLetterQueueLogging",
                   "Effect": "Allow",
                   "Action": [
                     "sqs:SendMessage"
@@ -69,6 +73,7 @@
                   "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
                 },
                 {
+                  "Sid": "LambdaSnsLogging",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Publish"
@@ -145,6 +150,7 @@
         "AssumeRolePolicyDocument": {
           "Statement": [
             {
+              "Sid": "LambdaRestApiInvocation",
               "Effect": "Allow",
               "Principal": {
                 "Service": "apigateway.amazonaws.com"
@@ -158,6 +164,7 @@
             "PolicyDocument": {
               "Statement": [
                 {
+                  "Sid": "LambdaRestApiLogging",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogGroup",

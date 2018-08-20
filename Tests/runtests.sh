@@ -12,6 +12,7 @@ dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.
 
 lash() {
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
+        --verbose:exceptions \
         --tier Test \
         --output $1-CF.json \
         --dryrun:cloudformation \

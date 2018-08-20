@@ -281,7 +281,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         AddError($"parameter name is not valid");
                     }
                     if(parameter.Secret != null) {
-                        ValidateNotBothStatements("Secret", "Parameters", parameter.Parameters == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
@@ -298,62 +297,39 @@ namespace MindTouch.LambdaSharp.Tool {
                             };
                         });
                     } else if(parameter.Values != null) {
-                        ValidateNotBothStatements("Values", "Parameters", parameter.Parameters == null);
                         ValidateNotBothStatements("Values", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Values", "Package", parameter.Package == null);
                         ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // list of values
                         AtLocation("Values", () => {
-
-                            // convert a `StringList` into `String` parameter by concatenating the values, separated by a comma (`,`)
-                            result = new StringParameter {
+                            result = new StringListParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Value = string.Join(",", parameter.Values),
+                                Values = parameter.Values,
                                 Export = parameter.Export
                             };
                         });
 
-                        // TODO (2018-08-19, bjorg): convert into a nested collection instead
+                        // TODO (2018-08-19, bjorg): this implementation create unnecessary parameters
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {
+                                if(parameter.Parameters != null) {
+                                    AddError("multiple values with a resource cannot have nested parameters");
+                                    return;
+                                }
 
-                                // enumerate values and add the requested permission for each
+                                // enumerate individual values with resource definition for each
+                                parameter.Parameters = new List<ParameterNode>();
                                 for(var i = 1; i <= parameter.Values.Count; ++i) {
-                                    var resource = ConvertResource(parameter.Values[i - 1], parameter.Resource);
-                                    resultList.Add(new ReferencedResourceParameter {
-                                        Name = parameter.Name + i,
-                                        FullName = parameterFullName + i,
-                                        Description = parameter.Description,
-                                        Resource = resource
+                                    parameter.Parameters.Add(new ParameterNode {
+                                        Name = $"Index{i}",
+                                        Value = parameter.Values[i - 1],
+                                        Resource = parameter.Resource
                                     });
                                 }
                             });
                         }
-                    } else if(parameter.Parameters != null) {
-                        ValidateNotBothStatements("Parameters", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Parameters", "Package", parameter.Package == null);
-                        ValidateNotBothStatements("Parameters", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Parameters", "EncryptionContext", parameter.EncryptionContext == null);
-
-                        // nested values
-                        AtLocation("Parameters", () => {
-
-                            // keep nested parameters only if they have values
-                            var nestedParameters = ConvertParameters(
-                                parameter.Parameters,
-                                parameterFullName
-                            );
-                            if(nestedParameters.Any()) {
-                                result = new CollectionParameter {
-                                    Name = parameter.Name,
-                                    Description = parameter.Description,
-                                    Parameters = nestedParameters,
-                                    Export = parameter.Export
-                                };
-                            }
-                        });
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
@@ -471,7 +447,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Value = parameter.Value
                             };
                         }
-                    } else {
+                    } else if(parameter.Resource != null) {
 
                         // managed resource
                         AtLocation("Resource", () => {
@@ -483,6 +459,31 @@ namespace MindTouch.LambdaSharp.Tool {
                         });
                     }
                 });
+
+                // check if there are nested parameters
+                if(parameter.Parameters != null) {
+                    AtLocation("Parameters", () => {
+                        var nestedParameters = ConvertParameters(
+                            parameter.Parameters,
+                            parameterFullName
+                        );
+
+                        // keep nested parameters only if they have values
+                        if(nestedParameters.Any()) {
+
+                            // create empty string parameter if collection has no value
+                            result = result ?? new StringParameter {
+                                Name = parameter.Name,
+                                Value = "",
+                                Description = parameter.Description,
+                                Export = parameter.Export
+                            };
+                            result.Parameters = nestedParameters;
+                        }
+                    });
+                }
+
+                // add parameter
                 if(result != null) {
                     result.FullName = parameterFullName;
                     result.Export = parameter.Export;
@@ -920,7 +921,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             AddError($"could not find parameter for S3 bucket: '{s3.Bucket}'");
                         } else if(!(parameter is AResourceParameter resourceParameter)) {
                             AddError($"parameter for S3 bucket is not a resource: '{s3.Bucket}'");
-                        } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
                             AddError($"parameter for S3 bucket must be an S3 bucket resource: '{s3.Bucket}'");
                         }
                         return s3;

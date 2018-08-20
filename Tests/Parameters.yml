@@ -43,6 +43,31 @@ Parameters:
           Purpose: Security
           "Spe|cial": "Char|acter"
 
+  - Name: OtherParameterCollection
+    Description: Description for collection parameter
+    Value: This collection has a value
+    Parameters:
+
+      - Name: FirstNestedParameter
+        Description: Same name as first nested parameter in sample parameter collection
+        Value: Another literal value
+
+  - Name: SingleResourceParameter
+    Description: Second nested parameter
+    Value: "arn:aws:sns:*:*:*"
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
+  - Name: MultiResourceParameter
+    Description: Second nested parameter
+    Values:
+      - "arn:aws:sns:*:*:*"
+      - "arn:aws:sns:*:*:*:*"
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
 Functions:
 
   - Name: Function

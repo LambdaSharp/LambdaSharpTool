@@ -31,6 +31,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
         public string Export { get; set; }
         public string FullName { get; set; }
+        public IList<AParameter> Parameters { get; set; }
     }
 
     public class SecretParameter : AParameter {
@@ -38,12 +39,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public object Secret { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
-    }
-
-    public class CollectionParameter : AParameter {
-
-        //--- Properties ---
-        public IList<AParameter> Parameters { get; set; }
     }
 
     public class StringParameter : AParameter {

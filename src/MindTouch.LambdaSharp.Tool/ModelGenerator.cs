@@ -67,6 +67,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // create generic resource statement; additional resource statements can be added by resources
             _resourceStatements = new List<Statement> {
                 new Statement {
+                    Sid = "LambdaLoggingWrite",
                     Effect = "Allow",
                     Resource = "arn:aws:logs:*:*:*",
                     Action = new List<string> {
@@ -75,6 +76,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 },
                 new Statement {
+                    Sid = "LambdaLoggingCreate",
                     Effect = "Allow",
                     Resource = "*",
                     Action = new List<string> {
@@ -86,6 +88,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // add decryption permission for requested keys
             if(_module.Secrets.Any()) {
                 _resourceStatements.Add(new Statement {
+                    Sid = "LambdaSecretsDecryption",
                     Effect = "Allow",
                     Resource = _module.Secrets,
                     Action = "kms:Decrypt"
@@ -105,6 +108,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // permissions needed for dead-letter queue
                 if(_module.Settings.DeadLetterQueueArn != null) {
                     _resourceStatements.Add(new Statement {
+                        Sid = "LambdaDeadLetterQueueLogging",
                         Effect = "Allow",
                         Resource = _module.Settings.DeadLetterQueueArn,
                         Action = new List<string> {
@@ -116,6 +120,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // permissions needed for logging topic
                 if(_module.Settings.LoggingTopicArn != null) {
                     _resourceStatements.Add(new Statement {
+                        Sid = "LambdaSnsLogging",
                         Effect = "Allow",
                         Resource = _module.Settings.LoggingTopicArn,
                         Action = new List<string> {
@@ -127,6 +132,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // permissions needed for lambda functions to exist in a VPC
                 if(_module.Functions.Any(function => function.VPC != null)) {
                     _resourceStatements.Add(new Statement {
+                        Sid = "LambdaVpcNetworkInterfaces",
                         Effect = "Allow",
                         Resource = "*",
                         Action = new List<string> {
@@ -142,6 +148,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AssumeRolePolicyDocument = new PolicyDocument {
                         Statement = new List<Statement> {
                             new Statement {
+                                Sid = "LambdaInvocation",
                                 Effect = "Allow",
                                 Principal = new {
                                     Service = "lambda.amazonaws.com"
@@ -198,6 +205,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         AssumeRolePolicyDocument = new PolicyDocument {
                             Statement = new List<Statement> {
                                 new Statement {
+                                    Sid = "LambdaRestApiInvocation",
                                     Effect = "Allow",
                                     Principal = new {
                                         Service = "apigateway.amazonaws.com"
@@ -212,6 +220,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 PolicyDocument = new PolicyDocument {
                                     Statement = new List<Statement> {
                                         new Statement {
+                                            Sid = "LambdaRestApiLogging",
                                             Effect = "Allow",
                                             Action = new List<string> {
                                                 "logs:CreateLogGroup",
@@ -629,21 +638,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     throw new NotImplementedException("exporting secrets is not yet supported");
                 }
                 break;
-            case CollectionParameter collectionParameter: {
-                    foreach(var nestedResource in collectionParameter.Parameters) {
-                        AddParameter(
-                            nestedResource,
-                            fullEnvName + "_",
-                            environmentRefVariables
-                        );
-                    }
-                    if(collectionParameter.Export != null) {
-
-                        // TODO (2018-08-16, bjorg): add support for exporting collections (or error out sooner)
-                        throw new NotImplementedException("exporting collections is not yet supported");
-                    }
-                }
-                break;
             case StringParameter stringParameter:
                 environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
                 exportValue = stringParameter.Value;
@@ -686,6 +680,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // add permissions for resource
                     if(resource.Allow?.Any() == true) {
                         _resourceStatements.Add(new Statement {
+                            Sid = parameter.FullName,
                             Effect = "Allow",
                             Resource = resource.ResourceArn,
                             Action = resource.Allow
@@ -805,6 +800,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // add permissions for resource
                     if((resourceArn != null) && (resource.Allow?.Any() == true)) {
                         _resourceStatements.Add(new Statement {
+                            Sid = parameter.FullName,
                             Effect = "Allow",
                             Resource = resourceArn,
                             Action = resource.Allow
@@ -814,6 +810,22 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(parameter), parameter, "unknown parameter type");
+            }
+
+            // check if nested parameters need to be added
+            if(parameter.Parameters?.Any() == true) {
+                if(parameter.Export != null) {
+
+                    // TODO (2018-08-16, bjorg): add support for exporting collections (or error out sooner)
+                    throw new NotImplementedException("exporting collections is not yet supported");
+                }
+                foreach(var nestedResource in parameter.Parameters) {
+                    AddParameter(
+                        nestedResource,
+                        fullEnvName + "_",
+                        environmentRefVariables
+                    );
+                }
             }
 
             // check if resource name should be exported
