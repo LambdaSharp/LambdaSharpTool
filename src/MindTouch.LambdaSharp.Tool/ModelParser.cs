@@ -24,19 +24,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
-using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
-using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool
+{
 
     public class ModelParserException : Exception {
 
@@ -45,9 +43,6 @@ namespace MindTouch.LambdaSharp.Tool {
     }
 
     public class ModelParser : AModelProcessor {
-
-        //--- Constants ---
-        private const string SECRET_ALIAS_PATTERN = "[0-9a-zA-Z/_\\-]+";
 
         //--- Fields ---
         private Module _module;
@@ -75,6 +70,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 return null;
             }
 
+            new ModelValidation(Settings).Process(module);
+            if(Settings.HasErrors) {
+                return null;
+            }
+
             // convert module file
             try {
                 return Convert(module);
@@ -85,30 +85,15 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private Module Convert(ModuleNode module) {
-            Validate(module.Name != null, "missing module name");
-
-            // ensure collections are present
-            if(module.Secrets == null) {
-                module.Secrets = new List<string>();
-            }
-            if(module.Parameters == null) {
-                module.Parameters = new List<ParameterNode>();
-            }
-            if(module.Functions == null) {
-                module.Functions = new List<FunctionNode>();
-            }
 
             // initialize module
             _module = new Module {
-                Name = module.Name ?? "<BAD>",
+                Name = module.Name,
                 Settings = Settings,
                 Description = module.Description
             };
 
             // convert 'Version' attribute to implicit 'Version' parameter
-            if(module.Version == null) {
-                module.Version = "1.0";
-            }
             if(Version.TryParse(module.Version, out System.Version version)) {
                 _module.Version = version;
                 module.Parameters.Add(new ParameterNode {
@@ -127,8 +112,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 _module.Version = new Version(0, 0);
             }
 
-            // compile all functions
-            new ModelFunctionProcessor(Settings).Process(module, _skipCompile);
+            // package all functions
+            new ModelFunctionPackager(Settings).Process(module, _skipCompile);
             if(Settings.HasErrors) {
                 return _module;
             }
@@ -149,7 +134,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check if we need to add a 'RollbarToken' parameter node
             if(
-                (_module.Settings.RollbarCustomResourceTopicArn != null)
+                (Settings.RollbarCustomResourceTopicArn != null)
                 && module.Functions.Any()
                 && !module.Parameters.Any(param => param.Name == "RollbarToken")
             ) {
@@ -160,41 +145,51 @@ namespace MindTouch.LambdaSharp.Tool {
                         Type = "Custom::LambdaSharpRollbarProject",
                         Allow = "None",
                         Properties = new Dictionary<string, object> {
-                            ["ServiceToken"] = _module.Settings.RollbarCustomResourceTopicArn,
-                            ["Tier"] = _module.Settings.Tier,
+                            ["ServiceToken"] = Settings.RollbarCustomResourceTopicArn,
+                            ["Tier"] = Settings.Tier,
                             ["Module"] = _module.Name,
 
                             // NOTE (2018-08-05, bjorg): set old values for backwards compatibility
                             ["Project"] = _module.Name,
-                            ["Deployment"] = _module.Settings.Tier
+                            ["Deployment"] = Settings.Tier
                         }
                     }
                 });
             }
 
             // convert parameters
+            if(module.Parameters.Any(p => p.Package != null)) {
+
+                // check if a deployment bucket exists
+                if(Settings.DeploymentBucketName == null) {
+                    AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                }
+
+                // check if S3 package loader topic arn exists
+                if(Settings.S3PackageLoaderCustomResourceTopicArn == null) {
+                    AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                }
+            }
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
             // create functions
             _module.Functions = new List<Function>();
             if(module.Functions.Any()) {
-                AtLocation("Functions", () => {
 
-                    // check if a deployment bucket was specified
-                    if(_module.Settings.DeploymentBucketName == null) {
-                        AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                    }
+                // check if a deployment bucket was specified
+                if(Settings.DeploymentBucketName == null) {
+                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                }
 
-                    // check if a dead-letter queue was specified
-                    if(_module.Settings.DeadLetterQueueUrl == null) {
-                        AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                    }
+                // check if a dead-letter queue was specified
+                if(Settings.DeadLetterQueueUrl == null) {
+                    AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                }
 
-                    // check if a logging topic was set
-                    if(_module.Settings.LoggingTopicArn == null) {
-                        AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                    }
-                });
+                // check if a logging topic was set
+                if(Settings.LoggingTopicArn == null) {
+                    AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                }
                 var functionIndex = 0;
                 _module.Functions = AtLocation("Functions", () => module.Functions
                     .Select(function => ConvertFunction(++functionIndex, function))
@@ -205,43 +200,17 @@ namespace MindTouch.LambdaSharp.Tool {
             return _module;
         }
 
-        public string ConvertSecret(int index, object rawSecret) {
+        public string ConvertSecret(int index, string secret) {
             return AtLocation($"[{index}]", () => {
-
-                // resolve secret value
-                var secret = rawSecret as string;
-                if(string.IsNullOrEmpty(secret)) {
-                    AddError($"secret has no value");
-                    return null;
-                }
-
-                if(secret.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
-                    AddError($"cannot grant permission to decrypt with aws/ssm");
-                    return null;
-                }
-
-                // check if secret is an ARN or KMS alias
                 if(secret.StartsWith("arn:")) {
-
-                    // validate secret arn
-                    if(!Regex.IsMatch(secret, $"arn:aws:kms:{_module.Settings.AwsRegion}:{_module.Settings.AwsAccountId}:key/[a-fA-F0-9\\-]+")) {
-                        AddError("secret key must be a valid ARN for the current region and account ID");
-                        return null;
-                    }
 
                     // decryption keys provided with their ARN can be added as is; no further steps required
                     return secret;
                 }
 
-                // validate regex for secret alias
-                if(!Regex.IsMatch(secret, SECRET_ALIAS_PATTERN)) {
-                    AddError("secret key must be a valid alias");
-                    return null;
-                }
-
                 // assume key name is an alias and resolve it to its ARN
                 try {
-                    var response = _module.Settings.KmsClient.DescribeKeyAsync($"alias/{secret}").Result;
+                    var response = Settings.KmsClient.DescribeKeyAsync($"alias/{secret}").Result;
                     return response.KeyMetadata.Arn;
                 } catch(Exception e) {
                     AddError($"failed to resolve key alias: {secret}", e);
@@ -258,21 +227,6 @@ namespace MindTouch.LambdaSharp.Tool {
             if((parameters == null) || !parameters.Any()) {
                 return resultList;
             }
-            if(parameters.Any(parameter => parameter.Package != null)) {
-
-                // check if a deployment bucket exists
-                if(_module.Settings.DeploymentBucketName == null) {
-                    AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                }
-
-                // check if S3 package loader topic arn exists
-                if(_module.Settings.S3PackageLoaderCustomResourceTopicArn == null) {
-                    AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(_module.Settings.Tier));
-                }
-            }
-
-            // TODO (2018-08-17, bjorg): consider converting all `Import` attributes to `Value`, `Values`, or `Secret` before processing parameters;
-            //  this wil simplify the processing logic by removing all the `Import` handling.
 
             // convert all parameters
             var index = 0;
@@ -282,17 +236,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 AParameter result = null;
                 var parameterFullName = resourcePrefix + parameter.Name;
                 AtLocation(parameterName, () => {
-                    if(parameter.Name == null) {
-                        AddError($"missing parameter name");
-                        parameter.Name = "<BAD>";
-                    } else if(!Regex.IsMatch(parameter.Name, CLOUDFORMATION_ID_PATTERN)) {
-                        AddError($"parameter name is not valid");
-                    }
                     if(parameter.Secret != null) {
-                        ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
-                        ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
-                        ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
 
                         // encrypted value
                         AtLocation("Secret", () => {
@@ -305,9 +249,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             };
                         });
                     } else if(parameter.Values != null) {
-                        ValidateNotBothStatements("Values", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Values", "Package", parameter.Package == null);
-                        ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // list of values
                         AtLocation("Values", () => {
@@ -322,10 +263,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         // TODO (2018-08-19, bjorg): this implementation create unnecessary parameters
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {
-                                if(parameter.Parameters != null) {
-                                    AddError("multiple values with a resource cannot have nested parameters");
-                                    return;
-                                }
 
                                 // enumerate individual values with resource definition for each
                                 parameter.Parameters = new List<ParameterNode>();
@@ -339,47 +276,16 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
                     } else if(parameter.Package != null) {
-                        ValidateNotBothStatements("Package", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Package", "Export", parameter.Export == null);
-                        ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // a package of one or more files
                         var files = new List<string>();
                         AtLocation("Package", () => {
 
-                            // check if package is nested
-                            if(resourcePrefix != "") {
-                                AddError("parameter package cannot be nested");
-                                return;
-                            }
-
-                            // check if required attributes are present
-                            if(parameter.Package.Files == null) {
-                                AddError("missing 'Files' attribute");
-                                return;
-                            }
-                            if(parameter.Package.Bucket == null) {
-                                AddError("missing 'Bucket' attribute");
-                                return;
-                            }
-
-                            // TODO (2018-07-25, bjorg): verify `Parameters` sections contains a valid S3 bucket reference
-                            // var bucketParameterName = parameter.Destination.Bucket;
-                            // var bucketParameter = _app.Parameters.FirstOrDefault(param => param.Name == bucketParameterName);
-                            // if(bucketParameter == null) {
-                            //     AddError($"could not find parameter for S3 bucket: '{bucketParameterName}'");
-                            // } else if(!(bucketParameter is AResourceParameter resourceParameter)) {
-                            //     AddError($"parameter for S3 bucket is not a resource: '{bucketParameterName}'");
-                            // } else if(resourceParameter.Resource.Type != "AWS::S3::Bucket") {
-                            //     AddError($"parameter for S3 bucket must be an S3 bucket resource: '{bucketParameterName}'");
-                            // }
-
                             // find all files that need to be part of the package
                             string folder;
                             string filePattern;
                             SearchOption searchOption;
-                            var packageFiles = Path.Combine(_module.Settings.WorkingDirectory, parameter.Package.Files);
+                            var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Package.Files);
                             if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
                                 folder = Path.GetFullPath(packageFiles);
                                 filePattern = "*";
@@ -402,7 +308,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                         bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
                                         var fileHash = md5.ComputeHash(stream);
                                         bytes.AddRange(fileHash);
-                                        if(_module.Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                        if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
                                             Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
                                         }
                                     }
@@ -499,13 +405,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             return resultList;
-
-            // local functions
-            void ValidateNotBothStatements(string attribute1, string attribute2, bool condition) {
-                if(!condition) {
-                    AddError($"attributes '{attribute1}' and '{attribute2}' are not allowed at the same time");
-                }
-            }
         }
 
         public Resource ConvertResource(string resourceArn, ResourceNode resource) {
@@ -522,7 +421,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 resourceType = AtLocation("Type", () => {
                     if(
                         !resource.Type.StartsWith("Custom::")
-                        && !_module.Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
+                        && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
                     ) {
                         AddError($"unsupported resource type: {resource.Type}");
                         return "<BAD>";
@@ -556,7 +455,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
                             allowSet.Add(allowStatement);
-                        } else if(_module.Settings.ResourceMapping.TryResolveAllowShorthand(resourceType, allowStatement, out IList<string> allowedList)) {
+                        } else if(Settings.ResourceMapping.TryResolveAllowShorthand(resourceType, allowStatement, out IList<string> allowedList)) {
                             foreach(var allowed in allowedList) {
                                 allowSet.Add(allowed);
                             }
@@ -587,10 +486,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public Function ConvertFunction(int index, FunctionNode function) {
             return AtLocation(function.Name ?? $"[{index}]", () => {
-                Validate(function.Memory != null, "missing Memory field");
-                Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
-                Validate(function.Timeout != null, "missing Name field");
-                Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
 
                 // initialize VPC configuration if provided
                 FunctionVpc vpc = null;
@@ -599,12 +494,12 @@ namespace MindTouch.LambdaSharp.Tool {
                         function.VPC.TryGetValue("SubnetIds", out var subnets)
                         && function.VPC.TryGetValue("SecurityGroupIds", out var securityGroups)
                     ) {
-                    AtLocation("VPC", () => {
-                        vpc = new FunctionVpc {
-                            SubnetIds = subnets,
-                            SecurityGroupIds = securityGroups
-                        };
-                    });
+                        AtLocation("VPC", () => {
+                            vpc = new FunctionVpc {
+                                SubnetIds = subnets,
+                                SecurityGroupIds = securityGroups
+                            };
+                        });
                     } else {
                         AddError("Lambda function contains a VPC definition that does not include SubnetIds or SecurityGroupIds");
                     }
@@ -633,44 +528,12 @@ namespace MindTouch.LambdaSharp.Tool {
         public AFunctionSource ConvertFunctionSource(int index, FunctionSourceNode source) {
             return AtLocation<AFunctionSource>($"{index}", () => {
                 if(source.Topic != null) {
-                    ValidateNotBothStatements("Topic", "Schedule", source.Schedule == null);
-                    ValidateNotBothStatements("Topic", "Api", source.Api == null);
-                    ValidateNotBothStatements("Topic", "SlackCommand", source.SlackCommand == null);
-                    ValidateNotBothStatements("Topic", "S3", source.S3 == null);
-                    ValidateNotBothStatements("Topic", "Events", source.Events == null);
-                    ValidateNotBothStatements("Topic", "Prefix", source.Prefix == null);
-                    ValidateNotBothStatements("Topic", "Suffix", source.Suffix == null);
-                    ValidateNotBothStatements("Topic", "Sqs", source.Sqs == null);
-                    ValidateNotBothStatements("Topic", "Alexa", source.Alexa == null);
                     return new TopicSource {
-                        TopicName = AtLocation("Topic", () => {
-
-                            // verify `Parameters` sections contains a valid topic reference
-                            var topicName = source.Topic;
-                            var parameter = _module.Parameters.FirstOrDefault(param => param.Name == topicName);
-                            if(parameter == null) {
-                                AddError($"could not find parameter for SNS topic: '{topicName}'");
-                            } else if(!(parameter is AResourceParameter resourceParameter)) {
-                                AddError($"parameter for SNS topic is not a resource: '{topicName}'");
-                            } else if(resourceParameter.Resource.Type != "AWS::SNS::Topic") {
-                                AddError($"parameter for SNS topic must be an SNS topic resource: '{topicName}'");
-                            }
-                            return topicName;
-                        }, "<BAD>")
+                        TopicName = source.Topic
                     };
                 }
                 if(source.Schedule != null) {
-                    ValidateNotBothStatements("Schedule", "Api", source.Api == null);
-                    ValidateNotBothStatements("Schedule", "SlackCommand", source.SlackCommand == null);
-                    ValidateNotBothStatements("Schedule", "S3", source.S3 == null);
-                    ValidateNotBothStatements("Schedule", "Events", source.Events == null);
-                    ValidateNotBothStatements("Schedule", "Prefix", source.Prefix == null);
-                    ValidateNotBothStatements("Schedule", "Suffix", source.Suffix == null);
-                    ValidateNotBothStatements("Schedule", "Sqs", source.Sqs == null);
-                    ValidateNotBothStatements("Schedule", "Alexa", source.Alexa == null);
                     return AtLocation("Schedule", () => {
-
-                        // TODO (2018-06-27, bjorg): missing expression validation
                         return new ScheduleSource {
                             Expression = source.Schedule,
                             Name = source.Name
@@ -678,12 +541,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }, null);
                 }
                 if(source.Api != null) {
-                    ValidateNotBothStatements("Api", "S3", source.S3 == null);
-                    ValidateNotBothStatements("Api", "Events", source.Events == null);
-                    ValidateNotBothStatements("Api", "Prefix", source.Prefix == null);
-                    ValidateNotBothStatements("Api", "Suffix", source.Suffix == null);
-                    ValidateNotBothStatements("Api", "Sqs", source.Sqs == null);
-                    ValidateNotBothStatements("Api", "Alexa", source.Alexa == null);
                     return AtLocation("Api", () => {
 
                         // extract http method from route
@@ -713,12 +570,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }, null);
                 }
                 if(source.SlackCommand != null) {
-                    ValidateNotBothStatements("SlackCommand", "S3", source.S3 == null);
-                    ValidateNotBothStatements("SlackCommand", "Events", source.Events == null);
-                    ValidateNotBothStatements("SlackCommand", "Prefix", source.Prefix == null);
-                    ValidateNotBothStatements("SlackCommand", "Suffix", source.Suffix == null);
-                    ValidateNotBothStatements("SlackCommand", "Sqs", source.Sqs == null);
-                    ValidateNotBothStatements("SlackCommand", "Alexa", source.Alexa == null);
                     return AtLocation("SlackCommand", () => {
 
                         // parse integration into a valid enum
@@ -730,82 +581,35 @@ namespace MindTouch.LambdaSharp.Tool {
                     }, null);
                 }
                 if(source.S3 != null) {
-                    ValidateNotBothStatements("S3", "Sqs", source.Sqs == null);
-                    ValidateNotBothStatements("S3", "Alexa", source.Alexa == null);
-                    return AtLocation("S3", () => {
+                    return new S3Source {
+                        Bucket = source.S3,
+                        Events = source.Events ?? new List<string> {
 
-                        // TODO (2018-06-27, bjorg): missing events, prefix, suffix validation
-                        var s3 = new S3Source {
-                            Bucket = source.S3,
-                            Events = source.Events ?? new List<string> {
-
-                                // default S3 events to listen to
-                                "s3:ObjectCreated:*"
-                            },
-                            Prefix = source.Prefix,
-                            Suffix = source.Suffix
-                        };
-
-                        // verify `Parameters` sections contains a valid bucket reference
-                        var parameter = _module.Parameters.FirstOrDefault(param => param.Name == s3.Bucket);
-                        if(parameter == null) {
-                            AddError($"could not find parameter for S3 bucket: '{s3.Bucket}'");
-                        } else if(!(parameter is AResourceParameter resourceParameter)) {
-                            AddError($"parameter for S3 bucket is not a resource: '{s3.Bucket}'");
-                            AddError($"parameter for S3 bucket must be an S3 bucket resource: '{s3.Bucket}'");
-                        }
-                        return s3;
-                    }, null);
+                            // default S3 events to listen to
+                            "s3:ObjectCreated:*"
+                        },
+                        Prefix = source.Prefix,
+                        Suffix = source.Suffix
+                    };
                 }
                 if(source.Sqs != null) {
-                    ValidateNotBothStatements("Sqs", "Events", source.Events == null);
-                    ValidateNotBothStatements("Sqs", "Prefix", source.Prefix == null);
-                    ValidateNotBothStatements("Sqs", "Suffix", source.Suffix == null);
-                    ValidateNotBothStatements("Sqs", "Alexa", source.Alexa == null);
-                    return AtLocation("Sqs", () => {
-                        var sqs = new SqsSource {
-                            Queue = source.Sqs,
-                            BatchSize = source.BatchSize ?? 10
-                        };
-                        AtLocation("BatchSize", () => {
-                            if((sqs.BatchSize < 1) || (sqs.BatchSize > 10)) {
-                                AddError($"invalid BatchSize value: {sqs.BatchSize}");
-                            }
-                        });
-
-                        // verify `Parameters` sections contains a valid queue reference
-                        var parameter = _module.Parameters.FirstOrDefault(param => param.Name == sqs.Queue);
-                        if(parameter == null) {
-                            AddError($"could not find parameter for SQS queue: '{sqs.Queue}'");
-                        } else if(!(parameter is AResourceParameter resourceParameter)) {
-                            AddError($"parameter for SQS queue is not a resource: '{sqs.Queue}'");
-                        } else if(resourceParameter.Resource.Type != "AWS::SQS::Queue") {
-                            AddError($"parameter for SQS queue must be an SQS queue resource: '{sqs.Queue}'");
-                        }
-                        return sqs;
-                    }, null);
+                    return new SqsSource {
+                        Queue = source.Sqs,
+                        BatchSize = source.BatchSize ?? 10
+                    };
                 }
                 if(source.Alexa != null) {
-                    return AtLocation("Alexa", () => {
-                        var alexaSkillId = (string.IsNullOrWhiteSpace(source.Alexa) || source.Alexa == "*")
-                            ? null
-                            : source.Alexa;
-                        return new AlexaSource {
-                            EventSourceToken = alexaSkillId
-                        };
-                    }, null);
+                    var alexaSkillId = string.IsNullOrWhiteSpace(source.Alexa) || (source.Alexa == "*")
+                        ? null
+                        : source.Alexa;
+                    return new AlexaSource {
+                        EventSourceToken = alexaSkillId
+                    };
                 }
                 AddError("empty event");
                 return null;
             }, null);
             throw new ModelParserException("invalid function event");
-
-            // local functions
-            void ValidateNotBothStatements(string attribute1, string attribute2, bool condition) {
-                if(!condition) {
-                    AddError($"attributes '{attribute1}' and '{attribute2}' are not allowed at the same time");
-                }
-            }
         }
     }
 }

@@ -26,34 +26,30 @@ using System.IO;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Xml.Linq;
-using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
-using Newtonsoft.Json;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
 
-namespace MindTouch.LambdaSharp.Tool {
+namespace MindTouch.LambdaSharp.Tool
+{
 
-    public class ModelFunctionProcessor : AModelProcessor {
+    public class ModelFunctionPackager : AModelProcessor {
 
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
         //--- Constructors ---
-        public ModelFunctionProcessor(Settings settings) : base(settings) { }
+        public ModelFunctionPackager(Settings settings) : base(settings) { }
 
         public void Process(ModuleNode module, bool skipCompile) {
             var index = 0;
             foreach(var function in module.Functions) {
+                ++index;
                 AtLocation(function.Name ?? $"[{index}]", () => {
                     Validate(function.Name != null, "missing Name field");
                     Process(module, function, skipCompile);
                 });
-                ++index;
             }
         }
 
