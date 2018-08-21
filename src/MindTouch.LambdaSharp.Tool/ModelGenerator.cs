@@ -632,11 +632,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 } else {
                     environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Secret;
                 }
-                if(secretParameter.Export != null) {
-
-                    // TODO (2018-08-16, bjorg): add support for exporting secrets (or error out sooner)
-                    throw new NotImplementedException("exporting secrets is not yet supported");
-                }
                 break;
             case StringParameter stringParameter:
                 environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
@@ -814,11 +809,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check if nested parameters need to be added
             if(parameter.Parameters?.Any() == true) {
-                if(parameter.Export != null) {
-
-                    // TODO (2018-08-16, bjorg): add support for exporting collections (or error out sooner)
-                    throw new NotImplementedException("exporting collections is not yet supported");
-                }
                 foreach(var nestedResource in parameter.Parameters) {
                     AddParameter(
                         nestedResource,

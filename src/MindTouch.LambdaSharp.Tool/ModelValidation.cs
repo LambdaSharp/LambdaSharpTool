@@ -25,8 +25,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
-namespace MindTouch.LambdaSharp.Tool
-{
+namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelValidation : AModelProcessor {
 
@@ -160,6 +159,8 @@ namespace MindTouch.LambdaSharp.Tool
                             if(parameter.Export != null) {
                                 AddError("exporting Parameters is not supported");
                             }
+
+                            // recursively validate nested parameters
                             ValidateParameters(parameter.Parameters, depth + 1);
                         });
                     }
@@ -218,7 +219,7 @@ namespace MindTouch.LambdaSharp.Tool
                         ValidateNotBothStatements("Schedule", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("Schedule", "Alexa", source.Alexa == null);
 
-                        // TODO (2018-06-27, bjorg): missing expression validation
+                        // TODO (2018-06-27, bjorg): add cron/rate expression validation
                     } else if(source.S3 != null) {
                         ValidateNotBothStatements("S3", "Api", source.Api == null);
                         ValidateNotBothStatements("S3", "Integration", source.Integration == null);
@@ -230,7 +231,7 @@ namespace MindTouch.LambdaSharp.Tool
                         ValidateNotBothStatements("S3", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("S3", "Alexa", source.Alexa == null);
 
-                        // TODO (2018-06-27, bjorg): missing events, prefix, suffix validation
+                        // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
 
                         // verify source exists
                         ValidateSourceParameter(source.S3, "AWS::S3::Bucket", "S3 bucket");

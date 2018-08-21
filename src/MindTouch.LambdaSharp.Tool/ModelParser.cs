@@ -70,11 +70,6 @@ namespace MindTouch.LambdaSharp.Tool
                 return null;
             }
 
-            new ModelValidation(Settings).Process(module);
-            if(Settings.HasErrors) {
-                return null;
-            }
-
             // convert module file
             try {
                 return Convert(module);
@@ -92,6 +87,12 @@ namespace MindTouch.LambdaSharp.Tool
                 Settings = Settings,
                 Description = module.Description
             };
+
+            // validate module
+            new ModelValidation(Settings).Process(module);
+            if(Settings.HasErrors) {
+                return null;
+            }
 
             // convert 'Version' attribute to implicit 'Version' parameter
             if(Version.TryParse(module.Version, out System.Version version)) {
@@ -114,6 +115,12 @@ namespace MindTouch.LambdaSharp.Tool
 
             // package all functions
             new ModelFunctionPackager(Settings).Process(module, _skipCompile);
+            if(Settings.HasErrors) {
+                return _module;
+            }
+
+            // package all files
+            new ModelFilesPackager(Settings).Process(module);
             if(Settings.HasErrors) {
                 return _module;
             }
@@ -260,7 +267,7 @@ namespace MindTouch.LambdaSharp.Tool
                             };
                         });
 
-                        // TODO (2018-08-19, bjorg): this implementation create unnecessary parameters
+                        // TODO (2018-08-19, bjorg): this implementation creates unnecessary parameters
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {
 
@@ -277,69 +284,15 @@ namespace MindTouch.LambdaSharp.Tool
                         }
                     } else if(parameter.Package != null) {
 
-                        // a package of one or more files
-                        var files = new List<string>();
-                        AtLocation("Package", () => {
-
-                            // find all files that need to be part of the package
-                            string folder;
-                            string filePattern;
-                            SearchOption searchOption;
-                            var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Package.Files);
-                            if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
-                                folder = Path.GetFullPath(packageFiles);
-                                filePattern = "*";
-                                searchOption = SearchOption.AllDirectories;
-                            } else {
-                                folder = Path.GetDirectoryName(packageFiles);
-                                filePattern = Path.GetFileName(packageFiles);
-                                searchOption = SearchOption.TopDirectoryOnly;
-                            }
-                            files.AddRange(Directory.GetFiles(folder, filePattern, searchOption));
-                            files.Sort();
-
-                            // compute MD5 hash for package
-                            string package;
-                            using(var md5 = MD5.Create()) {
-                                var bytes = new List<byte>();
-                                foreach(var file in files) {
-                                    using(var stream = File.OpenRead(file)) {
-                                        var relativeFilePath = Path.GetRelativePath(folder, file);
-                                        bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
-                                        var fileHash = md5.ComputeHash(stream);
-                                        bytes.AddRange(fileHash);
-                                        if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                            Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
-                                        }
-                                    }
-                                }
-                                package = $"{_module.Name}-{parameter.Name}-Package-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip";
-                            }
-
-                            // create zip package
-                            Console.WriteLine($"=> Building {parameter.Name} package");
-                            if(File.Exists(package)) {
-                                try {
-                                    File.Delete(package);
-                                } catch { }
-                            }
-                            using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
-                                foreach(var file in files) {
-                                    var filename = Path.GetRelativePath(folder, file);
-                                    zipArchive.CreateEntryFromFile(file, filename);
-                                }
-                            }
-
-                            // package value
-                            result = new PackageParameter {
-                                Name = parameter.Name,
-                                Description = parameter.Description,
-                                Package = package,
-                                Bucket = parameter.Package.Bucket,
-                                PackageS3Key = $"{_module.Name}/{package}",
-                                Prefix = parameter.Package.Prefix ?? ""
-                            };
-                        });
+                        // package value
+                        result = new PackageParameter {
+                            Name = parameter.Name,
+                            Description = parameter.Description,
+                            Package = parameter.Value,
+                            Bucket = parameter.Package.Bucket,
+                            PackageS3Key = $"{_module.Name}/{parameter.Value}",
+                            Prefix = parameter.Package.Prefix ?? ""
+                        };
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {

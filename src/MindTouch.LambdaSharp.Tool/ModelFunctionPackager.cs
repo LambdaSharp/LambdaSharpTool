@@ -31,8 +31,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
 
-namespace MindTouch.LambdaSharp.Tool
-{
+namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelFunctionPackager : AModelProcessor {
 
@@ -203,9 +202,7 @@ namespace MindTouch.LambdaSharp.Tool
                     if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                         using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
                             foreach(var file in files) {
-
-                                // TODO (2018-07-24, bjorg): I doubt this works correctly for files in subfolders
-                                var filename = Path.GetFileName(file);
+                                var filename = Path.GetRelativePath(tempDirectory, file);
                                 zipArchive.CreateEntryFromFile(file, filename);
                             }
                         }
