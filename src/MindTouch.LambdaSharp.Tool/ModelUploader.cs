@@ -33,6 +33,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
+        private bool _skipUpload;
 
         //--- Constructors ---
         public ModelUploader(Settings settings) : base(settings) {
@@ -40,12 +41,13 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public async Task Process(ModuleNode module, string bucket) {
+        public async Task ProcessAsync(ModuleNode module, string bucket, bool skipUpload) {
+            _skipUpload = skipUpload;
 
             // upload function packages
             foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
                 var key = $"{module.Name}/{Path.GetFileName(function.PackagePath)}";
-                function.S3Location = await UploadPackage(
+                function.S3Location = await UploadPackageAsync(
                     bucket,
                     key,
                     function.PackagePath,
@@ -56,7 +58,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
             foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
                 var key = $"{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
-                parameter.Package.S3Location = await UploadPackage(
+                parameter.Package.S3Location = await UploadPackageAsync(
                     bucket,
                     key,
                     parameter.Package.PackagePath,
@@ -65,29 +67,31 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private async Task<string> UploadPackage(string bucket, string key, string package, string description) {
+        private async Task<string> UploadPackageAsync(string bucket, string key, string package, string description) {
+            if(!_skipUpload) {
 
-            // check if a matching package file already exists in the bucket
-            var found = false;
-            try {
-                await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                    BucketName = bucket,
-                    Key = key
-                });
-                found = true;
-            } catch { }
-
-            // only upload files that don't exist
-            if(!found) {
-                Console.WriteLine($"=> Uploading {description}: s3://{bucket}/{key} ");
-                await _transferUtility.UploadAsync(package, bucket, key);
-            }
-
-            // delete the source zip file when there is no failure and the output directory is the working directory
-            if(Settings.OutputDirectory == Settings.WorkingDirectory) {
+                // check if a matching package file already exists in the bucket
+                var found = false;
                 try {
-                    File.Delete(package);
+                    await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                        BucketName = bucket,
+                        Key = key
+                    });
+                    found = true;
                 } catch { }
+
+                // only upload files that don't exist
+                if(!found) {
+                    Console.WriteLine($"=> Uploading {description}: s3://{bucket}/{key} ");
+                    await _transferUtility.UploadAsync(package, bucket, key);
+                }
+
+                // delete the source zip file when there is no failure and the output directory is the working directory
+                if(Settings.OutputDirectory == Settings.WorkingDirectory) {
+                    try {
+                        File.Delete(package);
+                    } catch { }
+                }
             }
             return $"s3://{bucket}/{key}";
         }

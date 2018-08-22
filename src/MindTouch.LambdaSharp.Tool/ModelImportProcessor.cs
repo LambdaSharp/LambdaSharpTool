@@ -45,22 +45,6 @@ namespace MindTouch.LambdaSharp.Tool
         //--- Methods ---
         public void Process(ModuleNode module) {
 
-            // NOTE (2018-08-04, bjorg): we only import lambdasharp parameters when necessary
-            //  to allow tests to use a dummy AWS account ID; since no import will be triggered
-            //  the dummy account id is not an issue.
-            var lambdaSharpPath = $"/{Settings.Tier}/LambdaSharp/";
-            if(
-                (Settings.EnvironmentVersion == null)
-                || (Settings.DeploymentBucketName == null)
-                || (Settings.DeadLetterQueueUrl == null)
-                || (Settings.LoggingTopicArn == null)
-                || (Settings.NotificationTopicArn == null)
-                || (Settings.RollbarCustomResourceTopicArn == null)
-                || (Settings.S3PackageLoaderCustomResourceTopicArn == null)
-            ) {
-                _importer.Add(lambdaSharpPath);
-            }
-
             // find all parameters with an `Import` field
             AtLocation("Parameters", () => FindAllParameterImports());
 
@@ -69,31 +53,6 @@ namespace MindTouch.LambdaSharp.Tool
 
             // replace all parameters with an `Import` field
             AtLocation("Parameters", () => ReplaceAllParameterImports());
-
-            // read missing LambdaSharp settings from the LambdaSharp Environment (unless the 'LambdaSharp` module is being deployed)
-            if(module.Name != "LambdaSharp") {
-                if(Settings.EnvironmentVersion == null) {
-                    var version = GetLambdaSharpSetting("Version");
-                    if(version != null) {
-                        Settings.EnvironmentVersion = new Version(version);
-                    }
-                }
-                Settings.DeploymentBucketName = Settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                Settings.DeadLetterQueueUrl = Settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-                Settings.LoggingTopicArn = Settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
-                Settings.NotificationTopicArn = Settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-                Settings.RollbarCustomResourceTopicArn = Settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-                Settings.S3PackageLoaderCustomResourceTopicArn = Settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
-
-                // check that LambdaSharp Environment & Tool versions match
-                if(Settings.EnvironmentVersion == null) {
-                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                } else {
-                    if(Settings.EnvironmentVersion != Settings.ToolVersion) {
-                        AddError($"LambdaSharp Tool (v{Settings.ToolVersion}) and Environment (v{Settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                    }
-                }
-            }
 
             // check if any imports were not found
             foreach(var missing in _importer.MissingImports) {
@@ -266,11 +225,6 @@ namespace MindTouch.LambdaSharp.Tool
                         }
                     });
                 }
-            }
-
-            string GetLambdaSharpSetting(string name) {
-                _importer.TryGetValue(lambdaSharpPath + name, out string result);
-                return result;
             }
         }
 

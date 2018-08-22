@@ -83,5 +83,15 @@ namespace MindTouch.LambdaSharp.Tool {
             HasErrors = true;
             ErrorCallback(message, exception);
         }
+
+        public void Reset() {
+            EnvironmentVersion = null;
+            DeploymentBucketName = null;
+            DeadLetterQueueUrl = null;
+            LoggingTopicArn = null;
+            NotificationTopicArn = null;
+            RollbarCustomResourceTopicArn = null;
+            S3PackageLoaderCustomResourceTopicArn = null;
+        }
     }
 }

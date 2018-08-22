@@ -13,7 +13,7 @@
       "Default": "A literal value"
     },
     "SampleParameterCollectionSecondNestedParameter": {
-      "Type": "StringList",
+      "Type": "CommaDelimitedList",
       "Description": "Second nested parameter",
       "Default": "one,two,three"
     },
@@ -38,7 +38,7 @@
       "Default": "arn:aws:sns:*:*:*"
     },
     "MultiResourceParameter": {
-      "Type": "StringList",
+      "Type": "CommaDelimitedList",
       "Description": "Second nested parameter",
       "Default": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*"
     },

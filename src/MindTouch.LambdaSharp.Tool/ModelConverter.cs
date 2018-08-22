@@ -22,16 +22,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
-using System.IO.Compression;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 using MindTouch.LambdaSharp.Tool.Internal;
-using System.Text;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -45,31 +40,12 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private Module _module;
-        private bool _skipCompile;
-        private bool _skipUpload;
 
         //--- Constructors ---
         public ModelConverter(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public Module Process(YamlDotNet.Core.IParser yamlParser, bool skipCompile, bool skipUpload) {
-            _module = new Module {
-                Settings = Settings
-            };
-            _skipCompile = skipCompile;
-            _skipUpload = skipUpload;
-
-            // parse YAML file into module AST
-            ModuleNode module;
-            try {
-                module = new DeserializerBuilder()
-                    .WithNamingConvention(new PascalCaseNamingConvention())
-                    .Build()
-                    .Deserialize<ModuleNode>(yamlParser);
-            } catch(Exception e) {
-                AddError($"parse error: {e.Message}", e);
-                return null;
-            }
+        public Module Process(ModuleNode module) {
 
             // convert module file
             try {
@@ -85,52 +61,24 @@ namespace MindTouch.LambdaSharp.Tool {
             // initialize module
             _module = new Module {
                 Name = module.Name,
+                Version = Version.Parse(module.Version),
                 Settings = Settings,
-                Description = module.Description
+                Description = module.Description,
+                Functions = new List<Function>()
             };
 
-            // validate module
-            new ModelValidation(Settings).Process(module);
-            if(Settings.HasErrors) {
-                return null;
+            // append the version to the module description
+            if(_module.Description != null) {
+                _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
             }
 
             // convert 'Version' attribute to implicit 'Version' parameter
-            if(Version.TryParse(module.Version, out System.Version version)) {
-                _module.Version = version;
-                module.Parameters.Add(new ParameterNode {
-                    Name = "Version",
-                    Value = module.Version,
-                    Description = "LambdaSharp module version",
-                    Export = "Version"
-                });
-
-                // append the version to the module description
-                if(_module.Description != null) {
-                    _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
-                }
-            } else {
-                AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
-                _module.Version = new Version(0, 0);
-            }
-
-            // package all functions
-            new ModelFunctionPackager(Settings).Process(module, _skipCompile);
-            if(Settings.HasErrors) {
-                return _module;
-            }
-
-            // package all files
-            new ModelFilesPackager(Settings).Process(module);
-            if(Settings.HasErrors) {
-                return _module;
-            }
-
-            // resolve all imported parameters
-            new ModelImportProcessor(Settings).Process(module);
-            if(Settings.HasErrors) {
-                return _module;
-            }
+            module.Parameters.Add(new ParameterNode {
+                Name = "Version",
+                Value = module.Version,
+                Description = "LambdaSharp module version",
+                Export = "Version"
+            });
 
             // check if we need to add a 'RollbarToken' parameter node
             if(
@@ -165,11 +113,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 .ToList()
             , new List<string>());
 
-            // check if assets need to be uploaded
-            if(!_skipUpload) {
-                new ModelUploader(Settings).Process(module, Settings.DeploymentBucketName).Wait();
-            }
-
             // convert parameters
             if(module.Parameters.Any(p => p.Package != null)) {
 
@@ -186,13 +129,7 @@ namespace MindTouch.LambdaSharp.Tool {
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
             // create functions
-            _module.Functions = new List<Function>();
             if(module.Functions.Any()) {
-
-                // check if a deployment bucket was specified
-                if(Settings.DeploymentBucketName == null) {
-                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                }
 
                 // check if a dead-letter queue was specified
                 if(Settings.DeadLetterQueueUrl == null) {

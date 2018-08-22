@@ -61,6 +61,9 @@ namespace MindTouch.LambdaSharp.Tool {
             // ensure version is present
             if(module.Version == null) {
                 module.Version = "1.0";
+            } else if(!Version.TryParse(module.Version, out System.Version version)) {
+                AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
+                module.Version = "0.0";
             }
 
             // process data structures

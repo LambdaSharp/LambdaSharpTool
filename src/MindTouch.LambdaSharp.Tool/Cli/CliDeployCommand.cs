@@ -95,6 +95,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         ) {
             var stopwatch = Stopwatch.StartNew();
 
+            // check that LambdaSharp Environment & Tool versions match
+            if(settings.EnvironmentVersion == null) {
+                AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+            } else {
+                if(settings.EnvironmentVersion != settings.ToolVersion) {
+                    AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                }
+            }
+
             // read input file
             Console.WriteLine();
             Console.WriteLine($"Processing module: {settings.ModuleFileName}");
@@ -107,17 +116,60 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // parse yaml module file
-            var module = new ModelConverter(settings).Process(
-                tokenStream,
-                skipCompile: dryRun == DryRunLevel.CloudFormation,
-                skipUpload: dryRun == DryRunLevel.CloudFormation
-            );
+            var moduleNode = new ModelParser(settings).Process(tokenStream);
+            if(ErrorCount > 0) {
+                return false;
+            }
+
+            // reset settings when the 'LambdaSharp` module is being deployed
+            if(moduleNode.Name == "LambdaSharp") {
+                settings.Reset();
+            }
+
+            // validate module
+            new ModelValidation(settings).Process(moduleNode);
+            if(ErrorCount > 0) {
+                return false;
+            }
+
+            // package all functions
+            new ModelFunctionPackager(settings).Process(moduleNode, skipCompile: dryRun == DryRunLevel.CloudFormation);
+            if(ErrorCount > 0) {
+                return false;
+            }
+
+            // package all files
+            new ModelFilesPackager(settings).Process(moduleNode);
+            if(ErrorCount > 0) {
+                return false;
+            }
+
+            // check if assets need to be uploaded
+            if(moduleNode.Functions.Any() || moduleNode.Parameters.Any(p => p.Package != null)) {
+
+                // check if a deployment bucket was specified
+                if(settings.DeploymentBucketName == null) {
+                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    return false;
+                }
+            }
+            await new ModelUploader(settings).ProcessAsync(moduleNode, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
+
+            // TODO (2018-08-22, bjorg): need to split the Settings importing from the module file imports
+            // resolve all imported parameters
+            new ModelImportProcessor(settings).Process(moduleNode);
+            if(ErrorCount > 0) {
+                return false;
+            }
+
+            // parse yaml module file
+            var module = new ModelConverter(settings).Process(moduleNode);
             if(ErrorCount > 0) {
                 return false;
             }
 
             // generate cloudformation template
-            var stack = new ModelGenerator().Generate(module);
+            var stack = new ModelGenerator(settings).Generate(module);
             if(ErrorCount > 0) {
                 return false;
             }

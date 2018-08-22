@@ -176,6 +176,39 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArnOption.Value();
                 var deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArnOption.Value();
 
+                // NOTE (2018-08-04, bjorg): we only import lambdasharp parameters when necessary
+                //  to allow tests to use a dummy AWS account ID; since no import will be triggered
+                //  the dummy account id is not an issue.
+                if(
+                    (deploymentVersion == null)
+                    || (deploymentBucketName == null)
+                    || (deploymentDeadletterQueueUrl == null)
+                    || (deploymentLoggingTopicArn == null)
+                    || (deploymentNotificationTopicArn == null)
+                    || (deploymentRollbarCustomResourceTopicArn == null)
+                    || (deploymentS3PackageLoaderCustomResourceTopicArn == null)
+                ) {
+
+                    // import LambdaSharp settings
+                    var lambdaSharpPath = $"/{tier}/LambdaSharp/";
+                    var lambdaSharpSettings = await ssmClient.GetAllParametersByPathAsync(lambdaSharpPath);
+
+                    // resolved values that are not yet set
+                    deploymentVersion = deploymentVersion ?? GetLambdaSharpSetting("Version");
+                    deploymentBucketName = deploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
+                    deploymentDeadletterQueueUrl = deploymentDeadletterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
+                    deploymentLoggingTopicArn = deploymentLoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
+                    deploymentNotificationTopicArn = deploymentNotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
+                    deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
+                    deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
+
+                    // local functions
+                    string GetLambdaSharpSetting(string name) {
+                        lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
+                        return kv.Value;
+                    }
+                }
+
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
                 foreach(var moduleFilename in moduleFilenames) {
