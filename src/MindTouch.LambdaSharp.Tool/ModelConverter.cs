@@ -41,7 +41,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelParserException(string message) : base(message) { }
     }
 
-    public class ModelParser : AModelProcessor {
+    public class ModelConverter : AModelProcessor {
 
         //--- Fields ---
         private Module _module;
@@ -49,10 +49,10 @@ namespace MindTouch.LambdaSharp.Tool {
         private bool _skipUpload;
 
         //--- Constructors ---
-        public ModelParser(Settings settings) : base(settings) { }
+        public ModelConverter(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public Module Parse(YamlDotNet.Core.IParser yamlParser, bool skipCompile, bool skipUpload) {
+        public Module Process(YamlDotNet.Core.IParser yamlParser, bool skipCompile, bool skipUpload) {
             _module = new Module {
                 Settings = Settings
             };

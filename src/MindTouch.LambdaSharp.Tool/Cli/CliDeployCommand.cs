@@ -107,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // parse yaml module file
-            var module = new ModelParser(settings).Parse(
+            var module = new ModelConverter(settings).Process(
                 tokenStream,
                 skipCompile: dryRun == DryRunLevel.CloudFormation,
                 skipUpload: dryRun == DryRunLevel.CloudFormation
