@@ -64,27 +64,6 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             var stackName = $"{module.Settings.Tier}-{module.Name}";
             Console.WriteLine($"Deploying stack: {stackName}");
 
-            // upload function packages
-            var transferUtility = new TransferUtility(module.Settings.S3Client);
-            foreach(var function in module.Functions) {
-                await UploadPackage(
-                    module.Settings.DeploymentBucketName,
-                    function.PackageS3Key,
-                    function.Package,
-                    "Lambda function"
-                );
-            }
-
-            // upload data packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
-            foreach(var package in module.Parameters.OfType<PackageParameter>()) {
-                await UploadPackage(
-                    module.Settings.DeploymentBucketName,
-                    package.PackageS3Key,
-                    package.Package,
-                    "package"
-                );
-            }
-
             // check if cloudformation stack already exists
             string mostRecentStackEventId = null;
             try {
@@ -117,6 +96,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                 try {
                     Console.WriteLine($"=> Uploading CloudFormation template: s3://{module.Settings.DeploymentBucketName}/{templateS3Key}");
                     File.WriteAllText(templateFile, template);
+                    var transferUtility = new TransferUtility(module.Settings.S3Client);
                     await transferUtility.UploadAsync(templateFile, module.Settings.DeploymentBucketName, templateS3Key);
                 } finally {
                     try {
@@ -238,30 +218,6 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                         Console.WriteLine($"=> {output.Description}: {output.OutputValue}");
                     }
                 }
-            }
-
-            async Task UploadPackage(string bucket, string key, string package, string description) {
-
-                // check if a matching package file already exists in the bucket
-                var found = false;
-                try {
-                    await module.Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                        BucketName = bucket,
-                        Key = key
-                    });
-                    found = true;
-                } catch { }
-
-                // only upload files that don't exist
-                if(!found) {
-                    Console.WriteLine($"=> Uploading {description}: s3://{bucket}/{key} ");
-                    await transferUtility.UploadAsync(package, bucket, key);
-                }
-
-                // always delete the source zip file when there is no failure
-                try {
-                    File.Delete(package);
-                } catch { }
             }
         }
 

@@ -107,7 +107,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // parse yaml module file
-            var module = new ModelParser(settings).Parse(tokenStream, skipCompile: dryRun == DryRunLevel.CloudFormation);
+            var module = new ModelParser(settings).Parse(
+                tokenStream,
+                skipCompile: dryRun == DryRunLevel.CloudFormation,
+                skipUpload: dryRun == DryRunLevel.CloudFormation
+            );
             if(ErrorCount > 0) {
                 return false;
             }

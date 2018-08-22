@@ -33,8 +33,7 @@ using YamlDotNet.Serialization.NamingConventions;
 using MindTouch.LambdaSharp.Tool.Internal;
 using System.Text;
 
-namespace MindTouch.LambdaSharp.Tool
-{
+namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelParserException : Exception {
 
@@ -47,16 +46,18 @@ namespace MindTouch.LambdaSharp.Tool
         //--- Fields ---
         private Module _module;
         private bool _skipCompile;
+        private bool _skipUpload;
 
         //--- Constructors ---
         public ModelParser(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public Module Parse(YamlDotNet.Core.IParser yamlParser, bool skipCompile) {
+        public Module Parse(YamlDotNet.Core.IParser yamlParser, bool skipCompile, bool skipUpload) {
             _module = new Module {
                 Settings = Settings
             };
             _skipCompile = skipCompile;
+            _skipUpload = skipUpload;
 
             // parse YAML file into module AST
             ModuleNode module;
@@ -131,14 +132,6 @@ namespace MindTouch.LambdaSharp.Tool
                 return _module;
             }
 
-            // convert secrets
-            var secretIndex = 0;
-            _module.Secrets = AtLocation("Secrets", () => module.Secrets
-                .Select(secret => ConvertSecret(++secretIndex, secret))
-                .Where(secret => secret != null)
-                .ToList()
-            , new List<string>());
-
             // check if we need to add a 'RollbarToken' parameter node
             if(
                 (Settings.RollbarCustomResourceTopicArn != null)
@@ -162,6 +155,19 @@ namespace MindTouch.LambdaSharp.Tool
                         }
                     }
                 });
+            }
+
+            // convert secrets
+            var secretIndex = 0;
+            _module.Secrets = AtLocation("Secrets", () => module.Secrets
+                .Select(secret => ConvertSecret(++secretIndex, secret))
+                .Where(secret => secret != null)
+                .ToList()
+            , new List<string>());
+
+            // check if assets need to be uploaded
+            if(!_skipUpload) {
+                new ModelUploader(Settings).Process(module, Settings.DeploymentBucketName).Wait();
             }
 
             // convert parameters
@@ -285,13 +291,14 @@ namespace MindTouch.LambdaSharp.Tool
                     } else if(parameter.Package != null) {
 
                         // package value
+                        var s3 = parameter.Package.S3Location.ToS3Info();
                         result = new PackageParameter {
                             Name = parameter.Name,
                             Description = parameter.Description,
-                            Package = parameter.Value,
-                            Bucket = parameter.Package.Bucket,
-                            PackageS3Key = $"{_module.Name}/{parameter.Value}",
-                            Prefix = parameter.Package.Prefix ?? ""
+                            DestinationBucketParameterName = parameter.Package.Bucket,
+                            DestinationKeyPrefix = parameter.Package.Prefix ?? "",
+                            PackageBucket = s3.Bucket,
+                            PackageKey = s3.Key,
                         };
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {
@@ -464,8 +471,7 @@ namespace MindTouch.LambdaSharp.Tool
                     Name = function.Name ,
                     Description = function.Description,
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
-                    Package = function.Package,
-                    PackageS3Key = $"{_module.Name}/{Path.GetFileName(function.Package)}",
+                    S3Location = function.S3Location,
                     Handler = function.Handler,
                     Runtime = function.Runtime,
                     Memory = function.Memory,

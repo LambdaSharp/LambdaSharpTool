@@ -39,6 +39,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public Dictionary<string, object> VPC { get; set; }
         public Dictionary<string, string> Environment { get; set; }
         public string Export { get; set; }
-        public string Package { get; set; }
+        public string PackagePath { get; set; }
+        public string S3Location { get; set; }
    }
 }

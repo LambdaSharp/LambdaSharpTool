@@ -101,9 +101,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         zipArchive.CreateEntryFromFile(file, filename);
                     }
                 }
-
-                // set `Value` to package location
-                parameter.Value = package;
+                parameter.Package.PackagePath = package;
             });
         }
     }

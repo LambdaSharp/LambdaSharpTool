@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -37,5 +38,13 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         public static string ToHexString(this IEnumerable<byte> bytes)
             => string.Concat(bytes.Select(x => x.ToString("X2")));
+
+        public static (string Bucket, string Key) ToS3Info(this string s3Uri) {
+            var s3 = new Uri(s3Uri);
+            return (
+                Bucket: s3.Host,
+                Key: s3.AbsolutePath.TrimStart('/')
+            );
+        }
     }
 }

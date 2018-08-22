@@ -108,7 +108,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
                 if(skipCompile) {
-                    function.Package = $"{projectName}-NOCOMPILE.zip";
+                    function.PackagePath = $"{projectName}-NOCOMPILE.zip";
                     return;
                 }
 
@@ -222,7 +222,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     }
                 }
-                function.Package = package;
+                function.PackagePath = package;
             });
         }
 

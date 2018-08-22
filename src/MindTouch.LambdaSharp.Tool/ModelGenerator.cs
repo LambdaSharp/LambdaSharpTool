@@ -429,6 +429,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create function definition
+            var s3 = function.S3Location.ToS3Info();
             _stack.Add(function.Name, new Lambda.Function {
                 FunctionName = ToAppResourceName(function.Name),
                 Description = function.Description,
@@ -439,8 +440,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 ReservedConcurrentExecutions = function.ReservedConcurrency,
                 Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
-                    S3Bucket = _module.Settings.DeploymentBucketName,
-                    S3Key = function.PackageS3Key
+                    S3Bucket = s3.Bucket,
+                    S3Key = s3.Key
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = _module.Settings.DeadLetterQueueArn
@@ -661,10 +662,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
                 _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
                     ["ServiceToken"] = _module.Settings.S3PackageLoaderCustomResourceTopicArn,
-                    ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.Bucket),
-                    ["DestinationKeyPrefix"] = packageParameter.Prefix,
-                    ["SourceBucketName"] = _module.Settings.DeploymentBucketName,
-                    ["SourcePackageKey"] = packageParameter.PackageS3Key,
+                    ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.DestinationBucketParameterName),
+                    ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
+                    ["SourceBucketName"] = packageParameter.PackageBucket,
+                    ["SourcePackageKey"] = packageParameter.PackageKey,
                 }));
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {

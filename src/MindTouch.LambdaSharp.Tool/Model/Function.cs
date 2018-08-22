@@ -29,8 +29,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Name { get; set; }
         public string Description { get; set; }
         public IList<AFunctionSource> Sources { get; set; }
-        public string Package { get; set; }
-        public string PackageS3Key { get; set; }
+        public string S3Location { get; set; }
         public string Handler { get; set; }
         public string Runtime { get; set; }
         public string Memory { get; set; }

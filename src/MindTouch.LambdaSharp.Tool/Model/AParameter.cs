@@ -56,10 +56,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class PackageParameter : AParameter {
 
         //--- Properties ---
-        public string Package { get; set; }
-        public string Bucket { get; set; }
-        public string PackageS3Key { get; set; }
-        public string Prefix { get; set; }
+        public string DestinationBucketParameterName { get; set; }
+        public string DestinationKeyPrefix { get; set; }
+        public string PackageBucket { get; set; }
+        public string PackageKey { get; set; }
     }
 
     public abstract class AResourceParameter : AParameter {
