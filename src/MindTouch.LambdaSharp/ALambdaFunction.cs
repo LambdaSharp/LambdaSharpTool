@@ -183,11 +183,10 @@ namespace MindTouch.LambdaSharp {
                 if((key == null) || (value == null)) {
                     continue;
                 }
-                var paramKey = "/" + key.Substring(4).Replace('_', '/');
                 if(key.StartsWith("STR_", StringComparison.Ordinal)) {
 
                     // plain string value
-                    parameters.Add(paramKey, value);
+                    parameters.Add(EnvToVarKey(key), value);
                 } else if(key.StartsWith("SEC_", StringComparison.Ordinal)) {
 
                     // secret with optional encryption context pairs
@@ -210,10 +209,13 @@ namespace MindTouch.LambdaSharp {
                         CiphertextBlob = new MemoryStream(Convert.FromBase64String(value)),
                         EncryptionContext = encryptionContext
                     })).Plaintext;
-                    parameters.Add(paramKey, Encoding.UTF8.GetString(plaintextStream.ToArray()));
+                    parameters.Add(EnvToVarKey(key), Encoding.UTF8.GetString(plaintextStream.ToArray()));
                 }
             }
             return parameters;
+
+            // local functions
+            string EnvToVarKey(string key) => "/" + key.Substring(4).Replace('_', '/');
         }
 
         #region *** Logging ***
