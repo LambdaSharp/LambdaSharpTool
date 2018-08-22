@@ -52,7 +52,7 @@ lash deploy Deploy.yml
 <dt><tt>--dryrun[:&lt;LEVEL&gt;]</tt></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
 <dt><tt>--output &lt;FILE&gt;</tt></dt>
-<dd>(optional) Name of generated CloudFormation template file (default: cloudformation.json)</dd>
+<dd>(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)</dd>
 <dt><tt>--allow-data-loss</tt></dt>
 <dd>(optional) Allow CloudFormation resource update operations that could lead to data loss</dd>
 <dt><tt>--protect</tt></dt>

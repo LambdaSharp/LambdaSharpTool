@@ -61,7 +61,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // initialize module
             _module = new Module {
                 Name = module.Name,
-                Version = Version.Parse(module.Version),
+                Version = module.Version,
                 Settings = Settings,
                 Description = module.Description,
                 Functions = new List<Function>()

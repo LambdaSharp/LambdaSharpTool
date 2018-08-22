@@ -24,23 +24,19 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
-using MindTouch.LambdaSharp.Tool.Internal;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
-    public class CliDeployCommand : ACliCommand {
+    public class CliPublishCommand : ACliCommand {
 
         //--- Class Methods ---
         public void Register(CommandLineApplication app) {
-            app.Command("deploy", cmd => {
+            app.Command("publish", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Deploy LambdaSharp module";
+                cmd.Description = "Publish LambdaSharp module";
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
-                var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
-                var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -72,12 +68,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     Console.WriteLine($"Readying module for deployment tier '{settingsCollection.First().Tier}'");
                     foreach(var settings in settingsCollection) {
-                        if(!await Deploy(
+                        if(!await Publish(
                             settings,
                             dryRun,
-                            outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
-                            allowDataLossOption.HasValue(),
-                            protectStackOption.HasValue()
+                            outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json")
                         )) {
                             break;
                         }
@@ -86,66 +80,44 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task<bool> Deploy(
+        private async Task<bool> Publish(
             Settings settings,
             DryRunLevel? dryRun,
-            string outputCloudFormationFilePath,
-            bool allowDataLoos,
-            bool protectStack
+            string outputCloudFormationFilePath
         ) {
             var stopwatch = Stopwatch.StartNew();
-
-            // check that LambdaSharp Environment & Tool versions match
-            if(settings.EnvironmentVersion == null) {
-                AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-            } else {
-                if(settings.EnvironmentVersion != settings.ToolVersion) {
-                    AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                }
-            }
 
             // read input file
             Console.WriteLine();
             Console.WriteLine($"Processing module: {settings.ModuleFileName}");
             var source = await File.ReadAllTextAsync(settings.ModuleFileName);
 
-            // preprocess file
-            var tokenStream = new ModelPreprocessor(settings).Preprocess(source);
-            if(ErrorCount > 0) {
-                return false;
-            }
-
             // parse yaml module file
-            var moduleNode = new ModelParser(settings).Process(tokenStream);
+            var module = new ModelParser(settings).Process(source);
             if(ErrorCount > 0) {
                 return false;
-            }
-
-            // reset settings when the 'LambdaSharp` module is being deployed
-            if(moduleNode.Name == "LambdaSharp") {
-                settings.Reset();
             }
 
             // validate module
-            new ModelValidation(settings).Process(moduleNode);
+            new ModelValidation(settings).Process(module);
             if(ErrorCount > 0) {
                 return false;
             }
 
             // package all functions
-            new ModelFunctionPackager(settings).Process(moduleNode, skipCompile: dryRun == DryRunLevel.CloudFormation);
+            new ModelFunctionPackager(settings).Process(module, skipCompile: dryRun == DryRunLevel.CloudFormation);
             if(ErrorCount > 0) {
                 return false;
             }
 
             // package all files
-            new ModelFilesPackager(settings).Process(moduleNode);
+            new ModelFilesPackager(settings).Process(module);
             if(ErrorCount > 0) {
                 return false;
             }
 
             // check if assets need to be uploaded
-            if(moduleNode.Functions.Any() || moduleNode.Parameters.Any(p => p.Package != null)) {
+            if(module.Functions.Any() || module.Parameters.Any(p => p.Package != null)) {
 
                 // check if a deployment bucket was specified
                 if(settings.DeploymentBucketName == null) {
@@ -153,40 +125,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
             }
-            await new ModelUploader(settings).ProcessAsync(moduleNode, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
+            await new ModelUploader(settings).ProcessAsync(module, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
 
-            // resolve all imported parameters
-            new ModelImportProcessor(settings).Process(moduleNode);
-            if(ErrorCount > 0) {
-                return false;
-            }
-
-            // parse yaml module file
-            var module = new ModelConverter(settings).Process(moduleNode);
-            if(ErrorCount > 0) {
-                return false;
-            }
-
-            // generate cloudformation template
-            var stack = new ModelGenerator(settings).Generate(module);
-            if(ErrorCount > 0) {
-                return false;
-            }
-
-            // serialize stack to disk
-            var result = true;
-            var template = new JsonStackSerializer().Serialize(stack);
-            File.WriteAllText(outputCloudFormationFilePath, template);
-            if(dryRun == null) {
-                result = await new StackUpdater().Deploy(module, outputCloudFormationFilePath, allowDataLoos, protectStack);
-                if(settings.OutputDirectory == settings.WorkingDirectory) {
-                    try {
-                        File.Delete(outputCloudFormationFilePath);
-                    } catch { }
-                }
-            }
+            // emit new module YAML file
+            await new ModelSerializer(settings).Process(module);
             Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
-            return result;
+            return true;
         }
     }
 }

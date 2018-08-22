@@ -127,19 +127,14 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
 
-
                         // ensure parameter is not exported
-                        if(parameter.Export != null) {
-                            AddError("exporting Package is not supported");
-                        }
+                        Validate(parameter.Export == null, "exporting Package is not supported");
+                        Validate(parameter.Package.PackagePath == null, "'PackagePath' is reserved for internal use");
 
                         // check if required attributes are present
-                        if(parameter.Package.Files == null) {
-                            AddError("missing 'Files' attribute");
-                        }
-                        if(parameter.Package.Bucket == null) {
-                            AddError("missing 'Bucket' attribute");
-                        } else {
+                        Validate(parameter.Package.Files != null, "missing 'Files' attribute");
+                        Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
+                        if(parameter.Package.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type
                             var param = _module.Parameters.FirstOrDefault(p => p.Name == parameter.Package.Bucket);
@@ -159,9 +154,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         AtLocation("Parameters", () => {
 
                             // ensure parameter is not exported
-                            if(parameter.Export != null) {
-                                AddError("exporting Parameters is not supported");
-                            }
+                            Validate(parameter.Export == null, "exporting Parameters is not supported");
 
                             // recursively validate nested parameters
                             ValidateParameters(parameter.Parameters, depth + 1);
@@ -176,6 +169,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void ValidateResource(ParameterNode parameter, ResourceNode resource) {
 
+            // TODO (2018-08-22, bjorg): validate AWS type
         }
 
         private void ValidateFunctions(IEnumerable<FunctionNode> functions) {
@@ -188,6 +182,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
                     Validate(function.Timeout != null, "missing Name field");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
+                    Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
                 });
             }
         }

@@ -45,5 +45,19 @@ namespace MindTouch.LambdaSharp.Tool {
                 return null;
             }
         }
+
+        public ModuleNode Process(string text) {
+
+            // parse YAML file into module AST
+            try {
+                return new DeserializerBuilder()
+                    .WithNamingConvention(new PascalCaseNamingConvention())
+                    .Build()
+                    .Deserialize<ModuleNode>(text);
+            } catch(Exception e) {
+                AddError($"parse error: {e.Message}", e);
+                return null;
+            }
+        }
     }
 }

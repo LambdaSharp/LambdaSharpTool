@@ -9,10 +9,10 @@
     <Version>0.3.0-pre</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-      <DebugSymbols>false</DebugSymbols>
-      <Optimize>true</Optimize>
-      <OutputPath>.\bin\Release\</OutputPath>
-      <DefineConstants>RELEASE;TRACE</DefineConstants>
+    <DebugSymbols>false</DebugSymbols>
+    <Optimize>true</Optimize>
+    <OutputPath>.\bin\Release\</OutputPath>
+    <DefineConstants>RELEASE;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.1"/>
@@ -24,7 +24,7 @@
     <PackageReference Include="Humidifier.Json" Version="0.2.7"/>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.4"/>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
-    <PackageReference Include="YamlDotNet" Version="4.3.1"/>
+    <PackageReference Include="YamlDotNet" Version="5.0.1"/>
     <PackageReference Include="System.ValueTuple" Version="4.5.0"/>
   </ItemGroup>
   <ItemGroup>

@@ -26,8 +26,7 @@ using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 using MindTouch.LambdaSharp.Tool.Internal;
 
-namespace MindTouch.LambdaSharp.Tool
-{
+namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelImportProcessor : AModelProcessor {
 

@@ -46,7 +46,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // upload function packages
             foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
-                var key = $"{module.Name}/{Path.GetFileName(function.PackagePath)}";
+                var key = $"Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}";
                 function.S3Location = await UploadPackageAsync(
                     bucket,
                     key,
@@ -57,7 +57,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
             foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
-                var key = $"{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
+                var key = $"Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}";
                 parameter.Package.S3Location = await UploadPackageAsync(
                     bucket,
                     key,
