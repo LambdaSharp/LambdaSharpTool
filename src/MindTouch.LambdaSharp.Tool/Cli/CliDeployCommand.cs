@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Deploy LambdaSharp module";
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
-                var outputFilename = cmd.Option("--output <FILE>", "(optional) Name of generated CloudFormation template file (default: cloudformation.json)", CommandOptionType.SingleValue);
+                var outputCloudFormationFilePathOption = cmd.Option("--output <FILE>", "(optional) Name of generated CloudFormation template file (default: cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
@@ -75,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         if(!await Deploy(
                             settings,
                             dryRun,
-                            outputFilename.Value() ?? "cloudformation.json",
+                            outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue()
                         )) {
@@ -89,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         private async Task<bool> Deploy(
             Settings settings,
             DryRunLevel? dryRun,
-            string outputFilename,
+            string outputCloudFormationFilePath,
             bool allowDataLoos,
             bool protectStack
         ) {
@@ -124,14 +124,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // serialize stack to disk
             var result = true;
-            var outputPath = Path.Combine(settings.WorkingDirectory, outputFilename);
             var template = new JsonStackSerializer().Serialize(stack);
-            File.WriteAllText(outputPath, template);
+            File.WriteAllText(outputCloudFormationFilePath, template);
             if(dryRun == null) {
-                result = await new StackUpdater().Deploy(module, template, allowDataLoos, protectStack);
-                try {
-                    File.Delete(outputPath);
-                } catch { }
+                result = await new StackUpdater().Deploy(module, outputCloudFormationFilePath, allowDataLoos, protectStack);
+                if(settings.OutputDirectory == settings.WorkingDirectory) {
+                    try {
+                        File.Delete(outputCloudFormationFilePath);
+                    } catch { }
+                }
             }
             Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
             return result;

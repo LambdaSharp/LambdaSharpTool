@@ -83,10 +83,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 await _transferUtility.UploadAsync(package, bucket, key);
             }
 
-            // always delete the source zip file when there is no failure
-            try {
-                File.Delete(package);
-            } catch { }
+            // delete the source zip file when there is no failure and the output directory is the working directory
+            if(Settings.OutputDirectory == Settings.WorkingDirectory) {
+                try {
+                    File.Delete(package);
+                } catch { }
+            }
             return $"s3://{bucket}/{key}";
         }
     }

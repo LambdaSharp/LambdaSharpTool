@@ -85,15 +85,17 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     }
-                    package = $"{_module.Name}-{parameter.Name}-Package-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip";
+                    package = Path.Combine(Settings.OutputDirectory, $"{_module.Name}-{parameter.Name}-Package-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
 
                 // create zip package
                 Console.WriteLine($"=> Building {parameter.Name} package");
-                if(File.Exists(package)) {
-                    try {
-                        File.Delete(package);
-                    } catch { }
+                if(Directory.Exists(Settings.OutputDirectory)) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"{_module.Name}-{parameter.Name}-Package-*.zip")) {
+                        try {
+                            File.Delete(file);
+                        } catch { }
+                    }
                 }
                 using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Create)) {
                     foreach(var file in files) {

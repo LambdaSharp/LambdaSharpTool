@@ -179,6 +179,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
                 foreach(var moduleFilename in moduleFilenames) {
+                    var workingDirectory = (moduleFilename != null)
+                        ? Path.GetDirectoryName(Path.GetFullPath(moduleFilename))
+                        : Directory.GetCurrentDirectory();
                     result.Add(new Settings {
                         ToolVersion = Version,
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
@@ -194,7 +197,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
                         S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
                         ModuleFileName = (moduleFilename != null) ? Path.GetFullPath(moduleFilename) : null,
-                        WorkingDirectory = (moduleFilename != null) ? Path.GetDirectoryName(moduleFilename) : Directory.GetCurrentDirectory(),
+                        WorkingDirectory = workingDirectory,
+
+                        // TODO (2018-08-22, bjorg): need to allow configuration of output directory
+                        OutputDirectory = Path.Combine(workingDirectory, "bin"),
                         ResourceMapping = new ResourceMapping(),
                         SsmClient = ssmClient,
                         CfClient = cfClient,

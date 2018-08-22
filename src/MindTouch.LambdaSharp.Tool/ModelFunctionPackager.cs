@@ -114,10 +114,12 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
                 var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
-                foreach(var file in Directory.GetFiles(Settings.WorkingDirectory, $"{projectName}-*.zip")) {
-                    try {
-                        File.Delete(file);
-                    } catch { }
+                if(Directory.Exists(Settings.OutputDirectory)) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"{projectName}-*.zip")) {
+                        try {
+                            File.Delete(file);
+                        } catch { }
+                    }
                 }
                 var buildConfiguration = Settings.BuildConfiguration;
                 Console.WriteLine($"Building function {projectName} [{targetFramework}, {buildConfiguration}]");
@@ -131,15 +133,15 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // compile project
                 Console.WriteLine("=> Building AWS Lambda package");
-                if(!DotNetLambdaPackage(targetFramework, buildConfiguration, projectName, projectDirectory)) {
+                var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, projectName + ".zip");
+                if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
                     AddError("`dotnet lambda package` command failed");
                     return;
                 }
 
                 // check if the project zip file was created
-                var zipOriginalPackage = Path.Combine(Settings.WorkingDirectory, projectName, projectName + ".zip");
-                if(!File.Exists(zipOriginalPackage)) {
-                    AddError($"could not find project package: {zipOriginalPackage}");
+                if(!File.Exists(dotnetOutputPackage)) {
+                    AddError($"could not find project package: {dotnetOutputPackage}");
                     return;
                 }
 
@@ -151,11 +153,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     // extract existing package into temp folder
                     Console.WriteLine("=> Decompressing AWS Lambda package");
                     if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        ZipFile.ExtractToDirectory(zipOriginalPackage, tempDirectory);
-                        File.Delete(zipOriginalPackage);
+                        ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
+                        File.Delete(dotnetOutputPackage);
                     } else {
                         Directory.CreateDirectory(tempDirectory);
-                        if(!UnzipWithTool(zipOriginalPackage, tempDirectory)) {
+                        if(!UnzipWithTool(dotnetOutputPackage, tempDirectory)) {
                             AddError("`unzip` command failed");
                             return;
                         }
@@ -194,7 +196,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                             }
                         }
-                        package = Path.Combine(Settings.WorkingDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+                        package = Path.Combine(Settings.OutputDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                     }
 
                     // compress folder contents
@@ -240,7 +242,7 @@ namespace MindTouch.LambdaSharp.Tool {
             );
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string projectName, string projectDirectory) {
+        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 AddError("failed to find the \"dotnet\" executable in path.");
@@ -248,7 +250,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", projectName + ".zip" },
+                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackagePath },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );

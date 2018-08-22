@@ -66,6 +66,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public VerboseLevel VerboseLevel { get; set; }
         public string ModuleFileName { get; set; }
         public string WorkingDirectory { get; set; }
+        public string OutputDirectory { get; set; }
 
         public string DeadLetterQueueArn {
             get {
