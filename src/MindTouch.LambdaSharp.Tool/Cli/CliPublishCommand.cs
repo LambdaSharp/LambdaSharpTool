@@ -87,6 +87,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         ) {
             var stopwatch = Stopwatch.StartNew();
 
+            // check if a deployment bucket was specified
+            if(dryRun != DryRunLevel.CloudFormation) {
+                if(settings.DeploymentBucketName == null) {
+                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    return false;
+                }
+            }
+
             // read input file
             Console.WriteLine();
             Console.WriteLine($"Processing module: {settings.ModuleFileName}");
@@ -96,6 +104,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var module = new ModelParser(settings).Process(source);
             if(ErrorCount > 0) {
                 return false;
+            }
+
+            // reset settings when the 'LambdaSharp` module is being deployed
+            if(module.Name == "LambdaSharp") {
+                settings.Reset();
             }
 
             // validate module
@@ -116,19 +129,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // check if assets need to be uploaded
-            if(module.Functions.Any() || module.Parameters.Any(p => p.Package != null)) {
-
-                // check if a deployment bucket was specified
-                if(settings.DeploymentBucketName == null) {
-                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                    return false;
-                }
-            }
+            // upload assets
             await new ModelUploader(settings).ProcessAsync(module, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
-
-            // emit new module YAML file
-            await new ModelSerializer(settings).Process(module);
+            if(ErrorCount > 0) {
+                return false;
+            }
             Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
             return true;
         }

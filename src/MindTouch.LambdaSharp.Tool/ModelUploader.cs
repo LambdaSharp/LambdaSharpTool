@@ -26,6 +26,8 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 using System.Threading.Tasks;
 using Amazon.S3.Transfer;
 using Amazon.S3.Model;
+using MindTouch.LambdaSharp.Tool.Internal;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -33,7 +35,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
-        private bool _skipUpload;
+        private string _bucket;
 
         //--- Constructors ---
         public ModelUploader(Settings settings) : base(settings) {
@@ -42,58 +44,133 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public async Task ProcessAsync(ModuleNode module, string bucket, bool skipUpload) {
-            _skipUpload = skipUpload;
+            _bucket = bucket;
+
+            // check if module version has already been published
+            var moduleKey = $"Modules/{module.Name}/{module.Version}/Module.yml";
+            if(!skipUpload) {
+                if(await S3ObjectExistsAsync(moduleKey)) {
+                    AddError("destination module already exists");
+                    return;
+                }
+            }
+
+            // finalize module definition
+            ProcessModule(module);
+
+            // serialize module as YAML file
+            var yaml = new SerializerBuilder().Build().Serialize(module);
+            await File.WriteAllTextAsync(Path.Combine(Settings.OutputDirectory, "Module.yml"), yaml);
+            if(skipUpload) {
+                return;
+            }
+
+            // upload module definition
+            await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                BucketName = _bucket,
+                Key = moduleKey,
+                ContentBody = yaml
+            });
 
             // upload function packages
             foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
-                var key = $"Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}";
-                function.S3Location = await UploadPackageAsync(
-                    bucket,
-                    key,
-                    function.PackagePath,
-                    "Lambda function"
-                );
+                var s3 = function.S3Location.ToS3Info();
+                if(s3.Bucket == _bucket) {
+                    await UploadPackageAsync(
+                        s3.Key,
+                        function.PackagePath,
+                        "Lambda function"
+                    );
+                }
             }
 
             // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
             foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
-                var key = $"Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}";
-                parameter.Package.S3Location = await UploadPackageAsync(
-                    bucket,
-                    key,
-                    parameter.Package.PackagePath,
-                    "package"
-                );
+                var s3 = parameter.Package.S3Location.ToS3Info();
+                if(s3.Bucket == _bucket) {
+                    await UploadPackageAsync(
+                        s3.Key,
+                        parameter.Package.PackagePath,
+                        "package"
+                    );
+                }
             }
         }
 
-        private async Task<string> UploadPackageAsync(string bucket, string key, string package, string description) {
-            if(!_skipUpload) {
+        private async Task UploadPackageAsync(string key, string package, string description) {
 
-                // check if a matching package file already exists in the bucket
-                var found = false;
+            // only upload files that don't exist
+            if(!await S3ObjectExistsAsync(key)) {
+                Console.WriteLine($"=> Uploading {description}: s3://{_bucket}/{key} ");
+                await _transferUtility.UploadAsync(package, _bucket, key);
+            }
+
+            // delete the source zip file when there is no failure and the output directory is the working directory
+            if(Settings.OutputDirectory == Settings.WorkingDirectory) {
                 try {
-                    await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                        BucketName = bucket,
-                        Key = key
-                    });
-                    found = true;
+                    File.Delete(package);
                 } catch { }
-
-                // only upload files that don't exist
-                if(!found) {
-                    Console.WriteLine($"=> Uploading {description}: s3://{bucket}/{key} ");
-                    await _transferUtility.UploadAsync(package, bucket, key);
-                }
-
-                // delete the source zip file when there is no failure and the output directory is the working directory
-                if(Settings.OutputDirectory == Settings.WorkingDirectory) {
-                    try {
-                        File.Delete(package);
-                    } catch { }
-                }
             }
-            return $"s3://{bucket}/{key}";
         }
+
+        private async Task<bool> S3ObjectExistsAsync(string key) {
+            var found = false;
+            try {
+                await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                    BucketName = _bucket,
+                    Key = key
+                });
+                found = true;
+            } catch { }
+            return found;
+        }
+
+        private void ProcessModule(ModuleNode module) {
+            ProcessSecrets(module);
+            ProcessParameters(module);
+            ProcessFunctions(module);
+        }
+
+        private void ProcessSecrets(ModuleNode module) {
+
+            // remove empty section
+            if(!module.Secrets.Any()) {
+                module.Secrets = null;
+            }
+        }
+
+        private void ProcessParameters(ModuleNode module) {
+            foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
+                parameter.Package.S3Location = $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}";
+
+                // files have been packed and uploaded already
+                parameter.Package.Files = null;
+
+                // clear package path since it's only used internally
+                parameter.Package.PackagePath = null;
+            }
+
+            // remove empty section
+            if(!module.Parameters.Any()) {
+                module.Secrets = null;
+            }
+       }
+
+        private void ProcessFunctions(ModuleNode module) {
+            foreach(var function in module.Functions) {
+                function.S3Location = $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}";
+
+                // project has been compiled and uploaded already
+                function.Project = null;
+
+                // clear package path since it's only used internally
+                function.PackagePath = null;
+            }
+
+            // remove empty section
+            if(!module.Functions.Any()) {
+                module.Secrets = null;
+            }
+       }
     }
 }
