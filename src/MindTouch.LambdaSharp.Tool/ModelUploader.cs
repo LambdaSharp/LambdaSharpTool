@@ -36,6 +36,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
         private string _bucket;
+        private bool _publish;
 
         //--- Constructors ---
         public ModelUploader(Settings settings) : base(settings) {
@@ -43,8 +44,9 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public async Task ProcessAsync(ModuleNode module, string bucket, bool skipUpload) {
+        public async Task ProcessAsync(ModuleNode module, string bucket, bool skipUpload, bool publish, bool forceUpdate) {
             _bucket = bucket;
+            _publish = publish;
 
             // finalize module definition
             ProcessModule(module);
@@ -82,25 +84,30 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // serialize module as YAML file
-            var yaml = new SerializerBuilder().Build().Serialize(module);
-            await File.WriteAllTextAsync(Path.Combine(Settings.OutputDirectory, "Module.yml"), yaml);
+            // check if module is being published
+            if(publish) {
 
-            // upload module definition
-            if(!skipUpload) {
-                var moduleKey = $"Modules/{module.Name}/{module.Version}/Module.yml";
+                // serialize module as YAML file
+                var yaml = new SerializerBuilder().Build().Serialize(module);
+                if(!Directory.Exists(Settings.OutputDirectory)) {
+                    Directory.CreateDirectory(Settings.OutputDirectory);
+                }
+                await File.WriteAllTextAsync(Path.Combine(Settings.OutputDirectory, "Module.yml"), yaml);
 
-                // TODO (2018-08-22, bjorg): add flag to force update
-                // if(await S3ObjectExistsAsync(moduleKey)) {
-                //     AddError($"module {module.Name} (v{module.Version}) already exists at {_bucket}");
-                //     return;
-                // }
-                Console.WriteLine($"=> Uploading module: s3://{_bucket}/{moduleKey}");
-                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
-                    BucketName = _bucket,
-                    Key = moduleKey,
-                    ContentBody = yaml
-                });
+                // upload module definition
+                if(!skipUpload) {
+                    var moduleKey = $"Modules/{module.Name}/{module.Version}/Module.yml";
+                    if(!forceUpdate && await S3ObjectExistsAsync(moduleKey)) {
+                        AddError($"module {module.Name} (v{module.Version}) already exists at {_bucket}");
+                        return;
+                    }
+                    Console.WriteLine($"=> Uploading module: s3://{_bucket}/{moduleKey}");
+                    await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                        BucketName = _bucket,
+                        Key = moduleKey,
+                        ContentBody = yaml
+                    });
+                }
             }
         }
 
@@ -138,39 +145,27 @@ namespace MindTouch.LambdaSharp.Tool {
             ProcessFunctions(module);
         }
 
-        private void ProcessSecrets(ModuleNode module) {
-
-            // remove empty section
-            if(!module.Secrets.Any()) {
-                module.Secrets = null;
-            }
-        }
+        private void ProcessSecrets(ModuleNode module) { }
 
         private void ProcessParameters(ModuleNode module) {
             foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
-                parameter.Package.S3Location = $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}";
+                parameter.Package.S3Location = _publish
+                    ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}"
+                    : $"s3://{_bucket}/Deployments/{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
 
                 // files have been packed and uploaded already
                 parameter.Package.Files = null;
-            }
-
-            // remove empty section
-            if(!module.Parameters.Any()) {
-                module.Secrets = null;
             }
        }
 
         private void ProcessFunctions(ModuleNode module) {
             foreach(var function in module.Functions) {
-                function.S3Location = $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}";
+                function.S3Location = _publish
+                    ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}"
+                    : $"s3://{_bucket}/Deployments/{module.Name}/{Path.GetFileName(function.PackagePath)}";
 
                 // project has been compiled and uploaded already
                 function.Project = null;
-            }
-
-            // remove empty section
-            if(!module.Functions.Any()) {
-                module.Secrets = null;
             }
        }
     }

@@ -113,30 +113,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return null;
                 }
 
-                // initialize gitSha value
-                var gitSha = gitShaOption.Value();
-                if(gitSha == null) {
-
-                    // read the gitSha using `git` directly
-                    var process = new Process {
-                        StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
-                            RedirectStandardOutput = true,
-                            UseShellExecute = false
-                        }
-                    };
-                    try {
-                        process.Start();
-                        gitSha = process.StandardOutput.ReadToEnd().Trim();
-                        process.WaitForExit();
-                        if(process.ExitCode != 0) {
-                            Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
-                            gitSha = null;
-                        }
-                    } catch {
-                        Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
-                    }
-                }
-
                 // initialize AWS profile
                 var awsAccount = await InitializeAwsProfile(awsProfileOption.Value(), awsAccountIdOption.Value(), awsRegionOption.Value());
                 if(awsAccount == null) {
@@ -150,15 +126,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     AddError("cannot specify --input and an argument at the same time");
                     return null;
                 }
-                var moduleFilenames = new List<string>();
+                var moduleSources = new List<string>();
                 if(inputFileOption.HasValue()) {
-                    moduleFilenames.Add(inputFileOption.Value());
+                    moduleSources.Add(inputFileOption.Value());
                 } else if(cmdArgument.Values.Any()) {
-                    moduleFilenames.AddRange(cmdArgument.Values);
+                    moduleSources.AddRange(cmdArgument.Values);
                 } else {
 
                     // add default entry so we can generate at least one settings instance
-                    moduleFilenames.Add(null);
+                    moduleSources.Add(null);
                 }
 
                 // create AWS clients
@@ -211,10 +187,57 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
-                foreach(var moduleFilename in moduleFilenames) {
-                    var workingDirectory = (moduleFilename != null)
-                        ? Path.GetDirectoryName(Path.GetFullPath(moduleFilename))
-                        : Directory.GetCurrentDirectory();
+                foreach(var moduleSource in moduleSources) {
+                    var source = moduleSource;
+                    string workingDirectory;
+                    string outputDirectory;
+                    bool isLocalModule;
+                    if(moduleSource == null) {
+
+                        // default to local module file name
+                        workingDirectory = Directory.GetCurrentDirectory();
+                        outputDirectory = Path.Combine(workingDirectory, "bin");
+                        source = Path.Combine(workingDirectory, "Deploy.yml");
+                        isLocalModule = true;
+                    } else if(Uri.TryCreate(moduleSource, UriKind.Absolute, out Uri _)) {
+
+                        // for remote module files; use current directory as working directory
+                        workingDirectory = Directory.GetCurrentDirectory();
+                        outputDirectory = workingDirectory;
+                        isLocalModule = false;
+                    } else {
+
+                        // module file is local
+                        source = Path.GetFullPath(moduleSource);
+                        workingDirectory = Path.GetDirectoryName(source);
+                        outputDirectory = Path.Combine(workingDirectory, "bin");
+                        isLocalModule = true;
+                    }
+
+                    // initialize gitSha value
+                    var gitSha = gitShaOption.Value();
+                    if((gitSha == null) && isLocalModule) {
+
+                        // read the gitSha using `git` directly
+                        var process = new Process {
+                            StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
+                                RedirectStandardOutput = true,
+                                UseShellExecute = false,
+                                WorkingDirectory = workingDirectory
+                            }
+                        };
+                        try {
+                            process.Start();
+                            gitSha = process.StandardOutput.ReadToEnd().Trim();
+                            process.WaitForExit();
+                            if(process.ExitCode != 0) {
+                                Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                                gitSha = null;
+                            }
+                        } catch {
+                            Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+                        }
+                    }
                     result.Add(new Settings {
                         ToolVersion = Version,
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
@@ -229,11 +252,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         NotificationTopicArn = deploymentNotificationTopicArn,
                         RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
                         S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
-                        ModuleFileName = (moduleFilename != null) ? Path.GetFullPath(moduleFilename) : null,
+                        ModuleSource = source,
+                        IsLocalModule = isLocalModule,
                         WorkingDirectory = workingDirectory,
 
                         // TODO (2018-08-22, bjorg): need to allow configuration of output directory
-                        OutputDirectory = Path.Combine(workingDirectory, "bin"),
+                        OutputDirectory = outputDirectory,
                         ResourceMapping = new ResourceMapping(),
                         SsmClient = ssmClient,
                         CfClient = cfClient,

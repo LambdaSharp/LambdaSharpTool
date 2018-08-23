@@ -52,6 +52,10 @@ namespace MindTouch.LambdaSharp.Tool {
         private void ProcessParameter(ParameterNode parameter) {
             var files = new List<string>();
             AtLocation("Package", () => {
+                if(parameter.Package.S3Location != null) {
+                    AddError("cannot use 'S3Location' attribute with local modules");
+                    return;
+                }
 
                 // find all files that need to be part of the package
                 string folder;

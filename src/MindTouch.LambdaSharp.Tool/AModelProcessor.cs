@@ -74,6 +74,6 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         protected void AddError(string message, Exception exception = null)
-            => _settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleFileName}]", exception);
+            => _settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleSource}]", exception);
     }
 }

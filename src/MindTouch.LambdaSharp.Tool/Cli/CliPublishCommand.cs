@@ -47,10 +47,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
                     foreach(var settings in settingsCollection) {
-                        if((settings.ModuleFileName == null) && File.Exists("Deploy.yml")) {
-                            settings.ModuleFileName = Path.GetFullPath("Deploy.yml");
-                        } else if((settings.ModuleFileName == null) || !File.Exists(settings.ModuleFileName)) {
-                            AddError($"could not find '{settings.ModuleFileName ?? Path.GetFullPath("Deploy.yml")}'");
+                        if(!settings.IsLocalModule) {
+                            AddError("cannot publish a remote module");
+                            return;
+                        }
+                        if(!File.Exists(settings.ModuleSource)) {
+                            AddError($"could not find '{settings.ModuleSource}'");
                         }
                     }
                     if(ErrorCount > 0) {
@@ -97,8 +99,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Processing module: {settings.ModuleFileName}");
-            var source = await File.ReadAllTextAsync(settings.ModuleFileName);
+            Console.WriteLine($"Processing module: {settings.ModuleSource}");
+            var source = await File.ReadAllTextAsync(settings.ModuleSource);
 
             // parse yaml module file
             var module = new ModelParser(settings).Process(source);
@@ -130,7 +132,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // upload assets
-            await new ModelUploader(settings).ProcessAsync(module, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
+            await new ModelUploader(settings).ProcessAsync(
+                module,
+                settings.DeploymentBucketName,
+                skipUpload: dryRun == DryRunLevel.CloudFormation,
+                publish: true,
+
+                // TODO (2018-08-22, bjorg): add command line option to control force update
+                forceUpdate: true
+            );
             if(ErrorCount > 0) {
                 return false;
             }

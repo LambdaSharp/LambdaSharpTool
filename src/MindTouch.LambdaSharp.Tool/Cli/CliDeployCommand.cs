@@ -23,7 +23,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Amazon.S3.Model;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -51,10 +53,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
                     foreach(var settings in settingsCollection) {
-                        if((settings.ModuleFileName == null) && File.Exists("Deploy.yml")) {
-                            settings.ModuleFileName = Path.GetFullPath("Deploy.yml");
-                        } else if((settings.ModuleFileName == null) || !File.Exists(settings.ModuleFileName)) {
-                            AddError($"could not find '{settings.ModuleFileName ?? Path.GetFullPath("Deploy.yml")}'");
+                        if(settings.IsLocalModule && !File.Exists(settings.ModuleSource)) {
+                            AddError($"could not find '{settings.ModuleSource}'");
                         }
                     }
                     if(ErrorCount > 0) {
@@ -106,8 +106,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Processing module: {settings.ModuleFileName}");
-            var source = await File.ReadAllTextAsync(settings.ModuleFileName);
+            Console.WriteLine($"Processing module: {settings.ModuleSource}");
+            string source;
+            if(settings.IsLocalModule) {
+                source = await File.ReadAllTextAsync(settings.ModuleSource);
+            } else {
+                var s3 = settings.ModuleSource.ToS3Info();
+                var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
+                    BucketName = s3.Bucket,
+                    Key = s3.Key
+                });
+                using(var reader = new StreamReader(response.ResponseStream, Encoding.UTF8)) {
+                    source = await reader.ReadToEndAsync();
+                }
+            }
 
             // preprocess file
             var tokenStream = new ModelPreprocessor(settings).Preprocess(source);
@@ -132,28 +144,44 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // package all functions
-            new ModelFunctionPackager(settings).Process(module, skipCompile: dryRun == DryRunLevel.CloudFormation);
-            if(ErrorCount > 0) {
-                return false;
-            }
+            // packaging assets only applies to local modules
+            if(settings.IsLocalModule) {
 
-            // package all files
-            new ModelFilesPackager(settings).Process(module);
-            if(ErrorCount > 0) {
-                return false;
-            }
-
-            // check if assets need to be uploaded
-            if(module.Functions.Any() || module.Parameters.Any(p => p.Package != null)) {
-
-                // check if a deployment bucket was specified
-                if(settings.DeploymentBucketName == null) {
-                    AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                // package all functions
+                new ModelFunctionPackager(settings).Process(
+                    module,
+                    skipCompile: dryRun == DryRunLevel.CloudFormation
+                );
+                if(ErrorCount > 0) {
                     return false;
                 }
+
+                // package all files
+                new ModelFilesPackager(settings).Process(module);
+                if(ErrorCount > 0) {
+                    return false;
+                }
+
+                // check if assets need to be uploaded
+                if(module.Functions.Any() || module.Parameters.Any(p => p.Package != null)) {
+
+                    // check if a deployment bucket was specified
+                    if(settings.DeploymentBucketName == null) {
+                        AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        return false;
+                    }
+                }
+                await new ModelUploader(settings).ProcessAsync(
+                    module,
+                    settings.DeploymentBucketName,
+                    skipUpload: dryRun == DryRunLevel.CloudFormation,
+                    publish: false,
+                    forceUpdate: false
+                );
+            } else {
+
+                // TODO (2018-08-23, bjorg): make sure all functions/packages have S3 locations
             }
-            await new ModelUploader(settings).ProcessAsync(module, settings.DeploymentBucketName, skipUpload: dryRun == DryRunLevel.CloudFormation);
 
             // resolve all imported parameters
             new ModelImportProcessor(settings).Process(module);
@@ -161,7 +189,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // parse yaml module file
+            // compile module file
             var moduleObject = new ModelConverter(settings).Process(module);
             if(ErrorCount > 0) {
                 return false;
