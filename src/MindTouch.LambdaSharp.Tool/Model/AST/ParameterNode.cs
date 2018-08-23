@@ -20,6 +20,7 @@
  */
 
 using System.Collections.Generic;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
@@ -62,6 +63,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Files { get; set; }
         public string Bucket { get; set; }
         public string Prefix { get; set; }
+
+        [YamlIgnore]
         public string PackagePath { get; set; }
         public string S3Location { get; set; }
     }
