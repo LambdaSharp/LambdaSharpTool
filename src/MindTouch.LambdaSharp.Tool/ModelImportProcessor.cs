@@ -31,7 +31,7 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModelImportProcessor : AModelProcessor {
 
         //--- Constants ---
-        private const string IMPORT_PATTERN = "^/?[a-zA-Z][a-zA-Z0-9]*(/[a-zA-Z][a-zA-Z0-9]*)*/?$";
+        private const string IMPORT_PATTERN = "^/?[a-zA-Z][a-zA-Z0-9_]*(/[a-zA-Z][a-zA-Z0-9_]*)*/?$";
 
         //--- Fields ---
         private ImportResolver _importer;
