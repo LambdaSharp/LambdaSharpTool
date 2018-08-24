@@ -185,7 +185,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 await new ModelUploader(settings).ProcessAsync(
                     module,
                     settings.DeploymentBucketName,
-                    skipUpload: dryRun == DryRunLevel.CloudFormation,
+                    skipUpload: dryRun != null,
                     publish: false,
                     forceUpdate: false
                 );

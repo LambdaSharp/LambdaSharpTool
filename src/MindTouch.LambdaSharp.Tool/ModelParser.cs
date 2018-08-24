@@ -20,6 +20,7 @@
  */
 
 using System;
+using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -38,6 +39,8 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 return new DeserializerBuilder()
                     .WithNamingConvention(new PascalCaseNamingConvention())
+                    .WithTagMapping("!Ref", typeof(CloudFormationRef))
+                    .WithTagMapping("!GetAtt", typeof(CloudFormationGetAtt))
                     .Build()
                     .Deserialize<ModuleNode>(yamlParser);
             } catch(Exception e) {
@@ -52,6 +55,8 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 return new DeserializerBuilder()
                     .WithNamingConvention(new PascalCaseNamingConvention())
+                    .WithTagMapping("!Ref", typeof(CloudFormationRef))
+                    .WithTagMapping("!GetAtt", typeof(CloudFormationGetAtt))
                     .Build()
                     .Deserialize<ModuleNode>(text);
             } catch(Exception e) {

@@ -34,10 +34,8 @@ Parameters:
       Properties:
         UsagePlanName: DemoUsagePlan
         ApiStages:
-          - ApiId:
-              Ref: ModuleRestApi
-            Stage:
-              Ref: ModuleRestApiStage
+          - ApiId: !Ref ModuleRestApi
+            Stage: !Ref ModuleRestApiStage
         Description: Sample usage plan for REST API
         Quota:
           Limit: 500
