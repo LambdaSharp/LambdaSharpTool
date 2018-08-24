@@ -23,6 +23,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
@@ -111,13 +112,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(settings.IsLocalModule) {
                 source = await File.ReadAllTextAsync(settings.ModuleSource);
             } else {
-                var s3 = settings.ModuleSource.ToS3Info();
-                var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
-                    BucketName = s3.Bucket,
-                    Key = s3.Key
-                });
-                using(var reader = new StreamReader(response.ResponseStream, Encoding.UTF8)) {
-                    source = await reader.ReadToEndAsync();
+                var uri = new Uri(settings.ModuleSource);
+                if(uri.Scheme == "s3") {
+                    var s3 = settings.ModuleSource.ToS3Info();
+                    var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
+                        BucketName = s3.Bucket,
+                        Key = s3.Key
+                    });
+                    using(var reader = new StreamReader(response.ResponseStream, Encoding.UTF8)) {
+                        source = await reader.ReadToEndAsync();
+                    }
+                } else {
+                    using(var httpClient = new HttpClient()) {
+                        using(var res = await httpClient.GetAsync(uri))
+                        using(var content = res.Content) {
+                            source = await content.ReadAsStringAsync();
+                        }
+                    }
                 }
             }
 

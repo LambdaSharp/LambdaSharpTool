@@ -132,8 +132,10 @@ namespace MindTouch.LambdaSharp.Tool {
                         Validate(parameter.Package.PackagePath == null, "'PackagePath' is reserved for internal use");
 
                         // check if required attributes are present
-                        Validate(parameter.Package.Files != null, "missing 'Files' attribute");
-                        Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
+                        if(parameter.Package.S3Location == null) {
+                            Validate(parameter.Package.Files != null, "missing 'Files' attribute");
+                            Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
+                        }
                         if(parameter.Package.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type

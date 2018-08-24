@@ -68,7 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         }
                         dryRun = value;
                     }
-                    Console.WriteLine($"Readying module for deployment tier '{settingsCollection.First().Tier}'");
+                    Console.WriteLine($"Publishing module to '{settingsCollection.First().DeploymentBucketName}'");
                     foreach(var settings in settingsCollection) {
                         if(!await Publish(
                             settings,
