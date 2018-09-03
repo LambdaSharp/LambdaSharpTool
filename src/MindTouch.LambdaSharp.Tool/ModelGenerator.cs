@@ -581,7 +581,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     _stack.Add($"{function.Name}{grp.Key}S3Permission", new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         SourceAccount = Settings.AwsAccountId,
-                        SourceArn = Fn.Ref(grp.Key),
+                        SourceArn = Fn.GetAtt(grp.Key, "Arn"),
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
@@ -589,10 +589,17 @@ namespace MindTouch.LambdaSharp.Tool {
                         ["ServiceToken"] = Settings.S3SubscriberCustomResourceTopicArn,
                         ["BucketName"] = Fn.Ref(grp.Key),
                         ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
-                        ["Filters"] = grp.Select(source => new Dictionary<string, object>() {
-                            ["Events"] = source.Events,
-                            ["Prefix"] = source.Prefix,
-                            ["Suffix"] = source.Suffix
+                        ["Filters"] = grp.Select(source => {
+                            var filter = new Dictionary<string, object>() {
+                                ["Events"] = source.Events,
+                            };
+                            if(source.Prefix != null) {
+                                filter["Prefix"] = source.Prefix;
+                            }
+                            if(source.Suffix != null) {
+                                filter["Suffix"] = source.Suffix;
+                            }
+                            return filter;
                         }).ToList()
                     });
                 }
