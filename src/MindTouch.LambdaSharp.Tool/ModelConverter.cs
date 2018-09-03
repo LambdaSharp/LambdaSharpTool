@@ -114,32 +114,10 @@ namespace MindTouch.LambdaSharp.Tool {
             , new List<string>());
 
             // convert parameters
-            if(module.Parameters.Any(p => p.Package != null)) {
-
-                // check if a deployment bucket exists
-                if(Settings.DeploymentBucketName == null) {
-                    AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                }
-
-                // check if S3 package loader topic arn exists
-                if(Settings.S3PackageLoaderCustomResourceTopicArn == null) {
-                    AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                }
-            }
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
             // create functions
             if(module.Functions.Any()) {
-
-                // check if a dead-letter queue was specified
-                if(Settings.DeadLetterQueueUrl == null) {
-                    AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                }
-
-                // check if a logging topic was set
-                if(Settings.LoggingTopicArn == null) {
-                    AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                }
                 var functionIndex = 0;
                 _module.Functions = AtLocation("Functions", () => module.Functions
                     .Select(function => ConvertFunction(++functionIndex, function))
@@ -306,27 +284,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public Resource ConvertResource(string resourceArn, ResourceNode resource) {
 
-            // parse resource type
-            var resourceType = "<BAD>";
-            if(resource.Type == null) {
-                if(resourceArn != null) {
-                    resource.Type = "AWS";
-                } else {
-                    AddError("missing Type field");
-                }
-            } else {
-                resourceType = AtLocation("Type", () => {
-                    if(
-                        !resource.Type.StartsWith("Custom::")
-                        && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
-                    ) {
-                        AddError($"unsupported resource type: {resource.Type}");
-                        return "<BAD>";
-                    }
-                    return resource.Type;
-                }, "<BAD>");
-            }
-
             // parse resource allowed operations
             var allowList = new List<string>();
             if((resource.Type != null) && (resource.Allow != null)) {
@@ -352,7 +309,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
                             allowSet.Add(allowStatement);
-                        } else if(Settings.ResourceMapping.TryResolveAllowShorthand(resourceType, allowStatement, out IList<string> allowedList)) {
+                        } else if(Settings.ResourceMapping.TryResolveAllowShorthand(resource.Type, allowStatement, out IList<string> allowedList)) {
                             foreach(var allowed in allowedList) {
                                 allowSet.Add(allowed);
                             }
@@ -363,18 +320,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     allowList = allowSet.OrderBy(text => text).ToList();
                 });
             }
-
-            // ensure the local resource name is an ARN or wildcard
-            if(resourceArn != null) {
-                if(!resourceArn.StartsWith("arn:") && (resourceArn != "*")) {
-                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
-                }
-                if(resource.Properties != null) {
-                    AddError($"referenced resource '{resourceArn}' cannot set properties");
-                }
-            }
             return new Resource {
-                Type = resourceType,
+                Type = resource.Type,
                 ResourceArn = resourceArn,
                 Allow = allowList,
                 Properties = resource.Properties
@@ -383,6 +330,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public Function ConvertFunction(int index, FunctionNode function) {
             return AtLocation(function.Name ?? $"[{index}]", () => {
+
+                // append the version to the function description
+                if(function.Description != null) {
+                    function.Description = function.Description.TrimEnd() + $" (v{_module.Version})";
+                }
 
                 // initialize VPC configuration if provided
                 FunctionVpc vpc = null;
@@ -502,7 +454,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         EventSourceToken = alexaSkillId
                     };
                 }
-                AddError("empty event");
                 return null;
             }, null);
             throw new ModelParserException("invalid function event");

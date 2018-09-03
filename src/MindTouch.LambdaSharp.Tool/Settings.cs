@@ -56,6 +56,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public string NotificationTopicArn { get; set; }
         public string RollbarCustomResourceTopicArn { get; set; }
         public string S3PackageLoaderCustomResourceTopicArn { get; set; }
+        public string S3SubscriberCustomResourceTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
@@ -93,6 +94,7 @@ namespace MindTouch.LambdaSharp.Tool {
             NotificationTopicArn = null;
             RollbarCustomResourceTopicArn = null;
             S3PackageLoaderCustomResourceTopicArn = null;
+            S3SubscriberCustomResourceTopicArn = null;
         }
     }
 }

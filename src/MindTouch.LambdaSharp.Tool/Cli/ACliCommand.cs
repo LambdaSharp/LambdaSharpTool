@@ -88,6 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentRollbarCustomResourceTopicArnOption = cmd.Option("--deployment-rollbar-customresource-topic-arn <ARN>", "(test only) SNS Topic for creating Rollbar projects (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentS3PackageLoaderCustomResourceTopicArnOption = cmd.Option("--deployment-s3packageloader-customresource-topic-arn <ARN>", "(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
+            var deploymentS3SubscriberCustomResourceTopicArnOption = cmd.Option("--deployment-s3subscriber-customeresource-topic-arn <ARN>", "(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Deploy.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
             var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Deploy.yml)", multipleValues: true);
@@ -151,6 +152,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
                 var deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArnOption.Value();
                 var deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArnOption.Value();
+                var deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArnOption.Value();
 
                 // NOTE (2018-08-04, bjorg): we only import lambdasharp parameters when necessary
                 //  to allow tests to use a dummy AWS account ID; since no import will be triggered
@@ -163,6 +165,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     || (deploymentNotificationTopicArn == null)
                     || (deploymentRollbarCustomResourceTopicArn == null)
                     || (deploymentS3PackageLoaderCustomResourceTopicArn == null)
+                    || (deploymentS3SubscriberCustomResourceTopicArn == null)
                 ) {
 
                     // import LambdaSharp settings
@@ -177,6 +180,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     deploymentNotificationTopicArn = deploymentNotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
                     deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
                     deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
+                    deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn ?? GetLambdaSharpSetting("S3SubscriberCustomResourceTopic");
 
                     // local functions
                     string GetLambdaSharpSetting(string name) {
@@ -252,6 +256,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         NotificationTopicArn = deploymentNotificationTopicArn,
                         RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
                         S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
+                        S3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn,
                         ModuleSource = source,
                         IsLocalModule = isLocalModule,
                         WorkingDirectory = workingDirectory,

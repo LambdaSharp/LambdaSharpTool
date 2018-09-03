@@ -146,6 +146,18 @@ namespace MindTouch.LambdaSharp.Tool {
                                 AddError($"parameter for function source must be an S3 bucket resource: '{parameter.Package.Bucket}'");
                             }
                         }
+                        if(parameter.Package.Files != null) {
+
+                            // check if a deployment bucket exists
+                            if(Settings.DeploymentBucketName == null) {
+                                AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                            }
+
+                            // check if S3 package loader topic arn exists
+                            if(Settings.S3PackageLoaderCustomResourceTopicArn == null) {
+                                AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                            }
+                        }
 
                         // check if package is nested
                         if(depth > 0) {
@@ -170,11 +182,46 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateResource(ParameterNode parameter, ResourceNode resource) {
+            if(parameter.Value != null) {
+                resource.Type = resource.Type ?? "AWS";
+                ValidateNotBothStatements("Value", "Properties", resource.Properties == null);
+                ValidateARN(parameter.Value);
+            } else if(parameter.Values != null) {
+                resource.Type = resource.Type ?? "AWS";
+                ValidateNotBothStatements("Values", "Properties", resource.Properties == null);
+                foreach(var value in parameter.Values) {
+                    ValidateARN(value);
+                }
+            } else if(resource.Type == null) {
+                AddError("missing Type field");
+            } else if(
+                resource.Type.StartsWith("AWS::")
+                && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
+            ) {
+                AddError($"unsupported resource type: {resource.Type}");
+            }
 
-            // TODO (2018-08-22, bjorg): validate AWS type
+            // local functions
+            void ValidateARN(string resourceArn) {
+                if(!resourceArn.StartsWith("arn:") && (resourceArn != "*")) {
+                    AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
+                }
+            }
         }
 
         private void ValidateFunctions(IEnumerable<FunctionNode> functions) {
+
+            // check if a dead-letter queue was specified
+            if(Settings.DeadLetterQueueUrl == null) {
+                AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+            }
+
+            // check if a logging topic was set
+            if(Settings.LoggingTopicArn == null) {
+                AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+            }
+
+            // validate functions
             var index = 0;
             foreach(var function in functions) {
                 ++index;
@@ -230,6 +277,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("S3", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("S3", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("S3", "Alexa", source.Alexa == null);
+
+                        // check if S3 subscriber topic arn exists
+                        if(Settings.S3SubscriberCustomResourceTopicArn == null) {
+                            AddError("S3 source requires S3Subscriber custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                        }
 
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
 

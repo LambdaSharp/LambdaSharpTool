@@ -577,16 +577,24 @@ namespace MindTouch.LambdaSharp.Tool {
             // check if function has any S3 event sources
             var s3Sources = function.Sources.OfType<S3Source>().ToList();
             if(s3Sources.Any()) {
-                foreach(var source in s3Sources.Distinct(source => source.BucketArn)) {
-                    var permissionLogicalId = $"{function.Name}{source.Bucket}S3Permission";
-                    _stack.Add(permissionLogicalId, new Lambda.Permission {
+                foreach(var grp in s3Sources.ToLookup(source => source.Bucket)) {
+                    _stack.Add($"{function.Name}{grp.Key}S3Permission", new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         SourceAccount = Settings.AwsAccountId,
-                        SourceArn = source.BucketArn,
+                        SourceArn = Fn.Ref(grp.Key),
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
-                    _stack.AddDependsOn(source.Bucket, permissionLogicalId);
+                    _stack.Add($"{function.Name}{grp.Key}S3Subscription", new Model.CustomResource("Custom::LambdaSharpS3Subscriber") {
+                        ["ServiceToken"] = Settings.S3SubscriberCustomResourceTopicArn,
+                        ["BucketName"] = Fn.Ref(grp.Key),
+                        ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
+                        ["Filters"] = grp.Select(source => new Dictionary<string, object>() {
+                            ["Events"] = source.Events,
+                            ["Prefix"] = source.Prefix,
+                            ["Suffix"] = source.Suffix
+                        }).ToList()
+                    });
                 }
             }
 
@@ -663,13 +671,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
-                _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader", new Dictionary<string, object> {
+                _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader") {
                     ["ServiceToken"] = Settings.S3PackageLoaderCustomResourceTopicArn,
                     ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = packageParameter.PackageBucket,
-                    ["SourcePackageKey"] = packageParameter.PackageKey,
-                }));
+                    ["SourcePackageKey"] = packageParameter.PackageKey
+                });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
@@ -713,80 +721,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         out resourceTemplate
                     )) {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
-                    }
-
-                    // for S3 buckets, we need to check if any functions use the bucket as an event source
-                    if(resource.Type == "AWS::S3::Bucket") {
-                        var s3Template = (Humidifier.S3.Bucket)resourceTemplate;
-                        var s3Sources = _module.Functions.SelectMany(function => function.Sources
-                                .OfType<S3Source>()
-                                .Where(source => source.Bucket == resourceName)
-                                .Select(source => new {
-                                    Function = function,
-                                    Source = source
-                                })
-                            )
-                            .ToList();
-                        if(s3Sources.Any()) {
-
-                            // NOTE (2018-06-28, bjorg): for S3 buckets, we need to jump through a few hoops to make
-                            //      everything work as expected; first, we need to know the final name of the bucket;
-                            //      second, we cannot use `Ref()` to get its name, because it introduces a circular dependency.
-
-                            // check if we need to create a hashed bucket name and set `BucketName` in template
-                            if(s3Template.BucketName == null) {
-
-                                // NOTE (2018-08-16, bjorg): bucket names must be lowercase
-                                var bucketName = $"{Settings.Tier}-{_module.Name}-{resourceName}-".ToLowerInvariant();
-                                bucketName += $"{Settings.AwsAccountId}-{Settings.AwsRegion}-{bucketName}".ToMD5Hash().Substring(0, 7).ToLowerInvariant();
-                                s3Template.BucketName = bucketName;
-                                var arn = $"arn:aws:s3:::{bucketName}";
-                                resourceArn = new object[] {
-                                    arn,
-                                    arn + "/*"
-                                };
-                                foreach(var src in s3Sources) {
-                                    src.Source.BucketArn = arn;
-                                }
-                            }
-
-                            // use the hashed bucket name as environment variable
-                            resourceParamFn = s3Template.BucketName;
-
-                            // add notification configuration to template
-                            s3Template.NotificationConfiguration = new Humidifier.S3.BucketTypes.NotificationConfiguration {
-                                LambdaConfigurations = s3Sources.SelectMany(src => src.Source.Events.Select(evt => new Humidifier.S3.BucketTypes.LambdaConfiguration {
-                                    Event = evt,
-                                    Filter = ConvertFilter(src.Source.Prefix, src.Source.Suffix),
-                                    Function = Fn.GetAtt(src.Function.Name, "Arn")
-                                })).ToList()
-                            };
-                        }
-
-                        // local function
-                        Humidifier.S3.BucketTypes.NotificationFilter ConvertFilter(string prefix, string suffix) {
-                            if((prefix == null) && (suffix == null)) {
-                                return null;
-                            }
-                            var rules = new List<Humidifier.S3.BucketTypes.FilterRule>();
-                            if(prefix != null) {
-                                rules.Add(new Humidifier.S3.BucketTypes.FilterRule {
-                                    Name = "prefix",
-                                    Value = prefix
-                                });
-                            }
-                            if(suffix != null) {
-                                rules.Add(new Humidifier.S3.BucketTypes.FilterRule {
-                                    Name = "suffix",
-                                    Value = suffix
-                                });
-                            }
-                            return new Humidifier.S3.BucketTypes.NotificationFilter {
-                                S3Key = new Humidifier.S3.BucketTypes.S3KeyFilter {
-                                    Rules = rules
-                                }
-                            };
-                        }
                     }
                     _stack.Add(resourceName, resourceTemplate);
                     exportValue = resourceParamFn;

@@ -57,7 +57,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
        //--- Properties ---
         public string Bucket { get; set; }
-        public string BucketArn { get; set; }
         public IList<string> Events { get; set; }
         public string Prefix { get; set; }
         public string Suffix { get; set; }
