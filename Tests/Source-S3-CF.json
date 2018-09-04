@@ -11,62 +11,7 @@
   "Resources": {
     "Bucket": {
       "Type": "AWS::S3::Bucket",
-      "Properties": {
-        "BucketName": "test-testmodule-bucket-a0367e0",
-        "NotificationConfiguration": {
-          "LambdaConfigurations": [
-            {
-              "Event": "s3:ObjectCreated:*",
-              "Filter": {
-                "S3Key": {
-                  "Rules": [
-                    {
-                      "Name": "prefix",
-                      "Value": "images/"
-                    },
-                    {
-                      "Name": "suffix",
-                      "Value": ".png"
-                    }
-                  ]
-                }
-              },
-              "Function": {
-                "Fn::GetAtt": [
-                  "Function",
-                  "Arn"
-                ]
-              }
-            },
-            {
-              "Event": "s3:ObjectRemoved:*",
-              "Filter": {
-                "S3Key": {
-                  "Rules": [
-                    {
-                      "Name": "prefix",
-                      "Value": "images/"
-                    },
-                    {
-                      "Name": "suffix",
-                      "Value": ".png"
-                    }
-                  ]
-                }
-              },
-              "Function": {
-                "Fn::GetAtt": [
-                  "Function",
-                  "Arn"
-                ]
-              }
-            }
-          ]
-        }
-      },
-      "DependsOn": [
-        "FunctionBucketS3Permission"
-      ]
+      "Properties": {}
     },
     "VersionSsmParameter": {
       "Type": "AWS::SSM::Parameter",
@@ -153,8 +98,26 @@
                     "s3:RestoreObject"
                   ],
                   "Resource": [
-                    "arn:aws:s3:::test-testmodule-bucket-a0367e0",
-                    "arn:aws:s3:::test-testmodule-bucket-a0367e0/*"
+                    {
+                      "Fn::GetAtt": [
+                        "Bucket",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Bucket",
+                              "Arn"
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
                   ]
                 },
                 {
@@ -197,7 +160,9 @@
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
-            "STR_BUCKET": "test-testmodule-bucket-a0367e0",
+            "STR_BUCKET": {
+              "Ref": "Bucket"
+            },
             "STR_VERSION": "1.0",
             "STR_ROLLBARTOKEN": {
               "Fn::GetAtt": [
@@ -242,8 +207,41 @@
         },
         "Principal": "s3.amazonaws.com",
         "SourceAccount": "123456789012",
-        "SourceArn": "arn:aws:s3:::test-testmodule-bucket-a0367e0"
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "Bucket",
+            "Arn"
+          ]
+        }
       }
+    },
+    "FunctionBucketS3Subscription": {
+      "Type": "Custom::LambdaSharpS3Subscriber",
+      "Properties": {
+        "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-S3SubscriberCustomResourceTopic",
+        "BucketName": {
+          "Ref": "Bucket"
+        },
+        "FunctionArn": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Filters": [
+          {
+            "Events": [
+              "s3:ObjectCreated:*",
+              "s3:ObjectRemoved:*"
+            ],
+            "Prefix": "images/",
+            "Suffix": ".png"
+          }
+        ]
+      },
+      "DependsOn": [
+        "FunctionBucketS3Permission"
+      ]
     }
   }
 }

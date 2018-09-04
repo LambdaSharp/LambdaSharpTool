@@ -151,7 +151,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
                 parameter.Package.S3Location = _publish
                     ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}"
-                    : $"s3://{_bucket}/Deployments/{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
+                    : $"s3://{_bucket}/{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
 
                 // files have been packed and uploaded already
                 parameter.Package.Files = null;
@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var function in module.Functions) {
                 function.S3Location = _publish
                     ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}"
-                    : $"s3://{_bucket}/Deployments/{module.Name}/{Path.GetFileName(function.PackagePath)}";
+                    : $"s3://{_bucket}/{module.Name}/{Path.GetFileName(function.PackagePath)}";
 
                 // project has been compiled and uploaded already
                 function.Project = null;

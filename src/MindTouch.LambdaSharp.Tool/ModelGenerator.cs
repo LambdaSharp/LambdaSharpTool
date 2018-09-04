@@ -578,14 +578,16 @@ namespace MindTouch.LambdaSharp.Tool {
             var s3Sources = function.Sources.OfType<S3Source>().ToList();
             if(s3Sources.Any()) {
                 foreach(var grp in s3Sources.ToLookup(source => source.Bucket)) {
-                    _stack.Add($"{function.Name}{grp.Key}S3Permission", new Lambda.Permission {
+                    var functionS3Permission = $"{function.Name}{grp.Key}S3Permission";
+                    var functionS3Subscription = $"{function.Name}{grp.Key}S3Subscription";
+                    _stack.Add(functionS3Permission, new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         SourceAccount = Settings.AwsAccountId,
                         SourceArn = Fn.GetAtt(grp.Key, "Arn"),
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
-                    _stack.Add($"{function.Name}{grp.Key}S3Subscription", new Model.CustomResource("Custom::LambdaSharpS3Subscriber") {
+                    _stack.Add(functionS3Subscription, new Model.CustomResource("Custom::LambdaSharpS3Subscriber") {
                         ["ServiceToken"] = Settings.S3SubscriberCustomResourceTopicArn,
                         ["BucketName"] = Fn.Ref(grp.Key),
                         ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
@@ -602,6 +604,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             return filter;
                         }).ToList()
                     });
+                    _stack.AddDependsOn(functionS3Subscription, functionS3Permission);
                 }
             }
 
