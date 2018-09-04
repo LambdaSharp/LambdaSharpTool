@@ -58,8 +58,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string DestinationBucketParameterName { get; set; }
         public string DestinationKeyPrefix { get; set; }
-        public string PackageBucket { get; set; }
-        public string PackageKey { get; set; }
+        public string PackagePath { get; set; }
     }
 
     public abstract class AResourceParameter : AParameter {

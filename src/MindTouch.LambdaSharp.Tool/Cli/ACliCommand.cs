@@ -195,32 +195,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var source = moduleSource;
                     string workingDirectory;
                     string outputDirectory;
-                    bool isLocalModule;
                     if(moduleSource == null) {
 
                         // default to local module file name
                         workingDirectory = Directory.GetCurrentDirectory();
                         outputDirectory = Path.Combine(workingDirectory, "bin");
                         source = Path.Combine(workingDirectory, "Deploy.yml");
-                        isLocalModule = true;
-                    } else if(Uri.TryCreate(moduleSource, UriKind.Absolute, out Uri _)) {
-
-                        // for remote module files; use current directory as working directory
-                        workingDirectory = Directory.GetCurrentDirectory();
-                        outputDirectory = workingDirectory;
-                        isLocalModule = false;
                     } else {
 
                         // module file is local
                         source = Path.GetFullPath(moduleSource);
                         workingDirectory = Path.GetDirectoryName(source);
                         outputDirectory = Path.Combine(workingDirectory, "bin");
-                        isLocalModule = true;
                     }
 
                     // initialize gitSha value
                     var gitSha = gitShaOption.Value();
-                    if((gitSha == null) && isLocalModule) {
+                    if(gitSha == null) {
 
                         // read the gitSha using `git` directly
                         var process = new Process {
@@ -258,7 +249,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
                         S3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn,
                         ModuleSource = source,
-                        IsLocalModule = isLocalModule,
                         WorkingDirectory = workingDirectory,
 
                         // TODO (2018-08-22, bjorg): need to allow configuration of output directory

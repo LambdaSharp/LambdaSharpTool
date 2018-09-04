@@ -38,6 +38,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public FunctionVpc VPC;
         public Dictionary<string, string> Environment { get; set; }
         public string Export { get; set; }
+        public string PackagePath { get; set; }
    }
 
    public class FunctionVpc {

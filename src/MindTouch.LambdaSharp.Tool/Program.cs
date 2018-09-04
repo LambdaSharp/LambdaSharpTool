@@ -54,7 +54,6 @@ namespace MindTouch.LambdaSharp.Tool {
             // register commands
             new CliInfoCommand().Register(app);
             new CliDeployCommand().Register(app);
-            new CliPublishCommand().Register(app);
             new CliNewCommand().Register(app);
             new CliListCommand().Register(app);
 

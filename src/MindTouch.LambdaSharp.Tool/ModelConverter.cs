@@ -206,14 +206,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(parameter.Package != null) {
 
                         // package value
-                        var s3 = parameter.Package.S3Location.ToS3Info();
                         result = new PackageParameter {
                             Name = parameter.Name,
                             Description = parameter.Description,
                             DestinationBucketParameterName = parameter.Package.Bucket,
                             DestinationKeyPrefix = parameter.Package.Prefix ?? "",
-                            PackageBucket = s3.Bucket,
-                            PackageKey = s3.Key,
+                            PackagePath = parameter.Package.PackagePath
                         };
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {
@@ -360,7 +358,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = function.Name ,
                     Description = function.Description,
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
-                    S3Location = function.S3Location,
+                    PackagePath = function.PackagePath,
                     Handler = function.Handler,
                     Runtime = function.Runtime,
                     Memory = function.Memory,

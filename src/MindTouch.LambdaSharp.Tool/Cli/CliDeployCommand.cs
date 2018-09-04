@@ -54,11 +54,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
                     foreach(var settings in settingsCollection) {
-                        if(settings.IsLocalModule && !File.Exists(settings.ModuleSource)) {
+                        if(!File.Exists(settings.ModuleSource)) {
                             AddError($"could not find '{settings.ModuleSource}'");
                         }
                     }
-                    if(ErrorCount > 0) {
+                    if(HasErrors) {
                         return;
                     }
                     DryRunLevel? dryRun = null;
@@ -108,39 +108,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // read input file
             Console.WriteLine();
             Console.WriteLine($"Processing module: {settings.ModuleSource}");
-            string source;
-            if(settings.IsLocalModule) {
-                source = await File.ReadAllTextAsync(settings.ModuleSource);
-            } else {
-                var uri = new Uri(settings.ModuleSource);
-                if(uri.Scheme == "s3") {
-                    var s3 = settings.ModuleSource.ToS3Info();
-                    var response = await settings.S3Client.GetObjectAsync(new GetObjectRequest {
-                        BucketName = s3.Bucket,
-                        Key = s3.Key
-                    });
-                    using(var reader = new StreamReader(response.ResponseStream, Encoding.UTF8)) {
-                        source = await reader.ReadToEndAsync();
-                    }
-                } else {
-                    using(var httpClient = new HttpClient()) {
-                        using(var res = await httpClient.GetAsync(uri))
-                        using(var content = res.Content) {
-                            source = await content.ReadAsStringAsync();
-                        }
-                    }
-                }
-            }
+            var source = await File.ReadAllTextAsync(settings.ModuleSource);
 
             // preprocess file
             var tokenStream = new ModelPreprocessor(settings).Preprocess(source);
-            if(ErrorCount > 0) {
+            if(HasErrors) {
                 return false;
             }
 
             // parse yaml module file
             var module = new ModelParser(settings).Process(tokenStream);
-            if(ErrorCount > 0) {
+            if(HasErrors) {
                 return false;
             }
 
@@ -151,73 +129,43 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // validate module
             new ModelValidation(settings).Process(module);
-            if(ErrorCount > 0) {
+            if(HasErrors) {
                 return false;
-            }
-
-            // packaging assets only applies to local modules
-            if(settings.IsLocalModule) {
-
-                // package all functions
-                new ModelFunctionPackager(settings).Process(
-                    module,
-                    skipCompile: dryRun == DryRunLevel.CloudFormation
-                );
-                if(ErrorCount > 0) {
-                    return false;
-                }
-
-                // package all files
-                new ModelFilesPackager(settings).Process(module);
-                if(ErrorCount > 0) {
-                    return false;
-                }
-
-                // check if assets need to be uploaded
-                if(module.Functions.Any() || module.Parameters.Any(p => p.Package != null)) {
-
-                    // check if a deployment bucket was specified
-                    if(settings.DeploymentBucketName == null) {
-                        AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        return false;
-                    }
-                }
-                await new ModelUploader(settings).ProcessAsync(
-                    module,
-                    settings.DeploymentBucketName,
-                    skipUpload: dryRun != null,
-                    publish: false,
-                    forceUpdate: false
-                );
-            } else {
-
-                // TODO (2018-08-23, bjorg): make sure all functions/packages have S3 locations
             }
 
             // resolve all imported parameters
             new ModelImportProcessor(settings).Process(module);
-            if(ErrorCount > 0) {
-                return false;
-            }
+
+            // package all functions
+            new ModelFunctionPackager(settings).Process(
+                module,
+                skipCompile: dryRun == DryRunLevel.CloudFormation
+            );
+
+            // package all files
+            new ModelFilesPackager(settings).Process(module);
 
             // compile module file
-            var moduleObject = new ModelConverter(settings).Process(module);
-            if(ErrorCount > 0) {
+            var compiledModule = new ModelConverter(settings).Process(module);
+            if(HasErrors) {
                 return false;
             }
 
             // generate cloudformation template
-            var stack = new ModelGenerator(settings).Generate(moduleObject);
-            if(ErrorCount > 0) {
+            var stack = new ModelGenerator(settings).Generate(compiledModule);
+
+            // upload assets
+            if(HasErrors) {
                 return false;
             }
+            await new ModelUploader(settings).ProcessAsync(compiledModule, skipUpload: dryRun != null);
 
             // serialize stack to disk
             var result = true;
             var template = new JsonStackSerializer().Serialize(stack);
             File.WriteAllText(outputCloudFormationFilePath, template);
             if(dryRun == null) {
-                result = await new StackUpdater().Deploy(moduleObject, outputCloudFormationFilePath, allowDataLoos, protectStack);
+                result = await new StackUpdater().Deploy(compiledModule, outputCloudFormationFilePath, allowDataLoos, protectStack);
                 if(settings.OutputDirectory == settings.WorkingDirectory) {
                     try {
                         File.Delete(outputCloudFormationFilePath);

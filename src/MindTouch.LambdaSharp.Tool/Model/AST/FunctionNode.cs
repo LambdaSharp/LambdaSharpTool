@@ -43,6 +43,5 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         [YamlIgnore]
         public string PackagePath { get; set; }
-        public string S3Location { get; set; }
    }
 }

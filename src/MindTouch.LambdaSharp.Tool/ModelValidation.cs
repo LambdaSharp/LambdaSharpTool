@@ -129,13 +129,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // ensure parameter is not exported
                         Validate(parameter.Export == null, "exporting Package is not supported");
-                        Validate(parameter.Package.PackagePath == null, "'PackagePath' is reserved for internal use");
 
                         // check if required attributes are present
-                        if(parameter.Package.S3Location == null) {
-                            Validate(parameter.Package.Files != null, "missing 'Files' attribute");
-                            Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
-                        }
+                        Validate(parameter.Package.Files != null, "missing 'Files' attribute");
+                        Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
                         if(parameter.Package.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type
@@ -210,6 +207,9 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateFunctions(IEnumerable<FunctionNode> functions) {
+            if(!functions.Any()) {
+                return;
+            }
 
             // check if a dead-letter queue was specified
             if(Settings.DeadLetterQueueUrl == null) {
@@ -219,6 +219,11 @@ namespace MindTouch.LambdaSharp.Tool {
             // check if a logging topic was set
             if(Settings.LoggingTopicArn == null) {
                 AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+            }
+
+            // check if a deployment bucket was specified
+            if(Settings.DeploymentBucketName == null) {
+                AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
             }
 
             // validate functions

@@ -43,7 +43,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public void Process(ModuleNode module, bool skipCompile) {
             var index = 0;
-            foreach(var function in module.Functions.Where(f => f.S3Location == null)) {
+            foreach(var function in module.Functions.Where(f => f.PackagePath == null)) {
                 ++index;
                 AtLocation(function.Name ?? $"[{index}]", () => {
                     Validate(function.Name != null, "missing Name field");
@@ -53,10 +53,6 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void Process(ModuleNode module, FunctionNode function, bool skipCompile) {
-            if(function.S3Location != null) {
-                AddError("cannot use 'S3Location' attribute with local modules");
-                return;
-            }
 
             // compile function project
             string projectName = null;

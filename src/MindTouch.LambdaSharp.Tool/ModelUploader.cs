@@ -22,12 +22,10 @@
 using System;
 using System.Linq;
 using System.IO;
-using MindTouch.LambdaSharp.Tool.Model.AST;
 using System.Threading.Tasks;
 using Amazon.S3.Transfer;
 using Amazon.S3.Model;
-using MindTouch.LambdaSharp.Tool.Internal;
-using YamlDotNet.Serialization;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -35,8 +33,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
-        private string _bucket;
-        private bool _publish;
 
         //--- Constructors ---
         public ModelUploader(Settings settings) : base(settings) {
@@ -44,12 +40,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public async Task ProcessAsync(ModuleNode module, string bucket, bool skipUpload, bool publish, bool forceUpdate) {
-            _bucket = bucket;
-            _publish = publish;
-
-            // finalize module definition
-            ProcessModule(module);
+        public async Task ProcessAsync(Module module, bool skipUpload) {
 
             // upload functions and packages
             if(!skipUpload) {
@@ -58,65 +49,26 @@ namespace MindTouch.LambdaSharp.Tool {
                 // upload function packages
                 if(module.Functions?.Any() == true) {
                     foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
-                        var s3 = function.S3Location.ToS3Info();
-                        if(s3.Bucket == _bucket) {
-                            await UploadPackageAsync(
-                                s3.Key,
-                                function.PackagePath,
-                                "Lambda function"
-                            );
-                        }
+                        await UploadPackageAsync(module, function.PackagePath, "Lambda function");
                     }
                 }
 
                 // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
                 if(module.Parameters?.Any() == true) {
-                    foreach(var parameter in module.Parameters.Where(p => p.Package?.PackagePath != null)) {
-                        var s3 = parameter.Package.S3Location.ToS3Info();
-                        if(s3.Bucket == _bucket) {
-                            await UploadPackageAsync(
-                                s3.Key,
-                                parameter.Package.PackagePath,
-                                "package"
-                            );
-                        }
+                    foreach(var parameter in module.Parameters.OfType<PackageParameter>()) {
+                        await UploadPackageAsync(module, parameter.PackagePath, "package");
                     }
-                }
-            }
-
-            // check if module is being published
-            if(publish) {
-
-                // serialize module as YAML file
-                var yaml = new SerializerBuilder().Build().Serialize(module);
-                if(!Directory.Exists(Settings.OutputDirectory)) {
-                    Directory.CreateDirectory(Settings.OutputDirectory);
-                }
-                await File.WriteAllTextAsync(Path.Combine(Settings.OutputDirectory, "Module.yml"), yaml);
-
-                // upload module definition
-                if(!skipUpload) {
-                    var moduleKey = $"Modules/{module.Name}/{module.Version}/Module.yml";
-                    if(!forceUpdate && await S3ObjectExistsAsync(moduleKey)) {
-                        AddError($"module {module.Name} (v{module.Version}) already exists at {_bucket}");
-                        return;
-                    }
-                    Console.WriteLine($"=> Uploading module: s3://{_bucket}/{moduleKey}");
-                    await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
-                        BucketName = _bucket,
-                        Key = moduleKey,
-                        ContentBody = yaml
-                    });
                 }
             }
         }
 
-        private async Task UploadPackageAsync(string key, string package, string description) {
+        private async Task UploadPackageAsync(Module module, string package, string description) {
+            var key = $"{module.Name}/{Path.GetFileName(package)}";
 
             // only upload files that don't exist
             if(!await S3ObjectExistsAsync(key)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{_bucket}/{key}");
-                await _transferUtility.UploadAsync(package, _bucket, key);
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
+                await _transferUtility.UploadAsync(package, Settings.DeploymentBucketName, key);
             }
 
             // delete the source zip file when there is no failure and the output directory is the working directory
@@ -131,42 +83,12 @@ namespace MindTouch.LambdaSharp.Tool {
             var found = false;
             try {
                 await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                    BucketName = _bucket,
+                    BucketName = Settings.DeploymentBucketName,
                     Key = key
                 });
                 found = true;
             } catch { }
             return found;
         }
-
-        private void ProcessModule(ModuleNode module) {
-            ProcessSecrets(module);
-            ProcessParameters(module);
-            ProcessFunctions(module);
-        }
-
-        private void ProcessSecrets(ModuleNode module) { }
-
-        private void ProcessParameters(ModuleNode module) {
-            foreach(var parameter in module.Parameters.Where(p => p.Package != null)) {
-                parameter.Package.S3Location = _publish
-                    ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(parameter.Package.PackagePath)}"
-                    : $"s3://{_bucket}/{module.Name}/{Path.GetFileName(parameter.Package.PackagePath)}";
-
-                // files have been packed and uploaded already
-                parameter.Package.Files = null;
-            }
-       }
-
-        private void ProcessFunctions(ModuleNode module) {
-            foreach(var function in module.Functions) {
-                function.S3Location = _publish
-                    ? $"s3://{_bucket}/Modules/{module.Name}/{module.Version}/{Path.GetFileName(function.PackagePath)}"
-                    : $"s3://{_bucket}/{module.Name}/{Path.GetFileName(function.PackagePath)}";
-
-                // project has been compiled and uploaded already
-                function.Project = null;
-            }
-       }
     }
 }

@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Properties ---
         protected static int ErrorCount => _errors.Count;
+        protected static bool HasErrors => ErrorCount > 0;
         protected static Version FullVersion => typeof(Program).Assembly.GetName().Version;
         protected static Version Version => _version;
 

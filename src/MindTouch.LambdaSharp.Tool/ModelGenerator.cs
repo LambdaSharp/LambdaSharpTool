@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Humidifier;
 using MindTouch.LambdaSharp.Tool.Internal;
@@ -432,7 +433,6 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create function definition
-            var s3 = function.S3Location.ToS3Info();
             _stack.Add(function.Name, new Lambda.Function {
                 FunctionName = ToAppResourceName(function.Name),
                 Description = function.Description,
@@ -443,8 +443,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 ReservedConcurrentExecutions = function.ReservedConcurrency,
                 Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
-                    S3Bucket = s3.Bucket,
-                    S3Key = s3.Key
+                    S3Bucket = Settings.DeploymentBucketName,
+                    S3Key = $"{_module.Name}/{Path.GetFileName(function.PackagePath)}"
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = Settings.DeadLetterQueueArn
@@ -685,8 +685,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["ServiceToken"] = Settings.S3PackageLoaderCustomResourceTopicArn,
                     ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
-                    ["SourceBucketName"] = packageParameter.PackageBucket,
-                    ["SourcePackageKey"] = packageParameter.PackageKey
+                    ["SourceBucketName"] = Settings.DeploymentBucketName,
+                    ["SourcePackageKey"] = $"{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}"
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {

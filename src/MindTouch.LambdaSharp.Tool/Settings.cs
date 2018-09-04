@@ -66,7 +66,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public bool HasErrors { get; set; }
         public VerboseLevel VerboseLevel { get; set; }
         public string ModuleSource { get; set; }
-        public bool IsLocalModule { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
 
