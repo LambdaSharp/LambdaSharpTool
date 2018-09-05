@@ -23,8 +23,17 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
+using System.Linq;
+using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NodeDeserializers;
+using YamlDotNet.Serialization.ObjectFactories;
 
 namespace MindTouch.LambdaSharp.Tool.Internal {
+
+    [TypeConverter(typeof(CloudFormationFunctionTypeConverter))]
+    public class CloudFormationFunction : List<object> { }
 
     public class CloudFormationFunctionTypeConverter : TypeConverter {
 
@@ -37,34 +46,83 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         public override bool CanConvertFrom(ITypeDescriptorContext context, Type sourceType)
             => sourceType == typeof(string);
-    }
 
-    [TypeConverter(typeof(CloudFormationRefTypeConverter))]
-    public class CloudFormationRef { }
-
-    public class CloudFormationRefTypeConverter : CloudFormationFunctionTypeConverter {
-
-        //--- Methods ---
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
-            => new Dictionary<string, object> {
-                ["Ref"] = value
-            };
+            => value;
     }
 
-    [TypeConverter(typeof(CloudFormationGetAttTypeConverter))]
-    public class CloudFormationGetAtt { }
+    public class CloudFormationFunctionNodeDeserializer : INodeDeserializer {
 
-    public class CloudFormationGetAttTypeConverter : CloudFormationFunctionTypeConverter {
+        //--- Class Fields ---
+        public static HashSet<string> SupportedTags = new HashSet<string> {
+            "!And",
+            "!Base64",
+            "!Cidr",
+            "!Equals",
+            "!FindInMap",
+            "!GetAtt",
+            "!GetAZs",
+            "!If",
+            "!ImportValue",
+            "!Join",
+            "!Not",
+            "!Or",
+            "!Ref",
+            "!Select",
+            "!Split",
+            "!Sub"
+        };
 
         //--- Methods ---
-        public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value) {
-            var parts = ((string)value).Split('.', 2);
-            return new Dictionary<string, object> {
-                ["Fn::GetAtt"] = new List<object> {
-                    parts[0],
-                    (parts.Length == 2) ? parts[1] : ""
+        public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
+            if((reader.Current is SequenceStart start) && SupportedTags.Contains(start.Tag)) {
+
+                // deserialize parameter list
+                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
+                    var key = TagToFunctionName(start.Tag);
+                    value = new Dictionary<string, object> {
+                        [key] = value
+                    };
+                    return true;
                 }
-            };
+            } else if((reader.Current is Scalar scalar) && SupportedTags.Contains(scalar.Tag)) {
+
+                // deserialize single parameter
+                INodeDeserializer nested = new ScalarNodeDeserializer();
+                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
+                    var key = TagToFunctionName(scalar.Tag);
+
+                    // special case for !GetAtt as the single parameter must be converted into a parameter list
+                    if(key == "Fn::GetAtt") {
+                        var parts = ((string)value).Split('.', 2);
+                        value = new Dictionary<string, object> {
+                            ["Fn::GetAtt"] = new List<object> {
+                                parts[0],
+                                (parts.Length == 2) ? parts[1] : ""
+                            }
+                        };
+                    } else {
+                        value = new Dictionary<string, object> {
+                            [key] = value
+                        };
+                    }
+                    return true;
+                }
+            }
+            value = null;
+            return false;
+
+            // local functions
+            string TagToFunctionName(string tag) {
+                var suffix = tag.Substring(1);
+
+                // special case for !Ref as it doesn't get the Fn:: prefix
+                if(suffix == "Ref") {
+                    return suffix;
+                }
+                return "Fn::" + suffix;
+           }
         }
     }
 }

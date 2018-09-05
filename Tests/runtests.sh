@@ -39,3 +39,4 @@ lash Source-Sqs
 lash Variables
 lash Source-Alexa
 lash Parameters
+lash CloudFormationFunctions
