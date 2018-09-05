@@ -31,6 +31,7 @@ Parameters:
 Functions:
 
   - Name: ResourceHandler
+    Description: LambdaSharp S3 Package Loader handler
     Memory: 128
     Timeout: 300
     Sources:

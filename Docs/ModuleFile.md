@@ -141,6 +141,7 @@ Variables:
 Functions:
 
   - Name: MyWelcomeFunction
+    Description: My handler
     Memory: 128
     Timeout: 30
     Environment:

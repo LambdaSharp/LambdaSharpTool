@@ -97,6 +97,7 @@
         "DeadLetterConfig": {
           "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
         },
+        "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
             "TIER": "Test",

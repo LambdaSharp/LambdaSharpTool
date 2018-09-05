@@ -5,6 +5,7 @@ Description: LambdaSharp CloudFormation Test
 Functions:
 
   - Name: Function
+    Description: My function
     Memory: 128
     Timeout: 30
     Sources:

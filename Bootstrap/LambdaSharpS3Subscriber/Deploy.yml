@@ -26,6 +26,7 @@ Parameters:
 Functions:
 
   - Name: ResourceHandler
+    Description: LambdaSharp S3 Subscription handler
     Memory: 128
     Timeout: 30
     ReservedConcurrency: 1

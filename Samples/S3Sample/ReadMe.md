@@ -32,6 +32,7 @@ Parameters:
 Functions:
 
   - Name: MyFunction
+    Description: This function is invoked by an S3 Bucket event
     Memory: 128
     Timeout: 30
     Sources:
