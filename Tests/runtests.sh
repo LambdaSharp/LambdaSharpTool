@@ -40,3 +40,5 @@ lash Variables
 lash Source-Alexa
 lash Parameters
 lash CloudFormationFunctions
+lash Source-DynamoDB
+lash Source-Kinesis
