@@ -638,6 +638,34 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
                 }
             }
+
+            // check if function has any DynamoDB event sources
+            var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
+            if(dynamoDbSources.Any()) {
+                foreach(var source in dynamoDbSources) {
+                    _stack.Add($"{function.Name}{source.DynamoDB}EventMapping", new Lambda.EventSourceMapping {
+                        BatchSize = source.BatchSize,
+                        StartingPosition = source.StartingPosition,
+                        Enabled = true,
+                        EventSourceArn = Fn.GetAtt(source.DynamoDB, "StreamArn"),
+                        FunctionName = Fn.Ref(function.Name)
+                    });
+                }
+            }
+
+            // check if function has any DynamoDB event sources
+            var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
+            if(kinesisSources.Any()) {
+                foreach(var source in kinesisSources) {
+                    _stack.Add($"{function.Name}{source.Kinesis}EventMapping", new Lambda.EventSourceMapping {
+                        BatchSize = source.BatchSize,
+                        StartingPosition = source.StartingPosition,
+                        Enabled = true,
+                        EventSourceArn = Fn.GetAtt(source.Kinesis, "Arn"),
+                        FunctionName = Fn.Ref(function.Name)
+                    });
+                }
+            }
         }
 
         private void AddParameter(

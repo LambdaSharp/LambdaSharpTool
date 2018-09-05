@@ -21,6 +21,11 @@
     - dynamodb:Query
     - dynamodb:Scan
     - dynamodb:UpdateItem
+  Subscribe:
+    - dynamodb:DescribeStream
+    - dynamodb:GetRecords
+    - dynamodb:GetShardIterator
+    - dynamodb:ListStreams
   Full:
     - dynamodb:*
 

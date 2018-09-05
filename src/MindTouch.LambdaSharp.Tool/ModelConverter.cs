@@ -452,6 +452,20 @@ namespace MindTouch.LambdaSharp.Tool {
                         EventSourceToken = alexaSkillId
                     };
                 }
+                if(source.DynamoDB != null) {
+                    return new DynamoDBSource {
+                        DynamoDB = source.DynamoDB,
+                        BatchSize = source.BatchSize ?? 100,
+                        StartingPosition = source.StartingPosition ?? "LATEST"
+                    };
+                }
+                if(source.Kinesis != null) {
+                    return new KinesisSource {
+                        Kinesis = source.Kinesis,
+                        BatchSize = source.BatchSize ?? 100,
+                        StartingPosition = source.StartingPosition ?? "LATEST"
+                    };
+                }
                 return null;
             }, null);
             throw new ModelParserException("invalid function event");

@@ -74,4 +74,20 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string EventSourceToken { get; set; }
     }
+
+    public class DynamoDBSource : AFunctionSource {
+
+       //--- Properties ---
+        public string DynamoDB { get; set; }
+        public int BatchSize { get; set; }
+        public string StartingPosition { get; set; }
+    }
+
+    public class KinesisSource : AFunctionSource {
+
+       //--- Properties ---
+        public string Kinesis { get; set; }
+        public int BatchSize { get; set; }
+        public string StartingPosition { get; set; }
+    }
 }

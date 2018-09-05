@@ -237,6 +237,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     Validate(function.Timeout != null, "missing Name field");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
                     Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
+                    if(function.Sources == null) {
+                        function.Sources = new List<FunctionSourceNode>();
+                    }
+                    ValidateFunctionSource(function.Sources);
                 });
             }
         }
@@ -258,6 +262,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Api", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Api", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("Api", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("Api", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("Api", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("Api", "Kinesis", source.Kinesis == null);
                     } else if(source.Schedule != null) {
                         ValidateNotBothStatements("Schedule", "Api", source.Api == null);
                         ValidateNotBothStatements("Schedule", "Integration", source.Integration == null);
@@ -270,18 +277,24 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Schedule", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Schedule", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("Schedule", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("Schedule", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("Schedule", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("Schedule", "Kinesis", source.Kinesis == null);
 
                         // TODO (2018-06-27, bjorg): add cron/rate expression validation
                     } else if(source.S3 != null) {
                         ValidateNotBothStatements("S3", "Api", source.Api == null);
                         ValidateNotBothStatements("S3", "Integration", source.Integration == null);
-                        ValidateNotBothStatements("S3", "Schedule", source.S3 == null);
-                        ValidateNotBothStatements("S3", "Name", source.S3 == null);
+                        ValidateNotBothStatements("S3", "Schedule", source.Schedule == null);
+                        ValidateNotBothStatements("S3", "Name", source.Name == null);
                         ValidateNotBothStatements("S3", "SlackCommand", source.SlackCommand == null);
                         ValidateNotBothStatements("S3", "Topic", source.Topic == null);
                         ValidateNotBothStatements("S3", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("S3", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("S3", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("S3", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("S3", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("S3", "Kinesis", source.Kinesis == null);
 
                         // check if S3 subscriber topic arn exists
                         if(Settings.S3SubscriberCustomResourceTopicArn == null) {
@@ -305,6 +318,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("SlackCommand", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("SlackCommand", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("SlackCommand", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("SlackCommand", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("SlackCommand", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("SlackCommand", "Kinesis", source.Kinesis == null);
                     } else if(source.Topic != null) {
                         ValidateNotBothStatements("Topic", "Api", source.Api == null);
                         ValidateNotBothStatements("Topic", "Integration", source.Integration == null);
@@ -318,6 +334,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Topic", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Topic", "BatchSize", source.BatchSize == null);
                         ValidateNotBothStatements("Topic", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("Topic", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("Topic", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("Topic", "Kinesis", source.Kinesis == null);
 
                         // verify source exists
                         ValidateSourceParameter(source.Topic, "AWS::SNS::Topic", "SNS topic");
@@ -333,6 +352,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Sqs", "SlackCommand", source.SlackCommand == null);
                         ValidateNotBothStatements("Sqs", "Topic", source.Topic == null);
                         ValidateNotBothStatements("Sqs", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("Sqs", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("Sqs", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("Sqs", "Kinesis", source.Kinesis == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -356,6 +378,81 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Alexa", "Topic", source.Topic == null);
                         ValidateNotBothStatements("Alexa", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Alexa", "BatchSize", source.BatchSize == null);
+                        ValidateNotBothStatements("Alexa", "DynamoDB", source.DynamoDB == null);
+                        ValidateNotBothStatements("Alexa", "StartingPosition", source.StartingPosition == null);
+                        ValidateNotBothStatements("Alexa", "Kinesis", source.Kinesis == null);
+                    } else if(source.DynamoDB != null) {
+Console.WriteLine("Kinesis validation");
+                        ValidateNotBothStatements("DynamoDB", "Api", source.Api == null);
+                        ValidateNotBothStatements("DynamoDB", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("DynamoDB", "Schedule", source.S3 == null);
+                        ValidateNotBothStatements("DynamoDB", "Name", source.S3 == null);
+                        ValidateNotBothStatements("DynamoDB", "S3", source.S3 == null);
+                        ValidateNotBothStatements("DynamoDB", "Events", source.Events == null);
+                        ValidateNotBothStatements("DynamoDB", "Prefix", source.Prefix == null);
+                        ValidateNotBothStatements("DynamoDB", "Suffix", source.Suffix == null);
+                        ValidateNotBothStatements("DynamoDB", "SlackCommand", source.SlackCommand == null);
+                        ValidateNotBothStatements("DynamoDB", "Topic", source.Topic == null);
+                        ValidateNotBothStatements("DynamoDB", "Sqs", source.Sqs == null);
+                        ValidateNotBothStatements("DynamoDB", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("DynamoDB", "Kinesis", source.Kinesis == null);
+
+                        // validate settings
+                        AtLocation("BatchSize", () => {
+                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
+                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            }
+                        });
+                        AtLocation("StartingPosition", () => {
+                            switch(source.StartingPosition) {
+                            case "TRIM_HORIZON":
+                            case "LATEST":
+                            case null:
+                                break;
+                            default:
+                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                break;
+                            }
+                        });
+
+                        // verify source exists
+                        ValidateSourceParameter(source.DynamoDB, "AWS::DynamoDB::Table", "DynamoDB table");
+                    } else if(source.Kinesis != null) {
+Console.WriteLine("Kinesis validation");
+                        ValidateNotBothStatements("Kinesis", "Api", source.Api == null);
+                        ValidateNotBothStatements("Kinesis", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Kinesis", "Schedule", source.S3 == null);
+                        ValidateNotBothStatements("Kinesis", "Name", source.S3 == null);
+                        ValidateNotBothStatements("Kinesis", "S3", source.S3 == null);
+                        ValidateNotBothStatements("Kinesis", "Events", source.Events == null);
+                        ValidateNotBothStatements("Kinesis", "Prefix", source.Prefix == null);
+                        ValidateNotBothStatements("Kinesis", "Suffix", source.Suffix == null);
+                        ValidateNotBothStatements("Kinesis", "SlackCommand", source.SlackCommand == null);
+                        ValidateNotBothStatements("Kinesis", "Topic", source.Topic == null);
+                        ValidateNotBothStatements("Kinesis", "Sqs", source.Sqs == null);
+                        ValidateNotBothStatements("Kinesis", "Alexa", source.Alexa == null);
+                        ValidateNotBothStatements("Kinesis", "DynamoDB", source.DynamoDB == null);
+
+                        // validate settings
+                        AtLocation("BatchSize", () => {
+                            if((source.BatchSize < 1) || (source.BatchSize > 100)) {
+                                AddError($"invalid BatchSize value: {source.BatchSize}");
+                            }
+                        });
+                        AtLocation("StartingPosition", () => {
+                            switch(source.StartingPosition) {
+                            case "TRIM_HORIZON":
+                            case "LATEST":
+                            case null:
+                                break;
+                            default:
+                                AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                break;
+                            }
+                        });
+
+                        // verify source exists
+                        ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
                     } else {
                         AddError("unknown source");
                     }

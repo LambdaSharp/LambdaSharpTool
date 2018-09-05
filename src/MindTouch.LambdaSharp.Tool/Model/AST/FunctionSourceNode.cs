@@ -54,5 +54,12 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         // Alexa Source
         public string Alexa { get; set; }
+
+        // DynamoDB Source
+        public string DynamoDB { get; set; }
+        public string StartingPosition { get; set; }
+
+        // Kinesis Source
+        public string Kinesis { get; set; }
    }
 }
