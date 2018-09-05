@@ -63,7 +63,7 @@ lash deploy Deploy.yml
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 <dt><tt>--verbose|-V[:&lt;LEVEL&gt;]</tt></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
-<dt><tt>--gitsha <&lt;VALUE&gt;</tt></dt>
+<dt><tt>--gitsha &lt;VALUE&gt;</tt></dt>
 <dd>(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)</dd>
 <dt><tt>--aws-account-id &lt;VALUE&gt;</tt></dt>
 <dd>(test only) Override AWS account Id (default: read from AWS profile)</dd>
@@ -122,7 +122,7 @@ LambdaSharp Rollbar Custom Resource Topic: arn:aws:sns:us-east-1:123456789012:La
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 <dt><tt>--verbose|-V[:&lt;LEVEL&gt;]</tt></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
-<dt><tt>--gitsha <&lt;VALUE&gt;</tt></dt>
+<dt><tt>--gitsha &lt;VALUE&gt;</tt></dt>
 <dd>(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)</dd>
 <dt><tt>--aws-account-id &lt;VALUE&gt;</tt></dt>
 <dd>(test only) Override AWS account Id (default: read from AWS profile)</dd>

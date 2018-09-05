@@ -102,7 +102,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::StepFunctions::Activity":
             case "AWS::StepFunctions::StateMachine":
 
-                // these AWS resources return their ARN using `Fn::Ref()`
+                // these AWS resources return their ARN using `!Ref`
                 resourceArnFn = Fn.Ref(logicalId);
                 resourceParamFn = Fn.Ref(logicalId);
                 break;

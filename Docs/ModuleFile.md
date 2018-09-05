@@ -361,7 +361,9 @@ The <tt>Allow</tt> attribute can either a comma-separated, single string value o
 
 <dt><tt>Properties</tt></dt>
 <dd>
-The <tt>Properties</tt> section specifies additional options that can be specified for a managed resource. The <tt>Properties</tt> section cannot be specified for referenced resources. For a list of all additional options, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>.
+The <tt>Properties</tt> section specifies additional options that can be specified for a managed resource. This section is copied verbatim into the CloudFormation template and can use <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html">CloudFormation intrinsic functions</a> for referencing other resources.
+
+The <tt>Properties</tt> section cannot be specified for referenced resources. For a list of all additional options, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>.
 
 <i>Required</i>: No
 
