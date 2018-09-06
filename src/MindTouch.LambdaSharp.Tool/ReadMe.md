@@ -14,14 +14,14 @@ Commands:
 
 The `deploy` command parses the input file, compiles all included function projects, and deploys the changes to the AWS account.
 
-The default filename for the module file is `Deploy.yml` in the current working directory. If the file has a different name or is not in the current directory, it must be specified as an argument on the command line.
+The default filename for the module file is `Module.yml` in the current working directory. If the file has a different name or is not in the current directory, it must be specified as an argument on the command line.
 
 CloudFormation stacks created by the λ# tool have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are being accidentally replaced.
 
 ```
 > lash deploy --tier Demo
 MindTouch LambdaSharp Tool - Deploy LambdaSharp module
-Loading 'Deploy.yml'
+Loading 'Module.yml'
 Pre-processing
 Analyzing
 Building function Sample.SlackCommand [netcoreapp2.0]
@@ -38,10 +38,10 @@ Deploying stack: Demo-Sample
 
 ### Argument
 
-The path to the YAML module file can be optionally specified as an argument. When omitted, the tool will look for a file called `Deploy.yml`.
+The path to the YAML module file can be optionally specified as an argument. When omitted, the tool will look for a file called `Module.yml`.
 
 ```
-lash deploy Deploy.yml
+lash deploy Module.yml
 ```
 
 ### Options

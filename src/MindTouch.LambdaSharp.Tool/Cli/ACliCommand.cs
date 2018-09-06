@@ -89,9 +89,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentRollbarCustomResourceTopicArnOption = cmd.Option("--deployment-rollbar-customresource-topic-arn <ARN>", "(test only) SNS Topic for creating Rollbar projects (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentS3PackageLoaderCustomResourceTopicArnOption = cmd.Option("--deployment-s3packageloader-customresource-topic-arn <ARN>", "(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentS3SubscriberCustomResourceTopicArnOption = cmd.Option("--deployment-s3subscriber-customeresource-topic-arn <ARN>", "(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Deploy.yml)", CommandOptionType.SingleValue);
+            var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
-            var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Deploy.yml)", multipleValues: true);
+            var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Module.yml)", multipleValues: true);
             return async () => {
 
                 // initialize logging level
@@ -200,7 +200,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         // default to local module file name
                         workingDirectory = Directory.GetCurrentDirectory();
                         outputDirectory = Path.Combine(workingDirectory, "bin");
-                        source = Path.Combine(workingDirectory, "Deploy.yml");
+                        source = Path.Combine(workingDirectory, "Module.yml");
                     } else {
 
                         // module file is local
