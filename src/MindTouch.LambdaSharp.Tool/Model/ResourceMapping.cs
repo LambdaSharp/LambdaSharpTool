@@ -119,10 +119,19 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 break;
             case "AWS::S3::Bucket":
 
-                // most AWS resources expose an `Arn` attribute that we need to use
+                // S3 Bucket resources must be granted permissions on the bucket AND the keys
                 resourceArnFn = new object[] {
                     Fn.GetAtt(logicalId, "Arn"),
                     Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/*")
+                };
+                resourceParamFn = Fn.Ref(logicalId);
+                break;
+            case "AWS::DynamoDB::Table":
+
+                // DynamoDB resources must be granted permissions on the table AND the stream
+                resourceArnFn = new object[] {
+                    Fn.GetAtt(logicalId, "Arn"),
+                    Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/stream/*")
                 };
                 resourceParamFn = Fn.Ref(logicalId);
                 break;

@@ -1,0 +1,34 @@
+Name: DynamoDBSample
+
+Description: A sample module using Kinesis streams
+
+Parameters:
+
+
+  - Name: Table
+    Description: Description for DynamoDB table
+    Resource:
+      Type: AWS::DynamoDB::Table
+      Allow: Subscribe
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: MessageId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: MessageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        StreamSpecification:
+          StreamViewType: KEYS_ONLY
+
+Functions:
+
+  - Name: MyFunction
+    Description: This function is invoked by a DynamoDB stream
+    Memory: 128
+    Timeout: 15
+    Sources:
+      - DynamoDB: Table
+        BatchSize: 15

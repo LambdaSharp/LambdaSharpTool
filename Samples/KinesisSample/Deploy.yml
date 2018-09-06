@@ -10,7 +10,6 @@ Parameters:
       Type: AWS::Kinesis::Stream
       Allow: Subscribe
       Properties:
-        Name: SampleStream
         ShardCount: 1
 
 Functions:

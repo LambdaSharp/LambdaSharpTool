@@ -6,32 +6,42 @@ Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
 ## Module File
 
-Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
+Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
 
-Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
+Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 
 ```yaml
-Name: KinesisSample
+Name: DynamoDBSample
 
 Description: A sample module using Kinesis streams
 
 Parameters:
 
-  - Name: Stream
-    Description: Description for Kinesis stream
+
+  - Name: Table
+    Description: Description for DynamoDB table
     Resource:
-      Type: AWS::Kinesis::Stream
+      Type: AWS::DynamoDB::Table
+      Allow: Subscribe
       Properties:
-        ShardCount: 1
+        AttributeDefinitions:
+          - AttributeName: MessageId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: MessageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
 
 Functions:
 
   - Name: MyFunction
-    Description: This function is invoked by a Kinesis stream
+    Description: This function is invoked by a DynamoDB stream
     Memory: 128
     Timeout: 15
     Sources:
-      - Kinesis: Stream
+      - DynamoDB: Table
         BatchSize: 15
 ```
 
@@ -71,4 +81,4 @@ public class Function : ALambdaFunction<KinesisEvent, string> {
 
 ## Reference
 
-Up to 100 messages can be retrieved at a time from a Kinesis stream.
+Up to 100 messages can be retrieved at a time from a DynamoDB stream.

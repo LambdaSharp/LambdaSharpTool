@@ -9,7 +9,6 @@ Parameters:
     Resource:
       Type: AWS::Kinesis::Stream
       Properties:
-        Name: SampleStream
         ShardCount: 1
 
 Functions:

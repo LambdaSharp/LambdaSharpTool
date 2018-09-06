@@ -12,7 +12,6 @@
     "Stream": {
       "Type": "AWS::Kinesis::Stream",
       "Properties": {
-        "Name": "SampleStream",
         "ShardCount": "1"
       }
     },
