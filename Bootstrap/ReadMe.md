@@ -66,7 +66,8 @@ __Using Powershell:__
 lash deploy `
     --tier Demo `
     $LAMBDASHARP\Bootstrap\LambdaSharp\Deploy.yml `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader\Deploy.yml
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader\Deploy.yml `
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber\Deploy.yml
 ```
 
 __Using Bash:__
@@ -74,7 +75,8 @@ __Using Bash:__
 lash deploy \
     --tier Demo \
     $LAMBDASHARP/Bootstrap/LambdaSharp/Deploy.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Deploy.yml
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Deploy.yml \
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Deploy.yml
 ```
 
 ## Validate λ# Environment
@@ -87,13 +89,14 @@ lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.3) - List LambdaSharp modules
+MindTouch LambdaSharp Tool (v0.3.0.0) - List LambdaSharp modules
 
 MODULE                        STATUS             DATE
-LambdaSharp                   [CREATE_COMPLETE]  2018-08-13 09:47:32
-LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-13 09:48:16
+LambdaSharp                   [CREATE_COMPLETE]  2018-08-19 22:48:45
+LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-22 01:06:02
+LambdaSharpS3Subscriber       [CREATE_COMPLETE]  2018-09-03 15:46:36
 
-Found 2 modules for deployment tier 'Demo'
+Found 3 modules for deployment tier 'Demo'
 ```
 ## Use `LAMBDASHARPTIER` Environment Variable
 
