@@ -22,38 +22,37 @@
 using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.SQSEvents;
+using Amazon.Lambda.KinesisEvents;
 using MindTouch.LambdaSharp;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace SqsSample.MyFunction {
+namespace KinesisSample.MyFunction {
 
-    public class Function : ALambdaFunction<SQSEvent, string> {
+    public class Function : ALambdaFunction<KinesisEvent, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(SQSEvent evt, ILambdaContext context) {
-            LogInfo($"# SQS Records = {evt.Records.Count}");
+        public override async Task<string> ProcessMessageAsync(KinesisEvent evt, ILambdaContext context) {
+            LogInfo($"# Kinesis Records = {evt.Records.Count}");
             for(var i = 0; i < evt.Records.Count; ++i) {
                 var record = evt.Records[i];
                 LogInfo($"Record #{i}");
-                LogInfo($"Body = {record.Body}");
+                LogInfo($"AwsRegion = {record.AwsRegion}");
+                LogInfo($"EventId = {record.EventId}");
+                LogInfo($"EventName = {record.EventName}");
                 LogInfo($"EventSource = {record.EventSource}");
-                LogInfo($"EventSourceArn = {record.EventSourceArn}");
-                LogInfo($"Md5OfBody = {record.Md5OfBody}");
-                LogInfo($"Md5OfMessageAttributes = {record.Md5OfMessageAttributes}");
-                LogInfo($"MessageId = {record.MessageId}");
-                LogInfo($"ReceiptHandle = {record.ReceiptHandle}");
-                foreach(var attribute in record.Attributes) {
-                    LogInfo($"Attributes.{attribute.Key} = {attribute.Value}");
-                }
-                foreach(var attribute in record.MessageAttributes) {
-                    LogInfo($"MessageAttributes.{attribute.Key} = {attribute.Value}");
-                }
+                LogInfo($"EventSourceARN = {record.EventSourceARN}");
+                LogInfo($"EventVersion = {record.EventVersion}");
+                LogInfo($"InvokeIdentityArn = {record.InvokeIdentityArn}");
+                LogInfo($"ApproximateArrivalTimestamp = {record.Kinesis.ApproximateArrivalTimestamp}");
+                LogInfo($"Data (length) = {record.Kinesis.Data.Length}");
+                LogInfo($"KinesisSchemaVersion = {record.Kinesis.KinesisSchemaVersion}");
+                LogInfo($"PartitionKey = {record.Kinesis.PartitionKey}");
+                LogInfo($"SequenceNumber = {record.Kinesis.SequenceNumber}");
             }
             return "Ok";
         }

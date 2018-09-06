@@ -12,7 +12,7 @@
     "Stream": {
       "Type": "AWS::Kinesis::Stream",
       "Properties": {
-        "Name": "GreetingStream",
+        "Name": "SampleStream",
         "ShardCount": "1"
       }
     },
