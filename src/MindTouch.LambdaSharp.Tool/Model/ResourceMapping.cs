@@ -75,6 +75,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(properties == null) {
                 resourceTemplate = (Humidifier.Resource)Activator.CreateInstance(type);
             } else {
+                if(properties is IDictionary<string, object> dictionary) {
+
+                    // NOTE (2018-09-05, bjorg): Humidifier appends a '_' to property names
+                    //  that conflict with the typename. This mimics the behavior by doing the
+                    // thing before we attempt to deserialize into the target type.
+                    var typeName = type.Name;
+                    if(dictionary.TryGetValue(typeName, out object value)) {
+                        dictionary.Remove(typeName);
+                        dictionary[typeName + "_"] = value;
+                    }
+                }
                 resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties), type);
             }
 
