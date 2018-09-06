@@ -28,7 +28,7 @@ Parameters:
 Functions:
 
   - Name: MyFunction
-    Description: This function is invoked by an SQS queue
+    Description: This function is invoked by a Kinesis stream
     Memory: 128
     Timeout: 15
     Sources:
