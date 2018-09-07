@@ -64,9 +64,12 @@ Releases are named after Greek philosophers.
 * **Breaking Change:** S3 event subscriptions are now handled by a custom resource handler, which allows S3 event subscriptions to work with new and existing S3 buckets. However, this change is not backwards compatible with existing S3 event subscriptions.
 * Updated [Bootstrap](Bootstrap/) procedure.
 * Added support for short form CloudFormation intrinsic functions, such as <code>!Ref</code>, <code>!Join</code>, <code>!Sub</code>, etc.
-* Improved how Lambda function parameters are passed in. Instead of relying on an embedded `parameters.json` file, parameters are now passed in via environment variables. This means that Lambda function packages no longer need to be re-uploaded because of parameter changes.
 * Added support parameter collections. All parameter types can have nested parameters.
-* Added `Sid` attribute for all built-in, automatic permissions being added to provide more context.
+* Added support for CloudFormation Macro sources. See [CloudFormation Macro](Samples/MacroSample/) sample.
+* Added support for Kinesis Stream sources. See [Kinesis Stream](Samples/KinesisSample/) sample.
+* Added support for DynamoDB Stream sources. See [DynamoDB Stream](Samples/DynamoDBSample/) sample.
+* Improved how Lambda function parameters are passed in. Instead of relying on an embedded `parameters.json` file, parameters are now passed in via environment variables. This means that Lambda function packages no longer need to be re-uploaded because of parameter changes.
+* Included `Sid` attribute for all built-in, automatic permissions being added to provide more context.
 * Switched to native AWS Lambda `JsonSerializer` class for serializing/deserializing data.
 * Fixed an issue where some CloudFormation properties needed to suffixed with `_` to work with [Humidifier](https://github.com/jakejscott/Humidifier) library for generating CloudFormation templates correctly.
 * Upgraded [YamlDotNet](https://github.com/aaubry/YamlDotNet) library to 5.0.1

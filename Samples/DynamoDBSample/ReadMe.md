@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Kinesis Function
+# LambdaSharp DynamoDB Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
