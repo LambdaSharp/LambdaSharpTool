@@ -227,7 +227,7 @@ The <code>Values</code> section cannot be used in conjunction with the <code>Res
 
 <i>Type</i>: List of String
 </dd>
-</dl>
+</dd>
 
 <dt><code>Secret</code></dt>
 <dd>
