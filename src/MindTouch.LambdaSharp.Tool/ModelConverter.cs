@@ -472,7 +472,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         macroName = function.Name;
                     }
                     return new MacroSource {
-                        MacroName = macroName
+                        MacroName = $"{Settings.Tier}-{macroName}"
                     };
                 }
                 return null;
