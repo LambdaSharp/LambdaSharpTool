@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,11 +40,11 @@ namespace MacroSample.MyFunction {
         // TODO (2018-09-06, bjorg): use official AWS events definition once available
         public string region;
         public string accountId;
-        public object fragment;
+        public IDictionary<string, object> fragment;
         public string transformId;
-        public object @params;
+        public IDictionary<string, object> @params;
         public string requestId;
-        public object templateParameterValues;
+        public IDictionary<string, object> templateParameterValues;
     }
 
     public class MacroResponse {
@@ -79,11 +80,41 @@ namespace MacroSample.MyFunction {
             LogInfo($"Params = {SerializeToJson(request.@params)}");
             LogInfo($"RequestID = {request.requestId}");
             LogInfo($"TemplateParameterValues = {SerializeToJson(request.templateParameterValues)}");
-            return new MacroResponse {
-                requestId = request.requestId,
-                status = "success",
-                fragment = request.fragment
-            };
+
+            // macro for string operations
+            try {
+                if(!request.@params.TryGetValue("Value", out object value)) {
+                    throw new ArgumentException("missing parameter: 'Value");
+                }
+                if(!(value is string text)) {
+                    throw new ArgumentException("parameter 'Value' must be a string");
+                }
+                string result;
+                switch(request.transformId) {
+                case "StringToUpper":
+                    result = text.ToUpper();
+                    break;
+                case "StringToLower":
+                    result = text.ToLower();
+                    break;
+                default:
+                    throw new NotSupportedException($"requested operation is not supported: '{request.transformId}'");
+                }
+
+                // return successful response
+                return new MacroResponse {
+                    requestId = request.requestId,
+                    status = "SUCCESS",
+                    fragment = result
+                };
+            } catch(Exception e) {
+
+                // an error occurred
+                return new MacroResponse {
+                    requestId = request.requestId,
+                    status = $"ERROR: {e.Message}"
+                };
+            }
         }
     }
 }
