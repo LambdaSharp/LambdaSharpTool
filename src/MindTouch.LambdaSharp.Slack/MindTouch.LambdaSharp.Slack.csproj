@@ -23,12 +23,12 @@
       <DefineConstants>RELEASE;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'=='NugetPublish' ">
     <PackageReference Include="MindTouch.LambdaSharp" Version="0.3.0-RC1"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'!='NugetPublish' ">
-    <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj" />
+    <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
   </ItemGroup>
 </Project>
