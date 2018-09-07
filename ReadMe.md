@@ -68,9 +68,8 @@ Releases are named after Greek philosophers.
 * Added support parameter collections. All parameter types can have nested parameters.
 * Added `Sid` attribute for all built-in, automatic permissions being added to provide more context.
 * Switched to native AWS Lambda `JsonSerializer` class for serializing/deserializing data.
-* Fixed an issue where some CloudFormation properties needed to suffixed with `_` to work with [Humidifier](https://github.com/jakejscott/Humidifier) libary for generating CloudFormation templates correctly.
-
- for subscribing Lambda functions to S3 buckets.
+* Fixed an issue where some CloudFormation properties needed to suffixed with `_` to work with [Humidifier](https://github.com/jakejscott/Humidifier) library for generating CloudFormation templates correctly.
+* Upgraded [YamlDotNet](https://github.com/aaubry/YamlDotNet) library to 5.0.1
 
 ## Brontinus (v0.2) - 2018-08-13
 
