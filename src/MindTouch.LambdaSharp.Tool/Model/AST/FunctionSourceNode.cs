@@ -57,9 +57,15 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         // DynamoDB Source
         public string DynamoDB { get; set; }
+        // int? BatchSize { get; set; }
         public string StartingPosition { get; set; }
 
         // Kinesis Source
         public string Kinesis { get; set; }
+        // int? BatchSize { get; set; }
+        // string StartingPosition { get; set; }
+
+        // Macro Source
+        public string Macro { get; set; }
    }
 }

@@ -653,7 +653,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // check if function has any DynamoDB event sources
+            // check if function has any Kinesis event sources
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
@@ -663,6 +663,17 @@ namespace MindTouch.LambdaSharp.Tool {
                         Enabled = true,
                         EventSourceArn = Fn.GetAtt(source.Kinesis, "Arn"),
                         FunctionName = Fn.Ref(function.Name)
+                    });
+                }
+            }
+
+            // check if function has any CloudFormation Macro event sources
+            var macroSources = function.Sources.OfType<MacroSource>().ToList();
+            if(macroSources.Any()) {
+                foreach(var source in macroSources) {
+                    _stack.Add($"{function.Name}{source.MacroName}Macro", new CustomResource("AWS::CloudFormation::Macro") {
+                        ["Name"] = source.MacroName,
+                        ["FunctionName"] = Fn.Ref(function.Name)
                     });
                 }
             }

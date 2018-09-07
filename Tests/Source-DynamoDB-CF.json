@@ -94,12 +94,28 @@
                     "dynamodb:GetShardIterator",
                     "dynamodb:ListStreams"
                   ],
-                  "Resource": {
-                    "Fn::GetAtt": [
-                      "Table",
-                      "Arn"
-                    ]
-                  }
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Table",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Table",
+                              "Arn"
+                            ]
+                          },
+                          "/stream/*"
+                        ]
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "LambdaDeadLetterQueueLogging",

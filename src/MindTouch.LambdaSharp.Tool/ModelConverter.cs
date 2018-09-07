@@ -357,7 +357,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return new Function {
                     Name = function.Name ,
                     Description = function.Description,
-                    Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
+                    Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
                     PackagePath = function.PackagePath,
                     Handler = function.Handler,
                     Runtime = function.Runtime,
@@ -371,7 +371,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }, null);
         }
 
-        public AFunctionSource ConvertFunctionSource(int index, FunctionSourceNode source) {
+        public AFunctionSource ConvertFunctionSource(FunctionNode function, int index, FunctionSourceNode source) {
             return AtLocation<AFunctionSource>($"{index}", () => {
                 if(source.Topic != null) {
                     return new TopicSource {
@@ -464,6 +464,15 @@ namespace MindTouch.LambdaSharp.Tool {
                         Kinesis = source.Kinesis,
                         BatchSize = source.BatchSize ?? 100,
                         StartingPosition = source.StartingPosition ?? "LATEST"
+                    };
+                }
+                if(source.Macro != null) {
+                    var macroName = source.Macro;
+                    if((macroName == "") || (macroName == "*")) {
+                        macroName = function.Name;
+                    }
+                    return new MacroSource {
+                        MacroName = macroName
                     };
                 }
                 return null;

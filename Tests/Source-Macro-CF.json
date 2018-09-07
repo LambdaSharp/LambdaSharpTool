@@ -9,12 +9,6 @@
     }
   },
   "Resources": {
-    "Stream": {
-      "Type": "AWS::Kinesis::Stream",
-      "Properties": {
-        "ShardCount": "1"
-      }
-    },
     "VersionSsmParameter": {
       "Type": "AWS::SSM::Parameter",
       "Properties": {
@@ -143,21 +137,13 @@
         "Timeout": "30"
       }
     },
-    "FunctionStreamEventMapping": {
-      "Type": "AWS::Lambda::EventSourceMapping",
+    "FunctionMacro": {
+      "Type": "AWS::CloudFormation::Macro",
       "Properties": {
-        "BatchSize": 15,
-        "Enabled": true,
-        "EventSourceArn": {
-          "Fn::GetAtt": [
-            "Stream",
-            "Arn"
-          ]
-        },
+        "Name": "MyMacro",
         "FunctionName": {
           "Ref": "Function"
-        },
-        "StartingPosition": "LATEST"
+        }
       }
     }
   }

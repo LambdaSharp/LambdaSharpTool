@@ -42,3 +42,4 @@ lash Parameters
 lash CloudFormationFunctions
 lash Source-DynamoDB
 lash Source-Kinesis
+lash Source-Macro

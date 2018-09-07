@@ -1,0 +1,20 @@
+Name: MacroSample
+
+Description: A sample module using an SNS topic
+
+Parameters:
+
+  - Name: MyTopic
+    Description: An SNS topic used to invoke the function.
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
+Functions:
+
+  - Name: MyFunction
+    Description: This function is invoked by an SNS topic
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Topic: MyTopic
