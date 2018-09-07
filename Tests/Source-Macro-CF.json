@@ -137,7 +137,7 @@
         "Timeout": "30"
       }
     },
-    "FunctionMacro": {
+    "FunctionMyMacroMacro": {
       "Type": "AWS::CloudFormation::Macro",
       "Properties": {
         "Name": "MyMacro",
