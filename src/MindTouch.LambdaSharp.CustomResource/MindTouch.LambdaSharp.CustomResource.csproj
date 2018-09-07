@@ -4,7 +4,7 @@
     <RootNamespace>MindTouch.LambdaSharp.CustomResource</RootNamespace>
 
     <PackageId>MindTouch.LambdaSharp.CustomResource</PackageId>
-    <Version>0.3.0-pre</Version>
+    <Version>0.3.0-RC1</Version>
     <Title>MindTouch λ# Custom Resource</Title>
     <Description>A serverless framework for rapid application development of AWS CloudFormation custom resources</Description>
     <Company>MindTouch, Inc.</Company>
@@ -27,7 +27,7 @@
     <PackageReference Include="AWSSDK.S3" Version="3.3.18.3"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-    <PackageReference Include="MindTouch.LambdaSharp" Version="0.3.0-pre"/>
+    <PackageReference Include="MindTouch.LambdaSharp" Version="0.3.0-RC1"/>
   </ItemGroup>
   <ItemGroup Condition=" '$(Configuration)'!='NugetPublish' ">
     <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj" />
