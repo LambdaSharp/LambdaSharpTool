@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp S3 Function
+# LambdaSharp S3 Bucket Notifications Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 

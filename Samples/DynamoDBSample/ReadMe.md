@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp DynamoDB Function
+# LambdaSharp DynamoDB Stream Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
