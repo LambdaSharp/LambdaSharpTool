@@ -35,3 +35,4 @@ lash Source-S3
 lash Source-Sqs
 lash Variables
 lash Source-Alexa
+lash Parameters
