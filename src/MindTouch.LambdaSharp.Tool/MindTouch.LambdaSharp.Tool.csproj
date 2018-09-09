@@ -16,7 +16,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.11"/>
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.5.6"/>
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.6.6"/>
     <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.4.14"/>
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.30.2"/>
