@@ -21,17 +21,48 @@
 
 using System;
 using System.IO;
+using System.Text;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
     public class CliNewCommand : ACliCommand {
 
+        //--- Class Methods ---
+        private static string ReadResource(string resourceName) {
+            var assembly = typeof(CliNewCommand).Assembly;
+            using(var resource = assembly.GetManifestResourceStream($"MindTouch.LambdaSharp.Tool.Resources.{resourceName}"))
+            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+                return reader.ReadToEnd();
+            }
+        }
+
         //--- Methods --
         public void Register(CommandLineApplication app) {
             app.Command("new", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Create new LambdaSharp asset";
+
+                // module sub-command
+                cmd.Command("module", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new LambdaSharp module";
+
+                    // sub-command options
+                    var nameOption = subCmd.Option("--name|-n <VALUE>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
+                    var directoryOption = subCmd.Option("--working-directory|-wd <VALUE>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
+                    subCmd.OnExecute(() => {
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        if(!nameOption.HasValue()) {
+                            AddError("missing module '--name' option");
+                            return;
+                        }
+                        NewModule(
+                            nameOption.Value(),
+                            Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
+                        );
+                    });
+                });
 
                 // function sub-command
                 cmd.Command("function", subCmd => {
@@ -47,7 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-                        if(lambdasharpDirectory == null) {
+                        if(useProjectReferenceOption.HasValue() && (lambdasharpDirectory == null)) {
                             AddError("missing LAMBDASHARP environment variable");
                             return;
                         }
@@ -71,7 +102,29 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private static void NewFunction(
+        private void NewModule(string moduleName, string moduleDirectory) {
+            try {
+                Directory.CreateDirectory(moduleDirectory);
+            } catch(Exception e) {
+                AddError($"unable to create directory '{moduleDirectory}'", e);
+                return;
+            }
+            var moduleFile = Path.Combine(moduleDirectory, "Module.yml");
+            if(File.Exists(moduleFile)) {
+                AddError($"module file '{moduleFile}' already exists");
+                return;
+            }
+            try {
+                var module = ReadResource("NewModule.yml");
+                module = module.Replace("%%MODULENAME%%", moduleName);
+                File.WriteAllText(moduleFile, module);
+                Console.WriteLine($"Created module file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create module file '{moduleFile}'", e);
+            }
+        }
+
+        private void NewFunction(
             string lambdasharpDirectory,
             string functionName,
             string rootNamespace,
@@ -90,7 +143,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 AddError($"unable to create directory '{projectDirectory}'", e);
                 return;
             }
-            var lambdasharpProject = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj"));
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
             try {
                 var projectContents = useProjectReference
@@ -107,7 +159,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     <PackageReference Include=""Amazon.Lambda.Serialization.Json"" Version=""1.2.0""/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include=""" + lambdasharpProject + @"""/>
+    <ProjectReference Include=""" + Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")) + @"""/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include=""Amazon.Lambda.Tools"" Version=""2.2.0""/>
