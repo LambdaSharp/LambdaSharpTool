@@ -69,6 +69,7 @@ Releases are named after Greek philosophers.
 * Added support for Kinesis Stream sources. See [Kinesis Stream](Samples/KinesisSample/) sample.
 * Added support for DynamoDB Stream sources. See [DynamoDB Stream](Samples/DynamoDBSample/) sample.
 * Added support for exporting functions to the parameter store.
+* Deployment artifacts are now created in an output directory.
 * Improved how Lambda function parameters are passed in. Instead of relying on an embedded `parameters.json` file, parameters are now passed in via environment variables. This means that Lambda function packages no longer need to be re-uploaded because of parameter changes.
 * Included `Sid` attribute for all built-in, automatic permissions being added to provide more context.
 * Switched to native AWS Lambda `JsonSerializer` class for serializing/deserializing data.

@@ -144,7 +144,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // package all files
             new ModelFilesPackager(settings).Process(module);
-
             // compile module file
             var compiledModule = new ModelConverter(settings).Process(module);
             if(HasErrors) {
@@ -163,6 +162,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // serialize stack to disk
             var result = true;
             var template = new JsonStackSerializer().Serialize(stack);
+            Directory.CreateDirectory(Path.GetDirectoryName(outputCloudFormationFilePath));
             File.WriteAllText(outputCloudFormationFilePath, template);
             if(dryRun == null) {
                 result = await new StackUpdater().Deploy(compiledModule, outputCloudFormationFilePath, allowDataLoos, protectStack);
