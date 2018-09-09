@@ -96,15 +96,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         ) {
             var stopwatch = Stopwatch.StartNew();
 
-            // check that LambdaSharp Environment & Tool versions match
-            if(settings.EnvironmentVersion == null) {
-                AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-            } else {
-                if(settings.EnvironmentVersion != settings.ToolVersion) {
-                    AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                }
-            }
-
             // read input file
             Console.WriteLine();
             Console.WriteLine($"Processing module: {settings.ModuleSource}");
@@ -125,7 +116,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // reset settings when the 'LambdaSharp` module is being deployed
             if(module.Name == "LambdaSharp") {
                 settings.Reset();
+            } else if(settings.EnvironmentVersion == null) {
+
+                // check that LambdaSharp Environment & Tool versions match
+                AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+            } else {
+                if(settings.EnvironmentVersion != settings.ToolVersion) {
+                    AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                }
             }
+
 
             // validate module
             new ModelValidation(settings).Process(module);

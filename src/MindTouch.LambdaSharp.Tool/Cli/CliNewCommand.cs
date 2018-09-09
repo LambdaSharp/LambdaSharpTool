@@ -107,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     <PackageReference Include=""Amazon.Lambda.Serialization.Json"" Version=""1.2.0""/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include=""" + lambdasharpProject + @""" />
+    <ProjectReference Include=""" + lambdasharpProject + @"""/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include=""Amazon.Lambda.Tools"" Version=""2.2.0""/>
@@ -138,7 +138,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
             try {
-                var functionContents = 
+                var functionContents =
 @"using System;
 using System.IO;
 using System.Threading.Tasks;
