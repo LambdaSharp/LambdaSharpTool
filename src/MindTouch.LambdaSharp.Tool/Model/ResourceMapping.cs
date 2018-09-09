@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public ResourceMapping() {
 
             // read short-hand for IAM mappings from embedded resource
-            var assembly = typeof(ResourceMapping).GetTypeInfo().Assembly;
+            var assembly = typeof(ResourceMapping).Assembly;
             using(var resource = assembly.GetManifestResourceStream("MindTouch.LambdaSharp.Tool.Resources.IAM-Mappings.yml"))
             using(var reader = new StreamReader(resource, Encoding.UTF8)) {
                 var deserializer = new DeserializerBuilder()

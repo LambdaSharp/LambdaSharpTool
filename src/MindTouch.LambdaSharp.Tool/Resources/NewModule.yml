@@ -1,0 +1,13 @@
+Name: %%MODULENAME%%
+
+Version: 1.0
+
+# Description: Module description
+
+Parameters:
+
+  # - Name: Parameter name
+  #   Description: Parameter description
+  #   Resource:
+  #     Type: AWS::...
+  #     Allow: ...

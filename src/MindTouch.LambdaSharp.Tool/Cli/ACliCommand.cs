@@ -266,7 +266,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             };
         }
 
-        protected static bool TryParseEnumOption<T>(CommandOption option, T defaultvalue, out T result) where T : struct {
+        protected bool TryParseEnumOption<T>(CommandOption option, T defaultvalue, out T result) where T : struct {
             if(option.Value() == null) {
                 result = defaultvalue;
                 return true;
