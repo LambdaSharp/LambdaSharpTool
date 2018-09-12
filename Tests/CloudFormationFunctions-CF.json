@@ -91,7 +91,23 @@
           ]
         },
         "UseSub2": {
-          "Fn::Sub": "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${vpc}"
+          "Fn::Sub": "arn:aws:ec2:${AWS::Region}:${AWS::AccountId}"
+        },
+        "UseTransform1": {
+          "Fn::Transform": {
+            "Name": "MacroName1",
+            "Parameters": {
+              "Param1": "Value1"
+            }
+          }
+        },
+        "UseTransform2": {
+          "Fn::Transform": {
+            "Name": "MacroName2",
+            "Parameters": {
+              "Param1": "Value2"
+            }
+          }
         }
       }
     },

@@ -33,7 +33,7 @@ using YamlDotNet.Serialization.ObjectFactories;
 namespace MindTouch.LambdaSharp.Tool.Internal {
 
     [TypeConverter(typeof(CloudFormationFunctionTypeConverter))]
-    public class CloudFormationFunction : List<object> { }
+    public class CloudFormationListFunction : List<object> { }
 
     public class CloudFormationFunctionTypeConverter : TypeConverter {
 
@@ -49,6 +49,20 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         public override object ConvertFrom(ITypeDescriptorContext context, CultureInfo culture, object value)
             => value;
+    }
+
+    public class CloudFormationMapFunction : Dictionary<string, object> { }
+
+    public static class CloudFromationFunctionsEx {
+
+        //--- Class Methods ---
+        public static DeserializerBuilder WithCloudFormationFunctions(this DeserializerBuilder builder) {
+            foreach(var tag in CloudFormationFunctionNodeDeserializer.SupportedTags) {
+                builder = builder.WithTagMapping(tag, typeof(CloudFormationListFunction));
+            }
+            return builder
+                .WithTagMapping("!Transform", typeof(CloudFormationMapFunction));
+        }
     }
 
     public class CloudFormationFunctionNodeDeserializer : INodeDeserializer {
@@ -75,12 +89,23 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
         //--- Methods ---
         public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {
-            if((reader.Current is SequenceStart start) && SupportedTags.Contains(start.Tag)) {
+            if((reader.Current is SequenceStart sequenceStart) && SupportedTags.Contains(sequenceStart.Tag)) {
 
                 // deserialize parameter list
                 INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
                 if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
-                    var key = TagToFunctionName(start.Tag);
+                    var key = TagToFunctionName(sequenceStart.Tag);
+                    value = new Dictionary<string, object> {
+                        [key] = value
+                    };
+                    return true;
+                }
+            } else if((reader.Current is MappingStart mapStart) && (mapStart.Tag == "!Transform")) {
+
+                // deserialize parameter map
+                INodeDeserializer nested = new DictionaryNodeDeserializer(new DefaultObjectFactory());
+                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)) {
+                    var key = TagToFunctionName(mapStart.Tag);
                     value = new Dictionary<string, object> {
                         [key] = value
                     };

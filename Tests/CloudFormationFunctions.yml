@@ -24,7 +24,13 @@ Parameters:
         UseSub1: !Sub
           - www.${Domain}
           - Domain: !Ref RootDomainName
-        UseSub2: !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}:vpc/${vpc}'
+        UseSub2: !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}'
+        UseTransform1: !Transform { Name: MacroName1, Parameters: { Param1: Value1 } }
+        UseTransform2: !Transform
+          Name: MacroName2
+          Parameters:
+            Param1: Value2
+
 
   - Name: OtherResource
     Description: A CloudFormation dummy resource to reference

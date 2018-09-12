@@ -37,13 +37,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // parse YAML file into module AST
             try {
-                var builder = new DeserializerBuilder()
+                return new DeserializerBuilder()
                     .WithNamingConvention(new PascalCaseNamingConvention())
-                    .WithNodeDeserializer(new CloudFormationFunctionNodeDeserializer());
-                foreach(var tag in CloudFormationFunctionNodeDeserializer.SupportedTags) {
-                    builder = builder.WithTagMapping(tag, typeof(CloudFormationFunction));
-                }
-                return builder
+                    .WithNodeDeserializer(new CloudFormationFunctionNodeDeserializer())
+                    .WithCloudFormationFunctions()
                     .Build()
                     .Deserialize<ModuleNode>(yamlParser);
             } catch(Exception e) {
