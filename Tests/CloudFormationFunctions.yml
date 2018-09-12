@@ -31,7 +31,6 @@ Parameters:
           Parameters:
             Param1: Value2
 
-
   - Name: OtherResource
     Description: A CloudFormation dummy resource to reference
     Resource:
