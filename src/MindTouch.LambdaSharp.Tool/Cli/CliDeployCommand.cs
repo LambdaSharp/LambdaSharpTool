@@ -168,7 +168,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             File.WriteAllText(outputCloudFormationFilePath, template);
             if(dryRun == null) {
-                result = await new StackUpdater().Deploy(compiledModule, outputCloudFormationFilePath, allowDataLoos, protectStack);
+                result = await new ModelUpdater(settings).Deploy(compiledModule, outputCloudFormationFilePath, allowDataLoos, protectStack);
                 if(settings.OutputDirectory == settings.WorkingDirectory) {
                     try {
                         File.Delete(outputCloudFormationFilePath);
