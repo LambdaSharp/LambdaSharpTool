@@ -42,6 +42,8 @@ The <code>Version</code> attribute defines the version of the λ# module. It is 
 
 The format of the version must be <code>Major.Minor[.Build[.Revision]]</code>. Components in square brackets (<code>[]</code>) are optional and can be omitted.
 
+<b>NOTE</b>: The `Version` attribute has not impact on whether a CloudFormation stack is updated. That determination depends  entirely on the parameters and functions of the λ# module.
+
 <i>Required:</i> No
 
 <i>Type:</i> String
