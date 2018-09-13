@@ -159,7 +159,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // decompress project zip into temporary folder so we can add the `parameters.json` and `GITSHAFILE` files
+            // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
             string package;
             var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             try {

@@ -96,7 +96,7 @@ The <code>EncryptionContext</code> section is an optional mapping of key-value p
 
 <dt><code>Import</code></dt>
 <dd>
-The <code>Import</code> attribute specifies a path to the AWS Systems Manager Parameter Store. At build time, the λ# tool imports the value and stores it in the <code>parameters.json</code> file. If the value starts with <code>/</code>, it will be used as an absolute key path. Otherwise, it will be prefixed with <code>/{{Tier}}/</code> to create an import path specific to the deployment tier.
+The <code>Import</code> attribute specifies a path to the AWS Systems Manager Parameter Store. At build time, the λ# tool imports the value and stores it in a Lambda function environment variable. If the value starts with <code>/</code>, it will be used as an absolute key path. Otherwise, it will be prefixed with <code>/{{Tier}}/</code> to create an import path specific to the deployment tier.
 
 <i>Required</i>: No. At most one <code>Value</code>, <code>Values</code>, <code>Secret</code>, or <code>Import</code> can be specified at a time.
 

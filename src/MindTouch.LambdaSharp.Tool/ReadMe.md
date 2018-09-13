@@ -28,7 +28,6 @@ Building function Sample.SlackCommand [netcoreapp2.0]
 => Restoring project dependencies
 => Building AWS Lambda package
 => Decompressing AWS Lambda package
-=> Adding settings file 'parameters.json'
 => Finalizing AWS Lambda package
 Deploying stack: Demo-Sample
 => Uploading CloudFormation template: s3://demo-lambdasharp-deploymentbucket/Demo/Sample/cloudformation-8ec32d267a1fef38e8e133d8ee19cf857d3a0911.json => Stack creation initiated
