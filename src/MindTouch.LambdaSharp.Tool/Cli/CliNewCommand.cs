@@ -58,16 +58,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp module";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <VALUE>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
-                    var directoryOption = subCmd.Option("--working-directory|-wd <VALUE>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
+                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
+                    nameOption.ShowInHelpText = false;
+                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. MyModule)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        if(!nameOption.HasValue()) {
-                            AddError("missing module '--name' option");
+                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
+                            AddError("cannot specify --name and an argument at the same time");
+                            return;
+                        }
+                        string moduleName;
+                        if(nameOption.HasValue()) {
+                            moduleName = nameOption.Value();
+                        } else if(cmdArgument.Values.Any()) {
+                            moduleName = cmdArgument.Values.First();
+                        } else {
+                            AddError("missing module name argument");
                             return;
                         }
                         NewModule(
-                            nameOption.Value(),
+                            moduleName,
                             Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
                         );
                     });
@@ -79,12 +90,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp function";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <VALUE>", "Name of new project with module name prefix (e.g. MyFunction)", CommandOptionType.SingleValue);
-                    var namespaceOption = subCmd.Option("--namespace|-ns <VALUE>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
-                    var directoryOption = subCmd.Option("--working-directory|-wd <VALUE>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
-                    var frameworkOption = subCmd.Option("--framework|-f <VALUE>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
+                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new project (e.g. MyFunction)", CommandOptionType.SingleValue);
+                    var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
+                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
+                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
+                    inputFileOption.ShowInHelpText = false;
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using project references (default: use nuget package reference)", CommandOptionType.NoValue);
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
@@ -92,14 +105,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             AddError("missing LAMBDASHARP environment variable");
                             return;
                         }
-                        if(!nameOption.HasValue()) {
-                            AddError("missing project '--name' option");
+                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
+                            AddError("cannot specify --name and an argument at the same time");
+                            return;
+                        }
+                        string functionName;
+                        if(nameOption.HasValue()) {
+                            functionName = nameOption.Value();
+                        } else if(cmdArgument.Values.Any()) {
+                            functionName = cmdArgument.Values.First();
+                        } else {
+                            AddError("missing function name argument");
                             return;
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
                             lambdasharpDirectory,
-                            nameOption.Value(),
+                            functionName,
                             namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
                             useProjectReferenceOption.HasValue(),
