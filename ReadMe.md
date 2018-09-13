@@ -53,41 +53,7 @@ Functions:
 1. [Module File Reference](Docs/ModuleFile.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [λ# Tool Reference](src/MindTouch.LambdaSharp.Tool/)
-
-# Releases
-
-Releases are named after Greek philosophers.
-
-## Cebes (v0.3-RC1) - 2018-09-06
-
-* **Breaking Change:** Default module file name was changed to `Module.yml` from `Deploy.yml`
-* **Breaking Change:** S3 event subscriptions are now handled by a custom resource handler, which allows S3 event subscriptions to work with new and existing S3 buckets. However, this change is not backwards compatible with existing S3 event subscriptions.
-* Updated [Bootstrap](Bootstrap/) procedure.
-* Added support for short form CloudFormation intrinsic functions, such as <code>!Ref</code>, <code>!Join</code>, <code>!Sub</code>, etc.
-* Added support parameter collections. All parameter types can have nested parameters.
-* Added support for CloudFormation Macro sources. See [CloudFormation Macro](Samples/MacroSample/) sample.
-* Added support for Kinesis Stream sources. See [Kinesis Stream](Samples/KinesisSample/) sample.
-* Added support for DynamoDB Stream sources. See [DynamoDB Stream](Samples/DynamoDBSample/) sample.
-* Added support for exporting functions to the parameter store.
-* Deployment artifacts are now created in an output directory.
-* Improved how Lambda function parameters are passed in. Instead of relying on an embedded `parameters.json` file, parameters are now passed in via environment variables. This means that Lambda function packages no longer need to be re-uploaded because of parameter changes.
-* Included `Sid` attribute for all built-in, automatic permissions being added to provide more context.
-* Switched to native AWS Lambda `JsonSerializer` class for serializing/deserializing data.
-* Fixed an issue where some CloudFormation properties needed to suffixed with `_` to work with [Humidifier](https://github.com/jakejscott/Humidifier) library for generating CloudFormation templates correctly.
-* Upgraded [YamlDotNet](https://github.com/aaubry/YamlDotNet) library to 5.0.1
-
-## Brontinus (v0.2) - 2018-08-13
-
-* Revised λ# nomenclature, which introduced breaking changes for the module files.
-* Added support for Alexa Skill invocation sources.
-* Added custom resource handler for deploying file packages to S3 buckets.
-* Added command for listing deployed λ# modules.
-* Added default warning/error logging SNS topic for all Lambda functions.
-* Streamlined the λ# Environment setup procedure.
-
-## Acrion (v0.1) - 2018-07-17
-
-Initial release of λ#.
+1. [Release Notes](Docs/ReadMe.md)
 
 # License
 
