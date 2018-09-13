@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Secret { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<string> Values { get; set; }
-        public string Value { get; set; }
+        public object Value { get; set; }
         public string Import { get; set; }
         public PackageNode Package { get; set; }
         public string Export { get; set; }

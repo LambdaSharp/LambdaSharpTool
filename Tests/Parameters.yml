@@ -43,6 +43,10 @@ Parameters:
           Purpose: Security
           "Spe|cial": "Char|acter"
 
+      - Name: SeventhParameter
+        Description: Seventh nested parameter
+        Value: !Ref SingleResourceParameter
+
   - Name: OtherParameterCollection
     Description: Description for collection parameter
     Value: This collection has a value

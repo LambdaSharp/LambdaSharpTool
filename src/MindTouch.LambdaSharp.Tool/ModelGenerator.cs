@@ -413,7 +413,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
-            var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
+            var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key, kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Settings.Tier;
             environmentVariables["MODULE"] = _module.Name;
             environmentVariables["DEADLETTERQUEUE"] = Settings.DeadLetterQueueUrl;
@@ -672,7 +672,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(macroSources.Any()) {
                 foreach(var source in macroSources) {
                     _stack.Add($"{function.Name}{source.MacroName}Macro", new CustomResource("AWS::CloudFormation::Macro") {
-                        ["Name"] = source.MacroName,
+                        ["Name"] = $"{Settings.Tier}-{source.MacroName}",
                         ["FunctionName"] = Fn.Ref(function.Name)
                     });
                 }
@@ -727,6 +727,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["SourceBucketName"] = Settings.DeploymentBucketName,
                     ["SourcePackageKey"] = $"{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}"
                 });
+                break;
+            case ExpressionParameter expressionParameter:
+                environmentRefVariables["STR_" + fullEnvName] = expressionParameter.Expression;
+                exportValue = expressionParameter.Expression;
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;

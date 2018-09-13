@@ -105,7 +105,7 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "TEST": "Do The Hello Should The Hello",
+            "STR_TEST": "Do The Hello Should The Hello",
             "TIER": "Test",
             "MODULE": "TestModule",
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",

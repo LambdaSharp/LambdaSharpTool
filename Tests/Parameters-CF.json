@@ -208,6 +208,9 @@
             },
             "SEC_SAMPLEPARAMETERCOLLECTION_FIFTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==",
             "SEC_SAMPLEPARAMETERCOLLECTION_SIXTHNESTEDPARAMETER": "AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==|Purpose=Security|Spe%7Ccial=Char%7Cacter",
+            "STR_SAMPLEPARAMETERCOLLECTION_SEVENTHPARAMETER": {
+              "Ref": "SingleResourceParameter"
+            },
             "STR_OTHERPARAMETERCOLLECTION": "This collection has a value",
             "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
             "STR_SINGLERESOURCEPARAMETER": "arn:aws:sns:*:*:*",

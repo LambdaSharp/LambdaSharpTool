@@ -140,7 +140,7 @@
     "FunctionMyMacroMacro": {
       "Type": "AWS::CloudFormation::Macro",
       "Properties": {
-        "Name": "MyMacro",
+        "Name": "Test-MyMacro",
         "FunctionName": {
           "Ref": "Function"
         }

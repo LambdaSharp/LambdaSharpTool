@@ -61,6 +61,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string PackagePath { get; set; }
     }
 
+    public class ExpressionParameter : AParameter {
+
+        //--- Properties ---
+        public object Expression { get; set; }
+    }
+
     public abstract class AResourceParameter : AParameter {
 
         //--- Properties ---

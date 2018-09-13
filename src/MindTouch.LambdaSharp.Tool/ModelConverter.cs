@@ -217,21 +217,30 @@ namespace MindTouch.LambdaSharp.Tool {
                             AtLocation("Resource", () => {
 
                                 // existing resource
-                                var resource = ConvertResource(parameter.Value, parameter.Resource);
+                                var resource = ConvertResource((string)parameter.Value, parameter.Resource);
                                 result = new ReferencedResourceParameter {
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
                                 };
                             });
-                        } else {
+                        } else if(parameter.Value is string text) {
 
                             // plaintext value
                             result = new StringParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Value = parameter.Value
+                                Value = text
                             };
+                        } else {
+
+                            // plaintext value
+                            result = new ExpressionParameter {
+                                Name = parameter.Name,
+                                Description = parameter.Description,
+                                Expression = parameter.Value
+                            };
+
                         }
                     } else if(parameter.Resource != null) {
 
@@ -364,7 +373,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
-                    Environment = function.Environment ?? new Dictionary<string, string>(),
+                    Environment = function.Environment ?? new Dictionary<string, object>(),
                     Export = function.Export
                 };
             }, null);
@@ -471,7 +480,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         macroName = function.Name;
                     }
                     return new MacroSource {
-                        MacroName = $"{Settings.Tier}-{macroName}"
+                        MacroName = macroName
                     };
                 }
                 return null;

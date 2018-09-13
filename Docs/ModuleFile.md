@@ -210,7 +210,7 @@ The <code>Description</code> attribute specifies the parameter description used 
 
 <dt><code>Value</code></dt>
 <dd>
-The <code>Value</code> attribute specifies the plaintext value for the parameter. When used in conjunction with the <code>Resource</code> section, the <code>Value</code> attribute must begin with <code>arn:</code> or be a global wildcard (i.e. <code>*</code>).
+The <code>Value</code> attribute specifies the value for the parameter. When used in conjunction with the <code>Resource</code> section, the <code>Value</code> attribute must be a plaintext value and must begin with <code>arn:</code> or be a global wildcard (i.e. <code>*</code>). If no <code>Resource</code> attribute is present, the value can be a CloudFormation expression (e.g. <code>!Ref MyResource</code>).
 
 <i>Required</i>: No. At most one <code>Value</code>, <code>Values</code>, <code>Secret</code>, <code>Import</code>, or <code>Package</code> can be specified at a time.
 
@@ -476,7 +476,7 @@ The <code>Export</code> attribute specifies a path to the AWS Systems Manager Pa
 
 <dt><code>Environment</code></dt>
 <dd>
-The <code>Environment</code> sections contains key-value pairs that correspond to custom <a href="https://docs.aws.amazon.com/lambda/latest/dg/env_variables.html">Lambda environment variables</a> which can be retrieved by the Lambda function during initialization.
+The <code>Environment</code> sections contains key-value pairs that correspond to custom <a href="https://docs.aws.amazon.com/lambda/latest/dg/env_variables.html">Lambda environment variables</a> which can be retrieved by the Lambda function during initialization. The attribute can be a plaintext value or a CloudFormation expression (e.g. <code>!Ref MyResource</code>).
 
 <i>Required</i>: No
 
