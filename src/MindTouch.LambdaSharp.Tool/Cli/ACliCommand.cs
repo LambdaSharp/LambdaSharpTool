@@ -91,6 +91,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentS3SubscriberCustomResourceTopicArnOption = cmd.Option("--deployment-s3subscriber-customeresource-topic-arn <ARN>", "(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
+            var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
             var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Module.yml)", multipleValues: true);
             return async () => {
 
@@ -207,6 +208,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         source = Path.GetFullPath(moduleSource);
                         workingDirectory = Path.GetDirectoryName(source);
                         outputDirectory = Path.Combine(workingDirectory, "bin");
+                    }
+                    if(outputDirectoryOption.HasValue()) {
+                        outputDirectory = outputDirectoryOption.Value();
                     }
 
                     // initialize gitSha value
