@@ -17,7 +17,6 @@ Description: A sample module using Kinesis streams
 
 Parameters:
 
-
   - Name: Table
     Description: Description for DynamoDB table
     Resource:

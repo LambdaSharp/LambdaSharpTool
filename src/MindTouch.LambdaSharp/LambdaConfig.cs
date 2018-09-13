@@ -61,6 +61,16 @@ namespace MindTouch.LambdaSharp {
 
         public string Path => CombinePathWithKey(_parent?.Path ?? "", _key);
 
+        public IEnumerable<string> Keys {
+            get {
+                try {
+                    return _source.ReadAllKeys().OrderBy(key => key.ToLowerInvariant()).ToArray();
+                } catch(Exception e) when(!(e is ALambdaConfigException)) {
+                    throw new LambdaConfigUnexpectedException(Path, "reading all config keys", e);
+                }
+            }
+        }
+
         //--- Methods ---
         public T Read<T>(string key, Func<string, T> fallback, Func<string, T> convert, Action<T> validate) {
 
@@ -111,14 +121,6 @@ namespace MindTouch.LambdaSharp {
                 throw new LambdaConfigBadValueException(CombinePathWithKey(Path, key), e);
             }
             return value;
-        }
-
-        public IEnumerable<string> RetrieveAllKeysAsync() {
-            try {
-                return _source.ReadAllKeys().OrderBy(key => key.ToLowerInvariant()).ToArray();
-            } catch(Exception e) when(!(e is ALambdaConfigException)) {
-                throw new LambdaConfigUnexpectedException(Path, "reading all config keys", e);
-            }
         }
     }
 }

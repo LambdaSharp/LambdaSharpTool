@@ -558,7 +558,7 @@ Macro: String
 <dl>
 <dt><code>Macro</code></dt>
 <dd>
-The <code>Macro</code> attribute specifies the CloudFormation Macro name by which this Lambda function can be invoked.
+The <code>Macro</code> attribute specifies the CloudFormation Macro name by which this Lambda function can be invoked. The macro name is automatically prefixed with the λ# deployment tier name.
 
 <i>Required</i>: Yes
 

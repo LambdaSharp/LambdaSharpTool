@@ -79,6 +79,12 @@ lash deploy Module.yml
 <dd>(test only) SNS topic used by LambdaSharp functions to log warnings and errors (default: read from LambdaSharp configuration)</dd>
 <dt><code>--deployment-notification-topic-arn &lt;ARN&gt;</code></dt>
 <dd>(test only) SNS Topic used by CloudFormation deployments (default: read from LambdaSharp configuration)</dd>
+<dt><code>--deployment-s3packageloader-customresource-topic-arn &lt;ARN&gt;</code></dt>
+<dd>(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)</dd>
+<dt><code>--deployment-s3subscriber-customeresource-topic-arn &lt;ARN&lt;</code></dt>
+<dd>(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)</dd>
+<dt><code> -o|--output &lt;DIRECTORY&gt;</code></dt>
+<dd>(optional) Path to output directory (default: bin)</dd>
 </dl>
 
 ## Info Command
@@ -138,6 +144,12 @@ LambdaSharp Rollbar Custom Resource Topic: arn:aws:sns:us-east-1:123456789012:La
 <dd>(test only) SNS topic used by LambdaSharp functions to log warnings and errors (default: read from LambdaSharp configuration)</dd>
 <dt><code>--deployment-notification-topic-arn &lt;ARN&gt;</code></dt>
 <dd>(test only) SNS Topic used by CloudFormation deployments (default: read from LambdaSharp configuration)</dd>
+<dt><code>--deployment-s3packageloader-customresource-topic-arn &lt;ARN&gt;</code></dt>
+<dd>(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)</dd>
+<dt><code>--deployment-s3subscriber-customeresource-topic-arn &lt;ARN&lt;</code></dt>
+<dd>(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)</dd>
+<dt><code> -o|--output &lt;DIRECTORY&gt;</code></dt>
+<dd>(optional) Path to output directory (default: bin)</dd>
 </dl>
 
 ## New Function Command
