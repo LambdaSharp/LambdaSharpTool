@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using McMaster.Extensions.CommandLineUtils;
@@ -29,19 +30,26 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     public class CliNewCommand : ACliCommand {
 
         //--- Class Methods ---
-        private static string ReadResource(string resourceName) {
+        private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
+            string result;
             var assembly = typeof(CliNewCommand).Assembly;
             using(var resource = assembly.GetManifestResourceStream($"MindTouch.LambdaSharp.Tool.Resources.{resourceName}"))
             using(var reader = new StreamReader(resource, Encoding.UTF8)) {
-                return reader.ReadToEnd();
+                result = reader.ReadToEnd();
             }
+            if(substitutions != null) {
+                foreach(var kv in substitutions) {
+                    result = result.Replace($"%%{kv.Key}%%", kv.Value);
+                }
+            }
+            return result;
         }
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
             app.Command("new", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Create new LambdaSharp asset";
+                cmd.Description = "Create new LambdaSharp module or function";
 
                 // module sub-command
                 cmd.Command("module", subCmd => {
@@ -115,8 +123,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return;
             }
             try {
-                var module = ReadResource("NewModule.yml");
-                module = module.Replace("%%MODULENAME%%", moduleName);
+                var module = ReadResource("NewModule.yml", new Dictionary<string, string> {
+                    ["MODULENAME"] = moduleName
+                });
                 File.WriteAllText(moduleFile, module);
                 Console.WriteLine($"Created module file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
             } catch(Exception e) {
@@ -132,6 +141,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool useProjectReference,
             string baseDirectory
         ) {
+
+            // create directory for function project
             var projectDirectory = Path.Combine(baseDirectory, functionName);
             if(Directory.Exists(projectDirectory)) {
                 AddError($"project directory '{projectDirectory}' already exists");
@@ -143,79 +154,33 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 AddError($"unable to create directory '{projectDirectory}'", e);
                 return;
             }
+
+            // create function project
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            var substitutions = new Dictionary<string, string> {
+                ["FRAMEWORK"] = framework,
+                ["ROOTNAMESPACE"] = rootNamespace,
+                ["LAMBDASHARPPROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
+                ["LAMBDASHARPVERSION"] = Version.ToString()
+            };
             try {
-                var projectContents = useProjectReference
-? @"<Project Sdk=""Microsoft.NET.Sdk"">
-  <PropertyGroup>
-    <TargetFramework>" + framework + @"</TargetFramework>
-    <Deterministic>true</Deterministic>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>" + rootNamespace + @"</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include=""Amazon.Lambda.Core"" Version=""1.0.0""/>
-    <PackageReference Include=""Amazon.Lambda.Serialization.Json"" Version=""1.2.0""/>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include=""" + Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")) + @"""/>
-  </ItemGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include=""Amazon.Lambda.Tools"" Version=""2.2.0""/>
-  </ItemGroup>
-</Project>"
-:  @"<Project Sdk=""Microsoft.NET.Sdk"">
-  <PropertyGroup>
-    <TargetFramework>" + framework + @"</TargetFramework>
-    <Deterministic>true</Deterministic>
-    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>" + rootNamespace + @"</RootNamespace>
-    <AWSProjectType>Lambda</AWSProjectType>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include=""Amazon.Lambda.Core"" Version=""1.0.0""/>
-    <PackageReference Include=""Amazon.Lambda.Serialization.Json"" Version=""1.2.0""/>
-    <PackageReference Include=""MindTouch.LambdaSharp"" Version=""0.1.3""/>
-  </ItemGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include=""Amazon.Lambda.Tools"" Version=""2.2.0""/>
-  </ItemGroup>
-</Project>";
+                var projectContents = ReadResource(
+                    useProjectReference
+                        ? "NewFunctionProjectLocal.xml"
+                        : "NewFunctionProjectNuget.xml",
+                    substitutions
+                );
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
                 AddError($"unable to create project file '{projectFile}'", e);
                 return;
             }
+
+            // create function source code
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
             try {
-                var functionContents =
-@"using System;
-using System.IO;
-using System.Threading.Tasks;
-using Amazon.Lambda.Core;
-using MindTouch.LambdaSharp;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
-
-namespace " + rootNamespace + @" {
-
-    public class Function : ALambdaFunction {
-
-        //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
-
-        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            using(var reader = new StreamReader(stream)) {
-                LogInfo(await reader.ReadToEndAsync());
-            }
-            return ""Ok"";
-        }
-    }
-}";
+                var functionContents = ReadResource("NewFunction.cs.txt", substitutions);
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
             } catch(Exception e) {
