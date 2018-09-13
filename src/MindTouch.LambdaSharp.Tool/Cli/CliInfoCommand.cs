@@ -45,12 +45,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(settings == null) {
                         return;
                     }
-                    Info(settings.First());
+                    await Info(settings.First());
                 });
             });
         }
 
-        private void Info(Settings settings) {
+        private async Task Info(Settings settings) {
+            await PopulateEnvironmentSettingsAsync(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"Deployment tier: {settings.Tier ?? "<NOT SET>"}");
