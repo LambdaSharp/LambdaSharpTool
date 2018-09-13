@@ -129,7 +129,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
             }
 
-
             // validate module
             new ModelValidation(settings).Process(module);
             if(HasErrors) {
