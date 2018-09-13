@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -78,10 +79,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp function";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <VALUE>", "Name of new project with module name prefix (e.g. Module.Function)", CommandOptionType.SingleValue);
+                    var nameOption = subCmd.Option("--name|-n <VALUE>", "Name of new project with module name prefix (e.g. MyFunction)", CommandOptionType.SingleValue);
                     var namespaceOption = subCmd.Option("--namespace|-ns <VALUE>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory|-wd <VALUE>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <VALUE>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
+                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using project references (default: use nuget package reference)", CommandOptionType.NoValue);
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -94,13 +96,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             AddError("missing project '--name' option");
                             return;
                         }
+                        var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
                             lambdasharpDirectory,
                             nameOption.Value(),
-                            namespaceOption.Value() ?? nameOption.Value(),
+                            namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
                             useProjectReferenceOption.HasValue(),
-                            Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
+                            workingDirectory,
+                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml")
                         );
                     });
                 });
@@ -139,11 +143,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string rootNamespace,
             string framework,
             bool useProjectReference,
-            string baseDirectory
+            string workingDirectory,
+            string moduleFile
         ) {
+            // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
+            var functionMemory = 128;
+            var functionTimeout = 30;
+
+            // parse yaml module file
+            if(!File.Exists(moduleFile)) {
+                AddError($"could not find module '{moduleFile}'");
+                return;
+            }
+            var moduleContents = File.ReadAllText(moduleFile);
+            var module = new ModelParser().Parse(moduleContents);
+            if(HasErrors) {
+                return;
+            }
+            var moduleName = module.Name;
+
+            // set default namespace if none is set
+            if(rootNamespace == null) {
+                rootNamespace = $"{moduleName}.{functionName}";
+            }
 
             // create directory for function project
-            var projectDirectory = Path.Combine(baseDirectory, functionName);
+            var projectDirectory = Path.Combine(workingDirectory, functionName);
             if(Directory.Exists(projectDirectory)) {
                 AddError($"project directory '{projectDirectory}' already exists");
                 return;
@@ -179,14 +204,40 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
+            var functionContents = ReadResource("NewFunction.txt", substitutions);
             try {
-                var functionContents = ReadResource("NewFunction.cs.txt", substitutions);
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
             } catch(Exception e) {
                 AddError($"unable to create function file '{functionFile}'", e);
                 return;
             }
+
+            // update YAML module file
+            var moduleLines = File.ReadAllLines(moduleFile).ToList();
+
+            // check if `Functions:` section needs to be added
+            var functionsIndex = moduleLines.FindIndex(line => line.StartsWith("Functions:", StringComparison.Ordinal));
+            if(functionsIndex < 0) {
+
+                // add empty separator line if the last line of the file is not empty
+                if(moduleLines.Any() && (moduleLines.Last().Trim() != "")) {
+                    moduleLines.Add("");
+                }
+                functionsIndex = moduleLines.Count;
+                moduleLines.Add("Functions:");
+            }
+            ++functionsIndex;
+
+            // insert function definition
+            moduleLines.InsertRange(functionsIndex, new[] {
+                "",
+                $" - Name: {functionName}",
+                $"   Description: TODO - update {functionName} description",
+                $"   Memory: {functionMemory}",
+                $"   Timeout: {functionTimeout}",
+            });
+            File.WriteAllLines(moduleFile, moduleLines);
         }
     }
 }

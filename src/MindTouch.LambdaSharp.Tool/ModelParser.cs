@@ -30,10 +30,10 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModelParser : AModelProcessor {
 
         //--- Constructors ---
-        public ModelParser(Settings settings) : base(settings) { }
+        public ModelParser() : base(new Settings()) { }
 
         //--- Methods ---
-        public ModuleNode Process(YamlDotNet.Core.IParser yamlParser) {
+        public ModuleNode Parse(YamlDotNet.Core.IParser yamlParser) {
 
             // parse YAML file into module AST
             try {
@@ -43,6 +43,22 @@ namespace MindTouch.LambdaSharp.Tool {
                     .WithCloudFormationFunctions()
                     .Build()
                     .Deserialize<ModuleNode>(yamlParser);
+            } catch(Exception e) {
+                AddError($"parse error: {e.Message}", e);
+                return null;
+            }
+        }
+
+        public ModuleNode Parse(string source) {
+
+            // parse YAML file into module AST
+            try {
+                return new DeserializerBuilder()
+                    .WithNamingConvention(new PascalCaseNamingConvention())
+                    .WithNodeDeserializer(new CloudFormationFunctionNodeDeserializer())
+                    .WithCloudFormationFunctions()
+                    .Build()
+                    .Deserialize<ModuleNode>(source);
             } catch(Exception e) {
                 AddError($"parse error: {e.Message}", e);
                 return null;

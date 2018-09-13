@@ -108,7 +108,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // parse yaml module file
-            var module = new ModelParser(settings).Process(tokenStream);
+            var module = new ModelParser().Parse(tokenStream);
             if(HasErrors) {
                 return false;
             }
