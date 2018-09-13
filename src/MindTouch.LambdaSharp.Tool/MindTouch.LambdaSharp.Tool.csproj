@@ -4,9 +4,9 @@
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackageVersion>0.3.0-RC1</PackageVersion>
+    <PackageVersion>0.3.0-RC2</PackageVersion>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
-    <Version>0.3.0-RC1</Version>
+    <Version>0.3.0-RC2</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
     <DebugSymbols>false</DebugSymbols>
