@@ -168,7 +168,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // create directory for function project
-            var projectDirectory = Path.Combine(workingDirectory, functionName);
+            var moduleFunctionName = $"{moduleName}.{functionName}";
+            var projectDirectory = Path.Combine(workingDirectory, moduleFunctionName);
             if(Directory.Exists(projectDirectory)) {
                 AddError($"project directory '{projectDirectory}' already exists");
                 return;
@@ -181,7 +182,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // create function project
-            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            var projectFile = Path.Combine(projectDirectory, moduleFunctionName + ".csproj");
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
