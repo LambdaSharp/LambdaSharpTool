@@ -155,41 +155,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArnOption.Value();
                 var deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArnOption.Value();
 
-                // NOTE (2018-08-04, bjorg): we only import lambdasharp parameters when necessary
-                //  to allow tests to use a dummy AWS account ID; since no import will be triggered
-                //  the dummy account id is not an issue.
-                if(
-                    (deploymentVersion == null)
-                    || (deploymentBucketName == null)
-                    || (deploymentDeadletterQueueUrl == null)
-                    || (deploymentLoggingTopicArn == null)
-                    || (deploymentNotificationTopicArn == null)
-                    || (deploymentRollbarCustomResourceTopicArn == null)
-                    || (deploymentS3PackageLoaderCustomResourceTopicArn == null)
-                    || (deploymentS3SubscriberCustomResourceTopicArn == null)
-                ) {
-
-                    // import LambdaSharp settings
-                    var lambdaSharpPath = $"/{tier}/LambdaSharp/";
-                    var lambdaSharpSettings = await ssmClient.GetAllParametersByPathAsync(lambdaSharpPath);
-
-                    // resolved values that are not yet set
-                    deploymentVersion = deploymentVersion ?? GetLambdaSharpSetting("Version");
-                    deploymentBucketName = deploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                    deploymentDeadletterQueueUrl = deploymentDeadletterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-                    deploymentLoggingTopicArn = deploymentLoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
-                    deploymentNotificationTopicArn = deploymentNotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-                    deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-                    deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
-                    deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn ?? GetLambdaSharpSetting("S3SubscriberCustomResourceTopic");
-
-                    // local functions
-                    string GetLambdaSharpSetting(string name) {
-                        lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
-                        return kv.Value;
-                    }
-                }
-
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
                 foreach(var moduleSource in moduleSources) {
@@ -254,8 +219,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         S3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn,
                         ModuleSource = source,
                         WorkingDirectory = workingDirectory,
-
-                        // TODO (2018-08-22, bjorg): need to allow configuration of output directory
                         OutputDirectory = outputDirectory,
                         ResourceMapping = new ResourceMapping(),
                         SsmClient = ssmClient,
@@ -291,6 +254,40 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             AddError($"value for {option.Template} must be one of {string.Join(", ", pairs)}");
             result = defaultvalue;
             return false;
+        }
+
+        protected async Task PopulateEnvironmentSettingsAsync(Settings settings) {
+            if(
+                (settings.EnvironmentVersion == null)
+                || (settings.DeploymentBucketName == null)
+                || (settings.DeadLetterQueueUrl == null)
+                || (settings.LoggingTopicArn == null)
+                || (settings.NotificationTopicArn == null)
+                || (settings.RollbarCustomResourceTopicArn == null)
+                || (settings.S3PackageLoaderCustomResourceTopicArn == null)
+                || (settings.S3SubscriberCustomResourceTopicArn == null)
+            ) {
+
+                // import LambdaSharp settings
+                var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
+                var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
+
+                // resolved values that are not yet set
+                settings.EnvironmentVersion = settings.EnvironmentVersion ?? new Version(GetLambdaSharpSetting("Version"));
+                settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
+                settings.DeadLetterQueueUrl = settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
+                settings.LoggingTopicArn = settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
+                settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
+                settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
+                settings.S3PackageLoaderCustomResourceTopicArn = settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
+                settings.S3SubscriberCustomResourceTopicArn = settings.S3SubscriberCustomResourceTopicArn ?? GetLambdaSharpSetting("S3SubscriberCustomResourceTopic");
+
+                // local functions
+                string GetLambdaSharpSetting(string name) {
+                    lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
+                    return kv.Value;
+                }
+            }
         }
     }
 }
