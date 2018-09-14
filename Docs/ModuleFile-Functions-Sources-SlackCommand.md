@@ -13,6 +13,7 @@ __Topics__
 
 ```yaml
 SlackCommand: String
+OperationName: String
 ```
 
 ## Properties
@@ -23,6 +24,15 @@ SlackCommand: String
 The <code>SlackCommand</code> attribute specifies the resource path that is mapped to the Lambda function. The notation is <span style="white-space: nowrap"><code>/resource/subresource</code></span>. Similarly to the API Gateway source, the API Gateway instance, the API Gateway resources, and the API Gateway methods are automatically created for the module when a Slack Command source is used.
 
 <i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>OperationName</code></dt>
+<dd>
+The <code>OperationName</code> attribute holds a friendly operation name for the method.
+
+<i>Required</i>: No
 
 <i>Type</i>: String
 </dd>

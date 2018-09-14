@@ -432,7 +432,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         return new ApiGatewaySource {
                             Method = "POST",
                             Path = source.SlackCommand.Split('/', StringSplitOptions.RemoveEmptyEntries),
-                            Integration = ApiGatewaySourceIntegration.SlackCommand
+                            Integration = ApiGatewaySourceIntegration.SlackCommand,
+                            OperationName = source.OperationName
                         };
                     }, null);
                 }

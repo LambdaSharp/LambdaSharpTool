@@ -255,8 +255,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 ++index;
                 AtLocation($"{index}", () => {
                     if(source.Api != null) {
-                        ValidateNotBothStatements("Api", "Schedule", source.S3 == null);
-                        ValidateNotBothStatements("Api", "Name", source.S3 == null);
+                        ValidateNotBothStatements("Api", "Schedule", source.Schedule == null);
+                        ValidateNotBothStatements("Api", "Name", source.Name == null);
                         ValidateNotBothStatements("Api", "S3", source.S3 == null);
                         ValidateNotBothStatements("Api", "Events", source.Events == null);
                         ValidateNotBothStatements("Api", "Prefix", source.Prefix == null);
@@ -319,7 +319,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.SlackCommand != null) {
                         ValidateNotBothStatements("SlackCommand", "Api", source.Api == null);
                         ValidateNotBothStatements("SlackCommand", "Integration", source.Integration == null);
-                        ValidateNotBothStatements("SlackCommand", "OperationName", source.OperationName == null);
                         ValidateNotBothStatements("SlackCommand", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("SlackCommand", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("SlackCommand", "Name", source.S3 == null);
