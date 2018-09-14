@@ -9,16 +9,14 @@ using MindTouch.LambdaSharp;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class Function : ALambdaFunction {
+    public class Function : ALambdaFunction<object, string> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            using(var reader = new StreamReader(stream)) {
-                LogInfo(await reader.ReadToEndAsync());
-            }
+        public override async Task<object> ProcessMessageStreamAsync(object request, ILambdaContext context) {
+            LogInfo("request received");
             return "Ok";
         }
     }

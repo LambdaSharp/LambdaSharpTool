@@ -26,14 +26,21 @@ This release introduces a custom resource to handle subscribing to S3 bucket not
 
 ## New λ# Tool Features
 
-### Create New Module File
+### Updated `New` Command
 
 The λ# tool has a new command to create a new module file. This command creates a `Module.yml` file in the current directory.
 
 To invoke the new command:
 ```bash
-lash new module --name MyNewModule
+lash new module MyNewModule
 ```
+
+Similarly, the existing `new function` command was updated to match.
+```bash
+lash new function MyFunction
+```
+
+Additionally, the `new function` command now updates the `Module.yml` file by adding a function definition.
 
 ### Artifact Output Directory
 
