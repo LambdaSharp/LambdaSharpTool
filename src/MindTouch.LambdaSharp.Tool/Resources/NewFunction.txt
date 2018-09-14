@@ -15,7 +15,7 @@ namespace %%ROOTNAMESPACE%% {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<object> ProcessMessageStreamAsync(object request, ILambdaContext context) {
+        public override async Task<string> ProcessMessageAsync(object request, ILambdaContext context) {
             LogInfo("request received");
             return "Ok";
         }
