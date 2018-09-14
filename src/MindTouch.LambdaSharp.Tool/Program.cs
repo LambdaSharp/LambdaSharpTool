@@ -66,6 +66,7 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 app.Execute(args);
             } catch(Exception e) {
+                Console.WriteLine(e);
                 AddError(e);
             }
             if(ErrorCount > 0) {

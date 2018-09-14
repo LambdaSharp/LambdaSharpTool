@@ -49,7 +49,7 @@ The λ# tool now generates all artifacts in a dedicated output directory. By def
 The location of the output directory can be overwritten with the `--output` option.
 
 ```bash
-lash deploy --output
+lash deploy --output MyOutputFolder
 ```
 
 ## New λ# Module Features

@@ -15,7 +15,7 @@ lash() {
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
-        --output $1-CF.json \
+        --cf-output $1-CF.json \
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \

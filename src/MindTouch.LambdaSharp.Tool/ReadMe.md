@@ -50,7 +50,7 @@ lash deploy Module.yml
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARPTIER</code> environment variable)</dd>
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
-<dt><code>--output &lt;FILE&gt;</code></dt>
+<dt><code>--cf-output &lt;FILE&gt;</code></dt>
 <dd>(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)</dd>
 <dt><code>--allow-data-loss</code></dt>
 <dd>(optional) Allow CloudFormation resource update operations that could lead to data loss</dd>
@@ -147,8 +147,6 @@ LambdaSharp Rollbar Custom Resource Topic: arn:aws:sns:us-east-1:123456789012:La
 <dd>(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)</dd>
 <dt><code>--deployment-s3subscriber-customeresource-topic-arn &lt;ARN&lt;</code></dt>
 <dd>(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)</dd>
-<dt><code> -o|--output &lt;DIRECTORY&gt;</code></dt>
-<dd>(optional) Path to output directory (default: bin)</dd>
 </dl>
 
 ## New Function Command
