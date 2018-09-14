@@ -419,7 +419,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         return new ApiGatewaySource {
                             Method = method,
                             Path = path,
-                            Integration = integration
+                            Integration = integration,
+                            OperationName = source.OperationName,
+                            ApiKeyRequired = source.ApiKeyRequired
                         };
                     }, null);
                 }

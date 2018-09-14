@@ -51,6 +51,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Method { get; set; }
         public string[] Path { get; set; }
         public ApiGatewaySourceIntegration Integration { get; set; }
+        public string OperationName { get; set; }
+        public bool? ApiKeyRequired { get; set; }
     }
 
     public class S3Source : AFunctionSource {

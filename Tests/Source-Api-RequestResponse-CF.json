@@ -404,6 +404,7 @@
             ]
           }
         },
+        "OperationName": "UpdateItem",
         "ResourceId": {
           "Ref": "ModuleRestApiItemsIdResource"
         },
@@ -438,6 +439,7 @@
     "ModuleRestApiItemsIdDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
+        "ApiKeyRequired": true,
         "AuthorizationType": "NONE",
         "HttpMethod": "DELETE",
         "Integration": {
@@ -488,10 +490,10 @@
         }
       }
     },
-    "ModuleRestApiDeployment09A037FE0F91E41A65FC838E69220A76": {
+    "ModuleRestApiDeployment124DA014C88A3B3CED5E6A780E0D8710": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
-        "Description": "TestModule API (Test) [09A037FE0F91E41A65FC838E69220A76]",
+        "Description": "TestModule API (Test) [124DA014C88A3B3CED5E6A780E0D8710]",
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
@@ -508,7 +510,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment09A037FE0F91E41A65FC838E69220A76"
+          "Ref": "ModuleRestApiDeployment124DA014C88A3B3CED5E6A780E0D8710"
         },
         "MethodSettings": [
           {

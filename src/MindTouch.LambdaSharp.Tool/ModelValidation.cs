@@ -272,6 +272,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Api", "Macro", source.Macro == null);
                     } else if(source.Schedule != null) {
                         ValidateNotBothStatements("Schedule", "Api", source.Api == null);
+                        ValidateNotBothStatements("Schedule", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Schedule", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Schedule", "Integration", source.Integration == null);
                         ValidateNotBothStatements("Schedule", "S3", source.S3 == null);
                         ValidateNotBothStatements("Schedule", "Events", source.Events == null);
@@ -291,6 +293,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.S3 != null) {
                         ValidateNotBothStatements("S3", "Api", source.Api == null);
                         ValidateNotBothStatements("S3", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("S3", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("S3", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("S3", "Schedule", source.Schedule == null);
                         ValidateNotBothStatements("S3", "Name", source.Name == null);
                         ValidateNotBothStatements("S3", "SlackCommand", source.SlackCommand == null);
@@ -315,6 +319,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.SlackCommand != null) {
                         ValidateNotBothStatements("SlackCommand", "Api", source.Api == null);
                         ValidateNotBothStatements("SlackCommand", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("SlackCommand", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("SlackCommand", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("SlackCommand", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("SlackCommand", "Name", source.S3 == null);
                         ValidateNotBothStatements("SlackCommand", "S3", source.S3 == null);
@@ -332,6 +338,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.Topic != null) {
                         ValidateNotBothStatements("Topic", "Api", source.Api == null);
                         ValidateNotBothStatements("Topic", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Topic", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Topic", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Topic", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("Topic", "Name", source.S3 == null);
                         ValidateNotBothStatements("Topic", "S3", source.S3 == null);
@@ -352,6 +360,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.Sqs != null) {
                         ValidateNotBothStatements("Sqs", "Api", source.Api == null);
                         ValidateNotBothStatements("Sqs", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Sqs", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Sqs", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Sqs", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("Sqs", "Name", source.S3 == null);
                         ValidateNotBothStatements("Sqs", "S3", source.S3 == null);
@@ -378,6 +388,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     } else if(source.Alexa != null) {
                         ValidateNotBothStatements("Alexa", "Api", source.Api == null);
                         ValidateNotBothStatements("Alexa", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Alexa", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Alexa", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Alexa", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("Alexa", "Name", source.S3 == null);
                         ValidateNotBothStatements("Alexa", "S3", source.S3 == null);
@@ -393,9 +405,10 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Alexa", "Kinesis", source.Kinesis == null);
                         ValidateNotBothStatements("Alexa", "Macro", source.Macro == null);
                     } else if(source.DynamoDB != null) {
-Console.WriteLine("Kinesis validation");
                         ValidateNotBothStatements("DynamoDB", "Api", source.Api == null);
                         ValidateNotBothStatements("DynamoDB", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("DynamoDB", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("DynamoDB", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("DynamoDB", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("DynamoDB", "Name", source.S3 == null);
                         ValidateNotBothStatements("DynamoDB", "S3", source.S3 == null);
@@ -430,9 +443,10 @@ Console.WriteLine("Kinesis validation");
                         // verify source exists
                         ValidateSourceParameter(source.DynamoDB, "AWS::DynamoDB::Table", "DynamoDB table");
                     } else if(source.Kinesis != null) {
-Console.WriteLine("Kinesis validation");
                         ValidateNotBothStatements("Kinesis", "Api", source.Api == null);
                         ValidateNotBothStatements("Kinesis", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Kinesis", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Kinesis", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Kinesis", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("Kinesis", "Name", source.S3 == null);
                         ValidateNotBothStatements("Kinesis", "S3", source.S3 == null);
@@ -469,6 +483,8 @@ Console.WriteLine("Kinesis validation");
                     } else if(source.Macro != null) {
                         ValidateNotBothStatements("Macro", "Api", source.Api == null);
                         ValidateNotBothStatements("Macro", "Integration", source.Integration == null);
+                        ValidateNotBothStatements("Macro", "OperationName", source.OperationName == null);
+                        ValidateNotBothStatements("Macro", "APiKeyRequired", source.ApiKeyRequired == null);
                         ValidateNotBothStatements("Macro", "Schedule", source.S3 == null);
                         ValidateNotBothStatements("Macro", "Name", source.S3 == null);
                         ValidateNotBothStatements("Macro", "S3", source.S3 == null);

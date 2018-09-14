@@ -13,5 +13,8 @@ Functions:
       - Api: GET /items/{id}
       - Api: POST /items
       - Api: PUT /items/{id}
+        OperationName: UpdateItem
       - Api: DELETE /items/{id}
         Integration: RequestResponse
+        ApiKeyRequired: true
+

@@ -31,6 +31,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // API Gateway Source
         public string Api { get; set; }
         public string Integration { get; set; }
+        public string OperationName { get; set; }
+        public bool? ApiKeyRequired { get; set; }
 
         // CloudWatch Schedule Event Source
         public string Schedule { get; set; }

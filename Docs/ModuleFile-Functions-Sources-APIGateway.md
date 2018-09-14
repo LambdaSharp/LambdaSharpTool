@@ -13,6 +13,8 @@ __Topics__
 
 ```yaml
 Api: String
+OperationName: String
+ApiKeyRequired: Boolean
 ```
 
 ## Properties
@@ -27,6 +29,24 @@ The <code>Api</code> attribute specifies the HTTP method and resource path that 
 
 <i>Type</i>: String
 </dd>
+
+<dt><code>OperationName</code></dt>
+<dd>
+The <code>OperationName</code> attribute holds a friendly operation name for the method.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>ApiKeyRequired</code></dt>
+<dd>
+The <code>ApiKeyRequired</code> attribute indicates whether the method requires clients to submit a valid API key.
+
+<i>Required</i>: No
+
+<i>Type</i>: Boolean
+</dd>
 </dl>
 
 ## Examples
@@ -35,7 +55,11 @@ A LambdaFunction can respond to multiple API Gateway endpoints at once.
 
 ```yaml
 Sources:
-  - Api: POST /items
   - Api: GET /items/{id}
+  - Api: POST /items
+    OperationName: AddItem
+    ApiKeyRequired: true
   - Api: DELETE /items/{id}
+    ApiKeyRequired: true
+    OperationName: RemoveItem
 ```

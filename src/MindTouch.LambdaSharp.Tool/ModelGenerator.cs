@@ -46,6 +46,8 @@ namespace MindTouch.LambdaSharp.Tool {
             public string[] Path { get; set; }
             public ApiGatewaySourceIntegration Integration { get; set; }
             public Function Function { get; set; }
+            public string OperationName { get; set; }
+            public bool? ApiKeyRequired { get; set; }
         }
 
         //--- Fields ---
@@ -301,6 +303,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         apiMethod = new ApiGateway.Method {
                             AuthorizationType = "NONE",
                             HttpMethod = method.Method,
+                            OperationName = method.OperationName,
+                            ApiKeyRequired = method.ApiKeyRequired,
                             ResourceId = parentId,
                             RestApiId = restApiId,
                             Integration = new ApiGateway.MethodTypes.Integration {
@@ -323,6 +327,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         apiMethod = new ApiGateway.Method {
                             AuthorizationType = "NONE",
                             HttpMethod = method.Method,
+                            OperationName = method.OperationName,
+                            ApiKeyRequired = method.ApiKeyRequired,
                             ResourceId = parentId,
                             RestApiId = restApiId,
                             Integration = new ApiGateway.MethodTypes.Integration {
@@ -569,7 +575,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         Method = apiEvent.Method,
                         Path = apiEvent.Path,
                         Integration = apiEvent.Integration,
-                        Function = function
+                        Function = function,
+                        OperationName = apiEvent.OperationName,
+                        ApiKeyRequired = apiEvent.ApiKeyRequired
                     });
                 }
             }

@@ -131,7 +131,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // DynamoDB resources must be granted permissions on the table AND the stream
                 resourceArnFn = new object[] {
                     Fn.GetAtt(logicalId, "Arn"),
-                    Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/stream/*")
+                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "stream", "*"),
+                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "index", "*")
                 };
                 resourceParamFn = Fn.Ref(logicalId);
                 break;
