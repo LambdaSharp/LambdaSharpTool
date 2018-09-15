@@ -4,7 +4,7 @@
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
     <PackageId>MindTouch.LambdaSharp</PackageId>
-    <Version>0.3.0-RC2</Version>
+    <VersionPrefix>0.3.0</VersionPrefix>
     <Title>MindTouch λ#</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
     <Company>MindTouch, Inc.</Company>
@@ -14,12 +14,6 @@
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;MindTouch;Serverless</PackageTags>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-      <DebugSymbols>false</DebugSymbols>
-      <Optimize>true</Optimize>
-      <OutputPath>.\bin\Release\</OutputPath>
-      <DefineConstants>RELEASE;TRACE</DefineConstants>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.1.3"/>
