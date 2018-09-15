@@ -1,4 +1,4 @@
-# λ# - Cebes (v0.3-RC2) - 2018-09-12
+# λ# - Cebes (v0.3-RC3) - 2018-09-14
 
 > Cebes was a disciple of Socrates and Philolaus, and a friend of Simmias of Thebes. He is one of the speakers in the Phaedo of Plato, in which he is represented as an earnest seeker after virtue and truth, keen in argument and cautious in decision. Xenophon says he was a member of Socrates' inner circle, and a frequent visitor to the hetaera, Theodote, in Athens.[1] He is also mentioned by Plato in the Crito and Epistle XIII. [(Wikipedia)](https://en.wikipedia.org/wiki/Cebes)
 
