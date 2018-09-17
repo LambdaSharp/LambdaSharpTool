@@ -47,7 +47,7 @@ lash deploy Module.yml
 
 <dl>
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARPTIER</code> environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
 <dt><code>--cf-output &lt;FILE&gt;</code></dt>
@@ -59,7 +59,7 @@ lash deploy Module.yml
 <dt><code>-c|--configuration &lt;CONFIGURATION&gt;</code></dt>
 <dd>(optional) Build configuration for function projects (default: "Release")</dd>
 <dt><code>--profile|-P &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
+<dd>(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)</dd>
 <dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
 <dt><code>--gitsha &lt;VALUE&gt;</code></dt>
@@ -122,9 +122,9 @@ LambdaSharp Rollbar Custom Resource Topic: arn:aws:sns:us-east-1:123456789012:La
 
 <dl>
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARPTIER</code> environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 <dt><code>--profile|-P &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
+<dd>(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)</dd>
 <dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
 <dt><code>--gitsha &lt;VALUE&gt;</code></dt>

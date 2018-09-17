@@ -74,9 +74,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         protected Func<Task<IEnumerable<Settings>>> CreateSettingsInitializer(CommandLineApplication cmd) {
-            var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARPTIER environment variable)", CommandOptionType.SingleValue);
+            var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
             var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-            var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+            var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
             var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -105,7 +105,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // initialize deployment tier value
-                var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARPTIER");
+                var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                 if(tier == null) {
                     AddError("missing deployment tier name");
                     return null;
@@ -116,7 +116,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // initialize AWS profile
-                var awsAccount = await InitializeAwsProfile(awsProfileOption.Value(), awsAccountIdOption.Value(), awsRegionOption.Value());
+                var awsAccount = await InitializeAwsProfile(
+                    awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE"),
+                    awsAccountIdOption.Value(),
+                    awsRegionOption.Value()
+                );
                 if(awsAccount == null) {
 
                     // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`

@@ -98,21 +98,21 @@ LambdaSharpS3Subscriber       [CREATE_COMPLETE]  2018-09-03 15:46:36
 
 Found 3 modules for deployment tier 'Demo'
 ```
-## Use `LAMBDASHARPTIER` Environment Variable
+## Use `LAMBDASHARP_TIER` Environment Variable
 
-You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARPTIER` environment variable instead.
+You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARP_TIER` environment variable instead.
 
 __Using PowerShell:__
 ```powershell
-New-Variable -Name LAMBDASHARPTIER -Value Demo
+New-Variable -Name LAMBDASHARP_TIER -Value Demo
 ```
 
 __Using Bash:__
 ```bash
-export LAMBDASHARPTIER=Demo
+export LAMBDASHARP_TIER=Demo
 ```
 
-Once `LAMBDASHARPTIER` is defined, the following command will produce the same result.
+Once `LAMBDASHARP_TIER` is defined, the following command will produce the same result.
 ```bash
 lash list
 ```

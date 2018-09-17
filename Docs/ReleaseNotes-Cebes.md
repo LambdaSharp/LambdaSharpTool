@@ -24,6 +24,10 @@ lash deploy Deploy.yml
 
 This release introduces a custom resource to handle subscribing to S3 bucket notifications. In previous releases, it was only possible to subscribe to S3 notifications for S3 buckets that were created in the same λ# module. With the addition of the [`S3Subscriber`](../Bootstrap/LambdaSharpS3Subscriber/) custom resource, it now possible to subscribe to both new and existing S3 buckets. However, this change is not backwards compatible with how previous implementation handled S3 bucket subscriptions and requires the old S3 bucket to be deleted.
 
+### λ# Environment Variable
+
+The name of the deployment tier environment variable was changed to `LAMBDASHARP_TIER`. The `LAMBDASHARP_PROFILE` was added to allow selecting a different, default AWS profile for λ# deployments.
+
 ## New λ# Tool Features
 
 ### Updated `New` Command
