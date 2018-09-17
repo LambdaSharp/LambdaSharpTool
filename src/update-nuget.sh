@@ -1,15 +1,17 @@
 # TODO:
-# - check LAMBDASHARP_NUGET_KEY is set
-# - allow SUFFIX to be passed in
+# - check that LAMBDASHARP_NUGET_KEY is set
+# - allow LAMBDASHARP_SUFFIX to be passed in
 
 # Set version SUFFIX
-SUFFIX=RC3
+LAMBDASHARP_SUFFIX=RC3
 
 update() {
     rm bin/Release/*.nupkg
 
+    dotnet clean
+
     dotnet pack \
-        --version-suffix $SUFFIX \
+        --version-suffix $LAMBDASHARP_SUFFIX \
         --configuration Release
 
     dotnet nuget push \

@@ -4,15 +4,9 @@
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackageVersion>0.3.0-RC2</PackageVersion>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
-    <Version>0.3.0-RC2</Version>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-    <DebugSymbols>false</DebugSymbols>
-    <Optimize>true</Optimize>
-    <OutputPath>.\bin\Release\</OutputPath>
-    <DefineConstants>RELEASE;TRACE</DefineConstants>
+    <VersionPrefix>0.3</VersionPrefix>
+    <VersionSuffix>RC3</VersionSuffix>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.11"/>
