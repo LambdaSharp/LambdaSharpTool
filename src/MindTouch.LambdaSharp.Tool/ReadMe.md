@@ -8,6 +8,7 @@ Commands:
 
 1. [Deploy](#deploy-command)
 1. [Info](#info-command)
+1. [New Module](#new-module-command)
 1. [New Function](#new-function-command)
 
 ## Deploy Command
@@ -151,26 +152,56 @@ LambdaSharp Rollbar Custom Resource Topic: arn:aws:sns:us-east-1:123456789012:La
 <dd>(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)</dd>
 </dl>
 
-## New Function Command
+## New Module Command
 
-The `new function` command creates a new C# project in the current folder with the required dependencies, as well as a `Function.cs` file with a skeleton AWS Lambda implementation.
+The `new module` command creates a `Module.yml` file in the current folder.
 
-```
-> lash new function --name MyApp.MyFunction --namespace MyCompany.MyApp.MyFunction
-MindTouch LambdaSharp Tool - Create new LambdaSharp asset
-Created project file: MyApp.MyFunction/MyApp.MyFunction.csproj
-Created function file: MyApp.MyFunction/Function.cs
+### Arguments
+
+The `new module` command takes the name of the new module to create.
+
+```bash
+lash new module MyNewModule
 ```
 
 ### Options
 
 <dl>
-<dt><code>--name|-n &lt;VALUE&gt;</code></dt>
-<dd>Name of new project (e.g. Module.Function)</dd>
+<dt><code>--working-directory|-wd &lt;PATH&gt;</code></dt>
+<dd>(optional) New module directory (default: current directory)</dd>
+</dl>
+
+## New Function Command
+
+The `new function` command creates a new C# project in the current folder with the required dependencies, as well as a `Function.cs` file with a skeleton AWS Lambda implementation.
+
+```
+> lash new function --namespace MyCompany.MyApp.MyFunction MyApp.MyFunction
+MindTouch LambdaSharp Tool - Create new LambdaSharp asset
+Created project file: MyApp.MyFunction/MyApp.MyFunction.csproj
+Created function file: MyApp.MyFunction/Function.cs
+```
+
+### Arguments
+
+The `new function` command takes the name of the new function to create.
+
+
+```bash
+lash new function MyNewFunction
+```
+
+### Options
+
+<dl>
 <dt><code>--namespace|-ns &lt;VALUE&gt;</code></dt>
 <dd>(optional) Root namespace for project (default: same as function name)</dd>
 <dt><code>--working-directory|-wd &lt;VALUE&gt;</code></dt>
 <dd>(optional) New function project parent directory (default: current directory)</dd>
 <dt><code>--framework|-f &lt;VALUE&gt;</code></dt>
 <dd>(optional) Target .NET framework (default: 'netcoreapp2.0')</dd>
+<dt><code>--use-project-reference</code></dt>
+<dd>Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)</dd>
+<dt><code>--use-nuget-reference</code></dt>
+<dd>Reference LambdaSharp libraries using nuget references</dd>
 </dl>

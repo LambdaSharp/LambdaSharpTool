@@ -90,21 +90,40 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp function";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new project (e.g. MyFunction)", CommandOptionType.SingleValue);
+                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new function (e.g. MyFunction)", CommandOptionType.SingleValue);
                     var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
-                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using project references (default: use nuget package reference)", CommandOptionType.NoValue);
+                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
+                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
                     var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-                        if(useProjectReferenceOption.HasValue() && (lambdasharpDirectory == null)) {
-                            AddError("missing LAMBDASHARP environment variable");
+
+                        // validate project vs. nuget reference options
+                        bool useProjectReference;
+                        if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
+                            AddError("cannot use --use-project-reference and --use-nuget-reference at the same time");
                             return;
                         }
+                        if(useProjectReferenceOption.HasValue()) {
+                            if(lambdasharpDirectory == null) {
+                                AddError("missing LAMBDASHARP environment variable");
+                                return;
+                            }
+                            useProjectReference = true;
+                        } else if(useNugetReferenceOption.HasValue()) {
+                            useProjectReference = false;
+                        } else if(lambdasharpDirectory != null) {
+                            useProjectReference = true;
+                        } else {
+                            useProjectReference = false;
+                        }
+
+                        // determine function name
                         if(cmdArgument.Values.Any() && nameOption.HasValue()) {
                             AddError("cannot specify --name and an argument at the same time");
                             return;
@@ -124,7 +143,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             functionName,
                             namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
-                            useProjectReferenceOption.HasValue(),
+                            useProjectReference,
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml")
                         );
@@ -208,8 +227,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARPPROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
-                ["LAMBDASHARPVERSION"] = Version.ToString()
+                ["LAMBDASHARP_PROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
+                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
             };
             try {
                 var projectContents = ReadResource(
@@ -255,10 +274,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // insert function definition
             moduleLines.InsertRange(functionsIndex, new[] {
                 "",
-                $" - Name: {functionName}",
-                $"   Description: TODO - update {functionName} description",
-                $"   Memory: {functionMemory}",
-                $"   Timeout: {functionTimeout}",
+                $"  - Name: {functionName}",
+                $"    Description: TODO - update {functionName} description",
+                $"    Memory: {functionMemory}",
+                $"    Timeout: {functionTimeout}",
             });
             File.WriteAllLines(moduleFile, moduleLines);
         }
