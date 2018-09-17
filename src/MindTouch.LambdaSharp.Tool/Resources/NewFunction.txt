@@ -9,15 +9,33 @@ using MindTouch.LambdaSharp;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class Function : ALambdaFunction<object, string> {
+    public class FunctionRequest {
+
+        //--- Properties ---
+
+        // TODO: add request fields
+
+    }
+
+    public class FunctionResponse {
+
+        //--- Properties ---
+
+        // TODO: add response fields
+
+    }
+
+    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(object request, ILambdaContext context) {
-            LogInfo("request received");
-            return "Ok";
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
+
+            // TODO: add business logic
+
+            return new FunctionResponse();
         }
     }
 }
