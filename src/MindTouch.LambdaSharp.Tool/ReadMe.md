@@ -56,6 +56,8 @@ lash deploy Module.yml
 <dd>(optional) Allow CloudFormation resource update operations that could lead to data loss</dd>
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
+<dt><code>--skip-assembly-validation</code></dt>
+<dd>(optional) Disable validating LambdaSharp assembly references in function project files</dd>
 <dt><code>-c|--configuration &lt;CONFIGURATION&gt;</code></dt>
 <dd>(optional) Build configuration for function projects (default: "Release")</dd>
 <dt><code>--profile|-P &lt;NAME&gt;</code></dt>

@@ -44,6 +44,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
+                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -78,7 +79,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             dryRun,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                             allowDataLossOption.HasValue(),
-                            protectStackOption.HasValue()
+                            protectStackOption.HasValue(),
+                            skipAssemblyValidationOption.HasValue()
                         )) {
                             break;
                         }
@@ -92,7 +94,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
             bool allowDataLoos,
-            bool protectStack
+            bool protectStack,
+            bool skipAssemblyValidation
         ) {
             var stopwatch = Stopwatch.StartNew();
 
@@ -141,7 +144,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // package all functions
             new ModelFunctionPackager(settings).Process(
                 module,
-                skipCompile: dryRun == DryRunLevel.CloudFormation
+                settings.ToolVersion,
+                skipCompile: dryRun == DryRunLevel.CloudFormation,
+                skipAssemblyValidation: skipAssemblyValidation
             );
 
             // package all files

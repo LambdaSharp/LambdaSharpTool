@@ -56,6 +56,20 @@ The location of the output directory can be overwritten with the `--output` opti
 lash deploy --output MyOutputFolder
 ```
 
+### Validate λ# References
+
+The λ# tool now checks the version of all λ# assembly references in the function project files. If an assembly version mismatch is found, an error is emitted and deployment operation is cancelled. This behavior can be suppressed with the `--skip-assembly-validation` option.
+
+```bash
+lash deploy --skip-assembly-validation
+```
+
+To validate assembly references without deploying, use the `--dryrun` option.
+
+```bash
+lash deploy --dryrun
+```
+
 ## New λ# Module Features
 
 ### Short-Form CloudFormation Intrinsic Functions

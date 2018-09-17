@@ -38,21 +38,32 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
+        //--- Class Methods ---
+        private static bool VersionMatch(string expected, string actual) {
+            if(!actual.StartsWith(expected, StringComparison.Ordinal)) {
+                return false;
+            }
+            var suffix = actual.Substring(expected.Length);
+            return (suffix == "")
+                || suffix.StartsWith(".", StringComparison.Ordinal)
+                || suffix.StartsWith("-", StringComparison.Ordinal);
+        }
+
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings) : base(settings) { }
 
-        public void Process(ModuleNode module, bool skipCompile) {
+        public void Process(ModuleNode module, Version version, bool skipCompile, bool skipAssemblyValidation) {
             var index = 0;
             foreach(var function in module.Functions.Where(f => f.PackagePath == null)) {
                 ++index;
                 AtLocation(function.Name ?? $"[{index}]", () => {
                     Validate(function.Name != null, "missing Name field");
-                    Process(module, function, skipCompile);
+                    Process(module, function, version, skipCompile, skipAssemblyValidation);
                 });
             }
         }
 
-        private void Process(ModuleNode module, FunctionNode function, bool skipCompile) {
+        private void Process(ModuleNode module, FunctionNode function, Version version, bool skipCompile, bool skipAssemblyValidation) {
 
             // compile function project
             string projectName = null;
@@ -119,7 +130,26 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
             }
 
-            // TODO (2018-08-23, bjorg): validate the project is using the most recent assembly references
+            // validate the project is using the most recent lambdasharp assembly references
+            if(!skipAssemblyValidation) {
+                var includes = csproj.Element("Project")
+                    ?.Elements("ItemGroup")
+                    .Elements("PackageReference")
+                    .Where(elem => elem.Attribute("Include")?.Value.StartsWith("MindTouch.LambdaSharp", StringComparison.Ordinal) ?? false);
+                if(includes != null) {
+                    var expectedVersion = $"{version.Major}.{version.Minor}";
+                    foreach(var include in includes) {
+                        var libraryVersion = include.Attribute("Version")?.Value ?? "missing";
+                        if(!VersionMatch(expectedVersion, libraryVersion)) {
+                            var library = include.Attribute("Include").Value;
+                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersion}')");
+                        }
+                    }
+                    if(Settings.HasErrors) {
+                        return;
+                    }
+                }
+            }
 
             if(skipCompile) {
                 function.PackagePath = $"{projectName}-NOCOMPILE.zip";
