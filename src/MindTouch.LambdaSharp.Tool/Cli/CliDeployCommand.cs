@@ -23,13 +23,10 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
-using MindTouch.LambdaSharp.Tool.Internal;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -159,6 +156,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // generate cloudformation template
             var stack = new ModelGenerator(settings).Generate(compiledModule);
+Console.WriteLine($"\n\nfinal stack state ***** {JsonConvert.SerializeObject(stack)}");
 
             // upload assets
             if(HasErrors) {
