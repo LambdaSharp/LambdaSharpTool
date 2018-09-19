@@ -2,9 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>MindTouch.LambdaSharp.CustomResource</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
 
     <PackageId>MindTouch.LambdaSharp.CustomResource</PackageId>
-    <VersionPrefix>0.3.0</VersionPrefix>
+    <VersionPrefix>0.4.0</VersionPrefix>
     <Title>MindTouch λ# Custom Resource</Title>
     <Description>A serverless framework for rapid application development of AWS CloudFormation custom resources</Description>
     <Company>MindTouch, Inc.</Company>

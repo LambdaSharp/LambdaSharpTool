@@ -89,7 +89,7 @@ lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.3.0.0) - List LambdaSharp modules
+MindTouch LambdaSharp Tool (v0.4) - List LambdaSharp modules
 
 MODULE                        STATUS             DATE
 LambdaSharp                   [CREATE_COMPLETE]  2018-08-19 22:48:45

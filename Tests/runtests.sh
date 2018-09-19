@@ -2,7 +2,7 @@ dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.
     --tier test \
     --aws-account-id 123456789012 \
     --aws-region us-east-1 \
-    --deployment-version 0.3 \
+    --deployment-version 0.4 \
     --deployment-bucket-name lambdsharp-bucket-name \
     --deployment-deadletter-queue-url https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue \
     --deployment-logging-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic \
@@ -19,7 +19,7 @@ lash() {
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --deployment-version 0.3 \
+        --deployment-version 0.4 \
         --deployment-bucket-name lambdsharp-bucket-name \
         --deployment-deadletter-queue-url https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue \
         --deployment-logging-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic \

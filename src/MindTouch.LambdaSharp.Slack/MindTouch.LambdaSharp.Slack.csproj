@@ -2,9 +2,10 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <RootNamespace>MindTouch.LambdaSharp.Slack</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
 
     <PackageId>MindTouch.LambdaSharp.Slack</PackageId>
-    <VersionPrefix>0.3.0</VersionPrefix>
+    <VersionPrefix>0.4.0</VersionPrefix>
     <Title>MindTouch λ# Slack</Title>
     <Description>A serverless framework for rapid application development of Slack integrations</Description>
     <Company>MindTouch, Inc.</Company>
