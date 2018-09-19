@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <RootNamespace>MindTouch.LambdaSharpS3Subscriber.ResourceHandler</RootNamespace>
+    <AWSProjectType>Lambda</AWSProjectType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.3.0"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp.CustomResource\MindTouch.LambdaSharp.CustomResource.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>
+  </ItemGroup>
+</Project>

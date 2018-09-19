@@ -27,7 +27,10 @@ namespace MindTouch.LambdaSharp.ConfigSource {
 
     public sealed class LambdaDictionarySource : ILambdaConfigSource {
 
-        private static string NormalizeKey(string key) => (key.Any() && key.All(char.IsLetterOrDigit)) ? key : throw new LambdaConfigIllegalKeyException(key);
+        private static string NormalizeKey(string key)
+            => (key.Any() && key.All(char.IsLetterOrDigit))
+                ? key
+                : throw new LambdaConfigIllegalKeyException(key);
 
         //--- Fields ---
         private readonly string _path;
@@ -38,11 +41,14 @@ namespace MindTouch.LambdaSharp.ConfigSource {
 
         public LambdaDictionarySource(string path, IDictionary<string, string> parameters) {
             _path = path ?? throw new ArgumentNullException(nameof(path));
-            _parameters = new Dictionary<string, string>(parameters ?? throw new ArgumentNullException(nameof(parameters)), StringComparer.InvariantCultureIgnoreCase);
+            _parameters = new Dictionary<string, string>(
+                parameters ?? throw new ArgumentNullException(nameof(parameters)),
+                StringComparer.InvariantCultureIgnoreCase
+            );
         }
 
         //--- Methods ---
-        public ILambdaConfigSource Open(string key) 
+        public ILambdaConfigSource Open(string key)
             => new LambdaDictionarySource(CombinePathWithKey(key), _parameters);
 
         public string Read(string key) {

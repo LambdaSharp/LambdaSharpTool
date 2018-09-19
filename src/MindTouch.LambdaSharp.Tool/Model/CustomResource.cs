@@ -37,6 +37,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             _properties = properties ?? throw new ArgumentNullException(nameof(properties));
         }
 
+        public CustomResource(string typeName) : this(typeName, new Dictionary<string, object>()) { }
+
         //--- Properties ---
         public override string AWSTypeName => _typeName;
 

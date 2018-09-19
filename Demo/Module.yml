@@ -5,7 +5,7 @@ Description: LambdaSharp Demo
 Parameters:
 
   - Name: MessageTable
-    Description: DynamoDb table for storing received messages
+    Description: DynamoDB table for storing received messages
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: ReadWrite
@@ -34,10 +34,8 @@ Parameters:
       Properties:
         UsagePlanName: DemoUsagePlan
         ApiStages:
-          - ApiId:
-              Ref: ModuleRestApi
-            Stage:
-              Ref: ModuleRestApiStage
+          - ApiId: !Ref ModuleRestApi
+            Stage: !Ref ModuleRestApiStage
         Description: Sample usage plan for REST API
         Quota:
           Limit: 500

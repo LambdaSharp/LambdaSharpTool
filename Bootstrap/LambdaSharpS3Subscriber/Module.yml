@@ -1,0 +1,34 @@
+Name: LambdaSharpS3Subscriber
+
+Version: 0.3
+
+Description: LambdaSharp S3 Lambda Function Subscriber
+
+Parameters:
+
+  - Name: S3BucketPermissions
+    Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
+    Values:
+      - "arn:aws:s3:::{{tier}}-*"
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow:
+        - "s3:GetBucketNotification"
+        - "s3:PutBucketNotification"
+
+  - Name: CustomResourceTopic
+    Description: Custom resource topic for subscribing Lambda functions to S3 buckets
+    Export: /{{Tier}}/LambdaSharp/S3SubscriberCustomResourceTopic
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
+Functions:
+
+  - Name: ResourceHandler
+    Description: LambdaSharp S3 Subscription handler
+    Memory: 128
+    Timeout: 30
+    ReservedConcurrency: 1
+    Sources:
+      - Topic: CustomResourceTopic

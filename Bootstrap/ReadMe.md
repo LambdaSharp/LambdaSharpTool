@@ -35,7 +35,7 @@ lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.2)
+MindTouch LambdaSharp Tool (v0.3)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
@@ -65,16 +65,18 @@ __Using Powershell:__
 ```powershell
 lash deploy `
     --tier Demo `
-    $LAMBDASHARP\Bootstrap\LambdaSharp\Deploy.yml `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader\Deploy.yml
+    $LAMBDASHARP\Bootstrap\LambdaSharp\Module.yml `
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader\Module.yml `
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber\Module.yml
 ```
 
 __Using Bash:__
 ```bash
 lash deploy \
     --tier Demo \
-    $LAMBDASHARP/Bootstrap/LambdaSharp/Deploy.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Deploy.yml
+    $LAMBDASHARP/Bootstrap/LambdaSharp/Module.yml \
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Module.yml \
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Module.yml
 ```
 
 ## Validate λ# Environment
@@ -87,29 +89,30 @@ lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.2) - List LambdaSharp modules
+MindTouch LambdaSharp Tool (v0.3.0.0) - List LambdaSharp modules
 
 MODULE                        STATUS             DATE
-LambdaSharp                   [CREATE_COMPLETE]  2018-08-13 09:47:32
-LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-13 09:48:16
+LambdaSharp                   [CREATE_COMPLETE]  2018-08-19 22:48:45
+LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-22 01:06:02
+LambdaSharpS3Subscriber       [CREATE_COMPLETE]  2018-09-03 15:46:36
 
-Found 2 modules for deployment tier 'Demo'
+Found 3 modules for deployment tier 'Demo'
 ```
-## Use `LAMBDASHARPTIER` Environment Variable
+## Use `LAMBDASHARP_TIER` Environment Variable
 
-You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARPTIER` environment variable instead.
+You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARP_TIER` environment variable instead.
 
 __Using PowerShell:__
 ```powershell
-New-Variable -Name LAMBDASHARPTIER -Value Demo
+New-Variable -Name LAMBDASHARP_TIER -Value Demo
 ```
 
 __Using Bash:__
 ```bash
-export LAMBDASHARPTIER=Demo
+export LAMBDASHARP_TIER=Demo
 ```
 
-Once `LAMBDASHARPTIER` is defined, the following command will produce the same result.
+Once `LAMBDASHARP_TIER` is defined, the following command will produce the same result.
 ```bash
 lash list
 ```

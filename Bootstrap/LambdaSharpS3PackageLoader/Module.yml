@@ -1,6 +1,6 @@
 Name: LambdaSharpS3PackageLoader
 
-Version: 0.2.1
+Version: 0.3
 
 Description: LambdaSharp S3 Package Loader
 
@@ -31,6 +31,7 @@ Parameters:
 Functions:
 
   - Name: ResourceHandler
+    Description: LambdaSharp S3 Package Loader handler
     Memory: 128
     Timeout: 300
     Sources:

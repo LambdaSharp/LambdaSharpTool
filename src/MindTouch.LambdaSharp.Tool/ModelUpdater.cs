@@ -34,10 +34,10 @@ using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 
-namespace MindTouch.LambdaSharp.Tool.Internal {
+namespace MindTouch.LambdaSharp.Tool {
     using Stack = Amazon.CloudFormation.Model.Stack;
 
-    public class StackUpdater {
+    public class ModelUpdater : AModelProcessor {
 
         //--- Class Fields ---
         private static HashSet<string> _finalStates = new HashSet<string> {
@@ -59,43 +59,25 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             => (evt.ResourceType == "AWS::CloudFormation::Stack")
                 && ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"));
 
+        //--- Constructors ---
+        public ModelUpdater(Settings settings) : base(settings) { }
+
         //--- Methods ---
-        public async Task<bool> Deploy(Module module, string template, bool allowDataLoss, bool protectStack) {
-            var stackName = $"{module.Settings.Tier}-{module.Name}";
+        public async Task<bool> Deploy(Module module, string templateFile, bool allowDataLoss, bool protectStack) {
+            var stackName = $"{Settings.Tier}-{module.Name}";
             Console.WriteLine($"Deploying stack: {stackName}");
-
-            // upload function packages
-            var transferUtility = new TransferUtility(module.Settings.S3Client);
-            foreach(var function in module.Functions) {
-                await UploadPackage(
-                    module.Settings.DeploymentBucketName,
-                    function.PackageS3Key,
-                    function.Package,
-                    "Lambda function"
-                );
-            }
-
-            // upload data packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
-            foreach(var package in module.Parameters.OfType<PackageParameter>()) {
-                await UploadPackage(
-                    module.Settings.DeploymentBucketName,
-                    package.PackageS3Key,
-                    package.Package,
-                    "package"
-                );
-            }
 
             // check if cloudformation stack already exists
             string mostRecentStackEventId = null;
             try {
-                var response = await module.Settings.CfClient.DescribeStackEventsAsync(new DescribeStackEventsRequest {
+                var response = await Settings.CfClient.DescribeStackEventsAsync(new DescribeStackEventsRequest {
                     StackName = stackName
                 });
                 var mostRecentStackEvent = response.StackEvents.First();
 
                 // make sure the stack is not already in an update operation
                 if(!IsFinalStackEvent(mostRecentStackEvent)) {
-                    module.Settings.AddError("stack appears to be undergoing an update operation");
+                    Settings.AddError("stack appears to be undergoing an update operation");
                     return false;
                 }
                 mostRecentStackEventId = mostRecentStackEvent.EventId;
@@ -103,26 +85,19 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
-            if(module.Settings.NotificationTopicArn != null) {
-                notificationArns.Add(module.Settings.NotificationTopicArn);
+            if(Settings.NotificationTopicArn != null) {
+                notificationArns.Add(Settings.NotificationTopicArn);
             }
 
             // upload cloudformation template
             string templateUrl = null;
-            if(module.Settings.DeploymentBucketName != null) {
-                var templateFile = Path.GetTempFileName();
-                var templateSuffix = module.Settings.GitSha ?? ("UTC" + DateTime.UtcNow.ToString("yyyyMMddhhmmss"));
+            if(Settings.DeploymentBucketName != null) {
+                var templateSuffix = Settings.GitSha ?? ("UTC" + DateTime.UtcNow.ToString("yyyyMMddhhmmss"));
                 var templateS3Key = $"{module.Name}/cloudformation-{templateSuffix}.json";
-                templateUrl = $"https://s3.amazonaws.com/{module.Settings.DeploymentBucketName}/{templateS3Key}";
-                try {
-                    Console.WriteLine($"=> Uploading CloudFormation template: s3://{module.Settings.DeploymentBucketName}/{templateS3Key}");
-                    File.WriteAllText(templateFile, template);
-                    await transferUtility.UploadAsync(templateFile, module.Settings.DeploymentBucketName, templateS3Key);
-                } finally {
-                    try {
-                        File.Delete(templateFile);
-                    } catch { }
-                }
+                templateUrl = $"https://s3.amazonaws.com/{Settings.DeploymentBucketName}/{templateS3Key}";
+                Console.WriteLine($"=> Uploading CloudFormation template: s3://{Settings.DeploymentBucketName}/{templateS3Key}");
+                var transferUtility = new TransferUtility(Settings.S3Client);
+                await transferUtility.UploadAsync(templateFile, Settings.DeploymentBucketName, templateS3Key);
             }
 
             // default stack policy denies all updates
@@ -186,9 +161,9 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                         StackPolicyBody = stackPolicyBody,
                         StackPolicyDuringUpdateBody = allowDataLoss ? stackDuringUpdatePolicyBody : null,
                         TemplateURL = templateUrl,
-                        TemplateBody = (templateUrl == null) ? template : null
+                        TemplateBody = (templateUrl == null) ? File.ReadAllText(templateFile) : null
                     };
-                    var response = await module.Settings.CfClient.UpdateStackAsync(request);
+                    var response = await Settings.CfClient.UpdateStackAsync(request);
                     var outcome = await TrackStackUpdate(module, response.StackId, mostRecentStackEventId);
                     if(outcome.Success) {
                         Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
@@ -215,9 +190,9 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                     StackPolicyBody = stackPolicyBody,
                     EnableTerminationProtection = protectStack,
                     TemplateURL = templateUrl,
-                    TemplateBody = (templateUrl == null) ? template : null
+                    TemplateBody = (templateUrl == null) ? File.ReadAllText(templateFile) : null
                 };
-                var response = await module.Settings.CfClient.CreateStackAsync(request);
+                var response = await Settings.CfClient.CreateStackAsync(request);
                 var outcome = await TrackStackUpdate(module, response.StackId, mostRecentStackEventId);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
@@ -239,30 +214,6 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                     }
                 }
             }
-
-            async Task UploadPackage(string bucket, string key, string package, string description) {
-
-                // check if a matching package file already exists in the bucket
-                var found = false;
-                try {
-                    await module.Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                        BucketName = bucket,
-                        Key = key
-                    });
-                    found = true;
-                } catch { }
-
-                // only upload files that don't exist
-                if(!found) {
-                    Console.WriteLine($"=> Uploading {description}: s3://{bucket}/{key} ");
-                    await transferUtility.UploadAsync(package, bucket, key);
-                }
-
-                // always delete the source zip file when there is no failure
-                try {
-                    File.Delete(package);
-                } catch { }
-            }
         }
 
         private async Task<(Stack Stack, bool Success)> TrackStackUpdate(Module module, string stackId, string mostRecentStackEventId) {
@@ -280,7 +231,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
                 // fetch as many events as possible for the current stack
                 var events = new List<StackEvent>();
-                var response = await module.Settings.CfClient.DescribeStackEventsAsync(request);
+                var response = await Settings.CfClient.DescribeStackEventsAsync(request);
                 events.AddRange(response.StackEvents);
                 events.Reverse();
 
@@ -294,7 +245,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                     events.RemoveAt(0);
                 }
                 if(!foundMostRecentStackEvent) {
-                    module.Settings.AddError("unable to find starting event");
+                    Settings.AddError("unable to find starting event");
                     return (Stack: null, Success: false);
                 }
 
@@ -317,7 +268,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
             }
 
             // describe stack and report any output values
-            var description = await module.Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+            var description = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
                 StackName = stackId
             });
             return (Stack: description.Stacks.FirstOrDefault(), Success: success);

@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -141,14 +142,8 @@ namespace MindTouch.LambdaSharp {
             var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
             LogInfo($"GITSHA = {gitsha ?? "NONE"}");
 
-            // read module parameter values from parameters file
-            var parameters = await ParseParameters("/", File.ReadAllText("parameters.json"));
-
-            // create config where environment variables take precedence over those found in the parameter file
-            _appConfig = new LambdaConfig(new LambdaMultiSource(new[] {
-                envSource,
-                new LambdaDictionarySource("", parameters)
-            }));
+            // convert environment variables to lambda parameters
+            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
             // initialize rollbar
             var rollbarAccessToken = _appConfig.ReadText("RollbarToken", defaultValue: null);
@@ -169,43 +164,6 @@ namespace MindTouch.LambdaSharp {
             ));
             _rollbarEnabled = (rollbarAccessToken != null);
             LogInfo($"ROLLBAR = {(_rollbarEnabled ? "ENABLED" : "DISABLED")}");
-
-            // local functions
-            async Task<Dictionary<string, string>> ParseParameters(string parameterPrefix, string json) {
-                var functionParameters = JsonConvert.DeserializeObject<Dictionary<string, LambdaFunctionParameter>>(json);
-                var flatten = new Dictionary<string, string>();
-                await Flatten(functionParameters, parameterPrefix, "STACK_", flatten);
-                return flatten;
-
-                // local functions
-                async Task Flatten(Dictionary<string, LambdaFunctionParameter> source, string prefix, string envPrefix, Dictionary<string, string> target) {
-                    foreach(var kv in source) {
-                        var value = kv.Value.Value;
-                        switch(kv.Value.Type) {
-                        case LambdaFunctionParameterType.Collection:
-                            await Flatten((Dictionary<string, LambdaFunctionParameter>)value, prefix + kv.Key + "/", envPrefix + kv.Key.ToUpperInvariant() + "_", target);
-                            break;
-                        case LambdaFunctionParameterType.Secret: {
-                                var secret = (string)value;
-                                var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
-                                    CiphertextBlob = new MemoryStream(Convert.FromBase64String(secret)),
-                                    EncryptionContext = kv.Value.EncryptionContext
-                                })).Plaintext;
-                                target.Add(prefix + kv.Key, Encoding.UTF8.GetString(plaintextStream.ToArray()));
-                                break;
-                            }
-                        case LambdaFunctionParameterType.Stack:
-                            target.Add(prefix + kv.Key, envSource.Read(envPrefix + kv.Key.ToUpperInvariant()));
-                            break;
-                        case LambdaFunctionParameterType.Text:
-                            target.Add(prefix + kv.Key, (string)value);
-                            break;
-                        default:
-                            throw new NotSupportedException($"unsupported parameter type: '{kv.Value.Type.ToString()}'");
-                        }
-                    }
-                }
-            }
         }
 
         protected virtual async Task RecordFailedMessageAsync(LambdaLogLevel level, string body, Exception exception) {
@@ -215,6 +173,49 @@ namespace MindTouch.LambdaSharp {
                 LogWarn("dead letter queue not configured");
                 throw new LambdaFunctionException("dead letter queue not configured", exception);
             }
+        }
+
+        private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
+            var parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            foreach(DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
+                var key = envVar.Key as string;
+                var value = envVar.Value as string;
+                if((key == null) || (value == null)) {
+                    continue;
+                }
+                if(key.StartsWith("STR_", StringComparison.Ordinal)) {
+
+                    // plain string value
+                    parameters.Add(EnvToVarKey(key), value);
+                } else if(key.StartsWith("SEC_", StringComparison.Ordinal)) {
+
+                    // secret with optional encryption context pairs
+                    var parts = value.Split('|');
+                    Dictionary<string, string> encryptionContext = null;
+                    if(parts.Length > 1) {
+                        encryptionContext = new Dictionary<string, string>();
+                        for(var i = 1; i < parts.Length; ++i) {
+                            var pair = parts[i].Split('=', 2);
+                            if(pair.Length != 2) {
+                                continue;
+                            }
+                            encryptionContext.Add(
+                                Uri.UnescapeDataString(pair[0]),
+                                Uri.UnescapeDataString(pair[1])
+                            );
+                        }
+                    }
+                    var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
+                        CiphertextBlob = new MemoryStream(Convert.FromBase64String(value)),
+                        EncryptionContext = encryptionContext
+                    })).Plaintext;
+                    parameters.Add(EnvToVarKey(key), Encoding.UTF8.GetString(plaintextStream.ToArray()));
+                }
+            }
+            return parameters;
+
+            // local functions
+            string EnvToVarKey(string key) => "/" + key.Substring(4).Replace('_', '/');
         }
 
         #region *** Logging ***

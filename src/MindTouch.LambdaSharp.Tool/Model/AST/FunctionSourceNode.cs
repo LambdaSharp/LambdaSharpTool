@@ -31,6 +31,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // API Gateway Source
         public string Api { get; set; }
         public string Integration { get; set; }
+        public string OperationName { get; set; }
+        public bool? ApiKeyRequired { get; set; }
 
         // CloudWatch Schedule Event Source
         public string Schedule { get; set; }
@@ -54,5 +56,18 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         // Alexa Source
         public string Alexa { get; set; }
+
+        // DynamoDB Source
+        public string DynamoDB { get; set; }
+        // int? BatchSize { get; set; }
+        public string StartingPosition { get; set; }
+
+        // Kinesis Source
+        public string Kinesis { get; set; }
+        // int? BatchSize { get; set; }
+        // string StartingPosition { get; set; }
+
+        // Macro Source
+        public string Macro { get; set; }
    }
 }

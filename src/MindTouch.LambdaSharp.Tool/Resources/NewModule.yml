@@ -1,0 +1,18 @@
+# The Module Name is used as prefix for all contained resources.
+Name: %%MODULENAME%%
+
+# The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
+Version: 1.0
+
+# The Module Description is shown in the AWS CloudFormation console with the version number.
+Description: Module description
+
+# The Parameters section defines values and resources to be shared across all Lambda functions.
+Parameters:
+
+  - Name: MyParameter
+    Description: Parameter description
+    Value: A sample parameter value for the module
+
+# The Functions section lists functions to compile, package, and deploy.
+Functions:

@@ -1,0 +1,44 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: MyResource
+    Description: A CloudFormation dummy resource
+    Resource:
+      Type: Custom::Something
+      Properties:
+        ServiceToken: arn:something
+        UseBase64: !Base64 "hello world"
+        UseGetAtt: !GetAtt OtherResource.Arn
+        UseGetAZz: !GetAZs "us-west-1"
+        UseImportValue: !ImportValue "OtherStack-ExportedParameterName"
+        UseRef: !Ref OtherResource
+
+        UseJoin: !Join [ ":", [ !Ref OtherResource, !GetAtt OtherResource.Arn ]]
+        UseCidr: !Cidr [ "192.168.0.0/24", 6, 5 ]
+        UseFindInMap: !FindInMap [ RegionMap, !Ref "AWS::Region", HVM64 ]
+        UseSelect: !Select [ "1", [ "apples", "grapes", "oranges", "mangoes" ] ]
+        UseSplit: !Split [ "|" , "a|b|c" ]
+        UseSub1: !Sub
+          - www.${Domain}
+          - Domain: !Ref RootDomainName
+        UseSub2: !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}'
+        UseTransform1: !Transform { Name: MacroName1, Parameters: { Param1: Value1 } }
+        UseTransform2: !Transform
+          Name: MacroName2
+          Parameters:
+            Param1: Value2
+
+  - Name: OtherResource
+    Description: A CloudFormation dummy resource to reference
+    Resource:
+      Type: AWS::SNS::Topic
+
+Functions:
+
+  - Name: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30

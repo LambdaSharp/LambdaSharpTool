@@ -1,6 +1,8 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool & Framework (Beta)
+# LambdaSharp Tool & Framework (v0.3)
+
+**[Read what's new in the latest release.](Docs/ReleaseNotes-Cebes.md)**
 
 The objective of λ# is to accelerate the innovation velocity of serverless solutions. Developers should be able to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
@@ -11,67 +13,78 @@ When creating a λ# module, you only need to worry about three files:
 * The .NET Core project file
 * The λ# module file
 
-__Example__
+## Getting Started
 
-The following AWS Lambda function listens to a [Slack](https://slack.com) command request and responds with a simple message. `ASlackCommandFunction` is one of several base classes that can be used to create lambda functions easily and quickly.
+**[Before getting started, you must setup your λ# Environment.](Bootstrap/)**
+
+Once setup, creating modules with Lambda functions and deploying them only requires a few steps.
+
+```bash
+# Create a new λ# module
+lash new module MySampleModule
+
+# Add a function to the λ# module
+lash new function MyFunction
+
+# Deploy the λ# module
+lash deploy
+```
+
+The λ# tool uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the parameters, resources, and functions.
+
+```yaml
+Name: MySampleModule
+
+Version: 1.0
+
+Functions:
+
+ - Name: MyFunction
+   Memory: 128
+   Timeout: 30
+```
+
+The C# project contains the Lambda handler.
 
 ```csharp
-namespace GettingStarted.SlackCommand {
+namespace MySampleModule.MyFunction {
 
-    public class Function : ALambdaSlackCommandFunction {
+    public class FunctionRequest {
+
+        // TODO: add request fields
+    }
+
+    public class FunctionResponse {
+
+        // TODO: add response fields
+    }
+
+    public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        protected async override Task HandleSlackRequestAsync(SlackRequest request)
-            => Console.WriteLine("Hello world!");
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
+
+            // TODO: add business logic
+
+            return new FunctionResponse();
+        }
     }
 }
 ```
 
-The λ# deployment tool uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the parameters, resources, and functions.
-
-```yaml
-Name: GettingStarted
-
-Description: Sample module that shows a Slack integration
-
-Functions:
-  - Name: SlackCommand
-    Description: Respond to slack commands
-    Memory: 128
-    Timeout: 30
-    Sources:
-      - SlackCommand: /slack
-```
-
-# Learn More
+## Learn More
 
 1. [Setup λ# Environment **(required)**](Bootstrap/)
 1. [λ# Samples](Samples/)
 1. [Module File Reference](Docs/ModuleFile.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [λ# Tool Reference](src/MindTouch.LambdaSharp.Tool/)
+1. [Release Notes](Docs/ReadMe.md)
 
-# Releases
-
-Releases are named after Greek philosophers.
-
-## Brontinus (v0.2) - 2018-08-13
-
-* Revised λ# nomenclature, which introduced breaking changes for the module files
-* Added support for Alexa Skill invocation sources
-* Added custom resource handler for deploying file packages to S3 buckets
-* Added command for listing deployed λ# modules
-* Added default warning/error logging SNS topic for all Lambda functions
-* Streamlined the λ# Environment setup procedure
-
-## Acrion (v0.1) - 2018-07-17
-
-Initial release of λ#.
-
-# License
+## License
 
 > Copyright (c) 2018 MindTouch
 >

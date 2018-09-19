@@ -4,7 +4,7 @@
     <RootNamespace>MindTouch.LambdaSharp.CustomResource</RootNamespace>
 
     <PackageId>MindTouch.LambdaSharp.CustomResource</PackageId>
-    <Version>0.2.0</Version>
+    <VersionPrefix>0.3.0</VersionPrefix>
     <Title>MindTouch λ# Custom Resource</Title>
     <Description>A serverless framework for rapid application development of AWS CloudFormation custom resources</Description>
     <Company>MindTouch, Inc.</Company>
@@ -16,21 +16,11 @@
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;MindTouch;Serverless</PackageTags>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-      <DebugSymbols>false</DebugSymbols>
-      <Optimize>true</Optimize>
-      <OutputPath>.\bin\Release\</OutputPath>
-      <DefineConstants>RELEASE;TRACE</DefineConstants>
-  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.18.3"/>
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
   </ItemGroup>
-  <ItemGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-    <PackageReference Include="MindTouch.LambdaSharp" Version="0.2.0"/>
-  </ItemGroup>
-  <ItemGroup Condition=" '$(Configuration)'!='NugetPublish' ">
-    <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj" />
+  <ItemGroup>
+    <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
   </ItemGroup>
 </Project>

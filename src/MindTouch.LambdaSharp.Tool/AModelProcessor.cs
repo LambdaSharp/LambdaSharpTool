@@ -28,6 +28,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public abstract class AModelProcessor {
 
+        //--- Constants ---
+        protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
+
         //--- Fields ---
         private readonly Settings _settings;
         private Stack<string> _locations = new Stack<string>();
@@ -64,7 +67,13 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
+        protected void Validate(bool condition, string message) {
+            if(!condition) {
+                AddError(message);
+            }
+        }
+
         protected void AddError(string message, Exception exception = null)
-            => _settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleFileName}]", exception);
+            => _settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleSource}]", exception);
     }
 }
