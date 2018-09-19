@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp S3 Function
+# LambdaSharp S3 Bucket Notifications Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
@@ -32,6 +32,7 @@ Parameters:
 Functions:
 
   - Name: MyFunction
+    Description: This function is invoked by an S3 Bucket event
     Memory: 128
     Timeout: 30
     Sources:
@@ -78,9 +79,3 @@ public class Function : ALambdaFunction<S3Event> {
     }
 }
 ```
-
-## Reference
-
-The λ# tool can only subscribe Lambda functions to S3 buckets that are defined in the same module file. This is due to a limitation in how S3 buckets register event listeners. This is an known issue and AWS may solve it sometime in the future.
-
-In addition, the λ# tool has to create a stable, but random-looking bucket name suffix to avoid circular dependencies in the initialization of the S3 bucket and the Lambda function. To ensure uniqueness of the suffix across accounts and modules, the suffix is computed from a hash using the AWS account Id, the AWS region, and the desired bucket name.

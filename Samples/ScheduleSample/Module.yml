@@ -4,7 +4,7 @@ Description: A sample module using schedule events
 
 Functions:
   - Name: MyFunction
-    Description: This function is invoked by slack commands
+    Description: This function is invoked by a scheduled event
     Memory: 128
     Timeout: 30
     Sources:

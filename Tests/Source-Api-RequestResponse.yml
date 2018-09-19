@@ -5,6 +5,7 @@ Description: LambdaSharp CloudFormation Test
 Functions:
 
   - Name: Function
+    Description: My function
     Memory: 128
     Timeout: 30
     Sources:
@@ -12,5 +13,8 @@ Functions:
       - Api: GET /items/{id}
       - Api: POST /items
       - Api: PUT /items/{id}
+        OperationName: UpdateItem
       - Api: DELETE /items/{id}
         Integration: RequestResponse
+        ApiKeyRequired: true
+

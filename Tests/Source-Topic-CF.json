@@ -1,6 +1,13 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
+  "Parameters": {
+    "Version": {
+      "Type": "String",
+      "Description": "LambdaSharp module version",
+      "Default": "1.0"
+    }
+  },
   "Resources": {
     "Topic": {
       "Type": "AWS::SNS::Topic",
@@ -31,6 +38,7 @@
         "AssumeRolePolicyDocument": {
           "Statement": [
             {
+              "Sid": "LambdaInvocation",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -44,6 +52,7 @@
             "PolicyDocument": {
               "Statement": [
                 {
+                  "Sid": "LambdaLoggingWrite",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -52,6 +61,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "LambdaLoggingCreate",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogGroup"
@@ -59,6 +69,7 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "Topic",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Subscribe"
@@ -68,6 +79,7 @@
                   }
                 },
                 {
+                  "Sid": "LambdaDeadLetterQueueLogging",
                   "Effect": "Allow",
                   "Action": [
                     "sqs:SendMessage"
@@ -75,6 +87,7 @@
                   "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
                 },
                 {
+                  "Sid": "LambdaSnsLogging",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Publish"
@@ -98,6 +111,7 @@
         "DeadLetterConfig": {
           "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
         },
+        "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
             "TIER": "Test",
@@ -105,10 +119,11 @@
             "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
             "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
             "LAMBDARUNTIME": "dotnetcore2.1",
-            "STACK_TOPIC": {
+            "STR_TOPIC": {
               "Ref": "Topic"
             },
-            "STACK_ROLLBARTOKEN": {
+            "STR_VERSION": "1.0",
+            "STR_ROLLBARTOKEN": {
               "Fn::GetAtt": [
                 "RollbarToken",
                 "Result"

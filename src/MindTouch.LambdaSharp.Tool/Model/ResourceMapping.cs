@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public ResourceMapping() {
 
             // read short-hand for IAM mappings from embedded resource
-            var assembly = typeof(ModelParser).GetTypeInfo().Assembly;
+            var assembly = typeof(ResourceMapping).Assembly;
             using(var resource = assembly.GetManifestResourceStream("MindTouch.LambdaSharp.Tool.Resources.IAM-Mappings.yml"))
             using(var reader = new StreamReader(resource, Encoding.UTF8)) {
                 var deserializer = new DeserializerBuilder()
@@ -75,6 +75,17 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(properties == null) {
                 resourceTemplate = (Humidifier.Resource)Activator.CreateInstance(type);
             } else {
+                if(properties is IDictionary<string, object> dictionary) {
+
+                    // NOTE (2018-09-05, bjorg): Humidifier appends a '_' to property names
+                    //  that conflict with the typename. This mimics the behavior by doing the
+                    // thing before we attempt to deserialize into the target type.
+                    var typeName = type.Name;
+                    if(dictionary.TryGetValue(typeName, out object value)) {
+                        dictionary.Remove(typeName);
+                        dictionary[typeName + "_"] = value;
+                    }
+                }
                 resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties), type);
             }
 
@@ -102,16 +113,26 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::StepFunctions::Activity":
             case "AWS::StepFunctions::StateMachine":
 
-                // these AWS resources return their ARN using `Fn::Ref()`
+                // these AWS resources return their ARN using `!Ref`
                 resourceArnFn = Fn.Ref(logicalId);
                 resourceParamFn = Fn.Ref(logicalId);
                 break;
             case "AWS::S3::Bucket":
 
-                // most AWS resources expose an `Arn` attribute that we need to use
+                // S3 Bucket resources must be granted permissions on the bucket AND the keys
                 resourceArnFn = new object[] {
                     Fn.GetAtt(logicalId, "Arn"),
                     Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/*")
+                };
+                resourceParamFn = Fn.Ref(logicalId);
+                break;
+            case "AWS::DynamoDB::Table":
+
+                // DynamoDB resources must be granted permissions on the table AND the stream
+                resourceArnFn = new object[] {
+                    Fn.GetAtt(logicalId, "Arn"),
+                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "stream", "*"),
+                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "index", "*")
                 };
                 resourceParamFn = Fn.Ref(logicalId);
                 break;

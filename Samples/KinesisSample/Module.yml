@@ -1,0 +1,23 @@
+Name: KinesisSample
+
+Description: A sample module using Kinesis streams
+
+Parameters:
+
+  - Name: Stream
+    Description: Description for Kinesis stream
+    Resource:
+      Type: AWS::Kinesis::Stream
+      Allow: Subscribe
+      Properties:
+        ShardCount: 1
+
+Functions:
+
+  - Name: MyFunction
+    Description: This function is invoked by a Kinesis stream
+    Memory: 128
+    Timeout: 15
+    Sources:
+      - Kinesis: Stream
+        BatchSize: 15

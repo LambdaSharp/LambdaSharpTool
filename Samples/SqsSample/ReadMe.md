@@ -34,6 +34,7 @@ Parameters:
 Functions:
 
   - Name: MyFunction
+    Description: This function is invoked by a SQS queue
     Memory: 128
     Timeout: 15
     Sources:

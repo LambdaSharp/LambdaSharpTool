@@ -51,13 +51,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Method { get; set; }
         public string[] Path { get; set; }
         public ApiGatewaySourceIntegration Integration { get; set; }
+        public string OperationName { get; set; }
+        public bool? ApiKeyRequired { get; set; }
     }
 
     public class S3Source : AFunctionSource {
 
        //--- Properties ---
         public string Bucket { get; set; }
-        public string BucketArn { get; set; }
         public IList<string> Events { get; set; }
         public string Prefix { get; set; }
         public string Suffix { get; set; }
@@ -74,5 +75,27 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string EventSourceToken { get; set; }
+    }
+
+    public class DynamoDBSource : AFunctionSource {
+
+       //--- Properties ---
+        public string DynamoDB { get; set; }
+        public int BatchSize { get; set; }
+        public string StartingPosition { get; set; }
+    }
+
+    public class KinesisSource : AFunctionSource {
+
+       //--- Properties ---
+        public string Kinesis { get; set; }
+        public int BatchSize { get; set; }
+        public string StartingPosition { get; set; }
+    }
+
+    public class MacroSource : AFunctionSource {
+
+        //--- Properties ---
+        public string MacroName { get; set; }
     }
 }

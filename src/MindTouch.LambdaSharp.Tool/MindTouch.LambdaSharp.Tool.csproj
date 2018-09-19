@@ -4,31 +4,24 @@
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <PackageVersion>0.2.1.3</PackageVersion>
     <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
-    <Version>0.2.1.3</Version>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)'=='NugetPublish' ">
-      <DebugSymbols>false</DebugSymbols>
-      <Optimize>true</Optimize>
-      <OutputPath>.\bin\Release\</OutputPath>
-      <DefineConstants>RELEASE;TRACE</DefineConstants>
+    <VersionPrefix>0.3</VersionPrefix>
+    <VersionSuffix></VersionSuffix>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\MindTouch.LambdaSharp\LambdaFunctionParameter.cs" Link="LambdaFunctionParameter.cs"/>
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.1"/>
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.5.6"/>
-    <PackageReference Include="AWSSDK.S3" Version="3.3.18.3"/>
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.4.4"/>
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.21"/>
-    <PackageReference Include="Humidifier" Version="0.2.7"/>
-    <PackageReference Include="Humidifier.Json" Version="0.2.7"/>
-    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.4"/>
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.11"/>
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.6.6"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.4.14"/>
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.30.2"/>
+    <PackageReference Include="Humidifier" Version="0.2.13"/>
+    <PackageReference Include="Humidifier.Json" Version="0.2.13"/>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.5"/>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
-    <PackageReference Include="YamlDotNet" Version="4.3.1"/>
+    <PackageReference Include="YamlDotNet" Version="5.0.1"/>
     <PackageReference Include="System.ValueTuple" Version="4.5.0"/>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Resources\IAM-Mappings.yml"/>
+    <EmbeddedResource Include="Resources\*"/>
   </ItemGroup>
 </Project>

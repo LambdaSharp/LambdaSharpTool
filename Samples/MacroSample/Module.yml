@@ -1,0 +1,13 @@
+Name: MacroSample
+
+Description: A sample module defining CloudFormation macros
+
+Functions:
+
+  - Name: MyFunction
+    Description: This function is invoked by a CloudFormation macros
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Macro: StringToUpper
+      - Macro: StringToLower

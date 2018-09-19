@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -45,7 +46,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Class Properties ---
         protected static int ErrorCount => _errors.Count;
-        protected static Version FullVersion => typeof(Program).Assembly.GetName().Version;
+        protected static bool HasErrors => ErrorCount > 0;
+        protected static Version FullVersion => typeof(CliBase).Assembly.GetName().Version;
+        protected static string VersionPrefixAndSuffix => typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         protected static Version Version => _version;
 
         //--- Class Methods ---

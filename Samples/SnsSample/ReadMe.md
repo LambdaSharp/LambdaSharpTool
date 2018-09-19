@@ -47,7 +47,7 @@ public class MyMessage {
 public class Function : ALambdaEventFunction<MyMessage> {
 
     //--- Methods ---
-    public override Task InitializeAsync(LambdaConfig config) 
+    public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
     public override Task ProcessMessageAsync(MyMessage message, ILambdaContext context) {
@@ -68,8 +68,7 @@ FunctionTopicSnsPermission:
   Type: AWS::Lambda::Permission
   Properties:
     Action: lambda:InvokeFunction
-    FunctionName:
-      Fn::GetAtt: !GetAtt Function.Arn
+    FunctionName: !GetAtt Function.Arn
     Principal: sns.amazonaws.com
     SourceArn: !Ref Topic
 ```

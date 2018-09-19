@@ -23,7 +23,7 @@
 using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
-    
+
     public abstract class AParameter {
 
         //--- Properties ---
@@ -31,19 +31,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
         public string Export { get; set; }
         public string FullName { get; set; }
+        public IList<AParameter> Parameters { get; set; }
     }
 
     public class SecretParameter : AParameter {
 
         //--- Properties ---
         public object Secret { get; set; }
-        public Dictionary<string, string> EncryptionContext { get; set; }
-    }
-
-    public class CollectionParameter : AParameter {
-
-        //--- Properties ---
-        public IList<AParameter> Parameters { get; set; }
+        public IDictionary<string, string> EncryptionContext { get; set; }
     }
 
     public class StringParameter : AParameter {
@@ -52,13 +47,24 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Value { get; set; }
     }
 
+    public class StringListParameter : AParameter {
+
+        //--- Properties ---
+        public IList<string> Values { get; set; }
+    }
+
     public class PackageParameter : AParameter {
 
         //--- Properties ---
-        public string Package { get; set; }
-        public string Bucket { get; set; }
-        public string PackageS3Key { get; set; }
-        public string Prefix { get; set; }
+        public string DestinationBucketParameterName { get; set; }
+        public string DestinationKeyPrefix { get; set; }
+        public string PackagePath { get; set; }
+    }
+
+    public class ExpressionParameter : AParameter {
+
+        //--- Properties ---
+        public object Expression { get; set; }
     }
 
     public abstract class AResourceParameter : AParameter {

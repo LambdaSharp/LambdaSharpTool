@@ -40,6 +40,7 @@ namespace SqsSample.MyFunction {
             LogInfo($"# SQS Records = {evt.Records.Count}");
             for(var i = 0; i < evt.Records.Count; ++i) {
                 var record = evt.Records[i];
+                LogInfo($"Record #{i}");
                 LogInfo($"Body = {record.Body}");
                 LogInfo($"EventSource = {record.EventSource}");
                 LogInfo($"EventSourceArn = {record.EventSourceArn}");

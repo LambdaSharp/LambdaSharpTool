@@ -5,6 +5,7 @@ Description: A sample module using an Alexa skill
 Functions:
 
   - Name: MyFunction
+    Description: This function is invoked by an Alexa Skill
     Memory: 128
     Timeout: 30
     Sources:

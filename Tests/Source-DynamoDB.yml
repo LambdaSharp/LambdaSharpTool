@@ -1,0 +1,30 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Parameters:
+
+  - Name: Table
+    Description: Description for DynamoDB table
+    Resource:
+      Type: AWS::DynamoDB::Table
+      Allow: Subscribe
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: MessageId
+            AttributeType: S
+        KeySchema:
+          - AttributeName: MessageId
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
+Functions:
+
+  - Name: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - DynamoDB: Table

@@ -8,12 +8,12 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.2.0"/>
-    <PackageReference Include="AWSSDK.S3" Version="3.3.18.3"/>
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.3.0"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj" />
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp.CustomResource\MindTouch.LambdaSharp.CustomResource.csproj" />
+    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp.CustomResource\MindTouch.LambdaSharp.CustomResource.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>

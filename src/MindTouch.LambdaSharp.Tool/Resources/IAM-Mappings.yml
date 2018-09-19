@@ -21,6 +21,11 @@
     - dynamodb:Query
     - dynamodb:Scan
     - dynamodb:UpdateItem
+  Subscribe:
+    - dynamodb:DescribeStream
+    - dynamodb:GetRecords
+    - dynamodb:GetShardIterator
+    - dynamodb:ListStreams
   Full:
     - dynamodb:*
 
@@ -86,3 +91,15 @@
     - sqs:SendMessageBatch
   Full:
     - sqs:*
+
+"AWS::Kinesis::Stream":
+  Subscribe:
+    - kinesis:DescribeStream
+    - kinesis:GetRecords
+    - kinesis:GetShardIterator
+  Publish:
+    - kinesis:DescribeStream
+    - kinesis:PutRecord
+    - kinesis:PutRecords
+  Full:
+    - kinesis:*

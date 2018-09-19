@@ -1,6 +1,6 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Alexa Function
+# LambdaSharp Alexa Skill Function
 
 Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
 
@@ -18,6 +18,7 @@ Description: A sample module using an Alexa skill
 Functions:
 
   - Name: MyFunction
+    Description: This function is invoked by an Alexa Skill
     Memory: 128
     Timeout: 30
     Sources:

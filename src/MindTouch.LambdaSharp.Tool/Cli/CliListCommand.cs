@@ -38,13 +38,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "List LambdaSharp modules";
 
                 // command options
-                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARPTIER environment variable)", CommandOptionType.SingleValue);
-                var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+                var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
                     // initialize deployment tier value
-                    var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARPTIER");
+                    var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     if(tier == null) {
                         AddError("missing deployment tier name");
                         return;
@@ -55,7 +55,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
 
                     // initialize AWS account Id and region
-                    var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+                    var awsAccount = await InitializeAwsProfile(
+                        awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE")
+                    );
                     if(awsAccount == null) {
                         return;
                     }

@@ -32,8 +32,49 @@ Parameters:
           Type: AWS::SNS::Topic
           Allow: Subscribe
 
+      - Name: FifthNestedParameter
+        Description: Fifth nested parameter
+        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+
+      - Name: SixthNestedParameter
+        Description: Sixth nested parameter
+        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        EncryptionContext:
+          Purpose: Security
+          "Spe|cial": "Char|acter"
+
+      - Name: SeventhParameter
+        Description: Seventh nested parameter
+        Value: !Ref SingleResourceParameter
+
+  - Name: OtherParameterCollection
+    Description: Description for collection parameter
+    Value: This collection has a value
+    Parameters:
+
+      - Name: FirstNestedParameter
+        Description: Same name as first nested parameter in sample parameter collection
+        Value: Another literal value
+
+  - Name: SingleResourceParameter
+    Description: Second nested parameter
+    Value: "arn:aws:sns:*:*:*"
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
+  - Name: MultiResourceParameter
+    Description: Second nested parameter
+    Values:
+      - "arn:aws:sns:*:*:*"
+      - "arn:aws:sns:*:*:*:*"
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
 Functions:
 
   - Name: Function
+    Description: My function
     Memory: 128
     Timeout: 30

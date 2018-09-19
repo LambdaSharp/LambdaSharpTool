@@ -27,8 +27,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Amazon.Lambda.Core;
+using Amazon.Lambda.Serialization.Json;
 using MindTouch.LambdaSharp.ConfigSource;
-using Newtonsoft.Json;
 
 
 namespace MindTouch.LambdaSharp.Slack {
@@ -45,6 +45,7 @@ namespace MindTouch.LambdaSharp.Slack {
         public static HttpClient HttpClient = new HttpClient();
 
         //--- Fields ---
+        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
         private string _slackVerificationTokenName;
         private string _slackVerificationToken;
 
@@ -65,26 +66,13 @@ namespace MindTouch.LambdaSharp.Slack {
 
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
 
-            // read stream into memory
-            LogInfo("reading message stream");
-            string body;
-            try {
-                using(var reader = new StreamReader(stream)) {
-                    body = reader.ReadToEnd();
-                }
-            } catch(Exception e) {
-                LogError(e, "failed during message stream reading");
-                throw;
-            }
-
             // sns event deserialization
-            LogInfo("deserializing Slack request");
+            LogInfo("reading message stream");
             SlackRequest request;
             try {
-                request = JsonConvert.DeserializeObject<SlackRequest>(body);
+                request = JsonSerializer.Deserialize<SlackRequest>(stream);
             } catch(Exception e) {
                 LogError(e, "failed during Slack request deserialization");
-                await RecordFailedMessageAsync(LambdaLogLevel.ERROR, body, e);
                 return $"ERROR: {e.Message}";
             }
 
@@ -143,12 +131,16 @@ namespace MindTouch.LambdaSharp.Slack {
             => Respond(request, SlackResponse.Ephemeral(text, attachments));
 
         protected async Task<bool> Respond(SlackRequest request, SlackResponse response) {
-            var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
-                RequestUri = new Uri(request.ResponseUrl),
-                Method = HttpMethod.Post,
-                Content = new StringContent(JsonConvert.SerializeObject(response), Encoding.UTF8, "application/json")
-            });
-            return httpResponse.StatusCode == HttpStatusCode.OK;
+            using(var stream = new MemoryStream()) {
+                JsonSerializer.Serialize(response, stream);
+                stream.Position = 0;
+                var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
+                    RequestUri = new Uri(request.ResponseUrl),
+                    Method = HttpMethod.Post,
+                    Content = new StreamContent(stream)
+                });
+                return httpResponse.StatusCode == HttpStatusCode.OK;
+            }
         }
     }
 }

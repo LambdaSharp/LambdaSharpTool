@@ -33,7 +33,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {
-            app.Command("info",  cmd => {
+            app.Command("info", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Show LambdaSharp settings";
 
@@ -51,23 +51,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         private async Task Info(Settings settings) {
-            var ssmClient = new AmazonSimpleSystemsManagementClient();
-
-            // import LambdaSharp settings
-            var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
-            var lambdaSharpSettings = await ssmClient.GetAllParametersByPathAsync(lambdaSharpPath);
-            if(settings.EnvironmentVersion == null) {
-                var version = GetLambdaSharpSetting("Version");
-                if(version != null) {
-                    settings.EnvironmentVersion = new Version(version);
-                }
-            }
-            settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-            settings.DeadLetterQueueUrl = settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-            settings.LoggingTopicArn = settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
-            settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-            settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-            settings.S3PackageLoaderCustomResourceTopicArn = settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
+            await PopulateEnvironmentSettingsAsync(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"Deployment tier: {settings.Tier ?? "<NOT SET>"}");
@@ -81,12 +65,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"LambdaSharp CloudFormation Notification Topic: {settings.NotificationTopicArn ?? "<NOT SET>"}");
             Console.WriteLine($"LambdaSharp Rollbar Project Topic: {settings.RollbarCustomResourceTopicArn ?? "<NOT SET>"}");
             Console.WriteLine($"LambdaSharp S3 Package Loader Topic: {settings.S3PackageLoaderCustomResourceTopicArn ?? "<NOT SET>"}");
-
-            // local functions
-            string GetLambdaSharpSetting(string name) {
-                lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> result);
-                return result.Value;
-            }
+            Console.WriteLine($"LambdaSharp S3 Subscriber Topic: {settings.S3SubscriberCustomResourceTopicArn ?? "<NOT SET>"}");
         }
     }
 }
