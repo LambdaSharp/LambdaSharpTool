@@ -201,6 +201,24 @@ namespace MindTouch.LambdaSharp.Tool {
             ) {
                 AddError($"unsupported resource type: {resource.Type}");
             }
+            
+            // validate dependencies
+            if(resource.DependsOn == null) {
+                resource.DependsOn = new List<string>();
+            } else {
+                AtLocation("DependsOn", () => {
+                    foreach(var dependency in resource.DependsOn) {
+                        var dependentParameter = _module.Parameters.FirstOrDefault(p => p.Name == dependency);
+                        if(dependentParameter == null) {
+                            AddError($"could not find dependency '{dependency}'");                            
+                        } else if(dependentParameter.Resource == null) {
+                            AddError($"cannot depend on literal parameter '{dependency}'");
+                        } else if(parameter.Name == dependency) {
+                            AddError($"dependency cannot be on itself '{dependency}'");
+                        }
+                    }                   
+                });
+            }
 
             // local functions
             void ValidateARN(string resourceArn) {

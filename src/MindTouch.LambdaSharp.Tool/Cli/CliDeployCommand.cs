@@ -26,7 +26,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
-using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -148,6 +147,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // package all files
             new ModelFilesPackager(settings).Process(module);
+            
             // compile module file
             var compiledModule = new ModelConverter(settings).Process(module);
             if(HasErrors) {
@@ -156,7 +156,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // generate cloudformation template
             var stack = new ModelGenerator(settings).Generate(compiledModule);
-Console.WriteLine($"\n\nfinal stack state ***** {JsonConvert.SerializeObject(stack)}");
 
             // upload assets
             if(HasErrors) {

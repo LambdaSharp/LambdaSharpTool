@@ -289,7 +289,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // parse resource allowed operations
             var allowList = new List<string>();
-            var dependsOnList = new List<string>();
             if((resource.Type != null) && (resource.Allow != null)) {
                 AtLocation("Allow", () => {
                     if(resource.Allow is string inlineValue) {
@@ -324,19 +323,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     allowList = allowSet.OrderBy(text => text).ToList();
                 });
             }
-            if(resource.DependsOn != null) {
-                AtLocation("DependsOn", () => {
-                    if(resource.DependsOn is IList<object> dependsOn) {
-                        dependsOnList = dependsOn.Cast<string>().ToList();
-                    }
-                });
-            }
             return new Resource {
                 Type = resource.Type,
                 ResourceArn = resourceArn,
                 Allow = allowList,
                 Properties = resource.Properties,
-                DependsOn = dependsOnList
+                DependsOn = resource.DependsOn
             };
         }
 
