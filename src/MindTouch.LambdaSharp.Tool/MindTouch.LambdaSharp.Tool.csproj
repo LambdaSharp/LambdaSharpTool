@@ -1,12 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+
+    <PackageId>MindTouch.LambdaSharp.Tool</PackageId>
+    <VersionPrefix>0.4.0</VersionPrefix>
+    <Title>MindTouch λ#</Title>
+    <Description>A serverless framework for rapid application development on AWS Lambda</Description>
+    <Company>MindTouch, Inc.</Company>
+    <Copyright>Copyright (C) 2018 MindTouch, Inc.</Copyright>
+    <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
+
+    <VersionSuffix>DEV</VersionSuffix>
     <ToolCommandName>dotnet-lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
-    <RootNamespace>MindTouch.LambdaSharp.Tool</RootNamespace>
-    <VersionPrefix>0.4</VersionPrefix>
-    <VersionSuffix>DEV</VersionSuffix>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.11.11"/>
