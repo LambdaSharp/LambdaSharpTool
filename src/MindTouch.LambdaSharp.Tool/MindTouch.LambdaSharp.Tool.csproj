@@ -12,7 +12,7 @@
     <Copyright>Copyright (C) 2018 MindTouch, Inc.</Copyright>
     <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
 
-    <VersionSuffix>DEV</VersionSuffix>
+    <VersionSuffix>WIP</VersionSuffix>
     <ToolCommandName>dotnet-lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
