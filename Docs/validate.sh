@@ -38,11 +38,25 @@ lash deploy \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Module.yml \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Module.yml
 
-# # Deploy the λ# Demo Module
+# Deploy the λ# Demo Module
 
 lash deploy Demo/Module.yml
 
-# # Create a Default λ# Module and Deploy it
+# Deploy all λ# Sample Modules
+
+lash deploy \
+    Samples/AlexaSample/Module.yml \
+    Samples/ApiSample/Module.yml \
+    Samples/DynamoDBSample/Module.yml \
+    Samples/KinesisSample/Module.yml \
+    Samples/MacroSample/Module.yml \
+    Samples/S3Sample/Module.yml \
+    Samples/ScheduleSample/Module.yml \
+    Samples/SlackCommandSample/Module.yml \
+    Samples/SnsSample/Module.yml \
+    Samples/SqsSample/Module.yml
+
+# Create a Default λ# Module and Deploy it
 
 # mkdir Test$SUFFIX
 mkdir Test$SUFFIX
