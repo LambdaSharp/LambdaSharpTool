@@ -32,5 +32,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<string> Secrets { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
         public IList<FunctionNode> Functions { get; set; }
+        public IList<ExportNode> Exports { get; set; }
     }
 }

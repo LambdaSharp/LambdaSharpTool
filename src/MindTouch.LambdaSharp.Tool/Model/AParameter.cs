@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class StringListParameter : AParameter {
 
         //--- Properties ---
-        public IList<string> Values { get; set; }
+        public IList<object> Values { get; set; }
     }
 
     public class PackageParameter : AParameter {

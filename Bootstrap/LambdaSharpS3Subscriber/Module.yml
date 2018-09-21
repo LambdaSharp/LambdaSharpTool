@@ -1,15 +1,20 @@
 Name: LambdaSharpS3Subscriber
 
-Version: 0.3
+Version: 0.4
 
 Description: LambdaSharp S3 Lambda Function Subscriber
+
+Exports:
+
+  - Name: CustomResource-LambdaSharp::S3Subscriber
+    Description: Custom Resource ARN for S3 bucket subscriptions
+    Value: !Ref CustomResourceTopic
 
 Parameters:
 
   - Name: S3BucketPermissions
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
-    Values:
-      - "arn:aws:s3:::{{tier}}-*"
+    Value: !Sub "arn:aws:s3:::${TierLowercase}-*"
     Resource:
       Type: AWS::S3::Bucket
       Allow:
@@ -18,7 +23,6 @@ Parameters:
 
   - Name: CustomResourceTopic
     Description: Custom resource topic for subscribing Lambda functions to S3 buckets
-    Export: /{{Tier}}/LambdaSharp/S3SubscriberCustomResourceTopic
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe

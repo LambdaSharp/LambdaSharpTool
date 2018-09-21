@@ -64,8 +64,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"LambdaSharp Logging Topic: {settings.LoggingTopicArn ?? "<NOT SET>"}");
             Console.WriteLine($"LambdaSharp CloudFormation Notification Topic: {settings.NotificationTopicArn ?? "<NOT SET>"}");
             Console.WriteLine($"LambdaSharp Rollbar Project Topic: {settings.RollbarCustomResourceTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp S3 Package Loader Topic: {settings.S3PackageLoaderCustomResourceTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp S3 Subscriber Topic: {settings.S3SubscriberCustomResourceTopicArn ?? "<NOT SET>"}");
         }
     }
 }

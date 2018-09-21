@@ -81,54 +81,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
 
-                        // check if we need to import a custom resource handler topic
-                        var resourceType = param?.Resource?.Type;
-                        if((resourceType != null) && !resourceType.StartsWith("AWS::")) {
-                            AtLocation("Resource", () => {
-                                AtLocation("Type", () => {
-
-                                    // confirm the custom resource has a `ServiceToken` specified or imports one
-                                    if(resourceType.StartsWith("Custom::") || (resourceType == "AWS::CloudFormation::CustomResource")) {
-                                        if(param.Resource.ImportServiceToken != null) {
-                                            _importer.Add(param.Resource.ImportServiceToken);
-                                        } else {
-                                            AtLocation("Properties", () => {
-                                                if(param.Resource.Properties?.ContainsKey("ServiceToken") != true) {
-                                                    AddError("missing ServiceToken in custom resource properties");
-                                                }
-                                            });
-                                        }
-                                        return;
-                                    }
-
-                                    // parse resource name as `{MODULE}::{TYPE}` pattern to import the custom resource topic name
-                                    var customResourceHandlerAndType = resourceType.Split("::");
-                                    if(customResourceHandlerAndType.Length != 2) {
-                                        AddError("custom resource type must have format {MODULE}::{TYPE}");
-                                        return;
-                                    }
-                                    if(!Regex.IsMatch(customResourceHandlerAndType[0], CLOUDFORMATION_ID_PATTERN)) {
-                                        AddError($"custom resource prefix must be alphanumeric: {customResourceHandlerAndType[0]}");
-                                        return;
-                                    }
-                                    if(!Regex.IsMatch(customResourceHandlerAndType[1], CLOUDFORMATION_ID_PATTERN)) {
-                                        AddError($"custom resource suffix must be alphanumeric: {customResourceHandlerAndType[1]}");
-                                        return;
-                                    }
-                                    param.Resource.Type = "Custom::" + param.Resource.Type.Replace("::", "");
-
-                                    // check if custom resource needs a service token to be retrieved
-                                    if(!(param.Resource.Properties?.ContainsKey("ServiceToken") ?? false)) {
-                                        var importServiceToken = $"/{Settings.Tier}"
-                                            + $"/{customResourceHandlerAndType[0]}"
-                                            + $"/{customResourceHandlerAndType[1]}CustomResourceTopic";
-                                        param.Resource.ImportServiceToken = importServiceToken;
-                                        _importer.Add(importServiceToken);
-                                    }
-                                });
-                            });
-                        }
-
                         // check if we need to recurse into nested parameters
                         if(param.Parameters != null) {
                             AtLocation("Parameters", () => {
@@ -138,6 +90,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
                 }
             }
+
             // local functions
             void ReplaceAllParameterImports(IList<ParameterNode> @params = null) {
                 var parameterCollection = @params ?? module.Parameters;
@@ -145,24 +98,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     var parameter = parameterCollection[i];
                     var parameterName = parameter.Name ?? $"#{i + 1}";
                     AtLocation(parameterName, () => {
-
-                        var resource = parameter.Resource;
-                        if(resource != null) {
-                            AtLocation("Resource", () => {
-                                if(resource.ImportServiceToken != null) {
-                                    if(!_importer.TryGetValue(resource.ImportServiceToken, out string importedValue)) {
-                                        AddError("unable to find custom resource handler topic");
-                                    } else {
-
-                                        // add resolved `ServiceToken` to custom resource
-                                        if(resource.Properties == null) {
-                                            resource.Properties = new Dictionary<string, object>();
-                                        }
-                                        resource.Properties["ServiceToken"] = importedValue;
-                                    }
-                                }
-                            });
-                        }
 
                         // replace nested parameters
                         if(parameter.Parameters != null) {

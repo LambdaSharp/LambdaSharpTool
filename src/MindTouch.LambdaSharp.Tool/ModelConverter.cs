@@ -22,10 +22,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
+    using Fn = Humidifier.Fn;
 
     public class ModelParserException : Exception {
 
@@ -76,6 +78,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 Export = "Version"
             });
 
+            // TODO (2018-09-20, bjorg): need to figure out when RollbarToken should be injected and when not
+
             // check if we need to add a 'RollbarToken' parameter node
             if(
                 (Settings.RollbarCustomResourceTopicArn != null)
@@ -86,16 +90,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = "RollbarToken",
                     Description = "Rollbar project token",
                     Resource = new ResourceNode {
-                        Type = "Custom::LambdaSharpRollbarProject",
+                        Type = "MindTouch::RollbarProject",
                         Allow = "None",
                         Properties = new Dictionary<string, object> {
-                            ["ServiceToken"] = Settings.RollbarCustomResourceTopicArn,
-                            ["Tier"] = Settings.Tier,
-                            ["Module"] = _module.Name,
-
-                            // NOTE (2018-08-05, bjorg): set old values for backwards compatibility
-                            ["Project"] = _module.Name,
-                            ["Deployment"] = Settings.Tier
+                            ["Tier"] = Fn.Ref("Tier"),
+                            ["Module"] = _module.Name
                         },
                         DependsOn = new List<string>()
                     }
@@ -114,14 +113,20 @@ namespace MindTouch.LambdaSharp.Tool {
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
             // create functions
-            if(module.Functions.Any()) {
-                var functionIndex = 0;
-                _module.Functions = AtLocation("Functions", () => module.Functions
-                    .Select(function => ConvertFunction(++functionIndex, function))
-                    .Where(function => function != null)
-                    .ToList()
-                , null) ?? new List<Function>();
-            }
+            var functionIndex = 0;
+            _module.Functions = AtLocation("Functions", () => module.Functions
+                .Select(function => ConvertFunction(++functionIndex, function))
+                .Where(function => function != null)
+                .ToList()
+            , null) ?? new List<Function>();
+
+            // convert exports
+            var exportIndex = 0;
+            _module.Exports = AtLocation("Exports", () => module.Exports
+                .Select(export => ConvertExport(++exportIndex, export))
+                .Where(export => export != null)
+                .ToList()
+            , null) ?? new List<Export>();
             return _module;
         }
 
@@ -215,7 +220,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             AtLocation("Resource", () => {
 
                                 // existing resource
-                                var resource = ConvertResource((string)parameter.Value, parameter.Resource);
+                                var resource = ConvertResource(parameter.Value, parameter.Resource);
                                 result = new ReferencedResourceParameter {
                                     Name = parameter.Name,
                                     Description = parameter.Description,
@@ -286,11 +291,11 @@ namespace MindTouch.LambdaSharp.Tool {
             return resultList;
         }
 
-        public Resource ConvertResource(string resourceArn, ResourceNode resource) {
+        public Resource ConvertResource(object resourceArn, ResourceNode resource) {
 
             // parse resource allowed operations
             var allowList = new List<string>();
-            if((resource.Type != null) && (resource.Allow != null)) {
+            if(resource.Allow != null) {
                 AtLocation("Allow", () => {
                     if(resource.Allow is string inlineValue) {
 
@@ -324,6 +329,28 @@ namespace MindTouch.LambdaSharp.Tool {
                     allowList = allowSet.OrderBy(text => text).ToList();
                 });
             }
+
+            // parse resource name as `{MODULE}::{TYPE}` pattern to import the custom resource topic name
+            AtLocation("Type", () => {
+                var customResourceHandlerAndType = resource.Type.Split("::", 2);
+                if((customResourceHandlerAndType[0] != "AWS") && (customResourceHandlerAndType[0] != "Custom")) {
+                    if(customResourceHandlerAndType.Length != 2) {
+                        AddError("custom resource type must have format {MODULE}::{TYPE}");
+                        return;
+                    }
+
+                    // check if custom resource needs a service token to be imported
+                    if(resource.Properties == null) {
+                        resource.Properties = new Dictionary<string, object>();
+                    }
+                    if(!resource.Properties.ContainsKey("ServiceToken")) {
+                        resource.Properties["ServiceToken"] = Fn.ImportValue(Fn.Sub($"${{Tier}}-CustomResource-{resource.Type}"));
+                    }
+
+                    // convert type name to a custom AWS resource type
+                    resource.Type = "Custom::" + resource.Type.Replace("::", "");
+                }
+            });
             return new Resource {
                 Type = resource.Type,
                 ResourceArn = resourceArn,
@@ -362,7 +389,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // create function
                 var eventIndex = 0;
                 return new Function {
-                    Name = function.Name ,
+                    Name = function.Name,
                     Description = function.Description,
                     Sources = AtLocation("Sources", () => function.Sources?.Select(source => ConvertFunctionSource(function, ++eventIndex, source)).Where(evt => evt != null).ToList(), null) ?? new List<AFunctionSource>(),
                     PackagePath = function.PackagePath,
@@ -488,6 +515,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 return null;
             }, null);
             throw new ModelParserException("invalid function event");
+        }
+
+        private Export ConvertExport(int index, ExportNode export) {
+            return AtLocation(export.Name ?? $"[{index}]", () => {
+                return new Export {
+                    Name = export.Name,
+                    Description = export.Description,
+                    Value = export.Value
+                };
+            }, null);
         }
     }
 }

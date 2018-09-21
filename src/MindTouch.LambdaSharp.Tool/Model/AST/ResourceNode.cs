@@ -29,7 +29,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
        //--- Properties ---
         public string Type { get; set; }
         public object Allow { get; set; }
-        public string ImportServiceToken { get; set; }
         public IDictionary<string, object> Properties { get; set; }
         public IList<string> DependsOn { get; set; }
     }

@@ -35,7 +35,8 @@ using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
-    using Stack = Amazon.CloudFormation.Model.Stack;
+    using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
+    using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class ModelUpdater : AModelProcessor {
 
@@ -146,6 +147,37 @@ namespace MindTouch.LambdaSharp.Tool {
         ""Resource"": ""*""
     }]
 }";
+            // initialize template parameters
+            var parameters = new List<CloudFormationParameter> {
+                new CloudFormationParameter {
+                    ParameterKey = "Tier",
+                    ParameterValue = Settings.Tier
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "TierLowercase",
+                    ParameterValue = Settings.Tier.ToLowerInvariant()
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentDeadLetterQueueArn",
+                    ParameterValue = Settings.DeadLetterQueueArn
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentDeadLetterQueueUrl",
+                    ParameterValue = Settings.DeadLetterQueueUrl
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentBucketName",
+                    ParameterValue = Settings.DeploymentBucketName
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentKeyPrefix",
+                    ParameterValue = ""
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentLoggingTopicArn",
+                    ParameterValue = Settings.LoggingTopicArn
+                }
+            };
 
             // create/update cloudformation stack
             var success = false;
@@ -158,6 +190,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             "CAPABILITY_NAMED_IAM"
                         },
                         NotificationARNs = notificationArns,
+                        Parameters = parameters,
                         StackPolicyBody = stackPolicyBody,
                         StackPolicyDuringUpdateBody = allowDataLoss ? stackDuringUpdatePolicyBody : null,
                         TemplateURL = templateUrl,
@@ -187,6 +220,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     OnFailure = OnFailure.DELETE,
                     NotificationARNs = notificationArns,
+                    Parameters = parameters,
                     StackPolicyBody = stackPolicyBody,
                     EnableTerminationProtection = protectStack,
                     TemplateURL = templateUrl,
@@ -205,7 +239,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return success;
 
             // local function
-            void ShowStackResult(Stack stack) {
+            void ShowStackResult(CloudFormationStack stack) {
                 var outputs = stack.Outputs;
                 if(outputs.Any()) {
                     Console.WriteLine("Stack output values:");
@@ -216,7 +250,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private async Task<(Stack Stack, bool Success)> TrackStackUpdate(Module module, string stackId, string mostRecentStackEventId) {
+        private async Task<(CloudFormationStack Stack, bool Success)> TrackStackUpdate(Module module, string stackId, string mostRecentStackEventId) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
             var request = new DescribeStackEventsRequest {

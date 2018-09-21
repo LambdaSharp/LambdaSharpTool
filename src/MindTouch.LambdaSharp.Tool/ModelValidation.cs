@@ -57,6 +57,9 @@ namespace MindTouch.LambdaSharp.Tool {
             if(module.Functions == null) {
                 module.Functions = new List<FunctionNode>();
             }
+            if(module.Exports == null) {
+                module.Exports = new List<ExportNode>();
+            }
 
             // ensure version is present
             if(module.Version == null) {
@@ -70,6 +73,7 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
             AtLocation("Parameters", () => ValidateParameters(module.Parameters));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
+            AtLocation("Exports", () => ValidateExports(module.Exports));
         }
 
         private void ValidateSecrets(IEnumerable<string> secrets) {
@@ -136,23 +140,13 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(parameter.Package.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type
-                            var param = _module.Parameters.FirstOrDefault(p => p.Name == parameter.Package.Bucket);
-                            if(param == null) {
-                                AddError($"could not find parameter for S3 bucket: '{parameter.Package.Bucket}'");
-                            } else if(param?.Resource?.Type != "AWS::S3::Bucket") {
-                                AddError($"parameter for function source must be an S3 bucket resource: '{parameter.Package.Bucket}'");
-                            }
+                            ValidateSourceParameter(parameter.Package.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
                         }
                         if(parameter.Package.Files != null) {
 
                             // check if a deployment bucket exists
                             if(Settings.DeploymentBucketName == null) {
                                 AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                            }
-
-                            // check if S3 package loader topic arn exists
-                            if(Settings.S3PackageLoaderCustomResourceTopicArn == null) {
-                                AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
                             }
                         }
 
@@ -184,8 +178,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 ValidateNotBothStatements("Value", "Properties", resource.Properties == null);
                 if(parameter.Value is string text) {
                     ValidateARN(text);
-                } else {
-                    AddError("resource reference must be a literal value");
                 }
             } else if(parameter.Values != null) {
                 resource.Type = resource.Type ?? "AWS";
@@ -201,7 +193,7 @@ namespace MindTouch.LambdaSharp.Tool {
             ) {
                 AddError($"unsupported resource type: {resource.Type}");
             }
-            
+
             // validate dependencies
             if(resource.DependsOn == null) {
                 resource.DependsOn = new List<string>();
@@ -210,19 +202,19 @@ namespace MindTouch.LambdaSharp.Tool {
                     foreach(var dependency in resource.DependsOn) {
                         var dependentParameter = _module.Parameters.FirstOrDefault(p => p.Name == dependency);
                         if(dependentParameter == null) {
-                            AddError($"could not find dependency '{dependency}'");                            
+                            AddError($"could not find dependency '{dependency}'");
                         } else if(dependentParameter.Resource == null) {
                             AddError($"cannot depend on literal parameter '{dependency}'");
                         } else if(parameter.Name == dependency) {
                             AddError($"dependency cannot be on itself '{dependency}'");
                         }
-                    }                   
+                    }
                 });
             }
 
             // local functions
-            void ValidateARN(string resourceArn) {
-                if(!resourceArn.StartsWith("arn:") && (resourceArn != "*")) {
+            void ValidateARN(object resourceArn) {
+                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
                     AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
                 }
             }
@@ -324,11 +316,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("S3", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("S3", "Kinesis", source.Kinesis == null);
                         ValidateNotBothStatements("S3", "Macro", source.Macro == null);
-
-                        // check if S3 subscriber topic arn exists
-                        if(Settings.S3SubscriberCustomResourceTopicArn == null) {
-                            AddError("S3 source requires S3Subscriber custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                        }
 
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
 
@@ -535,6 +522,11 @@ namespace MindTouch.LambdaSharp.Tool {
             } else if(parameter?.Resource?.Type != awsType) {
                 AddError($"parameter for function source must be an {typeDescription} resource: '{name}'");
             }
+        }
+
+        private void ValidateExports(IList<ExportNode> exports) {
+
+            // TODO (2018-09-20, bjorg): missing validation
         }
     }
 }

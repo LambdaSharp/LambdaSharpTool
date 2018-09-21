@@ -2,6 +2,39 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "ModuleName": {
+      "Type": "String",
+      "Description": "LambdaSharp Module Name",
+      "Default": "TestModule"
+    },
+    "Tier": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment Tier"
+    },
+    "TierLowercase": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment Tier (lowercase)"
+    },
+    "DeploymentDeadLetterQueueUrl": {
+      "Type": "String",
+      "Description": "LambdaSharp Function Dead-Letter Queue URL"
+    },
+    "DeploymentDeadLetterQueueArn": {
+      "Type": "String",
+      "Description": "LambdaSharp Function Dead-Letter Queue ARN"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment S3 Bucket Name"
+    },
+    "DeploymentKeyPrefix": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment S3 Bucket Key Prefix"
+    },
+    "DeploymentLoggingTopicArn": {
+      "Type": "String",
+      "Description": "LambdaSharp Function Logging ARN"
+    },
     "SampleParameter": {
       "Type": "String",
       "Description": "Description for function parameter",
@@ -20,17 +53,23 @@
         "Type": "String",
         "Description": "LambdaSharp module version",
         "Value": "1.0",
-        "Name": "/Test/TestModule/Version"
+        "Name": {
+          "Fn::Sub": "/${Tier}/TestModule/Version"
+        }
       }
     },
     "RollbarToken": {
-      "Type": "Custom::LambdaSharpRollbarProject",
+      "Type": "Custom::MindTouchRollbarProject",
       "Properties": {
-        "ServiceToken": "arn:aws:sns:us-east-1:123456789012:LambdaSharpRollbar-RollbarCustomResourceTopic",
-        "Tier": "Test",
+        "Tier": {
+          "Ref": "Tier"
+        },
         "Module": "TestModule",
-        "Project": "TestModule",
-        "Deployment": "Test"
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${Tier}-CustomResource-MindTouch::RollbarProject"
+          }
+        }
       }
     },
     "ModuleRole": {
@@ -75,7 +114,9 @@
                   "Action": [
                     "sqs:SendMessage"
                   ],
-                  "Resource": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+                  "Resource": {
+                    "Ref": "DeploymentDeadLetterQueueArn"
+                  }
                 },
                 {
                   "Sid": "LambdaSnsLogging",
@@ -83,11 +124,15 @@
                   "Action": [
                     "sns:Publish"
                   ],
-                  "Resource": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic"
+                  "Resource": {
+                    "Ref": "DeploymentLoggingTopicArn"
+                  }
                 }
               ]
             },
-            "PolicyName": "Test-TestModule-policy"
+            "PolicyName": {
+              "Fn::Sub": "${Tier}-TestModule-policy"
+            }
           }
         ]
       }
@@ -96,20 +141,32 @@
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
-          "S3Bucket": "lambdsharp-bucket-name",
-          "S3Key": "TestModule/TestModule.Function-NOCOMPILE.zip"
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": {
+            "Fn::Sub": "${DeploymentKeyPrefix}TestModule/TestModule.Function-NOCOMPILE.zip"
+          }
         },
         "DeadLetterConfig": {
-          "TargetArn": "arn:aws:sqs:us-east-1:123456789012:LambdaSharp-DeadLetterQueue"
+          "TargetArn": {
+            "Ref": "DeploymentDeadLetterQueueArn"
+          }
         },
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
             "STR_TEST": "Do The Hello Should The Hello",
-            "TIER": "Test",
+            "TIER": {
+              "Ref": "Tier"
+            },
             "MODULE": "TestModule",
-            "DEADLETTERQUEUE": "https://sqs.us-east-1.amazonaws.com/123456789012/LambdaSharp-DeadLetterQueue",
-            "LOGGINGTOPIC": "arn:aws:sns:us-east-1:123456789012:LambdaSharp-LoggingTopic",
+            "DEADLETTERQUEUE": {
+              "Ref": "DeploymentDeadLetterQueueUrl"
+            },
+            "LOGGINGTOPIC": {
+              "Ref": "DeploymentLoggingTopicArn"
+            },
             "LAMBDARUNTIME": "dotnetcore2.1",
             "STR_SAMPLEPARAMETER": "Hello World!",
             "STR_VERSION": "1.0",
@@ -121,7 +178,9 @@
             }
           }
         },
-        "FunctionName": "Test-TestModule-Function",
+        "FunctionName": {
+          "Fn::Sub": "${Tier}-TestModule-Function"
+        },
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
@@ -134,7 +193,9 @@
         "Tags": [
           {
             "Key": "lambdasharp:tier",
-            "Value": "Test"
+            "Value": {
+              "Ref": "Tier"
+            }
           },
           {
             "Key": "lambdasharp:module",

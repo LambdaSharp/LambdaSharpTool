@@ -1,23 +1,28 @@
 Name: LambdaSharpS3PackageLoader
 
-Version: 0.3
+Version: 0.4
 
 Description: LambdaSharp S3 Package Loader
+
+Exports:
+
+  - Name: CustomResource-LambdaSharp::S3PackageLoader
+    Description: Custom Resource ARN for for deploying packages to S3 buckets
+    Value: !Ref CustomResourceTopic
 
 Parameters:
 
   - Name: S3BucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
-      - "arn:aws:s3:::{{tier}}-*"
-      - "arn:aws:s3:::{{tier}}-*/*"
+      - !Sub "arn:aws:s3:::${TierLowercase}-*"
+      - !Sub "arn:aws:s3:::${TierLowercase}-*/*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
 
   - Name: CustomResourceTopic
     Description: Custom resource topic for deploying packages to S3 buckets
-    Export: /{{Tier}}/LambdaSharp/S3PackageLoaderCustomResourceTopic
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe

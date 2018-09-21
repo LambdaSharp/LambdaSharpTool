@@ -87,8 +87,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentLoggingTopicArnOption = cmd.Option("--deployment-logging-topic-arn <ARN>", "(test only) SNS topic used by LambdaSharp functions to log warnings and errors (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentRollbarCustomResourceTopicArnOption = cmd.Option("--deployment-rollbar-customresource-topic-arn <ARN>", "(test only) SNS Topic for creating Rollbar projects (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentS3PackageLoaderCustomResourceTopicArnOption = cmd.Option("--deployment-s3packageloader-customresource-topic-arn <ARN>", "(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentS3SubscriberCustomResourceTopicArnOption = cmd.Option("--deployment-s3subscriber-customeresource-topic-arn <ARN>", "(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
             var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
@@ -156,8 +154,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentLoggingTopicArn = deploymentLoggingTopicArnOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
                 var deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArnOption.Value();
-                var deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArnOption.Value();
-                var deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArnOption.Value();
 
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
@@ -219,8 +215,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         LoggingTopicArn = deploymentLoggingTopicArn,
                         NotificationTopicArn = deploymentNotificationTopicArn,
                         RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
-                        S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
-                        S3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn,
                         ModuleSource = source,
                         WorkingDirectory = workingDirectory,
                         OutputDirectory = outputDirectory,
@@ -268,8 +262,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 || (settings.LoggingTopicArn == null)
                 || (settings.NotificationTopicArn == null)
                 || (settings.RollbarCustomResourceTopicArn == null)
-                || (settings.S3PackageLoaderCustomResourceTopicArn == null)
-                || (settings.S3SubscriberCustomResourceTopicArn == null)
             ) {
 
                 // import LambdaSharp settings
@@ -283,8 +275,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 settings.LoggingTopicArn = settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
                 settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
                 settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-                settings.S3PackageLoaderCustomResourceTopicArn = settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
-                settings.S3SubscriberCustomResourceTopicArn = settings.S3SubscriberCustomResourceTopicArn ?? GetLambdaSharpSetting("S3SubscriberCustomResourceTopic");
 
                 // local functions
                 string GetLambdaSharpSetting(string name) {
