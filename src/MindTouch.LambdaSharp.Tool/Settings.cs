@@ -66,6 +66,9 @@ namespace MindTouch.LambdaSharp.Tool {
         public string ModuleSource { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
+        public string ModuleName { get; set; }
+
+        public bool HasDeadLetterQueue => DeadLetterQueueUrl != null;
 
         public string DeadLetterQueueArn {
             get {

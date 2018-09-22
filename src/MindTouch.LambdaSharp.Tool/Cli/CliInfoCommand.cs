@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task Info(Settings settings) {
+        public async Task Info(Settings settings) {
             await PopulateEnvironmentSettingsAsync(settings);
 
             // show LambdaSharp settings

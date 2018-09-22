@@ -155,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private void NewModule(string moduleName, string moduleDirectory) {
+        public void NewModule(string moduleName, string moduleDirectory) {
             try {
                 Directory.CreateDirectory(moduleDirectory);
             } catch(Exception e) {
@@ -178,7 +178,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        private void NewFunction(
+        public void NewFunction(
             string lambdasharpDirectory,
             string functionName,
             string rootNamespace,

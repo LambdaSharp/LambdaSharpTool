@@ -66,7 +66,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task List(string tier) {
+        public async Task List(string tier) {
             var cfClient = new AmazonCloudFormationClient();
             var request = new ListStacksRequest {
                 StackStatusFilter = new List<string> {

@@ -147,7 +147,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _apiGatewayRoutes = new List<ApiRoute>();
 
                 // permissions needed for dead-letter queue
-                if(Settings.DeadLetterQueueArn != null) {
+                if(Settings.HasDeadLetterQueue) {
                     _resourceStatements.Add(new Statement {
                         Sid = "LambdaDeadLetterQueueLogging",
                         Effect = "Allow",

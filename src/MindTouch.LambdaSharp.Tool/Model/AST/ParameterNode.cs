@@ -53,6 +53,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public object Value { get; set; }
         public string Import { get; set; }
         public PackageNode Package { get; set; }
+
+        // TODO (2018-09-21, bjorg) : remove once fully replaced by 'Exports'
         public string Export { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
     }

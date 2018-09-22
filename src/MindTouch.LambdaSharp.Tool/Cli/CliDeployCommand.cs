@@ -26,6 +26,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -47,15 +48,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // read settings and validate them
                     var settingsCollection = await initSettingsCallback();
-                    if(settingsCollection == null) {
-                        return;
-                    }
-                    foreach(var settings in settingsCollection) {
-                        if(!File.Exists(settings.ModuleSource)) {
-                            AddError($"could not find '{settings.ModuleSource}'");
-                        }
-                    }
-                    if(HasErrors) {
+                    if(!(settingsCollection?.Any() ?? false)) {
                         return;
                     }
                     DryRunLevel? dryRun = null;
@@ -85,7 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task<bool> Deploy(
+        public async Task<bool> Deploy(
             Settings settings,
             DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
@@ -93,99 +86,35 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool protectStack,
             bool skipAssemblyValidation
         ) {
+            var compiledModule = await new CliBuildCommand().Build(
+                settings,
+                dryRun,
+                outputCloudFormationFilePath,
+                skipAssemblyValidation
+            );
+            if(compiledModule == null) {
+                return false;
+            }
+            var result = true;
             try {
-                var stopwatch = Stopwatch.StartNew();
-
-                // read input file
-                Console.WriteLine();
-                Console.WriteLine($"Processing module: {settings.ModuleSource}");
-                var source = await File.ReadAllTextAsync(settings.ModuleSource);
-
-                // preprocess file
-                var tokenStream = new ModelPreprocessor(settings).Preprocess(source);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // parse yaml module file
-                var module = new ModelParser().Parse(tokenStream);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // reset settings when the 'LambdaSharp` module is being deployed
-                if(module.Name == "LambdaSharp") {
-                    settings.Reset();
-                } else {
-                    await PopulateEnvironmentSettingsAsync(settings);
-                    if(settings.EnvironmentVersion == null) {
-
-                        // check that LambdaSharp Environment & Tool versions match
-                        AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                    } else {
-                        if(settings.EnvironmentVersion != settings.ToolVersion) {
-                            AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        }
-                    }
-                }
-
-                // validate module
-                new ModelValidation(settings).Process(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // resolve all imported parameters
-                new ModelImportProcessor(settings).Process(module);
-
-                // package all functions
-                new ModelFunctionPackager(settings).Process(
-                    module,
-                    settings.ToolVersion,
-                    skipCompile: dryRun == DryRunLevel.CloudFormation,
-                    skipAssemblyValidation: skipAssemblyValidation
-                );
-
-                // package all files
-                new ModelFilesPackager(settings).Process(module);
-
-                // compile module file
-                var compiledModule = new ModelConverter(settings).Process(module);
-                if(HasErrors) {
-                    return false;
-                }
-
-                // generate cloudformation template
-                var stack = new ModelGenerator(settings).Generate(compiledModule);
-
-                // upload assets
-                if(HasErrors) {
-                    return false;
-                }
-                await new ModelUploader(settings).ProcessAsync(compiledModule, skipUpload: dryRun != null);
-
-                // serialize stack to disk
-                var result = true;
-                var template = new JsonStackSerializer().Serialize(stack);
-                var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
-                if(outputCloudFormationDirectory != "") {
-                    Directory.CreateDirectory(outputCloudFormationDirectory);
-                }
-                File.WriteAllText(outputCloudFormationFilePath, template);
                 if(dryRun == null) {
-                    result = await new ModelUpdater(settings).Deploy(compiledModule, outputCloudFormationFilePath, allowDataLoos, protectStack);
+                    result = await new ModelUpdater(settings).Deploy(
+                        compiledModule,
+                        outputCloudFormationFilePath,
+                        allowDataLoos,
+                        protectStack
+                    );
                     if(settings.OutputDirectory == settings.WorkingDirectory) {
                         try {
                             File.Delete(outputCloudFormationFilePath);
                         } catch { }
                     }
                 }
-                Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
-                return result;
             } catch(Exception e) {
                 AddError(e);
                 return false;
             }
+            return result;
         }
     }
 }

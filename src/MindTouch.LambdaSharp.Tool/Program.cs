@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Amazon.CloudFormation.Model;
 using Amazon.S3.Transfer;
@@ -56,7 +57,9 @@ namespace MindTouch.LambdaSharp.Tool {
             new CliInfoCommand().Register(app);
             new CliListCommand().Register(app);
             new CliNewCommand().Register(app);
+            new CliBundleCommand().Register(app);
             new CliSetupCommand().Register(app);
+            new CliBuildCommand().Register(app);
 
             // new command
             app.OnExecute(() => {
@@ -65,7 +68,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // execute command line options and report any errors
             try {
+                var stopwatch = Stopwatch.StartNew();
                 app.Execute(args);
+                Console.WriteLine();
+                Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
             } catch(Exception e) {
                 Console.WriteLine(e);
                 AddError(e);
