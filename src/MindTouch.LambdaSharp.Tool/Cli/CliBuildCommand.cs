@@ -105,7 +105,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // reset settings when the 'LambdaSharp` module is being deployed
-                settings.ModuleName = module.Name;
                 if(module.Name == "LambdaSharp") {
                     settings.Reset();
                 } else {

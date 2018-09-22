@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Internal;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -67,6 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // create deployment for all modules
             var buildCommand = new CliBuildCommand();
+            var compiledModulesWithSettings = new List<(Module Module, Settings Settings)>();
             foreach(var settings in settingsCollection) {
                 var compiledModule = await buildCommand.Build(
                     settings,
@@ -77,6 +79,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(compiledModule == null) {
                     return;
                 }
+                compiledModulesWithSettings.Add((compiledModule, settings));
             }
 
             // combine packages into an archive
@@ -86,15 +89,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             using(var packageStream = File.Create(packageName))
             using(var packageArchive = new ZipArchive(packageStream, ZipArchiveMode.Create)) {
                 var moduleCount = 0;
-                foreach(var setting in settingsCollection) {
+                foreach(var compiledModuleWithSettings in compiledModulesWithSettings) {
                     ++moduleCount;
-                    foreach(var file in Directory.GetFiles(setting.OutputDirectory)) {
+                    foreach(var file in Directory.GetFiles(compiledModuleWithSettings.Settings.OutputDirectory)) {
                         var filename = Path.GetFileName(file);
                         if(filename == "cloudformation.json") {
                             var suffix = settingsCollection.First().GitSha ?? ("UTC" + DateTime.UtcNow.ToString("yyyyMMddhhmmss"));
                             filename = $"cloudformation-{suffix}.json";
                         }
-                        var archiveName = $"{moduleCount:0#}-{setting.ModuleName}/{filename}";
+                        var archiveName = $"{moduleCount:0#}-{compiledModuleWithSettings.Module.Name}/{filename}";
                         packageArchive.CreateEntryFromFile(file, archiveName);
                         ++fileCount;
                     }
