@@ -84,14 +84,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Type = "String",
                 Description = "LambdaSharp Deployment Tier (lowercase)"
             });
-            _stack.Add("DeploymentDeadLetterQueueUrl", new Parameter {
-                Type = "String",
-                Description = "LambdaSharp Function Dead-Letter Queue URL"
-            });
-            _stack.Add("DeploymentDeadLetterQueueArn", new Parameter {
-                Type = "String",
-                Description = "LambdaSharp Function Dead-Letter Queue ARN"
-            });
             _stack.Add("DeploymentBucketName", new Parameter {
                 Type = "String",
                 Description = "LambdaSharp Deployment S3 Bucket Name"
@@ -99,10 +91,6 @@ namespace MindTouch.LambdaSharp.Tool {
             _stack.Add("DeploymentKeyPrefix", new Parameter {
                 Type = "String",
                 Description = "LambdaSharp Deployment S3 Bucket Key Prefix"
-            });
-            _stack.Add("DeploymentLoggingTopicArn", new Parameter {
-                Type = "String",
-                Description = "LambdaSharp Function Logging ARN"
             });
 
             // create generic resource statement; additional resource statements can be added by resources
@@ -147,28 +135,24 @@ namespace MindTouch.LambdaSharp.Tool {
                 _apiGatewayRoutes = new List<ApiRoute>();
 
                 // permissions needed for dead-letter queue
-                if(Settings.HasDeadLetterQueue) {
-                    _resourceStatements.Add(new Statement {
-                        Sid = "LambdaDeadLetterQueueLogging",
-                        Effect = "Allow",
-                        Resource = Fn.Ref("DeploymentDeadLetterQueueArn"),
-                        Action = new List<string> {
-                            "sqs:SendMessage"
-                        }
-                    });
-                }
+                _resourceStatements.Add(new Statement {
+                    Sid = "LambdaDeadLetterQueueLogging",
+                    Effect = "Allow",
+                    Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn")),
+                    Action = new List<string> {
+                        "sqs:SendMessage"
+                    }
+                });
 
                 // permissions needed for logging topic
-                if(Settings.LoggingTopicArn != null) {
-                    _resourceStatements.Add(new Statement {
-                        Sid = "LambdaSnsLogging",
-                        Effect = "Allow",
-                        Resource = Fn.Ref("DeploymentLoggingTopicArn"),
-                        Action = new List<string> {
-                            "sns:Publish"
-                        }
-                    });
-                }
+                _resourceStatements.Add(new Statement {
+                    Sid = "LambdaSnsLogging",
+                    Effect = "Allow",
+                    Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingTopicArn")),
+                    Action = new List<string> {
+                        "sns:Publish"
+                    }
+                });
 
                 // permissions needed for lambda functions to exist in a VPC
                 if(_module.Functions.Any(function => function.VPC != null)) {
@@ -455,8 +439,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE"] = _module.Name;
-            environmentVariables["DEADLETTERQUEUE"] = Fn.Ref("DeploymentDeadLetterQueueUrl");
-            environmentVariables["LOGGINGTOPIC"] = Fn.Ref("DeploymentLoggingTopicArn");
+            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueUrl"));
+            environmentVariables["LOGGINGTOPIC"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingTopicArn"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
@@ -486,7 +470,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     S3Key = Fn.Sub($"${{DeploymentKeyPrefix}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = Fn.Ref("DeploymentDeadLetterQueueArn")
+                    TargetArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn"))
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables

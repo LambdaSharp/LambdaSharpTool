@@ -4,18 +4,30 @@ Version: 0.4
 
 Description: LambdaSharp Environment
 
+Exports:
+
+  - Name: LambdaSharp-DeadLetterQueueUrl
+    Description: LambdaSharp Dead Letter Queue (Url)
+    Value: !Ref DeadLetterQueue
+
+  - Name: LambdaSharp-DeadLetterQueueArn
+    Description: LambdaSharp Dead Letter Queue (Arn)
+    Value: !GetAtt DeadLetterQueue.Arn
+
+  - Name: LambdaSharp-LoggingTopicArn
+    Description: LambdaSharp Loggin Topic (Arn)
+    Value: !Ref LoggingTopic
+
 Parameters:
 
   - Name: DeadLetterQueue
     Description: SQS queue used by LambdaSharp functions for failed messages
-    Export: DeadLetterQueue
     Resource:
       Type: AWS::SQS::Queue
       Allow: None
 
   - Name: LoggingTopic
     Description: SNS topic used by LambdaSharp functions to log warnings and errors
-    Export: LoggingTopic
     Resource:
       Type: AWS::SNS::Topic
       Allow: None

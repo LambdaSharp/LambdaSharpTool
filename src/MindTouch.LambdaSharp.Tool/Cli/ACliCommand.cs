@@ -171,6 +171,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                         // module file is local
                         source = Path.GetFullPath(moduleSource);
+
+                        // check if source is pointing to a path
+                        if(File.GetAttributes(source).HasFlag(FileAttributes.Directory)) {
+
+                            // append default module filename
+                            source = Path.Combine(source, "Module.yml");
+                        }
                         workingDirectory = Path.GetDirectoryName(source);
                         outputDirectory = Path.Combine(workingDirectory, "bin");
                     }
@@ -211,8 +218,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AwsRegion = awsAccount.Value.Region,
                         AwsAccountId = awsAccount.Value.AccountId,
                         DeploymentBucketName = deploymentBucketName,
-                        DeadLetterQueueUrl = deploymentDeadletterQueueUrl,
-                        LoggingTopicArn = deploymentLoggingTopicArn,
                         NotificationTopicArn = deploymentNotificationTopicArn,
                         RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
                         ModuleSource = source,
@@ -258,8 +263,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(
                 (settings.EnvironmentVersion == null)
                 || (settings.DeploymentBucketName == null)
-                || (settings.DeadLetterQueueUrl == null)
-                || (settings.LoggingTopicArn == null)
                 || (settings.NotificationTopicArn == null)
                 || (settings.RollbarCustomResourceTopicArn == null)
             ) {
@@ -271,8 +274,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // resolved values that are not yet set
                 settings.EnvironmentVersion = settings.EnvironmentVersion ?? new Version(GetLambdaSharpSetting("Version"));
                 settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                settings.DeadLetterQueueUrl = settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-                settings.LoggingTopicArn = settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
                 settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
                 settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
 

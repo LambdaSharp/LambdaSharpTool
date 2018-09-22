@@ -158,24 +158,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     ParameterValue = Settings.Tier.ToLowerInvariant()
                 },
                 new CloudFormationParameter {
-                    ParameterKey = "DeploymentDeadLetterQueueArn",
-                    ParameterValue = Settings.DeadLetterQueueArn ?? ""
-                },
-                new CloudFormationParameter {
-                    ParameterKey = "DeploymentDeadLetterQueueUrl",
-                    ParameterValue = Settings.DeadLetterQueueUrl ?? ""
-                },
-                new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",
                     ParameterValue = Settings.DeploymentBucketName ?? ""
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentKeyPrefix",
                     ParameterValue = ""
-                },
-                new CloudFormationParameter {
-                    ParameterKey = "DeploymentLoggingTopicArn",
-                    ParameterValue = Settings.LoggingTopicArn ?? ""
                 }
             };
 

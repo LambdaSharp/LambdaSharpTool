@@ -51,8 +51,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeadLetterQueueUrl { get; set; }
-        public string LoggingTopicArn { get; set; }
         public string NotificationTopicArn { get; set; }
         public string RollbarCustomResourceTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
@@ -68,18 +66,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public string OutputDirectory { get; set; }
         public string ModuleName { get; set; }
 
-        public bool HasDeadLetterQueue => DeadLetterQueueUrl != null;
-
-        public string DeadLetterQueueArn {
-            get {
-                if(DeadLetterQueueUrl == null) {
-                    return null;
-                }
-                var queueName = DeadLetterQueueUrl.Substring(DeadLetterQueueUrl.LastIndexOf('/') + 1);
-                return $"arn:aws:sqs:{AwsRegion}:{AwsAccountId}:{queueName}";
-             }
-        }
-
         //--- Methods ---
         public void AddError(string message, Exception exception = null) {
             HasErrors = true;
@@ -89,8 +75,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public void Reset() {
             EnvironmentVersion = null;
             DeploymentBucketName = null;
-            DeadLetterQueueUrl = null;
-            LoggingTopicArn = null;
             NotificationTopicArn = null;
             RollbarCustomResourceTopicArn = null;
         }

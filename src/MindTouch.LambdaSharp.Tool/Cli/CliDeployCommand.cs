@@ -95,6 +95,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(compiledModule == null) {
                 return false;
             }
+
+            // upload assets
+            if(HasErrors) {
+                return false;
+            }
+            await new ModelUploader(settings).ProcessAsync(compiledModule, skipUpload: dryRun != null);
+
+            // serialize stack to disk
             var result = true;
             try {
                 if(dryRun == null) {

@@ -225,16 +225,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // check if a dead-letter queue was specified
-            if(Settings.DeadLetterQueueUrl == null) {
-                AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
-            // check if a logging topic was set
-            if(Settings.LoggingTopicArn == null) {
-                AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
             // check if a deployment bucket was specified
             if(Settings.DeploymentBucketName == null) {
                 AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));

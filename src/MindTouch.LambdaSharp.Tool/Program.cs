@@ -67,23 +67,25 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // execute command line options and report any errors
+            var stopwatch = Stopwatch.StartNew();
             try {
-                var stopwatch = Stopwatch.StartNew();
-                app.Execute(args);
+                try {
+                    app.Execute(args);
+                } catch(Exception e) {
+                    Console.WriteLine(e);
+                    AddError(e);
+                }
+                if(ErrorCount > 0) {
+                    Console.WriteLine();
+                    Console.WriteLine($"FAILED: {ErrorCount:N0} errors encountered");
+                    ShowErrors();
+                    return -1;
+                }
+                return 0;
+            } finally {
                 Console.WriteLine();
                 Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
-            } catch(Exception e) {
-                Console.WriteLine(e);
-                AddError(e);
             }
-            if(ErrorCount > 0) {
-                Console.WriteLine();
-                Console.WriteLine($"FAILED: {ErrorCount:N0} errors encountered");
-                ShowErrors();
-                return -1;
-            }
-            return 0;
         }
-
     }
 }
