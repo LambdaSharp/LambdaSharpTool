@@ -163,7 +163,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentKeyPrefix",
-                    ParameterValue = ""
+                    ParameterValue = Settings.DeploymentKeyPrefix ?? ""
                 }
             };
 

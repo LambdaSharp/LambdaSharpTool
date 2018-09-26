@@ -85,6 +85,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             try {
                 if(!File.Exists(settings.ModuleSource)) {
                     AddError($"could not find '{settings.ModuleSource}'");
+                    return null;
                 }
 
                 // read input file
