@@ -88,10 +88,10 @@ namespace MindTouch.LambdaSharpWatcher.ProcessLogEvents {
 
                 if(!events.LogGroup.Contains("LambdaSharpWatcher")) {
                     LogInfo($"LogEvents.Owner = {events.Owner}");
-                    if(events.LogGroup != null) {
+                    if(!string.IsNullOrEmpty(events.LogGroup)) {
                         LogInfo($"LogEvents.LogGroup = {events.LogGroup}");
                     }
-                    if(events.LogStream != null) {
+                    if(!string.IsNullOrEmpty(events.LogStream)) {
                         LogInfo($"LogEvents.LogStream = {events.LogStream}");
                     }
                     LogInfo($"LogEvents.MessageType = {events.MessageType}");
@@ -99,13 +99,16 @@ namespace MindTouch.LambdaSharpWatcher.ProcessLogEvents {
                         LogInfo($"LogEvents.SubscriptionFilters[{j}] = {events.SubscriptionFilters[j]}");
                     }
                     for(var j = 0; j < events.LogEvents.Count; ++j) {
-                        LogInfo($"LogEvents.LogEvents[{j}].Id = {events.LogEvents[j].Id}");
-                        LogInfo($"LogEvents.LogEvents[{j}].Timestamp = {events.LogEvents[j].Timestamp}");
+                        if(!string.IsNullOrEmpty(events.LogEvents[j].Id)) {
+                            LogInfo($"LogEvents.LogEvents[{j}].Id = {events.LogEvents[j].Id}");
+                        }
+                        if(!string.IsNullOrEmpty(events.LogEvents[j].Timestamp)) {
+                            LogInfo($"LogEvents.LogEvents[{j}].Timestamp = {events.LogEvents[j].Timestamp}");
+                        }
                         LogInfo($"LogEvents.LogEvents[{j}].Message = {events.LogEvents[j].Message}");
                     }
                 }
             }
-            LogInfo("----------");
             return "Ok";
         }
     }
