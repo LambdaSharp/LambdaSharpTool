@@ -24,12 +24,12 @@ using System;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class Server {
-        
+
         //--- Constants ---
         private const int MAX_CODE_VERSION_LENGTH = 40;
-        
+
         //--- Fields ---
         private readonly string _branch;
         private readonly string _codeVersion;
@@ -52,23 +52,15 @@ namespace MindTouch.Rollbar.Data {
 
         //--- Properties ---
         [JsonProperty("host")]
-        public string Host {
-            get { return _host; }
-        }
+        public string Host => _host;
 
         [JsonProperty("root")]
-        public string Root {
-            get { return _root; }
-        }
+        public string Root => _root;
 
         [JsonProperty("branch")]
-        public string Branch {
-            get { return _branch; }
-        }
+        public string Branch => _branch;
 
         [JsonProperty("code_version")]
-        public string CodeVersion {
-            get { return _codeVersion; }
-        }
+        public string CodeVersion => _codeVersion;
     }
 }

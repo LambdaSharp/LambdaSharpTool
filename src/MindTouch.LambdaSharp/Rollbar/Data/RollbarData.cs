@@ -26,14 +26,14 @@ using System.Globalization;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class RollbarData {
-        
+
         //--- Constants ---
         private const int MAX_ENVIRONMENT_LENGTH = 255;
         private const int MAX_CODE_VERSION_LENGTH = 40;
         private const int MAX_TITLE_LENGTH = 255;
-        
+
         //--- Fields ---
         private readonly string _applicationContext;
         private readonly Body _body;
@@ -44,13 +44,11 @@ namespace MindTouch.Rollbar.Data {
         private readonly string _framework;
         private readonly string _language;
         private readonly string _level;
-        private readonly Person _person;
         private readonly string _platform;
-        private readonly Request _request;
         private readonly Server _server;
         private readonly long? _timestamp;
         private readonly string _title;
-        
+
         //--- Constructors ---
         public RollbarData(string environment, Body body) {
             if(string.IsNullOrWhiteSpace(environment)) {
@@ -82,8 +80,8 @@ namespace MindTouch.Rollbar.Data {
             string framework,
             string fingerprint,
             string title,
-            Server server)
-            : this(environment, body) {
+            Server server
+        ) : this(environment, body) {
             _level = level;
             _timestamp = timestamp;
             _platform = platform;
@@ -91,13 +89,13 @@ namespace MindTouch.Rollbar.Data {
             _framework = framework;
             _server = server;
             _fingerprint = fingerprint;
-            if (string.IsNullOrWhiteSpace(title)) {
+            if(string.IsNullOrWhiteSpace(title)) {
                 _title = title;
             } else {
                 var trim = title.Trim();
                 _title = trim.Length > MAX_TITLE_LENGTH ? trim.Substring(0, MAX_TITLE_LENGTH) : trim;
             }
-            if (!string.IsNullOrWhiteSpace(codeVersion)) {
+            if(!string.IsNullOrWhiteSpace(codeVersion)) {
                 var trim = codeVersion.Trim();
                 if(trim.Length > MAX_CODE_VERSION_LENGTH) {
                     throw new ArgumentOutOfRangeException(nameof(codeVersion), trim, "value too long");
@@ -106,152 +104,61 @@ namespace MindTouch.Rollbar.Data {
             }
         }
 
-        public RollbarData(RollbarData data, Context context)
-            : this(
-                data.Environment,
-                data.Body,
-                data.Level,
-                data.Timestamp,
-                data.CodeVersion,
-                data.Platform,
-                data.Language,
-                data.Framework,
-                data.Fingerprint,
-                data.Title,
-                data.Server) {
-            if(data == null) {
-                throw new ArgumentNullException("data");
-            }
-            if(context == null) {
-                throw new ArgumentNullException("context");
-            }
-            _applicationContext = context.ApplicationContext;
-            _request = context.Request;
-            _person = context.Person;
-            _custom = context.Custom;
-        }
-
-        public RollbarData(RollbarData data, string fingerprint)
-            : this(
-                data.Environment,
-                data.Body,
-                data.Level,
-                data.Timestamp,
-                data.CodeVersion,
-                data.Platform,
-                data.Language,
-                data.Framework,
-                fingerprint,
-                data.Title,
-                data.Server) {
-            if(data == null) {
-                throw new ArgumentNullException("data");
-            }
+        public RollbarData(RollbarData data, string fingerprint) : this(
+            data.Environment,
+            data.Body,
+            data.Level,
+            data.Timestamp,
+            data.CodeVersion,
+            data.Platform,
+            data.Language,
+            data.Framework,
+            fingerprint,
+            data.Title,
+            data.Server
+        ) {
             _applicationContext = data.ApplicationContext;
-            _request = data.Request;
-            _person = data.Person;
             _custom = data.Custom;
-        }
-
-        public RollbarData(RollbarData data, Context context, string fingerprint)
-            : this(
-                data.Environment,
-                data.Body,
-                data.Level,
-                data.Timestamp,
-                data.CodeVersion,
-                data.Platform,
-                data.Language,
-                data.Framework,
-                fingerprint,
-                data.Title,
-                data.Server) {
-            if(data == null) {
-                throw new ArgumentNullException("data");
-            }
-            if(context == null) {
-                throw new ArgumentNullException("context");
-            }
-            _applicationContext = context.ApplicationContext;
-            _request = context.Request;
-            _person = context.Person;
-            _custom = context.Custom;
         }
 
         //--- Properties ---
         [JsonProperty("environment")]
-        public string Environment {
-            get { return _environment; }
-        }
+        public string Environment => _environment;
 
         [JsonProperty("body")]
-        public Body Body {
-            get { return _body; }
-        }
+        public Body Body => _body;
 
         [JsonProperty("level")]
-        public string Level {
-            get { return _level; }
-        }
+        public string Level => _level;
 
         [JsonProperty("timestamp")]
-        public long? Timestamp {
-            get { return _timestamp; }
-        }
+        public long? Timestamp => _timestamp;
 
         [JsonProperty("code_version")]
-        public string CodeVersion {
-            get { return _codeVersion; }
-        }
+        public string CodeVersion => _codeVersion;
 
         [JsonProperty("platform")]
-        public string Platform {
-            get { return _platform; }
-        }
+        public string Platform => _platform;
 
         [JsonProperty("language")]
-        public string Language {
-            get { return _language; }
-        }
+        public string Language => _language;
 
         [JsonProperty("framework")]
-        public string Framework {
-            get { return _framework; }
-        }
+        public string Framework => _framework;
 
         [JsonProperty("context")]
-        public string ApplicationContext {
-            get { return _applicationContext; }
-        }
-
-        [JsonProperty("request")]
-        public Request Request {
-            get { return _request; }
-        }
-
-        [JsonProperty("person")]
-        public Person Person {
-            get { return _person; }
-        }
+        public string ApplicationContext => _applicationContext;
 
         [JsonProperty("server")]
-        public Server Server {
-            get { return _server; }
-        }
+        public Server Server => _server;
 
         [JsonProperty("custom")]
-        public NameValueCollection Custom {
-            get { return _custom; }
-        }
+        public NameValueCollection Custom => _custom;
 
         [JsonProperty("fingerprint")]
-        public string Fingerprint {
-            get { return _fingerprint; }
-        }
+        public string Fingerprint => _fingerprint;
 
         [JsonProperty("title")]
-        public string Title {
-            get { return _title; }
-        }
+        public string Title => _title;
     }
 }

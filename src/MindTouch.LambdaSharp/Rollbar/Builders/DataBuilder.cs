@@ -34,12 +34,12 @@ namespace MindTouch.Rollbar.Builders {
 
         //--- Fields ---
         private readonly BodyBuilder _bodyBuilder;
-        private readonly RollbarConfiguration _configuration;
+        private readonly RollbarReporter _configuration;
         private readonly TitleBuilder _titleBuilder;
 
         //--- Constructors ---
         public DataBuilder(
-            RollbarConfiguration configuration,
+            RollbarReporter configuration,
             BodyBuilder bodyBuilder,
             TitleBuilder titleBuilder
         ) {
@@ -75,16 +75,8 @@ namespace MindTouch.Rollbar.Builders {
             return data;
         }
 
-        public RollbarData CreateWithContext(RollbarData data, Context context) {
-            return new RollbarData(data, context);
-        }
-
         public RollbarData CreateWithFingerprintInput(RollbarData data, string fingerprintInput) {
             return new RollbarData(data, ToHash(fingerprintInput));
-        }
-
-        public RollbarData CreateWithContextAndFingerprintInput(RollbarData data, Context context, string fingerprintInput) {
-            return new RollbarData(data, context, ToHash(fingerprintInput));
         }
 
         private RollbarData CreateFromBody(Body body, string fingerprint, string level) {

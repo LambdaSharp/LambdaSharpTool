@@ -25,7 +25,7 @@ using Newtonsoft.Json;
 namespace MindTouch.Rollbar.Data {
 
     public class ExceptionInfo {
-        
+
         //--- Fields ---
         private readonly string _className;
         private readonly string _description;
@@ -33,36 +33,25 @@ namespace MindTouch.Rollbar.Data {
 
         //--- Constructors ---
         public ExceptionInfo(string className) {
-            if(string.IsNullOrWhiteSpace(className)) {
-                throw new ArgumentException("Cannot be null or whitespace.", "className");
-            }
-            _className = className;
+            _className = className ?? throw new ArgumentException("Cannot be null or whitespace.", nameof(className));
         }
 
-        public ExceptionInfo(string className, string message)
-            : this(className) {
+        public ExceptionInfo(string className, string message) : this(className) {
             _message = message;
         }
 
-        public ExceptionInfo(string className, string message, string description)
-            : this(className, message) {
+        public ExceptionInfo(string className, string message, string description) : this(className, message) {
             _description = description;
         }
 
         //--- Properties ---
         [JsonProperty("class")]
-        public string ClassName {
-            get { return _className; }
-        }
+        public string ClassName => _className;
 
         [JsonProperty("message")]
-        public string Message {
-            get { return _message; }
-        }
+        public string Message => _message;
 
         [JsonProperty("description")]
-        public string Description {
-            get { return _description; }
-        }
+        public string Description => _description;
     }
 }

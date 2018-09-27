@@ -35,46 +35,31 @@ namespace MindTouch.Rollbar.Data {
 
         //--- Constructors ---
         public Body(Trace trace) {
-            if(trace == null) {
-                throw new ArgumentNullException("trace");
-            }
-            _trace = trace;
+            _trace = trace ?? throw new ArgumentNullException(nameof(trace));
         }
 
         public Body(IEnumerable<Trace> chain) {
-            if(chain == null) {
-                throw new ArgumentNullException("chain");
-            }
+            _traceChain = chain ?? throw new ArgumentNullException(nameof(chain));
             if(!chain.Any()) {
-                throw new ArgumentException("Collection must not be empty", "chain");
+                throw new ArgumentException("Collection must not be empty", nameof(chain));
             }
             if(!chain.All(p => p != null)) {
-                throw new ArgumentException("Collection cannot contain any null items.", "chain");
+                throw new ArgumentException("Collection cannot contain any null items.", nameof(chain));
             }
-            _traceChain = chain;
         }
 
         public Body(Message message) {
-            if(message == null) {
-                throw new ArgumentNullException("message");
-            }
-            _message = message;
+            _message = message ?? throw new ArgumentNullException(nameof(message));
         }
 
         //--- Properties ---
         [JsonProperty("trace")]
-        public Trace Trace {
-            get { return _trace; }
-        }
+        public Trace Trace => _trace;
 
         [JsonProperty("trace_chain")]
-        public IEnumerable<Trace> TraceChain {
-            get { return _traceChain; }
-        }
+        public IEnumerable<Trace> TraceChain => _traceChain;
 
         [JsonProperty("message")]
-        public Message Message {
-            get { return _message; }
-        }
+        public Message Message => _message;
     }
 }

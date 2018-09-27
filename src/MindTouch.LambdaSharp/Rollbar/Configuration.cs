@@ -20,56 +20,72 @@
  */
 
 using System;
+using MindTouch.Rollbar.Builders;
+using MindTouch.Rollbar.Data;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar {
 
-    public class RollbarConfiguration {
-
-        //--- Constants ---
-        private const string DEFAULT_LANGUAGE = "csharp";
-        private const string GIT_SHA_ENVIRONMENT_VARIABLE = "GIT_SHA";
+    public class RollbarReporter {
 
         //--- Fields ---
-        private readonly string _accessToken;
-        private readonly string _proxy;
+        private readonly string _moduleName;
         private readonly string _environment;
         private readonly string _framework;
         private readonly string _gitSha;
         private readonly string _platform;
         private readonly JsonSerializerSettings _settings;
+        private readonly PayloadBuilder _payloadBuilder;
 
         //--- Constructors ---
-        public RollbarConfiguration(
-            string accessToken,
-            string proxy,
+        public RollbarReporter(
+            string moduleName,
             string environment,
             string platform,
             string framework,
             string gitSha
         ) {
-            if(string.IsNullOrWhiteSpace(accessToken)) {
-                throw new ArgumentNullException(nameof(accessToken));
+            if(string.IsNullOrWhiteSpace(moduleName)) {
+                throw new ArgumentNullException(nameof(moduleName));
             }
-            _accessToken = accessToken;
-            _proxy = proxy;
+            _moduleName = moduleName;
             _environment = environment ?? throw new ArgumentNullException(nameof(environment));
-            _platform = platform ?? System.Environment.OSVersion.ToString();
-            _framework = framework ?? ".NET " + System.Environment.Version;
-            _gitSha = gitSha ?? System.Environment.GetEnvironmentVariable(GIT_SHA_ENVIRONMENT_VARIABLE);
+            _platform = $"AWS Lambda ({System.Environment.OSVersion})";
+            _framework = framework;
+            _gitSha = gitSha;
             _settings = new JsonSerializerSettings {
                 Formatting = Formatting.None,
                 NullValueHandling = NullValueHandling.Ignore
             };
             _settings.Converters.Add(new NameValueCollectionConverter());
+
+            var frame = new FrameCollectionBuilder();
+            var exception = new ExceptionInfoBuilder();
+            var trace = new TraceBuilder(exception, frame);
+            var traceChain = new TraceChainBuilder(trace);
+            var body = new BodyBuilder(trace, traceChain);
+            var title = new TitleBuilder();
+            var data = new DataBuilder(this, body, title);
+            _payloadBuilder = new PayloadBuilder(this, data);
         }
 
         //--- Properties ---
-        public string AccessToken =>  _accessToken;
+        public string AccessToken =>  _moduleName;
         public string Environment => _environment;
         public string Platform  => _platform;
-        public string Language => DEFAULT_LANGUAGE;
+        public string Language => "csharp";
         public string Framework => _framework;
         public string GitSha => _gitSha;
+
+        //--- Methods ---
+        public Payload CreateFromException(Exception exception, string description, string level)
+            => _payloadBuilder.CreateFromException(exception, description, level);
+
+        public Payload CreateFromMessage(string message, string level)
+            => _payloadBuilder.CreateFromMessage(message, level);
+
+        public Payload CreateWithFingerprintInput(Payload payload, string fingerprintInput)
+            => _payloadBuilder.CreateWithFingerprintInput(payload, fingerprintInput);
+
     }
 }

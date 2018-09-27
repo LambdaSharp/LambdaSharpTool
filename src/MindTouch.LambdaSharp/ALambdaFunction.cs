@@ -34,7 +34,6 @@ using Amazon.Lambda.Serialization.Json;
 using Amazon.SQS;
 using MindTouch.LambdaSharp.ConfigSource;
 using MindTouch.Rollbar;
-using MindTouch.Rollbar.Builders;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.LambdaSharp {
@@ -82,7 +81,7 @@ namespace MindTouch.LambdaSharp {
         private readonly IAmazonKeyManagementService _kmsClient;
         private readonly IAmazonSQS _sqsClient;
         private readonly ILambdaConfigSource _envSource;
-        private PayloadBuilder _payloadBuilder;
+        private RollbarReporter _payloadBuilder;
         private string _deadLetterQueueUrl;
         private bool _initialized;
         private LambdaConfig _appConfig;
@@ -170,29 +169,14 @@ namespace MindTouch.LambdaSharp {
             _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
             // initialize rollbar
-            const string proxy = "";
             const string platform = "lambda";
-            var frame = new FrameCollectionBuilder();
-            var exception = new ExceptionInfoBuilder();
-            var trace = new TraceBuilder(exception, frame);
-            var traceChain = new TraceChainBuilder(trace);
-            var body = new BodyBuilder(trace, traceChain);
-            var title = new TitleBuilder();
-            var configuration = new RollbarConfiguration(
-
-                // NOTE (2018-08-06, bjorg): the rollbar access token determines the rollbar project
-                //  the error report is associated with; when rollbar intergration is disabled,
-                //  use the module name instead so the logging recipient can determine the module
-                //  the log entry belongs to.
+            _payloadBuilder = new RollbarReporter(
                 ModuleName,
-                proxy,
                 DeploymentTier,
                 platform,
                 framework,
                 gitsha
             );
-            var data = new DataBuilder(configuration, body, title);
-            _payloadBuilder = new PayloadBuilder(configuration, data);
         }
 
         protected virtual async Task RecordFailedMessageAsync(LambdaLogLevel level, string body, Exception exception) {

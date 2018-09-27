@@ -23,34 +23,24 @@ using System;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class Payload {
-        
+
         //--- Fields ---
         private readonly string _accessToken;
         private readonly RollbarData _data;
 
         //--- Constructors ---
         public Payload(string accessToken, RollbarData data) {
-            if(string.IsNullOrWhiteSpace(accessToken)) {
-                throw new ArgumentException("Cannot be null or whitespace.", "accessToken");
-            }
-            if(data == null) {
-                throw new ArgumentNullException("data");
-            }
-            _accessToken = accessToken;
-            _data = data;
+            _accessToken = accessToken ?? throw new ArgumentException("Cannot be null or whitespace.", nameof(accessToken));
+            _data = data ?? throw new ArgumentNullException(nameof(data));
         }
 
         //--- Properties ---
         [JsonProperty("access_token")]
-        public string AccessToken {
-            get { return _accessToken; }
-        }
+        public string AccessToken => _accessToken;
 
         [JsonProperty("data")]
-        public RollbarData RollbarData {
-            get { return _data; }
-        }
+        public RollbarData RollbarData => _data;
     }
 }

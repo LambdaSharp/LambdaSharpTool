@@ -26,37 +26,27 @@ using System.Linq;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class Trace {
-        
+
         //--- Fields ---
         private readonly ExceptionInfo _exception;
         private readonly IEnumerable<Frame> _frames;
 
         //--- Constructors ---
         public Trace(ExceptionInfo exception, IEnumerable<Frame> frames) {
-            if(exception == null) {
-                throw new ArgumentNullException("exception");
-            }
-            if(frames == null) {
-                throw new ArgumentNullException("frames");
-            }
+            _exception = exception ?? throw new ArgumentNullException(nameof(exception));
+            _frames = frames ?? throw new ArgumentNullException(nameof(frames));
             if(frames.Any(p => p == null)) {
                 throw new ArgumentException("Collection cannot contain any null items.", "frames");
             }
-            _exception = exception;
-            _frames = frames;
         }
 
         //--- Properties ---
         [JsonProperty("exception")]
-        public ExceptionInfo Exception {
-            get { return _exception; }
-        }
+        public ExceptionInfo Exception => _exception;
 
         [JsonProperty("frames")]
-        public IEnumerable<Frame> Frames {
-            get { return _frames; }
-        }
+        public IEnumerable<Frame> Frames => _frames;
     }
 }

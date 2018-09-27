@@ -23,12 +23,10 @@ using System;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class Frame {
-        
+
         //--- Fields ---
-        private readonly string _code;
-        private readonly CodeContext _codeContext;
         private readonly int? _columnNumber;
         private readonly string _fileName;
         private readonly int? _lineNumber;
@@ -36,54 +34,26 @@ namespace MindTouch.Rollbar.Data {
 
         //--- Constructors ---
         public Frame(string fileName) {
-            if(string.IsNullOrWhiteSpace(fileName)) {
-                throw new ArgumentNullException(nameof(fileName));
-            }
-            _fileName = fileName;
+            _fileName = fileName ?? throw new ArgumentNullException(nameof(fileName));
         }
 
-        public Frame(string fileName, int? lineNumber, int? columnNumber, string method)
-            : this(fileName) {
+        public Frame(string fileName, int? lineNumber, int? columnNumber, string method) : this(fileName) {
             _lineNumber = lineNumber;
             _columnNumber = columnNumber;
             _method = method;
         }
 
-        public Frame(string fileName, int? lineNumber, int? columnNumber, string method, string code, CodeContext codeContext)
-            : this(fileName, lineNumber, columnNumber, method) {
-            _code = code;
-            _codeContext = codeContext;
-        }
-
         //--- Properties ---
         [JsonProperty("filename")]
-        public string FileName {
-            get { return _fileName; }
-        }
+        public string FileName => _fileName;
 
         [JsonProperty("lineno")]
-        public int? LineNumber {
-            get { return _lineNumber; }
-        }
+        public int? LineNumber => _lineNumber;
 
         [JsonProperty("colno")]
-        public int? ColumnNumber {
-            get { return _columnNumber; }
-        }
+        public int? ColumnNumber => _columnNumber;
 
         [JsonProperty("method")]
-        public string Method {
-            get { return _method; }
-        }
-
-        [JsonProperty("code")]
-        public string Code {
-            get { return _code; }
-        }
-
-        [JsonProperty("context")]
-        public CodeContext CodeContext {
-            get { return _codeContext; }
-        }
+        public string Method => _method;
     }
 }

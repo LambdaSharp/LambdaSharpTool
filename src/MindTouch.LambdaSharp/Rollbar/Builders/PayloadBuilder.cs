@@ -27,11 +27,11 @@ namespace MindTouch.Rollbar.Builders {
     public class PayloadBuilder {
 
         //--- Fields ---
-        private readonly RollbarConfiguration _configuration;
+        private readonly RollbarReporter _configuration;
         private readonly DataBuilder _dataBuilder;
 
         //--- Contructors ---
-        public PayloadBuilder(RollbarConfiguration configuration, DataBuilder dataBuilder) {
+        public PayloadBuilder(RollbarReporter configuration, DataBuilder dataBuilder) {
             if(configuration == null) {
                 throw new ArgumentNullException("configuration");
             }
@@ -48,18 +48,8 @@ namespace MindTouch.Rollbar.Builders {
             return new Payload(_configuration.AccessToken, data);
         }
 
-        public Payload CreateWithContext(Payload payload, Context context) {
-            var data = _dataBuilder.CreateWithContext(payload.RollbarData, context);
-            return new Payload(_configuration.AccessToken, data);
-        }
-
         public Payload CreateWithFingerprintInput(Payload payload, string fingerprintInput) {
             var data = _dataBuilder.CreateWithFingerprintInput(payload.RollbarData, fingerprintInput);
-            return new Payload(_configuration.AccessToken, data);
-        }
-
-        public Payload CreateWithContextAndFingerprintInput(Payload payload, Context context, string fingerprintInput) {
-            var data = _dataBuilder.CreateWithContextAndFingerprintInput(payload.RollbarData, context, fingerprintInput);
             return new Payload(_configuration.AccessToken, data);
         }
 

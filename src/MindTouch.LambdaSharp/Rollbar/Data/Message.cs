@@ -24,24 +24,19 @@ using System;
 using Newtonsoft.Json;
 
 namespace MindTouch.Rollbar.Data {
-    
+
     public class Message {
-        
+
         //--- Fields ---
         private readonly string _body;
 
         //--- Constructors ---
         public Message(string body) {
-            if(string.IsNullOrWhiteSpace(body)) {
-                throw new ArgumentException("Cannot be null or whitespace.", "body");
-            }
-            _body = body;
+            _body = body ?? throw new ArgumentException("Cannot be null or whitespace.", nameof(body));
         }
 
         //--- Properties ---
         [JsonProperty("body")]
-        public string Body {
-            get { return _body; }
-        }
+        public string Body => _body;
     }
 }
