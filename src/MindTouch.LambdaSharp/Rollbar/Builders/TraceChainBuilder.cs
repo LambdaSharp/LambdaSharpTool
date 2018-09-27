@@ -26,13 +26,13 @@ using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
 
-    public class TraceChainBuilder : ITraceChainBuilder {
+    public class TraceChainBuilder {
 
         //--- Fields ---
-        private readonly ITraceBuilder _traceBuilder;
+        private readonly TraceBuilder _traceBuilder;
 
         //--- Constructors ---
-        public TraceChainBuilder(ITraceBuilder traceBuilder) {
+        public TraceChainBuilder(TraceBuilder traceBuilder) {
             if(traceBuilder == null) {
                 throw new ArgumentNullException("traceBuilder");
             }

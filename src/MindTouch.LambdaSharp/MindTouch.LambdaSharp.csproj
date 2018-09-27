@@ -24,7 +24,5 @@
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.0.0"/>
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.6.6"/>
     <PackageReference Include="AWSSDK.SQS" Version="3.3.3.18"/>
-    <PackageReference Include="MindTouch.Rollbar" Version="1.1.0"/>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.1.10"/>
   </ItemGroup>
 </Project>

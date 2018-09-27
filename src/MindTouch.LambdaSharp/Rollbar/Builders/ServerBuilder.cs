@@ -25,12 +25,13 @@ using System.Reflection;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
+
     internal sealed class ServerBuilder {
 
         //--- Constants ---
         private const string GIT_SHA_ENVIRONMENT_VARIABLE = "GIT_SHA";
         private const string GIT_BRANCH_ENVIRONMENT_VARIABLE = "GIT_BRANCH";
-        
+
         //--- Fields ---
         private static readonly Lazy<ServerBuilder> lazy =
             new Lazy<ServerBuilder>(() => new ServerBuilder());

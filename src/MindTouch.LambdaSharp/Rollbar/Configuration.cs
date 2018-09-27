@@ -27,8 +27,6 @@ namespace MindTouch.Rollbar {
     public class RollbarConfiguration {
 
         //--- Constants ---
-        private const string DEFAULT_ENCODING = "utf-8";
-        private const string DEFAULT_ENDPOINT = "https://api.rollbar.com/api/1/item/";
         private const string DEFAULT_LANGUAGE = "csharp";
         private const string GIT_SHA_ENVIRONMENT_VARIABLE = "GIT_SHA";
 
@@ -67,44 +65,11 @@ namespace MindTouch.Rollbar {
         }
 
         //--- Properties ---
-        public string Encoding {
-            get { return DEFAULT_ENCODING; }
-        }
-
-        public string Endpoint {
-            get { return DEFAULT_ENDPOINT; }
-        }
-
-        public string Proxy {
-            get { return _proxy; }
-        }
-
-        public string AccessToken {
-            get { return _accessToken; }
-        }
-
-        public string Environment {
-            get { return _environment; }
-        }
-
-        public string Platform {
-            get { return _platform; }
-        }
-
-        public string Language {
-            get { return DEFAULT_LANGUAGE; }
-        }
-
-        public string Framework {
-            get { return _framework; }
-        }
-
-        public string GitSha {
-            get { return _gitSha; }
-        }
-
-        public JsonSerializerSettings JsonSettings {
-            get { return _settings; }
-        }
+        public string AccessToken =>  _accessToken;
+        public string Environment => _environment;
+        public string Platform  => _platform;
+        public string Language => DEFAULT_LANGUAGE;
+        public string Framework => _framework;
+        public string GitSha => _gitSha;
     }
 }

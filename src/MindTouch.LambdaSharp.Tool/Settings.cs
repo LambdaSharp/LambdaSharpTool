@@ -40,10 +40,22 @@ namespace MindTouch.LambdaSharp.Tool {
         }
     }
 
+    public class LambdaSharpToolConfigException : Exception {
+
+        //--- Fields ---
+        public readonly string Profile;
+
+        //--- Constructors ---
+        public LambdaSharpToolConfigException(string profile) : base() {
+            Profile = profile ?? throw new ArgumentNullException(nameof(profile));
+        }
+    }
+
     public class Settings {
 
         //--- Properties ---
         public Version ToolVersion { get; set; }
+        public string ToolProfile { get; set; }
         public Version EnvironmentVersion { get; set; }
         public string Tier { get; set; }
         public string GitSha { get; set; }
@@ -53,7 +65,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public string DeploymentBucketName { get; set; }
         public string DeploymentKeyPrefix { get; set; }
         public string NotificationTopicArn { get; set; }
-        public string RollbarCustomResourceTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
@@ -76,7 +87,6 @@ namespace MindTouch.LambdaSharp.Tool {
             EnvironmentVersion = null;
             DeploymentBucketName = null;
             NotificationTopicArn = null;
-            RollbarCustomResourceTopicArn = null;
         }
     }
 }

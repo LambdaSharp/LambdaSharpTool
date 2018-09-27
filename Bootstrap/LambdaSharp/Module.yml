@@ -14,9 +14,9 @@ Exports:
     Description: LambdaSharp Dead Letter Queue (Arn)
     Value: !GetAtt DeadLetterQueue.Arn
 
-  - Name: LambdaSharp-LoggingTopicArn
-    Description: LambdaSharp Loggin Topic (Arn)
-    Value: !Ref LoggingTopic
+  - Name: LambdaSharp-LoggingStreamArn
+    Description: LambdaSharp Logging Stream
+    Value: !GetAtt LoggingStream.Arn
 
 Parameters:
 
@@ -26,8 +26,11 @@ Parameters:
       Type: AWS::SQS::Queue
       Allow: None
 
-  - Name: LoggingTopic
-    Description: SNS topic used by LambdaSharp functions to log warnings and errors
+  - Name: LoggingStream
+    Description: Kinesis stream for consolidated logging
     Resource:
-      Type: AWS::SNS::Topic
-      Allow: None
+      Type: AWS::Kinesis::Stream
+      Properties:
+        RetentionPeriodHours: 24
+        ShardCount: 1
+

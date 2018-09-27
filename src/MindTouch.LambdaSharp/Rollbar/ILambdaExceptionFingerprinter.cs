@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -19,12 +19,11 @@
  * limitations under the License.
  */
 
-using MindTouch.Rollbar.Data;
-
 namespace MindTouch.Rollbar {
-    public interface IPayloadPreprocessor {
 
-        //--- Methods ---
-        Context CreateContext(string context);
+    public interface ILambdaExceptionFingerprinter {
+
+        //--- Properties ---
+        string FingerprintValue { get; }
     }
 }

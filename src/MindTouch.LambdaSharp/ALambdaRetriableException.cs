@@ -24,12 +24,12 @@ using MindTouch.Rollbar;
 
 namespace MindTouch.LambdaSharp {
 
-    public abstract class ALambdaRetriableException : ARollbarException {
+    public abstract class ALambdaRetriableException : ALambdaException {
 
         //--- Constructors ---
-        protected ALambdaRetriableException(string format, params object[] args) 
+        protected ALambdaRetriableException(string format, params object[] args)
             : base(format, args) { }
-        protected ALambdaRetriableException(Exception innerException, string format, params object[] args) 
+        protected ALambdaRetriableException(Exception innerException, string format, params object[] args)
             : base(innerException, format, args) { }
     }
 }

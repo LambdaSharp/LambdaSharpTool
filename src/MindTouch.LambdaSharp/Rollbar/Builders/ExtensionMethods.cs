@@ -19,12 +19,25 @@
  * limitations under the License.
  */
 
-using MindTouch.Rollbar.Data;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MindTouch.Rollbar.Builders {
-    public interface ITitleBuilder {
-        
-        //--- Interface Methods ---
-        string CreateFromBody(Body body);
+
+    internal static class ExtensionMethods {
+
+        //--- Methods ---
+        public static IEnumerable<Exception> FlattenHierarchy(this Exception ex) {
+            return FlattenExceptionHierarchy(ex).ToArray();
+        }
+
+        private static IEnumerable<Exception> FlattenExceptionHierarchy(Exception ex) {
+            var innerException = ex;
+            do {
+                yield return innerException;
+                innerException = innerException.InnerException;
+            } while (innerException != null);
+        }
     }
 }

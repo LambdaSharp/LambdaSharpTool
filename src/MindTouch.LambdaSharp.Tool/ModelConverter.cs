@@ -78,29 +78,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Export = "Version"
             });
 
-            // TODO (2018-09-20, bjorg): need to figure out when RollbarToken should be injected and when not
-
-            // check if we need to add a 'RollbarToken' parameter node
-            if(
-                (Settings.RollbarCustomResourceTopicArn != null)
-                && module.Functions.Any()
-                && !module.Parameters.Any(param => param.Name == "RollbarToken")
-            ) {
-                module.Parameters.Add(new ParameterNode {
-                    Name = "RollbarToken",
-                    Description = "Rollbar project token",
-                    Resource = new ResourceNode {
-                        Type = "MindTouch::RollbarProject",
-                        Allow = "None",
-                        Properties = new Dictionary<string, object> {
-                            ["Tier"] = Fn.Ref("Tier"),
-                            ["Module"] = _module.Name
-                        },
-                        DependsOn = new List<string>()
-                    }
-                });
-            }
-
             // convert secrets
             var secretIndex = 0;
             _module.Secrets = AtLocation("Secrets", () => module.Secrets
@@ -252,6 +229,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             result = new CloudFormationResourceParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
+
+                                // TODO (2018-09-26, bjorg): consider passing in `Fn.Ref(parameter.Name)` as resource name
                                 Resource = ConvertResource(null, parameter.Resource)
                             };
                         });

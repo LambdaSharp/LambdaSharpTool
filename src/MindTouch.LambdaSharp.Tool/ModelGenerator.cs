@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Humidifier;
+using Humidifier.Logs;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -103,14 +104,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         "logs:CreateLogStream",
                         "logs:PutLogEvents"
                     }
-                },
-                new Statement {
-                    Sid = "LambdaLoggingCreate",
-                    Effect = "Allow",
-                    Resource = "*",
-                    Action = new List<string> {
-                        "logs:CreateLogGroup"
-                    }
                 }
             };
 
@@ -144,16 +137,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
 
-                // permissions needed for logging topic
-                _resourceStatements.Add(new Statement {
-                    Sid = "LambdaSnsLogging",
-                    Effect = "Allow",
-                    Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingTopicArn")),
-                    Action = new List<string> {
-                        "sns:Publish"
-                    }
-                });
-
                 // permissions needed for lambda functions to exist in a VPC
                 if(_module.Functions.Any(function => function.VPC != null)) {
                     _resourceStatements.Add(new Statement {
@@ -167,6 +150,37 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     });
                 }
+
+                // create CloudWatch Logs IAM role to invoke kinesis stream
+                _stack.Add("CloudWatchLogsRole", new IAM.Role {
+                    AssumeRolePolicyDocument = new PolicyDocument {
+                        Statement = new List<Statement> {
+                            new Statement {
+                                Sid = "CloudWatchLogsKinesisInvocation",
+                                Effect = "Allow",
+                                Principal = new {
+                                    Service = Fn.Sub("logs.${AWS::Region}.amazonaws.com")
+                                },
+                                Action = "sts:AssumeRole"
+                            }
+                        }
+                    },
+                    Policies = new List<IAM.Policy> {
+                        new IAM.Policy {
+                            PolicyName = Fn.Sub($"${{Tier}}-{_module.Name}-Permissions-Policy-For-CWL"),
+                            PolicyDocument = new PolicyDocument {
+                                Statement = new List<Statement> {
+                                    new Statement {
+                                        Sid = "CloudWatchLogsKinesisPermissions",
+                                        Effect = "Allow",
+                                        Action = "kinesis:PutRecord",
+                                        Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingStreamArn"))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
 
                 // create module IAM role used by all functions
                 _stack.Add("ModuleRole", new IAM.Role {
@@ -440,7 +454,6 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE"] = _module.Name;
             environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueUrl"));
-            environmentVariables["LOGGINGTOPIC"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingTopicArn"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
@@ -457,7 +470,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // create function definition
             _stack.Add(function.Name, new Lambda.Function {
-                FunctionName = ToAppResourceName(function.Name),
                 Description = function.Description,
                 Runtime = function.Runtime,
                 Handler = function.Handler,
@@ -486,6 +498,22 @@ namespace MindTouch.LambdaSharp.Tool {
                         Value = _module.Name
                     }
                 }
+            });
+
+            // create function log-group with retention window
+            var functionLogGroup = $"{function.Name}LogGroup";
+            _stack.Add(functionLogGroup, new LogGroup {
+                LogGroupName = Fn.Sub($"/aws/lambda/${{{function.Name}}}"),
+
+                // TODO (2018-09-26, bjorg): make retention configurable
+                //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
+                RetentionInDays = 7
+            });
+            _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
+                DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingStreamArn")),
+                FilterPattern = "\">>>\"",
+                LogGroupName = Fn.Ref(functionLogGroup),
+                RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
             });
 
             // check if function is exported
@@ -682,11 +710,12 @@ namespace MindTouch.LambdaSharp.Tool {
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
+                    var existingResource = _module.Parameters.First(p => p.Name == source.Kinesis) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.Kinesis}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         StartingPosition = source.StartingPosition,
                         Enabled = true,
-                        EventSourceArn = Fn.GetAtt(source.Kinesis, "Arn"),
+                        EventSourceArn = (existingResource != null) ? existingResource.Resource.ResourceArn : Fn.GetAtt(source.Kinesis, "Arn"),
                         FunctionName = Fn.Ref(function.Name)
                     });
                 }
@@ -855,5 +884,5 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private object ToAppResourceName(string name) => (name != null) ? Fn.Sub($"${{Tier}}-{_module.Name}-{name}") : null;
-   }
+    }
 }

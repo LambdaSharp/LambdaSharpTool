@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -19,14 +19,26 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public interface IFrameCollectionBuilder {
-        
+
+    public class TitleBuilder {
+
+        //--- Constants ---
+        private const int MAX_TITLE_LENGTH = 255;
+
         //--- Interface Methods ---
-        IEnumerable<Frame> CreateFromException(Exception exception);
+        public string CreateFromBody(Body body) {
+            if(body.Message != null) {
+                return body.Message.Body;
+            }
+            var trace = body.Trace ?? body.TraceChain.LastOrDefault() ?? body.TraceChain.Last();
+            var message = trace.Exception.Message;
+            var title = string.Format(CultureInfo.InvariantCulture, "{0}: {1}", trace.Exception.ClassName, message);
+            return title.Length > MAX_TITLE_LENGTH ? title.Substring(0, MAX_TITLE_LENGTH) : title;
+        }
     }
 }

@@ -23,14 +23,15 @@ using System;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public class TraceBuilder : ITraceBuilder {
-        
+
+    public class TraceBuilder {
+
         //--- Fields ---
-        private readonly IExceptionInfoBuilder _exceptionBuilder;
-        private readonly IFrameCollectionBuilder _frameBuilder;
+        private readonly ExceptionInfoBuilder _exceptionBuilder;
+        private readonly FrameCollectionBuilder _frameBuilder;
 
         //--- Constructors ---
-        public TraceBuilder(IExceptionInfoBuilder exceptionBuilder, IFrameCollectionBuilder frameBuilder) {
+        public TraceBuilder(ExceptionInfoBuilder exceptionBuilder, FrameCollectionBuilder frameBuilder) {
             if(exceptionBuilder == null) {
                 throw new ArgumentNullException("exceptionBuilder");
             }

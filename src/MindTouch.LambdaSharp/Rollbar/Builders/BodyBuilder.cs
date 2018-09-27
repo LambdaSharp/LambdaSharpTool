@@ -23,14 +23,15 @@ using System;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public class BodyBuilder : IBodyBuilder {
+
+    public class BodyBuilder {
 
         //--- Fields ---
-        private readonly ITraceBuilder _traceBuilder;
-        private readonly ITraceChainBuilder _traceChainBuilder;
+        private readonly TraceBuilder _traceBuilder;
+        private readonly TraceChainBuilder _traceChainBuilder;
 
         // -- Constructor ---
-        public BodyBuilder(ITraceBuilder traceBuilder, ITraceChainBuilder traceChainBuilder) {
+        public BodyBuilder(TraceBuilder traceBuilder, TraceChainBuilder traceChainBuilder) {
             if(traceBuilder == null) {
                 throw new ArgumentNullException("traceBuilder");
             }
@@ -41,7 +42,7 @@ namespace MindTouch.Rollbar.Builders {
             _traceChainBuilder = traceChainBuilder;
         }
 
-        //--- Methods --- 
+        //--- Methods ---
         public Body CreateFromException(Exception exception, string description) {
             if(exception.InnerException == null) {
                 var trace = _traceBuilder.CreateFromException(exception, description);

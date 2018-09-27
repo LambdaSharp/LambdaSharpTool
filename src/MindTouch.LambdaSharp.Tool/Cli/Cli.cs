@@ -60,10 +60,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Console.WriteLine("ERROR: " + error.Message);
                 }
             }
+            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
+            if(configException != null) {
+                Console.WriteLine();
+                Console.WriteLine($"IMPORTANT: complete the LambdaSharpTool configuration procedure for profile '{configException.Profile}'");
+                return;
+            }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
                 Console.WriteLine($"IMPORTANT: complete the LambdaSharp Environment bootstrap procedure for deployment tier '{setupException.Tier}'");
+                return;
             }
         }
 

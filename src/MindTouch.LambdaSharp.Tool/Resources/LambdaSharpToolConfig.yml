@@ -1,0 +1,108 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: LambdaSharpTool Settings
+
+Parameters:
+
+  DeploymentBucketName:
+    Type: String
+    Description: S3 bucket name to be used for deployments by LambdaSharpTool (if blank, an S3 bucket is created)
+    AllowedPattern: '[a-z0-9\-]*'
+    ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
+
+  DeploymentKeyPrefix:
+    Type: String
+    Description: S3 key prefix to be used for deployments by LambdaSharpTool
+
+  DeploymentNotificationTopicArn:
+    Type: String
+    Description: SNS topic for CloudFormation notification used by LambdaSharpTool (if blank, an SNS topic is created)
+    AllowedPattern: '(arn:aws:sns:.*)?'
+    ConstraintDescription: Must be an SNS topic ARN or left blank
+
+  LambdaSharpToolVersion:
+    Type: String
+    Description: LambdaSharpTool version
+    AllowedPattern: '\d+.\d+(.\d+(.\d+)?)?'
+    ConstraintDescription: 'Version number must have format: Major.Minor[.Build[.Revision]]'
+
+  LambdaSharpToolProfile:
+    Type: String
+    Description: LambdaSharpTool profile
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_\-]*'
+    ConstraintDescription: Must begin with a valid identifier
+
+Conditions:
+  CreateDeploymentBucket: !Equals [ !Ref DeploymentBucketName, "" ]
+  CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopicArn, "" ]
+  HasDeploymentKeyPrefix: !Not [ !Equals [ !Ref DeploymentKeyPrefix, "" ]]
+
+Resources:
+
+  # LambdaSharpTool settings
+  VersionSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/Version'
+      Description: LambdaSharp module version
+      Type: String
+      Value: !Ref LambdaSharpToolVersion
+
+  StackNameSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/StackName'
+      Description: LambdaSharp CloudFormation stack name
+      Type: String
+      Value: !Ref AWS::StackName
+
+  StackIdSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/StackId'
+      Description: LambdaSharp CloudFormation stack ID
+      Type: String
+      Value: !Ref AWS::StackId
+
+  # S3 Deployment Bucket & Key Prefix
+  DeploymentBucket:
+    Type: AWS::S3::Bucket
+    Condition: CreateDeploymentBucket
+
+  DeploymentBucketNameSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentBucketName'
+      Description: S3 bucket name to install modules
+      Type: String
+      Value: !If [
+        CreateDeploymentBucket,
+        !Ref DeploymentBucket,
+        !Ref DeploymentBucketName
+      ]
+
+  DeploymentKeyPrefixSsmParameter:
+    Type: AWS::SSM::Parameter
+    Condition: HasDeploymentKeyPrefix
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentKeyPrefix'
+      Description: S3 key prefix to install modules
+      Type: String
+      Value: !Ref DeploymentKeyPrefix
+
+  # SNS CloudFormation Notification Topic
+  DeploymentNotificationTopic:
+    Type: AWS::SNS::Topic
+    Condition: CreateDeploymentNotificationTopic
+
+  DeploymentNotificationTopicSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentNotificationTopicArn'
+      Description: SNS topic for CloudFormation notifications
+      Type: String
+      Value: !If [
+        CreateDeploymentNotificationTopic,
+        !Ref DeploymentNotificationTopic,
+        !Ref DeploymentNotificationTopicArn
+      ]

@@ -26,8 +26,9 @@ using System.Linq;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public class FrameCollectionBuilder : IFrameCollectionBuilder {
-        
+
+    public class FrameCollectionBuilder {
+
         //--- Methods ---
         public IEnumerable<Frame> CreateFromException(Exception exception) {
             var stackTrace = new StackTrace(exception, true);

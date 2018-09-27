@@ -26,21 +26,22 @@ using System.Text;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public class DataBuilder : IDataBuilder {
+
+    public class DataBuilder {
 
         //--- Class Fields ---
         private static readonly HashAlgorithm _algorithm = SHA1.Create();
 
         //--- Fields ---
-        private readonly IBodyBuilder _bodyBuilder;
+        private readonly BodyBuilder _bodyBuilder;
         private readonly RollbarConfiguration _configuration;
-        private readonly ITitleBuilder _titleBuilder;
+        private readonly TitleBuilder _titleBuilder;
 
         //--- Constructors ---
         public DataBuilder(
             RollbarConfiguration configuration,
-            IBodyBuilder bodyBuilder,
-            ITitleBuilder titleBuilder
+            BodyBuilder bodyBuilder,
+            TitleBuilder titleBuilder
         ) {
             if(configuration == null) {
                 throw new ArgumentNullException("configuration");
@@ -59,7 +60,7 @@ namespace MindTouch.Rollbar.Builders {
         //--- Methods ---
         public RollbarData CreateFromException(Exception exception, string description, string level) {
             var body = _bodyBuilder.CreateFromException(exception, description);
-            var fingerprinter = exception as IRollbarFingerprinter;
+            var fingerprinter = exception as ILambdaExceptionFingerprinter;
             var fingerprint = fingerprinter == null
                                   ? CreateFingerprintFromBody(body)
                                   : CreateFingerprintFromFingerprinter(fingerprinter);
@@ -112,15 +113,11 @@ namespace MindTouch.Rollbar.Builders {
                 server);
         }
 
-        private static string CreateFingerprintFromBody(Body body) {
-            var value = ToString(body);
-            return ToHash(value);
-        }
+        private static string CreateFingerprintFromBody(Body body)
+            => ToHash(ToString(body));
 
-        private static string CreateFingerprintFromFingerprinter(IRollbarFingerprinter fingerprinter) {
-            var value = fingerprinter.FingerprintValue;
-            return ToHash(value);
-        }
+        private static string CreateFingerprintFromFingerprinter(ILambdaExceptionFingerprinter fingerprinter)
+            => ToHash(fingerprinter.FingerprintValue);
 
         private static string ToHash(string value) {
             var hash = _algorithm.ComputeHash(Encoding.UTF8.GetBytes(value));

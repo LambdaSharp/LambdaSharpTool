@@ -59,15 +59,6 @@ namespace MacroSample.MyFunction {
 
     public class Function : ALambdaFunction<MacroRequest, MacroResponse> {
 
-        //--- Class Methods ---
-        private static string SerializeToJson(object value) {
-            using(var stream = new MemoryStream()) {
-                new JsonSerializer().Serialize(value, stream);
-                stream.Position = 0;
-                return Encoding.UTF8.GetString(stream.ToArray());
-            }
-        }
-
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
@@ -75,11 +66,11 @@ namespace MacroSample.MyFunction {
         public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request, ILambdaContext context) {
             LogInfo($"AwsRegion = {request.region}");
             LogInfo($"AccountID = {request.accountId}");
-            LogInfo($"Fragment = {SerializeToJson(request.fragment)}");
+            LogInfo($"Fragment = {SerializeJson(request.fragment)}");
             LogInfo($"TransformID = {request.transformId}");
-            LogInfo($"Params = {SerializeToJson(request.@params)}");
+            LogInfo($"Params = {SerializeJson(request.@params)}");
             LogInfo($"RequestID = {request.requestId}");
-            LogInfo($"TemplateParameterValues = {SerializeToJson(request.templateParameterValues)}");
+            LogInfo($"TemplateParameterValues = {SerializeJson(request.templateParameterValues)}");
 
             // macro for string operations
             try {

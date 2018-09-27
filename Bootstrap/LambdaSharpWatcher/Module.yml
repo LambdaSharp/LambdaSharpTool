@@ -1,0 +1,21 @@
+Name: LambdaSharpWatcher
+
+Version: 0.4
+
+Parameters:
+
+  - Name: LoggingStream
+    Value:
+      Fn::ImportValue: !Sub "${Tier}-LambdaSharp-LoggingStreamArn"
+    Resource:
+      Type: AWS::Kinesis::Stream
+      Allow: Subscribe
+
+Functions:
+
+  - Name: ProcessLogEvents
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Kinesis: LoggingStream
+        StartingPosition: TRIM_HORIZON

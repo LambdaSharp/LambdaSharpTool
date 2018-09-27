@@ -45,7 +45,6 @@ namespace MindTouch.LambdaSharp.Slack {
         public static HttpClient HttpClient = new HttpClient();
 
         //--- Fields ---
-        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
         private string _slackVerificationTokenName;
         private string _slackVerificationToken;
 
@@ -70,7 +69,7 @@ namespace MindTouch.LambdaSharp.Slack {
             LogInfo("reading message stream");
             SlackRequest request;
             try {
-                request = JsonSerializer.Deserialize<SlackRequest>(stream);
+                request = DeserializeJson<SlackRequest>(stream);
             } catch(Exception e) {
                 LogError(e, "failed during Slack request deserialization");
                 return $"ERROR: {e.Message}";
@@ -131,16 +130,12 @@ namespace MindTouch.LambdaSharp.Slack {
             => Respond(request, SlackResponse.Ephemeral(text, attachments));
 
         protected async Task<bool> Respond(SlackRequest request, SlackResponse response) {
-            using(var stream = new MemoryStream()) {
-                JsonSerializer.Serialize(response, stream);
-                stream.Position = 0;
-                var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
-                    RequestUri = new Uri(request.ResponseUrl),
-                    Method = HttpMethod.Post,
-                    Content = new StreamContent(stream)
-                });
-                return httpResponse.StatusCode == HttpStatusCode.OK;
-            }
+            var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
+                RequestUri = new Uri(request.ResponseUrl),
+                Method = HttpMethod.Post,
+                Content = new StringContent(SerializeJson(response))
+            });
+            return httpResponse.StatusCode == HttpStatusCode.OK;
         }
     }
 }

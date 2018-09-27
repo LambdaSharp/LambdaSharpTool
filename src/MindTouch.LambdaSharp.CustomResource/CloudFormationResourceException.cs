@@ -22,7 +22,7 @@
 using MindTouch.Rollbar;
 
 namespace MindTouch.LambdaSharp.CustomResource {
-    public class CustomResourceException : ARollbarException {
+    public class CustomResourceException : ALambdaException {
 
         //--- Constructors ---
         public CustomResourceException(string format, params object[] args) : base(format, args) { }

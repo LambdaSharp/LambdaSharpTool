@@ -23,14 +23,15 @@ using System;
 using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    public class PayloadBuilder : IPayloadBuilder {
+
+    public class PayloadBuilder {
 
         //--- Fields ---
         private readonly RollbarConfiguration _configuration;
-        private readonly IDataBuilder _dataBuilder;
+        private readonly DataBuilder _dataBuilder;
 
         //--- Contructors ---
-        public PayloadBuilder(RollbarConfiguration configuration, IDataBuilder dataBuilder) {
+        public PayloadBuilder(RollbarConfiguration configuration, DataBuilder dataBuilder) {
             if(configuration == null) {
                 throw new ArgumentNullException("configuration");
             }

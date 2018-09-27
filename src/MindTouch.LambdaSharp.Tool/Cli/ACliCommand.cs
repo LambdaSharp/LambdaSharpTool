@@ -84,9 +84,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentVersionOption = cmd.Option("--deployment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket used to deploying assets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentDeadletterQueueUrlOption = cmd.Option("--deployment-deadletter-queue-url <URL>", "(test only) SQS Deadletter queue used by function (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentLoggingTopicArnOption = cmd.Option("--deployment-logging-topic-arn <ARN>", "(test only) SNS topic used by LambdaSharp functions to log warnings and errors (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentRollbarCustomResourceTopicArnOption = cmd.Option("--deployment-rollbar-customresource-topic-arn <ARN>", "(test only) SNS Topic for creating Rollbar projects (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
             var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
@@ -151,9 +149,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentVersion = deploymentVersionOption.Value();
                 var deploymentBucketName = deploymentBucketNameOption.Value();
                 var deploymentDeadletterQueueUrl = deploymentDeadletterQueueUrlOption.Value();
-                var deploymentLoggingTopicArn = deploymentLoggingTopicArnOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
-                var deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArnOption.Value();
 
                 // create a settings entry for each module filename
                 var result = new List<Settings>();
@@ -211,6 +207,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     result.Add(new Settings {
                         ToolVersion = Version,
+
+                        // TODO (2018-09-26, bjorg): make tool profile configurable
+                        ToolProfile = "Default",
+
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
                         Tier = tier,
                         BuildConfiguration = buildConfigurationOption.Value() ?? "Release",
@@ -219,7 +219,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AwsAccountId = awsAccount.Value.AccountId,
                         DeploymentBucketName = deploymentBucketName,
                         NotificationTopicArn = deploymentNotificationTopicArn,
-                        RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
                         ModuleSource = source,
                         WorkingDirectory = workingDirectory,
                         OutputDirectory = outputDirectory,
@@ -264,8 +263,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 (settings.EnvironmentVersion == null)
                 || (settings.DeploymentBucketName == null)
                 || (settings.NotificationTopicArn == null)
-                || (settings.RollbarCustomResourceTopicArn == null)
             ) {
+
+                // import LambdaSharpTool settings
+                var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
+                var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
+                if(!Version.TryParse(GetLambdaSharpToolSetting("Version"), out Version lambdaSharpToolVersion)) {
+                    AddError("LambdaSharpTool is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
+                    return;
+                }
+                if(lambdaSharpToolVersion < settings.ToolVersion) {
+                    AddError($"LambdaSharpTool configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
+                    return;
+                }
+                settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
+                settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
 
                 // import LambdaSharp settings
                 var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
@@ -273,11 +285,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // resolved values that are not yet set
                 settings.EnvironmentVersion = settings.EnvironmentVersion ?? new Version(GetLambdaSharpSetting("Version"));
-                settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-                settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
 
                 // local functions
+                string GetLambdaSharpToolSetting(string name) {
+                    lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
+                    return kv.Value;
+                }
+
                 string GetLambdaSharpSetting(string name) {
                     lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
                     return kv.Value;

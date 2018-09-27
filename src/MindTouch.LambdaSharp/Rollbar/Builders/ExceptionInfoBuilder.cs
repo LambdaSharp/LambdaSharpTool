@@ -20,23 +20,31 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using MindTouch.Rollbar.Data;
 
 namespace MindTouch.Rollbar.Builders {
-    internal static class ExtensionMethods {
-        
+
+    public class ExceptionInfoBuilder {
+
         //--- Methods ---
-        public static IEnumerable<Exception> FlattenHierarchy(this Exception ex) {
-            return FlattenExceptionHierarchy(ex).ToArray();
+        public ExceptionInfo CreateFromException(Exception exception, string description) {
+            var className = exception.GetType().Name;
+            return new ExceptionInfo(
+                className,
+                exception.Message,
+                BuildDescription(exception, description)
+            );
         }
 
-        private static IEnumerable<Exception> FlattenExceptionHierarchy(Exception ex) {
-            var innerException = ex;
-            do {
-                yield return innerException;
-                innerException = innerException.InnerException;
-            } while (innerException != null);
+        private static string BuildDescription(Exception exception, string description) {
+
+            // use the exception message when no custom description (i.e. log4net message) is provided
+            if(string.IsNullOrWhiteSpace(description)) {
+                return exception.ToString();
+            }
+
+            // combine the custom description (i.e. log4net message) with the exception message
+            return description + Environment.NewLine + exception;
         }
     }
 }

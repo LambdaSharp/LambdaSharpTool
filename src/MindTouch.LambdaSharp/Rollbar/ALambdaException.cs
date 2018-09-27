@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -20,16 +20,26 @@
  */
 
 using System;
-using MindTouch.Rollbar.Data;
 
-namespace MindTouch.Rollbar.Builders {
-    public interface IDataBuilder {
-        
-        //--- Interface Methods ---
-        RollbarData CreateFromMessage(string message, string level);
-        RollbarData CreateFromException(Exception exception, string description, string level);
-        RollbarData CreateWithContext(RollbarData data, Context context);
-        RollbarData CreateWithFingerprintInput(RollbarData data, string fingerprintInput);
-        RollbarData CreateWithContextAndFingerprintInput(RollbarData data, Context context, string fingerprintInput);
+namespace MindTouch.Rollbar {
+
+    public class ALambdaException : Exception {
+
+        //--- Fields ---
+        private readonly string _messageFormat;
+
+        //--- Constructors ---
+        protected ALambdaException(string format, params object[] args)
+            : base(string.Format(format, args))
+            => _messageFormat = format;
+
+        protected ALambdaException(Exception innerException, string format, params object[] args)
+            : base(string.Format(format, args), innerException ?? new ArgumentNullException(nameof(innerException)))
+            => _messageFormat = format;
+
+        //--- Properties ---
+        public string FingerprintValue {
+            get => GetType().ToString() + _messageFormat;
+        }
     }
 }
