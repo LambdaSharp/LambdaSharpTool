@@ -28,16 +28,16 @@ namespace MindTouch.Rollbar.Builders {
     internal static class ExtensionMethods {
 
         //--- Methods ---
-        public static IEnumerable<Exception> FlattenHierarchy(this Exception ex) {
-            return FlattenExceptionHierarchy(ex).ToArray();
+        public static IEnumerable<Exception> FlattenHierarchy(this Exception exception) {
+            return FlattenExceptionHierarchy(exception).ToArray();
         }
 
-        private static IEnumerable<Exception> FlattenExceptionHierarchy(Exception ex) {
-            var innerException = ex;
+        private static IEnumerable<Exception> FlattenExceptionHierarchy(Exception exception) {
+            var current = exception;
             do {
-                yield return innerException;
-                innerException = innerException.InnerException;
-            } while (innerException != null);
+                yield return current;
+                current = current.InnerException;
+            } while(current != null);
         }
     }
 }

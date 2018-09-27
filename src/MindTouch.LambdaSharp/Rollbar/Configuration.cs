@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -33,6 +34,7 @@ namespace MindTouch.Rollbar {
 
         //--- Class Fields ---
         private static readonly HashAlgorithm _algorithm = SHA1.Create();
+        private static readonly DateTime _epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
         //--- Class Methods ---
         private static string CreateFingerprintFromBody(Body body) {
@@ -40,7 +42,7 @@ namespace MindTouch.Rollbar {
             if(body.Message != null) {
                 text = body.Message.Body;
             } else if(body.Trace != null) {
-                text = CreateFromTraces(body.Trace);
+                text = CreateFromTraces(new[] { body.Trace });
             } else {
                 text = CreateFromTraces(body.TraceChain.ToArray());
             }
@@ -55,7 +57,7 @@ namespace MindTouch.Rollbar {
             return string.Concat(hash.Select(x => x.ToString("X2")));
         }
 
-        private static string CreateFromTraces(params Trace[] traces) {
+        private static string CreateFromTraces(Trace[] traces) {
             var sb = new StringBuilder();
             foreach(var trace in traces) {
                 sb.AppendLine(trace.Exception.ClassName);
@@ -80,8 +82,6 @@ namespace MindTouch.Rollbar {
         private readonly JsonSerializerSettings _settings;
         private readonly ExceptionInfoBuilder _exceptionBuilder;
         private readonly FrameCollectionBuilder _frameBuilder;
-        private readonly TraceBuilder _traceBuilder;
-        private readonly TraceChainBuilder _traceChainBuilder;
         private readonly TitleBuilder _titleBuilder;
 
         //--- Constructors ---
@@ -107,8 +107,6 @@ namespace MindTouch.Rollbar {
             _settings.Converters.Add(new NameValueCollectionConverter());
             _frameBuilder = new FrameCollectionBuilder();
             _exceptionBuilder = new ExceptionInfoBuilder();
-            _traceBuilder = new TraceBuilder(_exceptionBuilder, _frameBuilder);
-            _traceChainBuilder = new TraceChainBuilder(_traceBuilder);
             _titleBuilder = new TitleBuilder();
         }
 
@@ -125,17 +123,15 @@ namespace MindTouch.Rollbar {
         //--- Methods ---
         public Payload CreateFromException(Exception exception, string description, string level) {
             Body body;
-            if(exception.InnerException == null) {
-                var trace = _traceBuilder.CreateFromException(exception, description);
-                body = new Body(trace);
-            } else {
-                var traces = _traceChainBuilder.CreateFromException(exception, description);
-                body = new Body(traces);
-            }
-            var fingerprinter = exception as ILambdaExceptionFingerprinter;
-            var fingerprint = (fingerprinter == null)
-                ? CreateFingerprintFromBody(body)
-                : CreateFingerprintFromFingerprinter(fingerprinter);
+            var exceptions = exception.FlattenHierarchy();
+            var traces = new List<Trace>();
+            traces.Add(CreateTraceFromException(exceptions.First(), description));
+            traces.AddRange(exceptions.Skip(1).Select(ex => CreateTraceFromException(ex, description: null)));
+            traces.Reverse();
+            body = new Body(traces);
+            var fingerprint = (exception is ILambdaExceptionFingerprinter fingerprinter)
+                ? CreateFingerprintFromFingerprinter(fingerprinter)
+                : CreateFingerprintFromBody(body);
             var data = CreateFromBody(body, fingerprint, level);
             return new Payload(AccessToken, data);
         }
@@ -153,27 +149,27 @@ namespace MindTouch.Rollbar {
         }
 
         private RollbarData CreateFromBody(Body body, string fingerprint, string level) {
-            var epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            var timestamp = Convert.ToInt64((DateTime.UtcNow - epoch).TotalSeconds);
-            var platform = Platform;
-            var language = Language;
-            var framework = Framework;
+            var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             var title = _titleBuilder.CreateFromBody(body);
-            var server = ServerBuilder.Instance.Server;
-            string codeVersion = GitSha;
             return new RollbarData(
                 Environment,
                 body,
                 level,
                 timestamp,
-                codeVersion,
-                platform,
-                language,
-                framework,
+                GitSha,
+                Platform,
+                Language,
+                Framework,
                 fingerprint,
                 title,
-                server
+                ServerBuilder.Instance.Server
             );
+        }
+
+        private Trace CreateTraceFromException(Exception exception, string description) {
+            var ex = _exceptionBuilder.CreateFromException(exception, description);
+            var frames = _frameBuilder.CreateFromException(exception);
+            return new Trace(ex, frames);
         }
     }
 }
