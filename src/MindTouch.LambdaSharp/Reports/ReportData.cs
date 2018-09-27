@@ -1,4 +1,4 @@
-﻿/*
+/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -22,31 +22,26 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Specialized;
+using System.Globalization;
 using Newtonsoft.Json;
 
-namespace MindTouch.Rollbar.Data {
+namespace MindTouch.LambdaSharp.Reports {
 
-    public class Trace {
-
-        //--- Fields ---
-        private readonly ExceptionInfo _exception;
-        private readonly IEnumerable<Frame> _frames;
-
-        //--- Constructors ---
-        public Trace(ExceptionInfo exception, IEnumerable<Frame> frames) {
-            _exception = exception ?? throw new ArgumentNullException(nameof(exception));
-            _frames = frames ?? throw new ArgumentNullException(nameof(frames));
-            if(frames.Any(p => p == null)) {
-                throw new ArgumentException("Collection cannot contain any null items.", "frames");
-            }
-        }
+    public class ReportData {
 
         //--- Properties ---
-        [JsonProperty("exception")]
-        public ExceptionInfo Exception => _exception;
-
-        [JsonProperty("frames")]
-        public IEnumerable<Frame> Frames => _frames;
+        public string ModuleName { get; set; }
+        public string DeploymentTier { get; set; }
+        public string Level { get; set; }
+        public string Fingerprint { get; set; }
+        public long Timestamp { get; set; }
+        public string Message { get; set; }
+        public IEnumerable<ReportStackTrace> Traces { get; set; }
+        public string Platform { get; set; }
+        public string Framework { get; set; }
+        public string Language { get; set; }
+        public string GitSha { get; set; }
+        public string GitBranch { get; set; }
     }
 }

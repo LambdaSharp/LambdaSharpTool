@@ -20,7 +20,7 @@
  */
 
 using System;
-using MindTouch.Rollbar;
+using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp {
 

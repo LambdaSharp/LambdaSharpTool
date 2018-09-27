@@ -19,12 +19,11 @@
  * limitations under the License.
  */
 
-using MindTouch.LambdaSharp.Reports;
+namespace MindTouch.LambdaSharp {
 
-namespace MindTouch.LambdaSharp.CustomResource {
-    public class CustomResourceException : ALambdaException {
+    public interface ILambdaExceptionFingerprinter {
 
-        //--- Constructors ---
-        public CustomResourceException(string format, params object[] args) : base(format, args) { }
+        //--- Properties ---
+        string FingerprintValue { get; }
     }
 }

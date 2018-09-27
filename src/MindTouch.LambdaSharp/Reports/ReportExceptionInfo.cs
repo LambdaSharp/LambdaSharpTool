@@ -19,11 +19,16 @@
  * limitations under the License.
  */
 
-namespace MindTouch.Rollbar {
+using System;
+using Newtonsoft.Json;
 
-    public interface ILambdaExceptionFingerprinter {
+namespace MindTouch.LambdaSharp.Reports {
+
+    public class ReportExceptionInfo {
 
         //--- Properties ---
-        string FingerprintValue { get; }
+        public string ClassName { get; set; }
+        public string Message { get; set; }
+        public string StackTrace { get; set; }
     }
 }

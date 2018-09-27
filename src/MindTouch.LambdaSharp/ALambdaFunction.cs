@@ -33,8 +33,7 @@ using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.Json;
 using Amazon.SQS;
 using MindTouch.LambdaSharp.ConfigSource;
-using MindTouch.Rollbar;
-using MindTouch.Rollbar.Data;
+using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp {
 
@@ -55,33 +54,13 @@ namespace MindTouch.LambdaSharp {
             }
         }
 
-        private static string FormatMessage(string format, object[] args) {
-            if(format == null) {
-                return null;
-            }
-            if(args.Length == 0) {
-                return format;
-            }
-            try {
-                return string.Format(format, args);
-            } catch {
-                return format + "(" + string.Join(", ", args.Select(arg => {
-                    try {
-                        return arg.ToString();
-                    } catch {
-                        return "<ERROR>";
-                    }
-                })) + ")";
-            }
-        }
-
         //--- Fields ---
         private readonly Func<DateTime> _now;
         private readonly DateTime _started;
         private readonly IAmazonKeyManagementService _kmsClient;
         private readonly IAmazonSQS _sqsClient;
         private readonly ILambdaConfigSource _envSource;
-        private RollbarReporter _payloadBuilder;
+        private Reporter _reporter;
         private string _deadLetterQueueUrl;
         private bool _initialized;
         private LambdaConfig _appConfig;
@@ -168,14 +147,13 @@ namespace MindTouch.LambdaSharp {
             // convert environment variables to lambda parameters
             _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
-            // initialize rollbar
-            const string platform = "lambda";
-            _payloadBuilder = new RollbarReporter(
+            // initialize error/warning reporter
+            _reporter = new Reporter(
                 ModuleName,
                 DeploymentTier,
-                platform,
                 framework,
-                gitsha
+                gitsha,
+                gitBranch: null
             );
         }
 
@@ -254,12 +232,12 @@ namespace MindTouch.LambdaSharp {
             => LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{extra}");
 
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
-            string message = FormatMessage(format, args);
+            string message = _reporter.FormatMessage(format, args);
             Log(level, $"{message}", exception?.ToString());
             if(level >= LambdaLogLevel.WARNING) {
                 try {
-                    var payload = CreatePayload(level.ToString(), exception, format, args);
-                    LogReport(level, message, "JSON", SerializeJson(payload));
+                    var report = _reporter.CreateReport(level.ToString(), exception, format, args);
+                    LambdaLogger.Log(SerializeJson(report) + "\n");
                 } catch(Exception e) {
                     LogReport(level, message, "STACKTRACE", exception.ToString());
                     LogReport(LambdaLogLevel.WARNING, "failed to generate JSON exception payload", "STACKTRACE", e.ToString());
@@ -271,24 +249,5 @@ namespace MindTouch.LambdaSharp {
             LambdaLogger.Log($">>> {level.ToString().ToUpperInvariant()} {message}\n{type}:\n{payload}");
         }
         #endregion
-
-        private Payload CreatePayload(string level, Exception exception, string format = null, params object[] args) {
-            var message = FormatMessage(format, args) ?? exception?.Message;
-            if(message == null) {
-                throw new ArgumentException("both exception and format are null");
-            }
-            Payload payload;
-            if(exception != null) {
-                payload = _payloadBuilder.CreateFromException(exception, message, level);
-            } else {
-                payload = _payloadBuilder.CreateFromMessage(message, level);
-            }
-            if(exception is ALambdaException rollbarException) {
-                payload = _payloadBuilder.CreateWithFingerprintInput(payload, rollbarException.FingerprintValue);
-            } else {
-                payload = _payloadBuilder.CreateWithFingerprintInput(payload, format);
-            }
-            return payload;
-        }
     }
 }

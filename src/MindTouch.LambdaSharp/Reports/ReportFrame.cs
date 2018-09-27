@@ -1,4 +1,4 @@
-﻿/*
+/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -22,25 +22,17 @@
 using System;
 using Newtonsoft.Json;
 
-namespace MindTouch.Rollbar.Data {
+namespace MindTouch.LambdaSharp.Reports {
 
-    public class Payload {
-
-        //--- Fields ---
-        private readonly string _accessToken;
-        private readonly RollbarData _data;
-
-        //--- Constructors ---
-        public Payload(string accessToken, RollbarData data) {
-            _accessToken = accessToken ?? throw new ArgumentException("Cannot be null or whitespace.", nameof(accessToken));
-            _data = data ?? throw new ArgumentNullException(nameof(data));
-        }
+    public class ReportStackFrame {
 
         //--- Properties ---
-        [JsonProperty("access_token")]
-        public string AccessToken => _accessToken;
+        public string FileName { get; set; }
 
-        [JsonProperty("data")]
-        public RollbarData RollbarData => _data;
+        public int? LineNumber { get; set; }
+
+        public int? ColumnNumber { get; set; }
+
+        public string MethodName { get; set; }
     }
 }

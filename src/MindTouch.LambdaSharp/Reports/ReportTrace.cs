@@ -21,22 +21,17 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Newtonsoft.Json;
 
-namespace MindTouch.Rollbar.Data {
+namespace MindTouch.LambdaSharp.Reports {
 
-    public class Message {
-
-        //--- Fields ---
-        private readonly string _body;
-
-        //--- Constructors ---
-        public Message(string body) {
-            _body = body ?? throw new ArgumentException("Cannot be null or whitespace.", nameof(body));
-        }
+    public class ReportStackTrace {
 
         //--- Properties ---
-        [JsonProperty("body")]
-        public string Body => _body;
+        public ReportExceptionInfo Exception { get; set; }
+
+        public IEnumerable<ReportStackFrame> Frames { get; set; }
     }
 }

@@ -21,9 +21,9 @@
 
 using System;
 
-namespace MindTouch.Rollbar {
+namespace MindTouch.LambdaSharp {
 
-    public class ALambdaException : Exception {
+    public abstract class ALambdaException : Exception, ILambdaExceptionFingerprinter {
 
         //--- Fields ---
         private readonly string _messageFormat;
@@ -37,9 +37,7 @@ namespace MindTouch.Rollbar {
             : base(string.Format(format, args), innerException ?? new ArgumentNullException(nameof(innerException)))
             => _messageFormat = format;
 
-        //--- Properties ---
-        public string FingerprintValue {
-            get => GetType().ToString() + _messageFormat;
-        }
+        //--- ILambdaExceptionFingerprinter Members ---
+        string ILambdaExceptionFingerprinter.FingerprintValue => GetType().ToString() + _messageFormat;
     }
 }
