@@ -34,6 +34,7 @@ namespace MindTouch.LambdaSharp.Reports {
         public string Version { get; set; } = "2018-09-27";
         public string ModuleName { get; set; }
         public string DeploymentTier { get; set; }
+        public string RequestId { get; set; }
         public string Level { get; set; }
         public string Fingerprint { get; set; }
         public long Timestamp { get; set; }

@@ -113,7 +113,7 @@ namespace MindTouch.LambdaSharp.Reports {
         public string AccessToken =>  _moduleName;
 
         //--- Methods ---
-        public ReportData CreateReport(string level, Exception exception, string format = null, params object[] args) {
+        public ReportData CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
             var message = FormatMessage(format, args) ?? exception?.Message;
             if(message == null) {
                 return null;
@@ -127,14 +127,11 @@ namespace MindTouch.LambdaSharp.Reports {
                 ?.Select(CreateStackTraceFromException)
                 .Reverse()
                 .ToList();
-            return CreateFromBody(message, traces, fingerprint, level);
-        }
-
-        private ReportData CreateFromBody(string message, IEnumerable<ReportStackTrace> traces, string fingerprint, string level) {
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ReportData {
                 ModuleName = _moduleName,
                 DeploymentTier = _deploymentTier,
+                RequestId = requestId,
                 Level = level,
                 Fingerprint = fingerprint,
                 Timestamp = timestamp,

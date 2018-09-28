@@ -82,6 +82,7 @@ namespace MindTouch.LambdaSharp {
         protected DateTime Started => _started;
         protected string ModuleName { get; private set; }
         protected string DeploymentTier { get; private set; }
+        private string _requestId;
 
         //--- Abstract Methods ---
         public abstract Task InitializeAsync(LambdaConfig config);
@@ -90,6 +91,7 @@ namespace MindTouch.LambdaSharp {
         //--- Methods ---
         public async Task<object> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
             try {
+                _requestId = context.AwsRequestId;
 
                 // function startup
                 Stopwatch.Restart();
@@ -237,7 +239,7 @@ namespace MindTouch.LambdaSharp {
             if(level >= LambdaLogLevel.WARNING) {
                 if(_reporter != null) {
                     try {
-                        var report = _reporter.CreateReport(level.ToString(), exception, format, args);
+                        var report = _reporter.CreateReport(_requestId, level.ToString(), exception, format, args);
                         LambdaLogger.Log(SerializeJson(report) + "\n");
                     } catch(Exception e) {
                         LambdaLogger.Log($"EXCEPTION: {e}");
