@@ -232,21 +232,21 @@ namespace MindTouch.LambdaSharp {
             => LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{extra}");
 
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
-            string message = _reporter.FormatMessage(format, args);
+            string message = Reporter.FormatMessage(format, args);
             Log(level, $"{message}", exception?.ToString());
             if(level >= LambdaLogLevel.WARNING) {
-                try {
-                    var report = _reporter.CreateReport(level.ToString(), exception, format, args);
-                    LambdaLogger.Log(SerializeJson(report) + "\n");
-                } catch(Exception e) {
-                    LogReport(level, message, "STACKTRACE", exception.ToString());
-                    LogReport(LambdaLogLevel.WARNING, "failed to generate JSON exception payload", "STACKTRACE", e.ToString());
+                if(_reporter != null) {
+                    try {
+                        var report = _reporter.CreateReport(level.ToString(), exception, format, args);
+                        LambdaLogger.Log(SerializeJson(report) + "\n");
+                    } catch(Exception e) {
+                        LambdaLogger.Log($"EXCEPTION: {e}");
+                        LambdaLogger.Log($"EXCEPTION: {exception}");
+                    }
+                } else {
+                    LambdaLogger.Log($"EXCEPTION: {exception}");
                 }
             }
-        }
-
-        private void LogReport(LambdaLogLevel level, string message, string type, string payload) {
-            LambdaLogger.Log($">>> {level.ToString().ToUpperInvariant()} {message}\n{type}:\n{payload}");
         }
         #endregion
     }

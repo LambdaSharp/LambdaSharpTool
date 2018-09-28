@@ -63,6 +63,26 @@ namespace MindTouch.LambdaSharp.Reports {
             }
         }
 
+        public static string FormatMessage(string format, object[] args) {
+            if(format == null) {
+                return null;
+            }
+            if(args.Length == 0) {
+                return format;
+            }
+            try {
+                return string.Format(format, args);
+            } catch {
+                return format + "(" + string.Join(", ", args.Select(arg => {
+                    try {
+                        return arg.ToString();
+                    } catch {
+                        return "<ERROR>";
+                    }
+                })) + ")";
+            }
+        }
+
         //--- Fields ---
         private readonly string _moduleName;
         private readonly string _deploymentTier;
@@ -110,26 +130,6 @@ namespace MindTouch.LambdaSharp.Reports {
             return CreateFromBody(message, traces, fingerprint, level);
         }
 
-        public string FormatMessage(string format, object[] args) {
-            if(format == null) {
-                return null;
-            }
-            if(args.Length == 0) {
-                return format;
-            }
-            try {
-                return string.Format(format, args);
-            } catch {
-                return format + "(" + string.Join(", ", args.Select(arg => {
-                    try {
-                        return arg.ToString();
-                    } catch {
-                        return "<ERROR>";
-                    }
-                })) + ")";
-            }
-        }
-
         private ReportData CreateFromBody(string message, IEnumerable<ReportStackTrace> traces, string fingerprint, string level) {
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ReportData {
@@ -152,11 +152,9 @@ namespace MindTouch.LambdaSharp.Reports {
             var stackFrames = new StackTrace(exception, true).GetFrames();
             return new ReportStackTrace {
                 Exception = new ReportExceptionInfo {
-                    ClassName = exception.GetType().FullName,
+                    Type = exception.GetType().FullName,
                     Message = exception.Message,
-
-                    // NOTE: only include the text version of the stack trace if we can't retrieve the stack frames
-                    StackTrace = (stackFrames == null) ? exception.StackTrace : null
+                    StackTrace = exception.StackTrace
                 },
                 Frames = stackFrames?.Select(frame => {
 
@@ -176,7 +174,7 @@ namespace MindTouch.LambdaSharp.Reports {
 
                     // try to figure out code line-number
                     int? lineNumber = frame.GetFileLineNumber();
-                    if(lineNumber < 0) {
+                    if(lineNumber <= 0) {
                         lineNumber = null;
                     }
 

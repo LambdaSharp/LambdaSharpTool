@@ -20,14 +20,13 @@
  */
 
 using System;
-using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Reports {
 
     public class ReportExceptionInfo {
 
         //--- Properties ---
-        public string ClassName { get; set; }
+        public string Type { get; set; }
         public string Message { get; set; }
         public string StackTrace { get; set; }
     }

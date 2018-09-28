@@ -511,7 +511,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
             _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
                 DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingStreamArn")),
-                FilterPattern = "\">>>\"",
+                FilterPattern = "-\"*** \"",
                 LogGroupName = Fn.Ref(functionLogGroup),
                 RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
             });

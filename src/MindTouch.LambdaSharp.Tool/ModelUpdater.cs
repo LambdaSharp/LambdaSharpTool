@@ -27,12 +27,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
-using Amazon.S3;
-using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;

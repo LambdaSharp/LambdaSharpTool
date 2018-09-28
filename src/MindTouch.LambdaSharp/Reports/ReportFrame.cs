@@ -20,7 +20,6 @@
  */
 
 using System;
-using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Reports {
 

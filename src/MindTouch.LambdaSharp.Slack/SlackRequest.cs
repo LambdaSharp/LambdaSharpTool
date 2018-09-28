@@ -20,7 +20,6 @@
  */
 
 using System.Text;
-using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Slack {
 
