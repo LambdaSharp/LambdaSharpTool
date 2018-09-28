@@ -665,10 +665,11 @@ namespace MindTouch.LambdaSharp.Tool {
             var sqsSources = function.Sources.OfType<SqsSource>().ToList();
             if(sqsSources.Any()) {
                 foreach(var source in sqsSources) {
+                    var existingResource = _module.Parameters.First(p => p.Name == source.Queue) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.Queue}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         Enabled = true,
-                        EventSourceArn = Fn.GetAtt(source.Queue, "Arn"),
+                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.Queue, "Arn"),
                         FunctionName = Fn.Ref(function.Name)
                     });
                 }
@@ -696,11 +697,12 @@ namespace MindTouch.LambdaSharp.Tool {
             var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
             if(dynamoDbSources.Any()) {
                 foreach(var source in dynamoDbSources) {
+                    var existingResource = _module.Parameters.First(p => p.Name == source.DynamoDB) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.DynamoDB}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         StartingPosition = source.StartingPosition,
                         Enabled = true,
-                        EventSourceArn = Fn.GetAtt(source.DynamoDB, "StreamArn"),
+                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.DynamoDB, "StreamArn"),
                         FunctionName = Fn.Ref(function.Name)
                     });
                 }
@@ -715,7 +717,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         BatchSize = source.BatchSize,
                         StartingPosition = source.StartingPosition,
                         Enabled = true,
-                        EventSourceArn = (existingResource != null) ? existingResource.Resource.ResourceArn : Fn.GetAtt(source.Kinesis, "Arn"),
+                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.Kinesis, "Arn"),
                         FunctionName = Fn.Ref(function.Name)
                     });
                 }
