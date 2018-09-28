@@ -241,9 +241,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     Validate(function.Timeout != null, "missing Name field");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
                     Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
-                    if(function.Sources == null) {
-                        function.Sources = new List<FunctionSourceNode>();
-                    }
+                    function.Sources = function.Sources ?? new List<FunctionSourceNode>();
+                    function.Environment = function.Environment ?? new Dictionary<string, object>();
+                    function.VPC = function.VPC ?? new Dictionary<string, object>();
                     ValidateFunctionSource(function.Sources);
                 });
             }

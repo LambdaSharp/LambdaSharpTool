@@ -120,7 +120,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add built-in variables
 
-            // TODO (2018-09-21): check if we want to keepy any of these
+            // TODO (2018-09-21): check if we want to keep any of these
             // variables["Tier"] = Settings.Tier;
             // variables["tier"] = Settings.Tier.ToLowerInvariant();
             // variables["GitSha"] = Settings.GitSha ?? "";

@@ -83,7 +83,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             var deploymentVersionOption = cmd.Option("--deployment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket used to deploying assets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentDeadletterQueueUrlOption = cmd.Option("--deployment-deadletter-queue-url <URL>", "(test only) SQS Deadletter queue used by function (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
             inputFileOption.ShowInHelpText = false;
@@ -148,7 +147,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // initialize LambdaSharp deployment values
                 var deploymentVersion = deploymentVersionOption.Value();
                 var deploymentBucketName = deploymentBucketNameOption.Value();
-                var deploymentDeadletterQueueUrl = deploymentDeadletterQueueUrlOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
                 // create a settings entry for each module filename

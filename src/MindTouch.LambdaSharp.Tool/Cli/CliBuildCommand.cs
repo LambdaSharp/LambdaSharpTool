@@ -130,6 +130,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // resolve all imported parameters
                 new ModelImportProcessor(settings).Process(module);
 
+                // resolve all parameter references
+                new ModelReferenceResolver(settings).Resolve(module);
+
                 // package all functions
                 new ModelFunctionPackager(settings).Process(
                     module,

@@ -753,13 +753,6 @@ namespace MindTouch.LambdaSharp.Tool {
             case StringParameter stringParameter:
                 environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
                 exportValue = stringParameter.Value;
-
-                // add literal string parameter value as CloudFormation parameter so it can be referenced
-                _stack.Add(stringParameter.FullName, new Parameter {
-                    Type = "String",
-                    Default = stringParameter.Value,
-                    Description = stringParameter.Description
-                });
                 break;
             case StringListParameter stringListParameter: {
                     if(stringListParameter.Values.All(value => value is string)) {
@@ -767,11 +760,12 @@ namespace MindTouch.LambdaSharp.Tool {
                         exportValue = commaDelimitedValue;
 
                         // add literal string list parameter value as CloudFormation parameter so it can be referenced
-                        _stack.Add(stringListParameter.FullName, new Parameter {
-                            Type = "CommaDelimitedList",
-                            Default = commaDelimitedValue,
-                            Description = stringListParameter.Description
-                        });
+// TODO (replace this)
+//                        _stack.Add(stringListParameter.FullName, new Parameter {
+//                            Type = "CommaDelimitedList",
+//                            Default = commaDelimitedValue,
+//                            Description = stringListParameter.Description
+//                        });
                     } else {
                         exportValue = Fn.Join(",", stringListParameter.Values.Cast<dynamic>().ToArray());
                     }
@@ -804,15 +798,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             Effect = "Allow",
                             Resource = resource.ResourceArn,
                             Action = resource.Allow
-                        });
-                    }
-
-                    // add literal reference resource parameter value as CloudFormation parameter so it can be referenced
-                    if(resource.ResourceArn is string text) {
-                        _stack.Add(referenceResourceParameter.FullName, new Parameter {
-                            Type = "String",
-                            Default = text,
-                            Description = referenceResourceParameter.Description
                         });
                     }
                 }

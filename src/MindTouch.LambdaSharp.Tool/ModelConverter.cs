@@ -349,7 +349,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // initialize VPC configuration if provided
                 FunctionVpc vpc = null;
-                if(function.VPC?.Any() ?? false) {
+                if(function.VPC?.Any() == true) {
                     if(
                         function.VPC.TryGetValue("SubnetIds", out var subnets)
                         && function.VPC.TryGetValue("SecurityGroupIds", out var securityGroups)
