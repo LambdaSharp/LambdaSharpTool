@@ -110,6 +110,12 @@ Parameters:
         Description: Nested parameter with a literal value
         Value: A nested literal source value
 
+      - Name: SecondSourceResourceParameter
+        Description: CloudFormation Resource
+        Resource:
+          Type: AWS::SNS::Topic
+          Allow: Publish
+
 Functions:
 
   - Name: Function
@@ -122,4 +128,5 @@ Functions:
       RESOURCE: !Ref SourceResourceParameter
       VALUELIST: !Ref SourceValueListParameter
       EXPRESSIONLIST: !Ref SourceExpressionListParameter
-      NESTEDVALUE: !Ref SourceParameterCollection.FirstSourceValueParameter
+      NESTEDVALUE: !Ref SourceParameterCollection::FirstSourceValueParameter
+      NESTEDRESOURCE: !Ref SourceParameterCollection::SecondSourceResourceParameter

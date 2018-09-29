@@ -101,8 +101,10 @@ namespace MindTouch.LambdaSharp.Tool {
                             freeParameters[prefix + parameter.Name] = parameter;
                         } else if(parameter.Values != null) {
                             boundParameters[prefix + parameter.Name] = parameter;
+                        } else if(parameter.Resource != null) {
+                            freeParameters[prefix + parameter.Name] = parameter;
                         }
-                        DiscoverParameters(parameter.Parameters, prefix + parameter.Name + ".");
+                        DiscoverParameters(parameter.Parameters, prefix + parameter.Name + "::");
                     }
                 }
             }
@@ -148,7 +150,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             Substitute(parameter.Value, missingName => {
                                 AddError($"circular !Ref dependency on '{missingName}'");
                             });
-                            ReportUnresolved(parameter.Parameters, prefix + parameter.Name + ".");
+                            ReportUnresolved(parameter.Parameters, prefix + parameter.Name + "::");
                         });
                     }
                 }
@@ -162,10 +164,12 @@ namespace MindTouch.LambdaSharp.Tool {
                             if(freeParameter.Value != null) {
                                 return freeParameter.Value;
                             }
-                            if(freeParameter.Values.All(v => v is string)) {
+                            if(freeParameter.Values?.All(v => v is string) == true) {
                                 return string.Join(",", freeParameter.Values);
+                            } else if(freeParameter.Values != null) {
+                                return Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
                             }
-                            return Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
+                            return Fn.Ref(refKey.Replace("::", ""));
                         }
                         missing?.Invoke(refKey);
                         return value;
