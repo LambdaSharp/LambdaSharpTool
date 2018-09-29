@@ -40,13 +40,9 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
                 DiscoverParameters(module.Parameters);
-foreach(var b in boundParameters) Console.WriteLine($"UNRESOLVED {b.Key}");
 
                 // resolve parameter variables via substitution
-                while(ResolveParameters(boundParameters.ToList())) {
-Console.WriteLine();
-foreach(var b in boundParameters) Console.WriteLine($"UNRESOLVED {b.Key}");
-                }
+                while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
                 ReportUnresolved(module.Parameters);
