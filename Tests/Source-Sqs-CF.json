@@ -15,14 +15,6 @@
       "Type": "String",
       "Description": "LambdaSharp Deployment Tier (lowercase)"
     },
-    "DeploymentDeadLetterQueueUrl": {
-      "Type": "String",
-      "Description": "LambdaSharp Function Dead-Letter Queue URL"
-    },
-    "DeploymentDeadLetterQueueArn": {
-      "Type": "String",
-      "Description": "LambdaSharp Function Dead-Letter Queue ARN"
-    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "LambdaSharp Deployment S3 Bucket Name"
@@ -30,15 +22,6 @@
     "DeploymentKeyPrefix": {
       "Type": "String",
       "Description": "LambdaSharp Deployment S3 Bucket Key Prefix"
-    },
-    "DeploymentLoggingTopicArn": {
-      "Type": "String",
-      "Description": "LambdaSharp Function Logging ARN"
-    },
-    "Version": {
-      "Type": "String",
-      "Description": "LambdaSharp module version",
-      "Default": "1.0"
     }
   },
   "Resources": {
@@ -61,18 +44,44 @@
         }
       }
     },
-    "RollbarToken": {
-      "Type": "Custom::MindTouchRollbarProject",
+    "CloudWatchLogsRole": {
+      "Type": "AWS::IAM::Role",
       "Properties": {
-        "Tier": {
-          "Ref": "Tier"
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsKinesisInvocation",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
         },
-        "Module": "TestModule",
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${Tier}-CustomResource-MindTouch::RollbarProject"
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Effect": "Allow",
+                  "Action": "kinesis:PutRecord",
+                  "Resource": {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": "${Tier}-LambdaSharp-LoggingStreamArn"
+                    }
+                  }
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${Tier}-TestModule-Permissions-Policy-For-CWL"
+            }
           }
-        }
+        ]
       }
     },
     "ModuleRole": {
@@ -102,14 +111,6 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
-                },
-                {
-                  "Sid": "LambdaLoggingCreate",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogGroup"
-                  ],
-                  "Resource": "*"
                 },
                 {
                   "Sid": "Sqs1",
@@ -158,17 +159,9 @@
                     "sqs:SendMessage"
                   ],
                   "Resource": {
-                    "Ref": "DeploymentDeadLetterQueueArn"
-                  }
-                },
-                {
-                  "Sid": "LambdaSnsLogging",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "DeploymentLoggingTopicArn"
+                    "Fn::ImportValue": {
+                      "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
+                    }
                   }
                 }
               ]
@@ -193,7 +186,9 @@
         },
         "DeadLetterConfig": {
           "TargetArn": {
-            "Ref": "DeploymentDeadLetterQueueArn"
+            "Fn::ImportValue": {
+              "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
+            }
           }
         },
         "Description": "My function (v1.0)",
@@ -204,10 +199,9 @@
             },
             "MODULE": "TestModule",
             "DEADLETTERQUEUE": {
-              "Ref": "DeploymentDeadLetterQueueUrl"
-            },
-            "LOGGINGTOPIC": {
-              "Ref": "DeploymentLoggingTopicArn"
+              "Fn::ImportValue": {
+                "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueUrl"
+              }
             },
             "LAMBDARUNTIME": "dotnetcore2.1",
             "STR_SQS1": {
@@ -216,17 +210,8 @@
             "STR_SQS2": {
               "Ref": "Sqs2"
             },
-            "STR_VERSION": "1.0",
-            "STR_ROLLBARTOKEN": {
-              "Fn::GetAtt": [
-                "RollbarToken",
-                "Result"
-              ]
-            }
+            "STR_VERSION": "1.0"
           }
-        },
-        "FunctionName": {
-          "Fn::Sub": "${Tier}-TestModule-Function"
         },
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
         "MemorySize": "128",
@@ -250,6 +235,35 @@
           }
         ],
         "Timeout": "30"
+      }
+    },
+    "FunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
+        },
+        "RetentionInDays": 7
+      }
+    },
+    "FunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${Tier}-LambdaSharp-LoggingStreamArn"
+          }
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "FunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::GetAtt": [
+            "CloudWatchLogsRole",
+            "Arn"
+          ]
+        }
       }
     },
     "FunctionSqs1EventMapping": {
