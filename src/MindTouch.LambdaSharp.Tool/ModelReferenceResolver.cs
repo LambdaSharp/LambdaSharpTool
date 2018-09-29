@@ -22,13 +22,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelReferenceResolver : AModelProcessor {
-
-        //--- Fields ---
 
         //--- Constructors ---
         public ModelReferenceResolver(Settings settings) : base(settings) { }
@@ -38,56 +37,26 @@ namespace MindTouch.LambdaSharp.Tool {
             var freeParameters = new Dictionary<string, ParameterNode>();
             var boundParameters = new Dictionary<string, ParameterNode>();
 
-            // gather all parameter variables
+            // resolve all inter-parameter references
             AtLocation("Parameters", () => {
-                foreach(var parameter in module.Parameters) {
-
-                    // TODO (2018-09-28, bjorg): add support for `Values` parmeters
-
-                    if(parameter.Value is string) {
-                        freeParameters[parameter.Name] = parameter;
-                    } else if(parameter.Value != null) {
-                        boundParameters[parameter.Name] = parameter;
-                    }
-                }
+                DiscoverParameters(module.Parameters);
+foreach(var b in boundParameters) Console.WriteLine($"UNRESOLVED {b.Key}");
 
                 // resolve parameter variables via substitution
-                bool progress;
-                do {
-                    progress = false;
-                    foreach(var parameter in boundParameters.Values.ToList()) {
-                        AtLocation(parameter.Name, () => {
-                            var clean = true;
-                            parameter.Value = Substitute(parameter.Value, _ => clean = false);
-                            if(clean) {
-
-                                // capture that progress towards resolving all bound variables has been made;
-                                // if ever an iteration does not produces progress, we need to stop; otherwise
-                                // we will loop forever
-                                progress = true;
-
-                                // promote bound variable to free variable
-                                freeParameters[parameter.Name] = parameter;
-                                boundParameters.Remove(parameter.Name);
-                            }
-                        });
-                    }
-
-                } while(progress);
-
-                // report any remaining bound variables
-                foreach(var parameter in boundParameters) {
-                    AtLocation(parameter.Key, () => {
-                        Substitute(parameter.Value, missingName => {
-                            AddError($"circular !Ref dependency on '{missingName}'");
-                        });
-                    });
+                while(ResolveParameters(boundParameters.ToList())) {
+Console.WriteLine();
+foreach(var b in boundParameters) Console.WriteLine($"UNRESOLVED {b.Key}");
                 }
+
+                // report circular dependencies, if any
+                ReportUnresolved(module.Parameters);
                 if(Settings.HasErrors) {
                     return;
                 }
+            });
 
-                // resolve references in resource properties
+            // resolve references in resource properties
+            AtLocation("Parameters", () => {
                 foreach(var parameter in module.Parameters.Where(p => p.Resource?.Properties != null)) {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
@@ -125,26 +94,99 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // local functions
+            void DiscoverParameters(IEnumerable<ParameterNode> parameters, string prefix = "") {
+                if(parameters != null) {
+                    foreach(var parameter in parameters) {
+                        if(parameter.Value is string) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else if(parameter.Value != null) {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        } else if(parameter.Values?.All(value => value is string) == true) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else if(parameter.Values != null) {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        }
+                        DiscoverParameters(parameter.Parameters, prefix + parameter.Name + ".");
+                    }
+                }
+            }
+
+            bool ResolveParameters(IEnumerable<KeyValuePair<string, ParameterNode>> parameters) {
+                if(parameters == null) {
+                    return false;
+                }
+                var progress = false;
+                foreach(var kv in parameters) {
+                    var parameter = kv.Value;
+                    AtLocation(parameter.Name, () => {
+                        var doesNotContainBoundParameters = true;
+                        if(parameter.Value != null) {
+                            parameter.Value = Substitute(parameter.Value, CheckBoundParameters);
+                        } else if(parameter.Values != null) {
+                            parameter.Values = parameter.Values.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                        }
+                        if(doesNotContainBoundParameters) {
+
+                            // capture that progress towards resolving all bound variables has been made;
+                            // if ever an iteration does not produces progress, we need to stop; otherwise
+                            // we will loop forever
+                            progress = true;
+
+                            // promote bound variable to free variable
+                            freeParameters[kv.Key] = parameter;
+                            boundParameters.Remove(kv.Key);
+                        }
+
+                        // local functions
+                        void CheckBoundParameters(string missingName)
+                            => doesNotContainBoundParameters = doesNotContainBoundParameters && !boundParameters.ContainsKey(missingName);
+                    });
+                }
+                return progress;
+            }
+
+            void ReportUnresolved(IEnumerable<ParameterNode> parameters, string prefix = "") {
+                if(parameters != null) {
+                    foreach(var parameter in parameters) {
+                        AtLocation(parameter.Name, () => {
+                            Substitute(parameter.Value, missingName => {
+                                AddError($"circular !Ref dependency on '{missingName}'");
+                            });
+                            ReportUnresolved(parameter.Parameters, prefix + parameter.Name + ".");
+                        });
+                    }
+                }
+            }
+
             object Substitute(object value, Action<string> missing = null) {
                 switch(value) {
                 case IDictionary<string, object> map:
                     if((map.Count == 1) && map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
                         if(freeParameters.TryGetValue(refKey, out ParameterNode freeParameter)) {
-                            return freeParameter.Value;
+                            if(freeParameter.Value != null) {
+                                return freeParameter.Value;
+                            }
+                            if(freeParameter.Values.All(v => v is string)) {
+                                return string.Join(",", freeParameter.Values);
+                            }
+                            return Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
                         }
-                        if(boundParameters.ContainsKey(refKey)) {
-                            missing?.Invoke(refKey);
-                        }
+                        missing?.Invoke(refKey);
+                        return value;
                     }
-                    break;
-                case IList<object> list:
-                    return list.Select(item => Substitute(item, missing)).ToList();
+                    return new Dictionary<string, object>(map.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value, missing))));
+                case IList<object> list: {
+                        var result = new List<object>();
+                        foreach(var item in list) {
+                            result.Add(Substitute(item, missing));
+                        }
+                        return result;
+                    }
                 default:
 
                     // nothing further to substitute
-                    break;
+                    return value;
                 }
-                return value;
             }
         }
 

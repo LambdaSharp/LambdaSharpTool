@@ -758,14 +758,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(stringListParameter.Values.All(value => value is string)) {
                         var commaDelimitedValue = string.Join(",", stringListParameter.Values);
                         exportValue = commaDelimitedValue;
-
-                        // add literal string list parameter value as CloudFormation parameter so it can be referenced
-// TODO (replace this)
-//                        _stack.Add(stringListParameter.FullName, new Parameter {
-//                            Type = "CommaDelimitedList",
-//                            Default = commaDelimitedValue,
-//                            Description = stringListParameter.Description
-//                        });
                     } else {
                         exportValue = Fn.Join(",", stringListParameter.Values.Cast<dynamic>().ToArray());
                     }
