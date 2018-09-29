@@ -78,7 +78,7 @@ Parameters:
     Value: This is a literal value
 
   - Name: SourceExpressionParameter
-    Description: CloudFormation Expression
+    Description: CloudFormation !Ref expression
     Value: !Ref SourceValueParameter
 
   - Name: SourceResourceParameter
@@ -115,6 +115,18 @@ Parameters:
         Resource:
           Type: AWS::SNS::Topic
           Allow: Publish
+
+  - Name: SourceSubExpressions
+    Description: CloudFormation !Sub expressions
+    Values:
+      - !Sub "${SourceValueParameter}"
+      - !Sub "${SourceExpressionParameter}"
+      - !Sub "${SourceResourceParameter}"
+      - !Sub "${SourceValueListParameter}"
+      - !Sub "${SourceExpressionListParameter}"
+      - !Sub "${SourceParameterCollection::FirstSourceValueParameter}"
+      - !Sub "${SourceParameterCollection::SecondSourceResourceParameter}"
+      - !Sub "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
 
 Functions:
 

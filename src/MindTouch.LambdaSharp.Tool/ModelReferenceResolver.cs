@@ -22,12 +22,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelReferenceResolver : AModelProcessor {
+
+        //--- Constants ---
+        private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
 
         //--- Constructors ---
         public ModelReferenceResolver(Settings settings) : base(settings) { }
@@ -159,36 +163,90 @@ namespace MindTouch.LambdaSharp.Tool {
             object Substitute(object value, Action<string> missing = null) {
                 switch(value) {
                 case IDictionary<string, object> map:
-                    if((map.Count == 1) && map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
-                        if(freeParameters.TryGetValue(refKey, out ParameterNode freeParameter)) {
-                            if(freeParameter.Value != null) {
-                                return freeParameter.Value;
+                    map = new Dictionary<string, object>(map.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value, missing))));
+                    if(map.Count == 1) {
+                        if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
+                            if(TrySubstitute(refKey, out object found)) {
+                                return found;
                             }
-                            if(freeParameter.Values?.All(v => v is string) == true) {
-                                return string.Join(",", freeParameter.Values);
-                            } else if(freeParameter.Values != null) {
-                                return Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
+                            missing?.Invoke(refKey);
+                            return value;
+                        }
+                        if(map.TryGetValue("Fn::Sub", out object subObject)) {
+                            if(subObject is string) {
+                                subObject = new List<object> {
+                                    subObject,
+                                    new Dictionary<string, object>()
+                                };
                             }
-                            return Fn.Ref(refKey.Replace("::", ""));
+                            if(
+                                (subObject is IList<object> subList)
+                                && (subList.Count == 2)
+                                && (subList[0] is string subPattern)
+                                && (subList[1] is IDictionary<string, object> subArgs)
+                            ) {
+                                subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                                    var matchText = match.ToString();
+                                    var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                                    if(!subArgs.ContainsKey(name[0])) {
+                                        if(TrySubstitute(name[0], out object found)) {
+                                            if(found is string text) {
+                                                if(name.Length == 2) {
+                                                    AddError($"reference '{name[0]}' resolved to a literal value, but is used in a Fn::GetAtt expression");
+                                                }
+                                                return text;
+                                            }
+                                            var argName = $"Arg{subArgs.Count:00}";
+                                            if(name.Length == 2) {
+                                                found = new Dictionary<string, object> {
+                                                    ["Fn::GetAtt"] = new List<object> {
+                                                        found,
+                                                        name[1]
+                                                    }
+                                                };
+                                            }
+                                            subArgs.Add(argName, found);
+                                            return "${" + argName + "}";
+                                        } else {
+                                            missing?.Invoke(name[0]);
+                                        }
+                                    }
+                                    return matchText;
+                                });
+                                map = new Dictionary<string, object> {
+                                    ["Fn::Sub"] = new List<object> {
+                                        subPattern,
+                                        subArgs
+                                    }
+                                };
+                            }
                         }
-                        missing?.Invoke(refKey);
-                        return value;
                     }
-                    return new Dictionary<string, object>(map.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value, missing))));
-                case IList<object> list: {
-                        var result = new List<object>();
-                        foreach(var item in list) {
-                            result.Add(Substitute(item, missing));
-                        }
-                        return result;
-                    }
+                    return map;
+                case IList<object> list:
+                    return list.Select(item => Substitute(item, missing)).ToList();
                 default:
 
                     // nothing further to substitute
                     return value;
                 }
             }
-        }
 
+            bool TrySubstitute(string key, out object found) {
+                found = null;
+                if(freeParameters.TryGetValue(key, out ParameterNode freeParameter)) {
+                    if(freeParameter.Value != null) {
+                        found = freeParameter.Value;
+                    } else if(freeParameter.Values?.All(v => v is string) == true) {
+                        found = string.Join(",", freeParameter.Values);
+                    } else if(freeParameter.Values != null) {
+                        found = Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
+                    } else {
+                        found = Fn.Ref(key.Replace("::", ""));
+                    }
+                }
+                return found != null;
+            }
+        }
     }
 }

@@ -293,6 +293,92 @@
             "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
               "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
             },
+            "STR_SOURCESUBEXPRESSIONS": {
+              "Fn::Join": [
+                ",",
+                [
+                  {
+                    "Fn::Sub": [
+                      "This is a literal value",
+                      {}
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "This is a literal value",
+                      {}
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "${Arg00}",
+                      {
+                        "Arg00": {
+                          "Ref": "SourceResourceParameter"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "first,second,third",
+                      {}
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "${Arg00}",
+                      {
+                        "Arg00": {
+                          "Fn::Join": [
+                            ",",
+                            [
+                              "This is a literal value",
+                              "This is a literal value",
+                              {
+                                "Ref": "SourceResourceParameter"
+                              },
+                              "literal value"
+                            ]
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "A nested literal source value",
+                      {}
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "${Arg00}",
+                      {
+                        "Arg00": {
+                          "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "Fn::Sub": [
+                      "${Arg00}",
+                      {
+                        "Arg00": {
+                          "Fn::GetAtt": [
+                            {
+                              "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
+                            },
+                            "TopicName"
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                ]
+              ]
+            },
             "STR_VERSION": "1.0"
           }
         },
