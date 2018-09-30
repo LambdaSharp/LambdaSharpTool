@@ -173,47 +173,68 @@ namespace MindTouch.LambdaSharp.Tool {
                             return value;
                         }
                         if(map.TryGetValue("Fn::Sub", out object subObject)) {
+                            string subPattern;
+                            IDictionary<string, object> subArgs = null;
+
+                            // determine which form of !Sub is being used
                             if(subObject is string) {
-                                subObject = new List<object> {
-                                    subObject,
-                                    new Dictionary<string, object>()
-                                };
-                            }
-                            if(
+                                subPattern = (string)subObject;
+                                subArgs = new Dictionary<string, object>();
+                            } else if(
                                 (subObject is IList<object> subList)
                                 && (subList.Count == 2)
-                                && (subList[0] is string subPattern)
-                                && (subList[1] is IDictionary<string, object> subArgs)
+                                && (subList[0] is string)
+                                && (subList[1] is IDictionary<string, object>)
                             ) {
-                                subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
-                                    var matchText = match.ToString();
-                                    var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
-                                    if(!subArgs.ContainsKey(name[0])) {
-                                        if(TrySubstitute(name[0], out object found)) {
-                                            if(found is string text) {
-                                                if(name.Length == 2) {
-                                                    AddError($"reference '{name[0]}' resolved to a literal value, but is used in a Fn::GetAtt expression");
-                                                }
-                                                return text;
-                                            }
-                                            var argName = $"Arg{subArgs.Count:00}";
+                                subPattern = (string)subList[0];
+                                subArgs = (IDictionary<string, object>)subList[1];
+                            } else {
+                                return map;
+                            }
+
+                            // replace as many ${VAR} occurrences as possible
+                            subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                                var matchText = match.ToString();
+                                var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                                if(!subArgs.ContainsKey(name[0])) {
+                                    if(TrySubstitute(name[0], out object found)) {
+                                        if(found is string text) {
                                             if(name.Length == 2) {
-                                                found = new Dictionary<string, object> {
-                                                    ["Fn::GetAtt"] = new List<object> {
-                                                        found,
-                                                        name[1]
-                                                    }
-                                                };
+                                                AddError($"reference '{name[0]}' resolved to a literal value, but is used in a Fn::GetAtt expression");
                                             }
-                                            subArgs.Add(argName, found);
-                                            return "${" + argName + "}";
-                                        } else {
-                                            missing?.Invoke(name[0]);
+                                            return text;
                                         }
+                                        var argName = $"P{subArgs.Count}";
+                                        if(name.Length == 2) {
+                                            found = new Dictionary<string, object> {
+                                                ["Fn::GetAtt"] = new List<object> {
+                                                    found,
+                                                    name[1]
+                                                }
+                                            };
+                                        }
+                                        subArgs.Add(argName, found);
+                                        return "${" + argName + "}";
+                                    } else {
+                                        missing?.Invoke(name[0]);
                                     }
-                                    return matchText;
-                                });
-                                map = new Dictionary<string, object> {
+                                }
+                                return matchText;
+                            });
+
+                            // determine which form of !Sub to construct
+                            if(subArgs.Count == 0) {
+
+                                // check if !Sub pattern still contains any variables
+                                if(Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)) {
+                                    return new Dictionary<string, object> {
+                                        ["Fn::Sub"] = subPattern
+                                    };
+                                } else {
+                                    return subPattern;
+                                }
+                            } else {
+                                return new Dictionary<string, object> {
                                     ["Fn::Sub"] = new List<object> {
                                         subPattern,
                                         subArgs

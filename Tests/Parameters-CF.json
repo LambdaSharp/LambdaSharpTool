@@ -297,39 +297,24 @@
               "Fn::Join": [
                 ",",
                 [
+                  "This is a literal value",
+                  "This is a literal value",
                   {
                     "Fn::Sub": [
-                      "This is a literal value",
-                      {}
-                    ]
-                  },
-                  {
-                    "Fn::Sub": [
-                      "This is a literal value",
-                      {}
-                    ]
-                  },
-                  {
-                    "Fn::Sub": [
-                      "${Arg00}",
+                      "${P0}",
                       {
-                        "Arg00": {
+                        "P0": {
                           "Ref": "SourceResourceParameter"
                         }
                       }
                     ]
                   },
+                  "first,second,third",
                   {
                     "Fn::Sub": [
-                      "first,second,third",
-                      {}
-                    ]
-                  },
-                  {
-                    "Fn::Sub": [
-                      "${Arg00}",
+                      "${P0}",
                       {
-                        "Arg00": {
+                        "P0": {
                           "Fn::Join": [
                             ",",
                             [
@@ -345,17 +330,12 @@
                       }
                     ]
                   },
+                  "A nested literal source value",
                   {
                     "Fn::Sub": [
-                      "A nested literal source value",
-                      {}
-                    ]
-                  },
-                  {
-                    "Fn::Sub": [
-                      "${Arg00}",
+                      "${P0}",
                       {
-                        "Arg00": {
+                        "P0": {
                           "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
                         }
                       }
@@ -363,9 +343,9 @@
                   },
                   {
                     "Fn::Sub": [
-                      "${Arg00}",
+                      "${P0}",
                       {
-                        "Arg00": {
+                        "P0": {
                           "Fn::GetAtt": [
                             {
                               "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
