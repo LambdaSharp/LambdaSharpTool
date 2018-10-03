@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
@@ -31,8 +33,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Version { get; set; }
         public string Description { get; set; }
         public IList<string> Secrets { get; set; }
+        public IList<AParameter> Variables { get; set; }
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
         public IList<Output> Outputs { get; set; }
-    }
+
+        [YamlIgnore]
+        public IEnumerable<AParameter> VariablesAndParameters => Variables.Union(Parameters);
+     }
 }

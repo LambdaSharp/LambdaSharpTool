@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public void Process(ModuleNode module) {
             _module = module;
-            foreach(var parameter in module.Parameters.Where(p => (p.Package != null) && (p.Package.PackagePath == null))) {
+            foreach(var parameter in module.VariablesAndParameters.Where(p => (p.Package != null) && (p.Package.PackagePath == null))) {
                 AtLocation(parameter.Name, () => {
                     ProcessParameter(parameter);
                 });

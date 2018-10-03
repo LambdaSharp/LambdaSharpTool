@@ -2,6 +2,51 @@ Name: TestModule
 
 Description: LambdaSharp CloudFormation Test
 
+Variables:
+
+  - Name: SourceValueParameter
+    Description: Literal value
+    Value: This is a literal value
+
+  - Name: SourceExpressionParameter
+    Description: CloudFormation !Ref expression
+    Value: !Ref SourceValueParameter
+
+  - Name: SourceResourceParameter
+    Description: CloudFormation Resource
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
+  - Name: SourceValueListParameter
+    Description: List of literal values
+    Values:
+      - first
+      - second
+      - third
+
+  - Name: SourceExpressionListParameter
+    Description: List of literal values
+    Values:
+      - !Ref SourceValueParameter
+      - !Ref SourceExpressionParameter
+      - !Ref SourceResourceParameter
+      - literal value
+
+  - Name: SourceParameterCollection
+    Description: Description for collection parameter
+    Parameters:
+
+      - Name: FirstSourceValueParameter
+        Description: Nested parameter with a literal value
+        Value: A nested literal source value
+
+      - Name: SecondSourceResourceParameter
+        Description: CloudFormation Resource
+        Resource:
+          Type: AWS::SNS::Topic
+          Allow: Publish
+
 Parameters:
 
   - Name: SampleParameterCollection
@@ -73,49 +118,6 @@ Parameters:
       Allow: Publish
 
   # !Ref reference use-cases
-  - Name: SourceValueParameter
-    Description: Literal value
-    Value: This is a literal value
-
-  - Name: SourceExpressionParameter
-    Description: CloudFormation !Ref expression
-    Value: !Ref SourceValueParameter
-
-  - Name: SourceResourceParameter
-    Description: CloudFormation Resource
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
-
-  - Name: SourceValueListParameter
-    Description: List of literal values
-    Values:
-      - first
-      - second
-      - third
-
-  - Name: SourceExpressionListParameter
-    Description: List of literal values
-    Values:
-      - !Ref SourceValueParameter
-      - !Ref SourceExpressionParameter
-      - !Ref SourceResourceParameter
-      - literal value
-
-  - Name: SourceParameterCollection
-    Description: Description for collection parameter
-    Parameters:
-
-      - Name: FirstSourceValueParameter
-        Description: Nested parameter with a literal value
-        Value: A nested literal source value
-
-      - Name: SecondSourceResourceParameter
-        Description: CloudFormation Resource
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Publish
-
   - Name: SourceSubExpressions
     Description: CloudFormation !Sub expressions
     Values:
@@ -134,11 +136,3 @@ Functions:
     Description: My function
     Memory: 128
     Timeout: 30
-    Environment:
-      VALUE: !Ref SourceValueParameter
-      EXPRESSION: !Ref SourceExpressionParameter
-      RESOURCE: !Ref SourceResourceParameter
-      VALUELIST: !Ref SourceValueListParameter
-      EXPRESSIONLIST: !Ref SourceExpressionListParameter
-      NESTEDVALUE: !Ref SourceParameterCollection::FirstSourceValueParameter
-      NESTEDRESOURCE: !Ref SourceParameterCollection::SecondSourceResourceParameter

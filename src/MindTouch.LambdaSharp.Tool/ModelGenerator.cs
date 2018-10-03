@@ -93,6 +93,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Type = "String",
                 Description = "LambdaSharp Deployment S3 Bucket Key Prefix"
             });
+
             // TODO (2018-09-29, bjorg): module registration
             //  - module name
             //  - tier
@@ -124,6 +125,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     Resource = _module.Secrets,
                     Action = "kms:Decrypt"
                 });
+            }
+
+            // add resource variables
+            foreach(var variable in _module.Variables.Where(v => v is AResourceParameter)) {
+                AddParameter(variable, "", new Dictionary<string, object>());
             }
 
             // add parameters
@@ -324,12 +330,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add outputs
             foreach(var output in module.Outputs) {
-                var outputName = new string(export.Name.Where(c => char.IsLetterOrDigit(c)).ToArray());
+                var outputName = new string(output.Name.Where(char.IsLetterOrDigit).ToArray());
                 _stack.Add(outputName, new Humidifier.Output {
                     Description = output.Description,
                     Value = output.Value,
-                    Export = new Dictionary<string, dynamic>
-                    {
+                    Export = new Dictionary<string, dynamic> {
                         ["Name"] = Fn.Sub("${Tier}-" + output.Name)
                     }
                 });
@@ -546,7 +551,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var topicSource in topicSources) {
 
                     // find the resource that matches the declared topic name
-                    var parameter = _module.Parameters
+                    var parameter = _module.VariablesAndParameters
                         .OfType<AResourceParameter>()
                         .FirstOrDefault(p => p.Name == topicSource.TopicName);
 
@@ -651,7 +656,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
-                    _stack.Add(functionS3Subscription, new Model.CustomResource("Custom::LambdaSharpS3Subscriber") {
+                    _stack.Add(functionS3Subscription, new CustomResource("Custom::LambdaSharpS3Subscriber") {
                         ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}-CustomResource-LambdaSharp::S3Subscriber")),
                         ["BucketName"] = Fn.Ref(grp.Key),
                         ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
@@ -676,7 +681,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var sqsSources = function.Sources.OfType<SqsSource>().ToList();
             if(sqsSources.Any()) {
                 foreach(var source in sqsSources) {
-                    var existingResource = _module.Parameters.First(p => p.Name == source.Queue) as ReferencedResourceParameter;
+                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.Queue) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.Queue}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         Enabled = true,
@@ -708,7 +713,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
             if(dynamoDbSources.Any()) {
                 foreach(var source in dynamoDbSources) {
-                    var existingResource = _module.Parameters.First(p => p.Name == source.DynamoDB) as ReferencedResourceParameter;
+                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.DynamoDB) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.DynamoDB}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         StartingPosition = source.StartingPosition,
@@ -723,7 +728,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
-                    var existingResource = _module.Parameters.First(p => p.Name == source.Kinesis) as ReferencedResourceParameter;
+                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.Kinesis) as ReferencedResourceParameter;
                     _stack.Add($"{function.Name}{source.Kinesis}EventMapping", new Lambda.EventSourceMapping {
                         BatchSize = source.BatchSize,
                         StartingPosition = source.StartingPosition,
@@ -777,9 +782,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
-                _stack.Add(packageParameter.FullName, new Model.CustomResource("Custom::LambdaSharpS3PackageLoader") {
+                _stack.Add(packageParameter.FullName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
                     ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}-CustomResource-LambdaSharp::S3PackageLoader")),
-                    ["DestinationBucketName"] = Humidifier.Fn.Ref(packageParameter.DestinationBucketParameterName),
+                    ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
                     ["SourcePackageKey"] = Fn.Sub($"${{DeploymentKeyPrefix}}{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}")
@@ -813,10 +818,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
                         resourceArn = null;
-
-                        // TODO (2018-10-03, bjorg): let's not prescribe the names for custom resource outpouts
-                        resourceParamFn = Fn.GetAtt(resourceName, "Result");
-                        resourceTemplate = new Model.CustomResource(resource.Type, resource.Properties);
+                        resourceParamFn = null;
+                        resourceTemplate = new CustomResource(resource.Type, resource.Properties);
                     } else if(!Settings.ResourceMapping.TryParseResourceProperties(
                         resource.Type,
                         resourceName,
@@ -831,7 +834,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     exportValue = resourceParamFn;
 
                     // only add parameters that the lambda functions are allowed to access
-                    if(resource.Type.StartsWith("Custom::") || (resource.Allow?.Any() == true)) {
+                    if((resourceParamFn != null) && (resource.Allow?.Any() == true)) {
                         environmentRefVariables["STR_" + fullEnvName] = resourceParamFn;
                     }
 

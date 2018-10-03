@@ -70,8 +70,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
             }
 
-            // convert 'Version' attribute to implicit 'Version' parameter
-            module.Parameters.Add(new ParameterNode {
+            // convert 'Version' attribute to implicit 'Version' variable
+            module.Variables.Add(new ParameterNode {
                 Name = "Version",
                 Value = module.Version,
                 Description = "LambdaSharp module version",
@@ -87,6 +87,7 @@ namespace MindTouch.LambdaSharp.Tool {
             , new List<string>());
 
             // convert parameters
+            _module.Variables = AtLocation("Variables", () => ConvertParameters(module.Variables), null) ?? new List<AParameter>();
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
 
             // create functions
@@ -97,7 +98,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 .ToList()
             , null) ?? new List<Function>();
 
-            // convert exports
+            // convert outputs
             var exportIndex = 0;
             _module.Outputs = AtLocation("Outputs", () => module.Outputs
                 .Select(export => ConvertOutput(++exportIndex, export))

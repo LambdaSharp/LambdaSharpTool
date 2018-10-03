@@ -43,15 +43,32 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
+                DiscoverParameters(module.Variables);
                 DiscoverParameters(module.Parameters);
 
                 // resolve parameter variables via substitution
                 while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
+                ReportUnresolved(module.Variables);
                 ReportUnresolved(module.Parameters);
                 if(Settings.HasErrors) {
                     return;
+                }
+            });
+
+            // resolve references in resource properties
+            AtLocation("Variables", () => {
+                foreach(var parameter in module.Variables.Where(p => p.Resource?.Properties != null)) {
+                    AtLocation(parameter.Name, () => {
+                        AtLocation("Resource", () => {
+                            AtLocation("Properties", () => {
+                                parameter.Resource.Properties = new Dictionary<string, object>(
+                                    parameter.Resource.Properties.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
+                                );
+                            });
+                        });
+                    });
                 }
             });
 
@@ -95,21 +112,22 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // local functions
             void DiscoverParameters(IEnumerable<ParameterNode> parameters, string prefix = "") {
-                if(parameters != null) {
-                    foreach(var parameter in parameters) {
-                        if(parameter.Value is string) {
-                            freeParameters[prefix + parameter.Name] = parameter;
-                        } else if(parameter.Value != null) {
-                            boundParameters[prefix + parameter.Name] = parameter;
-                        } else if(parameter.Values?.All(value => value is string) == true) {
-                            freeParameters[prefix + parameter.Name] = parameter;
-                        } else if(parameter.Values != null) {
-                            boundParameters[prefix + parameter.Name] = parameter;
-                        } else if(parameter.Resource != null) {
-                            freeParameters[prefix + parameter.Name] = parameter;
-                        }
-                        DiscoverParameters(parameter.Parameters, prefix + parameter.Name + "::");
+                if(parameters == null) {
+                    return;
+                }
+                foreach(var parameter in parameters) {
+                    if(parameter.Value is string) {
+                        freeParameters[prefix + parameter.Name] = parameter;
+                    } else if(parameter.Value != null) {
+                        boundParameters[prefix + parameter.Name] = parameter;
+                    } else if(parameter.Values?.All(value => value is string) == true) {
+                        freeParameters[prefix + parameter.Name] = parameter;
+                    } else if(parameter.Values != null) {
+                        boundParameters[prefix + parameter.Name] = parameter;
+                    } else if(parameter.Resource != null) {
+                        freeParameters[prefix + parameter.Name] = parameter;
                     }
+                    DiscoverParameters(parameter.Parameters, prefix + parameter.Name + "::");
                 }
             }
 

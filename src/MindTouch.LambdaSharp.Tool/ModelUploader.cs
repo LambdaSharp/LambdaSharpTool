@@ -47,17 +47,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 Console.WriteLine($"Uploading module assets");
 
                 // upload function packages
-                if(module.Functions?.Any() == true) {
-                    foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
-                        await UploadPackageAsync(module, function.PackagePath, "Lambda function");
-                    }
+                foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
+                    await UploadPackageAsync(module, function.PackagePath, "Lambda function");
                 }
 
                 // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
-                if(module.Parameters?.Any() == true) {
-                    foreach(var parameter in module.Parameters.OfType<PackageParameter>()) {
-                        await UploadPackageAsync(module, parameter.PackagePath, "package");
-                    }
+                foreach(var parameter in module.VariablesAndParameters.OfType<PackageParameter>()) {
+                    await UploadPackageAsync(module, parameter.PackagePath, "package");
                 }
             }
         }

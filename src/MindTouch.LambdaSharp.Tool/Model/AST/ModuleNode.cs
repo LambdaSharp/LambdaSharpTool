@@ -20,6 +20,8 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
@@ -35,5 +37,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<ParameterNode> Variables { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
         public IList<FunctionNode> Functions { get; set; }
+
+        [YamlIgnore]
+        public IEnumerable<ParameterNode> VariablesAndParameters => Variables.Union(Parameters);
     }
 }

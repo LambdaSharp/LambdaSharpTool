@@ -51,6 +51,9 @@ namespace MindTouch.LambdaSharp.Tool {
             if(module.Secrets == null) {
                 module.Secrets = new List<string>();
             }
+            if(module.Variables == null) {
+                module.Variables = new List<ParameterNode>();
+            }
             if(module.Parameters == null) {
                 module.Parameters = new List<ParameterNode>();
             }
@@ -71,6 +74,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // process data structures
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
+            AtLocation("Variables", () => ValidateParameters(module.Variables));
             AtLocation("Parameters", () => ValidateParameters(module.Parameters));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
             AtLocation("Outputs", () => ValidateOutputs(module.Outputs));
@@ -200,7 +204,7 @@ namespace MindTouch.LambdaSharp.Tool {
             } else {
                 AtLocation("DependsOn", () => {
                     foreach(var dependency in resource.DependsOn) {
-                        var dependentParameter = _module.Parameters.FirstOrDefault(p => p.Name == dependency);
+                        var dependentParameter = _module.VariablesAndParameters.FirstOrDefault(p => p.Name == dependency);
                         if(dependentParameter == null) {
                             AddError($"could not find dependency '{dependency}'");
                         } else if(dependentParameter.Resource == null) {
@@ -506,7 +510,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateSourceParameter(string name, string awsType, string typeDescription) {
-            var parameter = _module.Parameters.FirstOrDefault(p => p.Name == name);
+            var parameter = _module.VariablesAndParameters.FirstOrDefault(p => p.Name == name);
             if(parameter == null) {
                 AddError($"could not find parameter for {typeDescription}: '{name}'");
             } else if(parameter?.Resource?.Type != awsType) {
@@ -514,7 +518,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void ValidateOutputs(IList<OutputNode> exports) {
+        private void ValidateOutputs(IList<OutputNode> outputs) {
 
             // TODO (2018-09-20, bjorg): missing validation
         }
