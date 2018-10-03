@@ -81,6 +81,7 @@ namespace MindTouch.LambdaSharp {
         protected DateTime UtcNow => _now();
         protected DateTime Started => _started;
         protected string ModuleName { get; private set; }
+        protected string ModuleVersion { get; private set; }
         protected string DeploymentTier { get; private set; }
         private string _requestId;
 
@@ -136,10 +137,12 @@ namespace MindTouch.LambdaSharp {
             // read configuration from environment variables
             DeploymentTier = envSource.Read("TIER");
             ModuleName = envSource.Read("MODULE");
+            ModuleVersion = envSource.Read("MODULEVERSION");
             _deadLetterQueueUrl = envSource.Read("DEADLETTERQUEUE");
             var framework = envSource.Read("LAMBDARUNTIME");
             LogInfo($"TIER = {DeploymentTier}");
             LogInfo($"MODULE = {ModuleName}");
+            LogInfo($"MODULEVERSION = {ModuleVersion ?? "NONE"}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
 
             // read optional git-sha file
@@ -152,6 +155,7 @@ namespace MindTouch.LambdaSharp {
             // initialize error/warning reporter
             _reporter = new Reporter(
                 ModuleName,
+                ModuleVersion,
                 DeploymentTier,
                 framework,
                 gitsha,

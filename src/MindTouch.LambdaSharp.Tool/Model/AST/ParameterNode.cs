@@ -51,6 +51,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Values { get; set; }
         public object Value { get; set; }
+
+        // TODO (2018-10-02, bjorg) : deprecate
         public string Import { get; set; }
         public PackageNode Package { get; set; }
 

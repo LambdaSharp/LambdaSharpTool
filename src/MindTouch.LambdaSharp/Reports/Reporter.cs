@@ -85,6 +85,7 @@ namespace MindTouch.LambdaSharp.Reports {
 
         //--- Fields ---
         private readonly string _moduleName;
+        private readonly string _moduleVersion;
         private readonly string _deploymentTier;
         private readonly string _framework;
         private readonly string _gitSha;
@@ -94,12 +95,14 @@ namespace MindTouch.LambdaSharp.Reports {
         //--- Constructors ---
         public Reporter(
             string moduleName,
+            string moduleVersion,
             string deploymentTier,
             string framework,
             string gitSha,
             string gitBranch
         ) {
             _moduleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
+            _moduleVersion = moduleVersion;
             _deploymentTier = deploymentTier ?? throw new ArgumentNullException(nameof(deploymentTier));
             _platform = $"AWS Lambda ({System.Environment.OSVersion})";
             _framework = framework;
@@ -130,6 +133,7 @@ namespace MindTouch.LambdaSharp.Reports {
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ReportData {
                 ModuleName = _moduleName,
+                ModuleVersion = _moduleVersion,
                 DeploymentTier = _deploymentTier,
                 RequestId = requestId,
                 Level = level,

@@ -93,6 +93,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 Type = "String",
                 Description = "LambdaSharp Deployment S3 Bucket Key Prefix"
             });
+            // TODO (2018-09-29, bjorg): module registration
+            //  - module name
+            //  - tier
+            //  - version
+            //  - module stack name
+            //  - stack name
+            //  - stack id
+            //  - parent stack name
+            //  - parent stack id
 
             // create generic resource statement; additional resource statements can be added by resources
             _resourceStatements = new List<Statement> {
@@ -453,6 +462,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE"] = _module.Name;
+            environmentVariables["MODULEVERSION"] = _module.Version;
             environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueUrl"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {

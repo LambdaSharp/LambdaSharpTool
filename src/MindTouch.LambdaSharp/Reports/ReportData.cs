@@ -33,6 +33,7 @@ namespace MindTouch.LambdaSharp.Reports {
         public string Source { get; set; } = "LambdaReport";
         public string Version { get; set; } = "2018-09-27";
         public string ModuleName { get; set; }
+        public string ModuleVersion { get; set; }
         public string DeploymentTier { get; set; }
         public string RequestId { get; set; }
         public string Level { get; set; }
