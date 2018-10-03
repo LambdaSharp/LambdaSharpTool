@@ -20,13 +20,14 @@
  */
 
 
-namespace MindTouch.LambdaSharp.Tool.Model {
+namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
-    public class Export {
+    public class ParameterPackageNode {
 
         //--- Properties ---
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public object Value { get; set; }
+        public string Files { get; set; }
+        public string Bucket { get; set; }
+        public string Prefix { get; set; }
+        public string PackagePath { get; set; }
     }
 }

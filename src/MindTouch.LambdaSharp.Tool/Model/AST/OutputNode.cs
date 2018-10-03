@@ -22,7 +22,7 @@
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
-    public class ExportNode {
+    public class OutputNode {
 
         //--- Properties ---
         public string Name { get; set; }

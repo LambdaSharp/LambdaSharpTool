@@ -70,11 +70,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             });
 
-            // resolve references in exported values
-            AtLocation("Exports", () => {
-                foreach(var export in module.Exports) {
-                    AtLocation(export.Name, () => {
-                        export.Value = Substitute(export.Value);
+            // resolve references in output values
+            AtLocation("Outputs", () => {
+                foreach(var output in module.Outputs) {
+                    AtLocation(output.Name, () => {
+                        output.Value = Substitute(output.Value);
                     });
                 }
             });

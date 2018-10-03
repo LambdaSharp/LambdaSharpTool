@@ -233,7 +233,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
 
                     // add output parameter to easily located API
-                    _stack.Add("ModuleRestApi", new Output {
+                    _stack.Add("ModuleRestApi", new Humidifier.Output {
                         Description = restApiDescription,
                         Value = Fn.Sub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
                     });
@@ -322,14 +322,15 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            // add exports
-            foreach(var export in module.Exports) {
-                var exportName = new string(export.Name.Where(c => char.IsLetterOrDigit(c)).ToArray());
-                _stack.Add(exportName, new Output {
-                    Description = export.Description,
-                    Value = export.Value,
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub("${Tier}-" + export.Name)
+            // add outputs
+            foreach(var output in module.Outputs) {
+                var outputName = new string(export.Name.Where(c => char.IsLetterOrDigit(c)).ToArray());
+                _stack.Add(outputName, new Humidifier.Output {
+                    Description = output.Description,
+                    Value = output.Value,
+                    Export = new Dictionary<string, dynamic>
+                    {
+                        ["Name"] = Fn.Sub("${Tier}-" + output.Name)
                     }
                 });
             }
@@ -812,6 +813,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
                         resourceArn = null;
+
+                        // TODO (2018-10-03, bjorg): let's not prescribe the names for custom resource outpouts
                         resourceParamFn = Fn.GetAtt(resourceName, "Result");
                         resourceTemplate = new Model.CustomResource(resource.Type, resource.Properties);
                     } else if(!Settings.ResourceMapping.TryParseResourceProperties(

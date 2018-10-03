@@ -99,11 +99,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // convert exports
             var exportIndex = 0;
-            _module.Exports = AtLocation("Exports", () => module.Exports
-                .Select(export => ConvertExport(++exportIndex, export))
+            _module.Outputs = AtLocation("Outputs", () => module.Outputs
+                .Select(export => ConvertOutput(++exportIndex, export))
                 .Where(export => export != null)
                 .ToList()
-            , null) ?? new List<Export>();
+            , null) ?? new List<Output>();
             return _module;
         }
 
@@ -496,9 +496,9 @@ namespace MindTouch.LambdaSharp.Tool {
             throw new ModelParserException("invalid function event");
         }
 
-        private Export ConvertExport(int index, ExportNode export) {
+        private Output ConvertOutput(int index, OutputNode export) {
             return AtLocation(export.Name ?? $"[{index}]", () => {
-                return new Export {
+                return new Output {
                     Name = export.Name,
                     Description = export.Description,
                     Value = export.Value

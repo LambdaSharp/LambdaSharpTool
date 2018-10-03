@@ -57,8 +57,8 @@ namespace MindTouch.LambdaSharp.Tool {
             if(module.Functions == null) {
                 module.Functions = new List<FunctionNode>();
             }
-            if(module.Exports == null) {
-                module.Exports = new List<ExportNode>();
+            if(module.Outputs == null) {
+                module.Outputs = new List<OutputNode>();
             }
 
             // ensure version is present
@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
             AtLocation("Parameters", () => ValidateParameters(module.Parameters));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
-            AtLocation("Exports", () => ValidateExports(module.Exports));
+            AtLocation("Outputs", () => ValidateOutputs(module.Outputs));
         }
 
         private void ValidateSecrets(IEnumerable<string> secrets) {
@@ -514,7 +514,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void ValidateExports(IList<ExportNode> exports) {
+        private void ValidateOutputs(IList<OutputNode> exports) {
 
             // TODO (2018-09-20, bjorg): missing validation
         }
