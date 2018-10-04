@@ -15,7 +15,6 @@ lash() {
 if [ -z "$1" ]; then
 
     # run everything
-
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- info \
         --tier test \
         --aws-account-id 123456789012 \
@@ -24,6 +23,9 @@ if [ -z "$1" ]; then
         --deployment-bucket-name lambdsharp-bucket-name \
         --deployment-notification-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
 
+    if [ $? -ne 0 ]; then
+        exit $?
+    fi
     lash Source-Topic
     lash Source-Timer
     lash Source-Api-SlackCommand
