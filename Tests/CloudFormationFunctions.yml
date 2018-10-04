@@ -31,6 +31,10 @@ Parameters:
           Parameters:
             Param1: Value2
 
+  - Name: MyCustomResourceProperty
+    Description: A value from my custom resources
+    Value: !GetAtt MyResource.Result
+
   - Name: OtherResource
     Description: A CloudFormation dummy resource to reference
     Resource:

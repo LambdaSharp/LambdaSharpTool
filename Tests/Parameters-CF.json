@@ -138,20 +138,15 @@
                   "Resource": "arn:aws:sns:*:*:*"
                 },
                 {
-                  "Sid": "MultiResourceParameterIndex1",
+                  "Sid": "MultiResourceParameter",
                   "Effect": "Allow",
                   "Action": [
                     "sns:Publish"
                   ],
-                  "Resource": "arn:aws:sns:*:*:*"
-                },
-                {
-                  "Sid": "MultiResourceParameterIndex2",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": "arn:aws:sns:*:*:*:*"
+                  "Resource": [
+                    "arn:aws:sns:*:*:*",
+                    "arn:aws:sns:*:*:*:*"
+                  ]
                 },
                 {
                   "Sid": "LambdaDeadLetterQueueLogging",
@@ -220,8 +215,6 @@
             "STR_OTHERPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "Another literal value",
             "STR_SINGLERESOURCEPARAMETER": "arn:aws:sns:*:*:*",
             "STR_MULTIRESOURCEPARAMETER": "arn:aws:sns:*:*:*,arn:aws:sns:*:*:*:*",
-            "STR_MULTIRESOURCEPARAMETER_INDEX1": "arn:aws:sns:*:*:*",
-            "STR_MULTIRESOURCEPARAMETER_INDEX2": "arn:aws:sns:*:*:*:*",
             "STR_SOURCESUBEXPRESSIONS": {
               "Fn::Join": [
                 ",",

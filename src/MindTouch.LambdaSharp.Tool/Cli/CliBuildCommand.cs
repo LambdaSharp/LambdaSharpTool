@@ -106,18 +106,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // reset settings when the 'LambdaSharp` module is being deployed
-                if(module.Name == "LambdaSharp") {
-                    settings.Reset();
-                } else {
-                    await PopulateEnvironmentSettingsAsync(settings);
-                    if(settings.EnvironmentVersion == null) {
+                await PopulateEnvironmentSettingsAsync(settings);
+                if(settings.EnvironmentVersion == null) {
 
-                        // check that LambdaSharp Environment & Tool versions match
-                        AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                    } else {
-                        if(settings.EnvironmentVersion != settings.ToolVersion) {
-                            AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        }
+                    // check that LambdaSharp Environment & Tool versions match
+                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                } else {
+                    if(settings.EnvironmentVersion != settings.ToolVersion) {
+                        AddError($"LambdaSharp Tool (v{settings.ToolVersion}) and Environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     }
                 }
 
@@ -129,9 +125,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // resolve all imported parameters
                 new ModelImportProcessor(settings).Process(module);
-
-                // resolve all parameter references
-                new ModelReferenceResolver(settings).Resolve(module);
 
                 // package all functions
                 new ModelFunctionPackager(settings).Process(
@@ -146,6 +139,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // compile module file
                 var compiledModule = new ModelConverter(settings).Process(module);
+                if(HasErrors) {
+                    return null;
+                }
+
+                // resolve all parameter references
+                new ModelReferenceResolver(settings).Resolve(compiledModule);
                 if(HasErrors) {
                     return null;
                 }

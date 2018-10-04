@@ -131,17 +131,6 @@
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
-    "VersionSsmParameter": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Type": "String",
-        "Description": "LambdaSharp module version",
-        "Value": "1.0",
-        "Name": {
-          "Fn::Sub": "/${Tier}/TestModule/Version"
-        }
-      }
-    },
     "CloudWatchLogsRole": {
       "Type": "AWS::IAM::Role",
       "Properties": {
@@ -256,19 +245,19 @@
               "Ref": "Tier"
             },
             "MODULE": "TestModule",
+            "MODULEVERSION": "1.0",
             "DEADLETTERQUEUE": {
               "Fn::ImportValue": {
                 "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueUrl"
               }
             },
             "LAMBDARUNTIME": "dotnetcore2.1",
-            "STR_MYRESOURCE": {
+            "STR_MYCUSTOMRESOURCEPROPERTY": {
               "Fn::GetAtt": [
                 "MyResource",
                 "Result"
               ]
-            },
-            "STR_VERSION": "1.0"
+            }
           }
         },
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",

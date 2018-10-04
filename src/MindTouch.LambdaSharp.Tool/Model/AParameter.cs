@@ -41,13 +41,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, string> EncryptionContext { get; set; }
     }
 
-    public class StringParameter : AParameter {
+    public class ValueParameter : AParameter {
 
         //--- Properties ---
-        public string Value { get; set; }
+        public object Value { get; set; }
     }
 
-    public class StringListParameter : AParameter {
+    public class ValueListParameter : AParameter {
 
         //--- Properties ---
         public IList<object> Values { get; set; }
@@ -59,12 +59,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string DestinationBucketParameterName { get; set; }
         public string DestinationKeyPrefix { get; set; }
         public string PackagePath { get; set; }
-    }
-
-    public class ExpressionParameter : AParameter {
-
-        //--- Properties ---
-        public object Expression { get; set; }
     }
 
     public abstract class AResourceParameter : AParameter {

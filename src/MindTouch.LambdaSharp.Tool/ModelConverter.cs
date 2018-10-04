@@ -157,30 +157,27 @@ namespace MindTouch.LambdaSharp.Tool {
                             };
                         });
                     } else if(parameter.Values != null) {
-
-                        // list of values
-                        AtLocation("Values", () => {
-                            result = new StringListParameter {
-                                Name = parameter.Name,
-                                Description = parameter.Description,
-                                Values = parameter.Values,
-                                Export = parameter.Export
-                            };
-                        });
-
-                        // TODO (2018-08-19, bjorg): this implementation creates unnecessary parameters
                         if(parameter.Resource != null) {
                             AtLocation("Resource", () => {
 
-                                // enumerate individual values with resource definition for each
-                                parameter.Parameters = new List<ParameterNode>();
-                                for(var i = 1; i <= parameter.Values.Count; ++i) {
-                                    parameter.Parameters.Add(new ParameterNode {
-                                        Name = $"Index{i}",
-                                        Value = parameter.Values[i - 1],
-                                        Resource = parameter.Resource
-                                    });
-                                }
+                                // list of existing resources
+                                var resource = ConvertResource(parameter.Values, parameter.Resource);
+                                result = new ReferencedResourceParameter {
+                                    Name = parameter.Name,
+                                    Description = parameter.Description,
+                                    Resource = resource
+                                };
+                            });
+                        } else {
+
+                            // list of values
+                            AtLocation("Values", () => {
+                                result = new ValueListParameter {
+                                    Name = parameter.Name,
+                                    Description = parameter.Description,
+                                    Values = parameter.Values,
+                                    Export = parameter.Export
+                                };
                             });
                         }
                     } else if(parameter.Package != null) {
@@ -198,28 +195,18 @@ namespace MindTouch.LambdaSharp.Tool {
                             AtLocation("Resource", () => {
 
                                 // existing resource
-                                var resource = ConvertResource(parameter.Value, parameter.Resource);
+                                var resource = ConvertResource(new List<object> { parameter.Value }, parameter.Resource);
                                 result = new ReferencedResourceParameter {
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
                                 };
                             });
-                        } else if(parameter.Value is string text) {
-
-                            // plaintext value
-                            result = new StringParameter {
-                                Name = parameter.Name,
-                                Description = parameter.Description,
-                                Value = text
-                            };
                         } else {
-
-                            // plaintext value
-                            result = new ExpressionParameter {
+                            result = new ValueParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Expression = parameter.Value
+                                Value = parameter.Value
                             };
 
                         }
@@ -230,9 +217,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             result = new CloudFormationResourceParameter {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-
-                                // TODO (2018-09-26, bjorg): consider passing in `Fn.Ref(parameter.Name)` as resource name
-                                Resource = ConvertResource(null, parameter.Resource)
+                                Resource = ConvertResource(new List<object>(), parameter.Resource)
                             };
                         });
                     }
@@ -250,7 +235,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(nestedParameters.Any()) {
 
                             // create empty string parameter if collection has no value
-                            result = result ?? new StringParameter {
+                            result = result ?? new ValueParameter {
                                 Name = parameter.Name,
                                 Value = "",
                                 Description = parameter.Description,
@@ -271,7 +256,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return resultList;
         }
 
-        public Resource ConvertResource(object resourceArn, ResourceNode resource) {
+        public Resource ConvertResource(IList<object> resourceReferences, ResourceNode resource) {
 
             // parse resource allowed operations
             var allowList = new List<string>();
@@ -333,7 +318,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
             return new Resource {
                 Type = resource.Type,
-                ResourceArn = resourceArn,
+                ResourceReferences = resourceReferences,
                 Allow = allowList,
                 Properties = resource.Properties,
                 DependsOn = resource.DependsOn

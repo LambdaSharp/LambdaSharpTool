@@ -51,6 +51,23 @@ namespace MindTouch.LambdaSharp.Tool {
             public bool? ApiKeyRequired { get; set; }
         }
 
+        //--- Class Methods ---
+        void EnumerateOrDefault(IList<object> items, object single, Action<string, object> callback) {
+            switch(items.Count) {
+            case 0:
+                callback("", single);
+                break;
+            case 1:
+                callback("", items.First());
+                break;
+            default:
+                for(var i = 0; i < items.Count; ++i) {
+                    callback((i + 1).ToString(), items[i]);
+                }
+                break;
+            }
+        }
+
         //--- Fields ---
 
         private Module _module;
@@ -549,38 +566,19 @@ namespace MindTouch.LambdaSharp.Tool {
             var topicSources = function.Sources.OfType<TopicSource>();
             if(topicSources.Any()) {
                 foreach(var topicSource in topicSources) {
-
-                    // find the resource that matches the declared topic name
-                    var parameter = _module.VariablesAndParameters
-                        .OfType<AResourceParameter>()
-                        .FirstOrDefault(p => p.Name == topicSource.TopicName);
-
-                    // determine how to reference the resource
-                    object resourceReference;
-                    switch(parameter) {
-                    case ReferencedResourceParameter reference:
-                        resourceReference = reference.Resource.ResourceArn;
-                        break;
-                    case CloudFormationResourceParameter cloudformation:
-                        resourceReference = Fn.Ref(topicSource.TopicName);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException(
-                            nameof(parameter),
-                            parameter?.GetType().Name ?? "<null>",
-                            "parameter resource type must be either ReferencedResourceParameter or CloudFormationResourceParameter"
-                        );
-                    }
-                    _stack.Add($"{function.Name}{topicSource.TopicName}SnsPermission", new Lambda.Permission {
-                        Action = "lambda:InvokeFunction",
-                        SourceArn = resourceReference,
-                        FunctionName = Fn.GetAtt(function.Name, "Arn"),
-                        Principal = "sns.amazonaws.com"
-                    });
-                    _stack.Add($"{function.Name}{topicSource.TopicName}Subscription", new SNS.Subscription {
-                        Endpoint = Fn.GetAtt(function.Name, "Arn"),
-                        Protocol = "lambda",
-                        TopicArn = resourceReference
+                    var parameter = (AResourceParameter)_module.VariablesAndParameters.First(p => p.Name == topicSource.TopicName);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.Ref(topicSource.TopicName), (suffix, arn) => {
+                        _stack.Add($"{function.Name}{topicSource.TopicName}SnsPermission{suffix}", new Lambda.Permission {
+                            Action = "lambda:InvokeFunction",
+                            SourceArn = arn,
+                            FunctionName = Fn.GetAtt(function.Name, "Arn"),
+                            Principal = "sns.amazonaws.com"
+                        });
+                        _stack.Add($"{function.Name}{topicSource.TopicName}Subscription{suffix}", new SNS.Subscription {
+                            Endpoint = Fn.GetAtt(function.Name, "Arn"),
+                            Protocol = "lambda",
+                            TopicArn = arn
+                        });
                     });
                 }
             }
@@ -681,12 +679,14 @@ namespace MindTouch.LambdaSharp.Tool {
             var sqsSources = function.Sources.OfType<SqsSource>().ToList();
             if(sqsSources.Any()) {
                 foreach(var source in sqsSources) {
-                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.Queue) as ReferencedResourceParameter;
-                    _stack.Add($"{function.Name}{source.Queue}EventMapping", new Lambda.EventSourceMapping {
-                        BatchSize = source.BatchSize,
-                        Enabled = true,
-                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.Queue, "Arn"),
-                        FunctionName = Fn.Ref(function.Name)
+                    var parameter = (AResourceParameter)_module.VariablesAndParameters.First(p => p.Name == source.Queue);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.Queue, "Arn"), (suffix, arn) => {
+                        _stack.Add($"{function.Name}{source.Queue}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                            BatchSize = source.BatchSize,
+                            Enabled = true,
+                            EventSourceArn = arn,
+                            FunctionName = Fn.Ref(function.Name)
+                        });
                     });
                 }
             }
@@ -713,13 +713,15 @@ namespace MindTouch.LambdaSharp.Tool {
             var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
             if(dynamoDbSources.Any()) {
                 foreach(var source in dynamoDbSources) {
-                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.DynamoDB) as ReferencedResourceParameter;
-                    _stack.Add($"{function.Name}{source.DynamoDB}EventMapping", new Lambda.EventSourceMapping {
-                        BatchSize = source.BatchSize,
-                        StartingPosition = source.StartingPosition,
-                        Enabled = true,
-                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.DynamoDB, "StreamArn"),
-                        FunctionName = Fn.Ref(function.Name)
+                    var parameter = (AResourceParameter)_module.VariablesAndParameters.First(p => p.Name == source.DynamoDB);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.DynamoDB, "StreamArn"), (suffix, arn) => {
+                        _stack.Add($"{function.Name}{source.DynamoDB}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                            BatchSize = source.BatchSize,
+                            StartingPosition = source.StartingPosition,
+                            Enabled = true,
+                            EventSourceArn = arn,
+                            FunctionName = Fn.Ref(function.Name)
+                        });
                     });
                 }
             }
@@ -728,13 +730,15 @@ namespace MindTouch.LambdaSharp.Tool {
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
-                    var existingResource = _module.VariablesAndParameters.First(p => p.Name == source.Kinesis) as ReferencedResourceParameter;
-                    _stack.Add($"{function.Name}{source.Kinesis}EventMapping", new Lambda.EventSourceMapping {
-                        BatchSize = source.BatchSize,
-                        StartingPosition = source.StartingPosition,
-                        Enabled = true,
-                        EventSourceArn = existingResource?.Resource.ResourceArn ?? Fn.GetAtt(source.Kinesis, "Arn"),
-                        FunctionName = Fn.Ref(function.Name)
+                    var parameter = (AResourceParameter)_module.VariablesAndParameters.First(p => p.Name == source.Kinesis);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.Kinesis, "Arn"), (suffix, arn) => {
+                        _stack.Add($"{function.Name}{source.Kinesis}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                            BatchSize = source.BatchSize,
+                            StartingPosition = source.StartingPosition,
+                            Enabled = true,
+                            EventSourceArn = arn,
+                            FunctionName = Fn.Ref(function.Name)
+                        });
                     });
                 }
             }
@@ -766,16 +770,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Secret;
                 }
                 break;
-            case StringParameter stringParameter:
-                environmentRefVariables["STR_" + fullEnvName] = stringParameter.Value;
-                exportValue = stringParameter.Value;
+            case ValueParameter valueParameter:
+                exportValue = valueParameter.Value;
+                environmentRefVariables["STR_" + fullEnvName] = exportValue;
                 break;
-            case StringListParameter stringListParameter: {
-                    if(stringListParameter.Values.All(value => value is string)) {
-                        var commaDelimitedValue = string.Join(",", stringListParameter.Values);
+            case ValueListParameter listParameter: {
+                    if(listParameter.Values.All(value => value is string)) {
+                        var commaDelimitedValue = string.Join(",", listParameter.Values);
                         exportValue = commaDelimitedValue;
                     } else {
-                        exportValue = Fn.Join(",", stringListParameter.Values.Cast<dynamic>().ToArray());
+                        exportValue = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
                     }
                     environmentRefVariables["STR_" + fullEnvName] = exportValue;
                 }
@@ -790,21 +794,28 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["SourcePackageKey"] = Fn.Sub($"${{DeploymentKeyPrefix}}{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}")
                 });
                 break;
-            case ExpressionParameter expressionParameter:
-                environmentRefVariables["STR_" + fullEnvName] = expressionParameter.Expression;
-                exportValue = expressionParameter.Expression;
-                break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
-                    environmentRefVariables["STR_" + fullEnvName] = resource.ResourceArn;
-                    exportValue = resource.ResourceArn;
+                    object resources;
+                    if(resource.ResourceReferences.All(value => value is string)) {
+                        exportValue = string.Join(",", resource.ResourceReferences);
+                        if(resource.ResourceReferences.Count == 1) {
+                            resources = resource.ResourceReferences.First();
+                        } else {
+                            resources = resource.ResourceReferences.ToList();
+                        }
+                    } else {
+                        exportValue = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToArray());
+                        resources = exportValue;
+                    }
+                    environmentRefVariables["STR_" + fullEnvName] = exportValue;
 
                     // add permissions for resource
                     if(resource.Allow?.Any() == true) {
                         _resourceStatements.Add(new Statement {
                             Sid = parameter.FullName,
                             Effect = "Allow",
-                            Resource = resource.ResourceArn,
+                            Resource = resources,
                             Action = resource.Allow
                         });
                     }
@@ -832,6 +843,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                     _stack.Add(resourceName, resourceTemplate, dependsOn: resource.DependsOn.ToArray());
                     exportValue = resourceParamFn;
+
+// TODO (2018-10-04, bjorg): revisit this now that we have the `Variables` section
 
                     // only add parameters that the lambda functions are allowed to access
                     if((resourceParamFn != null) && (resource.Allow?.Any() == true)) {

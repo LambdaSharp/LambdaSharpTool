@@ -24,7 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Humidifier;
-using MindTouch.LambdaSharp.Tool.Model.AST;
+using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -37,9 +37,9 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelReferenceResolver(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public void Resolve(ModuleNode module) {
-            var freeParameters = new Dictionary<string, ParameterNode>();
-            var boundParameters = new Dictionary<string, ParameterNode>();
+        public void Resolve(Module module) {
+            var freeParameters = new Dictionary<string, AParameter>();
+            var boundParameters = new Dictionary<string, AParameter>();
 
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
@@ -59,7 +59,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in resource properties
             AtLocation("Variables", () => {
-                foreach(var parameter in module.Variables.Where(p => p.Resource?.Properties != null)) {
+                foreach(var parameter in module.Variables.OfType<AResourceParameter>().Where(p => p.Resource?.Properties != null)) {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
@@ -74,7 +74,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in resource properties
             AtLocation("Parameters", () => {
-                foreach(var parameter in module.Parameters.Where(p => p.Resource?.Properties != null)) {
+                foreach(var parameter in module.Parameters.OfType<AResourceParameter>().Where(p => p.Resource?.Properties != null)) {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
@@ -103,47 +103,80 @@ namespace MindTouch.LambdaSharp.Tool {
                         function.Environment = new Dictionary<string, object>(
                             function.Environment.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
                         );
-                        function.VPC = new Dictionary<string, object>(
-                            function.VPC.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
-                        );
+                        if(function.VPC != null) {
+                            function.VPC.SecurityGroupIds = Substitute(function.VPC.SecurityGroupIds);
+                            function.VPC.SubnetIds = Substitute(function.VPC.SubnetIds);
+                        }
                     });
                 }
             });
 
             // local functions
-            void DiscoverParameters(IEnumerable<ParameterNode> parameters, string prefix = "") {
+            void DiscoverParameters(IEnumerable<AParameter> parameters, string prefix = "") {
                 if(parameters == null) {
                     return;
                 }
                 foreach(var parameter in parameters) {
-                    if(parameter.Value is string) {
+                    switch(parameter) {
+                    case ValueParameter valueParameter:
+                        if(valueParameter.Value is string) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        }
+                        break;
+                    case ValueListParameter listParameter:
+                        if(listParameter.Values.All(value => value is string)) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        }
+                        break;
+                    case ReferencedResourceParameter referencedParameter:
+                        if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        }
+                        break;
+                    case CloudFormationResourceParameter _:
                         freeParameters[prefix + parameter.Name] = parameter;
-                    } else if(parameter.Value != null) {
-                        boundParameters[prefix + parameter.Name] = parameter;
-                    } else if(parameter.Values?.All(value => value is string) == true) {
-                        freeParameters[prefix + parameter.Name] = parameter;
-                    } else if(parameter.Values != null) {
-                        boundParameters[prefix + parameter.Name] = parameter;
-                    } else if(parameter.Resource != null) {
-                        freeParameters[prefix + parameter.Name] = parameter;
+                        break;
+
+                        // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
                     }
                     DiscoverParameters(parameter.Parameters, prefix + parameter.Name + "::");
                 }
             }
 
-            bool ResolveParameters(IEnumerable<KeyValuePair<string, ParameterNode>> parameters) {
+            bool ResolveParameters(IEnumerable<KeyValuePair<string, AParameter>> parameters) {
                 if(parameters == null) {
                     return false;
                 }
                 var progress = false;
                 foreach(var kv in parameters) {
+
+                    // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound variable;
+                    //  in the iteration, we attempt to substitute all references with free variables;
+                    //  if we do, the variable can be added to the pool of free variables;
+                    //  if we iterate over all bound variables without making progress, then we must have
+                    //  a circular dependency and we stop.
+
                     var parameter = kv.Value;
                     AtLocation(parameter.Name, () => {
                         var doesNotContainBoundParameters = true;
-                        if(parameter.Value != null) {
-                            parameter.Value = Substitute(parameter.Value, CheckBoundParameters);
-                        } else if(parameter.Values != null) {
-                            parameter.Values = parameter.Values.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                        switch(parameter) {
+                        case ValueParameter valueParameter:
+                            valueParameter.Value = Substitute(valueParameter.Value, CheckBoundParameters);
+                            break;
+                        case ValueListParameter listParameter:
+                            listParameter.Values = listParameter.Values.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                            break;
+                        case ReferencedResourceParameter referencedParameter:
+                            referencedParameter.Resource.ResourceReferences = referencedParameter.Resource.ResourceReferences.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                            break;
+                        default:
+                            throw new InvalidOperationException($"cannot resolved references for this type: {parameter?.GetType()}");
                         }
                         if(doesNotContainBoundParameters) {
 
@@ -165,13 +198,24 @@ namespace MindTouch.LambdaSharp.Tool {
                 return progress;
             }
 
-            void ReportUnresolved(IEnumerable<ParameterNode> parameters, string prefix = "") {
+            void ReportUnresolved(IEnumerable<AParameter> parameters, string prefix = "") {
                 if(parameters != null) {
                     foreach(var parameter in parameters) {
                         AtLocation(parameter.Name, () => {
-                            Substitute(parameter.Value, missingName => {
-                                AddError($"circular !Ref dependency on '{missingName}'");
-                            });
+                            switch(parameter) {
+                            case ValueParameter valueParameter:
+                                Substitute(valueParameter.Value, missingName => {
+                                    AddError($"circular !Ref dependency on '{missingName}'");
+                                });
+                                break;
+                            case ValueListParameter listParameter:
+                                foreach(var item in listParameter.Values) {
+                                    Substitute(item, missingName => {
+                                        AddError($"circular !Ref dependency on '{missingName}'");
+                                    });
+                                }
+                                break;
+                            }
                             ReportUnresolved(parameter.Parameters, prefix + parameter.Name + "::");
                         });
                     }
@@ -183,6 +227,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 case IDictionary<string, object> map:
                     map = new Dictionary<string, object>(map.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value, missing))));
                     if(map.Count == 1) {
+
+                        // handle !Ref expression
                         if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
                             if(TrySubstitute(refKey, out object found)) {
                                 return found;
@@ -190,6 +236,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             missing?.Invoke(refKey);
                             return value;
                         }
+
+                        // handle !Sub expression
                         if(map.TryGetValue("Fn::Sub", out object subObject)) {
                             string subPattern;
                             IDictionary<string, object> subArgs = null;
@@ -211,11 +259,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
 
                             // replace as many ${VAR} occurrences as possible
+                            var substitions = false;
                             subPattern = Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
                                 var matchText = match.ToString();
                                 var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
                                 if(!subArgs.ContainsKey(name[0])) {
                                     if(TrySubstitute(name[0], out object found)) {
+                                        substitions = true;
                                         if(found is string text) {
                                             if(name.Length == 2) {
                                                 AddError($"reference '{name[0]}' resolved to a literal value, but is used in a Fn::GetAtt expression");
@@ -239,6 +289,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                                 return matchText;
                             });
+                            if(!substitions) {
+                                return map;
+                            }
 
                             // determine which form of !Sub to construct
                             if(subArgs.Count == 0) {
@@ -273,15 +326,30 @@ namespace MindTouch.LambdaSharp.Tool {
 
             bool TrySubstitute(string key, out object found) {
                 found = null;
-                if(freeParameters.TryGetValue(key, out ParameterNode freeParameter)) {
-                    if(freeParameter.Value != null) {
-                        found = freeParameter.Value;
-                    } else if(freeParameter.Values?.All(v => v is string) == true) {
-                        found = string.Join(",", freeParameter.Values);
-                    } else if(freeParameter.Values != null) {
-                        found = Fn.Join(",", freeParameter.Values.Cast<dynamic>().ToArray());
-                    } else {
+                if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
+                    switch(freeParameter) {
+                    case ValueParameter valueParameter:
+                        found = valueParameter.Value;
+                        break;
+                    case ValueListParameter listParameter:
+                        if(listParameter.Values.All(value => value is string)) {
+                            found = string.Join(",", listParameter.Values);
+                        } else {
+                            found = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
+                        }
+                        break;
+                    case ReferencedResourceParameter referencedParameter:
+                        if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
+                            found = string.Join(",", referencedParameter.Resource.ResourceReferences);
+                        } else {
+                            found = Fn.Join(",", referencedParameter.Resource.ResourceReferences.Cast<dynamic>().ToArray());
+                        }
+                        break;
+                    case CloudFormationResourceParameter _:
                         found = Fn.Ref(key.Replace("::", ""));
+                        break;
+
+                        // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
                     }
                 }
                 return found != null;

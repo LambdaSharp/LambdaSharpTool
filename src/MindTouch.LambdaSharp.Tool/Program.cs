@@ -62,7 +62,9 @@ namespace MindTouch.LambdaSharp.Tool {
             new CliBuildCommand().Register(app);
 
             // new command
+            var showHelp = false;
             app.OnExecute(() => {
+                showHelp = true;
                 Console.WriteLine(app.GetHelpText());
             });
 
@@ -83,8 +85,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 return 0;
             } finally {
-                Console.WriteLine();
-                Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
+                if(!showHelp) {
+                    Console.WriteLine();
+                    Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
+                }
             }
         }
     }
