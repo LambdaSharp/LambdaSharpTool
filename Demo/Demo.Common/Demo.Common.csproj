@@ -4,6 +4,6 @@
     <RootNamespace>MindTouch.LambdaSharpDemo.Common</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.14.1"/>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.14.4"/>
   </ItemGroup>
 </Project>

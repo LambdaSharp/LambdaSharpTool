@@ -19,7 +19,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
-    <PackageReference Include="AWSSDK.S3" Version="3.3.23.1"/>
+    <PackageReference Include="AWSSDK.S3" Version="3.3.24.2"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
