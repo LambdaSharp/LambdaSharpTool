@@ -89,6 +89,8 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
             // add CloudFormation parameters
+
+            // TODO (2018-10-04, bjorg): replace with `Module::Name` variable
             _stack.Add("ModuleName", new Parameter {
                 Type = "String",
                 Description = "LambdaSharp Module Name",
@@ -115,7 +117,7 @@ namespace MindTouch.LambdaSharp.Tool {
             //  - module name
             //  - tier
             //  - version
-            //  - module stack name
+            //  - module id
             //  - stack name
             //  - stack id
             //  - parent stack name
@@ -140,12 +142,33 @@ namespace MindTouch.LambdaSharp.Tool {
                     Sid = "LambdaSecretsDecryption",
                     Effect = "Allow",
                     Resource = _module.Secrets,
-                    Action = "kms:Decrypt"
+                    Action = new List<string> {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    }
                 });
             }
 
-            // add resource variables
+            // add inputs
+            foreach(var input in _module.Inputs) {
+                _stack.Add(input.Name, new Parameter {
+                    Type = input.Type,
+                    Description = input.Description,
+                    Default = input.Default
+                });
+                if(input.Import != null) {
+
+                    // Create a condition for inputs that use an import statement
+                    //  FooIsImport := ($Foo != "") && (split($Foo, "!Import:")[0] == "")
+                    _stack.Add($"{input.Name}IsImport", new Condition(Fn.And(Fn.Not(Fn.Equals(Fn.Ref(input.Name), "")), Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""))));
+                }
+            }
+
+            // add variables
             foreach(var variable in _module.Variables.Where(v => v is AResourceParameter)) {
+
+                // NOTE: we call `AddParameter with a a dummy dictionary
+                //  since we don't want variables to be added to the environment
                 AddParameter(variable, "", new Dictionary<string, object>());
             }
 

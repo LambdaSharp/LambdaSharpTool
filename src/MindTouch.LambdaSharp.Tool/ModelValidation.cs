@@ -51,6 +51,9 @@ namespace MindTouch.LambdaSharp.Tool {
             if(module.Secrets == null) {
                 module.Secrets = new List<string>();
             }
+            if(module.Inputs == null) {
+                module.Inputs = new List<InputNode>();
+            }
             if(module.Variables == null) {
                 module.Variables = new List<ParameterNode>();
             }
@@ -74,6 +77,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // process data structures
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
+            AtLocation("Inputs", () => ValidateInputs(module.Inputs));
             AtLocation("Variables", () => ValidateParameters(module.Variables));
             AtLocation("Parameters", () => ValidateParameters(module.Parameters));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
@@ -506,9 +510,25 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void ValidateOutputs(IList<OutputNode> outputs) {
+        private void ValidateInputs(IList<InputNode> inputs) {
+            foreach(var input in inputs) {
+                if(input.Type == null) {
+                    input.Type = "String";
+                }
+                if(input.Import != null) {
+                    ValidateNotBothStatements("Import", "Default", input.Default == null);
+                    input.Default = "";
+                }
 
-            // TODO (2018-09-20, bjorg): missing validation
+                // TODO (2018-09-20, bjorg): missing validation
+            }
+        }
+
+        private void ValidateOutputs(IList<OutputNode> outputs) {
+            foreach(var output in outputs) {
+
+                // TODO (2018-09-20, bjorg): missing validation
+            }
         }
     }
 }

@@ -78,6 +78,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 .ToList()
             , new List<string>());
 
+            // convert inputs
+            var inputIndex = 0;
+            _module.Inputs = AtLocation("Inputs", () => module.Inputs
+                .Select(input => ConvertInput(++inputIndex, input))
+                .Where(input => input != null)
+                .ToList()
+            , null) ?? new List<Input>();
+
             // convert parameters
             _module.Variables = AtLocation("Variables", () => ConvertParameters(module.Variables), null) ?? new List<AParameter>();
             _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
@@ -116,6 +124,31 @@ namespace MindTouch.LambdaSharp.Tool {
                     AddError($"failed to resolve key alias: {secret}", e);
                     return null;
                 }
+            }, null);
+        }
+
+        public Input ConvertInput(int index, InputNode input) {
+            return AtLocation(input.Name ?? $"[{index}]", () => {
+
+                // TODO (2018-10-04, bjorg): convert import into proper format (Module.ExportName --> ???)
+
+                object reference;
+                if(input.Import != null) {
+
+                    // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
+                    //  Foo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
+                    reference = Fn.If($"{input.Name}IsImport", Fn.ImportValue(Fn.Join("-", Fn.Ref("Tier"), Fn.Select("1", Fn.Split("!Import:", Fn.Ref(input.Name))))), Fn.Ref(input.Name));
+                } else {
+                    reference = Fn.Ref(input.Name);
+                }
+                return new Input {
+                    Name = input.Name,
+                    Description = input.Description,
+                    Type = input.Type,
+                    Default = input.Default,
+                    Import = input.Import,
+                    Reference = reference
+                };
             }, null);
         }
 

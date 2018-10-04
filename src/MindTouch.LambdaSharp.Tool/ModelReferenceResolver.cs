@@ -38,11 +38,13 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
+            var freeInputs = new Dictionary<string, Input>();
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
 
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
+                DiscoverInputs(module.Inputs);
                 DiscoverParameters(module.Variables);
                 DiscoverParameters(module.Parameters);
 
@@ -112,6 +114,12 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // local functions
+            void DiscoverInputs(IEnumerable<Input> inputs) {
+                foreach(var input in inputs) {
+                    freeInputs[input.Name] = input;
+                }
+            }
+
             void DiscoverParameters(IEnumerable<AParameter> parameters, string prefix = "") {
                 if(parameters == null) {
                     return;
@@ -326,7 +334,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
             bool TrySubstitute(string key, out object found) {
                 found = null;
-                if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
+                if(freeInputs.TryGetValue(key, out Input freeInput)) {
+                    found = freeInput.Reference;
+                } else if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
                     switch(freeParameter) {
                     case ValueParameter valueParameter:
                         found = valueParameter.Value;

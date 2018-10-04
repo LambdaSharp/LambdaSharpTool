@@ -1,0 +1,27 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Inputs:
+
+  - Name: FooInput
+    Default: a default value
+
+  - Name: BarInput
+    Import: OtherModule.ExportValue
+
+Parameters:
+
+  - Name: Foo
+    Value: !Ref FooInput
+
+  - Name: Bar
+    Value: !Ref BarInput
+
+Functions:
+
+  - Name: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

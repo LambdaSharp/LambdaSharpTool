@@ -20,9 +20,9 @@
  */
 
 
-namespace MindTouch.LambdaSharp.Tool.Model.AST {
+namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class InputNode {
+    public class Input {
 
         //--- Properties ---
         public string Name { get; set; }
@@ -30,5 +30,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Type { get; set; }
         public string Default { get; set; }
         public string Import { get; set; }
+        public object Reference { get; set; }
     }
 }

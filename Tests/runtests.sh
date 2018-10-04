@@ -38,6 +38,7 @@ if [ -z "$1" ]; then
     lash Source-DynamoDB
     lash Source-Kinesis
     lash Source-Macro
+    lash Inputs
 else
 
     # run requested test

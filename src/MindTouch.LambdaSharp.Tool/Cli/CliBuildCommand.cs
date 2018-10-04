@@ -100,7 +100,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // parse yaml module file
-                var module = new ModelParser().Parse(tokenStream);
+                var parsedModule = new ModelParser().Parse(tokenStream);
                 if(HasErrors) {
                     return null;
                 }
@@ -118,41 +118,41 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // validate module
-                new ModelValidation(settings).Process(module);
+                new ModelValidation(settings).Process(parsedModule);
                 if(HasErrors) {
                     return null;
                 }
 
                 // resolve all imported parameters
-                new ModelImportProcessor(settings).Process(module);
+                new ModelImportProcessor(settings).Process(parsedModule);
+
+                // TODO (2018-10-04, bjorg): refactor all model processing to use the strict model instead of the parsed model
 
                 // package all functions
                 new ModelFunctionPackager(settings).Process(
-                    module,
+                    parsedModule,
                     settings.ToolVersion,
                     skipCompile: dryRun == DryRunLevel.CloudFormation,
                     skipAssemblyValidation: skipAssemblyValidation
                 );
 
                 // package all files
-                new ModelFilesPackager(settings).Process(module);
+                new ModelFilesPackager(settings).Process(parsedModule);
 
                 // compile module file
-                var compiledModule = new ModelConverter(settings).Process(module);
+                var module = new ModelConverter(settings).Process(parsedModule);
                 if(HasErrors) {
                     return null;
                 }
 
                 // resolve all parameter references
-                new ModelReferenceResolver(settings).Resolve(compiledModule);
+                new ModelReferenceResolver(settings).Resolve(module);
                 if(HasErrors) {
                     return null;
                 }
 
                 // generate cloudformation template
-                var stack = new ModelGenerator(settings).Generate(compiledModule);
-
-                // upload assets
+                var stack = new ModelGenerator(settings).Generate(module);
                 if(HasErrors) {
                     return null;
                 }
@@ -165,7 +165,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
                 File.WriteAllText(outputCloudFormationFilePath, template);
                 Console.WriteLine("=> Module processing done");
-                return compiledModule;
+                return module;
             } catch(Exception e) {
                 AddError(e);
                 return null;
