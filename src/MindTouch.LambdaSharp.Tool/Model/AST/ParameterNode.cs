@@ -39,7 +39,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
             Value = parameter.Value;
             Import = parameter.Import;
             Package = parameter.Package;
-            Export = parameter.Export;
             Parameters = parameter.Parameters;
         }
 
@@ -55,9 +54,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // TODO (2018-10-02, bjorg) : deprecate
         public string Import { get; set; }
         public ParameterPackageNode Package { get; set; }
-
-        // TODO (2018-09-21, bjorg) : remove once fully replaced by 'Exports'
-        public string Export { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
     }
 }

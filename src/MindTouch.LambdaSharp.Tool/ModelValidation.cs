@@ -112,11 +112,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
-
-                        // ensure parameter is not exported
-                        if(parameter.Export != null) {
-                            AddError("exporting Secret is not supported");
-                        }
                     } else if(parameter.Values != null) {
                         ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
@@ -131,12 +126,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Package", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Package", "Export", parameter.Export == null);
                         ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
-
-                        // ensure parameter is not exported
-                        Validate(parameter.Export == null, "exporting Package is not supported");
 
                         // check if required attributes are present
                         Validate(parameter.Package.Files != null, "missing 'Files' attribute");
@@ -161,9 +152,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                     if(parameter.Parameters != null) {
                         AtLocation("Parameters", () => {
-
-                            // ensure parameter is not exported
-                            Validate(parameter.Export == null, "exporting Parameters is not supported");
 
                             // recursively validate nested parameters
                             ValidateParameters(parameter.Parameters, depth + 1);

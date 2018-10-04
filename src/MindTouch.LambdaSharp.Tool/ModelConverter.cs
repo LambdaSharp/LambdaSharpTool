@@ -70,14 +70,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 _module.Description = _module.Description.TrimEnd() + $" (v{module.Version})";
             }
 
-            // convert 'Version' attribute to implicit 'Version' variable
-            module.Variables.Add(new ParameterNode {
-                Name = "Version",
-                Value = module.Version,
-                Description = "LambdaSharp module version",
-                Export = "Version"
-            });
-
             // convert secrets
             var secretIndex = 0;
             _module.Secrets = AtLocation("Secrets", () => module.Secrets
@@ -99,10 +91,10 @@ namespace MindTouch.LambdaSharp.Tool {
             , null) ?? new List<Function>();
 
             // convert outputs
-            var exportIndex = 0;
+            var outputIndex = 0;
             _module.Outputs = AtLocation("Outputs", () => module.Outputs
-                .Select(export => ConvertOutput(++exportIndex, export))
-                .Where(export => export != null)
+                .Select(output => ConvertOutput(++outputIndex, output))
+                .Where(output => output != null)
                 .ToList()
             , null) ?? new List<Output>();
             return _module;
@@ -152,7 +144,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Secret = parameter.Secret,
-                                Export = parameter.Export,
                                 EncryptionContext = parameter.EncryptionContext
                             };
                         });
@@ -175,8 +166,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 result = new ValueListParameter {
                                     Name = parameter.Name,
                                     Description = parameter.Description,
-                                    Values = parameter.Values,
-                                    Export = parameter.Export
+                                    Values = parameter.Values
                                 };
                             });
                         }
@@ -238,8 +228,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             result = result ?? new ValueParameter {
                                 Name = parameter.Name,
                                 Value = "",
-                                Description = parameter.Description,
-                                Export = parameter.Export
+                                Description = parameter.Description
                             };
                             result.Parameters = nestedParameters;
                         }
@@ -249,7 +238,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 // add parameter
                 if(result != null) {
                     result.FullName = parameterFullName;
-                    result.Export = parameter.Export;
                     resultList.Add(result);
                 }
             }
@@ -364,8 +352,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
-                    Environment = function.Environment ?? new Dictionary<string, object>(),
-                    Export = function.Export
+                    Environment = function.Environment ?? new Dictionary<string, object>()
                 };
             }, null);
         }
@@ -482,12 +469,12 @@ namespace MindTouch.LambdaSharp.Tool {
             throw new ModelParserException("invalid function event");
         }
 
-        private Output ConvertOutput(int index, OutputNode export) {
-            return AtLocation(export.Name ?? $"[{index}]", () => {
+        private Output ConvertOutput(int index, OutputNode output) {
+            return AtLocation(output.Name ?? $"[{index}]", () => {
                 return new Output {
-                    Name = export.Name,
-                    Description = export.Description,
-                    Value = export.Value
+                    Name = output.Name,
+                    Description = output.Description,
+                    Value = output.Value
                 };
             }, null);
         }

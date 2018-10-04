@@ -549,19 +549,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
             });
 
-            // check if function is exported
-            if(function.Export != null) {
-                var export = function.Export.StartsWith("/")
-                    ? (object)function.Export
-                    : Fn.Sub($"/${{Tier}}/{_module.Name}/{function.Export}");
-                _stack.Add(function.Name + "SsmParameter", new SSM.Parameter {
-                    Name = export,
-                    Description = function.Description,
-                    Type = "String",
-                    Value = Fn.Ref(function.Name)
-                });
-            }
-
             // check if function has any SNS topic event sources
             var topicSources = function.Sources.OfType<TopicSource>();
             if(topicSources.Any()) {
@@ -587,12 +574,12 @@ namespace MindTouch.LambdaSharp.Tool {
             var scheduleSources = function.Sources.OfType<ScheduleSource>().ToList();
             if(scheduleSources.Any()) {
                 for(var i = 0; i < scheduleSources.Count; ++i) {
-                    var name = function.Name + "ScheduleEvent" + (i + 1).ToString("00");
+                    var name = function.Name + "ScheduleEvent" + (i + 1).ToString();
                     _stack.Add(name, new Events.Rule {
                         ScheduleExpression = scheduleSources[i].Expression,
                         Targets = new List<Events.RuleTypes.Target> {
                             new Events.RuleTypes.Target {
-                                Id = ToAppResourceName(name),
+                                Id = Fn.Sub($"${{Tier}}-{_module.Name}-{name}"),
                                 Arn = Fn.GetAtt(function.Name, "Arn"),
                                 InputTransformer = new Events.RuleTypes.InputTransformer {
                                     InputPathsMap = new Dictionary<string, dynamic> {
@@ -760,7 +747,6 @@ namespace MindTouch.LambdaSharp.Tool {
             string envPrefix,
             IDictionary<string, object> environmentRefVariables
         ) {
-            object exportValue = null;
             var fullEnvName = envPrefix + parameter.Name.ToUpperInvariant();
             switch(parameter) {
             case SecretParameter secretParameter:
@@ -771,17 +757,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case ValueParameter valueParameter:
-                exportValue = valueParameter.Value;
-                environmentRefVariables["STR_" + fullEnvName] = exportValue;
+                environmentRefVariables["STR_" + fullEnvName] = valueParameter.Value;
                 break;
             case ValueListParameter listParameter: {
                     if(listParameter.Values.All(value => value is string)) {
-                        var commaDelimitedValue = string.Join(",", listParameter.Values);
-                        exportValue = commaDelimitedValue;
+                        environmentRefVariables["STR_" + fullEnvName] = string.Join(",", listParameter.Values);
                     } else {
-                        exportValue = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
+                        environmentRefVariables["STR_" + fullEnvName] = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
                     }
-                    environmentRefVariables["STR_" + fullEnvName] = exportValue;
                 }
                 break;
             case PackageParameter packageParameter:
@@ -798,17 +781,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     var resource = referenceResourceParameter.Resource;
                     object resources;
                     if(resource.ResourceReferences.All(value => value is string)) {
-                        exportValue = string.Join(",", resource.ResourceReferences);
+                        environmentRefVariables["STR_" + fullEnvName] = string.Join(",", resource.ResourceReferences);
                         if(resource.ResourceReferences.Count == 1) {
                             resources = resource.ResourceReferences.First();
                         } else {
                             resources = resource.ResourceReferences.ToList();
                         }
                     } else {
-                        exportValue = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToArray());
-                        resources = exportValue;
+                        resources = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToArray());
+                        environmentRefVariables["STR_" + fullEnvName] = resources;
                     }
-                    environmentRefVariables["STR_" + fullEnvName] = exportValue;
 
                     // add permissions for resource
                     if(resource.Allow?.Any() == true) {
@@ -824,41 +806,40 @@ namespace MindTouch.LambdaSharp.Tool {
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
                     var resourceName = parameter.FullName;
-                    object resourceArn;
-                    object resourceParamFn;
+                    object resourceAsStatementFn;
+                    object resourceAsParameterFn;
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
-                        resourceArn = null;
-                        resourceParamFn = null;
+                        resourceAsStatementFn = null;
+                        resourceAsParameterFn = null;
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
                     } else if(!Settings.ResourceMapping.TryParseResourceProperties(
                         resource.Type,
                         resourceName,
                         resource.Properties,
-                        out resourceArn,
-                        out resourceParamFn,
+                        out resourceAsStatementFn,
+                        out resourceAsParameterFn,
                         out resourceTemplate
                     )) {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                     }
                     _stack.Add(resourceName, resourceTemplate, dependsOn: resource.DependsOn.ToArray());
-                    exportValue = resourceParamFn;
+                    if(resource.Allow?.Any() == true) {
 
-// TODO (2018-10-04, bjorg): revisit this now that we have the `Variables` section
+                        // only add parameters that the lambda functions are allowed to access
+                        if(resourceAsParameterFn != null) {
+                            environmentRefVariables["STR_" + fullEnvName] = resourceAsParameterFn;
+                        }
 
-                    // only add parameters that the lambda functions are allowed to access
-                    if((resourceParamFn != null) && (resource.Allow?.Any() == true)) {
-                        environmentRefVariables["STR_" + fullEnvName] = resourceParamFn;
-                    }
-
-                    // add permissions for resource
-                    if((resourceArn != null) && (resource.Allow?.Any() == true)) {
-                        _resourceStatements.Add(new Statement {
-                            Sid = parameter.FullName,
-                            Effect = "Allow",
-                            Resource = resourceArn,
-                            Action = resource.Allow
-                        });
+                        // add permissions for resource
+                        if(resourceAsStatementFn != null) {
+                            _resourceStatements.Add(new Statement {
+                                Sid = parameter.FullName,
+                                Effect = "Allow",
+                                Resource = resourceAsStatementFn,
+                                Action = resource.Allow
+                            });
+                        }
                     }
                 }
                 break;
@@ -868,29 +849,14 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check if nested parameters need to be added
             if(parameter.Parameters?.Any() == true) {
-                foreach(var nestedResource in parameter.Parameters) {
+                foreach(var nestedParameter in parameter.Parameters) {
                     AddParameter(
-                        nestedResource,
+                        nestedParameter,
                         fullEnvName + "_",
                         environmentRefVariables
                     );
                 }
             }
-
-            // check if resource name should be exported
-            if(parameter.Export != null) {
-                var export = parameter.Export.StartsWith("/")
-                    ? (object)parameter.Export
-                    : Fn.Sub($"/${{Tier}}/{_module.Name}/{parameter.Export}");
-                _stack.Add(parameter.FullName + "SsmParameter", new SSM.Parameter {
-                    Name = export,
-                    Description = parameter.Description,
-                    Type = "String",
-                    Value = exportValue
-                });
-            }
         }
-
-        private object ToAppResourceName(string name) => (name != null) ? Fn.Sub($"${{Tier}}-{_module.Name}-{name}") : null;
     }
 }

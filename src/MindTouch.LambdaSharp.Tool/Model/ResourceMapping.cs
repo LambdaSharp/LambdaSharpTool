@@ -61,14 +61,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             string awsType,
             string logicalId,
             object properties,
-            out object resourceArnFn,
-            out object resourceParamFn,
+            out object resourceAsStatementFn,
+            out object resourceAsParameterFn,
             out Humidifier.Resource resourceTemplate
         ) {
             var type = GetHumidifierType(awsType);
             if(type == null) {
-                resourceArnFn = null;
-                resourceParamFn = null;
+                resourceAsStatementFn = null;
+                resourceAsParameterFn = null;
                 resourceTemplate = null;
                 return false;
             }
@@ -114,33 +114,33 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::StepFunctions::StateMachine":
 
                 // these AWS resources return their ARN using `!Ref`
-                resourceArnFn = Fn.Ref(logicalId);
-                resourceParamFn = Fn.Ref(logicalId);
+                resourceAsStatementFn = Fn.Ref(logicalId);
+                resourceAsParameterFn = Fn.Ref(logicalId);
                 break;
             case "AWS::S3::Bucket":
 
                 // S3 Bucket resources must be granted permissions on the bucket AND the keys
-                resourceArnFn = new object[] {
+                resourceAsStatementFn = new object[] {
                     Fn.GetAtt(logicalId, "Arn"),
                     Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/*")
                 };
-                resourceParamFn = Fn.Ref(logicalId);
+                resourceAsParameterFn = Fn.Ref(logicalId);
                 break;
             case "AWS::DynamoDB::Table":
 
                 // DynamoDB resources must be granted permissions on the table AND the stream
-                resourceArnFn = new object[] {
+                resourceAsStatementFn = new object[] {
                     Fn.GetAtt(logicalId, "Arn"),
                     Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "stream", "*"),
                     Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "index", "*")
                 };
-                resourceParamFn = Fn.Ref(logicalId);
+                resourceAsParameterFn = Fn.Ref(logicalId);
                 break;
             default:
 
                 // most AWS resources expose an `Arn` attribute that we need to use
-                resourceArnFn = Fn.GetAtt(logicalId, "Arn");
-                resourceParamFn = Fn.Ref(logicalId);
+                resourceAsStatementFn = Fn.GetAtt(logicalId, "Arn");
+                resourceAsParameterFn = Fn.Ref(logicalId);
                 break;
             }
             return true;

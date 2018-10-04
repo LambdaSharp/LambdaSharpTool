@@ -201,7 +201,7 @@
         }
       }
     },
-    "FunctionScheduleEvent01": {
+    "FunctionScheduleEvent1": {
       "Type": "AWS::Events::Rule",
       "Properties": {
         "ScheduleExpression": "rate(1 minute)",
@@ -214,7 +214,7 @@
               ]
             },
             "Id": {
-              "Fn::Sub": "${Tier}-TestModule-FunctionScheduleEvent01"
+              "Fn::Sub": "${Tier}-TestModule-FunctionScheduleEvent1"
             },
             "InputTransformer": {
               "InputPathsMap": {
