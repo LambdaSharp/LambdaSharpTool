@@ -27,7 +27,7 @@
     <PackageReference Include="Humidifier.Json" Version="0.2.13"/>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.5"/>
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2"/>
-    <PackageReference Include="YamlDotNet" Version="5.0.1"/>
+    <PackageReference Include="YamlDotNet" Version="5.2.0"/>
     <PackageReference Include="System.ValueTuple" Version="4.5.0"/>
   </ItemGroup>
   <ItemGroup>
