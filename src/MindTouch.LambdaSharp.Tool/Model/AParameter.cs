@@ -29,7 +29,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
-        public string FullName { get; set; }
+        public string ResourceName { get; set; }
         public IList<AParameter> Parameters { get; set; }
     }
 

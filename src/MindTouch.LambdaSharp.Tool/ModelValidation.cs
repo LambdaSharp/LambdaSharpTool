@@ -34,6 +34,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private ModuleNode _module;
+        private HashSet<string> _names;
 
         //--- Constructors ---
         public ModelValidation(Settings settings) : base(settings) { }
@@ -45,6 +46,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void Validate(ModuleNode module) {
             _module = module;
+            _names = new HashSet<string>();
             Validate(module.Name != null, "missing module name");
 
             // ensure collections are present
@@ -104,12 +106,12 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void ValidateParameters(IEnumerable<ParameterNode> parameters, int depth = 0) {
+        private void ValidateParameters(IEnumerable<ParameterNode> parameters, string prefix = "") {
             var index = 0;
             foreach(var parameter in parameters) {
                 ++index;
                 AtLocation(parameter.Name ?? $"[{index}]", () => {
-                    Validate(parameter.Name != null, "missing parameter name");
+                    ValidateResourceName(parameter.Name, prefix);
                     Validate(Regex.IsMatch(parameter.Name, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
                     if(parameter.Secret != null) {
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
@@ -150,7 +152,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
 
                         // check if package is nested
-                        if(depth > 0) {
+                        if(prefix != "") {
                             AddError("parameter package cannot be nested");
                         }
                     }
@@ -158,7 +160,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         AtLocation("Parameters", () => {
 
                             // recursively validate nested parameters
-                            ValidateParameters(parameter.Parameters, depth + 1);
+                            ValidateParameters(parameter.Parameters, prefix + "::" + parameter.Name);
                         });
                     }
                     if(parameter.Resource != null) {
@@ -231,7 +233,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var function in functions) {
                 ++index;
                 AtLocation(function.Name ?? $"[{index}]", () => {
-                    Validate(function.Name != null, "missing function name");
+                    ValidateResourceName(function.Name, "");
                     Validate(function.Memory != null, "missing Memory field");
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
                     Validate(function.Timeout != null, "missing Name field");
@@ -511,23 +513,41 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateInputs(IList<InputNode> inputs) {
+            var index = 0;
             foreach(var input in inputs) {
-                if(input.Type == null) {
-                    input.Type = "String";
-                }
-                if(input.Import != null) {
-                    ValidateNotBothStatements("Import", "Default", input.Default == null);
-                    input.Default = "";
-                }
+                ++index;
+                AtLocation(input.Name ?? $"[{index}]", () => {
+                    ValidateResourceName(input.Name, "");
+                    if(input.Type == null) {
+                        input.Type = "String";
+                    }
+                    if(input.Import != null) {
+                        ValidateNotBothStatements("Import", "Default", input.Default == null);
+                        input.Default = $"!Import:{input.Import}";
+                    }
+
+                    // TODO (2018-09-20, bjorg): missing validation
+                });
+            }
+        }
+
+        private void ValidateOutputs(IList<OutputNode> outputs) {
+            var index = 0;
+            foreach(var output in outputs) {
+                ++index;
 
                 // TODO (2018-09-20, bjorg): missing validation
             }
         }
 
-        private void ValidateOutputs(IList<OutputNode> outputs) {
-            foreach(var output in outputs) {
-
-                // TODO (2018-09-20, bjorg): missing validation
+        private void ValidateResourceName(string name, string prefix) {
+            var fullname = prefix + name;
+            if(name == null) {
+                AddError("missing name");
+            } else if(fullname == "Module") {
+                AddError($"'{fullname}' is a reserved name");
+            } else if(!_names.Add(fullname)) {
+                AddError($"duplicate name '{fullname}'");
             }
         }
     }

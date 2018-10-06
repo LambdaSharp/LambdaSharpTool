@@ -105,6 +105,35 @@ namespace MindTouch.LambdaSharp.Tool {
                 .Where(output => output != null)
                 .ToList()
             , null) ?? new List<Output>();
+
+            // add module variables
+            _module.Variables.Add(new ValueParameter {
+                Name = "Module",
+                ResourceName = "Module",
+                Description = "LambdaSharp module information",
+                Parameters = new List<AParameter> {
+                    new ValueParameter {
+                        Name = "Name",
+                        ResourceName = "ModuleName",
+                        Description = "LambdaSharp module name",
+                        Value = _module.Name
+                    },
+                    new ValueParameter {
+                        Name = "Id",
+                        ResourceName = "ModuleId",
+                        Description = "LambdaSharp module id",
+                        Value = Fn.Ref("ModuleId")
+                    },
+                    new ValueParameter {
+                        Name = "Version",
+                        ResourceName = "ModuleVersion",
+                        Description = "LambdaSharp module version",
+                        Value = _module.Version
+                    }
+
+                    // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
+                }
+            });
             return _module;
         }
 
@@ -270,7 +299,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // add parameter
                 if(result != null) {
-                    result.FullName = parameterFullName;
+                    result.ResourceName = parameterFullName;
                     resultList.Add(result);
                 }
             }

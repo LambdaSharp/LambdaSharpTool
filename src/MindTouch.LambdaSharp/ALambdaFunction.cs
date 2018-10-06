@@ -81,6 +81,7 @@ namespace MindTouch.LambdaSharp {
         protected DateTime UtcNow => _now();
         protected DateTime Started => _started;
         protected string ModuleName { get; private set; }
+        protected string ModuleId { get; private set; }
         protected string ModuleVersion { get; private set; }
         protected string DeploymentTier { get; private set; }
         private string _requestId;
@@ -136,8 +137,9 @@ namespace MindTouch.LambdaSharp {
 
             // read configuration from environment variables
             DeploymentTier = envSource.Read("TIER");
-            ModuleName = envSource.Read("MODULE");
-            ModuleVersion = envSource.Read("MODULEVERSION");
+            ModuleName = envSource.Read("MODULE_NAME");
+            ModuleId = envSource.Read("MODULE_ID");
+            ModuleVersion = envSource.Read("MODULE_VERSION");
             _deadLetterQueueUrl = envSource.Read("DEADLETTERQUEUE");
             var framework = envSource.Read("LAMBDARUNTIME");
             LogInfo($"TIER = {DeploymentTier}");

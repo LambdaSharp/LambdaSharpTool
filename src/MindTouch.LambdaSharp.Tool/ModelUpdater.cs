@@ -61,6 +61,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public async Task<bool> Deploy(Module module, string templateFile, bool allowDataLoss, bool protectStack) {
+
+            // TODO (2010-10-06, bjorg): use module id instead of module name
             var stackName = $"{Settings.Tier}-{module.Name}";
             Console.WriteLine($"Deploying stack: {stackName}");
 
@@ -145,6 +147,12 @@ namespace MindTouch.LambdaSharp.Tool {
 }";
             // initialize template parameters
             var parameters = new List<CloudFormationParameter> {
+                new CloudFormationParameter {
+                    ParameterKey = "ModuleId",
+
+                    // TODO (2018-10-06, bjorg): inject the module id
+                    ParameterValue = module.Name
+                },
                 new CloudFormationParameter {
                     ParameterKey = "Tier",
                     ParameterValue = Settings.Tier

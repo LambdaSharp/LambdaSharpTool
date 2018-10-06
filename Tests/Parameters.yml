@@ -130,6 +130,16 @@ Parameters:
       - !Sub "${SourceParameterCollection::SecondSourceResourceParameter}"
       - !Sub "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
 
+  # !Ref module variables
+  - Name: MyModuleName
+    Value: !Ref Module::Name
+
+  - Name: MyModuleId
+    Value: !Ref Module::Id
+
+  - Name: MyModuleVersion
+    Value: !Ref Module::Version
+
 Functions:
 
   - Name: Function

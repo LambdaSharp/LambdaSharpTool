@@ -91,10 +91,9 @@ namespace MindTouch.LambdaSharp.Tool {
             // add CloudFormation parameters
 
             // TODO (2018-10-04, bjorg): replace with `Module::Name` variable
-            _stack.Add("ModuleName", new Parameter {
+            _stack.Add("ModuleId", new Parameter {
                 Type = "String",
-                Description = "LambdaSharp Module Name",
-                Default = module.Name
+                Description = "LambdaSharp Module Id"
             });
             _stack.Add("Tier", new Parameter {
                 Type = "String",
@@ -222,7 +221,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = Fn.Sub($"${{Tier}}-{_module.Name}-Permissions-Policy-For-CWL"),
+                            PolicyName = Fn.Sub("${Tier}-${ModuleId}-Permissions-Policy-For-CWL"),
                             PolicyDocument = new PolicyDocument {
                                 Statement = new List<Statement> {
                                     new Statement {
@@ -253,7 +252,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = Fn.Sub($"${{Tier}}-{_module.Name}-policy"),
+                            PolicyName = Fn.Sub("${Tier}-${ModuleId}-policy"),
                             PolicyDocument = new PolicyDocument {
 
                                 // NOTE: additional resource statements can be added by resources
@@ -273,7 +272,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     var restApiName = "ModuleRestApi";
                     var restApiDescription = $"{_module.Name} API (v{_module.Version})";
                     _stack.Add(restApiName, new ApiGateway.RestApi {
-                        Name = Fn.Sub($"{_module.Name} API (${{Tier}})"),
+                        Name = Fn.Sub("${ModuleId} API (${Tier})"),
                         Description = restApiDescription,
                         FailOnWarnings = true
                     });
@@ -301,7 +300,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         },
                         Policies = new List<IAM.Policy> {
                             new IAM.Policy {
-                                PolicyName = $"{_module.Name}RestApiRolePolicy",
+                                PolicyName = Fn.Sub("${ModuleId}ModuleRestApiRolePolicy"),
                                 PolicyDocument = new PolicyDocument {
                                     Statement = new List<Statement> {
                                         new Statement {
@@ -345,7 +344,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created
                     _stack.Add(restApiDeploymentName, new ApiGateway.Deployment {
                         RestApiId = Fn.Ref(restApiName),
-                        Description = Fn.Sub($"{_module.Name} API (${{Tier}}) [{methodsHash}]")
+                        Description = Fn.Sub($"${{ModuleId}} API (${{Tier}}) [{methodsHash}]")
                     }, dependsOn: apiMethods.Select(kv => kv.Key).ToArray());
 
                     // RestApi stage depends on API gateway deployment and API gateway account
@@ -507,8 +506,9 @@ namespace MindTouch.LambdaSharp.Tool {
         private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Fn.Ref("Tier");
-            environmentVariables["MODULE"] = _module.Name;
-            environmentVariables["MODULEVERSION"] = _module.Version;
+            environmentVariables["MODULE_NAME"] = _module.Name;
+            environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
+            environmentVariables["MODULE_VERSION"] = _module.Version;
             environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueUrl"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
@@ -602,7 +602,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ScheduleExpression = scheduleSources[i].Expression,
                         Targets = new List<Events.RuleTypes.Target> {
                             new Events.RuleTypes.Target {
-                                Id = Fn.Sub($"${{Tier}}-{_module.Name}-{name}"),
+                                Id = Fn.Sub($"${{Tier}}-${{ModuleId}}-{name}"),
                                 Arn = Fn.GetAtt(function.Name, "Arn"),
                                 InputTransformer = new Events.RuleTypes.InputTransformer {
                                     InputPathsMap = new Dictionary<string, dynamic> {
@@ -791,8 +791,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case PackageParameter packageParameter:
-                environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.FullName, "Result");
-                _stack.Add(packageParameter.FullName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
+                environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.ResourceName, "Result");
+                _stack.Add(packageParameter.ResourceName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
                     ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}-CustomResource-LambdaSharp::S3PackageLoader")),
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
@@ -818,7 +818,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // add permissions for resource
                     if(resource.Allow?.Any() == true) {
                         _resourceStatements.Add(new Statement {
-                            Sid = parameter.FullName,
+                            Sid = parameter.ResourceName,
                             Effect = "Allow",
                             Resource = resources,
                             Action = resource.Allow
@@ -828,7 +828,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
-                    var resourceName = parameter.FullName;
+                    var resourceName = parameter.ResourceName;
                     object resourceAsStatementFn;
                     object resourceAsParameterFn;
                     Humidifier.Resource resourceTemplate;
@@ -857,7 +857,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // add permissions for resource
                         if(resourceAsStatementFn != null) {
                             _resourceStatements.Add(new Statement {
-                                Sid = parameter.FullName,
+                                Sid = parameter.ResourceName,
                                 Effect = "Allow",
                                 Resource = resourceAsStatementFn,
                                 Action = resource.Allow

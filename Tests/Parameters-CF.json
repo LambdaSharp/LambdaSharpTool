@@ -2,10 +2,9 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
-    "ModuleName": {
+    "ModuleId": {
       "Type": "String",
-      "Description": "LambdaSharp Module Name",
-      "Default": "TestModule"
+      "Description": "LambdaSharp Module Id"
     },
     "Tier": {
       "Type": "String",
@@ -67,7 +66,7 @@
               ]
             },
             "PolicyName": {
-              "Fn::Sub": "${Tier}-TestModule-Permissions-Policy-For-CWL"
+              "Fn::Sub": "${Tier}-${ModuleId}-Permissions-Policy-For-CWL"
             }
           }
         ]
@@ -163,7 +162,7 @@
               ]
             },
             "PolicyName": {
-              "Fn::Sub": "${Tier}-TestModule-policy"
+              "Fn::Sub": "${Tier}-${ModuleId}-policy"
             }
           }
         ]
@@ -193,8 +192,11 @@
             "TIER": {
               "Ref": "Tier"
             },
-            "MODULE": "TestModule",
-            "MODULEVERSION": "1.0",
+            "MODULE_NAME": "TestModule",
+            "MODULE_ID": {
+              "Ref": "ModuleId"
+            },
+            "MODULE_VERSION": "1.0",
             "DEADLETTERQUEUE": {
               "Fn::ImportValue": {
                 "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueUrl"
@@ -280,7 +282,12 @@
                   }
                 ]
               ]
-            }
+            },
+            "STR_MYMODULENAME": "TestModule",
+            "STR_MYMODULEID": {
+              "Ref": "ModuleId"
+            },
+            "STR_MYMODULEVERSION": "1.0"
           }
         },
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
