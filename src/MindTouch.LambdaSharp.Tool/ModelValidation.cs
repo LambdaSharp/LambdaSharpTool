@@ -143,13 +143,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             // verify that target bucket is defined as parameter with correct type
                             ValidateSourceParameter(parameter.Package.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
                         }
-                        if(parameter.Package.Files != null) {
-
-                            // check if a deployment bucket exists
-                            if(Settings.DeploymentBucketName == null) {
-                                AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                            }
-                        }
 
                         // check if package is nested
                         if(prefix != "") {
