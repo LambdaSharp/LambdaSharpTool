@@ -104,7 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 .Select(output => ConvertOutput(++outputIndex, output))
                 .Where(output => output != null)
                 .ToList()
-            , null) ?? new List<Output>();
+            , null) ?? new List<AOutput>();
 
             // add module variables
             _module.Variables.Add(new ValueParameter {
@@ -113,16 +113,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 Description = "LambdaSharp module information",
                 Parameters = new List<AParameter> {
                     new ValueParameter {
-                        Name = "Name",
-                        ResourceName = "ModuleName",
-                        Description = "LambdaSharp module name",
-                        Value = _module.Name
-                    },
-                    new ValueParameter {
                         Name = "Id",
                         ResourceName = "ModuleId",
                         Description = "LambdaSharp module id",
                         Value = Fn.Ref("ModuleId")
+                    },
+                    new ValueParameter {
+                        Name = "Name",
+                        ResourceName = "ModuleName",
+                        Description = "LambdaSharp module name",
+                        Value = _module.Name
                     },
                     new ValueParameter {
                         Name = "Version",
@@ -132,6 +132,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
 
                     // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
+                    //  Fn.Sub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
                 }
             });
             return _module;
@@ -165,7 +166,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(input.Import != null) {
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
-                    //  Foo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
+                    //  UseFoo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
                     reference = Fn.If($"{input.Name}IsImport", Fn.ImportValue(Fn.Join("-", Fn.Ref("Tier"), Fn.Select("1", Fn.Split("!Import:", Fn.Ref(input.Name))))), Fn.Ref(input.Name));
                 } else {
                     reference = Fn.Ref(input.Name);
@@ -528,16 +529,32 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 return null;
             }, null);
-            throw new ModelParserException("invalid function event");
         }
 
-        private Output ConvertOutput(int index, OutputNode output) {
-            return AtLocation(output.Name ?? $"[{index}]", () => {
-                return new Output {
-                    Name = output.Name,
-                    Description = output.Description,
-                    Value = output.Value
-                };
+        private AOutput ConvertOutput(int index, OutputNode output) {
+            return AtLocation<AOutput>(output.Name ?? $"[{index}]", () => {
+                if(output.Name != null) {
+                    return new StackOutput {
+                        Name = output.Name,
+                        Description = output.Description,
+                        Value = output.Value
+                    };
+                }
+                if(output.Export != null) {
+                    return new ExportOutput {
+                        Name = output.Name,
+                        Description = output.Description,
+                        Value = output.Value
+                    };
+                }
+                if(output.CustomResource != null) {
+                    return new CustomResourceHandlerOutput {
+                        CustomResourceName = output.CustomResource,
+                        Description = output.Description,
+                        Handler = output.Handler
+                    };
+                }
+                throw new ModelParserException("invalid output type");
             }, null);
         }
     }

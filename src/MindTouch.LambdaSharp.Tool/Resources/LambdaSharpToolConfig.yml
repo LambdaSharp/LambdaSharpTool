@@ -16,7 +16,7 @@ Parameters:
 
   DeploymentNotificationTopicArn:
     Type: String
-    Description: SNS topic for CloudFormation notification used by LambdaSharpTool (if blank, an SNS topic is created)
+    Description: SNS topic for CloudFormation notifications used by LambdaSharpTool (if blank, an SNS topic is created)
     AllowedPattern: '(arn:aws:sns:.*)?'
     ConstraintDescription: Must be an SNS topic ARN or left blank
 
@@ -31,6 +31,32 @@ Parameters:
     Description: LambdaSharpTool profile
     AllowedPattern: '[a-zA-Z][a-zA-Z0-9_\-]*'
     ConstraintDescription: Must begin with a valid identifier
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: LambdaSharp Tool Settings
+        Parameters:
+          - LambdaSharpToolProfile
+          - LambdaSharpToolVersion
+      - Label:
+          default: LambdaSharp Deployment Settings
+        Parameters:
+          - DeploymentBucketName
+          - DeploymentKeyPrefix
+          - DeploymentNotificationTopicArn
+    ParameterLabels:
+      LambdaSharpToolProfile:
+        default: Profile Name
+      LambdaSharpToolVersion:
+        default: Version
+      DeploymentBucketName:
+        default: S3 Bucket Name
+      DeploymentKeyPrefix:
+        default: S3 Bucket Path
+      DeploymentNotificationTopicArn:
+        default: SNS Topic ARN
 
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref DeploymentBucketName, "" ]

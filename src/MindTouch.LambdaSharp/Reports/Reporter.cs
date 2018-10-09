@@ -110,11 +110,6 @@ namespace MindTouch.LambdaSharp.Reports {
             _gitBranch = gitBranch;
         }
 
-        //--- Properties ---
-
-        // TODO: convert `AccessToken` to `ModuleName`
-        public string AccessToken =>  _moduleName;
-
         //--- Methods ---
         public ReportData CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
             var message = FormatMessage(format, args) ?? exception?.Message;

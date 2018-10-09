@@ -60,10 +60,14 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelUpdater(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public async Task<bool> Deploy(Module module, string templateFile, bool allowDataLoss, bool protectStack) {
+        public async Task<bool> Deploy(Module module, string moduleId, string templateFile, bool allowDataLoss, bool protectStack) {
+            if(moduleId == null) {
+                moduleId = module.Name;
+            } else {
 
-            // TODO (2010-10-06, bjorg): use module id instead of module name
-            var stackName = $"{Settings.Tier}-{module.Name}";
+                // TODO (2018-10-09, bjorg): it makes no sense to allow multiple instantiations of a module with custom resources since they are global
+            }
+            var stackName = $"{Settings.Tier}-{moduleId}";
             Console.WriteLine($"Deploying stack: {stackName}");
 
             // check if cloudformation stack already exists
@@ -149,9 +153,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var parameters = new List<CloudFormationParameter> {
                 new CloudFormationParameter {
                     ParameterKey = "ModuleId",
-
-                    // TODO (2018-10-06, bjorg): inject the module id
-                    ParameterValue = module.Name
+                    ParameterValue = moduleId
                 },
                 new CloudFormationParameter {
                     ParameterKey = "Tier",
@@ -166,8 +168,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     ParameterValue = Settings.DeploymentBucketName ?? ""
                 },
                 new CloudFormationParameter {
-                    ParameterKey = "DeploymentKeyPrefix",
-                    ParameterValue = Settings.DeploymentKeyPrefix ?? ""
+                    ParameterKey = "DeploymentBucketPath",
+                    ParameterValue = Settings.DeploymentBucketPath ?? ""
                 }
             };
 

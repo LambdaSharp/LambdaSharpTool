@@ -37,6 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("deploy", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Deploy LambdaSharp module";
+                var moduleIdOption = cmd.Option("--name", "(optional) Specify a CloudFormation stack name (default: module name)", CommandOptionType.SingleOrNoValue);
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
@@ -67,6 +68,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings,
                             dryRun,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                            moduleIdOption.Value(),
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue(),
                             skipAssemblyValidationOption.HasValue()
@@ -82,17 +84,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
+            string moduleId,
             bool allowDataLoos,
             bool protectStack,
             bool skipAssemblyValidation
         ) {
-            var compiledModule = await new CliBuildCommand().Build(
+            var module = await new CliBuildCommand().Build(
                 settings,
                 dryRun,
                 outputCloudFormationFilePath,
                 skipAssemblyValidation
             );
-            if(compiledModule == null) {
+            if(module == null) {
                 return false;
             }
 
@@ -100,14 +103,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(HasErrors) {
                 return false;
             }
-            await new ModelUploader(settings).ProcessAsync(compiledModule, skipUpload: dryRun != null);
+            await new ModelUploader(settings).ProcessAsync(module, skipUpload: dryRun != null);
 
             // serialize stack to disk
             var result = true;
             try {
                 if(dryRun == null) {
                     result = await new ModelUpdater(settings).Deploy(
-                        compiledModule,
+                        module,
+                        moduleId,
                         outputCloudFormationFilePath,
                         allowDataLoos,
                         protectStack

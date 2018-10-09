@@ -4,11 +4,11 @@ Version: 0.4
 
 Description: LambdaSharp S3 Package Loader
 
-Exports:
+Outputs:
 
-  - Name: CustomResource-LambdaSharp::S3PackageLoader
+  - CustomResource: LambdaSharp::S3PackageLoader
     Description: Custom Resource ARN for for deploying packages to S3 buckets
-    Value: !Ref CustomResourceTopic
+    Handler: CustomResourceTopic
 
 Parameters:
 

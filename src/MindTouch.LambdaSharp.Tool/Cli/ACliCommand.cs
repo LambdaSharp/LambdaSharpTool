@@ -76,7 +76,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         protected Func<Task<IEnumerable<Settings>>> CreateSettingsInitializer(CommandLineApplication cmd) {
             var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
             var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-            var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
+            var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+            var toolProfileOption = cmd.Option("--tool-profile|-T <NAME>", "(optional) Use a specific LambdaSharp Tool profile (default: Default)", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
             var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -99,6 +100,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                 }
 
+                // initialize tool profile
+                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
+
                 // initialize deployment tier value
                 var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                 if(tier == null) {
@@ -112,7 +116,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // initialize AWS profile
                 var awsAccount = await InitializeAwsProfile(
-                    awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE"),
+                    awsProfileOption.Value(),
                     awsAccountIdOption.Value(),
                     awsRegionOption.Value()
                 );
@@ -205,10 +209,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     result.Add(new Settings {
                         ToolVersion = Version,
-
-                        // TODO (2018-09-26, bjorg): make tool profile configurable
-                        ToolProfile = "Default",
-
+                        ToolProfile = toolProfile,
                         EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
                         Tier = tier,
                         BuildConfiguration = buildConfigurationOption.Value() ?? "Release",

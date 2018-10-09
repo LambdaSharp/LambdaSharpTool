@@ -22,11 +22,30 @@
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
-    public class Output {
+    public abstract class AOutput {
+
+        //--- Properties ---
+        public string Description { get; set; }
+    }
+
+    public class StackOutput : AOutput {
 
         //--- Properties ---
         public string Name { get; set; }
-        public string Description { get; set; }
         public object Value { get; set; }
+    }
+
+    public class ExportOutput : AOutput {
+
+        //--- Properties ---
+        public string Name { get; set; }
+        public object Value { get; set; }
+    }
+
+    public class CustomResourceHandlerOutput : AOutput {
+
+        //--- Properties ---
+        public string CustomResourceName { get; set; }
+        public string Handler { get; set; }
     }
 }

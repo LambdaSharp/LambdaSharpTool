@@ -92,9 +92,24 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve references in output values
             AtLocation("Outputs", () => {
                 foreach(var output in module.Outputs) {
-                    AtLocation(output.Name, () => {
-                        output.Value = Substitute(output.Value);
-                    });
+                    switch(output) {
+                    case StackOutput stackOutput:
+                        AtLocation(stackOutput.Name, () => {
+                            stackOutput.Value = Substitute(stackOutput.Value);
+                        });
+                        break;
+                    case ExportOutput exportOutput:
+                        AtLocation(exportOutput.Name, () => {
+                            exportOutput.Value = Substitute(exportOutput.Value);
+                        });
+                        break;
+                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+
+                        // nothing to do
+                        break;
+                    default:
+                        throw new InvalidOperationException($"cannot resolve references for this type: {output?.GetType()}");
+                    }
                 }
             });
 
@@ -184,7 +199,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             referencedParameter.Resource.ResourceReferences = referencedParameter.Resource.ResourceReferences.Select(value => Substitute(value, CheckBoundParameters)).ToList();
                             break;
                         default:
-                            throw new InvalidOperationException($"cannot resolved references for this type: {parameter?.GetType()}");
+                            throw new InvalidOperationException($"cannot resolve references for this type: {parameter?.GetType()}");
                         }
                         if(doesNotContainBoundParameters) {
 

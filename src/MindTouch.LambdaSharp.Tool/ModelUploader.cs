@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // only upload files that don't exist
             if(!await S3ObjectExistsAsync(key)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{Settings.DeploymentKeyPrefix}{key}");
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{Settings.DeploymentBucketPath}{key}");
                 await _transferUtility.UploadAsync(package, Settings.DeploymentBucketName, key);
             }
 

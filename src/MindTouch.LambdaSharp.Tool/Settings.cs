@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeploymentKeyPrefix { get; set; }
+        public string DeploymentBucketPath { get; set; }
         public string NotificationTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }

@@ -54,6 +54,20 @@ namespace MindTouch.LambdaSharp {
             }
         }
 
+        private static string ConvertQueueArnToUrl(string arn) {
+            var parts = arn.Split(':');
+            if((parts.Length != 6) || (parts[0] != "arn") || (parts[1] != "aws") || (parts[2] != "sqs")) {
+                throw new ArgumentException("unexpected format", nameof(arn));
+            }
+
+            // convert from 'arn:aws:sqs:us-east-2:123456789012:aa4-MyQueue-Z5NOSZO2PZE9'
+            //  to 'https://sqs.us-east-2.amazonaws.com/123456789012/aa4-MyQueue-Z5NOSZO2PZE9'
+            var region = parts[3];
+            var accountId = parts[4];
+            var queueName = parts[5];
+            return $"https://sqs.{region}.amazonaws.com/{accountId}/{queueName}";
+        }
+
         //--- Fields ---
         private readonly Func<DateTime> _now;
         private readonly DateTime _started;
@@ -140,7 +154,7 @@ namespace MindTouch.LambdaSharp {
             ModuleName = envSource.Read("MODULE_NAME");
             ModuleId = envSource.Read("MODULE_ID");
             ModuleVersion = envSource.Read("MODULE_VERSION");
-            _deadLetterQueueUrl = envSource.Read("DEADLETTERQUEUE");
+            _deadLetterQueueUrl = ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
             var framework = envSource.Read("LAMBDARUNTIME");
             LogInfo($"TIER = {DeploymentTier}");
             LogInfo($"MODULE = {ModuleName}");

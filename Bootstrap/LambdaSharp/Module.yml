@@ -4,19 +4,15 @@ Version: 0.4
 
 Description: LambdaSharp Environment
 
-Exports:
+Outputs:
 
-  - Name: LambdaSharp-DeadLetterQueueUrl
-    Description: LambdaSharp Dead Letter Queue (Url)
-    Value: !Ref DeadLetterQueue
-
-  - Name: LambdaSharp-DeadLetterQueueArn
-    Description: LambdaSharp Dead Letter Queue (Arn)
+  - Export: LambdaSharp-DeadLetterQueueArn
+    Description: LambdaSharp Dead Letter Queue
     Value: !GetAtt DeadLetterQueue.Arn
 
-  - Name: LambdaSharp-LoggingStreamArn
+  - Export: LambdaSharp-LoggingStreamArn
     Description: LambdaSharp Logging Stream
-    Value: !GetAtt LoggingStream.Arn
+    Value: !Ref LoggingStream
 
 Parameters:
 

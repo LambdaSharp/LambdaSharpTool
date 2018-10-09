@@ -81,14 +81,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var existingStackName = GetToolSetting("StackName");
                 var existingStackId = GetToolSetting("StackId");
                 var existingBucketName = GetToolSetting("DeploymentBucketName");
-                var existingKeyPrefix = GetToolSetting("DeploymentKeyPrefix");
+                var existingBucketPath = GetToolSetting("DeploymentBucketPath");
                 var existingCloudFormationTopic = GetToolSetting("DeploymentNotificationTopicArn");
                 Console.WriteLine($"LambdaSharp Tool Setting for profile '{toolProfile}'");
                 Console.WriteLine($"Tool Version: {existingVersion ?? "<NOT SET>"}");
                 Console.WriteLine($"CloudFormation Stack Name: {existingStackName ?? "<NOT SET>"}");
                 Console.WriteLine($"CloudFormation Stack ID: {existingStackId ?? "<NOT SET>"}");
                 Console.WriteLine($"Module Deployment S3 Bucket Name: {existingBucketName ?? "<NOT SET>"}");
-                Console.WriteLine($"Module Deployment S3 Key Prefix: {existingKeyPrefix ?? "<NOT SET>"}");
+                Console.WriteLine($"Module Deployment S3 Key Prefix: {existingBucketPath ?? "<NOT SET>"}");
                 Console.WriteLine($"CloudFormation Deployment Notifications: {existingCloudFormationTopic ?? "<NOT SET>"}");
             }
 
@@ -112,7 +112,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // var stackProfile = GetExistingParameter("LambdaSharpToolProfile") ?? "Default";
             // var stackVersion = GetExistingParameter("LambdaSharpToolVersion") ?? "none";
             // var stackBucketName = GetExistingParameter("DeploymentBucketName");
-            // var stackKeyPrefix = GetExistingParameter("DeploymentKeyPrefix");
+            // var stackKeyPrefix = GetExistingParameter("DeploymentBucketPath");
             // var stackCloudFormationTopic = GetExistingParameter("DeploymentNotificationTopicArn");
 
             // Console.WriteLine($"Current LambdaSharp Tool Profile: {stackProfile}");

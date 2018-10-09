@@ -202,15 +202,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(HasErrors) {
                 return;
             }
-            var moduleName = module.Name;
 
             // set default namespace if none is set
             if(rootNamespace == null) {
-                rootNamespace = $"{moduleName}.{functionName}";
+                rootNamespace = $"{module.Name}.{functionName}";
             }
 
             // create directory for function project
-            var moduleFunctionName = $"{moduleName}.{functionName}";
+            var moduleFunctionName = $"{module.Name}.{functionName}";
             var projectDirectory = Path.Combine(workingDirectory, moduleFunctionName);
             if(Directory.Exists(projectDirectory)) {
                 AddError($"project directory '{projectDirectory}' already exists");

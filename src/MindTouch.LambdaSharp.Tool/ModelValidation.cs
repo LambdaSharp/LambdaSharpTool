@@ -184,7 +184,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ValidateARN(value);
                 }
             } else if(resource.Type == null) {
-                AddError("missing Type field");
+                AddError("missing Type attribute");
             } else if(
                 resource.Type.StartsWith("AWS::")
                 && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
@@ -234,9 +234,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 ++index;
                 AtLocation(function.Name ?? $"[{index}]", () => {
                     ValidateResourceName(function.Name, "");
-                    Validate(function.Memory != null, "missing Memory field");
+                    Validate(function.Memory != null, "missing Memory attribute");
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
-                    Validate(function.Timeout != null, "missing Name field");
+                    Validate(function.Timeout != null, "missing Name attribute");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
                     Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
                     function.Sources = function.Sources ?? new List<FunctionSourceNode>();
@@ -535,8 +535,35 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var output in outputs) {
                 ++index;
+                AtLocation(output.Name ?? output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                    if(output.Name != null) {
 
-                // TODO (2018-09-20, bjorg): missing validation
+                        // TODO (2018-09-20, bjorg): add name validation
+
+                        Validate(output.Value != null, "missing Value attribute");
+                        ValidateNotBothStatements("Name", "Export", output.Export == null);
+                        ValidateNotBothStatements("Name", "CustomResource", output.CustomResource == null);
+                        ValidateNotBothStatements("Name", "Handler", output.Handler == null);
+                    } else if(output.Export != null) {
+
+                        // TODO (2018-09-20, bjorg): add export name validation
+
+                        Validate(output.Value != null, "missing Value attribute");
+                        ValidateNotBothStatements("Export", "Name", output.Name == null);
+                        ValidateNotBothStatements("Export", "CustomResource", output.CustomResource == null);
+                        ValidateNotBothStatements("Export", "Handler", output.Handler == null);
+                    } else if(output.CustomResource != null) {
+
+                        // TODO (2018-09-20, bjorg): add custom resource name validation
+
+                        Validate(output.Handler != null, "missing Handler attribute");
+
+                        // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
+
+                        ValidateNotBothStatements("CustomResource", "Name", output.Name == null);
+                        ValidateNotBothStatements("CustomResource", "Value", output.Value == null);
+                    }
+                });
             }
         }
 
@@ -548,6 +575,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 AddError($"'{fullname}' is a reserved name");
             } else if(!_names.Add(fullname)) {
                 AddError($"duplicate name '{fullname}'");
+            } else {
+                // TODO (2018-10-09, bjorg): regex name validation
             }
         }
     }

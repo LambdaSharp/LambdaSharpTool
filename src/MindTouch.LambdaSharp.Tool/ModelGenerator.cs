@@ -89,8 +89,14 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
             // add CloudFormation parameters
-
-            // TODO (2018-10-04, bjorg): replace with `Module::Name` variable
+            _stack.Add("DeploymentBucketName", new Parameter {
+                Type = "String",
+                Description = "LambdaSharp Deployment S3 Bucket Name"
+            });
+            _stack.Add("DeploymentBucketPath", new Parameter {
+                Type = "String",
+                Description = "LambdaSharp Deployment S3 Bucket Path"
+            });
             _stack.Add("ModuleId", new Parameter {
                 Type = "String",
                 Description = "LambdaSharp Module Id"
@@ -102,14 +108,6 @@ namespace MindTouch.LambdaSharp.Tool {
             _stack.Add("TierLowercase", new Parameter {
                 Type = "String",
                 Description = "LambdaSharp Deployment Tier (lowercase)"
-            });
-            _stack.Add("DeploymentBucketName", new Parameter {
-                Type = "String",
-                Description = "LambdaSharp Deployment S3 Bucket Name"
-            });
-            _stack.Add("DeploymentKeyPrefix", new Parameter {
-                Type = "String",
-                Description = "LambdaSharp Deployment S3 Bucket Key Prefix"
             });
 
             // TODO (2018-09-29, bjorg): module registration
@@ -349,7 +347,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // RestApi stage depends on API gateway deployment and API gateway account
                     // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
-                    // the necessary permissions for logging
+                    //  the necessary permissions for logging
                     var restApiStageName = restApiName + "Stage";
                     _stack.Add(restApiStageName, new ApiGateway.Stage {
                         RestApiId = Fn.Ref(restApiName),
@@ -369,14 +367,35 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add outputs
             foreach(var output in module.Outputs) {
-                var outputName = new string(output.Name.Where(char.IsLetterOrDigit).ToArray());
-                _stack.Add(outputName, new Humidifier.Output {
-                    Description = output.Description,
-                    Value = output.Value,
-                    Export = new Dictionary<string, dynamic> {
-                        ["Name"] = Fn.Sub("${Tier}-" + output.Name)
-                    }
-                });
+                switch(output) {
+                case StackOutput stackOutput:
+                    _stack.Add(stackOutput.Name, new Humidifier.Output {
+                        Description = stackOutput.Description,
+                        Value = stackOutput.Value
+                    });
+                    break;
+                case ExportOutput exportOutput:
+                    _stack.Add(exportOutput.Name, new Humidifier.Output {
+                        Description = exportOutput.Description,
+                        Value = exportOutput.Value,
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{Tier}}:${{ModuleId}}-{module.Name}::{exportOutput.Name}")
+                        }
+                    });
+                    break;
+                case CustomResourceHandlerOutput customResourceHandlerOutput:
+                    _stack.Add(new string(customResourceHandlerOutput.CustomResourceName.Where(char.IsLetterOrDigit).ToArray()) + "Handler", new Humidifier.Output {
+                        Description = customResourceHandlerOutput.Description,
+                        Value = Fn.Ref(customResourceHandlerOutput.Handler),
+                        Export = new Dictionary<string, dynamic> {
+                            ["Name"] = Fn.Sub($"${{Tier}}:CustomResource-{customResourceHandlerOutput.CustomResourceName}")
+                        }
+                    });
+                    break;
+                default:
+                    throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
+                }
+
             }
             return _stack;
 
@@ -509,7 +528,7 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
             environmentVariables["MODULE_VERSION"] = _module.Version;
-            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueUrl"));
+            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
@@ -535,7 +554,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
                     S3Bucket = Fn.Ref("DeploymentBucketName"),
-                    S3Key = Fn.Sub($"${{DeploymentKeyPrefix}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
+                    S3Key = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn"))
@@ -543,17 +562,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
                 },
-                VpcConfig = vpcConfig,
-                Tags = new List<Tag> {
-                    new Tag {
-                        Key = "lambdasharp:tier",
-                        Value = Fn.Ref("Tier")
-                    },
-                    new Tag {
-                        Key = "lambdasharp:module",
-                        Value = _module.Name
-                    }
-                }
+                VpcConfig = vpcConfig
             });
 
             // create function log-group with retention window
@@ -797,7 +806,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
-                    ["SourcePackageKey"] = Fn.Sub($"${{DeploymentKeyPrefix}}{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}")
+                    ["SourcePackageKey"] = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}")
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
