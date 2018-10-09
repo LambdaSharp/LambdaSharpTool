@@ -35,7 +35,6 @@ namespace MindTouch.LambdaSharp.Tool {
     using IAM = Humidifier.IAM;
     using Lambda = Humidifier.Lambda;
     using SNS = Humidifier.SNS;
-    using SSM = Humidifier.SSM;
 
     public class ModelGenerator : AModelProcessor {
 

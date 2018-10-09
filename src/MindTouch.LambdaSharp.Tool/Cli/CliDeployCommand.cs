@@ -112,6 +112,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                 }
             }
+            if(HasErrors) {
+                return false;
+            }
 
             // upload assets
             await new ModelUploader(settings).ProcessAsync(module, skipUpload: dryRun != null);

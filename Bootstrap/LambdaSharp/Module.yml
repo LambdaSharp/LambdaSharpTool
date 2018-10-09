@@ -18,9 +18,9 @@ Outputs:
 
   - Export: LoggingStreamArn
     Description: LambdaSharp Logging Stream
-    Value: !Ref LoggingStream
+    Value: !GetAtt LoggingStream.Arn
 
-Parameters:
+Variables:
 
   - Name: DeadLetterQueue
     Description: SQS queue used by LambdaSharp functions for failed messages
@@ -36,3 +36,12 @@ Parameters:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
+  - Name: EnvironmentVersion
+    Description: LambdaSharp module version
+    Resource:
+      Type: AWS::SSM::Parameter
+      Properties:
+        Type: String
+        Description: LambdaSharp module version
+        Value: !Ref Module::Version
+        Name: !Sub "/${Tier}/LambdaSharp/Version"

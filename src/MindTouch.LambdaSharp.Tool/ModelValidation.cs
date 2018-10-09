@@ -223,11 +223,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // check if a deployment bucket was specified
-            if(Settings.DeploymentBucketName == null) {
-                AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
             // validate functions
             var index = 0;
             foreach(var function in functions) {

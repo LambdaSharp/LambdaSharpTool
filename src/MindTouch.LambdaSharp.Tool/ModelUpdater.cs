@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string templateUrl = null;
             if(Settings.DeploymentBucketName != null) {
                 var templateSuffix = Settings.GitSha ?? ("UTC" + DateTime.UtcNow.ToString("yyyyMMddhhmmss"));
-                var templateS3Key = $"{module.Name}/cloudformation-{templateSuffix}.json";
+                var templateS3Key = $"{Settings.DeploymentBucketPath}{module.Name}/cloudformation-v{module.Version}-{templateSuffix}.json";
                 templateUrl = $"https://s3.amazonaws.com/{Settings.DeploymentBucketName}/{templateS3Key}";
                 Console.WriteLine($"=> Uploading CloudFormation template: s3://{Settings.DeploymentBucketName}/{templateS3Key}");
                 var transferUtility = new TransferUtility(Settings.S3Client);
