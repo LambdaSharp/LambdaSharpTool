@@ -2,6 +2,14 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment S3 Bucket Name"
+    },
+    "DeploymentBucketPath": {
+      "Type": "String",
+      "Description": "LambdaSharp Deployment S3 Bucket Path"
+    },
     "ModuleId": {
       "Type": "String",
       "Description": "LambdaSharp Module Id"
@@ -13,14 +21,6 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "LambdaSharp Deployment Tier (lowercase)"
-    },
-    "DeploymentBucketName": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment S3 Bucket Name"
-    },
-    "DeploymentKeyPrefix": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment S3 Bucket Key Prefix"
     }
   },
   "Resources": {
@@ -121,7 +121,7 @@
             "Ref": "DeploymentBucketName"
           },
           "S3Key": {
-            "Fn::Sub": "${DeploymentKeyPrefix}TestModule/TestModule.Function-NOCOMPILE.zip"
+            "Fn::Sub": "${DeploymentBucketPath}TestModule/TestModule.Function-NOCOMPILE.zip"
           }
         },
         "DeadLetterConfig": {
@@ -144,7 +144,7 @@
             "MODULE_VERSION": "1.0",
             "DEADLETTERQUEUE": {
               "Fn::ImportValue": {
-                "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueUrl"
+                "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
               }
             },
             "LAMBDARUNTIME": "dotnetcore2.1"
@@ -159,18 +159,6 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Tags": [
-          {
-            "Key": "lambdasharp:tier",
-            "Value": {
-              "Ref": "Tier"
-            }
-          },
-          {
-            "Key": "lambdasharp:module",
-            "Value": "TestModule"
-          }
-        ],
         "Timeout": "30"
       }
     },
