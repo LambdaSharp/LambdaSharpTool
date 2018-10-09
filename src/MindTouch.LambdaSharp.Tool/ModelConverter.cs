@@ -116,7 +116,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Name = "Id",
                         ResourceName = "ModuleId",
                         Description = "LambdaSharp module id",
-                        Value = Fn.Ref("ModuleId")
+                        Value = FnRef("ModuleId")
                     },
                     new ValueParameter {
                         Name = "Name",
@@ -132,7 +132,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
 
                     // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
-                    //  Fn.Sub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
+                    //  FnSub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
                 }
             });
             return _module;
@@ -167,9 +167,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
                     //  UseFoo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
-                    reference = Fn.If($"{input.Name}IsImport", Fn.ImportValue(Fn.Join("-", Fn.Ref("Tier"), Fn.Select("1", Fn.Split("!Import:", Fn.Ref(input.Name))))), Fn.Ref(input.Name));
+                    reference = FnIf($"{input.Name}IsImport", FnImportValue(FnJoin("-", FnRef("Tier"), FnSelect("1", FnSplit("!Import:", FnRef(input.Name))))), FnRef(input.Name));
                 } else {
-                    reference = Fn.Ref(input.Name);
+                    reference = FnRef(input.Name);
                 }
                 return new Input {
                     Name = input.Name,
@@ -360,7 +360,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         resource.Properties = new Dictionary<string, object>();
                     }
                     if(!resource.Properties.ContainsKey("ServiceToken")) {
-                        resource.Properties["ServiceToken"] = Fn.ImportValue(Fn.Sub($"${{Tier}}-CustomResource-{resource.Type}"));
+                        resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-{resource.Type}"));
                     }
 
                     // convert type name to a custom AWS resource type
@@ -542,7 +542,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 if(output.Export != null) {
                     return new ExportOutput {
-                        Name = output.Name,
+                        ExportName = output.Export,
                         Description = output.Description,
                         Value = output.Value
                     };

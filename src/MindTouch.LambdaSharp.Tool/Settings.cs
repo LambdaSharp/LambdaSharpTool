@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
         public string DeploymentBucketPath { get; set; }
-        public string NotificationTopicArn { get; set; }
+        public string DeploymentNotificationsTopicArn { get; set; }
         public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
@@ -81,12 +81,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public void AddError(string message, Exception exception = null) {
             HasErrors = true;
             ErrorCallback(message, exception);
-        }
-
-        public void Reset() {
-            EnvironmentVersion = null;
-            DeploymentBucketName = null;
-            NotificationTopicArn = null;
         }
     }
 }

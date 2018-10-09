@@ -54,13 +54,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             await PopulateEnvironmentSettingsAsync(settings);
 
             // show LambdaSharp settings
-            Console.WriteLine($"Deployment tier: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"LambdaSharp Tool");
+            Console.WriteLine($"    Profile: {settings.ToolProfile ?? "<NOT SET>"}");
+            Console.WriteLine($"    Version: {settings.ToolVersion}");
+            Console.WriteLine($"    Module Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
+            Console.WriteLine($"    Module Deployment S3 Path: {settings.DeploymentBucketPath ?? "<NOT SET>"}");
+            Console.WriteLine($"    Module Deployment Notifications Topic: {settings.DeploymentNotificationsTopicArn ?? "<NOT SET>"}");
+            Console.WriteLine($"LambdaSharp Environment");
+            Console.WriteLine($"    Deployment Tier: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git SHA: {settings.GitSha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Region: {settings.AwsRegion ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Account Id: {settings.AwsAccountId ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharpTool Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharpTool CloudFormation Notification Topic: {settings.NotificationTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp Environment Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
         }
     }
 }

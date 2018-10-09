@@ -77,18 +77,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
             var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
             var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-            var toolProfileOption = cmd.Option("--tool-profile|-T <NAME>", "(optional) Use a specific LambdaSharp Tool profile (default: Default)", CommandOptionType.SingleValue);
+            var toolProfileOption = cmd.Option("--tool-profile|-T <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
             var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
-            var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
-            var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
-            var deploymentVersionOption = cmd.Option("--deployment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket used to deploying assets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
             var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
-            inputFileOption.ShowInHelpText = false;
             var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
             var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Module.yml)", multipleValues: true);
+
+            // add options for testing
+            var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
+            var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+            var toolVersionOption = cmd.Option("--tool-version <VALUE>", "(test only) LambdaSharp tool version for profile (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
+            var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
+            var deploymentBucketPathOption = cmd.Option("--deployment-bucket-path <NAME>", "(test only) S3 Bucket path used to deploy modules (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
+            var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
+            var environmentVersionOption = cmd.Option("--environment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
+            inputFileOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
@@ -101,7 +105,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // initialize tool profile
-                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
+                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE");
 
                 // initialize deployment tier value
                 var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
@@ -149,8 +153,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var s3Client = new AmazonS3Client();
 
                 // initialize LambdaSharp deployment values
-                var deploymentVersion = deploymentVersionOption.Value();
+                var environmentVersion = environmentVersionOption.Value();
                 var deploymentBucketName = deploymentBucketNameOption.Value();
+                var deploymentBucketPath = deploymentBucketPathOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
                 // create a settings entry for each module filename
@@ -210,14 +215,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     result.Add(new Settings {
                         ToolVersion = Version,
                         ToolProfile = toolProfile,
-                        EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
+                        EnvironmentVersion = (environmentVersion != null) ? new Version(environmentVersion) : null,
                         Tier = tier,
                         BuildConfiguration = buildConfigurationOption.Value() ?? "Release",
                         GitSha = gitSha,
                         AwsRegion = awsAccount.Value.Region,
                         AwsAccountId = awsAccount.Value.AccountId,
                         DeploymentBucketName = deploymentBucketName,
-                        NotificationTopicArn = deploymentNotificationTopicArn,
+                        DeploymentBucketPath = deploymentBucketPath,
+                        DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
                         ModuleSource = source,
                         WorkingDirectory = workingDirectory,
                         OutputDirectory = outputDirectory,
@@ -261,39 +267,51 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(
                 (settings.EnvironmentVersion == null)
                 || (settings.DeploymentBucketName == null)
-                || (settings.NotificationTopicArn == null)
+                || (settings.DeploymentBucketPath == null)
+                || (settings.DeploymentNotificationsTopicArn == null)
             ) {
 
                 // import LambdaSharpTool settings
-                var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
-                var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
-                if(!Version.TryParse(GetLambdaSharpToolSetting("Version"), out Version lambdaSharpToolVersion)) {
-                    AddError("LambdaSharpTool is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
-                    return;
+                if(settings.ToolProfile != null) {
+                    var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
+                    var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
+                    if(!Version.TryParse(GetLambdaSharpToolSetting("Version"), out Version lambdaSharpToolVersion)) {
+                        AddError("LambdaSharp tool is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        return;
+                    }
+                    if(lambdaSharpToolVersion < settings.ToolVersion) {
+                        AddError($"LambdaSharp tool configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        return;
+                    }
+                    settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
+                    settings.DeploymentBucketPath = settings.DeploymentBucketPath ?? GetLambdaSharpToolSetting("DeploymentBucketPath");
+                    settings.DeploymentNotificationsTopicArn = settings.DeploymentNotificationsTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
+
+                    // local functions
+                    string GetLambdaSharpToolSetting(string name) {
+                        lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
+                        return kv.Value;
+                    }
                 }
-                if(lambdaSharpToolVersion < settings.ToolVersion) {
-                    AddError($"LambdaSharpTool configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
-                    return;
-                }
-                settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
-                settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
 
                 // import LambdaSharp settings
-                var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
-                var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
+                if(settings.Tier != null) {
+                    var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
+                    var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
 
-                // resolved values that are not yet set
-                settings.EnvironmentVersion = settings.EnvironmentVersion ?? new Version(GetLambdaSharpSetting("Version"));
+                    // resolved values that are not yet set
+                    if(settings.EnvironmentVersion == null) {
+                        var environmentVersion = GetLambdaSharpSetting("Version");
+                        if(environmentVersion != null) {
+                            settings.EnvironmentVersion = new Version(environmentVersion);
+                        }
+                    }
 
-                // local functions
-                string GetLambdaSharpToolSetting(string name) {
-                    lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
-                    return kv.Value;
-                }
-
-                string GetLambdaSharpSetting(string name) {
-                    lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
-                    return kv.Value;
+                    // local functions
+                    string GetLambdaSharpSetting(string name) {
+                        lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
+                        return kv.Value;
+                    }
                 }
             }
         }

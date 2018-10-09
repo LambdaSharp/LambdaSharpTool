@@ -10,7 +10,7 @@ Parameters:
     AllowedPattern: '[a-z0-9\-]*'
     ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
 
-  DeploymentKeyPrefix:
+  DeploymentBucketPath:
     Type: String
     Description: S3 key prefix to be used for deployments by LambdaSharpTool
 
@@ -44,7 +44,7 @@ Metadata:
           default: LambdaSharp Deployment Settings
         Parameters:
           - DeploymentBucketName
-          - DeploymentKeyPrefix
+          - DeploymentBucketPath
           - DeploymentNotificationTopicArn
     ParameterLabels:
       LambdaSharpToolProfile:
@@ -53,7 +53,7 @@ Metadata:
         default: Version
       DeploymentBucketName:
         default: S3 Bucket Name
-      DeploymentKeyPrefix:
+      DeploymentBucketPath:
         default: S3 Bucket Path
       DeploymentNotificationTopicArn:
         default: SNS Topic ARN
@@ -61,7 +61,7 @@ Metadata:
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref DeploymentBucketName, "" ]
   CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopicArn, "" ]
-  HasDeploymentKeyPrefix: !Not [ !Equals [ !Ref DeploymentKeyPrefix, "" ]]
+  HasDeploymentBucketPath: !Not [ !Equals [ !Ref DeploymentBucketPath, "" ]]
 
 Resources:
 
@@ -90,7 +90,7 @@ Resources:
       Type: String
       Value: !Ref AWS::StackId
 
-  # S3 Deployment Bucket & Key Prefix
+  # S3 Deployment Bucket & Path
   DeploymentBucket:
     Type: AWS::S3::Bucket
     Condition: CreateDeploymentBucket
@@ -107,14 +107,14 @@ Resources:
         !Ref DeploymentBucketName
       ]
 
-  DeploymentKeyPrefixSsmParameter:
+  DeploymentBucketPathSsmParameter:
     Type: AWS::SSM::Parameter
-    Condition: HasDeploymentKeyPrefix
+    Condition: HasDeploymentBucketPath
     Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentKeyPrefix'
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentBucketPath'
       Description: S3 key prefix to install modules
       Type: String
-      Value: !Ref DeploymentKeyPrefix
+      Value: !Ref DeploymentBucketPath
 
   # SNS CloudFormation Notification Topic
   DeploymentNotificationTopic:

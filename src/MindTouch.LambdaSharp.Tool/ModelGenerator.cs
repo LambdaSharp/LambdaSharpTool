@@ -183,7 +183,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _resourceStatements.Add(new Statement {
                     Sid = "LambdaDeadLetterQueueLogging",
                     Effect = "Allow",
-                    Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn")),
+                    Resource = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn")),
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
@@ -226,7 +226,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                         Sid = "CloudWatchLogsKinesisPermissions",
                                         Effect = "Allow",
                                         Action = "kinesis:PutRecord",
-                                        Resource = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingStreamArn"))
+                                        Resource = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn"))
                                     }
                                 }
                             }
@@ -375,11 +375,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     });
                     break;
                 case ExportOutput exportOutput:
-                    _stack.Add(exportOutput.Name, new Humidifier.Output {
+                    _stack.Add(exportOutput.ExportName, new Humidifier.Output {
                         Description = exportOutput.Description,
                         Value = exportOutput.Value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{Tier}}:${{ModuleId}}-{module.Name}::{exportOutput.Name}")
+                            ["Name"] = Fn.Sub($"${{Tier}}:${{ModuleId}}-{module.Name}::{exportOutput.ExportName}")
                         }
                     });
                     break;
@@ -528,7 +528,7 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
             environmentVariables["MODULE_VERSION"] = _module.Version;
-            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn"));
+            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"));
             environmentVariables["LAMBDARUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
@@ -557,7 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     S3Key = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-DeadLetterQueueArn"))
+                    TargetArn = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"))
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
@@ -575,7 +575,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 RetentionInDays = 7
             });
             _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
-                DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}-LambdaSharp-LoggingStreamArn")),
+                DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn")),
                 FilterPattern = "-\"*** \"",
                 LogGroupName = Fn.Ref(functionLogGroup),
                 RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
@@ -674,7 +674,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Principal = "s3.amazonaws.com"
                     });
                     _stack.Add(functionS3Subscription, new CustomResource("Custom::LambdaSharpS3Subscriber") {
-                        ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}-CustomResource-LambdaSharp::S3Subscriber")),
+                        ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}:CustomResource-LambdaSharp::S3Subscriber")),
                         ["BucketName"] = Fn.Ref(grp.Key),
                         ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
                         ["Filters"] = grp.Select(source => {
@@ -802,7 +802,7 @@ namespace MindTouch.LambdaSharp.Tool {
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.ResourceName, "Result");
                 _stack.Add(packageParameter.ResourceName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
-                    ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}-CustomResource-LambdaSharp::S3PackageLoader")),
+                    ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}:CustomResource-LambdaSharp::S3PackageLoader")),
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),

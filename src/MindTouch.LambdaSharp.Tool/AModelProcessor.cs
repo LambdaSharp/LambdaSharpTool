@@ -31,6 +31,71 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
 
+        //--- Class Methods ---
+        protected static object FnGetAtt(string logicalNameOfResource, string attributeName)
+            => new Dictionary<string, object> {
+                ["Fn::GetAtt"] = new List<object> {
+                    logicalNameOfResource,
+                    attributeName
+                }
+            };
+
+        protected static object FnIf(string conditionName, object valueIfTrue, object valueIfFalse)
+            => new Dictionary<string, object> {
+                ["Fn::If"] = new List<object> {
+                    conditionName,
+                    valueIfTrue,
+                    valueIfFalse
+                }
+            };
+
+        protected static object FnImportValue(object sharedValueToImport)
+            => new Dictionary<string, object> {
+                ["Fn::ImportValue"] = sharedValueToImport
+            };
+
+        protected static object FnJoin(string separator, params object[] parameters)
+            => new Dictionary<string, object> {
+                ["Fn::Join"] = new List<object> {
+                    separator,
+                    parameters.ToList()
+                }
+            };
+
+        protected static object FnRef(string reference)
+            => new Dictionary<string, object> {
+                ["Ref"] = reference
+            };
+
+        protected static object FnSelect(string index, object listOfObjects)
+            => new Dictionary<string, object> {
+                ["Fn::Select"] = new List<object> {
+                    index,
+                    listOfObjects
+                }
+            };
+
+        protected static object FnSub(string input)
+            => new Dictionary<string, object> {
+                ["Fn::Sub"] = input
+            };
+
+        protected static object FnSub(string input, Dictionary<string, object> variables)
+            => new Dictionary<string, object> {
+                ["Fn::Sub"] = new List<object> {
+                    input,
+                    variables
+                }
+            };
+
+        protected static object FnSplit(string delimiter, object sourceString)
+            => new Dictionary<string, object> {
+                ["Fn::Split"] = new List<object> {
+                    delimiter,
+                    sourceString
+                }
+            };
+
         //--- Fields ---
         private readonly Settings _settings;
         private Stack<string> _locations = new Stack<string>();

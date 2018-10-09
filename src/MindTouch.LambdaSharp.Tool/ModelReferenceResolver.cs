@@ -38,6 +38,13 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
+            var freeReserved = new HashSet<string> {
+                "DeploymentBucketName",
+                "DeploymentBucketPath",
+                "ModuleId",
+                "Tier",
+                "TierLowercase"
+            };
             var freeInputs = new Dictionary<string, Input>();
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
@@ -99,7 +106,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         });
                         break;
                     case ExportOutput exportOutput:
-                        AtLocation(exportOutput.Name, () => {
+                        AtLocation(exportOutput.ExportName, () => {
                             exportOutput.Value = Substitute(exportOutput.Value);
                         });
                         break;
@@ -222,26 +229,35 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             void ReportUnresolved(IEnumerable<AParameter> parameters, string prefix = "") {
-                if(parameters != null) {
-                    foreach(var parameter in parameters) {
-                        AtLocation(parameter.Name, () => {
-                            switch(parameter) {
-                            case ValueParameter valueParameter:
-                                Substitute(valueParameter.Value, missingName => {
+                if(parameters == null) {
+                    return;
+                }
+                foreach(var parameter in parameters) {
+                    AtLocation(parameter.Name, () => {
+                        switch(parameter) {
+                        case ValueParameter valueParameter:
+                            Substitute(valueParameter.Value, missingName => {
+                                if(boundParameters.ContainsKey(missingName)) {
                                     AddError($"circular !Ref dependency on '{missingName}'");
-                                });
-                                break;
-                            case ValueListParameter listParameter:
-                                foreach(var item in listParameter.Values) {
-                                    Substitute(item, missingName => {
-                                        AddError($"circular !Ref dependency on '{missingName}'");
-                                    });
+                                } else {
+                                    AddError($"could not find !Ref dependency '{missingName}'");
                                 }
-                                break;
+                            });
+                            break;
+                        case ValueListParameter listParameter:
+                            foreach(var item in listParameter.Values) {
+                                Substitute(item, missingName => {
+                                    if(boundParameters.ContainsKey(missingName)) {
+                                        AddError($"circular !Ref dependency on '{missingName}'");
+                                    } else {
+                                        AddError($"could not find !Ref dependency '{missingName}'");
+                                    }
+                                });
                             }
-                            ReportUnresolved(parameter.Parameters, prefix + parameter.Name + "::");
-                        });
-                    }
+                            break;
+                        }
+                        ReportUnresolved(parameter.Parameters, prefix + parameter.Name + "::");
+                    });
                 }
             }
 
@@ -255,6 +271,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
                             if(TrySubstitute(refKey, out object found)) {
                                 return found;
+                            }
+                            if(freeReserved.Contains(refKey)) {
+                                return value;
                             }
                             missing?.Invoke(refKey);
                             return value;
@@ -306,9 +325,11 @@ namespace MindTouch.LambdaSharp.Tool {
                                         }
                                         subArgs.Add(argName, found);
                                         return "${" + argName + "}";
-                                    } else {
-                                        missing?.Invoke(name[0]);
                                     }
+                                    if(freeReserved.Contains(name[0])) {
+                                        return matchText;
+                                    }
+                                    missing?.Invoke(name[0]);
                                 }
                                 return matchText;
                             });
@@ -360,18 +381,18 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(listParameter.Values.All(value => value is string)) {
                             found = string.Join(",", listParameter.Values);
                         } else {
-                            found = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
+                            found = FnJoin(",", listParameter.Values.ToArray());
                         }
                         break;
                     case ReferencedResourceParameter referencedParameter:
                         if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
                             found = string.Join(",", referencedParameter.Resource.ResourceReferences);
                         } else {
-                            found = Fn.Join(",", referencedParameter.Resource.ResourceReferences.Cast<dynamic>().ToArray());
+                            found = FnJoin(",", referencedParameter.Resource.ResourceReferences.ToArray());
                         }
                         break;
                     case CloudFormationResourceParameter _:
-                        found = Fn.Ref(key.Replace("::", ""));
+                        found = FnRef(key.Replace("::", ""));
                         break;
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?

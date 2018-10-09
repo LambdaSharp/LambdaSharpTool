@@ -95,21 +95,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 outputCloudFormationFilePath,
                 skipAssemblyValidation
             );
-            if(module == null) {
+            if((module == null) || HasErrors) {
                 return false;
             }
 
-            // upload assets
-            if(HasErrors) {
-                return false;
+            // reset settings when the 'LambdaSharp` module is being deployed
+            await PopulateEnvironmentSettingsAsync(settings);
+            if(module.Name != "LambdaSharp") {
+                if(settings.EnvironmentVersion == null) {
+
+                    // check that LambdaSharp Environment & Tool versions match
+                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                } else {
+                    if(settings.EnvironmentVersion != settings.ToolVersion) {
+                        AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    }
+                }
             }
+
+            // upload assets
             await new ModelUploader(settings).ProcessAsync(module, skipUpload: dryRun != null);
 
             // serialize stack to disk
             var result = true;
             try {
                 if(dryRun == null) {
-                    result = await new ModelUpdater(settings).Deploy(
+                    result = await new ModelUpdater(settings).DeployAsync(
                         module,
                         moduleId,
                         outputCloudFormationFilePath,
