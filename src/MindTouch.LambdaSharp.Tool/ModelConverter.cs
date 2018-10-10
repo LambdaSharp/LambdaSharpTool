@@ -28,6 +28,7 @@ using MindTouch.LambdaSharp.Tool.Model.AST;
 
 namespace MindTouch.LambdaSharp.Tool {
     using Fn = Humidifier.Fn;
+    using Condition = Humidifier.Condition;
 
     public class ModelParserException : Exception {
 
@@ -163,7 +164,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 // TODO (2018-10-04, bjorg): convert import into proper format (Module.ExportName --> ???)
 
                 object reference;
+                Condition condition = null;
+                var defaultValue = input.Default;
                 if(input.Import != null) {
+
+                    // Create a condition for inputs that use an import statement:
+                    //  FooIsImport := ($Foo != "") && (split($Foo, "!Import:")[0] == "")
+                    condition = new Condition(Fn.And(Fn.Not(Fn.Equals(Fn.Ref(input.Name), "")), Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), "")));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
                     //  UseFoo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
@@ -181,6 +188,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         )),
                         FnRef(input.Name)
                     );
+                    defaultValue = $"!Import:{input.Import}";
                 } else {
                     reference = FnRef(input.Name);
                 }
@@ -188,9 +196,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = input.Name,
                     Description = input.Description,
                     Type = input.Type,
-                    Default = input.Default,
+                    Default = defaultValue,
                     Import = input.Import,
-                    Reference = reference
+                    Reference = reference,
+                    Condition = condition
                 };
             }, null);
         }

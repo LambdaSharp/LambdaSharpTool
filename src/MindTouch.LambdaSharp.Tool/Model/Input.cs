@@ -31,5 +31,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Default { get; set; }
         public string Import { get; set; }
         public object Reference { get; set; }
+        public Humidifier.Condition Condition { get; set; }
     }
 }

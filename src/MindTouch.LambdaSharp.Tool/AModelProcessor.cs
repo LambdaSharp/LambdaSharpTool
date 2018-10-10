@@ -54,13 +54,23 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::ImportValue"] = sharedValueToImport
             };
 
-        protected static object FnJoin(string separator, IList<object> parameters)
-            => new Dictionary<string, object> {
+        protected static object FnJoin(string separator, IList<object> parameters) {
+            if(parameters.Count == 0) {
+                return "";
+            }
+            if(parameters.Count == 1) {
+                return parameters.First();
+            }
+            if(parameters.All(value => value is string)) {
+                return string.Join(",", parameters);
+            }
+            return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
                     separator,
                     parameters
                 }
             };
+        }
 
         protected static object FnRef(string reference)
             => new Dictionary<string, object> {
@@ -80,7 +90,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::Sub"] = input
             };
 
-        protected static object FnSub(string input, Dictionary<string, object> variables)
+        protected static object FnSub(string input, IDictionary<string, object> variables)
             => new Dictionary<string, object> {
                 ["Fn::Sub"] = new List<object> {
                     input,

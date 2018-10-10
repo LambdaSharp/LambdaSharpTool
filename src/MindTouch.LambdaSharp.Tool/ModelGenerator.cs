@@ -157,10 +157,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Default = input.Default
                 });
                 if(input.Import != null) {
-
-                    // Create a condition for inputs that use an import statement
-                    //  FooIsImport := ($Foo != "") && (split($Foo, "!Import:")[0] == "")
-                    _stack.Add($"{input.Name}IsImport", new Condition(Fn.And(Fn.Not(Fn.Equals(Fn.Ref(input.Name), "")), Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""))));
+                    _stack.Add($"{input.Name}IsImport", input.Condition);
                 }
             }
 
@@ -800,13 +797,8 @@ namespace MindTouch.LambdaSharp.Tool {
             case ValueParameter valueParameter:
                 environmentRefVariables["STR_" + fullEnvName] = valueParameter.Value;
                 break;
-            case ValueListParameter listParameter: {
-                    if(listParameter.Values.All(value => value is string)) {
-                        environmentRefVariables["STR_" + fullEnvName] = string.Join(",", listParameter.Values);
-                    } else {
-                        environmentRefVariables["STR_" + fullEnvName] = Fn.Join(",", listParameter.Values.Cast<dynamic>().ToArray());
-                    }
-                }
+            case ValueListParameter listParameter:
+                environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", listParameter.Values);
                 break;
             case PackageParameter packageParameter:
                 environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.ResourceName, "Result");
@@ -821,11 +813,7 @@ namespace MindTouch.LambdaSharp.Tool {
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
                     object resources;
-                    if(resource.ResourceReferences.All(value => value is string)) {
-                        environmentRefVariables["STR_" + fullEnvName] = string.Join(",", resource.ResourceReferences);
-                    } else {
-                        environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", resource.ResourceReferences);
-                    }
+                    environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", resource.ResourceReferences);
                     if(resource.ResourceReferences.Count == 1) {
                         resources = resource.ResourceReferences.First();
                     } else {

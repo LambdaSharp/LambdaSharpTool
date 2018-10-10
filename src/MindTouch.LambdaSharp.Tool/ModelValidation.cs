@@ -511,10 +511,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                     if(input.Import != null) {
                         ValidateNotBothStatements("Import", "Default", input.Default == null);
-                        input.Default = $"!Import:{input.Import}";
                     }
-
-                    // TODO (2018-09-20, bjorg): missing validation
                 });
             }
         }

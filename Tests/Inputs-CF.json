@@ -36,6 +36,7 @@
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
           "Statement": [
             {
               "Sid": "CloudWatchLogsKinesisInvocation",
@@ -52,6 +53,7 @@
         "Policies": [
           {
             "PolicyDocument": {
+              "Version": "2012-10-17",
               "Statement": [
                 {
                   "Sid": "CloudWatchLogsKinesisPermissions",
@@ -59,7 +61,7 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::ImportValue": {
-                      "Fn::Sub": "${Tier}-LambdaSharp-LoggingStreamArn"
+                      "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn"
                     }
                   }
                 }
@@ -76,6 +78,7 @@
       "Type": "AWS::IAM::Role",
       "Properties": {
         "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
           "Statement": [
             {
               "Sid": "LambdaInvocation",
@@ -90,9 +93,10 @@
         "Policies": [
           {
             "PolicyDocument": {
+              "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "LambdaLoggingWrite",
+                  "Sid": "LambdaLogStreamAccess",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -108,7 +112,7 @@
                   ],
                   "Resource": {
                     "Fn::ImportValue": {
-                      "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
+                      "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
                     }
                   }
                 }
@@ -135,7 +139,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::ImportValue": {
-              "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
+              "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
             }
           }
         },
@@ -152,7 +156,7 @@
             "MODULE_VERSION": "1.0",
             "DEADLETTERQUEUE": {
               "Fn::ImportValue": {
-                "Fn::Sub": "${Tier}-LambdaSharp-DeadLetterQueueArn"
+                "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
               }
             },
             "LAMBDARUNTIME": "dotnetcore2.1",
@@ -220,7 +224,7 @@
       "Properties": {
         "DestinationArn": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${Tier}-LambdaSharp-LoggingStreamArn"
+            "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn"
           }
         },
         "FilterPattern": "-\"*** \"",

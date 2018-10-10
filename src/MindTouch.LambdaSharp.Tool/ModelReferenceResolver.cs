@@ -175,7 +175,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
                     }
-                    DiscoverParameters(parameter.Parameters, prefix + parameter.Name + "::");
+                    DiscoverParameters(parameter.Parameters, prefix + parameter.Name);
                 }
             }
 
@@ -256,7 +256,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                             break;
                         }
-                        ReportUnresolved(parameter.Parameters, prefix + parameter.Name + "::");
+                        ReportUnresolved(parameter.Parameters, prefix + parameter.Name);
                     });
                 }
             }
@@ -269,13 +269,27 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // handle !Ref expression
                         if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
-                            if(TrySubstitute(refKey, out object found)) {
+                            if(TrySubstitute(refKey, null, out object found)) {
                                 return found;
                             }
                             if(freeReserved.Contains(refKey)) {
                                 return value;
                             }
                             missing?.Invoke(refKey);
+                            return value;
+                        }
+
+                        // handle !GetAtt expression
+                        if(
+                            map.TryGetValue("Fn::GetAtt", out object getAttObject)
+                            && (getAttObject is IList<object> getAttArgs)
+                            && (getAttArgs.Count == 2)
+                            && getAttArgs[0] is string getAttKey
+                            && getAttArgs[1] is string getAttAttribute
+                        ) {
+                            if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
+                                return found;
+                            }
                             return value;
                         }
 
@@ -306,27 +320,18 @@ namespace MindTouch.LambdaSharp.Tool {
                                 var matchText = match.ToString();
                                 var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
                                 if(!subArgs.ContainsKey(name[0])) {
-                                    if(TrySubstitute(name[0], out object found)) {
+                                    if(TrySubstitute(name[0], (name.Length == 2) ? name[1] : null, out object found)) {
                                         substitions = true;
                                         if(found is string text) {
-                                            if(name.Length == 2) {
-                                                AddError($"reference '{name[0]}' resolved to a literal value, but is used in a Fn::GetAtt expression");
-                                            }
                                             return text;
                                         }
                                         var argName = $"P{subArgs.Count}";
-                                        if(name.Length == 2) {
-                                            found = new Dictionary<string, object> {
-                                                ["Fn::GetAtt"] = new List<object> {
-                                                    found,
-                                                    name[1]
-                                                }
-                                            };
-                                        }
                                         subArgs.Add(argName, found);
                                         return "${" + argName + "}";
                                     }
                                     if(freeReserved.Contains(name[0])) {
+
+                                        // references to reserved names stay as is
                                         return matchText;
                                     }
                                     missing?.Invoke(name[0]);
@@ -338,24 +343,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
 
                             // determine which form of !Sub to construct
-                            if(subArgs.Count == 0) {
-
-                                // check if !Sub pattern still contains any variables
-                                if(Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)) {
-                                    return new Dictionary<string, object> {
-                                        ["Fn::Sub"] = subPattern
-                                    };
-                                } else {
-                                    return subPattern;
-                                }
-                            } else {
-                                return new Dictionary<string, object> {
-                                    ["Fn::Sub"] = new List<object> {
-                                        subPattern,
-                                        subArgs
-                                    }
-                                };
-                            }
+                            return subArgs.Any()
+                                ? FnSub(subPattern, subArgs)
+                                : Regex.IsMatch(subPattern, SUBVARIABLE_PATTERN)
+                                ? FnSub(subPattern)
+                                : subPattern;
                         }
                     }
                     return map;
@@ -368,31 +360,37 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
 
-            bool TrySubstitute(string key, out object found) {
+            bool TrySubstitute(string key, string attribute, out object found) {
+                key = key.Replace("::", "");
                 found = null;
                 if(freeInputs.TryGetValue(key, out Input freeInput)) {
                     found = freeInput.Reference;
                 } else if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
                     switch(freeParameter) {
                     case ValueParameter valueParameter:
+                        if(attribute != null) {
+                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
+                        }
                         found = valueParameter.Value;
                         break;
                     case ValueListParameter listParameter:
-                        if(listParameter.Values.All(value => value is string)) {
-                            found = string.Join(",", listParameter.Values);
-                        } else {
-                            found = FnJoin(",", listParameter.Values);
+                        if(attribute != null) {
+                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
                         }
+                        found = FnJoin(",", listParameter.Values);
                         break;
                     case ReferencedResourceParameter referencedParameter:
-                        if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
-                            found = string.Join(",", referencedParameter.Resource.ResourceReferences);
-                        } else {
-                            found = FnJoin(",", referencedParameter.Resource.ResourceReferences);
+                        if(attribute != null) {
+                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
                         }
+                        found = FnJoin(",", referencedParameter.Resource.ResourceReferences);
                         break;
                     case CloudFormationResourceParameter _:
-                        found = FnRef(key.Replace("::", ""));
+                        if(attribute != null) {
+                            found = FnGetAtt(key, attribute);
+                        } else {
+                            found = FnRef(key);
+                        }
                         break;
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
