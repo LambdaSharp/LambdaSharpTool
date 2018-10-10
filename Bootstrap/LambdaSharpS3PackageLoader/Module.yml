@@ -10,9 +10,9 @@ Outputs:
     Description: Custom Resource ARN for for deploying packages to S3 buckets
     Handler: CustomResourceTopic
 
-Parameters:
+Variables:
 
-  - Name: S3BucketPermissions
+  - Name: S3TargetBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
       - !Sub "arn:aws:s3:::${TierLowercase}-*"
@@ -20,6 +20,17 @@ Parameters:
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
+
+  - Name: S3DeploymentBucketPermissions
+    Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
+    Values:
+      - !Sub "arn:aws:s3:::${DeploymentBucketName}"
+      - !Sub "arn:aws:s3:::${DeploymentBucketName}/*"
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadOnly
+
+Parameters:
 
   - Name: CustomResourceTopic
     Description: Custom resource topic for deploying packages to S3 buckets

@@ -122,8 +122,12 @@ namespace MindTouch.LambdaSharp.Tool {
             // create generic resource statement; additional resource statements can be added by resources
             _resourceStatements = new List<Statement> {
                 new Statement {
-                    Sid = "LambdaLoggingWrite",
+                    Sid = "LambdaLogStreamAccess",
                     Effect = "Allow",
+
+                    // TODO (2018-10-09, bjorg): we should be able to make the resource target a lot more
+                    //  specific since we know all the function names already; and we create the log groups
+                    //  for them.
                     Resource = "arn:aws:logs:*:*:*",
                     Action = new List<string> {
                         "logs:CreateLogStream",
@@ -205,6 +209,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // create CloudWatch Logs IAM role to invoke kinesis stream
                 _stack.Add("CloudWatchLogsRole", new IAM.Role {
                     AssumeRolePolicyDocument = new PolicyDocument {
+                        Version = "2012-10-17",
                         Statement = new List<Statement> {
                             new Statement {
                                 Sid = "CloudWatchLogsKinesisInvocation",
@@ -220,6 +225,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         new IAM.Policy {
                             PolicyName = Fn.Sub("${Tier}-${ModuleId}-Permissions-Policy-For-CWL"),
                             PolicyDocument = new PolicyDocument {
+                                Version = "2012-10-17",
                                 Statement = new List<Statement> {
                                     new Statement {
                                         Sid = "CloudWatchLogsKinesisPermissions",
@@ -236,6 +242,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // create module IAM role used by all functions
                 _stack.Add("ModuleRole", new IAM.Role {
                     AssumeRolePolicyDocument = new PolicyDocument {
+                        Version = "2012-10-17",
                         Statement = new List<Statement> {
                             new Statement {
                                 Sid = "LambdaInvocation",
@@ -251,6 +258,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         new IAM.Policy {
                             PolicyName = Fn.Sub("${Tier}-${ModuleId}-policy"),
                             PolicyDocument = new PolicyDocument {
+                                Version = "2012-10-17",
 
                                 // NOTE: additional resource statements can be added by resources
                                 Statement = _resourceStatements
@@ -284,6 +292,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     var restApiRoleName = restApiName + "Role";
                     _stack.Add(restApiRoleName, new IAM.Role {
                         AssumeRolePolicyDocument = new PolicyDocument {
+                            Version = "2012-10-17",
                             Statement = new List<Statement> {
                                 new Statement {
                                     Sid = "LambdaRestApiInvocation",
@@ -299,6 +308,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             new IAM.Policy {
                                 PolicyName = Fn.Sub("${ModuleId}ModuleRestApiRolePolicy"),
                                 PolicyDocument = new PolicyDocument {
+                                    Version = "2012-10-17",
                                     Statement = new List<Statement> {
                                         new Statement {
                                             Sid = "LambdaRestApiLogging",
@@ -813,14 +823,13 @@ namespace MindTouch.LambdaSharp.Tool {
                     object resources;
                     if(resource.ResourceReferences.All(value => value is string)) {
                         environmentRefVariables["STR_" + fullEnvName] = string.Join(",", resource.ResourceReferences);
-                        if(resource.ResourceReferences.Count == 1) {
-                            resources = resource.ResourceReferences.First();
-                        } else {
-                            resources = resource.ResourceReferences.ToList();
-                        }
                     } else {
-                        resources = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToArray());
-                        environmentRefVariables["STR_" + fullEnvName] = resources;
+                        environmentRefVariables["STR_" + fullEnvName] = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToList());
+                    }
+                    if(resource.ResourceReferences.Count == 1) {
+                        resources = resource.ResourceReferences.First();
+                    } else {
+                        resources = resource.ResourceReferences.ToList();
                     }
 
                     // add permissions for resource

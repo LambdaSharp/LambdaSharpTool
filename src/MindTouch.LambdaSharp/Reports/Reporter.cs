@@ -84,6 +84,7 @@ namespace MindTouch.LambdaSharp.Reports {
         }
 
         //--- Fields ---
+        private readonly string _moduleId;
         private readonly string _moduleName;
         private readonly string _moduleVersion;
         private readonly string _deploymentTier;
@@ -94,6 +95,7 @@ namespace MindTouch.LambdaSharp.Reports {
 
         //--- Constructors ---
         public Reporter(
+            string moduleId,
             string moduleName,
             string moduleVersion,
             string deploymentTier,
@@ -101,6 +103,7 @@ namespace MindTouch.LambdaSharp.Reports {
             string gitSha,
             string gitBranch
         ) {
+            _moduleId = moduleId ?? throw new ArgumentNullException(nameof(moduleId));
             _moduleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
             _moduleVersion = moduleVersion;
             _deploymentTier = deploymentTier ?? throw new ArgumentNullException(nameof(deploymentTier));
@@ -127,6 +130,7 @@ namespace MindTouch.LambdaSharp.Reports {
                 .ToList();
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new ReportData {
+                ModuleId = _moduleId,
                 ModuleName = _moduleName,
                 ModuleVersion = _moduleVersion,
                 DeploymentTier = _deploymentTier,

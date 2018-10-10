@@ -71,7 +71,13 @@ namespace MindTouch.LambdaSharp.Tool {
             XDocument csproj = null;
             XElement mainPropertyGroup = null;
             if(!AtLocation("Project", () => {
-                projectName = function.Project ?? $"{module.Name}.{function.Name}";
+                if(function.Project != null) {
+                    projectName = function.Project;
+                } else if(Directory.Exists(Path.Combine(Settings.WorkingDirectory, function.Name))) {
+                    projectName = function.Name;
+                } else {
+                    projectName = $"{module.Name}.{function.Name}";
+                }
                 var project = Path.Combine(Settings.WorkingDirectory, projectName, projectName + ".csproj");
 
                 // check if csproj file exists in project folder
@@ -159,7 +165,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"{projectName}-*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function-{projectName}-*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }
@@ -240,7 +246,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     }
-                    package = Path.Combine(Settings.OutputDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+                    package = Path.Combine(Settings.OutputDirectory, $"function-{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
 
                 // compress folder contents
