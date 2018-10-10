@@ -2,6 +2,14 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "FooInput": {
+      "Type": "String",
+      "Default": "a default value"
+    },
+    "BarInput": {
+      "Type": "String",
+      "Default": "!Import:OtherModule.ExportValue-OtherModule.ExportValue"
+    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "LambdaSharp Deployment S3 Bucket Name"
@@ -21,14 +29,6 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "LambdaSharp Deployment Tier (lowercase)"
-    },
-    "FooInput": {
-      "Type": "String",
-      "Default": "a default value"
-    },
-    "BarInput": {
-      "Type": "String",
-      "Default": "!Import:OtherModule.ExportValue"
     }
   },
   "Resources": {
@@ -242,37 +242,21 @@
   },
   "Conditions": {
     "BarInputIsImport": {
-      "Fn::And": [
+      "Fn::Equals": [
         {
-          "Fn::Not": [
+          "Fn::Select": [
+            "0",
             {
-              "Fn::Equals": [
+              "Fn::Split": [
+                "!Import:",
                 {
                   "Ref": "BarInput"
-                },
-                ""
+                }
               ]
             }
           ]
         },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "!Import:",
-                    {
-                      "Ref": "BarInput"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
+        ""
       ]
     }
   }

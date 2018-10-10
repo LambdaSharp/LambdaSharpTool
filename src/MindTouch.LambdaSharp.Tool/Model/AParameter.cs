@@ -24,9 +24,16 @@ using System.Collections.Generic;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
+    public enum ParameterScope {
+        Undefined,
+        Module,
+        Lambda
+    }
+
     public abstract class AParameter {
 
         //--- Properties ---
+        public ParameterScope Scope { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public string ResourceName { get; set; }

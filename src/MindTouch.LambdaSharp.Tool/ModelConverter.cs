@@ -87,9 +87,38 @@ namespace MindTouch.LambdaSharp.Tool {
                 .ToList()
             , null) ?? new List<Input>();
 
+            // internal module inputs
+            _module.Inputs.Add(ConvertInput(0, new InputNode {
+                Name = "DeploymentBucketName",
+                Type = "String",
+                Description = "LambdaSharp Deployment S3 Bucket Name"
+            }));
+            _module.Inputs.Add(ConvertInput(0, new InputNode {
+                Name = "DeploymentBucketPath",
+                Type = "String",
+                Description = "LambdaSharp Deployment S3 Bucket Path"
+            }));
+            _module.Inputs.Add(ConvertInput(0, new InputNode {
+                Name = "ModuleId",
+                Type = "String",
+                Description = "LambdaSharp Module Id"
+            }));
+            _module.Inputs.Add(ConvertInput(0, new InputNode {
+                Name = "Tier",
+                Type = "String",
+                Description = "LambdaSharp Deployment Tier"
+            }));
+            _module.Inputs.Add(ConvertInput(0, new InputNode {
+                Name = "TierLowercase",
+                Type = "String",
+                Description = "LambdaSharp Deployment Tier (lowercase)"
+            }));
+
             // convert parameters
-            _module.Variables = AtLocation("Variables", () => ConvertParameters(module.Variables), null) ?? new List<AParameter>();
-            _module.Parameters = AtLocation("Parameters", () => ConvertParameters(module.Parameters), null) ?? new List<AParameter>();
+            var values = new List<AParameter>();
+            values.AddRange(AtLocation("Variables", () => ConvertParameters(module.Variables, ParameterScope.Module), null) ?? new List<AParameter>());
+            values.AddRange(AtLocation("Parameters", () => ConvertParameters(module.Parameters, ParameterScope.Lambda), null) ?? new List<AParameter>());
+            _module.Parameters = values;
 
             // create functions
             var functionIndex = 0;
@@ -108,10 +137,12 @@ namespace MindTouch.LambdaSharp.Tool {
             , null) ?? new List<AOutput>();
 
             // add module variables
-            _module.Variables.Add(new ValueParameter {
+            _module.Parameters.Add(new ValueParameter {
+                Scope = ParameterScope.Module,
                 Name = "Module",
                 ResourceName = "Module",
                 Description = "LambdaSharp module information",
+                Value = "",
                 Parameters = new List<AParameter> {
                     new ValueParameter {
                         Name = "Id",
@@ -160,17 +191,14 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public Input ConvertInput(int index, InputNode input) {
             return AtLocation(input.Name ?? $"[{index}]", () => {
-
-                // TODO (2018-10-04, bjorg): convert import into proper format (Module.ExportName --> ???)
-
                 object reference;
                 Condition condition = null;
                 var defaultValue = input.Default;
                 if(input.Import != null) {
 
                     // Create a condition for inputs that use an import statement:
-                    //  FooIsImport := ($Foo != "") && (split($Foo, "!Import:")[0] == "")
-                    condition = new Condition(Fn.And(Fn.Not(Fn.Equals(Fn.Ref(input.Name), "")), Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), "")));
+                    //  FooIsImport := split($Foo, "!Import:")[0] == ""
+                    condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
                     //  UseFoo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
@@ -188,7 +216,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         )),
                         FnRef(input.Name)
                     );
-                    defaultValue = $"!Import:{input.Import}";
+                    var moduleId = input.Import.Split("::", 2)[0];
+                    defaultValue = $"!Import:{moduleId}-{input.Import}";
                 } else {
                     reference = FnRef(input.Name);
                 }
@@ -206,6 +235,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public IList<AParameter> ConvertParameters(
             IList<ParameterNode> parameters,
+            ParameterScope type,
             string resourcePrefix = ""
         ) {
             var resultList = new List<AParameter>();
@@ -226,6 +256,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // encrypted value
                         AtLocation("Secret", () => {
                             result = new SecretParameter {
+                                Scope = type,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Secret = parameter.Secret,
@@ -239,6 +270,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 // list of existing resources
                                 var resource = ConvertResource(parameter.Values, parameter.Resource);
                                 result = new ReferencedResourceParameter {
+                                    Scope = type,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
@@ -249,6 +281,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // list of values
                             AtLocation("Values", () => {
                                 result = new ValueListParameter {
+                                    Scope = type,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Values = parameter.Values
@@ -259,6 +292,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // package value
                         result = new PackageParameter {
+                            Scope = type,
                             Name = parameter.Name,
                             Description = parameter.Description,
                             DestinationBucketParameterName = parameter.Package.Bucket,
@@ -272,6 +306,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 // existing resource
                                 var resource = ConvertResource(new List<object> { parameter.Value }, parameter.Resource);
                                 result = new ReferencedResourceParameter {
+                                    Scope = type,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
@@ -279,6 +314,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         } else {
                             result = new ValueParameter {
+                                Scope = type,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Value = parameter.Value
@@ -290,6 +326,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // managed resource
                         AtLocation("Resource", () => {
                             result = new CloudFormationResourceParameter {
+                                Scope = type,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(new List<object>(), parameter.Resource)
@@ -303,6 +340,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation("Parameters", () => {
                         var nestedParameters = ConvertParameters(
                             parameter.Parameters,
+                            type,
                             parameterFullName
                         );
 
@@ -311,6 +349,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // create empty string parameter if collection has no value
                             result = result ?? new ValueParameter {
+                                Scope = type,
                                 Name = parameter.Name,
                                 Value = "",
                                 Description = parameter.Description

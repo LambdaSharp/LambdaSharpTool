@@ -28,6 +28,12 @@
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
+    "SourceParameterCollectionSecondSourceResourceParameter": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {
+        "DisplayName": "This is a literal value"
+      }
+    },
     "SampleParameterCollectionFourthNestedParameter": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
@@ -112,6 +118,16 @@
                   ],
                   "Resource": {
                     "Ref": "SourceResourceParameter"
+                  }
+                },
+                {
+                  "Sid": "SourceParameterCollectionSecondSourceResourceParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
                   }
                 },
                 {

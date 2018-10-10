@@ -510,6 +510,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         input.Type = "String";
                     }
                     if(input.Import != null) {
+
+                        // TODO (2018-10-10, bjorg): validate import notation: <ModuleName>::<OutputName>
+
                         ValidateNotBothStatements("Import", "Default", input.Default == null);
                     }
                 });

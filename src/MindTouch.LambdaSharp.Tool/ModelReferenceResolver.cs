@@ -38,13 +38,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
-            var freeReserved = new HashSet<string> {
-                "DeploymentBucketName",
-                "DeploymentBucketPath",
-                "ModuleId",
-                "Tier",
-                "TierLowercase"
-            };
             var freeInputs = new Dictionary<string, Input>();
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
@@ -52,14 +45,12 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
                 DiscoverInputs(module.Inputs);
-                DiscoverParameters(module.Variables);
                 DiscoverParameters(module.Parameters);
 
                 // resolve parameter variables via substitution
                 while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
-                ReportUnresolved(module.Variables);
                 ReportUnresolved(module.Parameters);
                 if(Settings.HasErrors) {
                     return;
@@ -68,7 +59,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in resource properties
             AtLocation("Variables", () => {
-                foreach(var parameter in module.Variables.OfType<AResourceParameter>().Where(p => p.Resource?.Properties != null)) {
+                foreach(var parameter in module.Parameters
+                    .Where(p => p.Scope == ParameterScope.Module)
+                    .OfType<AResourceParameter>()
+                    .Where(p => p.Resource?.Properties != null)
+                ) {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
@@ -83,7 +78,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // resolve references in resource properties
             AtLocation("Parameters", () => {
-                foreach(var parameter in module.Parameters.OfType<AResourceParameter>().Where(p => p.Resource?.Properties != null)) {
+                foreach(var parameter in module.Parameters
+                    .Where(p => p.Scope == ParameterScope.Lambda)
+                    .OfType<AResourceParameter>()
+                    .Where(p => p.Resource?.Properties != null)
+                ) {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
@@ -169,11 +168,17 @@ namespace MindTouch.LambdaSharp.Tool {
                             boundParameters[prefix + parameter.Name] = parameter;
                         }
                         break;
-                    case CloudFormationResourceParameter _:
-                        freeParameters[prefix + parameter.Name] = parameter;
+                    case CloudFormationResourceParameter cloudFormationResourceParameter:
+                        if(cloudFormationResourceParameter.Resource.Properties?.Any() != true) {
+                            freeParameters[prefix + parameter.Name] = parameter;
+                        } else {
+                            boundParameters[prefix + parameter.Name] = parameter;
+                        }
                         break;
+                    default:
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
+                        break;
                     }
                     DiscoverParameters(parameter.Parameters, prefix + parameter.Name);
                 }
@@ -204,6 +209,9 @@ namespace MindTouch.LambdaSharp.Tool {
                             break;
                         case ReferencedResourceParameter referencedParameter:
                             referencedParameter.Resource.ResourceReferences = referencedParameter.Resource.ResourceReferences.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                            break;
+                        case CloudFormationResourceParameter cloudFormationResourceParameter:
+                            cloudFormationResourceParameter.Resource.Properties = (IDictionary<string, object>)Substitute(cloudFormationResourceParameter.Resource.Properties, CheckBoundParameters);
                             break;
                         default:
                             throw new InvalidOperationException($"cannot resolve references for this type: {parameter?.GetType()}");
@@ -244,8 +252,8 @@ namespace MindTouch.LambdaSharp.Tool {
                                 }
                             });
                             break;
-                        case ValueListParameter listParameter:
-                            foreach(var item in listParameter.Values) {
+                        case ValueListParameter valueListParameter:
+                            foreach(var item in valueListParameter.Values) {
                                 Substitute(item, missingName => {
                                     if(boundParameters.ContainsKey(missingName)) {
                                         AddError($"circular !Ref dependency on '{missingName}'");
@@ -255,6 +263,25 @@ namespace MindTouch.LambdaSharp.Tool {
                                 });
                             }
                             break;
+                        case ReferencedResourceParameter referencedResourceParameter:
+                            foreach(var item in referencedResourceParameter.Resource.ResourceReferences) {
+                                Substitute(item, missingName => {
+                                    if(boundParameters.ContainsKey(missingName)) {
+                                        AddError($"circular !Ref dependency on '{missingName}'");
+                                    } else {
+                                        AddError($"could not find !Ref dependency '{missingName}'");
+                                    }
+                                });
+                            }
+                            break;
+                        case CloudFormationResourceParameter _:
+                        case PackageParameter _:
+                        case SecretParameter _:
+
+                            // nothing to do
+                            break;
+                        default:
+                            throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
                         }
                         ReportUnresolved(parameter.Parameters, prefix + parameter.Name);
                     });
@@ -272,11 +299,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             if(TrySubstitute(refKey, null, out object found)) {
                                 return found;
                             }
-                            if(freeReserved.Contains(refKey)) {
-                                return value;
-                            }
                             missing?.Invoke(refKey);
-                            return value;
+                            return map;
                         }
 
                         // handle !GetAtt expression
@@ -290,7 +314,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
                                 return found;
                             }
-                            return value;
+                            missing?.Invoke(getAttKey);
+                            return map;
                         }
 
                         // handle !Sub expression
@@ -329,11 +354,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                         subArgs.Add(argName, found);
                                         return "${" + argName + "}";
                                     }
-                                    if(freeReserved.Contains(name[0])) {
-
-                                        // references to reserved names stay as is
-                                        return matchText;
-                                    }
                                     missing?.Invoke(name[0]);
                                 }
                                 return matchText;
@@ -353,6 +373,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     return map;
                 case IList<object> list:
                     return list.Select(item => Substitute(item, missing)).ToList();
+                case null:
+                    AddError("null value is not allowed");
+                    return value;
                 default:
 
                     // nothing further to substitute

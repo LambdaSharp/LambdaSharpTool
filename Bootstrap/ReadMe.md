@@ -65,18 +65,18 @@ __Using Powershell:__
 ```powershell
 lash deploy `
     --tier Demo `
-    $LAMBDASHARP\Bootstrap\LambdaSharp\Module.yml `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader\Module.yml `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber\Module.yml
+    $LAMBDASHARP\Bootstrap\LambdaSharp `
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader `
+    $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber
 ```
 
 __Using Bash:__
 ```bash
 lash deploy \
     --tier Demo \
-    $LAMBDASHARP/Bootstrap/LambdaSharp/Module.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Module.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Module.yml
+    $LAMBDASHARP/Bootstrap/LambdaSharp \
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader \
+    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber
 ```
 
 ## Validate λ# Environment

@@ -52,7 +52,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
-                foreach(var parameter in module.VariablesAndParameters.OfType<PackageParameter>()) {
+                foreach(var parameter in module.Parameters.OfType<PackageParameter>()) {
                     await UploadPackageAsync(module, parameter.PackagePath, "package");
                 }
             }

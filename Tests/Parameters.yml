@@ -46,6 +46,8 @@ Variables:
         Resource:
           Type: AWS::SNS::Topic
           Allow: Publish
+          Properties:
+            DisplayName: !Ref SourceValueParameter
 
 Parameters:
 
