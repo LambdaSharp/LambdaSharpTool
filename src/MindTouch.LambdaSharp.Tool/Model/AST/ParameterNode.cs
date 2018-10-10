@@ -26,22 +26,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class ParameterNode {
 
-        //--- Constructors ---
-        public ParameterNode() { }
-
-        public ParameterNode(ParameterNode parameter) {
-            Name = parameter.Name;
-            Description = parameter.Description;
-            Resource = parameter.Resource;
-            Secret = parameter.Secret;
-            EncryptionContext = parameter.EncryptionContext;
-            Values = parameter.Values;
-            Value = parameter.Value;
-            Import = parameter.Import;
-            Package = parameter.Package;
-            Parameters = parameter.Parameters;
-        }
-
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
@@ -50,9 +34,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IDictionary<string, string> EncryptionContext { get; set; }
         public IList<object> Values { get; set; }
         public object Value { get; set; }
-
-        // TODO (2018-10-02, bjorg) : deprecate
-        public string Import { get; set; }
         public ParameterPackageNode Package { get; set; }
         public IList<ParameterNode> Parameters { get; set; }
     }

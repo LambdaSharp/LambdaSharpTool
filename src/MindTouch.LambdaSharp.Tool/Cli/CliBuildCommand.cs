@@ -111,9 +111,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return null;
                 }
 
-                // resolve all imported parameters
-                new ModelImportProcessor(settings).Process(parsedModule);
-
                 // TODO (2018-10-04, bjorg): refactor all model processing to use the strict model instead of the parsed model
 
                 // package all functions
