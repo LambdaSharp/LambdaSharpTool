@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: LambdaSharpTool Settings
+Description: LambdaSharpTool Settings (v%%VERSION%%)
 
 Parameters:
 

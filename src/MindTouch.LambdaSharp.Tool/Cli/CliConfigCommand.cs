@@ -36,12 +36,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     public class CliConfigCommand : ACliCommand {
 
         //--- Class Methods ---
-        private static string ReadResource(string resourceName) {
+        private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             string result;
             var assembly = typeof(CliNewCommand).Assembly;
             using(var resource = assembly.GetManifestResourceStream($"MindTouch.LambdaSharp.Tool.Resources.{resourceName}"))
             using(var reader = new StreamReader(resource, Encoding.UTF8)) {
                 result = reader.ReadToEnd();
+            }
+            if(substitutions != null) {
+                foreach(var kv in substitutions) {
+                    result = result.Replace($"%%{kv.Key}%%", kv.Value);
+                }
             }
             return result;
         }
@@ -83,7 +88,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             IAmazonCloudFormation cfClient,
             IAmazonSimpleSystemsManagement ssmClient
         ) {
-            var template = ReadResource("LambdaSharpToolConfig.yml");
+            var template = ReadResource("LambdaSharpToolConfig.yml", new Dictionary<string, string> {
+                ["VERSION"] = Version.ToString()
+            });
 
             // try to read tool settings
             var assumeToolProfile = toolProfile ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
@@ -150,15 +157,67 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Console.WriteLine($"=> Stack creation FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                 }
             } else {
-                var existingVersion = GetToolSetting("Version");
-                if(new Version(existingVersion) < Version) {
+                toolProfile = assumeToolProfile;
+                if(!Version.TryParse(GetToolSetting("Version"), out Version existingVersion)) {
+                    AddError("unable to parse existing version");
+                    return;
+                }
+                if(existingVersion < Version) {
 
                     // TODO (2018-10-09, bjorg): logic for upgrading lambdasharp tool
                     AddError("upgrading is not yet supported");
                     return;
                 }
-                Console.WriteLine();
-                Console.WriteLine($"LambdaSharp tool configuration is up-to-date");
+                if(existingVersion > Version) {
+                    Console.WriteLine();
+                    Console.WriteLine($"WARNING: LambdaSharp tool configuration is more recent (v{existingVersion})");
+                    return;
+                }
+                try {
+                    var stackName = $"LambdaSharpTool-{toolProfile}";
+                    Console.WriteLine($"=> Stack update initiated for {stackName}");
+                    var mostRecentStackEventId = await cfClient.GetMostRecentStackEventIdAsync(stackName);
+                    var request = new UpdateStackRequest {
+                        StackName = stackName,
+                        Capabilities = new List<string> {
+                            "CAPABILITY_NAMED_IAM"
+                        },
+                        Parameters = new List<Parameter> {
+                            new Parameter {
+                                ParameterKey = "DeploymentBucketName",
+                                UsePreviousValue = true
+                            },
+                            new Parameter {
+                                ParameterKey = "DeploymentBucketPath",
+                                UsePreviousValue = true
+                            },
+                            new Parameter {
+                                ParameterKey = "DeploymentNotificationTopicArn",
+                                UsePreviousValue = true
+                            },
+                            new Parameter {
+                                ParameterKey = "LambdaSharpToolVersion",
+                                ParameterValue = Version.ToString()
+                            },
+                            new Parameter {
+                                ParameterKey = "LambdaSharpToolProfile",
+                                UsePreviousValue = true
+                            }
+                        },
+                        TemplateBody = template
+                    };
+                    var response = await cfClient.UpdateStackAsync(request);
+                    var outcome = await cfClient.TrackStackUpdateAsync(response.StackId, mostRecentStackEventId);
+                    if(outcome.Success) {
+                        Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    } else {
+                        Console.WriteLine($"=> Stack update FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                    }
+                } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
+
+                    // this error is thrown when no required updates where found
+                    Console.WriteLine($"=> No stack update required (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
+                }
             }
 
             // local functions
