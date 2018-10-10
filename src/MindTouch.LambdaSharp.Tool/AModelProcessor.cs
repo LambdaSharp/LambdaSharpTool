@@ -54,11 +54,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 ["Fn::ImportValue"] = sharedValueToImport
             };
 
-        protected static object FnJoin(string separator, params object[] parameters)
+        protected static object FnJoin(string separator, IList<object> parameters)
             => new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
                     separator,
-                    parameters.ToList()
+                    parameters
                 }
             };
 

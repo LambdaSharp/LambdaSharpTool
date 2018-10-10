@@ -381,14 +381,14 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(listParameter.Values.All(value => value is string)) {
                             found = string.Join(",", listParameter.Values);
                         } else {
-                            found = FnJoin(",", listParameter.Values.ToArray());
+                            found = FnJoin(",", listParameter.Values);
                         }
                         break;
                     case ReferencedResourceParameter referencedParameter:
                         if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
                             found = string.Join(",", referencedParameter.Resource.ResourceReferences);
                         } else {
-                            found = FnJoin(",", referencedParameter.Resource.ResourceReferences.ToArray());
+                            found = FnJoin(",", referencedParameter.Resource.ResourceReferences);
                         }
                         break;
                     case CloudFormationResourceParameter _:

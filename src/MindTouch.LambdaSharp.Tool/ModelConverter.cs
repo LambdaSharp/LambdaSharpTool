@@ -167,7 +167,20 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
                     //  UseFoo: FooIsImport ? ($Tier + "-" + split($Foo, "!Import:")[1]) : $Foo
-                    reference = FnIf($"{input.Name}IsImport", FnImportValue(FnJoin("-", FnRef("Tier"), FnSelect("1", FnSplit("!Import:", FnRef(input.Name))))), FnRef(input.Name));
+                    reference = FnIf(
+                        $"{input.Name}IsImport",
+                        FnImportValue(FnJoin(
+                            "-",
+                            new List<object> {
+                                FnRef("Tier"),
+                                FnSelect(
+                                    "1",
+                                    FnSplit("!Import:", FnRef(input.Name))
+                                )
+                            }
+                        )),
+                        FnRef(input.Name)
+                    );
                 } else {
                     reference = FnRef(input.Name);
                 }

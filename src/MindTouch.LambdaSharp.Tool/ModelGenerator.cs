@@ -824,12 +824,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(resource.ResourceReferences.All(value => value is string)) {
                         environmentRefVariables["STR_" + fullEnvName] = string.Join(",", resource.ResourceReferences);
                     } else {
-                        environmentRefVariables["STR_" + fullEnvName] = Fn.Join(",", resource.ResourceReferences.Cast<dynamic>().ToList());
+                        environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", resource.ResourceReferences);
                     }
                     if(resource.ResourceReferences.Count == 1) {
                         resources = resource.ResourceReferences.First();
                     } else {
-                        resources = resource.ResourceReferences.ToList();
+                        resources = resource.ResourceReferences;
                     }
 
                     // add permissions for resource
