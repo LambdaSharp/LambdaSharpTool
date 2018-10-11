@@ -55,12 +55,13 @@ namespace MindTouch.LambdaSharpRegistrar.RegisterModule {
             => Task.CompletedTask;
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
-            if(request.ResourceProperties.Tier != DeploymentTier) {
+            var prop = request.ResourceProperties;
+            if(prop.Tier != DeploymentTier) {
 
                 // TODO
-                throw new Exception();
+                throw new Exception("tier mismatch");
             }
-
+            LogInfo($"Registering Module: Id={prop.ModuleId}, Name={prop.ModuleName}, Version={prop.ModuleVersion}");
             var registration = $"registration:{request.ResourceProperties.ModuleId}";
             return new Response<ResponseProperties> {
                 PhysicalResourceId = registration,

@@ -32,7 +32,7 @@ using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp.Reports {
 
-    public class Reporter {
+    public class ErrorReporter {
 
         //--- Constants ---
         private const string LANGUAGE = "csharp";
@@ -94,7 +94,7 @@ namespace MindTouch.LambdaSharp.Reports {
         private readonly string _platform;
 
         //--- Constructors ---
-        public Reporter(
+        public ErrorReporter(
             string moduleId,
             string moduleName,
             string moduleVersion,
@@ -114,7 +114,7 @@ namespace MindTouch.LambdaSharp.Reports {
         }
 
         //--- Methods ---
-        public ReportData CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
+        public ErrorReport CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
             var message = FormatMessage(format, args) ?? exception?.Message;
             if(message == null) {
                 return null;
@@ -129,7 +129,7 @@ namespace MindTouch.LambdaSharp.Reports {
                 .Reverse()
                 .ToList();
             var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
-            return new ReportData {
+            return new ErrorReport {
                 ModuleId = _moduleId,
                 ModuleName = _moduleName,
                 ModuleVersion = _moduleVersion,
@@ -148,10 +148,10 @@ namespace MindTouch.LambdaSharp.Reports {
             };
         }
 
-        private ReportStackTrace CreateStackTraceFromException(Exception exception) {
+        private ErrorReportStackTrace CreateStackTraceFromException(Exception exception) {
             var stackFrames = new StackTrace(exception, true).GetFrames();
-            return new ReportStackTrace {
-                Exception = new ReportExceptionInfo {
+            return new ErrorReportStackTrace {
+                Exception = new ErrorReportExceptionInfo {
                     Type = exception.GetType().FullName,
                     Message = exception.Message,
                     StackTrace = exception.StackTrace
@@ -185,7 +185,7 @@ namespace MindTouch.LambdaSharp.Reports {
                     }
 
                     // NOTE: Set CodeContext and Code (lines of code above and below the line that raised the exception).
-                    return new ReportStackFrame {
+                    return new ErrorReportStackFrame {
                         FileName = fileName,
                         LineNumber = lineNumber,
                         ColumnNumber = null,

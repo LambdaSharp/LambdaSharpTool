@@ -19,6 +19,14 @@ Outputs:
     Description: Custom resources for registering LambdaSharp modules
     Handler: RegistrationTopic
 
+  - Export: ErrorReportTopic
+    Description: SNS topic for LambdaSharp module errors
+    Value: !Ref ErrorReportTopic
+
+  - Export: UsageReportTopic
+    Description: SNS topic for LambdaSharp function usage reports
+    Value: !Ref UsageReportTopic
+
 Parameters:
 
   - Name: LoggingStreamReference
@@ -32,6 +40,18 @@ Parameters:
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
+
+  - Name: ErrorReportTopic
+    Description: Topic for publishing LambdaSharp module errors
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
+  - Name: UsageReportTopic
+    Description: Topic for publishing LambdaSharp function usage reports
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
 
 Functions:
 

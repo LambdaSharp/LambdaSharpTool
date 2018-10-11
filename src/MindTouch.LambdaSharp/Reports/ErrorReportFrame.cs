@@ -1,4 +1,4 @@
-﻿/*
+/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -23,11 +23,15 @@ using System;
 
 namespace MindTouch.LambdaSharp.Reports {
 
-    public class ReportExceptionInfo {
+    public class ErrorReportStackFrame {
 
         //--- Properties ---
-        public string Type { get; set; }
-        public string Message { get; set; }
-        public string StackTrace { get; set; }
+        public string FileName { get; set; }
+
+        public int? LineNumber { get; set; }
+
+        public int? ColumnNumber { get; set; }
+
+        public string MethodName { get; set; }
     }
 }

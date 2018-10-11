@@ -47,6 +47,12 @@ namespace MindTouch.LambdaSharp {
         //--- Methods ---
         protected static T DeserializeJson<T>(Stream stream) =>  JsonSerializer.Deserialize<T>(stream);
 
+        protected static T DeserializeJson<T>(string json) {
+            using(var stream = new MemoryStream(Encoding.UTF8.GetBytes(json))) {
+                return DeserializeJson<T>(stream);
+            }
+        }
+
         protected static string SerializeJson(object value) {
             using(var stream = new MemoryStream()) {
                 JsonSerializer.Serialize(value, stream);
@@ -74,7 +80,7 @@ namespace MindTouch.LambdaSharp {
         private readonly IAmazonKeyManagementService _kmsClient;
         private readonly IAmazonSQS _sqsClient;
         private readonly ILambdaConfigSource _envSource;
-        private Reporter _reporter;
+        private ErrorReporter _reporter;
         private string _deadLetterQueueUrl;
         private bool _initialized;
         private LambdaConfig _appConfig;
@@ -170,7 +176,7 @@ namespace MindTouch.LambdaSharp {
             _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
             // initialize error/warning reporter
-            _reporter = new Reporter(
+            _reporter = new ErrorReporter(
                 ModuleId,
                 ModuleName,
                 ModuleVersion,
@@ -256,7 +262,7 @@ namespace MindTouch.LambdaSharp {
             => LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{extra}");
 
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
-            string message = Reporter.FormatMessage(format, args);
+            string message = ErrorReporter.FormatMessage(format, args);
             Log(level, $"{message}", exception?.ToString());
             if(level >= LambdaLogLevel.WARNING) {
                 if(_reporter != null) {

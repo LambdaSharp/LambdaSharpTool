@@ -19,18 +19,15 @@
  * limitations under the License.
  */
 
-
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MindTouch.LambdaSharp.Reports {
 
-    public class ReportStackTrace {
+    public class ErrorReportExceptionInfo {
 
         //--- Properties ---
-        public ReportExceptionInfo Exception { get; set; }
-
-        public IEnumerable<ReportStackFrame> Frames { get; set; }
+        public string Type { get; set; }
+        public string Message { get; set; }
+        public string StackTrace { get; set; }
     }
 }

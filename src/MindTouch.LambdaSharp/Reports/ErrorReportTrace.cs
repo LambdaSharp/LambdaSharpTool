@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -19,19 +19,18 @@
  * limitations under the License.
  */
 
+
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MindTouch.LambdaSharp.Reports {
 
-    public class ReportStackFrame {
+    public class ErrorReportStackTrace {
 
         //--- Properties ---
-        public string FileName { get; set; }
+        public ErrorReportExceptionInfo Exception { get; set; }
 
-        public int? LineNumber { get; set; }
-
-        public int? ColumnNumber { get; set; }
-
-        public string MethodName { get; set; }
+        public IEnumerable<ErrorReportStackFrame> Frames { get; set; }
     }
 }

@@ -19,20 +19,23 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.Serialization.Json;
+using Amazon.SimpleNotificationService;
 using MindTouch.LambdaSharp;
+using MindTouch.LambdaSharp.Reports;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace MindTouch.LambdaSharpWatcher.ProcessLogEvents {
+namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
     public class LogEventsMessage {
 
@@ -53,63 +56,72 @@ namespace MindTouch.LambdaSharpWatcher.ProcessLogEvents {
         public string Message { get; set; }
     }
 
-    public class Function : ALambdaFunction<KinesisEvent, string> {
+    public class Function : ALambdaFunction<KinesisEvent, string>, ILogicDependencyProvider {
+
+        //--- Fields ---
+        private Logic _logic;
+        private IAmazonSimpleNotificationService _snsClient;
+        private string _errorTopicArn;
+        private string _usageTopicArn;
 
         //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config)
-            => Task.CompletedTask;
+        public override async Task InitializeAsync(LambdaConfig config) {
+            _logic = new Logic(this);
+            _snsClient = new AmazonSimpleNotificationServiceClient();
+            _errorTopicArn = config.ReadText("ErrorReportTopic");
+            _usageTopicArn = config.ReadText("UsageReportTopic");
+        }
 
-        public override async Task<string> ProcessMessageAsync(KinesisEvent evt, ILambdaContext context) {
-            LogInfo($"# Kinesis Records = {evt.Records.Count}");
-            for(var i = 0; i < evt.Records.Count; ++i) {
-                var record = evt.Records[i];
-                LogInfo($"Record #{i}");
-                LogInfo($"AwsRegion = {record.AwsRegion}");
-                LogInfo($"EventId = {record.EventId}");
-                LogInfo($"EventName = {record.EventName}");
-                LogInfo($"EventSource = {record.EventSource}");
-                LogInfo($"EventSourceARN = {record.EventSourceARN}");
-                LogInfo($"EventVersion = {record.EventVersion}");
-                LogInfo($"InvokeIdentityArn = {record.InvokeIdentityArn}");
-                LogInfo($"ApproximateArrivalTimestamp = {record.Kinesis.ApproximateArrivalTimestamp}");
-                LogInfo($"Kinesis.Data.Length = {record.Kinesis.Data.Length}");
-                LogInfo($"Kinesis.KinesisSchemaVersion = {record.Kinesis.KinesisSchemaVersion}");
-                LogInfo($"KinesisPartitionKey = {record.Kinesis.PartitionKey}");
-                LogInfo($"KinesisSequenceNumber = {record.Kinesis.SequenceNumber}");
-
+        public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis, ILambdaContext context) {
+            foreach(var record in kinesis.Records) {
                 LogEventsMessage events;
-                using(var decompressedStream = new MemoryStream()) {
+                using(var stream = new MemoryStream()) {
                     using(var gzip = new GZipStream(record.Kinesis.Data, CompressionMode.Decompress)) {
-                        gzip.CopyTo(decompressedStream);
-                        decompressedStream.Position = 0;
+                        gzip.CopyTo(stream);
+                        stream.Position = 0;
                     }
-                    events = DeserializeJson<LogEventsMessage>(decompressedStream);
+                    events = DeserializeJson<LogEventsMessage>(stream);
                 }
-
-                if(!events.LogGroup.Contains("LambdaSharpWatcher")) {
-                    LogInfo($"LogEvents.Owner = {events.Owner}");
-                    if(!string.IsNullOrEmpty(events.LogGroup)) {
-                        LogInfo($"LogEvents.LogGroup = {events.LogGroup}");
-                    }
-                    if(!string.IsNullOrEmpty(events.LogStream)) {
-                        LogInfo($"LogEvents.LogStream = {events.LogStream}");
-                    }
-                    LogInfo($"LogEvents.MessageType = {events.MessageType}");
-                    for(var j = 0; j < events.SubscriptionFilters.Count; ++j) {
-                        LogInfo($"LogEvents.SubscriptionFilters[{j}] = {events.SubscriptionFilters[j]}");
-                    }
-                    for(var j = 0; j < events.LogEvents.Count; ++j) {
-                        if(!string.IsNullOrEmpty(events.LogEvents[j].Id)) {
-                            LogInfo($"LogEvents.LogEvents[{j}].Id = {events.LogEvents[j].Id}");
-                        }
-                        if(!string.IsNullOrEmpty(events.LogEvents[j].Timestamp)) {
-                            LogInfo($"LogEvents.LogEvents[{j}].Timestamp = {events.LogEvents[j].Timestamp}");
-                        }
-                        LogInfo($"LogEvents.LogEvents[{j}].Message = {events.LogEvents[j].Message}");
-                    }
-                }
+                await HandleLogEventMessage(events);
             }
             return "Ok";
         }
+
+        private async Task HandleLogEventMessage(LogEventsMessage logEventMessage) {
+
+            // skip events from own module
+            if(logEventMessage.LogGroup.Contains(ModuleName) || !logEventMessage.LogEvents.Any()) {
+                return;
+            }
+
+            // skip control messages
+            if(logEventMessage.MessageType == "CONTROL_MESSAGE ") {
+                return;
+            }
+            if(logEventMessage.MessageType != "DATA_MESSAGE ") {
+
+                // TODO: report unexpected messages
+                return;
+            }
+
+            // TODO: continue here
+            OwnerMetaData owner = null;
+            foreach(var entry in logEventMessage.LogEvents) {
+                await _logic.ProgressLogEntryAsync(owner, entry.Message, entry.Timestamp);
+            }
+        }
+
+        //--- ILogicDependencyProvider Members ---
+        ErrorReport ILogicDependencyProvider.DeserializeErrorReport(string jsonReport)
+            => DeserializeJson<ErrorReport>(jsonReport);
+
+        async Task ILogicDependencyProvider.SendErrorReportAsync(ErrorReport report)
+            => await _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report));
+
+        async Task ILogicDependencyProvider.SendUsageReportAsync(UsageReport report)
+            => await _snsClient.PublishAsync(_usageTopicArn, SerializeJson(report));
+
+        void ILogicDependencyProvider.WriteLine(string message)
+            => LogInfo(message);
     }
 }

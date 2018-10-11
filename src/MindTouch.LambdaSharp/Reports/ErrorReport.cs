@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -27,25 +26,32 @@ using System.Globalization;
 
 namespace MindTouch.LambdaSharp.Reports {
 
-    public class ReportData {
+    public class ErrorReport {
 
         //--- Properties ---
-        public string Source { get; set; } = "LambdaReport";
+
+        // Report
+        public string Source { get; set; } = "LambdaError";
         public string Version { get; set; } = "2018-09-27";
-        public string ModuleId { get; set; }
+
+        // Origin
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
         public string DeploymentTier { get; set; }
-        public string RequestId { get; set; }
-        public string Level { get; set; }
-        public string Fingerprint { get; set; }
-        public long Timestamp { get; set; }
-        public string Message { get; set; }
-        public IEnumerable<ReportStackTrace> Traces { get; set; }
+        public string ModuleId { get; set; }
+        public string FunctionName { get; set; } // TODO: => ${ModuleName}.{FunctionName}
         public string Platform { get; set; }
         public string Framework { get; set; }
         public string Language { get; set; }
         public string GitSha { get; set; }
         public string GitBranch { get; set; }
+
+        // Occurrence
+        public string RequestId { get; set; }
+        public string Level { get; set; }
+        public string Fingerprint { get; set; }
+        public long Timestamp { get; set; }
+        public string Message { get; set; }
+        public IEnumerable<ErrorReportStackTrace> Traces { get; set; }
     }
 }
