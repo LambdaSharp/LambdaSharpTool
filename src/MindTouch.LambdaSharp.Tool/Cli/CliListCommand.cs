@@ -56,7 +56,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // initialize AWS account Id and region
                     var awsAccount = await InitializeAwsProfile(
-                        awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE")
+                        awsProfileOption.Value()
                     );
                     if(awsAccount == null) {
                         return;
