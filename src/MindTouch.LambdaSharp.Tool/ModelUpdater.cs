@@ -30,6 +30,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.S3.Transfer;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Internal;
+using Newtonsoft.Json;
+using Amazon.S3.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
@@ -63,12 +65,17 @@ namespace MindTouch.LambdaSharp.Tool {
             // upload cloudformation template
             string templateUrl = null;
             if(Settings.DeploymentBucketName != null) {
-                var templateSuffix = File.ReadAllText(templateFile).ToMD5Hash();
-                var templateS3Key = $"{Settings.DeploymentBucketPath}{module.Name}/cloudformation-v{module.Version}-{templateSuffix}.json";
-                templateUrl = $"https://s3.amazonaws.com/{Settings.DeploymentBucketName}/{templateS3Key}";
+                var template = File.ReadAllText(templateFile);
+                var minifiedTemplate = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(template), Formatting.None);
+                var templateS3Key = $"{Settings.DeploymentBucketPath}{module.Name}/cloudformation-v{module.Version}-{minifiedTemplate.ToMD5Hash()}.json";
+                templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{templateS3Key}";
                 Console.WriteLine($"=> Uploading CloudFormation template: s3://{Settings.DeploymentBucketName}/{templateS3Key}");
-                var transferUtility = new TransferUtility(Settings.S3Client);
-                await transferUtility.UploadAsync(templateFile, Settings.DeploymentBucketName, templateS3Key);
+                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentBody = minifiedTemplate,
+                    ContentType = "application/json",
+                    Key = templateS3Key,
+                });
             }
 
             // default stack policy denies all updates
