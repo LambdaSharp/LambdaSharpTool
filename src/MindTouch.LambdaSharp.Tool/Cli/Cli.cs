@@ -30,8 +30,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     public class CliBase {
 
         //--- Class Fields ---
-        protected static VerboseLevel _verboseLevel = VerboseLevel.Normal;
-        private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
         private static Version _version;
 
         //--- Class Constructor ---
@@ -45,39 +43,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         //--- Class Properties ---
-        protected static int ErrorCount => _errors.Count;
-        protected static bool HasErrors => ErrorCount > 0;
         protected static Version FullVersion => typeof(CliBase).Assembly.GetName().Version;
         protected static string VersionPrefixAndSuffix => typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
         protected static Version Version => _version;
+        protected static bool HasErrors => Settings.HasErrors;
 
         //--- Class Methods ---
-        protected static void ShowErrors() {
-            foreach(var error in _errors) {
-                if((error.Exception != null) && (_verboseLevel >= VerboseLevel.Exceptions)) {
-                    Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
-                } else {
-                    Console.WriteLine("ERROR: " + error.Message);
-                }
-            }
-            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
-            if(configException != null) {
-                Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: complete the LambdaSharpTool configuration procedure for profile '{configException.Profile}'");
-                return;
-            }
-            var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
-            if(setupException != null) {
-                Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: complete the LambdaSharp Environment bootstrap procedure for deployment tier '{setupException.Tier}'");
-                return;
-            }
-        }
-
         protected static void AddError(string message, Exception exception = null)
-            => _errors.Add((Message: message, Exception: exception));
+            => Settings.AddError(message, exception);
 
         protected static void AddError(Exception exception)
-            => AddError(exception.Message, exception);
+            => Settings.AddError(exception);
     }
 }

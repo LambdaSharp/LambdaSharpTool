@@ -124,7 +124,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _locations.Push(location);
                 action();
             } catch(Exception e) {
-                AddError($"internal error: {e.Message}", e);
+                AddError(e);
             } finally {
                 _locations.Pop();
             }
@@ -135,7 +135,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _locations.Push(location);
                 return function();
             } catch(Exception e) {
-                AddError($"internal error: {e.Message}", e);
+                AddError(e);
                 return onErrorReturn;
             } finally {
                 _locations.Pop();
@@ -149,6 +149,9 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         protected void AddError(string message, Exception exception = null)
-            => _settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleSource}]", exception);
+            => Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleSource}]", exception);
+
+        protected void AddError(Exception exception = null)
+            => Settings.AddError(exception);
     }
 }

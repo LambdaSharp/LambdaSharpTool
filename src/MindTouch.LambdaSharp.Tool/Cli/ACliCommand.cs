@@ -97,7 +97,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // initialize logging level
                 if(verboseLevelOption.HasValue()) {
-                    if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out _verboseLevel)) {
+                    if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
 
                         // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
                         return null;
@@ -231,9 +231,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         SsmClient = ssmClient,
                         CfClient = cfClient,
                         KmsClient = kmsClient,
-                        S3Client = s3Client,
-                        ErrorCallback = AddError,
-                        VerboseLevel = _verboseLevel
+                        S3Client = s3Client
                     });
                 }
                 return result;

@@ -77,10 +77,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     Console.WriteLine(e);
                     AddError(e);
                 }
-                if(ErrorCount > 0) {
+                if(Settings.HasErrors) {
                     Console.WriteLine();
-                    Console.WriteLine($"FAILED: {ErrorCount:N0} errors encountered");
-                    ShowErrors();
+                    Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                    Settings.ShowErrors();
                     return -1;
                 }
                 return 0;

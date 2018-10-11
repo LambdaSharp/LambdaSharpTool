@@ -51,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 return Convert(module);
             } catch(Exception e) {
-                AddError($"internal error: {e.Message}", e);
+                AddError(e);
                 return null;
             }
         }

@@ -21,6 +21,8 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Amazon.CloudFormation;
 using Amazon.KeyManagementService;
 using Amazon.S3;
@@ -53,6 +55,43 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public class Settings {
 
+        //--- Class Fields ---
+        public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Normal;
+        private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
+
+        //--- Class Properties ---
+        public static int ErrorCount => _errors.Count;
+        public static bool HasErrors => _errors.Count > 0;
+
+        //--- Class Methods ---
+        public static void ShowErrors() {
+            foreach(var error in _errors) {
+                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                    Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
+                } else {
+                    Console.WriteLine("ERROR: " + error.Message);
+                }
+            }
+            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
+            if(configException != null) {
+                Console.WriteLine();
+                Console.WriteLine($"IMPORTANT: complete the LambdaSharpTool configuration procedure for profile '{configException.Profile}'");
+                return;
+            }
+            var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
+            if(setupException != null) {
+                Console.WriteLine();
+                Console.WriteLine($"IMPORTANT: complete the LambdaSharp Environment bootstrap procedure for deployment tier '{setupException.Tier}'");
+                return;
+            }
+        }
+
+        public static void AddError(string message, Exception exception = null)
+            => _errors.Add((Message: message, Exception: exception));
+
+        public static void AddError(Exception exception)
+            => AddError($"internal error: {exception.Message}", exception);
+
         //--- Properties ---
         public Version ToolVersion { get; set; }
         public string ToolProfile { get; set; }
@@ -70,17 +109,8 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonCloudFormation CfClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
-        public Action<string, Exception> ErrorCallback { get; set; }
-        public bool HasErrors { get; set; }
-        public VerboseLevel VerboseLevel { get; set; }
         public string ModuleSource { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
-
-        //--- Methods ---
-        public void AddError(string message, Exception exception = null) {
-            HasErrors = true;
-            ErrorCallback(message, exception);
-        }
     }
 }

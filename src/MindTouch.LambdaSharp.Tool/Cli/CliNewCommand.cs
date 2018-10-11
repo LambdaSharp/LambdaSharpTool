@@ -198,7 +198,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
-            var module = new ModelParser().Parse(moduleContents);
+            var module = new ModelParser(new Settings()).Parse(moduleContents);
             if(HasErrors) {
                 return;
             }
