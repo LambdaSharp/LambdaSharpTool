@@ -4,6 +4,9 @@ Description: It watches you...
 
 Version: 0.4
 
+Pragmas:
+  - no-module-registration
+
 Inputs:
 
   - Name: LoggingStream

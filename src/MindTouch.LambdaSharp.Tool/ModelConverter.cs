@@ -63,6 +63,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Name = module.Name,
                 Version = module.Version,
                 Description = module.Description,
+                Pragmas = module.Pragmas,
                 Functions = new List<Function>()
             };
 
@@ -137,36 +138,64 @@ namespace MindTouch.LambdaSharp.Tool {
             , null) ?? new List<AOutput>();
 
             // add module variables
+            var moduleParameters = new List<AParameter> {
+                new ValueParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "Id",
+                    ResourceName = "ModuleId",
+                    Description = "LambdaSharp module id",
+                    Value = FnRef("ModuleId")
+                },
+                new ValueParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "Name",
+                    ResourceName = "ModuleName",
+                    Description = "LambdaSharp module name",
+                    Value = _module.Name
+                },
+                new ValueParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "Version",
+                    ResourceName = "ModuleVersion",
+                    Description = "LambdaSharp module version",
+                    Value = _module.Version
+                }
+
+                // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
+                //  FnSub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
+            };
             _module.Parameters.Add(new ValueParameter {
                 Scope = ParameterScope.Module,
                 Name = "Module",
                 ResourceName = "Module",
                 Description = "LambdaSharp module information",
                 Value = "",
-                Parameters = new List<AParameter> {
-                    new ValueParameter {
-                        Name = "Id",
-                        ResourceName = "ModuleId",
-                        Description = "LambdaSharp module id",
-                        Value = FnRef("ModuleId")
-                    },
-                    new ValueParameter {
-                        Name = "Name",
-                        ResourceName = "ModuleName",
-                        Description = "LambdaSharp module name",
-                        Value = _module.Name
-                    },
-                    new ValueParameter {
-                        Name = "Version",
-                        ResourceName = "ModuleVersion",
-                        Description = "LambdaSharp module version",
-                        Value = _module.Version
-                    }
-
-                    // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
-                    //  FnSub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
-                }
+                Parameters = moduleParameters
             });
+
+            // check if we need to register this module
+            if(!_module.Pragmas.Contains("no-module-registration")) {
+                moduleParameters.Add(new CloudFormationResourceParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "Registration",
+                    ResourceName = "ModuleRegistration",
+                    Description = "LambdaSharp module registration",
+                    Resource = new Resource {
+                        Type = "Custom::LambdaSharpModuleRegistration",
+                        ResourceReferences = new List<object>(),
+                        DependsOn = new List<string>(),
+                        Properties = new Dictionary<string, object> {
+                            ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Module::Registration")),
+                            ["Tier"] = FnRef("Tier"),
+                            ["ModuleId"] = FnRef("ModuleId"),
+                            ["ModuleName"] = _module.Name,
+                            ["ModuleVersion"] = _module.Version,
+                            ["StackName"] = FnRef("AWS::StackName"),
+                            ["StackId"] = FnRef("AWS::StackId")
+                        }
+                    }
+                });
+            }
             return _module;
         }
 
@@ -235,7 +264,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public IList<AParameter> ConvertParameters(
             IList<ParameterNode> parameters,
-            ParameterScope type,
+            ParameterScope scope,
             string resourcePrefix = ""
         ) {
             var resultList = new List<AParameter>();
@@ -256,7 +285,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // encrypted value
                         AtLocation("Secret", () => {
                             result = new SecretParameter {
-                                Scope = type,
+                                Scope = scope,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Secret = parameter.Secret,
@@ -270,7 +299,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 // list of existing resources
                                 var resource = ConvertResource(parameter.Values, parameter.Resource);
                                 result = new ReferencedResourceParameter {
-                                    Scope = type,
+                                    Scope = scope,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
@@ -281,7 +310,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             // list of values
                             AtLocation("Values", () => {
                                 result = new ValueListParameter {
-                                    Scope = type,
+                                    Scope = scope,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Values = parameter.Values
@@ -292,7 +321,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // package value
                         result = new PackageParameter {
-                            Scope = type,
+                            Scope = scope,
                             Name = parameter.Name,
                             Description = parameter.Description,
                             DestinationBucketParameterName = parameter.Package.Bucket,
@@ -306,7 +335,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 // existing resource
                                 var resource = ConvertResource(new List<object> { parameter.Value }, parameter.Resource);
                                 result = new ReferencedResourceParameter {
-                                    Scope = type,
+                                    Scope = scope,
                                     Name = parameter.Name,
                                     Description = parameter.Description,
                                     Resource = resource
@@ -314,7 +343,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         } else {
                             result = new ValueParameter {
-                                Scope = type,
+                                Scope = scope,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Value = parameter.Value
@@ -326,7 +355,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // managed resource
                         AtLocation("Resource", () => {
                             result = new CloudFormationResourceParameter {
-                                Scope = type,
+                                Scope = scope,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(new List<object>(), parameter.Resource)
@@ -340,7 +369,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation("Parameters", () => {
                         var nestedParameters = ConvertParameters(
                             parameter.Parameters,
-                            type,
+                            scope,
                             parameterFullName
                         );
 
@@ -349,7 +378,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // create empty string parameter if collection has no value
                             result = result ?? new ValueParameter {
-                                Scope = type,
+                                Scope = scope,
                                 Name = parameter.Name,
                                 Value = "",
                                 Description = parameter.Description

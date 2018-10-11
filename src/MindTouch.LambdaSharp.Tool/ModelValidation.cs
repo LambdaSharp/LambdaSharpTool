@@ -50,24 +50,13 @@ namespace MindTouch.LambdaSharp.Tool {
             Validate(module.Name != null, "missing module name");
 
             // ensure collections are present
-            if(module.Secrets == null) {
-                module.Secrets = new List<string>();
-            }
-            if(module.Inputs == null) {
-                module.Inputs = new List<InputNode>();
-            }
-            if(module.Variables == null) {
-                module.Variables = new List<ParameterNode>();
-            }
-            if(module.Parameters == null) {
-                module.Parameters = new List<ParameterNode>();
-            }
-            if(module.Functions == null) {
-                module.Functions = new List<FunctionNode>();
-            }
-            if(module.Outputs == null) {
-                module.Outputs = new List<OutputNode>();
-            }
+            module.Pragmas = module.Pragmas ?? new List<string>();
+            module.Secrets = module.Secrets ?? new List<string>();
+            module.Inputs = module.Inputs ?? new List<InputNode>();
+            module.Variables = module.Variables ?? new List<ParameterNode>();
+            module.Parameters = module.Parameters ?? new List<ParameterNode>();
+            module.Functions = module.Functions ?? new List<FunctionNode>();
+            module.Outputs = module.Outputs ?? new List<OutputNode>();
 
             // ensure version is present
             if(module.Version == null) {
