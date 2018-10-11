@@ -3,7 +3,7 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>MindTouch.LambdaSharpWatcher.ProcessLogEvents</RootNamespace>
+    <RootNamespace>MindTouch.LambdaSharpRegistrar.ProcessLogEvents</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>

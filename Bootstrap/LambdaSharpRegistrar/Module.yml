@@ -1,0 +1,47 @@
+Name: LambdaSharpRegistrar
+
+Description: It watches you...
+
+Version: 0.4
+
+Inputs:
+
+  - Name: LoggingStream
+    Description: AWS Kinesis stream to monitor
+    Import: LambdaSharp::LoggingStreamArn
+
+Outputs:
+
+  - CustomResource: LambdaSharp::Module::Registration
+    Description: Custom resources for registering LambdaSharp modules
+    Handler: RegistrationTopic
+
+Parameters:
+
+  - Name: LoggingStreamReference
+    Value: !Ref LoggingStream
+    Resource:
+      Type: AWS::Kinesis::Stream
+      Allow: Subscribe
+
+  - Name: RegistrationTopic
+    Description: Custom resource topic for registering LambdaSharp modules
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
+Functions:
+
+  - Name: ProcessLogEvents
+    Description: Process log events from all LambdaSharp module functions
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Kinesis: LoggingStreamReference
+
+  - Name: RegisterModule
+    Description: Register LambdaSharp modules
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Topic: RegistrationTopic
