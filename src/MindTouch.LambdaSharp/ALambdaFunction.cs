@@ -104,6 +104,7 @@ namespace MindTouch.LambdaSharp {
         protected string ModuleId { get; private set; }
         protected string ModuleVersion { get; private set; }
         protected string DeploymentTier { get; private set; }
+        protected string FunctionName { get; private set; }
         private string _requestId;
 
         //--- Abstract Methods ---
@@ -161,7 +162,8 @@ namespace MindTouch.LambdaSharp {
             ModuleId = envSource.Read("MODULE_ID");
             ModuleVersion = envSource.Read("MODULE_VERSION");
             _deadLetterQueueUrl = ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
-            var framework = envSource.Read("LAMBDARUNTIME");
+            FunctionName = envSource.Read("LAMBDA_NAME");
+            var framework = envSource.Read("LAMBDA_RUNTIME");
             LogInfo($"TIER = {DeploymentTier}");
             LogInfo($"MODULE = {ModuleName}");
             LogInfo($"MODULE_ID = {ModuleId ?? "NONE"}");
@@ -181,6 +183,7 @@ namespace MindTouch.LambdaSharp {
                 ModuleName,
                 ModuleVersion,
                 DeploymentTier,
+                FunctionName,
                 framework,
                 gitsha,
                 gitBranch: null

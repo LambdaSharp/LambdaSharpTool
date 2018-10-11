@@ -505,7 +505,8 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
             environmentVariables["MODULE_VERSION"] = _module.Version;
             environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"));
-            environmentVariables["LAMBDARUNTIME"] = function.Runtime;
+            environmentVariables["LAMBDA_NAME"] = function.Name;
+            environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
             }
