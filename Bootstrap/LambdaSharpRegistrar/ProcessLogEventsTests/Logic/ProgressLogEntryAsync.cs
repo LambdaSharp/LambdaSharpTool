@@ -80,19 +80,20 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider = new MockDependencyProvider(output);
             _logic = new Logic(_provider);
             _owner = new OwnerMetaData {
-                LogGroupName = "/aws/lambda/MyTestFunction",
+                DeploymentTier = "DeploymentTier",
                 ModuleName = "ModuleName",
                 ModuleVersion = "ModuleVersion",
-                DeploymentTier = "DeploymentTier",
                 ModuleId = "ModuleId",
+                FunctionId = "MyTestFunction",
                 FunctionName = "FunctionName",
-                Platform = "Platform",
-                Framework = "Framework",
-                Language = "Language",
-                GitSha = "GitSha",
-                GitBranch = "GitBranch",
-                MaxDuration = TimeSpan.FromMilliseconds(10000),
-                MaxMemory = 128
+                FunctionLogGroupName = "/aws/lambda/MyTestFunction",
+                FunctionPlatform = "Platform",
+                FunctionFramework = "Framework",
+                FunctionLanguage = "Language",
+                FunctionGitSha = "GitSha",
+                FunctionGitBranch = "GitBranch",
+                FunctionMaxDuration = TimeSpan.FromMilliseconds(10000),
+                FunctionMaxMemory = 128
             };
         }
 
@@ -162,6 +163,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider.ErrorReport.ModuleVersion.Should().Be("ModuleVersion");
             _provider.ErrorReport.DeploymentTier.Should().Be("DeploymentTier");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
+
+            // TODO (2018-10-11, bjorg): Validate FunctionId
+
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");
             _provider.ErrorReport.Platform.Should().Be("Platform");
             _provider.ErrorReport.Framework.Should().Be("Framework");

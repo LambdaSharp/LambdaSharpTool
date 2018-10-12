@@ -118,7 +118,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // convert parameters
             var values = new List<AParameter>();
             values.AddRange(AtLocation("Variables", () => ConvertParameters(module.Variables, ParameterScope.Module), null) ?? new List<AParameter>());
-            values.AddRange(AtLocation("Parameters", () => ConvertParameters(module.Parameters, ParameterScope.Lambda), null) ?? new List<AParameter>());
+            values.AddRange(AtLocation("Parameters", () => ConvertParameters(module.Parameters, ParameterScope.Function), null) ?? new List<AParameter>());
             _module.Parameters = values;
 
             // create functions
@@ -172,30 +172,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Value = "",
                 Parameters = moduleParameters
             });
-
-            // check if we need to register this module
-            if(!_module.Pragmas.Contains("no-module-registration")) {
-                moduleParameters.Add(new CloudFormationResourceParameter {
-                    Scope = ParameterScope.Module,
-                    Name = "Registration",
-                    ResourceName = "ModuleRegistration",
-                    Description = "LambdaSharp module registration",
-                    Resource = new Resource {
-                        Type = "Custom::LambdaSharpModuleRegistration",
-                        ResourceReferences = new List<object>(),
-                        DependsOn = new List<string>(),
-                        Properties = new Dictionary<string, object> {
-                            ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Module::Registration")),
-                            ["Tier"] = FnRef("Tier"),
-                            ["ModuleId"] = FnRef("ModuleId"),
-                            ["ModuleName"] = _module.Name,
-                            ["ModuleVersion"] = _module.Version,
-                            ["StackName"] = FnRef("AWS::StackName"),
-                            ["StackId"] = FnRef("AWS::StackId")
-                        }
-                    }
-                });
-            }
             return _module;
         }
 

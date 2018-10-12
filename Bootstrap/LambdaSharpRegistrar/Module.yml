@@ -1,11 +1,11 @@
+Pragmas:
+  - no-registration
+
 Name: LambdaSharpRegistrar
 
 Description: It watches you...
 
 Version: 0.4
-
-Pragmas:
-  - no-module-registration
 
 Inputs:
 
@@ -17,6 +17,10 @@ Outputs:
 
   - CustomResource: LambdaSharp::Module::Registration
     Description: Custom resources for registering LambdaSharp modules
+    Handler: RegistrationTopic
+
+  - CustomResource: LambdaSharp::Function::Registration
+    Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
 
   - Export: ErrorReportTopic

@@ -87,15 +87,18 @@ namespace MindTouch.LambdaSharp.Tool {
                 Description = _module.Description
             };
 
-            // TODO (2018-09-29, bjorg): module registration
-            //  - module name
-            //  - tier
-            //  - version
-            //  - module id
-            //  - stack name
-            //  - stack id
-            //  - parent stack name
-            //  - parent stack id
+            // add module registration
+            if(_module.HasModuleRegistration) {
+                _stack.Add("ModuleRegistration", new CustomResource("Custom::LambdaSharpModuleRegistration", new Dictionary<string, object> {
+                    ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Module::Registration")),
+                    ["Tier"] = FnRef("Tier"),
+                    ["ModuleId"] = FnRef("ModuleId"),
+                    ["ModuleName"] = _module.Name,
+                    ["ModuleVersion"] = _module.Version,
+                    ["StackName"] = FnRef("AWS::StackName"),
+                    ["StackId"] = FnRef("AWS::StackId")
+                }));
+            }
 
             // create generic resource statement; additional resource statements can be added by resources
             _resourceStatements = new List<Statement> {
@@ -499,16 +502,43 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
+
+            // initialize function environment variables
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
             environmentVariables["MODULE_VERSION"] = _module.Version;
-            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"));
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
+            environmentVariables["DEADLETTERQUEUE"] = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"));
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
+            }
+
+            // create function registration
+            if(_module.HasModuleRegistration) {
+                var registrationName = $"{function.Name}Registration";
+                _stack.Add($"{function.Name}Registration", new CustomResource("Custom::LambdaSharpFunctionRegistration", new Dictionary<string, object> {
+                    ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Function::Registration")),
+                    ["Tier"] = Fn.Ref("Tier"),
+                    ["StackName"] = Fn.Ref("AWS::StackName"),
+                    ["StackId"] = Fn.Ref("AWS::StackId"),
+                    ["ModuleId"] = Fn.Ref("ModuleId"),
+                    ["ModuleName"] = _module.Name,
+                    ["ModuleVersion"] = _module.Version,
+                    ["FunctionId"] = Fn.Ref(function.Name),
+                    ["FunctionName"] = function.Name,
+                    ["FunctionLogGroupName"] = Fn.Sub($"/aws/lambda/${{{function.Name}}}"),
+                    ["FunctionPlatform"] = "AWS Lambda",
+                    ["FunctionFramework"] = function.Runtime,
+                    ["FunctionLanguage"] = "csharp",
+                    ["FunctionGitSha"] = Settings.GitSha ?? "",
+                    ["FunctionGitBranch"] = "",
+                    ["FunctionMaxMemory"] = function.Memory,
+                    ["FunctionMaxDuration"] = function.Timeout
+                }), dependsOn: new[] { "ModuleRegistration" });
+//                environmentVariables["LAMBDA_REGISTRATION"] = Fn.GetAtt(registrationName, "Registration");
             }
 
             // check if function as a VPC configuration
@@ -759,7 +789,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var fullEnvName = envPrefix + parameter.Name.ToUpperInvariant();
             switch(parameter) {
             case SecretParameter secretParameter:
-                if(parameter.Scope == ParameterScope.Lambda) {
+                if(parameter.Scope == ParameterScope.Function) {
                     if(secretParameter.EncryptionContext?.Any() == true) {
                         environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Secret}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
                     } else {
@@ -768,17 +798,17 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case ValueParameter valueParameter:
-                if(parameter.Scope == ParameterScope.Lambda) {
+                if(parameter.Scope == ParameterScope.Function) {
                     environmentRefVariables["STR_" + fullEnvName] = valueParameter.Value;
                 }
                 break;
             case ValueListParameter listParameter:
-                if(parameter.Scope == ParameterScope.Lambda) {
+                if(parameter.Scope == ParameterScope.Function) {
                     environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", listParameter.Values);
                 }
                 break;
             case PackageParameter packageParameter:
-                if(parameter.Scope == ParameterScope.Lambda) {
+                if(parameter.Scope == ParameterScope.Function) {
                     environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.ResourceName, "Result");
                 }
                 _stack.Add(packageParameter.ResourceName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
@@ -791,7 +821,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
                     var resource = referenceResourceParameter.Resource;
-                    if(parameter.Scope == ParameterScope.Lambda) {
+                    if(parameter.Scope == ParameterScope.Function) {
                         environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", resource.ResourceReferences);
                     }
                     object resources;
@@ -836,7 +866,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(resource.Allow?.Any() == true) {
 
                         // only add parameters that the lambda functions are allowed to access
-                        if((parameter.Scope == ParameterScope.Lambda) && (resourceAsParameterFn != null)) {
+                        if((parameter.Scope == ParameterScope.Function) && (resourceAsParameterFn != null)) {
                             environmentRefVariables["STR_" + fullEnvName] = resourceAsParameterFn;
                         }
 

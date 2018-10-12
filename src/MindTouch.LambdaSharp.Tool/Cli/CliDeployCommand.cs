@@ -101,7 +101,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // reset settings when the 'LambdaSharp` module is being deployed
             await PopulateEnvironmentSettingsAsync(settings);
-            if(moduleId != "LambdaSharp") {
+            if(!module.HasPragma("bootstrap")) {
                 if(settings.EnvironmentVersion == null) {
 
                     // check that LambdaSharp Environment & Tool versions match

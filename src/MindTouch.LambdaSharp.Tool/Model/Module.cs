@@ -38,5 +38,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
         public IList<AOutput> Outputs { get; set; }
+        public bool HasModuleRegistration => !HasPragma("no-registration");
+
+        //--- Methods ---
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
      }
 }

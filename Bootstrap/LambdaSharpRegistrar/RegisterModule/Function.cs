@@ -35,11 +35,21 @@ namespace MindTouch.LambdaSharpRegistrar.RegisterModule {
 
         //--- Properties ---
         public string Tier;
+        public string StackName;
+        public string StackId;
         public string ModuleId;
         public string ModuleName;
         public string ModuleVersion;
-        public string StackName;
-        public string StackId;
+        public string FunctionId;
+        public string FunctionName;
+        public string FunctionLogGroupName;
+        public int FunctionMaxMemory;
+        public int FunctionMaxDuration;
+        public string FunctionPlatform { get; set; }
+        public string FunctionFramework { get; set; }
+        public string FunctionLanguage { get; set; }
+        public string FunctionGitSha { get; set; }
+        public string FunctionGitBranch { get; set; }
     }
 
     public class ResponseProperties {
@@ -55,13 +65,35 @@ namespace MindTouch.LambdaSharpRegistrar.RegisterModule {
             => Task.CompletedTask;
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
-            var prop = request.ResourceProperties;
-            if(prop.Tier != DeploymentTier) {
+            var properties = request.ResourceProperties;
 
-                // TODO
+            // validate request
+            if(properties.Tier != DeploymentTier) {
+
+                // TODO (2018-10-11, bjorg): better exception
                 throw new Exception("tier mismatch");
             }
-            LogInfo($"Registering Module: Id={prop.ModuleId}, Name={prop.ModuleName}, Version={prop.ModuleVersion}");
+
+            // determine the kind of registration that is requested
+            switch(request.ResourceType) {
+            case "Custom::LambdaSharpModuleRegistration":
+                LogInfo($"Registering Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                return Respond($"registration:module:{properties.ModuleId}");
+            case "Custom::LambdaSharpFunctionRegistration":
+                LogInfo($"Registering Function: Id={properties.FunctionId}, Name={properties.FunctionName}, LogGroup={properties.FunctionLogGroupName}");
+                return Respond($"registration:function:{properties.FunctionId}");
+            default:
+
+                // TODO (2018-10-11, bjorg): better exception
+                throw new Exception($"bad resource type: {request.ResourceType}");
+            }
+        }
+
+        protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
+            return new Response<ResponseProperties>();
+        }
+
+        protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
             var registration = $"registration:{request.ResourceProperties.ModuleId}";
             return new Response<ResponseProperties> {
                 PhysicalResourceId = registration,
@@ -71,12 +103,7 @@ namespace MindTouch.LambdaSharpRegistrar.RegisterModule {
             };
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
-            return new Response<ResponseProperties>();
-        }
-
-        protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
-            var registration = $"registration:{request.ResourceProperties.ModuleId}";
+        private Response<ResponseProperties> Respond(string registration) {
             return new Response<ResponseProperties> {
                 PhysicalResourceId = registration,
                 Properties = new ResponseProperties {

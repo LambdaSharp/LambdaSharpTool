@@ -1,3 +1,7 @@
+Pragmas:
+  - bootstrap
+  - no-registration
+
 Name: LambdaSharp
 
 Version: 0.4

@@ -53,19 +53,20 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
     public class OwnerMetaData {
 
         //--- Properties ---
-        public string LogGroupName { get; set; }
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
         public string DeploymentTier { get; set; }
         public string ModuleId { get; set; }
+        public string ModuleName { get; set; }
+        public string ModuleVersion { get; set; }
+        public string FunctionId { get; set; }
         public string FunctionName { get; set; }
-        public string Platform { get; set; }
-        public string Framework { get; set; }
-        public string Language { get; set; }
-        public string GitSha { get; set; }
-        public string GitBranch { get; set; }
-        public int MaxMemory { get; set; }
-        public TimeSpan MaxDuration { get; set; }
+        public string FunctionLogGroupName { get; set; }
+        public string FunctionPlatform { get; set; }
+        public string FunctionFramework { get; set; }
+        public string FunctionLanguage { get; set; }
+        public string FunctionGitSha { get; set; }
+        public string FunctionGitBranch { get; set; }
+        public int FunctionMaxMemory { get; set; }
+        public TimeSpan FunctionMaxDuration { get; set; }
     }
 
     public class Logic {
@@ -157,11 +158,11 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             return _provider.SendUsageReportAsync(new UsageReport {
                 BilledDuration = billedDuration,
                 UsedDuration = usedDuration,
-                UsedDurationPercent = (float)usedDuration.TotalMilliseconds / (float)owner.MaxDuration.TotalMilliseconds,
-                MaxDuration = owner.MaxDuration,
+                UsedDurationPercent = (float)usedDuration.TotalMilliseconds / (float)owner.FunctionMaxDuration.TotalMilliseconds,
+                MaxDuration = owner.FunctionMaxDuration,
                 MaxMemory = maxMemory,
                 UsedMemory = usedMemory,
-                UsedMemoryPercent = (float)usedMemory / (float)owner.MaxMemory
+                UsedMemoryPercent = (float)usedMemory / (float)owner.FunctionMaxMemory
             });
         }
 
@@ -180,11 +181,11 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 DeploymentTier = owner.DeploymentTier,
                 ModuleId = owner.ModuleId,
                 FunctionName = owner.FunctionName,
-                Platform = owner.Platform,
-                Framework = owner.Framework,
-                Language = owner.Language,
-                GitSha = owner.GitSha,
-                GitBranch = owner.GitBranch
+                Platform = owner.FunctionPlatform,
+                Framework = owner.FunctionFramework,
+                Language = owner.FunctionLanguage,
+                GitSha = owner.FunctionGitSha,
+                GitBranch = owner.FunctionGitBranch
             };
             preparer(report);
             return _provider.SendErrorReportAsync(report);

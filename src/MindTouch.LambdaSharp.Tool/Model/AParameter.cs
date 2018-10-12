@@ -27,7 +27,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public enum ParameterScope {
         Undefined,
         Module,
-        Lambda
+        Function
     }
 
     public abstract class AParameter {

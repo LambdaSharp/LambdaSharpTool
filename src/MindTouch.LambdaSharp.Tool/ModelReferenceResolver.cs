@@ -79,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve references in resource properties
             AtLocation("Parameters", () => {
                 foreach(var parameter in module.Parameters
-                    .Where(p => p.Scope == ParameterScope.Lambda)
+                    .Where(p => p.Scope == ParameterScope.Function)
                     .OfType<AResourceParameter>()
                     .Where(p => p.Resource?.Properties != null)
                 ) {
