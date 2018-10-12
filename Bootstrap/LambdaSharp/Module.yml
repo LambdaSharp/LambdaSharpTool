@@ -1,5 +1,5 @@
 Pragmas:
-  - bootstrap
+  - no-environment-check
   - no-registration
 
 Name: LambdaSharp
