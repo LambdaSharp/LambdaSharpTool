@@ -11,5 +11,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProcessLogEvents\ProcessLogEvents.csproj"/>
+    <ProjectReference Include="..\Registrations\Registrations.csproj"/>
   </ItemGroup>
 </Project>

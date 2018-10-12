@@ -3,7 +3,7 @@ Pragmas:
 
 Name: LambdaSharpRegistrar
 
-Description: It watches you...
+Description: LambdaSharp Modules and Functions Registrar
 
 Version: 0.4
 
@@ -57,6 +57,22 @@ Parameters:
       Type: AWS::SNS::Topic
       Allow: Publish
 
+  - Name: RegistrationTable
+    Description: DynamoDb table for storing function registrations
+    Resource:
+      Type: AWS::DynamoDB::Table
+      Allow: ReadWrite
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: Id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: Id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+
 Functions:
 
   - Name: ProcessLogEvents
@@ -66,8 +82,8 @@ Functions:
     Sources:
       - Kinesis: LoggingStreamReference
 
-  - Name: RegisterModule
-    Description: Register LambdaSharp modules
+  - Name: Register
+    Description: Register LambdaSharp modules and functions
     Memory: 128
     Timeout: 30
     Sources:

@@ -87,7 +87,7 @@ namespace MindTouch.LambdaSharp.Reports {
         private readonly string _moduleId;
         private readonly string _moduleName;
         private readonly string _moduleVersion;
-        private readonly string _deploymentTier;
+        private readonly string _tier;
         private readonly string _functionId;
         private readonly string _functionName;
         private readonly string _framework;
@@ -100,7 +100,7 @@ namespace MindTouch.LambdaSharp.Reports {
             string moduleId,
             string moduleName,
             string moduleVersion,
-            string deploymentTier,
+            string tier,
             string functionId,
             string functionName,
             string framework,
@@ -110,7 +110,7 @@ namespace MindTouch.LambdaSharp.Reports {
             _moduleId = moduleId ?? throw new ArgumentNullException(nameof(moduleId));
             _moduleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
             _moduleVersion = moduleVersion;
-            _deploymentTier = deploymentTier ?? throw new ArgumentNullException(nameof(deploymentTier));
+            _tier = tier ?? throw new ArgumentNullException(nameof(tier));
             _platform = $"AWS Lambda ({System.Environment.OSVersion})";
             _functionId = functionId ?? throw new ArgumentNullException(nameof(functionName));
             _functionName = functionName ?? throw new ArgumentNullException(nameof(functionName));
@@ -139,7 +139,7 @@ namespace MindTouch.LambdaSharp.Reports {
                 ModuleId = _moduleId,
                 ModuleName = _moduleName,
                 ModuleVersion = _moduleVersion,
-                DeploymentTier = _deploymentTier,
+                Tier = _tier,
                 RequestId = requestId,
                 Level = level,
                 Fingerprint = fingerprint,

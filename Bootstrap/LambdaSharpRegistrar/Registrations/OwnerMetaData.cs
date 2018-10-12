@@ -20,39 +20,24 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
 
-namespace MindTouch.LambdaSharp.Reports {
-
-    public class ErrorReport {
+namespace MindTouch.LambdaSharpRegistrar {
+    public class OwnerMetaData {
 
         //--- Properties ---
-
-        // Report
-        public string Source { get; set; } = "LambdaError";
-        public string Version { get; set; } = "2018-09-27";
-
-        // Origin
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
         public string Tier { get; set; }
         public string ModuleId { get; set; }
+        public string ModuleName { get; set; }
+        public string ModuleVersion { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
-        public string Platform { get; set; }
-        public string Framework { get; set; }
-        public string Language { get; set; }
-        public string GitSha { get; set; }
-        public string GitBranch { get; set; }
-
-        // Occurrence
-        public string RequestId { get; set; }
-        public string Level { get; set; }
-        public string Fingerprint { get; set; }
-        public long Timestamp { get; set; }
-        public string Message { get; set; }
-        public IEnumerable<ErrorReportStackTrace> Traces { get; set; }
+        public string FunctionLogGroupName { get; set; }
+        public string FunctionPlatform { get; set; }
+        public string FunctionFramework { get; set; }
+        public string FunctionLanguage { get; set; }
+        public string FunctionGitSha { get; set; }
+        public string FunctionGitBranch { get; set; }
+        public int FunctionMaxMemory { get; set; }
+        public TimeSpan FunctionMaxDuration { get; set; }
     }
 }

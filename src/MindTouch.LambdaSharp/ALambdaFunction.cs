@@ -104,6 +104,7 @@ namespace MindTouch.LambdaSharp {
         protected string ModuleId { get; private set; }
         protected string ModuleVersion { get; private set; }
         protected string DeploymentTier { get; private set; }
+        protected string FunctionId { get; private set; }
         protected string FunctionName { get; private set; }
         private string _requestId;
 
@@ -162,12 +163,15 @@ namespace MindTouch.LambdaSharp {
             ModuleId = envSource.Read("MODULE_ID");
             ModuleVersion = envSource.Read("MODULE_VERSION");
             _deadLetterQueueUrl = ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
+            FunctionId = context.InvokedFunctionArn.Split(':')[5];
             FunctionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
             LogInfo($"TIER = {DeploymentTier}");
             LogInfo($"MODULE = {ModuleName}");
-            LogInfo($"MODULE_ID = {ModuleId ?? "NONE"}");
-            LogInfo($"MODULE_VERSION = {ModuleVersion ?? "NONE"}");
+            LogInfo($"MODULE_ID = {ModuleId}");
+            LogInfo($"MODULE_VERSION = {ModuleVersion}");
+            LogInfo($"FUNCTION = {FunctionName}");
+            LogInfo($"FUNCTION_ID = {FunctionId}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
 
             // read optional git-sha file
@@ -183,7 +187,7 @@ namespace MindTouch.LambdaSharp {
                 ModuleName,
                 ModuleVersion,
                 DeploymentTier,
-                context.InvokedFunctionArn.Split(':')[5],
+                FunctionId,
                 FunctionName,
                 framework,
                 gitsha,
@@ -267,7 +271,6 @@ namespace MindTouch.LambdaSharp {
 
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
             string message = ErrorReporter.FormatMessage(format, args);
-            Log(level, $"{message}", exception?.ToString());
             if(level >= LambdaLogLevel.WARNING) {
                 if(_reporter != null) {
                     try {
@@ -280,6 +283,8 @@ namespace MindTouch.LambdaSharp {
                 } else {
                     LambdaLogger.Log($"EXCEPTION: {exception}");
                 }
+            } else {
+                Log(level, $"{message}", exception?.ToString());
             }
         }
         #endregion

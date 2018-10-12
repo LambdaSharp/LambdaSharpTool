@@ -22,6 +22,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
@@ -38,118 +40,114 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         void WriteLine(string message);
     }
 
-    public class UsageReport {
-
-        //--- Properties ---
-        public TimeSpan BilledDuration { get; set; }
-        public TimeSpan UsedDuration { get; set; }
-        public float UsedDurationPercent { get; set; }
-        public TimeSpan MaxDuration { get; set; }
-        public int MaxMemory { get; set; }
-        public int UsedMemory { get; set; }
-        public float UsedMemoryPercent { get; set; }
-    }
-
-    public class OwnerMetaData {
-
-        //--- Properties ---
-        public string DeploymentTier { get; set; }
-        public string ModuleId { get; set; }
-        public string ModuleName { get; set; }
-        public string ModuleVersion { get; set; }
-        public string FunctionId { get; set; }
-        public string FunctionName { get; set; }
-        public string FunctionLogGroupName { get; set; }
-        public string FunctionPlatform { get; set; }
-        public string FunctionFramework { get; set; }
-        public string FunctionLanguage { get; set; }
-        public string FunctionGitSha { get; set; }
-        public string FunctionGitBranch { get; set; }
-        public int FunctionMaxMemory { get; set; }
-        public TimeSpan FunctionMaxDuration { get; set; }
-    }
-
     public class Logic {
 
         //--- Types ---
-        private delegate Task MatchHandlerAsync(OwnerMetaData owner, Match match, string timestamp);
+        private delegate Task MatchHandlerAsync(OwnerMetaData owner, ErrorReport report, Match match);
 
         //--- Class Methods ---
-        private static (Regex Regex, MatchHandlerAsync HandlerAsync) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
-            => (Regex: new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled), HandlerAsync: handler);
+        private static (Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
+            => (
+                Regex: new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.Multiline),
+                HandlerAsync: handler,
+                Fingerprint: ToMD5Hash(pattern)
+            );
+
+        public static string ToMD5Hash(string text) {
+            using(var md5 = MD5.Create()) {
+                return ToHexString(md5.ComputeHash(Encoding.UTF8.GetBytes(text)));
+            }
+        }
+
+        public static string ToHexString(IEnumerable<byte> bytes)
+            => string.Concat(bytes.Select(x => x.ToString("X2")));
 
         //--- Fields ---
         private ILogicDependencyProvider _provider;
-        private IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync)> _mappings;
+        private IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint)> _mappings;
 
         //--- Constructors ---
         public Logic(ILogicDependencyProvider provider) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync)[] {
+            _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint)[] {
+                CreateMatchPattern(@"^START RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
+                CreateMatchPattern(@"^END RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
+                CreateMatchPattern(@"^REPORT RequestId: (?<RequestId>[\da-f\-]+)\s*Duration: (?<UsedDuration>[\d\.]+) ms\s*Billed Duration: (?<BilledDuration>[\d\.]+) ms\s*Memory Size: (?<MaxMemory>[\d\.]+) MB\s*Max Memory Used: (?<UsedMemory>[\d\.]+) MB\s*$", MatchExecutionReportAsync),
+                CreateMatchPattern(@"^\s*{.*}\s*$", MatchLambdaSharpJsonLogEntryAsync),
                 CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): LambdaException$", MatchLambdaExceptionAsync),
                 CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+) (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Task timed out after (?<Duration>[\d\.]+) seconds)$", MatchTimeoutAsync),
-                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchProcessExitedBeforeCompletionAsync),
-                CreateMatchPattern(@"^REPORT RequestId: (?<RequestId>[\da-f\-]+)\s*Duration: (?<UsedDuration>[\d\.]+) ms\s*Billed Duration: (?<BilledDuration>[\d\.]+) ms\s*Memory Size: (?<MaxMemory>[\d\.]+) MB\s*Max Memory Used: (?<UsedMemory>[\d\.]+) MB\s*$", MatchExecutionReportAsync)
+                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchProcessExitedBeforeCompletionAsync)
             };
         }
 
         //--- Methods ---
-        public Task ProgressLogEntryAsync(OwnerMetaData owner, string message, string timestamp) {
-            if(message.StartsWith("{") && message.EndsWith("}")) {
-                var report = _provider.DeserializeErrorReport(message);
-                if((report.Version == "2018-09-27") && (report.Source == "LambdaError")) {
-                    return _provider.SendErrorReportAsync(report);
+        public async Task<bool> ProgressLogEntryAsync(OwnerMetaData owner, string message, string timestamp) {
+            foreach(var mapping in _mappings) {
+                var match = mapping.Regex.Match(message);
+                if(match.Success) {
+
+                    // fill-in error report with owner information
+                    var report = new ErrorReport {
+                        ModuleName = owner.ModuleName,
+                        ModuleVersion = owner.ModuleVersion,
+                        Tier = owner.Tier,
+                        ModuleId = owner.ModuleId,
+                        FunctionId = owner.FunctionId,
+                        FunctionName = owner.FunctionName,
+                        Platform = owner.FunctionPlatform,
+                        Framework = owner.FunctionFramework,
+                        Language = owner.FunctionLanguage,
+                        GitSha = owner.FunctionGitSha,
+                        GitBranch = owner.FunctionGitBranch,
+                        Level = "ERROR",
+                        Timestamp = long.Parse(timestamp),
+                        Fingerprint = mapping.Fingerprint
+                    };
+
+                    // have handler fill in the rest from the matched error line
+                    await mapping.HandlerAsync(owner, report, match);
+                    return true;
                 }
+            }
+            return false;
+        }
+
+        private Task IgnoreEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+
+            // nothing to do
+            return Task.CompletedTask;
+        }
+
+        private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report = _provider.DeserializeErrorReport(match.ToString());
+            if((report.Version == "2018-09-27") && (report.Source == "LambdaError")) {
+                await _provider.SendErrorReportAsync(report);
+            } else {
 
                 // TODO: bad json document
                 throw new Exception("bad json document");
             }
-            foreach(var mapping in _mappings) {
-                var match = mapping.Regex.Match(message);
-                if(match.Success) {
-                    return mapping.HandlerAsync(owner, match, timestamp);
-                }
-            }
-            return Task.CompletedTask;
         }
 
-        private Task MatchLambdaExceptionAsync(OwnerMetaData owner, Match match, string timestamp) {
-            _provider.WriteLine($"*** MatchLambdaExceptionAsync: {match}");
-            PrintMatch(match);
-
-            return SendErrorReport(owner, report => {
-                report.Message = match.Groups["ErrorMessage"].Value;
-                report.RequestId = match.Groups["RequestId"].Value;
-                report.Timestamp = long.Parse(timestamp);
-            });
+        private Task MatchLambdaExceptionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report.Message = match.Groups["ErrorMessage"].Value;
+            report.RequestId = match.Groups["RequestId"].Value;
+            return _provider.SendErrorReportAsync(report);
         }
 
-        private Task MatchTimeoutAsync(OwnerMetaData owner, Match match, string timestamp) {
-            _provider.WriteLine($"*** MatchTimeOutAsync: {match}");
-            PrintMatch(match);
-
-            return SendErrorReport(owner, report => {
-                report.Message = match.Groups["ErrorMessage"].Value;
-                report.RequestId = match.Groups["RequestId"].Value;
-                report.Timestamp = long.Parse(timestamp);
-            });
+        private Task MatchTimeoutAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report.Message = match.Groups["ErrorMessage"].Value;
+            report.RequestId = match.Groups["RequestId"].Value;
+            return _provider.SendErrorReportAsync(report);
         }
 
-        private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, Match match, string timestamp) {
-            _provider.WriteLine($"*** MatchProcessExitedAsync: {match}");
-            PrintMatch(match);
-
-            return SendErrorReport(owner, report => {
-                report.Message = match.Groups["ErrorMessage"].Value;
-                report.RequestId = match.Groups["RequestId"].Value;
-                report.Timestamp = long.Parse(timestamp);
-            });
+        private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report.Message = match.Groups["ErrorMessage"].Value;
+            report.RequestId = match.Groups["RequestId"].Value;
+            return _provider.SendErrorReportAsync(report);
         }
 
-        private Task MatchExecutionReportAsync(OwnerMetaData owner, Match match, string timestamp) {
-            _provider.WriteLine($"*** MatchExecutionReportAsync: {match}");
-            PrintMatch(match);
-
+        private Task MatchExecutionReportAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             var requestId = match.Groups["RequestId"].Value;
             var usedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["UsedDuration"].Value));
             var billedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["BilledDuration"].Value));
@@ -166,19 +164,11 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             });
         }
 
-        private void PrintMatch(Match match) {
-            var index = 0;
-            foreach(Group group in match.Groups.Skip(1)) {
-                _provider.WriteLine($"{group.Name} = {group.Value}");
-                ++index;
-            }
-        }
-
         private Task SendErrorReport(OwnerMetaData owner, Action<ErrorReport> preparer) {
             var report = new ErrorReport {
                 ModuleName = owner.ModuleName,
                 ModuleVersion = owner.ModuleVersion,
-                DeploymentTier = owner.DeploymentTier,
+                Tier = owner.Tier,
                 ModuleId = owner.ModuleId,
                 FunctionId = owner.FunctionId,
                 FunctionName = owner.FunctionName,

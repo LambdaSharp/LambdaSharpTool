@@ -11,10 +11,12 @@
     <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0"/>
     <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="1.0.1"/>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.14.5"/>
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.1.14"/>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
+    <ProjectReference Include="..\Registrations\Registrations.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>
