@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
                 ModuleName = "ModuleName",
                 ModuleVersion = "ModuleVersion",
                 ModuleId = "ModuleId",
-                FunctionId = "MyTestFunction",
+                FunctionId = "StackName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
                 FunctionLogGroupName = "/aws/lambda/MyTestFunction",
                 FunctionPlatform = "Platform",
@@ -163,9 +163,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider.ErrorReport.ModuleVersion.Should().Be("ModuleVersion");
             _provider.ErrorReport.DeploymentTier.Should().Be("DeploymentTier");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
-
-            // TODO (2018-10-11, bjorg): Validate FunctionId
-
+            _provider.ErrorReport.FunctionId.Should().Be("StackName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");
             _provider.ErrorReport.Platform.Should().Be("Platform");
             _provider.ErrorReport.Framework.Should().Be("Framework");

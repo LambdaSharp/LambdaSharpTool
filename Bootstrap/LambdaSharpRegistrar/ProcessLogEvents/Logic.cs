@@ -180,6 +180,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 ModuleVersion = owner.ModuleVersion,
                 DeploymentTier = owner.DeploymentTier,
                 ModuleId = owner.ModuleId,
+                FunctionId = owner.FunctionId,
                 FunctionName = owner.FunctionName,
                 Platform = owner.FunctionPlatform,
                 Framework = owner.FunctionFramework,

@@ -183,6 +183,7 @@ namespace MindTouch.LambdaSharp {
                 ModuleName,
                 ModuleVersion,
                 DeploymentTier,
+                context.InvokedFunctionArn.Split(':')[5],
                 FunctionName,
                 framework,
                 gitsha,

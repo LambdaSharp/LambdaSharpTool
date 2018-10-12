@@ -88,6 +88,7 @@ namespace MindTouch.LambdaSharp.Reports {
         private readonly string _moduleName;
         private readonly string _moduleVersion;
         private readonly string _deploymentTier;
+        private readonly string _functionId;
         private readonly string _functionName;
         private readonly string _framework;
         private readonly string _gitSha;
@@ -100,6 +101,7 @@ namespace MindTouch.LambdaSharp.Reports {
             string moduleName,
             string moduleVersion,
             string deploymentTier,
+            string functionId,
             string functionName,
             string framework,
             string gitSha,
@@ -110,6 +112,7 @@ namespace MindTouch.LambdaSharp.Reports {
             _moduleVersion = moduleVersion;
             _deploymentTier = deploymentTier ?? throw new ArgumentNullException(nameof(deploymentTier));
             _platform = $"AWS Lambda ({System.Environment.OSVersion})";
+            _functionId = functionId ?? throw new ArgumentNullException(nameof(functionName));
             _functionName = functionName ?? throw new ArgumentNullException(nameof(functionName));
             _framework = framework;
             _gitSha = gitSha;
@@ -144,6 +147,7 @@ namespace MindTouch.LambdaSharp.Reports {
                 Message = message,
                 Traces = traces,
                 Platform = _platform,
+                FunctionId = _functionId,
                 FunctionName = _functionName,
                 Framework = _framework,
                 Language = LANGUAGE,
