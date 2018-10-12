@@ -1,0 +1,32 @@
+Name: BadModule
+
+Version: 1.0
+
+Description: Module for generating errors
+
+Functions:
+
+  - Name: FailBadEntryPoint
+    Description: TODO - update FailBadEntryPoint description
+    Memory: 128
+    Timeout: 30
+
+  - Name: FailError
+    Description: Throws an exception
+    Memory: 128
+    Timeout: 15
+
+  - Name: FailTimeout
+    Description: Times out
+    Memory: 128
+    Timeout: 15
+
+  - Name: FailOutOfMemory
+    Description: Runs out of memory
+    Memory: 128
+    Timeout: 15
+
+  - Name: FailConstructor
+    Description: Throws an exception in the constructor
+    Memory: 128
+    Timeout: 15
