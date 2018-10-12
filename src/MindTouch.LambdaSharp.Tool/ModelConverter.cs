@@ -481,7 +481,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
-                    Environment = function.Environment ?? new Dictionary<string, object>()
+                    Environment = function.Environment ?? new Dictionary<string, object>(),
+                    Pragmas = function.Pragmas
                 };
             }, null);
         }

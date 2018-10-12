@@ -36,8 +36,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Timeout { get; set; }
         public string ReservedConcurrency { get; set; }
         public FunctionVpc VPC;
-        public Dictionary<string, object> Environment { get; set; }
+        public IDictionary<string, object> Environment { get; set; }
         public string PackagePath { get; set; }
+        public IList<string> Pragmas { get; set; }
+        public bool HasFunctionRegistration => !HasPragma("no-registration");
+
+        //--- Methods ---
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
    }
 
    public class FunctionVpc {

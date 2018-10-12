@@ -83,10 +83,10 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
             case "Custom::LambdaSharpModuleRegistration": {
-                    LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    LogInfo($"Adding Module: Id={properties.StackName}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = CreateOwnerMetaData(properties);
-                    await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
-                    return Respond($"registration:module:{properties.ModuleId}");
+                    await _registrations.PutOwnerMetaDataAsync($"M:{owner.StackName}", owner);
+                    return Respond($"registration:module:{properties.StackName}");
                 }
             case "Custom::LambdaSharpFunctionRegistration": {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
@@ -105,8 +105,8 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             var properties = request.ResourceProperties;
             switch(request.ResourceType) {
             case "Custom::LambdaSharpModuleRegistration": {
-                    LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
-                    await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    LogInfo($"Removing Module: Id={properties.StackName}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.StackName}");
                     break;
                 }
             case "Custom::LambdaSharpFunctionRegistration": {
@@ -139,6 +139,8 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                 ModuleId = properties.ModuleId,
                 ModuleName = properties.ModuleName,
                 ModuleVersion = properties.ModuleVersion,
+                StackName = properties.StackName,
+                StackId = properties.StackId,
                 FunctionId = properties.FunctionId,
                 FunctionName = properties.FunctionName,
                 FunctionLogGroupName = properties.FunctionLogGroupName,

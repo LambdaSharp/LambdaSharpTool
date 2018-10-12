@@ -79,6 +79,8 @@ Functions:
     Description: Process log events from all LambdaSharp module functions
     Memory: 128
     Timeout: 30
+    Pragmas:
+        - no-registration
     Sources:
       - Kinesis: LoggingStreamReference
 

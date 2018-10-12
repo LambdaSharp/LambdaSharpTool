@@ -46,6 +46,8 @@ namespace MindTouch.LambdaSharpRegistrar {
                 ModuleId = TryGetAsString("ModuleId"),
                 ModuleName = TryGetAsString("ModuleName"),
                 ModuleVersion = TryGetAsString("ModuleVersion"),
+                StackName = TryGetAsString("StackName"),
+                StackId = TryGetAsString("StackId"),
                 FunctionId = TryGetAsString("FunctionId"),
                 FunctionName = TryGetAsString("FunctionName"),
                 FunctionLogGroupName = TryGetAsString("FunctionLogGroupName"),
@@ -76,6 +78,8 @@ namespace MindTouch.LambdaSharpRegistrar {
                 ["ModuleId"] = owner.ModuleId,
                 ["ModuleName"] = owner.ModuleName,
                 ["ModuleVersion"] = owner.ModuleVersion,
+                ["StackName"] = owner.StackName,
+                ["StackId"] = owner.StackId,
             };
             if(owner.FunctionId != null) {
                 document["FunctionId"] = owner.FunctionId;

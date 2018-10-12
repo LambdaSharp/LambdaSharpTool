@@ -517,7 +517,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // create function registration
-            if(_module.HasModuleRegistration) {
+            if(_module.HasModuleRegistration && function.HasFunctionRegistration) {
                 var registrationName = $"{function.Name}Registration";
                 _stack.Add($"{function.Name}Registration", new CustomResource("Custom::LambdaSharpFunctionRegistration", new Dictionary<string, object> {
                     ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Function::Registration")),
@@ -582,12 +582,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
                 RetentionInDays = 7
             });
-            _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
-                DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn")),
-                FilterPattern = "-\"*** \"",
-                LogGroupName = Fn.Ref(functionLogGroup),
-                RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
-            });
+            if(function.HasFunctionRegistration) {
+                _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
+                    DestinationArn = Fn.ImportValue(Fn.Sub("${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn")),
+                    FilterPattern = "-\"*** \"",
+                    LogGroupName = Fn.Ref(functionLogGroup),
+                    RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
+                });
+            }
 
             // check if function has any SNS topic event sources
             var topicSources = function.Sources.OfType<TopicSource>();

@@ -220,6 +220,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     function.Environment = function.Environment ?? new Dictionary<string, object>();
                     function.VPC = function.VPC ?? new Dictionary<string, object>();
                     ValidateFunctionSource(function.Sources);
+                    if(function.Pragmas == null) {
+                        function.Pragmas = new List<string>();
+                    }
                 });
             }
         }

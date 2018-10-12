@@ -29,6 +29,8 @@ namespace MindTouch.LambdaSharpRegistrar {
         public string ModuleId { get; set; }
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
+        public string StackName { get; set; }
+        public string StackId { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }
         public string FunctionLogGroupName { get; set; }
