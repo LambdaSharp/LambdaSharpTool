@@ -80,7 +80,6 @@ namespace MindTouch.LambdaSharp {
         private readonly IAmazonKeyManagementService _kmsClient;
         private readonly IAmazonSQS _sqsClient;
         private readonly ILambdaConfigSource _envSource;
-        private ErrorReporter _reporter;
         private string _deadLetterQueueUrl;
         private bool _initialized;
         private LambdaConfig _appConfig;
@@ -106,7 +105,8 @@ namespace MindTouch.LambdaSharp {
         protected string DeploymentTier { get; private set; }
         protected string FunctionId { get; private set; }
         protected string FunctionName { get; private set; }
-        private string _requestId;
+        protected string RequestId { get; private set; }
+        protected ErrorReporter ErrorReporter { get; private set; }
 
         //--- Abstract Methods ---
         public abstract Task InitializeAsync(LambdaConfig config);
@@ -115,7 +115,7 @@ namespace MindTouch.LambdaSharp {
         //--- Methods ---
         public async Task<object> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
             try {
-                _requestId = context.AwsRequestId;
+                RequestId = context.AwsRequestId;
 
                 // function startup
                 Stopwatch.Restart();
@@ -182,7 +182,7 @@ namespace MindTouch.LambdaSharp {
             _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
 
             // initialize error/warning reporter
-            _reporter = new ErrorReporter(
+            ErrorReporter = new ErrorReporter(
                 ModuleId,
                 ModuleName,
                 ModuleVersion,
@@ -272,9 +272,9 @@ namespace MindTouch.LambdaSharp {
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
             string message = ErrorReporter.FormatMessage(format, args);
             if(level >= LambdaLogLevel.WARNING) {
-                if(_reporter != null) {
+                if(ErrorReporter != null) {
                     try {
-                        var report = _reporter.CreateReport(_requestId, level.ToString(), exception, format, args);
+                        var report = ErrorReporter.CreateReport(RequestId, level.ToString(), exception, format, args);
                         LambdaLogger.Log(SerializeJson(report) + "\n");
                     } catch(Exception e) {
                         LambdaLogger.Log($"EXCEPTION: {e}");

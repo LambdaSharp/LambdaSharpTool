@@ -78,59 +78,69 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             _errorTopicArn = config.ReadText("ErrorReportTopic");
             _usageTopicArn = config.ReadText("UsageReportTopic");
             var tableName = config.ReadText("RegistrationTable");
-            _registrations = new RegistrationTable(new AmazonDynamoDBClient(), tableName);
+            var dynamoClient = new AmazonDynamoDBClient();
+            _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
         }
 
         public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis, ILambdaContext context) {
-            foreach(var record in kinesis.Records) {
-                LogEventsMessage events;
-                using(var stream = new MemoryStream()) {
-                    using(var gzip = new GZipStream(record.Kinesis.Data, CompressionMode.Decompress)) {
-                        gzip.CopyTo(stream);
-                        stream.Position = 0;
+
+            // NOTE: this function is responsible for error logs parsing; therefore, it CANNOT error out itself;
+            //  instead, it must rely on aggressive exception handling and redirect those message where appropriate.
+
+            try {
+                foreach(var record in kinesis.Records) {
+                    try {
+                        LogEventsMessage message;
+                        using(var stream = new MemoryStream()) {
+                            using(var gzip = new GZipStream(record.Kinesis.Data, CompressionMode.Decompress)) {
+                                gzip.CopyTo(stream);
+                                stream.Position = 0;
+                            }
+                            message = DeserializeJson<LogEventsMessage>(stream);
+                        }
+
+                        // skip events from own module
+                        if(message.LogGroup.Contains(FunctionName)) {
+                            LogInfo("skipping event from own event log");
+                            continue;
+                        }
+
+                        // skip control messages
+                        if(message.MessageType == "CONTROL_MESSAGE") {
+                            LogInfo("skipping control message");
+                            continue;
+                        }
+                        if(message.MessageType != "DATA_MESSAGE") {
+                            LogWarn("unknown message type: {0}", message.MessageType);
+                            continue;
+                        }
+                        if(!message.LogGroup.StartsWith(LOG_GROUP_PREFIX, StringComparison.Ordinal)) {
+                            LogWarn("unexpected log group: {0}", message.LogGroup);
+                            continue;
+                        }
+
+                        // process messages
+                        var functionId = message.LogGroup.Substring(LOG_GROUP_PREFIX.Length);
+                        LogInfo($"getting owner for function: {functionId}" );
+                        var owner = await GetOwnerMetaDataAsync($"F:{functionId}");
+                        if(owner != null) {
+                            foreach(var entry in message.LogEvents) {
+                                if(!await _logic.ProgressLogEntryAsync(owner, entry.Message, entry.Timestamp)) {
+                                    LogWarn("Unable to parse message: {0}", entry.Message);
+                                }
+                            }
+                        } else {
+                            LogWarn("unable to retrieve registration for: {0}", message.LogGroup);
+                        }
+                    } catch(Exception e) {
+                        await SendErrorExceptionAsync(e);
                     }
-                    events = DeserializeJson<LogEventsMessage>(stream);
                 }
-                await HandleLogEventMessage(events);
-            }
-            return "Ok";
-        }
-
-        private async Task HandleLogEventMessage(LogEventsMessage message) {
-
-            // skip events from own module
-            if(message.LogGroup.Contains(FunctionName)) {
-                LogInfo("skipping event from own event log");
-                return;
-            }
-
-            // skip control messages
-            if(message.MessageType == "CONTROL_MESSAGE") {
-                LogInfo("skipping control message");
-                return;
-            }
-            if(message.MessageType != "DATA_MESSAGE") {
-                LogWarn("unknown message type: {0}", message.MessageType);
-                return;
-            }
-            if(!message.LogGroup.StartsWith(LOG_GROUP_PREFIX, StringComparison.Ordinal)) {
-                LogWarn("unexpected log group: {0}", message.LogGroup);
-                return;
-            }
-
-            // process messages
-            var functionId = message.LogGroup.Substring(LOG_GROUP_PREFIX.Length);
-            LogInfo($"getting owner for function: {functionId}" );
-            var owner = await GetOwnerMetaDataAsync($"F:{functionId}");
-            if(owner != null) {
-                foreach(var entry in message.LogEvents) {
-                    if(!await _logic.ProgressLogEntryAsync(owner, entry.Message, entry.Timestamp)) {
-                        LogWarn("Unable to parse message: {0}", entry.Message);
-                    }
-                }
-            } else {
-                LogWarn("unable to retrieve registration for: {0}", message.LogGroup);
+                return "Ok";
+            } catch(Exception e) {
+                await SendErrorExceptionAsync(e);
+                return $"Error: {e.Message}";
             }
         }
 
@@ -145,12 +155,31 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             return result;
         }
 
+        private async Task SendErrorExceptionAsync(Exception exception, string format = null, params object[] args) {
+            try {
+                var report = ErrorReporter.CreateReport(RequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
+                await PublishErrorReportAsync(report);
+            } catch(Exception) {
+
+                // log the error; it's the best we can do
+                LogError(exception, format, args);
+            }
+        }
+
+        private async Task PublishErrorReportAsync(ErrorReport report) {
+            try {
+                await _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report));
+            } catch(Exception) {
+                LambdaLogger.Log(SerializeJson(report) + "\n");
+            }
+        }
+
         //--- ILogicDependencyProvider Members ---
         ErrorReport ILogicDependencyProvider.DeserializeErrorReport(string jsonReport)
             => DeserializeJson<ErrorReport>(jsonReport);
 
-        async Task ILogicDependencyProvider.SendErrorReportAsync(ErrorReport report)
-            => await _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report));
+        Task ILogicDependencyProvider.SendErrorReportAsync(ErrorReport report)
+            => PublishErrorReportAsync(report);
 
         async Task ILogicDependencyProvider.SendUsageReportAsync(UsageReport report)
             => await _snsClient.PublishAsync(_usageTopicArn, SerializeJson(report));
