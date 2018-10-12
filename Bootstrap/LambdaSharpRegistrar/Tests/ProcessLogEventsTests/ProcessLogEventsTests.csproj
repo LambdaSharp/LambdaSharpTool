@@ -10,7 +10,7 @@
     <PackageReference Include="FluentAssertions" Version="5.4.2"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProcessLogEvents\ProcessLogEvents.csproj"/>
-    <ProjectReference Include="..\Registrations\Registrations.csproj"/>
+    <ProjectReference Include="..\..\ProcessLogEvents\ProcessLogEvents.csproj"/>
+    <ProjectReference Include="..\..\Libs\Registrations\Registrations.csproj"/>
   </ItemGroup>
 </Project>

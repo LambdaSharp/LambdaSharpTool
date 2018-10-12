@@ -191,8 +191,6 @@ namespace MindTouch.LambdaSharp.Reports {
                     if(string.IsNullOrEmpty(fileName)) {
                         fileName = method.ReflectedType.ToString();
                     }
-
-                    // NOTE: Set CodeContext and Code (lines of code above and below the line that raised the exception).
                     return new ErrorReportStackFrame {
                         FileName = fileName,
                         LineNumber = lineNumber,
