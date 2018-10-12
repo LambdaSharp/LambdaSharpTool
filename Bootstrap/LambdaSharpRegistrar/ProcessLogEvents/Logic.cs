@@ -46,11 +46,11 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         private delegate Task MatchHandlerAsync(OwnerMetaData owner, ErrorReport report, Match match);
 
         //--- Class Methods ---
-        private static (Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
+        private static (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
             => (
                 Regex: new Regex(pattern, RegexOptions.CultureInvariant | RegexOptions.Compiled | RegexOptions.Multiline),
                 HandlerAsync: handler,
-                Fingerprint: ToMD5Hash(pattern)
+                Pattern: pattern
             );
 
         public static string ToMD5Hash(string text) {
@@ -64,12 +64,12 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
         //--- Fields ---
         private ILogicDependencyProvider _provider;
-        private IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint)> _mappings;
+        private IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)> _mappings;
 
         //--- Constructors ---
         public Logic(ILogicDependencyProvider provider) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Fingerprint)[] {
+            _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)[] {
                 CreateMatchPattern(@"^START RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
                 CreateMatchPattern(@"^END RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
                 CreateMatchPattern(@"^REPORT RequestId: (?<RequestId>[\da-f\-]+)\s*Duration: (?<UsedDuration>[\d\.]+) ms\s*Billed Duration: (?<BilledDuration>[\d\.]+) ms\s*Memory Size: (?<MaxMemory>[\d\.]+) MB\s*Max Memory Used: (?<UsedMemory>[\d\.]+) MB\s*$", MatchExecutionReportAsync),
@@ -100,8 +100,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                         GitSha = owner.FunctionGitSha,
                         GitBranch = owner.FunctionGitBranch,
                         Level = "ERROR",
+                        Raw = message.Trim(),
                         Timestamp = long.Parse(timestamp),
-                        Fingerprint = mapping.Fingerprint
+                        Fingerprint = ToMD5Hash($"{owner.ModuleId}:{owner.FunctionId}:{mapping.Pattern}")
                     };
 
                     // have handler fill in the rest from the matched error line

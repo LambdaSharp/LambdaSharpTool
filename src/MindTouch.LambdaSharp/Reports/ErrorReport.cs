@@ -53,6 +53,7 @@ namespace MindTouch.LambdaSharp.Reports {
         public string Fingerprint { get; set; }
         public long Timestamp { get; set; }
         public string Message { get; set; }
+        public string Raw { get; set; }
         public IEnumerable<ErrorReportStackTrace> Traces { get; set; }
     }
 }
