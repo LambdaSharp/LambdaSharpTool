@@ -137,7 +137,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Description = input.Description,
                     Default = input.Default
                 });
-                if(input.Import != null) {
+                if(input.Condition != null) {
                     _stack.Add($"{input.Name}IsImport", input.Condition);
                 }
             }
@@ -358,7 +358,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Description = exportOutput.Description,
                         Value = exportOutput.Value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{Tier}}:${{ModuleId}}-{module.Name}::{exportOutput.ExportName}")
+                            ["Name"] = Fn.Sub($"${{Tier}}-${{ModuleId}}::{exportOutput.ExportName}")
                         }
                     });
                     break;

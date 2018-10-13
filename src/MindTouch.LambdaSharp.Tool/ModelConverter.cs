@@ -196,18 +196,23 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public Input ConvertInput(int index, InputNode input) {
             return AtLocation(input.Name ?? $"[{index}]", () => {
-                object reference;
-                Condition condition = null;
-                var defaultValue = input.Default;
-                if(input.Import != null) {
+                var result = new Input {
+                    Name = input.Name,
+                    Description = input.Description,
+                    Type = input.Type,
+                    Default = input.Default
+                };
+
+                // check if default value is an import statement
+                if(input.Default?.StartsWith("!Import:", StringComparison.Ordinal) == true) {
 
                     // Create a condition for inputs that use an import statement:
                     //  FooIsImport := split($Foo, "!Import:")[0] == ""
-                    condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""));
+                    result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
                     //  UseFoo: FooIsImport ? join(":", $Tier, split($Foo, "!Import:")[1]) : $Foo
-                    reference = FnIf(
+                    result.Reference = FnIf(
                         $"{input.Name}IsImport",
                         FnImportValue(FnJoin(
                             ":",
@@ -221,22 +226,10 @@ namespace MindTouch.LambdaSharp.Tool {
                         )),
                         FnRef(input.Name)
                     );
-                    var moduleId = input.Import.Split("::", 2)[0];
-
-                    // TODO (2018-10-12, bjorg): change format to `!Import:{tier}-{moduleId}::{exportName}`
-                    defaultValue = $"!Import:{moduleId}-{input.Import}";
                 } else {
-                    reference = FnRef(input.Name);
+                    result.Reference = FnRef(input.Name);
                 }
-                return new Input {
-                    Name = input.Name,
-                    Description = input.Description,
-                    Type = input.Type,
-                    Default = defaultValue,
-                    Import = input.Import,
-                    Reference = reference,
-                    Condition = condition
-                };
+                return result;
             }, null);
         }
 
