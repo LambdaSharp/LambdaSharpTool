@@ -30,7 +30,6 @@ using Xunit.Abstractions;
 namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
 
     // TODO:
-    // * test exception in lambda constructor
     // * usage report getting close to being a time-out (error vs. warning)
     // * usage report getting close to being out-of-memory (error vs. warning)
 
