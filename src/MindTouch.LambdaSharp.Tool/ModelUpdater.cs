@@ -43,7 +43,14 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelUpdater(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public async Task<bool> DeployAsync(Module module, string moduleId, string templateFile, bool allowDataLoss, bool protectStack) {
+        public async Task<bool> DeployAsync(
+            Module module,
+            string moduleId,
+            string templateFile,
+            bool allowDataLoss,
+            bool protectStack,
+            Dictionary<string, string> inputs
+        ) {
             if(moduleId == null) {
                 moduleId = module.Name;
             } else {
@@ -147,6 +154,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     ParameterValue = Settings.DeploymentBucketPath ?? ""
                 }
             };
+            foreach(var input in inputs) {
+                parameters.Add(new CloudFormationParameter {
+                    ParameterKey = input.Key,
+                    ParameterValue = input.Value
+                });
+            }
 
             // create/update cloudformation stack
             var success = false;

@@ -222,6 +222,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         FnRef(input.Name)
                     );
                     var moduleId = input.Import.Split("::", 2)[0];
+
+                    // TODO (2018-10-12, bjorg): change format to `!Import:{tier}-{moduleId}::{exportName}`
                     defaultValue = $"!Import:{moduleId}-{input.Import}";
                 } else {
                     reference = FnRef(input.Name);
@@ -608,10 +610,24 @@ namespace MindTouch.LambdaSharp.Tool {
                     };
                 }
                 if(output.Export != null) {
+                    var value = output.Value;
+                    var description = output.Description;
+                    if(value == null) {
+
+                        // NOTE: if no value is provided, we expect the export name to correspond to a
+                        //  parameter name; if it does, we export the !Ref value of that parameter; in
+                        //  addition, we assume its description if none is provided.
+
+                        value = FnRef(output.Export);
+                        if(description == null) {
+                            var parameter = _module.Parameters.First(p => p.Name == output.Export);
+                            description = parameter.Description;
+                        }
+                    }
                     return new ExportOutput {
                         ExportName = output.Export,
-                        Description = output.Description,
-                        Value = output.Value
+                        Description = description,
+                        Value = value
                     };
                 }
                 if(output.CustomResource != null) {

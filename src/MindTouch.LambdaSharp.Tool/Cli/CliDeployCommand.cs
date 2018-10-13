@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -27,6 +28,8 @@ using System.Threading.Tasks;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Model;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -37,7 +40,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("deploy", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Deploy LambdaSharp module";
-                var moduleIdOption = cmd.Option("--name", "(optional) Specify a CloudFormation stack name (default: module name)", CommandOptionType.SingleOrNoValue);
+                var moduleIdOption = cmd.Option("--id", "(optional) Specify a module id (default: module name)", CommandOptionType.SingleOrNoValue);
+                var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify module inputs (default: none)", CommandOptionType.SingleValue);
+                var inputKeyOption = cmd.Option("--key <PARAMETER>=<VALUE>", "(optional) Specify module input key with value (default: none)", CommandOptionType.MultipleValue);
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
@@ -62,6 +67,28 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         }
                         dryRun = value;
                     }
+
+                    // reading module inputs
+                    var inputs = new Dictionary<string, string>();
+                    if(inputsFileOption.HasValue()) {
+                        inputs = ReadInputParametersFiles(inputsFileOption.Value());
+                        if(HasErrors) {
+                            return;
+                        }
+                    }
+                    foreach(var inputKeyValue in inputKeyOption.Values) {
+                        var keyValue = inputKeyValue.Split('=', 2);
+                        if(keyValue.Length != 2) {
+                            AddError($"bad format for input parameter: {keyValue}");
+                        } else {
+                            inputs[keyValue[0]] = keyValue[1];
+                        }
+                    }
+                    if(HasErrors) {
+                        return;
+                    }
+
+                    // deploying module
                     Console.WriteLine($"Readying module for deployment tier '{settingsCollection.First().Tier}'");
                     foreach(var settings in settingsCollection) {
                         if(!await Deploy(
@@ -71,7 +98,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             moduleIdOption.Value(),
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue(),
-                            skipAssemblyValidationOption.HasValue()
+                            skipAssemblyValidationOption.HasValue(),
+                            inputs
                         )) {
                             break;
                         }
@@ -87,7 +115,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string moduleId,
             bool allowDataLoos,
             bool protectStack,
-            bool skipAssemblyValidation
+            bool skipAssemblyValidation,
+            Dictionary<string, string> inputs
         ) {
             var module = await new CliBuildCommand().Build(
                 settings,
@@ -128,7 +157,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         moduleId,
                         outputCloudFormationFilePath,
                         allowDataLoos,
-                        protectStack
+                        protectStack,
+                        inputs
                     );
                     if(settings.OutputDirectory == settings.WorkingDirectory) {
                         try {
@@ -141,6 +171,32 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
             return result;
+        }
+
+        private Dictionary<string, string> ReadInputParametersFiles(string filename) {
+            if(!File.Exists(filename)) {
+                AddError("cannot find inputs file");
+                return null;
+            }
+            switch(Path.GetExtension(filename).ToLowerInvariant()) {
+            case ".yml":
+            case ".yaml":
+                try {
+                    return new DeserializerBuilder()
+                        .WithNamingConvention(new PascalCaseNamingConvention())
+                        .Build()
+                        .Deserialize<Dictionary<string, string>>(File.ReadAllText(filename));
+                } catch(YamlDotNet.Core.YamlException e) {
+                    AddError($"parsing error near {e.Message}");
+                } catch(Exception e) {
+                    AddError(e);
+                }
+                return null;
+            default:
+                AddError("incompatible inputs file format");
+                return null;
+            }
+
         }
     }
 }

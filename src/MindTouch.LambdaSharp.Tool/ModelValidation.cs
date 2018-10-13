@@ -528,8 +528,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-09-20, bjorg): add export name validation
 
-                        if(output.Value == null) {
-                            output.Value = FnRef(output.Export);
+                        if(
+                            (output.Value == null)
+                            && (_module.Variables.Union(_module.Parameters).FirstOrDefault(p => p?.Name == output.Export) == null)
+                        ) {
+                            AddError("export must either have a Value attribute or match the name of an existing variable/parameter");
                         }
                         ValidateNotBothStatements("Export", "Name", output.Name == null);
                         ValidateNotBothStatements("Export", "CustomResource", output.CustomResource == null);
@@ -558,6 +561,7 @@ namespace MindTouch.LambdaSharp.Tool {
             } else if(!_names.Add(fullname)) {
                 AddError($"duplicate name '{fullname}'");
             } else {
+
                 // TODO (2018-10-09, bjorg): regex name validation
             }
         }
