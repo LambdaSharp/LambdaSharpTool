@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleSystemsManagement;
@@ -66,6 +68,34 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"Git SHA: {settings.GitSha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Region: {settings.AwsRegion ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Account Id: {settings.AwsAccountId ?? "<NOT SET>"}");
+            Console.WriteLine($".Net Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
+        }
+
+        private string GetDotNetVersion() {
+            var dotNetExe = ProcessLauncher.DotNetExe;
+            if(string.IsNullOrEmpty(dotNetExe)) {
+                return null;
+            }
+
+            // read the dotnet version
+            var process = new Process {
+                StartInfo = new ProcessStartInfo(dotNetExe, ArgumentEscaper.EscapeAndConcatenate(new[] { "--version" })) {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = Directory.GetCurrentDirectory()
+                }
+            };
+            try {
+                process.Start();
+                var dotnetVersion = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    return null;
+                }
+                return dotnetVersion;
+            } catch {
+                return null;
+            }
         }
     }
 }
