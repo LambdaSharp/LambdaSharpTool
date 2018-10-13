@@ -25,11 +25,9 @@ Outputs:
 
   - Export: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors
-    Value: !Ref ErrorReportTopic
 
   - Export: UsageReportTopic
     Description: SNS topic for LambdaSharp function usage reports
-    Value: !Ref UsageReportTopic
 
 Parameters:
 

@@ -528,7 +528,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-09-20, bjorg): add export name validation
 
-                        Validate(output.Value != null, "missing Value attribute");
+                        if(output.Value == null) {
+                            output.Value = FnRef(output.Export);
+                        }
                         ValidateNotBothStatements("Export", "Name", output.Name == null);
                         ValidateNotBothStatements("Export", "CustomResource", output.CustomResource == null);
                         ValidateNotBothStatements("Export", "Handler", output.Handler == null);
