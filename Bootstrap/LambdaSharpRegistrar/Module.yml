@@ -10,8 +10,21 @@ Version: 0.4
 Inputs:
 
   - Name: LoggingStream
-    Description: AWS Kinesis stream to monitor
-    Import: LambdaSharp::LoggingStreamArn
+    Description: AWS Kinesis stream of log entries to process
+    Default: "!Import:LambdaSharp::LoggingStreamArn"
+
+    # TODO: add support for resource specification of input parameters
+    # Resource:
+    #   Type: AWS::Kinesis::Stream
+    #   Allow: Subscribe
+
+  - Name: RegistrationTableReadCapacity
+    Description: Provisioned read capacity for registrations table
+    Default: 1
+
+  - Name: RegistrationTableWriteCapacity
+    Description: Provisioned write capacity for registrations table
+    Default: 1
 
 Outputs:
 
@@ -24,14 +37,13 @@ Outputs:
     Handler: RegistrationTopic
 
   - Export: ErrorReportTopic
-    Description: SNS topic for LambdaSharp module errors
 
   - Export: UsageReportTopic
-    Description: SNS topic for LambdaSharp function usage reports
 
 Parameters:
 
   - Name: LoggingStreamReference
+    Description: Reference to the Kinesis stream used to ingest the function logs
     Value: !Ref LoggingStream
     Resource:
       Type: AWS::Kinesis::Stream
@@ -44,13 +56,13 @@ Parameters:
       Allow: Subscribe
 
   - Name: ErrorReportTopic
-    Description: Topic for publishing LambdaSharp module errors
+    Description: SNS topic for LambdaSharp module errors
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
   - Name: UsageReportTopic
-    Description: Topic for publishing LambdaSharp function usage reports
+    Description: SNS topic for LambdaSharp function usage reports
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
@@ -68,8 +80,8 @@ Parameters:
           - AttributeName: Id
             KeyType: HASH
         ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
+          ReadCapacityUnits: !Ref RegistrationTableReadCapacity
+          WriteCapacityUnits: !Ref RegistrationTableWriteCapacity
 
 Functions:
 
