@@ -74,7 +74,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     settings,
                     DryRunLevel.Everything,
                     Path.Combine(settings.OutputDirectory, "cloudformation.json"),
-                    skipAssemblyValidation
+                    skipAssemblyValidation,
+                    skipFunctionBuild: false
                 );
                 if(compiledModule == null) {
                     return;

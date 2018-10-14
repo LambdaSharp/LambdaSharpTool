@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Humidifier;
+using Humidifier.Json;
 using Humidifier.Logs;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
@@ -78,7 +79,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public ModelGenerator(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public Stack Generate(Module module) {
+        public string Generate(Module module) {
             _module = module;
 
             // stack header
@@ -373,7 +374,32 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
             }
-            return _stack;
+
+            // generate JSON template
+            var template = new JsonStackSerializer().Serialize(_stack);
+
+            // NOTE (2018-10-14, bjorg): Humidifier doesn't support adding the Metadata section yet; so
+            //  we have to do by deserializing the document, adding it manually, and then serialize everything again.
+
+            // add interface for presenting inputs
+            var json = JsonConvert.DeserializeObject<Dictionary<string, object>>(template);
+            json.Add("Metadata", new Dictionary<string, object> {
+                ["AWS::CloudFormation::Interface"] = new Dictionary<string, object> {
+                    ["ParameterLabels"] = _module.Inputs.ToDictionary(input => input.Name, input => new Dictionary<string, object> {
+                        ["default"] = input.Label
+                    }),
+                    ["ParameterGroups"] = _module.Inputs.ToLookup(input => input.Section)
+                        .Select(section => new Dictionary<string, object> {
+                            ["Label"] = new Dictionary<string, string> {
+                                ["default"] = section.Key
+                            },
+                            ["Parameters"] = section.Select(input => input.Name).ToList()
+                        }
+                    )
+                }
+            });
+            template = JsonConvert.SerializeObject(json, Formatting.Indented);
+            return template;
 
             // local functions
             void AddApiResource(string parentPrefix, object restApiId, object parentId, int level, IEnumerable<ApiRoute> routes, List<KeyValuePair<string, ApiGateway.Method>> apiMethods) {

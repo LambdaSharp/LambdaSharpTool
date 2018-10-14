@@ -40,9 +40,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("build", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Build LambdaSharp module";
+                var skipFunctionBuildOption = cmd.Option("--skip-function-build", "(optional) Do not build the function projects", CommandOptionType.NoValue);
+                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
-                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
@@ -77,7 +78,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings,
                             dryRun,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
-                            skipAssemblyValidationOption.HasValue()
+                            skipAssemblyValidationOption.HasValue(),
+                            skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation)
                         ) == null) {
                             break;
                         }
@@ -90,7 +92,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
-            bool skipAssemblyValidation
+            bool skipAssemblyValidation,
+            bool skipFunctionBuild
         ) {
             try {
                 if(!File.Exists(settings.ModuleSource)) {
@@ -127,7 +130,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 new ModelFunctionPackager(settings).Process(
                     parsedModule,
                     settings.ToolVersion,
-                    skipCompile: dryRun == DryRunLevel.CloudFormation,
+                    skipCompile: skipFunctionBuild,
                     skipAssemblyValidation: skipAssemblyValidation
                 );
 
@@ -147,13 +150,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // generate cloudformation template
-                var stack = new ModelGenerator(settings).Generate(module);
+                var template = new ModelGenerator(settings).Generate(module);
                 if(HasErrors) {
                     return null;
                 }
 
-                // serialize stack to disk
-                var template = new JsonStackSerializer().Serialize(stack);
+                // save cloudformation template to disk
                 var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
                 if(outputCloudFormationDirectory != "") {
                     Directory.CreateDirectory(outputCloudFormationDirectory);

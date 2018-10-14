@@ -43,11 +43,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var altModuleNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleOrNoValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify module inputs (default: none)", CommandOptionType.SingleValue);
                 var inputKeyOption = cmd.Option("--key <PARAMETER>=<VALUE>", "(optional) Specify module input key with value (default: none)", CommandOptionType.MultipleValue);
+                var skipFunctionBuildOption = cmd.Option("--skip-function-build", "(optional) Do not build the function projects", CommandOptionType.NoValue);
+                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
-                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -99,6 +100,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue(),
                             skipAssemblyValidationOption.HasValue(),
+                            skipFunctionBuildOption.HasValue(),
                             inputs
                         )) {
                             break;
@@ -116,13 +118,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool allowDataLoos,
             bool protectStack,
             bool skipAssemblyValidation,
+            bool skipFunctionBuild,
             Dictionary<string, string> inputs
         ) {
             var module = await new CliBuildCommand().Build(
                 settings,
                 dryRun,
                 outputCloudFormationFilePath,
-                skipAssemblyValidation
+                skipAssemblyValidation,
+                skipFunctionBuild
             );
             if((module == null) || HasErrors) {
                 return false;

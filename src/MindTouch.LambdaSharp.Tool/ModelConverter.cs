@@ -84,50 +84,68 @@ namespace MindTouch.LambdaSharp.Tool {
             , new List<string>());
 
             // internal module inputs
-            _module.Inputs = new List<Input> {
-                ConvertInput(0, new InputNode {
-                    Name = "DeploymentBucketName",
-                    Type = "String",
-                    Description = "LambdaSharp Deployment S3 Bucket Name"
-                }),
-                ConvertInput(0, new InputNode {
-                    Name = "DeploymentBucketPath",
-                    Type = "String",
-                    Description = "LambdaSharp Deployment S3 Bucket Path"
-                }),
-                ConvertInput(0, new InputNode {
-                    Name = "Tier",
-                    Type = "String",
-                    Description = "LambdaSharp Deployment Tier"
-                }),
-                ConvertInput(0, new InputNode {
-                    Name = "TierLowercase",
-                    Type = "String",
-                    Description = "LambdaSharp Deployment Tier (lowercase)"
-                }),
-                ConvertInput(0, new InputNode {
-                    Name = "ModuleDeadLetterQueueArn",
-                    Type = "String",
-                    Description = "LambdaSharp Dead Letter Queue",
-                    Default = "!Import:LambdaSharp::DeadLetterQueueArn"
-                }),
-                ConvertInput(0, new InputNode {
-                    Name = "ModuleLoggingStreamArn",
-                    Type = "String",
-                    Description = "LambdaSharp Logging Stream",
-                    Default = "!Import:LambdaSharp::LoggingStreamArn"
-                })
-            };
-
-            // convert inputs
             AtLocation("Inputs", () => {
                 var inputIndex = 0;
-                foreach(var inputNode in module.Inputs
-                    .Select(input => ConvertInput(++inputIndex, input))
-                    .Where(input => input != null)
-                ) {
-                    _module.Inputs.Add(inputNode);
-                }
+                var inputs = module.Inputs
+                        .Select(input => ConvertInput(++inputIndex, input))
+                        .Where(input => input != null)
+                        .ToList();
+
+                // LambdaSharp Module Settings
+                var section = "LambdaSharp Module Dependencies (Internal)";
+                inputs.AddRange(new[] {
+
+                    ConvertInput(0, new InputNode {
+                        Name = "ModuleDeadLetterQueueArn",
+                        Type = "String",
+                        Description = "Function Dead Letter Queue (ARN)",
+                        Default = "!Import:LambdaSharp::DeadLetterQueueArn",
+                        Section = section,
+                        Label = "Dead Letter Queue"
+                    }),
+                    ConvertInput(0, new InputNode {
+                        Name = "ModuleLoggingStreamArn",
+                        Type = "String",
+                        Description = "Function Logging Kinesis Stream (ARN)",
+                        Default = "!Import:LambdaSharp::LoggingStreamArn",
+                        Section = section,
+                        Label = "Logging Stream"
+                    })
+                });
+
+                // LambdaSharp Deployment Settings
+                section = "LambdaSharp Deployment Settings (Internal - DO NOT MODIFY)";
+                inputs.AddRange(new[] {
+                    ConvertInput(0, new InputNode {
+                        Name = "DeploymentBucketName",
+                        Type = "String",
+                        Description = "Source Deployment S3 Bucket Name",
+                        Section = section,
+                        Label = "S3 Bucket Name"
+                    }),
+                    ConvertInput(0, new InputNode {
+                        Name = "DeploymentBucketPath",
+                        Type = "String",
+                        Description = "Source Deployment S3 Bucket Path",
+                        Section = section,
+                        Label = "S3 Bucket Path"
+                    }),
+                    ConvertInput(0, new InputNode {
+                        Name = "Tier",
+                        Type = "String",
+                        Description = "Module Deployment Tier",
+                        Section = section,
+                        Label = "Tier"
+                    }),
+                    ConvertInput(0, new InputNode {
+                        Name = "TierLowercase",
+                        Type = "String",
+                        Description = "Module Deployment Tier (lowercase)",
+                        Section = section,
+                        Label = "Tier (lowercase)"
+                    })
+                });
+                _module.Inputs = inputs;
             });
 
             // convert parameters
@@ -229,7 +247,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = input.Name,
                     Description = input.Description,
                     Type = input.Type,
-                    Default = input.Default
+                    Default = input.Default,
+                    Section = input.Section ?? "Module Settings",
+                    Label = input.Label ?? input.Name
                 };
 
                 // check if default value is an import statement
