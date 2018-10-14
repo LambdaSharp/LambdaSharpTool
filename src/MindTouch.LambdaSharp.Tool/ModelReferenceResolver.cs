@@ -230,7 +230,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // local functions
                         void CheckBoundParameters(string missingName)
-                            => doesNotContainBoundParameters = doesNotContainBoundParameters && !boundParameters.ContainsKey(missingName);
+                            => doesNotContainBoundParameters = doesNotContainBoundParameters && !boundParameters.ContainsKey(missingName.Replace("::", ""));
                     });
                 }
                 return progress;
@@ -297,7 +297,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // handle !Ref expression
                         if(map.TryGetValue("Ref", out object refObject) && (refObject is string refKey)) {
                             if(TrySubstitute(refKey, null, out object found)) {
-                                return found;
+                                return found ?? map;
                             }
                             missing?.Invoke(refKey);
                             return map;
@@ -312,7 +312,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             && getAttArgs[1] is string getAttAttribute
                         ) {
                             if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
-                                return found;
+                                return found ?? map;
                             }
                             missing?.Invoke(getAttKey);
                             return map;
@@ -347,6 +347,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 if(!subArgs.ContainsKey(name[0])) {
                                     if(TrySubstitute(name[0], (name.Length == 2) ? name[1] : null, out object found)) {
                                         substitions = true;
+                                        if(found == null) {
+                                            return matchText;
+                                        }
                                         if(found is string text) {
                                             return text;
                                         }
@@ -384,6 +387,10 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             bool TrySubstitute(string key, string attribute, out object found) {
+                if(key.StartsWith("AWS::", StringComparison.Ordinal)) {
+                    found = null;
+                    return true;
+                }
                 key = key.Replace("::", "");
                 found = null;
                 if(freeInputs.TryGetValue(key, out Input freeInput)) {
@@ -409,11 +416,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         found = FnJoin(",", referencedParameter.Resource.ResourceReferences);
                         break;
                     case CloudFormationResourceParameter _:
-                        if(attribute != null) {
-                            found = FnGetAtt(key, attribute);
-                        } else {
-                            found = FnRef(key);
-                        }
+                        found = (attribute != null)
+                            ? FnGetAtt(key, attribute)
+                            : FnRef(key);
                         break;
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?

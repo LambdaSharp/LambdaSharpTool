@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("deploy", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Deploy LambdaSharp module";
-                var moduleIdOption = cmd.Option("--id", "(optional) Specify a module id (default: module name)", CommandOptionType.SingleOrNoValue);
+                var altModuleNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleOrNoValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify module inputs (default: none)", CommandOptionType.SingleValue);
                 var inputKeyOption = cmd.Option("--key <PARAMETER>=<VALUE>", "(optional) Specify module input key with value (default: none)", CommandOptionType.MultipleValue);
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
@@ -95,7 +95,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings,
                             dryRun,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
-                            moduleIdOption.Value(),
+                            altModuleNameOption.Value(),
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue(),
                             skipAssemblyValidationOption.HasValue(),
@@ -112,7 +112,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
-            string moduleId,
+            string altModuleName,
             bool allowDataLoos,
             bool protectStack,
             bool skipAssemblyValidation,
@@ -154,7 +154,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(dryRun == null) {
                     result = await new ModelUpdater(settings).DeployAsync(
                         module,
-                        moduleId,
+                        altModuleName,
                         outputCloudFormationFilePath,
                         allowDataLoos,
                         protectStack,

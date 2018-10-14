@@ -89,15 +89,12 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // add module registration
             if(_module.HasModuleRegistration) {
-                _stack.Add("ModuleRegistration", new CustomResource("Custom::LambdaSharpModuleRegistration", new Dictionary<string, object> {
-                    ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Module::Registration")),
-                    ["Tier"] = FnRef("Tier"),
-                    ["ModuleId"] = FnRef("ModuleId"),
+                _stack.Add("ModuleRegistration", new LambdaSharpResource("LambdaSharp::Register::Module") {
+                    ["Tier"] = Fn.Ref("Tier"),
+                    ["ModuleId"] = Fn.Ref("AWS::StackName"),
                     ["ModuleName"] = _module.Name,
-                    ["ModuleVersion"] = _module.Version,
-                    ["StackName"] = FnRef("AWS::StackName"),
-                    ["StackId"] = FnRef("AWS::StackId")
-                }));
+                    ["ModuleVersion"] = _module.Version
+                });
             }
 
             // create generic resource statement; additional resource statements can be added by resources
@@ -193,7 +190,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = Fn.Sub("${Tier}-${ModuleId}-Permissions-Policy-For-CWL"),
+                            PolicyName = Fn.Sub("${AWS::StackName}ModuleCloudWatchLogsPolicy"),
                             PolicyDocument = new PolicyDocument {
                                 Version = "2012-10-17",
                                 Statement = new List<Statement> {
@@ -226,7 +223,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = Fn.Sub("${Tier}-${ModuleId}-policy"),
+                            PolicyName = Fn.Sub("${AWS::StackName}ModuleResourcesPolicy"),
                             PolicyDocument = new PolicyDocument {
                                 Version = "2012-10-17",
 
@@ -247,7 +244,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     var restApiName = "ModuleRestApi";
                     var restApiDescription = $"{_module.Name} API (v{_module.Version})";
                     _stack.Add(restApiName, new ApiGateway.RestApi {
-                        Name = Fn.Sub("${ModuleId} API (${Tier})"),
+                        Name = Fn.Sub("${AWS::StackName} Module API"),
                         Description = restApiDescription,
                         FailOnWarnings = true
                     });
@@ -276,7 +273,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         },
                         Policies = new List<IAM.Policy> {
                             new IAM.Policy {
-                                PolicyName = Fn.Sub("${ModuleId}ModuleRestApiRolePolicy"),
+                                PolicyName = Fn.Sub("${AWS::StackName}ModuleRestApiRolePolicy"),
                                 PolicyDocument = new PolicyDocument {
                                     Version = "2012-10-17",
                                     Statement = new List<Statement> {
@@ -321,7 +318,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created
                     _stack.Add(restApiDeploymentName, new ApiGateway.Deployment {
                         RestApiId = Fn.Ref(restApiName),
-                        Description = Fn.Sub($"${{ModuleId}} API (${{Tier}}) [{methodsHash}]")
+                        Description = Fn.Sub($"${{AWS::StackName}} API [{methodsHash}]")
                     }, dependsOn: apiMethods.Select(kv => kv.Key).ToArray());
 
                     // RestApi stage depends on API gateway deployment and API gateway account
@@ -358,16 +355,16 @@ namespace MindTouch.LambdaSharp.Tool {
                         Description = exportOutput.Description,
                         Value = exportOutput.Value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{Tier}}-${{ModuleId}}::{exportOutput.ExportName}")
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.ExportName}")
                         }
                     });
                     break;
                 case CustomResourceHandlerOutput customResourceHandlerOutput:
-                    _stack.Add(new string(customResourceHandlerOutput.CustomResourceName.Where(char.IsLetterOrDigit).ToArray()) + "Handler", new Humidifier.Output {
+                    _stack.Add($"{customResourceHandlerOutput.CustomResourceName}Handler", new Humidifier.Output {
                         Description = customResourceHandlerOutput.Description,
                         Value = Fn.Ref(customResourceHandlerOutput.Handler),
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{Tier}}:CustomResource-{customResourceHandlerOutput.CustomResourceName}")
+                            ["Name"] = Fn.Sub($"${{Tier}}-CustomResource-{customResourceHandlerOutput.CustomResourceName}")
                         }
                     });
                     break;
@@ -507,7 +504,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE_NAME"] = _module.Name;
-            environmentVariables["MODULE_ID"] = Fn.Ref("ModuleId");
+            environmentVariables["MODULE_ID"] = Fn.Ref("AWS::StackName");
             environmentVariables["MODULE_VERSION"] = _module.Version;
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
@@ -519,14 +516,8 @@ namespace MindTouch.LambdaSharp.Tool {
             // create function registration
             if(_module.HasModuleRegistration && function.HasFunctionRegistration) {
                 var registrationName = $"{function.Name}Registration";
-                _stack.Add($"{function.Name}Registration", new CustomResource("Custom::LambdaSharpFunctionRegistration", new Dictionary<string, object> {
-                    ["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-LambdaSharp::Function::Registration")),
-                    ["Tier"] = Fn.Ref("Tier"),
-                    ["StackName"] = Fn.Ref("AWS::StackName"),
-                    ["StackId"] = Fn.Ref("AWS::StackId"),
-                    ["ModuleId"] = Fn.Ref("ModuleId"),
-                    ["ModuleName"] = _module.Name,
-                    ["ModuleVersion"] = _module.Version,
+                _stack.Add($"{function.Name}Registration", new LambdaSharpResource("LambdaSharp::Register::Function") {
+                    ["ModuleId"] = Fn.Ref("AWS::StackName"),
                     ["FunctionId"] = Fn.Ref(function.Name),
                     ["FunctionName"] = function.Name,
                     ["FunctionLogGroupName"] = Fn.Sub($"/aws/lambda/${{{function.Name}}}"),
@@ -539,7 +530,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["FunctionGitBranch"] = "",
                     ["FunctionMaxMemory"] = function.Memory,
                     ["FunctionMaxDuration"] = function.Timeout
-                }), dependsOn: new[] { "ModuleRegistration" });
+                }, dependsOn: new[] { "ModuleRegistration" });
             }
 
             // check if function as a VPC configuration
@@ -621,7 +612,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ScheduleExpression = scheduleSources[i].Expression,
                         Targets = new List<Events.RuleTypes.Target> {
                             new Events.RuleTypes.Target {
-                                Id = Fn.Sub($"${{Tier}}-${{ModuleId}}-{name}"),
+                                Id = Fn.Sub($"${{AWS::StackName}}Module{name}ScheduleEvent"),
                                 Arn = Fn.GetAtt(function.Name, "Arn"),
                                 InputTransformer = new Events.RuleTypes.InputTransformer {
                                     InputPathsMap = new Dictionary<string, dynamic> {
@@ -683,8 +674,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "s3.amazonaws.com"
                     });
-                    _stack.Add(functionS3Subscription, new CustomResource("Custom::LambdaSharpS3Subscriber") {
-                        ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}:CustomResource-LambdaSharp::S3Subscriber")),
+                    _stack.Add(functionS3Subscription, new LambdaSharpResource("LambdaSharp::S3::Subscription") {
                         ["BucketName"] = Fn.Ref(grp.Key),
                         ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
                         ["Filters"] = grp.Select(source => {
@@ -814,8 +804,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(parameter.Scope == ParameterScope.Function) {
                     environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(parameter.ResourceName, "Result");
                 }
-                _stack.Add(packageParameter.ResourceName, new CustomResource("Custom::LambdaSharpS3PackageLoader") {
-                    ["ServiceToken"] = Fn.ImportValue(Fn.Sub("${Tier}:CustomResource-LambdaSharp::S3PackageLoader")),
+                _stack.Add(packageParameter.ResourceName, new LambdaSharpResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),

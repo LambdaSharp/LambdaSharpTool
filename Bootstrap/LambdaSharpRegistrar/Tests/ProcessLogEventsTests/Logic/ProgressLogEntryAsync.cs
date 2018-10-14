@@ -53,13 +53,13 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
                 => JsonConvert.DeserializeObject<ErrorReport>(jsonReport);
 
             public Task SendErrorReportAsync(ErrorReport report) {
-                Assert.Equal(null, ErrorReport);
+                ErrorReport.Should().BeNull();
                 ErrorReport = report;
                 return Task.CompletedTask;
             }
 
             public Task SendUsageReportAsync(UsageReport report) {
-                Assert.Equal(null, UsageReport);
+                UsageReport.Should().BeNull();
                 UsageReport = report;
                 return Task.CompletedTask;
             }
@@ -83,7 +83,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
                 ModuleName = "ModuleName",
                 ModuleVersion = "ModuleVersion",
                 ModuleId = "ModuleId",
-                FunctionId = "StackName-FunctionName-NT5EUXTNTXXD",
+                FunctionId = "ModuleName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
                 FunctionLogGroupName = "/aws/lambda/MyTestFunction",
                 FunctionPlatform = "Platform",
@@ -99,7 +99,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
         //--- Methods ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
-            _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"Tier\":\"Tier\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"StackName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Wait();
+            _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"Tier\":\"Tier\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Wait();
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
             _provider.ErrorReport.Timestamp.Should().Be(1539361232);
@@ -165,13 +165,13 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
         }
 
         private void CommonErrorReportAsserts() {
-            Assert.NotNull(_provider.ErrorReport);
-            Assert.Null(_provider.UsageReport);
+            _provider.ErrorReport.Should().NotBeNull();
+            _provider.UsageReport.Should().BeNull();
             _provider.ErrorReport.ModuleName.Should().Be("ModuleName");
             _provider.ErrorReport.ModuleVersion.Should().Be("ModuleVersion");
             _provider.ErrorReport.Tier.Should().Be("Tier");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
-            _provider.ErrorReport.FunctionId.Should().Be("StackName-FunctionName-NT5EUXTNTXXD");
+            _provider.ErrorReport.FunctionId.Should().Be("ModuleName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");
             _provider.ErrorReport.Platform.Should().Be("Platform");
             _provider.ErrorReport.Framework.Should().Be("Framework");

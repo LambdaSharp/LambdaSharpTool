@@ -38,6 +38,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelConverter : AModelProcessor {
 
+        //--- Constants ---
+        private const string CUSTOM_RESOURCE_PREFIX = "Custom::";
+
         //--- Fields ---
         private Module _module;
 
@@ -100,11 +103,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Description = "LambdaSharp Deployment S3 Bucket Path"
             }));
             _module.Inputs.Add(ConvertInput(0, new InputNode {
-                Name = "ModuleId",
-                Type = "String",
-                Description = "LambdaSharp Module Id"
-            }));
-            _module.Inputs.Add(ConvertInput(0, new InputNode {
                 Name = "Tier",
                 Type = "String",
                 Description = "LambdaSharp Deployment Tier"
@@ -144,7 +142,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = "Id",
                     ResourceName = "ModuleId",
                     Description = "LambdaSharp module id",
-                    Value = FnRef("ModuleId")
+                    Value = FnRef("AWS::StackName")
                 },
                 new ValueParameter {
                     Scope = ParameterScope.Module,
@@ -407,25 +405,21 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
             }
 
-            // parse resource name as `{MODULE}::{TYPE}` pattern to import the custom resource topic name
+            // check if custom resource needs a service token to be imported
             AtLocation("Type", () => {
-                var customResourceHandlerAndType = resource.Type.Split("::", 2);
-                if((customResourceHandlerAndType[0] != "AWS") && (customResourceHandlerAndType[0] != "Custom")) {
-                    if(customResourceHandlerAndType.Length != 2) {
-                        AddError("custom resource type must have format {MODULE}::{TYPE}");
-                        return;
-                    }
-
-                    // check if custom resource needs a service token to be imported
+                if(!resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                    var customResourceName = resource.Type.StartsWith(CUSTOM_RESOURCE_PREFIX, StringComparison.Ordinal)
+                        ? resource.Type.Substring(CUSTOM_RESOURCE_PREFIX.Length)
+                        : resource.Type;
                     if(resource.Properties == null) {
                         resource.Properties = new Dictionary<string, object>();
                     }
                     if(!resource.Properties.ContainsKey("ServiceToken")) {
-                        resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}:CustomResource-{resource.Type}"));
+                        resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}-CustomResource-{customResourceName}"));
                     }
 
                     // convert type name to a custom AWS resource type
-                    resource.Type = "Custom::" + resource.Type.Replace("::", "");
+                    resource.Type = "Custom::" + customResourceName;
                 }
             });
             return new Resource {

@@ -8,7 +8,7 @@ Inputs:
     Default: a default value
 
   - Name: BarInput
-    Import: OtherModule.ExportValue
+    Default: "!Import:OtherModule::ExportValue"
 
 Parameters:
 

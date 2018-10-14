@@ -13,7 +13,7 @@ Inputs:
     Description: AWS Kinesis stream of log entries to process
     Default: "!Import:LambdaSharp::LoggingStreamArn"
 
-    # TODO: add support for resource specification of input parameters
+    # TODO (2018-10-13, bjorg): add support for resource specification of input parameters
     # Resource:
     #   Type: AWS::Kinesis::Stream
     #   Allow: Subscribe
@@ -28,11 +28,11 @@ Inputs:
 
 Outputs:
 
-  - CustomResource: LambdaSharp::Module::Registration
+  - CustomResource: LambdaSharp::Register::Module
     Description: Custom resources for registering LambdaSharp modules
     Handler: RegistrationTopic
 
-  - CustomResource: LambdaSharp::Function::Registration
+  - CustomResource: LambdaSharp::Register::Function
     Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
 

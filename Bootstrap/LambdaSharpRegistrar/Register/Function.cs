@@ -36,8 +36,6 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
         //--- Properties ---
         public string Tier { get; set; }
-        public string StackName { get; set; }
-        public string StackId { get; set; }
         public string ModuleId { get; set; }
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
@@ -83,14 +81,15 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
             case "Custom::LambdaSharpModuleRegistration": {
-                    LogInfo($"Adding Module: Id={properties.StackName}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
-                    var owner = CreateOwnerMetaData(properties);
-                    await _registrations.PutOwnerMetaDataAsync($"M:{owner.StackName}", owner);
-                    return Respond($"registration:module:{properties.StackName}");
+                    LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    var owner = PopulateOwnerMetaData(properties);
+                    await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
+                    return Respond($"registration:module:{properties.ModuleId}");
                 }
             case "Custom::LambdaSharpFunctionRegistration": {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
-                    var owner = CreateOwnerMetaData(properties);
+                    var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    owner = PopulateOwnerMetaData(properties, owner);
                     await _registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
                     return Respond($"registration:function:{properties.FunctionId}");
                 }
@@ -105,8 +104,8 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             var properties = request.ResourceProperties;
             switch(request.ResourceType) {
             case "Custom::LambdaSharpModuleRegistration": {
-                    LogInfo($"Removing Module: Id={properties.StackName}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
-                    await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.StackName}");
+                    LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+                    await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     break;
                 }
             case "Custom::LambdaSharpFunctionRegistration": {
@@ -133,25 +132,25 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                 }
             };
 
-        private OwnerMetaData CreateOwnerMetaData(RequestProperties properties) {
-            return new OwnerMetaData {
-                Tier = properties.Tier,
-                ModuleId = properties.ModuleId,
-                ModuleName = properties.ModuleName,
-                ModuleVersion = properties.ModuleVersion,
-                StackName = properties.StackName,
-                StackId = properties.StackId,
-                FunctionId = properties.FunctionId,
-                FunctionName = properties.FunctionName,
-                FunctionLogGroupName = properties.FunctionLogGroupName,
-                FunctionPlatform = properties.FunctionPlatform,
-                FunctionFramework = properties.FunctionFramework,
-                FunctionLanguage = properties.FunctionLanguage,
-                FunctionGitSha = properties.FunctionGitSha,
-                FunctionGitBranch = properties.FunctionGitBranch,
-                FunctionMaxMemory = properties.FunctionMaxMemory,
-                FunctionMaxDuration = TimeSpan.FromSeconds(properties.FunctionMaxDuration),
-            };
+        private OwnerMetaData PopulateOwnerMetaData(RequestProperties properties, OwnerMetaData owner = null) {
+            if(owner == null) {
+                owner = new OwnerMetaData();
+            }
+            owner.Tier = properties.Tier;
+            owner.ModuleId = properties.ModuleId;
+            owner.ModuleName = properties.ModuleName;
+            owner.ModuleVersion = properties.ModuleVersion;
+            owner.FunctionId = properties.FunctionId;
+            owner.FunctionName = properties.FunctionName;
+            owner.FunctionLogGroupName = properties.FunctionLogGroupName;
+            owner.FunctionPlatform = properties.FunctionPlatform;
+            owner.FunctionFramework = properties.FunctionFramework;
+            owner.FunctionLanguage = properties.FunctionLanguage;
+            owner.FunctionGitSha = properties.FunctionGitSha;
+            owner.FunctionGitBranch = properties.FunctionGitBranch;
+            owner.FunctionMaxMemory = properties.FunctionMaxMemory;
+            owner.FunctionMaxDuration = TimeSpan.FromSeconds(properties.FunctionMaxDuration);
+            return owner;
         }
     }
 }

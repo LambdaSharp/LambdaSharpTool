@@ -45,19 +45,18 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public async Task<bool> DeployAsync(
             Module module,
-            string moduleId,
+            string altModuleName,
             string templateFile,
             bool allowDataLoss,
             bool protectStack,
             Dictionary<string, string> inputs
         ) {
-            if(moduleId == null) {
-                moduleId = module.Name;
-            } else {
+            var stackName = $"{Settings.Tier}-{altModuleName ?? module.Name}";
+            if(altModuleName != null) {
 
-                // TODO (2018-10-09, bjorg): it makes no sense to allow multiple instantiations of a module with custom resources since they are global
+                // TODO (2018-10-09, bjorg): check if modules has any custom resources; if it does, fail, because it makes
+                //  no sense to allow multiple instantiations of a module with custom resources since they are global
             }
-            var stackName = $"{Settings.Tier}-{moduleId}";
             Console.WriteLine($"Deploying stack: {stackName}");
 
             // check if cloudformation stack already exists
@@ -133,10 +132,6 @@ namespace MindTouch.LambdaSharp.Tool {
 }";
             // initialize template parameters
             var parameters = new List<CloudFormationParameter> {
-                new CloudFormationParameter {
-                    ParameterKey = "ModuleId",
-                    ParameterValue = moduleId
-                },
                 new CloudFormationParameter {
                     ParameterKey = "Tier",
                     ParameterValue = Settings.Tier

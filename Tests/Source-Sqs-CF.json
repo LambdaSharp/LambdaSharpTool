@@ -10,10 +10,6 @@
       "Type": "String",
       "Description": "LambdaSharp Deployment S3 Bucket Path"
     },
-    "ModuleId": {
-      "Type": "String",
-      "Description": "LambdaSharp Module Id"
-    },
     "Tier": {
       "Type": "String",
       "Description": "LambdaSharp Deployment Tier"
@@ -24,6 +20,24 @@
     }
   },
   "Resources": {
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegisterModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::Register::Module"
+          }
+        },
+        "Tier": {
+          "Ref": "Tier"
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "ModuleName": "TestModule",
+        "ModuleVersion": "1.0"
+      }
+    },
     "Sqs1": {
       "Type": "AWS::SQS::Queue",
       "Properties": {}
@@ -68,7 +82,7 @@
               ]
             },
             "PolicyName": {
-              "Fn::Sub": "${Tier}-${ModuleId}-Permissions-Policy-For-CWL"
+              "Fn::Sub": "${AWS::StackName}ModuleCloudWatchLogsPolicy"
             }
           }
         ]
@@ -159,11 +173,41 @@
               ]
             },
             "PolicyName": {
-              "Fn::Sub": "${Tier}-${ModuleId}-policy"
+              "Fn::Sub": "${AWS::StackName}ModuleResourcesPolicy"
             }
           }
         ]
       }
+    },
+    "FunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegisterFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::Register::Function"
+          }
+        },
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "Function"
+        },
+        "FunctionName": "Function",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Function}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionGitSha": "4d78cbf1c765fa1c750b9cc636a84543794cd5fc",
+        "FunctionGitBranch": "",
+        "FunctionMaxMemory": "128",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
     },
     "Function": {
       "Type": "AWS::Lambda::Function",
@@ -191,15 +235,16 @@
             },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
-              "Ref": "ModuleId"
+              "Ref": "AWS::StackName"
             },
             "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "Function",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::ImportValue": {
                 "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
               }
             },
-            "LAMBDARUNTIME": "dotnetcore2.1",
             "STR_SQS1": {
               "Ref": "Sqs1"
             },

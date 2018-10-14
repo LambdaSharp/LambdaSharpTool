@@ -6,7 +6,7 @@ Description: LambdaSharp S3 Lambda Function Subscriber
 
 Outputs:
 
-  - CustomResource: LambdaSharp::S3Subscriber
+  - CustomResource: LambdaSharp::S3::Subscription
     Description: Custom resource for S3 bucket subscriptions
     Handler: CustomResourceTopic
 
