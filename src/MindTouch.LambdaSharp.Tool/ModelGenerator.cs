@@ -100,7 +100,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // create generic resource statement; additional resource statements can be added by resources
             _resourceStatements = new List<Statement> {
                 new Statement {
-                    Sid = "LambdaLogStreamAccess",
+                    Sid = "ModuleLogStreamAccess",
                     Effect = "Allow",
 
                     // TODO (2018-10-09, bjorg): we should be able to make the resource target a lot more
@@ -117,7 +117,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // add decryption permission for requested keys
             if(_module.Secrets.Any()) {
                 _resourceStatements.Add(new Statement {
-                    Sid = "LambdaSecretsDecryption",
+                    Sid = "ModuleSecretsDecryption",
                     Effect = "Allow",
                     Resource = _module.Secrets,
                     Action = new List<string> {
@@ -151,7 +151,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // permissions needed for dead-letter queue
                 _resourceStatements.Add(new Statement {
-                    Sid = "LambdaDeadLetterQueueLogging",
+                    Sid = "ModuleDeadLetterQueueLogging",
                     Effect = "Allow",
                     Resource = _module.GetInputReference("ModuleDeadLetterQueueArn"),
                     Action = new List<string> {
@@ -162,7 +162,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 // permissions needed for lambda functions to exist in a VPC
                 if(_module.Functions.Any(function => function.VPC != null)) {
                     _resourceStatements.Add(new Statement {
-                        Sid = "LambdaVpcNetworkInterfaces",
+                        Sid = "ModuleVpcNetworkInterfaces",
                         Effect = "Allow",
                         Resource = "*",
                         Action = new List<string> {
@@ -212,7 +212,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Version = "2012-10-17",
                         Statement = new List<Statement> {
                             new Statement {
-                                Sid = "LambdaInvocation",
+                                Sid = "ModuleLambdaInvocation",
                                 Effect = "Allow",
                                 Principal = new {
                                     Service = "lambda.amazonaws.com"
@@ -223,7 +223,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     Policies = new List<IAM.Policy> {
                         new IAM.Policy {
-                            PolicyName = Fn.Sub("${AWS::StackName}ModuleResourcesPolicy"),
+                            PolicyName = Fn.Sub("${AWS::StackName}ModulePolicy"),
                             PolicyDocument = new PolicyDocument {
                                 Version = "2012-10-17",
 
@@ -262,7 +262,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             Version = "2012-10-17",
                             Statement = new List<Statement> {
                                 new Statement {
-                                    Sid = "LambdaRestApiInvocation",
+                                    Sid = "ModuleRestApiInvocation",
                                     Effect = "Allow",
                                     Principal = new {
                                         Service = "apigateway.amazonaws.com"
@@ -273,12 +273,12 @@ namespace MindTouch.LambdaSharp.Tool {
                         },
                         Policies = new List<IAM.Policy> {
                             new IAM.Policy {
-                                PolicyName = Fn.Sub("${AWS::StackName}ModuleRestApiRolePolicy"),
+                                PolicyName = Fn.Sub("${AWS::StackName}ModuleRestApiPolicy"),
                                 PolicyDocument = new PolicyDocument {
                                     Version = "2012-10-17",
                                     Statement = new List<Statement> {
                                         new Statement {
-                                            Sid = "LambdaRestApiLogging",
+                                            Sid = "ModuleRestApiLogging",
                                             Effect = "Allow",
                                             Action = new List<string> {
                                                 "logs:CreateLogGroup",
