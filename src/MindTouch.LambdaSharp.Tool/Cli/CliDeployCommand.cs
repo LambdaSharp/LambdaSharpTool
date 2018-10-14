@@ -100,7 +100,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             allowDataLossOption.HasValue(),
                             protectStackOption.HasValue(),
                             skipAssemblyValidationOption.HasValue(),
-                            skipFunctionBuildOption.HasValue(),
+                            skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation),
                             inputs
                         )) {
                             break;
