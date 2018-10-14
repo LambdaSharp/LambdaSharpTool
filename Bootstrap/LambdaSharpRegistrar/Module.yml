@@ -9,15 +9,6 @@ Version: 0.4
 
 Inputs:
 
-  - Name: LoggingStream
-    Description: AWS Kinesis stream of log entries to process
-    Default: "!Import:LambdaSharp::LoggingStreamArn"
-
-    # TODO (2018-10-13, bjorg): add support for resource specification of input parameters
-    # Resource:
-    #   Type: AWS::Kinesis::Stream
-    #   Allow: Subscribe
-
   - Name: RegistrationTableReadCapacity
     Description: Provisioned read capacity for registrations table
     Default: 1
@@ -40,11 +31,11 @@ Outputs:
 
   - Export: UsageReportTopic
 
-Parameters:
+Variables:
 
   - Name: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
-    Value: !Ref LoggingStream
+    Value: !Ref Module::LoggingStreamArn
     Resource:
       Type: AWS::Kinesis::Stream
       Allow: Subscribe
@@ -54,6 +45,8 @@ Parameters:
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
+
+Parameters:
 
   - Name: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors

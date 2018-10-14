@@ -83,35 +83,52 @@ namespace MindTouch.LambdaSharp.Tool {
                 .ToList()
             , new List<string>());
 
-            // convert inputs
-            var inputIndex = 0;
-            _module.Inputs = AtLocation("Inputs", () => module.Inputs
-                .Select(input => ConvertInput(++inputIndex, input))
-                .Where(input => input != null)
-                .ToList()
-            , null) ?? new List<Input>();
-
             // internal module inputs
-            _module.Inputs.Add(ConvertInput(0, new InputNode {
-                Name = "DeploymentBucketName",
-                Type = "String",
-                Description = "LambdaSharp Deployment S3 Bucket Name"
-            }));
-            _module.Inputs.Add(ConvertInput(0, new InputNode {
-                Name = "DeploymentBucketPath",
-                Type = "String",
-                Description = "LambdaSharp Deployment S3 Bucket Path"
-            }));
-            _module.Inputs.Add(ConvertInput(0, new InputNode {
-                Name = "Tier",
-                Type = "String",
-                Description = "LambdaSharp Deployment Tier"
-            }));
-            _module.Inputs.Add(ConvertInput(0, new InputNode {
-                Name = "TierLowercase",
-                Type = "String",
-                Description = "LambdaSharp Deployment Tier (lowercase)"
-            }));
+            _module.Inputs = new List<Input> {
+                ConvertInput(0, new InputNode {
+                    Name = "DeploymentBucketName",
+                    Type = "String",
+                    Description = "LambdaSharp Deployment S3 Bucket Name"
+                }),
+                ConvertInput(0, new InputNode {
+                    Name = "DeploymentBucketPath",
+                    Type = "String",
+                    Description = "LambdaSharp Deployment S3 Bucket Path"
+                }),
+                ConvertInput(0, new InputNode {
+                    Name = "Tier",
+                    Type = "String",
+                    Description = "LambdaSharp Deployment Tier"
+                }),
+                ConvertInput(0, new InputNode {
+                    Name = "TierLowercase",
+                    Type = "String",
+                    Description = "LambdaSharp Deployment Tier (lowercase)"
+                }),
+                ConvertInput(0, new InputNode {
+                    Name = "ModuleDeadLetterQueueArn",
+                    Type = "String",
+                    Description = "LambdaSharp Dead Letter Queue",
+                    Default = "!Import:LambdaSharp::DeadLetterQueueArn"
+                }),
+                ConvertInput(0, new InputNode {
+                    Name = "ModuleLoggingStreamArn",
+                    Type = "String",
+                    Description = "LambdaSharp Logging Stream",
+                    Default = "!Import:LambdaSharp::LoggingStreamArn"
+                })
+            };
+
+            // convert inputs
+            AtLocation("Inputs", () => {
+                var inputIndex = 0;
+                foreach(var inputNode in module.Inputs
+                    .Select(input => ConvertInput(++inputIndex, input))
+                    .Where(input => input != null)
+                ) {
+                    _module.Inputs.Add(inputNode);
+                }
+            });
 
             // convert parameters
             var values = new List<AParameter>();
@@ -157,6 +174,20 @@ namespace MindTouch.LambdaSharp.Tool {
                     ResourceName = "ModuleVersion",
                     Description = "LambdaSharp module version",
                     Value = _module.Version
+                },
+                new ValueParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "DeadLetterQueueArn",
+                    ResourceName = "ModuleDeadLetterQueueArn",
+                    Description = "LambdaSharp Dead Letter Queue",
+                    Value = FnRef("ModuleDeadLetterQueueArn")
+                },
+                new ValueParameter {
+                    Scope = ParameterScope.Module,
+                    Name = "LoggingStreamArn",
+                    ResourceName = "ModuleLoggingStreamArn",
+                    Description = "LambdaSharp Logging Stream",
+                    Value = FnRef("ModuleLoggingStreamArn")
                 }
 
                 // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?
@@ -209,19 +240,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
-                    //  UseFoo: FooIsImport ? join(":", $Tier, split($Foo, "!Import:")[1]) : $Foo
+                    //  UseFoo: FooIsImport ? join("-", $Tier, split($Foo, "!Import:")[1]) : $Foo
                     result.Reference = FnIf(
                         $"{input.Name}IsImport",
-                        FnImportValue(FnJoin(
-                            ":",
-                            new List<object> {
-                                FnRef("Tier"),
-                                FnSelect(
-                                    "1",
-                                    FnSplit("!Import:", FnRef(input.Name))
-                                )
-                            }
-                        )),
+                        FnImportValue(FnSub("${Tier}-${Import}", new Dictionary<string, object> {
+                            ["Import"] = FnSelect("1", FnSplit("!Import:", FnRef(input.Name)))
+                        })),
                         FnRef(input.Name)
                     );
                 } else {

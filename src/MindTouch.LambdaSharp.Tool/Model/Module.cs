@@ -42,5 +42,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+        public object GetInputReference(string inputName) => Inputs.First(i => i.Name == inputName).Reference;
      }
 }

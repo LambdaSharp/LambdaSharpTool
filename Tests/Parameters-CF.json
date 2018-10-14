@@ -17,6 +17,16 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "LambdaSharp Deployment Tier (lowercase)"
+    },
+    "ModuleDeadLetterQueueArn": {
+      "Type": "String",
+      "Description": "LambdaSharp Dead Letter Queue",
+      "Default": "!Import:LambdaSharp::DeadLetterQueueArn"
+    },
+    "ModuleLoggingStreamArn": {
+      "Type": "String",
+      "Description": "LambdaSharp Logging Stream",
+      "Default": "!Import:LambdaSharp::LoggingStreamArn"
     }
   },
   "Resources": {
@@ -80,9 +90,34 @@
                   "Effect": "Allow",
                   "Action": "kinesis:PutRecord",
                   "Resource": {
-                    "Fn::ImportValue": {
-                      "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn"
-                    }
+                    "Fn::If": [
+                      "ModuleLoggingStreamArnIsImport",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${Tier}-${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "!Import:",
+                                      {
+                                        "Ref": "ModuleLoggingStreamArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "ModuleLoggingStreamArn"
+                      }
+                    ]
                   }
                 }
               ]
@@ -188,9 +223,34 @@
                     "sqs:SendMessage"
                   ],
                   "Resource": {
-                    "Fn::ImportValue": {
-                      "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
-                    }
+                    "Fn::If": [
+                      "ModuleDeadLetterQueueArnIsImport",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${Tier}-${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "!Import:",
+                                      {
+                                        "Ref": "ModuleDeadLetterQueueArn"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "ModuleDeadLetterQueueArn"
+                      }
+                    ]
                   }
                 }
               ]
@@ -223,7 +283,7 @@
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
-        "FunctionGitSha": "4d78cbf1c765fa1c750b9cc636a84543794cd5fc",
+        "FunctionGitSha": "2c5a0de887a325c9e20a34d669d46bf8beda01ce",
         "FunctionGitBranch": "",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -245,9 +305,34 @@
         },
         "DeadLetterConfig": {
           "TargetArn": {
-            "Fn::ImportValue": {
-              "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
-            }
+            "Fn::If": [
+              "ModuleDeadLetterQueueArnIsImport",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${Tier}-${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "!Import:",
+                              {
+                                "Ref": "ModuleDeadLetterQueueArn"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "ModuleDeadLetterQueueArn"
+              }
+            ]
           }
         },
         "Description": "My function (v1.0)",
@@ -264,9 +349,34 @@
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
-              "Fn::ImportValue": {
-                "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::DeadLetterQueueArn"
-              }
+              "Fn::If": [
+                "ModuleDeadLetterQueueArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${Tier}-${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "!Import:",
+                                {
+                                  "Ref": "ModuleDeadLetterQueueArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "ModuleDeadLetterQueueArn"
+                }
+              ]
             },
             "STR_SAMPLEPARAMETERCOLLECTION": "",
             "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",
@@ -378,9 +488,34 @@
       "Type": "AWS::Logs::SubscriptionFilter",
       "Properties": {
         "DestinationArn": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${Tier}:LambdaSharp-LambdaSharp::LoggingStreamArn"
-          }
+          "Fn::If": [
+            "ModuleLoggingStreamArnIsImport",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${Tier}-${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "!Import:",
+                            {
+                              "Ref": "ModuleLoggingStreamArn"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "ModuleLoggingStreamArn"
+            }
+          ]
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
@@ -393,6 +528,44 @@
           ]
         }
       }
+    }
+  },
+  "Conditions": {
+    "ModuleDeadLetterQueueArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "!Import:",
+                {
+                  "Ref": "ModuleDeadLetterQueueArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "ModuleLoggingStreamArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "!Import:",
+                {
+                  "Ref": "ModuleLoggingStreamArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
     }
   }
 }

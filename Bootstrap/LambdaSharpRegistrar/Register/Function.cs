@@ -80,13 +80,13 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
-            case "Custom::LambdaSharpModuleRegistration": {
+            case "Custom::LambdaSharpRegisterModule": {
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = PopulateOwnerMetaData(properties);
                     await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
                     return Respond($"registration:module:{properties.ModuleId}");
                 }
-            case "Custom::LambdaSharpFunctionRegistration": {
+            case "Custom::LambdaSharpRegisterFunction": {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
                     var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     owner = PopulateOwnerMetaData(properties, owner);
@@ -103,12 +103,12 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
         protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
             switch(request.ResourceType) {
-            case "Custom::LambdaSharpModuleRegistration": {
+            case "Custom::LambdaSharpRegisterModule": {
                     LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     break;
                 }
-            case "Custom::LambdaSharpFunctionRegistration": {
+            case "Custom::LambdaSharpRegisterFunction": {
                     LogInfo($"Removing Function: Id={properties.FunctionId}, Name={properties.FunctionName}, LogGroup={properties.FunctionLogGroupName}");
                     await _registrations.DeleteOwnerMetaDataAsync($"F:{properties.FunctionId}");
                     break;
