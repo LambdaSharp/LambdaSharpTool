@@ -186,10 +186,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             case ".yml":
             case ".yaml":
                 try {
-                    return new DeserializerBuilder()
+                    var parameters = new DeserializerBuilder()
                         .WithNamingConvention(new PascalCaseNamingConvention())
                         .Build()
-                        .Deserialize<Dictionary<string, string>>(File.ReadAllText(filename));
+                        .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
+                    return parameters.ToDictionary(
+                        kv => kv.Key,
+                        kv => (kv.Value is string text)
+                            ? text
+                            : string.Join(",", (IList<object>)kv.Value)
+                    );
                 } catch(YamlDotNet.Core.YamlException e) {
                     AddError($"parsing error near {e.Message}");
                 } catch(Exception e) {
