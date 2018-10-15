@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using Humidifier;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
@@ -26,12 +28,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Name { get; set; }
+        public string Section { get; set; }
+        public string Label { get; set; }
         public string Description { get; set; }
         public string Type { get; set; }
         public string Default { get; set; }
         public object Reference { get; set; }
-        public Humidifier.Condition Condition { get; set; }
-        public string Section { get; set; }
-        public string Label { get; set; }
+        public Condition Condition { get; set; }
+        public string ConstraintDescription { get; set; }
+        public string AllowedPattern { get; set; }
+        public IList<string> AllowedValues { get; set; }
     }
 }

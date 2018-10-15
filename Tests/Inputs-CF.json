@@ -8,6 +8,8 @@
     },
     "BarInput": {
       "Type": "String",
+      "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
+      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
       "Default": "$OtherModule::ExportValue"
     },
     "ModuleSecrets": {
@@ -18,16 +20,22 @@
     "ModuleDeadLetterQueueArn": {
       "Type": "String",
       "Description": "Dead letter queue for functions",
+      "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
+      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
       "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
     "ModuleLoggingStreamArn": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions",
+      "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
+      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
       "Default": "$LambdaSharp::LoggingStreamArn"
     },
     "ModuleDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
+      "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
+      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
       "Default": "$LambdaSharp::DefaultSecretKeyArn"
     },
     "DeploymentBucketName": {

@@ -501,6 +501,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(input.Type == null) {
                         input.Type = "String";
                     }
+                    if(input.Import != null) {
+                        ValidateNotBothStatements("Import", "Default", input.Default == null);
+                        ValidateNotBothStatements("Import", "ConstraintDescription", input.ConstraintDescription == null);
+                        ValidateNotBothStatements("Import", "AllowedPattern", input.AllowedPattern == null);
+                        ValidateNotBothStatements("Import", "AllowedValues", input.AllowedValues == null);
+                    }
                 });
             }
         }

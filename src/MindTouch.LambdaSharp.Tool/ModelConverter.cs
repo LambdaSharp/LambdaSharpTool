@@ -114,7 +114,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Label = "Dead Letter Queue (ARN)",
                         Type = "String",
                         Description = "Dead letter queue for functions",
-                        Default = "$LambdaSharp::DeadLetterQueueArn"
+                        Import = "LambdaSharp::DeadLetterQueueArn"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "ModuleLoggingStreamArn",
@@ -122,7 +122,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Label = "Logging Stream (ARN)",
                         Type = "String",
                         Description = "Logging kinesis stream for functions",
-                        Default = "$LambdaSharp::LoggingStreamArn"
+                        Import = "LambdaSharp::LoggingStreamArn"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "ModuleDefaultSecretKeyArn",
@@ -130,7 +130,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Label = "Secret Key (ARN)",
                         Type = "String",
                         Description = "Default secret key for functions",
-                        Default = "$LambdaSharp::DefaultSecretKeyArn"
+                        Import = "LambdaSharp::DefaultSecretKeyArn"
                     })
                 });
 
@@ -269,15 +269,21 @@ namespace MindTouch.LambdaSharp.Tool {
             return AtLocation(input.Name ?? $"[{index}]", () => {
                 var result = new Input {
                     Name = input.Name,
+                    Section = input.Section ?? "Module Settings",
+                    Label = input.Label ?? input.Name,
                     Description = input.Description,
                     Type = input.Type,
                     Default = input.Default,
-                    Section = input.Section ?? "Module Settings",
-                    Label = input.Label ?? input.Name
+                    ConstraintDescription = input.ConstraintDescription,
+                    AllowedPattern = input.AllowedPattern,
+                    AllowedValues = input.AllowedValues
                 };
 
                 // check if default value is an import statement
-                if(input.Default?.StartsWith("$", StringComparison.Ordinal) == true) {
+                if(input.Import != null) {
+                    result.Default = "$" + input.Import;
+                    result.AllowedPattern = @"^(\$[\w]+::[\w]+|arn:[\w:]+)$";
+                    result.ConstraintDescription = "must either be a LambdaSharp import reference or a resource ARN";
 
                     // Create a condition for inputs that use an import statement:
                     //  FooIsImport := split($Foo, "$")[0] == ""

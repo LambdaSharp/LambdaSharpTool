@@ -20,16 +20,22 @@
  */
 
 
+using System.Collections.Generic;
+
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class InputNode {
 
         //--- Properties ---
         public string Name { get; set; }
+        public string Section { get; set; }
+        public string Label { get; set; }
         public string Description { get; set; }
         public string Type { get; set; }
         public string Default { get; set; }
-        public string Section { get; set; }
-        public string Label { get; set; }
+        public string ConstraintDescription { get; set; }
+        public string AllowedPattern { get; set; }
+        public IList<string> AllowedValues { get; set; }
+        public string Import { get; set; }
     }
 }

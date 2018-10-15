@@ -139,7 +139,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 _stack.Add(input.Name, new Parameter {
                     Type = input.Type,
                     Description = input.Description,
-                    Default = input.Default
+                    Default = input.Default,
+                    ConstraintDescription = input.ConstraintDescription,
+                    AllowedPattern = input.AllowedPattern,
+                    AllowedValues = input.AllowedValues?.ToList()
                 });
                 if(input.Condition != null) {
                     _stack.Add($"{input.Name}IsImport", input.Condition);
