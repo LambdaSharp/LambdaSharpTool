@@ -11,8 +11,14 @@ Description: LambdaSharp Environment
 Inputs:
 
   - Name: LoggingStreamRetentionPeriod
-    Description: Retention period for logging stream before entires are lost
+    Label: Retention period (hours)
+    Description: How long logging stream entries are kept before they are lost
     Default: 24
+
+  - Name: SecretsKeyRotationEnabled
+    Label: Enable key rotation
+    Description: Rotate KMS key automatically every 365 days
+    Default: false
 
 Outputs:
 
@@ -50,6 +56,7 @@ Variables:
       Type: AWS::KMS::Key
       Properties:
         Description: Default encryption/decryption key for LambdaSharp modules
+        EnableKeyRotation: !Ref SecretsKeyRotationEnabled
         KeyPolicy:
           Version: "2012-10-17"
           Id: !Sub "${AWS::StackName}ModuleSecretsKeyPolicy"
