@@ -52,8 +52,6 @@ namespace MindTouch.LambdaSharpRegistrar {
                 FunctionPlatform = TryGetAsString("FunctionPlatform"),
                 FunctionFramework = TryGetAsString("FunctionFramework"),
                 FunctionLanguage = TryGetAsString("FunctionLanguage"),
-                FunctionGitSha = TryGetAsString("FunctionGitSha"),
-                FunctionGitBranch = TryGetAsString("FunctionGitBranch"),
                 FunctionMaxMemory = TryGetAsInt("FunctionMaxMemory"),
                 FunctionMaxDuration = TryGetAsTimeSpan("FunctionMaxDuration")
             };
@@ -84,8 +82,6 @@ namespace MindTouch.LambdaSharpRegistrar {
                 document["FunctionPlatform"] = owner.FunctionPlatform;
                 document["FunctionFramework"] = owner.FunctionFramework;
                 document["FunctionLanguage"] = owner.FunctionLanguage;
-                document["FunctionGitSha"] = owner.FunctionGitSha;
-                document["FunctionGitBranch"] = owner.FunctionGitBranch;
                 document["FunctionMaxMemory"] = owner.FunctionMaxMemory;
                 document["FunctionMaxDuration"] = owner.FunctionMaxDuration.ToString();
             }

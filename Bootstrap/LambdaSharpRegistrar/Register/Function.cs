@@ -47,8 +47,6 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
         public string FunctionPlatform { get; set; }
         public string FunctionFramework { get; set; }
         public string FunctionLanguage { get; set; }
-        public string FunctionGitSha { get; set; }
-        public string FunctionGitBranch { get; set; }
     }
 
     public class ResponseProperties {
@@ -146,8 +144,6 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             owner.FunctionPlatform = properties.FunctionPlatform;
             owner.FunctionFramework = properties.FunctionFramework;
             owner.FunctionLanguage = properties.FunctionLanguage;
-            owner.FunctionGitSha = properties.FunctionGitSha;
-            owner.FunctionGitBranch = properties.FunctionGitBranch;
             owner.FunctionMaxMemory = properties.FunctionMaxMemory;
             owner.FunctionMaxDuration = TimeSpan.FromSeconds(properties.FunctionMaxDuration);
             return owner;

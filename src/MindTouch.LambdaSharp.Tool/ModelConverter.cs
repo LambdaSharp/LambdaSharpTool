@@ -99,7 +99,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Name = "ModuleDeadLetterQueueArn",
                         Type = "String",
                         Description = "Function Dead Letter Queue (ARN)",
-                        Default = "!Import:LambdaSharp::DeadLetterQueueArn",
+                        Default = "=LambdaSharp::DeadLetterQueueArn",
                         Section = section,
                         Label = "Dead Letter Queue"
                     }),
@@ -107,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Name = "ModuleLoggingStreamArn",
                         Type = "String",
                         Description = "Function Logging Kinesis Stream (ARN)",
-                        Default = "!Import:LambdaSharp::LoggingStreamArn",
+                        Default = "=LambdaSharp::LoggingStreamArn",
                         Section = section,
                         Label = "Logging Stream"
                     })
@@ -253,18 +253,18 @@ namespace MindTouch.LambdaSharp.Tool {
                 };
 
                 // check if default value is an import statement
-                if(input.Default?.StartsWith("!Import:", StringComparison.Ordinal) == true) {
+                if(input.Default?.StartsWith("=", StringComparison.Ordinal) == true) {
 
                     // Create a condition for inputs that use an import statement:
-                    //  FooIsImport := split($Foo, "!Import:")[0] == ""
-                    result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("!Import:", Fn.Ref(input.Name))), ""));
+                    //  FooIsImport := split($Foo, "=")[0] == ""
+                    result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("=", Fn.Ref(input.Name))), ""));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
-                    //  UseFoo: FooIsImport ? join("-", $Tier, split($Foo, "!Import:")[1]) : $Foo
+                    //  UseFoo: FooIsImport ? join("-", $Tier, split($Foo, "=")[1]) : $Foo
                     result.Reference = FnIf(
                         $"{input.Name}IsImport",
                         FnImportValue(FnSub("${Tier}-${Import}", new Dictionary<string, object> {
-                            ["Import"] = FnSelect("1", FnSplit("!Import:", FnRef(input.Name)))
+                            ["Import"] = FnSelect("1", FnSplit("=", FnRef(input.Name)))
                         })),
                         FnRef(input.Name)
                     );

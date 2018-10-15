@@ -89,8 +89,6 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
                 FunctionPlatform = "Platform",
                 FunctionFramework = "Framework",
                 FunctionLanguage = "Language",
-                FunctionGitSha = "GitSha",
-                FunctionGitBranch = "GitBranch",
                 FunctionMaxDuration = TimeSpan.FromMilliseconds(10000),
                 FunctionMaxMemory = 128
             };

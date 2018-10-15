@@ -97,8 +97,6 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                         Platform = owner.FunctionPlatform,
                         Framework = owner.FunctionFramework,
                         Language = owner.FunctionLanguage,
-                        GitSha = owner.FunctionGitSha,
-                        GitBranch = owner.FunctionGitBranch,
                         Level = "ERROR",
                         Raw = message.Trim(),
                         Timestamp = long.Parse(timestamp),
@@ -175,9 +173,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 FunctionName = owner.FunctionName,
                 Platform = owner.FunctionPlatform,
                 Framework = owner.FunctionFramework,
-                Language = owner.FunctionLanguage,
-                GitSha = owner.FunctionGitSha,
-                GitBranch = owner.FunctionGitBranch
+                Language = owner.FunctionLanguage
             };
             preparer(report);
             return _provider.SendErrorReportAsync(report);

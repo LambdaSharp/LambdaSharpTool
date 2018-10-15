@@ -2,39 +2,39 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
-    "DeploymentBucketName": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment S3 Bucket Name"
-    },
-    "DeploymentBucketPath": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment S3 Bucket Path"
-    },
-    "Tier": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment Tier"
-    },
-    "TierLowercase": {
-      "Type": "String",
-      "Description": "LambdaSharp Deployment Tier (lowercase)"
-    },
-    "ModuleDeadLetterQueueArn": {
-      "Type": "String",
-      "Description": "LambdaSharp Dead Letter Queue",
-      "Default": "!Import:LambdaSharp::DeadLetterQueueArn"
-    },
-    "ModuleLoggingStreamArn": {
-      "Type": "String",
-      "Description": "LambdaSharp Logging Stream",
-      "Default": "!Import:LambdaSharp::LoggingStreamArn"
-    },
     "FooInput": {
       "Type": "String",
       "Default": "a default value"
     },
     "BarInput": {
       "Type": "String",
-      "Default": "!Import:OtherModule::ExportValue"
+      "Default": "=OtherModule::ExportValue"
+    },
+    "ModuleDeadLetterQueueArn": {
+      "Type": "String",
+      "Description": "Function Dead Letter Queue (ARN)",
+      "Default": "=LambdaSharp::DeadLetterQueueArn"
+    },
+    "ModuleLoggingStreamArn": {
+      "Type": "String",
+      "Description": "Function Logging Kinesis Stream (ARN)",
+      "Default": "=LambdaSharp::LoggingStreamArn"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Source Deployment S3 Bucket Name"
+    },
+    "DeploymentBucketPath": {
+      "Type": "String",
+      "Description": "Source Deployment S3 Bucket Path"
+    },
+    "Tier": {
+      "Type": "String",
+      "Description": "Module Deployment Tier"
+    },
+    "TierLowercase": {
+      "Type": "String",
+      "Description": "Module Deployment Tier (lowercase)"
     }
   },
   "Resources": {
@@ -96,7 +96,7 @@
                                   "1",
                                   {
                                     "Fn::Split": [
-                                      "!Import:",
+                                      "=",
                                       {
                                         "Ref": "ModuleLoggingStreamArn"
                                       }
@@ -130,7 +130,7 @@
           "Version": "2012-10-17",
           "Statement": [
             {
-              "Sid": "LambdaInvocation",
+              "Sid": "ModuleLambdaInvocation",
               "Effect": "Allow",
               "Principal": {
                 "Service": "lambda.amazonaws.com"
@@ -145,7 +145,7 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "LambdaLogStreamAccess",
+                  "Sid": "ModuleLogStreamAccess",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -154,7 +154,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "LambdaDeadLetterQueueLogging",
+                  "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
                   "Action": [
                     "sqs:SendMessage"
@@ -172,7 +172,7 @@
                                   "1",
                                   {
                                     "Fn::Split": [
-                                      "!Import:",
+                                      "=",
                                       {
                                         "Ref": "ModuleDeadLetterQueueArn"
                                       }
@@ -193,7 +193,7 @@
               ]
             },
             "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModuleResourcesPolicy"
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
             }
           }
         ]
@@ -220,8 +220,6 @@
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
-        "FunctionGitSha": "2c5a0de887a325c9e20a34d669d46bf8beda01ce",
-        "FunctionGitBranch": "",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
       },
@@ -254,7 +252,7 @@
                           "1",
                           {
                             "Fn::Split": [
-                              "!Import:",
+                              "=",
                               {
                                 "Ref": "ModuleDeadLetterQueueArn"
                               }
@@ -298,7 +296,7 @@
                             "1",
                             {
                               "Fn::Split": [
-                                "!Import:",
+                                "=",
                                 {
                                   "Ref": "ModuleDeadLetterQueueArn"
                                 }
@@ -331,7 +329,7 @@
                             "1",
                             {
                               "Fn::Split": [
-                                "!Import:",
+                                "=",
                                 {
                                   "Ref": "BarInput"
                                 }
@@ -387,7 +385,7 @@
                         "1",
                         {
                           "Fn::Split": [
-                            "!Import:",
+                            "=",
                             {
                               "Ref": "ModuleLoggingStreamArn"
                             }
@@ -418,6 +416,24 @@
     }
   },
   "Conditions": {
+    "BarInputIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "=",
+                {
+                  "Ref": "BarInput"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
     "ModuleDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -425,7 +441,7 @@
             "0",
             {
               "Fn::Split": [
-                "!Import:",
+                "=",
                 {
                   "Ref": "ModuleDeadLetterQueueArn"
                 }
@@ -443,7 +459,7 @@
             "0",
             {
               "Fn::Split": [
-                "!Import:",
+                "=",
                 {
                   "Ref": "ModuleLoggingStreamArn"
                 }
@@ -453,23 +469,66 @@
         },
         ""
       ]
-    },
-    "BarInputIsImport": {
-      "Fn::Equals": [
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "FooInput": {
+          "default": "FooInput"
+        },
+        "BarInput": {
+          "default": "BarInput"
+        },
+        "ModuleDeadLetterQueueArn": {
+          "default": "Dead Letter Queue"
+        },
+        "ModuleLoggingStreamArn": {
+          "default": "Logging Stream"
+        },
+        "DeploymentBucketName": {
+          "default": "S3 Bucket Name"
+        },
+        "DeploymentBucketPath": {
+          "default": "S3 Bucket Path"
+        },
+        "Tier": {
+          "default": "Tier"
+        },
+        "TierLowercase": {
+          "default": "Tier (lowercase)"
+        }
+      },
+      "ParameterGroups": [
         {
-          "Fn::Select": [
-            "0",
-            {
-              "Fn::Split": [
-                "!Import:",
-                {
-                  "Ref": "BarInput"
-                }
-              ]
-            }
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "FooInput",
+            "BarInput"
           ]
         },
-        ""
+        {
+          "Label": {
+            "default": "LambdaSharp Module Dependencies (Internal)"
+          },
+          "Parameters": [
+            "ModuleDeadLetterQueueArn",
+            "ModuleLoggingStreamArn"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (Internal - DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentBucketPath",
+            "Tier",
+            "TierLowercase"
+          ]
+        }
       ]
     }
   }

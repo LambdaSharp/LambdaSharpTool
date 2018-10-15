@@ -35,8 +35,6 @@ namespace MindTouch.LambdaSharpRegistrar {
         public string FunctionPlatform { get; set; }
         public string FunctionFramework { get; set; }
         public string FunctionLanguage { get; set; }
-        public string FunctionGitSha { get; set; }
-        public string FunctionGitBranch { get; set; }
         public int FunctionMaxMemory { get; set; }
         public TimeSpan FunctionMaxDuration { get; set; }
     }

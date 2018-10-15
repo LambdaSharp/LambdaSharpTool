@@ -550,10 +550,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["FunctionPlatform"] = "AWS Lambda",
                     ["FunctionFramework"] = function.Runtime,
                     ["FunctionLanguage"] = "csharp",
-                    ["FunctionGitSha"] = Settings.GitSha ?? "",
-
-                    // TODO (2018-10-11, bjorg): add GitBranch information
-                    ["FunctionGitBranch"] = "",
                     ["FunctionMaxMemory"] = function.Memory,
                     ["FunctionMaxDuration"] = function.Timeout
                 }, dependsOn: new[] { "ModuleRegistration" });
