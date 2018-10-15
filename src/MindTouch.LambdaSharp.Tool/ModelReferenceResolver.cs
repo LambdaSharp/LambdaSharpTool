@@ -387,21 +387,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 found = null;
                 if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
                     switch(freeParameter) {
-                    case ValueParameter valueParameter:
+                    case ValueParameter _:
+                    case SecretParameter _:
+                    case PackageParameter _:
+                    case ValueListParameter _:
+                    case ReferencedResourceParameter _:
+                    case ValueInputParameter _:
+                    case SecretInputParameter _:
+                    case ImportInputParameter _:
                         if(attribute != null) {
-                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
-                        }
-                        found = freeParameter.Reference;
-                        break;
-                    case ValueListParameter listParameter:
-                        if(attribute != null) {
-                            AddError($"reference '{key}' resolved to a list value, but is used in a Fn::GetAtt expression");
-                        }
-                        found = freeParameter.Reference;
-                        break;
-                    case ReferencedResourceParameter referencedParameter:
-                        if(attribute != null) {
-                            AddError($"reference '{key}' resolved to a referenced resource value, but is used in a Fn::GetAtt expression");
+                            AddError($"reference '{key}' must resolved to a CloudFormation resource to be used with an Fn::GetAtt expression");
                         }
                         found = freeParameter.Reference;
                         break;
@@ -410,21 +405,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             ? FnGetAtt(key, attribute)
                             : freeParameter.Reference;
                         break;
-                    case ValueInputParameter _:
-                    case SecretInputParameter _:
-                        if(attribute != null) {
-                            AddError($"reference '{key}' resolved to an input value, but is used in a Fn::GetAtt expression");
-                        }
-                        found = freeParameter.Reference;
-                        break;
-                    case ImportInputParameter importInputParameter:
-                        if(attribute != null) {
-                            AddError($"reference '{key}' resolved to an import value, but is used in a Fn::GetAtt expression");
-                        }
-                        found = freeParameter.Reference;
-                        break;
-
-                        // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
                     }
                 }
                 return found != null;
