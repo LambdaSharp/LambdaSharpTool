@@ -24,6 +24,10 @@ Outputs:
     Description: LambdaSharp Logging Stream
     Value: !GetAtt LoggingStream.Arn
 
+  - Export: SecretsKeyArn
+    Description: LambdaSharp Secrets Key
+    Value: !GetAtt SecretsKey.Arn
+
 Variables:
 
   - Name: DeadLetterQueue
@@ -39,6 +43,23 @@ Variables:
       Properties:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
+
+  - Name: SecretsKey
+    Description: Default encryption/decryption key for LambdaSharp modules
+    Resource:
+      Type: AWS::KMS::Key
+      Properties:
+        Description: Default encryption/decryption key for LambdaSharp modules
+        KeyPolicy:
+          Version: "2012-10-17"
+          Id: !Sub "${AWS::StackName}ModuleSecretsKeyPolicy"
+          Statement:
+            - Effect: Allow
+              Principal:
+                AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+              Action:
+                - kms:*
+              Resource: "*"
 
   - Name: EnvironmentVersion
     Description: LambdaSharp module version
