@@ -81,72 +81,96 @@ namespace MindTouch.LambdaSharp.Tool {
                 .Select(secret => ConvertSecret(++secretIndex, secret))
                 .Where(secret => secret != null)
                 .ToList()
-            , new List<string>());
+            , new List<object>());
 
             // internal module inputs
             AtLocation("Inputs", () => {
+                string section;
                 var inputIndex = 0;
                 var inputs = module.Inputs
                         .Select(input => ConvertInput(++inputIndex, input))
                         .Where(input => input != null)
                         .ToList();
 
-                // LambdaSharp Module Settings
-                var section = "LambdaSharp Module Dependencies (Internal)";
+                // LambdaSharp Module Options
+                section = "LambdaSharp Module Options";
                 inputs.AddRange(new[] {
+                    ConvertInput(0, new InputNode {
+                        Name = "ModuleSecrets",
+                        Section = section,
+                        Label = "Secret Keys (ARNs)",
+                        Type = "String",
+                        Description = "Comma-separated list of optional secret keys",
+                        Default = ""
+                    })
+                });
 
+                // LambdaSharp Module Internal Dependencies
+                section = "LambdaSharp Module Internal Dependencies";
+                inputs.AddRange(new[] {
                     ConvertInput(0, new InputNode {
                         Name = "ModuleDeadLetterQueueArn",
-                        Type = "String",
-                        Description = "Function Dead Letter Queue (ARN)",
-                        Default = "=LambdaSharp::DeadLetterQueueArn",
                         Section = section,
-                        Label = "Dead Letter Queue"
+                        Label = "Dead Letter Queue (ARN)",
+                        Type = "String",
+                        Description = "Dead letter queue for functions",
+                        Default = "$LambdaSharp::DeadLetterQueueArn"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "ModuleLoggingStreamArn",
-                        Type = "String",
-                        Description = "Function Logging Kinesis Stream (ARN)",
-                        Default = "=LambdaSharp::LoggingStreamArn",
                         Section = section,
-                        Label = "Logging Stream"
+                        Label = "Logging Stream (ARN)",
+                        Type = "String",
+                        Description = "Logging kinesis stream for functions",
+                        Default = "$LambdaSharp::LoggingStreamArn"
+                    }),
+                    ConvertInput(0, new InputNode {
+                        Name = "ModuleDefaultSecretKeyArn",
+                        Section = section,
+                        Label = "Secret Key (ARN)",
+                        Type = "String",
+                        Description = "Default secret key for functions",
+                        Default = "$LambdaSharp::DefaultSecretKeyArn"
                     })
                 });
 
                 // LambdaSharp Deployment Settings
-                section = "LambdaSharp Deployment Settings (Internal - DO NOT MODIFY)";
+                section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
                 inputs.AddRange(new[] {
                     ConvertInput(0, new InputNode {
                         Name = "DeploymentBucketName",
-                        Type = "String",
-                        Description = "Source Deployment S3 Bucket Name",
                         Section = section,
-                        Label = "S3 Bucket Name"
+                        Label = "S3 Bucket Name",
+                        Type = "String",
+                        Description = "Source deployment S3 bucket name"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "DeploymentBucketPath",
-                        Type = "String",
-                        Description = "Source Deployment S3 Bucket Path",
                         Section = section,
-                        Label = "S3 Bucket Path"
+                        Label = "S3 Bucket Path",
+                        Type = "String",
+                        Description = "Source deployment S3 bucket path"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "Tier",
-                        Type = "String",
-                        Description = "Module Deployment Tier",
                         Section = section,
-                        Label = "Tier"
+                        Label = "Tier",
+                        Type = "String",
+                        Description = "Module deployment tier"
                     }),
                     ConvertInput(0, new InputNode {
                         Name = "TierLowercase",
-                        Type = "String",
-                        Description = "Module Deployment Tier (lowercase)",
                         Section = section,
-                        Label = "Tier (lowercase)"
+                        Label = "Tier (lowercase)",
+                        Type = "String",
+                        Description = "Module deployment tier (lowercase)"
                     })
                 });
                 _module.Inputs = inputs;
             });
+
+            // add default secrets key that is imported from the input parameters
+            _module.Secrets.Add(_module.GetInputReference("ModuleDefaultSecretKeyArn"));
 
             // convert parameters
             var values = new List<AParameter>();
@@ -222,7 +246,7 @@ namespace MindTouch.LambdaSharp.Tool {
             return _module;
         }
 
-        public string ConvertSecret(int index, string secret) {
+        public object ConvertSecret(int index, string secret) {
             return AtLocation($"[{index}]", () => {
                 if(secret.StartsWith("arn:")) {
 
@@ -253,18 +277,18 @@ namespace MindTouch.LambdaSharp.Tool {
                 };
 
                 // check if default value is an import statement
-                if(input.Default?.StartsWith("=", StringComparison.Ordinal) == true) {
+                if(input.Default?.StartsWith("$", StringComparison.Ordinal) == true) {
 
                     // Create a condition for inputs that use an import statement:
-                    //  FooIsImport := split($Foo, "=")[0] == ""
-                    result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("=", Fn.Ref(input.Name))), ""));
+                    //  FooIsImport := split($Foo, "$")[0] == ""
+                    result.Condition = new Condition(Fn.Equals(Fn.Select("0", Fn.Split("$", Fn.Ref(input.Name))), ""));
 
                     // If condition is set, the parameter uses the `!ImportValue` function, otherwise it's just a `!Ref`
-                    //  UseFoo: FooIsImport ? join("-", $Tier, split($Foo, "=")[1]) : $Foo
+                    //  UseFoo: FooIsImport ? join("-", $Tier, split($Foo, "$")[1]) : $Foo
                     result.Reference = FnIf(
                         $"{input.Name}IsImport",
                         FnImportValue(FnSub("${Tier}-${Import}", new Dictionary<string, object> {
-                            ["Import"] = FnSelect("1", FnSplit("=", FnRef(input.Name)))
+                            ["Import"] = FnSelect("1", FnSplit("$", FnRef(input.Name)))
                         })),
                         FnRef(input.Name)
                     );

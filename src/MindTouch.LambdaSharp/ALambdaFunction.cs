@@ -105,6 +105,7 @@ namespace MindTouch.LambdaSharp {
         protected string DeploymentTier { get; private set; }
         protected string FunctionId { get; private set; }
         protected string FunctionName { get; private set; }
+        protected string DefaultSecretKey { get; private set; }
         protected string RequestId { get; private set; }
         protected ErrorReporter ErrorReporter { get; private set; }
 
@@ -163,6 +164,7 @@ namespace MindTouch.LambdaSharp {
             ModuleId = envSource.Read("MODULE_ID");
             ModuleVersion = envSource.Read("MODULE_VERSION");
             _deadLetterQueueUrl = ConvertQueueArnToUrl(envSource.Read("DEADLETTERQUEUE"));
+            DefaultSecretKey = envSource.Read("DEFAULTSECRETKEY");
             FunctionId = context.InvokedFunctionArn.Split(':')[5];
             FunctionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
@@ -173,6 +175,7 @@ namespace MindTouch.LambdaSharp {
             LogInfo($"FUNCTION = {FunctionName}");
             LogInfo($"FUNCTION_ID = {FunctionId}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
+            LogInfo($"DEFAULTSECRETKEY = {DefaultSecretKey ?? "NONE"}");
 
             // read optional git-sha file
             var gitsha = File.Exists("gitsha.txt") ? File.ReadAllText("gitsha.txt") : null;
@@ -204,6 +207,23 @@ namespace MindTouch.LambdaSharp {
             }
         }
 
+        protected async Task<string> DecryptSecretAsync(string secret, Dictionary<string, string> encryptionContext = null) {
+            var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
+                CiphertextBlob = new MemoryStream(Convert.FromBase64String(secret)),
+                EncryptionContext = encryptionContext
+            })).Plaintext;
+            return Encoding.UTF8.GetString(plaintextStream.ToArray());
+        }
+
+        protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null) {
+            var response = await _kmsClient.EncryptAsync(new EncryptRequest {
+                KeyId = encryptionKeyId ?? DefaultSecretKey,
+                Plaintext = new MemoryStream(Encoding.UTF8.GetBytes(text)),
+                EncryptionContext = encryptionContext
+            });
+            return Convert.ToBase64String(response.CiphertextBlob.ToArray());
+        }
+
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
             var parameters = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             foreach(DictionaryEntry envVar in Environment.GetEnvironmentVariables()) {
@@ -218,9 +238,9 @@ namespace MindTouch.LambdaSharp {
                     parameters.Add(EnvToVarKey(key), value);
                 } else if(key.StartsWith("SEC_", StringComparison.Ordinal)) {
 
-                    // secret with optional encryption context pairs
-                    var parts = value.Split('|');
+                    // check for optional encrypt contexts
                     Dictionary<string, string> encryptionContext = null;
+                    var parts = value.Split('|');
                     if(parts.Length > 1) {
                         encryptionContext = new Dictionary<string, string>();
                         for(var i = 1; i < parts.Length; ++i) {
@@ -234,11 +254,9 @@ namespace MindTouch.LambdaSharp {
                             );
                         }
                     }
-                    var plaintextStream = (await _kmsClient.DecryptAsync(new DecryptRequest {
-                        CiphertextBlob = new MemoryStream(Convert.FromBase64String(value)),
-                        EncryptionContext = encryptionContext
-                    })).Plaintext;
-                    parameters.Add(EnvToVarKey(key), Encoding.UTF8.GetString(plaintextStream.ToArray()));
+
+                    // decrypt secret value
+                    parameters.Add(EnvToVarKey(key), await DecryptSecretAsync(parts[0], encryptionContext));
                 }
             }
             return parameters;

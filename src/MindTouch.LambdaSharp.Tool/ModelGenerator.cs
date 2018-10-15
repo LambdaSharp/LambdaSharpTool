@@ -116,17 +116,23 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
             // add decryption permission for requested keys
-            if(_module.Secrets.Any()) {
-                _resourceStatements.Add(new Statement {
-                    Sid = "ModuleSecretsDecryption",
-                    Effect = "Allow",
-                    Resource = _module.Secrets,
-                    Action = new List<string> {
-                        "kms:Decrypt",
-                        "kms:Encrypt"
+            _resourceStatements.Add(new Statement {
+                Sid = "ModuleSecretsDecryption",
+                Effect = "Allow",
+                Resource = FnSplit(",", FnJoin(
+                    ",",
+                    new List<object> {
+                        FnJoin(",", _module.Secrets),
+                        FnRef("ModuleSecrets")
                     }
-                });
-            }
+                )),
+                Action = new List<string> {
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                }
+            });
 
             // add inputs
             foreach(var input in _module.Inputs) {
@@ -535,6 +541,7 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
             environmentVariables["DEADLETTERQUEUE"] = _module.GetInputReference("ModuleDeadLetterQueueArn");
+            environmentVariables["DEFAULTSECRETKEY"] = _module.GetInputReference("ModuleDefaultSecretKeyArn");
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
             }

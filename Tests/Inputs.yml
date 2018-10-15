@@ -8,7 +8,7 @@ Inputs:
     Default: a default value
 
   - Name: BarInput
-    Default: =OtherModule::ExportValue
+    Default: $OtherModule::ExportValue
 
 Parameters:
 

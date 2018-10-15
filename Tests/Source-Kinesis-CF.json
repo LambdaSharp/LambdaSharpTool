@@ -2,31 +2,41 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "ModuleSecrets": {
+      "Type": "String",
+      "Description": "Comma-separated list of optional secret keys",
+      "Default": ""
+    },
     "ModuleDeadLetterQueueArn": {
       "Type": "String",
-      "Description": "Function Dead Letter Queue (ARN)",
-      "Default": "=LambdaSharp::DeadLetterQueueArn"
+      "Description": "Dead letter queue for functions",
+      "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
     "ModuleLoggingStreamArn": {
       "Type": "String",
-      "Description": "Function Logging Kinesis Stream (ARN)",
-      "Default": "=LambdaSharp::LoggingStreamArn"
+      "Description": "Logging kinesis stream for functions",
+      "Default": "$LambdaSharp::LoggingStreamArn"
+    },
+    "ModuleDefaultSecretKeyArn": {
+      "Type": "String",
+      "Description": "Default secret key for functions",
+      "Default": "$LambdaSharp::DefaultSecretKeyArn"
     },
     "DeploymentBucketName": {
       "Type": "String",
-      "Description": "Source Deployment S3 Bucket Name"
+      "Description": "Source deployment S3 bucket name"
     },
     "DeploymentBucketPath": {
       "Type": "String",
-      "Description": "Source Deployment S3 Bucket Path"
+      "Description": "Source deployment S3 bucket path"
     },
     "Tier": {
       "Type": "String",
-      "Description": "Module Deployment Tier"
+      "Description": "Module deployment tier"
     },
     "TierLowercase": {
       "Type": "String",
-      "Description": "Module Deployment Tier (lowercase)"
+      "Description": "Module deployment tier (lowercase)"
     }
   },
   "Resources": {
@@ -94,7 +104,7 @@
                                   "1",
                                   {
                                     "Fn::Split": [
-                                      "=",
+                                      "$",
                                       {
                                         "Ref": "ModuleLoggingStreamArn"
                                       }
@@ -152,6 +162,61 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "ModuleSecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::Join": [
+                          ",",
+                          [
+                            {
+                              "Fn::If": [
+                                "ModuleDefaultSecretKeyArnIsImport",
+                                {
+                                  "Fn::ImportValue": {
+                                    "Fn::Sub": [
+                                      "${Tier}-${Import}",
+                                      {
+                                        "Import": {
+                                          "Fn::Select": [
+                                            "1",
+                                            {
+                                              "Fn::Split": [
+                                                "$",
+                                                {
+                                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                                }
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      }
+                                    ]
+                                  }
+                                },
+                                {
+                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                }
+                              ]
+                            },
+                            {
+                              "Ref": "ModuleSecrets"
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
                   "Sid": "ModuleDeadLetterQueueLogging",
                   "Effect": "Allow",
                   "Action": [
@@ -170,7 +235,7 @@
                                   "1",
                                   {
                                     "Fn::Split": [
-                                      "=",
+                                      "$",
                                       {
                                         "Ref": "ModuleDeadLetterQueueArn"
                                       }
@@ -250,7 +315,7 @@
                           "1",
                           {
                             "Fn::Split": [
-                              "=",
+                              "$",
                               {
                                 "Ref": "ModuleDeadLetterQueueArn"
                               }
@@ -294,7 +359,7 @@
                             "1",
                             {
                               "Fn::Split": [
-                                "=",
+                                "$",
                                 {
                                   "Ref": "ModuleDeadLetterQueueArn"
                                 }
@@ -308,6 +373,36 @@
                 },
                 {
                   "Ref": "ModuleDeadLetterQueueArn"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "ModuleDefaultSecretKeyArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${Tier}-${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "ModuleDefaultSecretKeyArn"
                 }
               ]
             }
@@ -350,7 +445,7 @@
                         "1",
                         {
                           "Fn::Split": [
-                            "=",
+                            "$",
                             {
                               "Ref": "ModuleLoggingStreamArn"
                             }
@@ -405,7 +500,7 @@
             "0",
             {
               "Fn::Split": [
-                "=",
+                "$",
                 {
                   "Ref": "ModuleDeadLetterQueueArn"
                 }
@@ -423,9 +518,27 @@
             "0",
             {
               "Fn::Split": [
-                "=",
+                "$",
                 {
                   "Ref": "ModuleLoggingStreamArn"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "ModuleDefaultSecretKeyArnIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "ModuleDefaultSecretKeyArn"
                 }
               ]
             }
@@ -438,11 +551,17 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "ModuleSecrets": {
+          "default": "Secret Keys (ARNs)"
+        },
         "ModuleDeadLetterQueueArn": {
-          "default": "Dead Letter Queue"
+          "default": "Dead Letter Queue (ARN)"
         },
         "ModuleLoggingStreamArn": {
-          "default": "Logging Stream"
+          "default": "Logging Stream (ARN)"
+        },
+        "ModuleDefaultSecretKeyArn": {
+          "default": "Secret Key (ARN)"
         },
         "DeploymentBucketName": {
           "default": "S3 Bucket Name"
@@ -460,16 +579,25 @@
       "ParameterGroups": [
         {
           "Label": {
-            "default": "LambdaSharp Module Dependencies (Internal)"
+            "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "ModuleDeadLetterQueueArn",
-            "ModuleLoggingStreamArn"
+            "ModuleSecrets"
           ]
         },
         {
           "Label": {
-            "default": "LambdaSharp Deployment Settings (Internal - DO NOT MODIFY)"
+            "default": "LambdaSharp Module Internal Dependencies"
+          },
+          "Parameters": [
+            "ModuleDeadLetterQueueArn",
+            "ModuleLoggingStreamArn",
+            "ModuleDefaultSecretKeyArn"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
           },
           "Parameters": [
             "DeploymentBucketName",

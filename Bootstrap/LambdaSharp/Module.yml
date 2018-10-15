@@ -15,7 +15,7 @@ Inputs:
     Description: How long logging stream entries are kept before they are lost
     Default: 24
 
-  - Name: SecretsKeyRotationEnabled
+  - Name: DefaultSecretKeyRotationEnabled
     Label: Enable key rotation
     Description: Rotate KMS key automatically every 365 days
     Default: false
@@ -30,9 +30,9 @@ Outputs:
     Description: LambdaSharp Logging Stream
     Value: !GetAtt LoggingStream.Arn
 
-  - Export: SecretsKeyArn
-    Description: LambdaSharp Secrets Key
-    Value: !GetAtt SecretsKey.Arn
+  - Export: DefaultSecretKeyArn
+    Description: LambdaSharp Default Secrets Key
+    Value: !GetAtt DefaultSecretKey.Arn
 
 Variables:
 
@@ -50,16 +50,16 @@ Variables:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
-  - Name: SecretsKey
+  - Name: DefaultSecretKey
     Description: Default encryption/decryption key for LambdaSharp modules
     Resource:
       Type: AWS::KMS::Key
       Properties:
         Description: Default encryption/decryption key for LambdaSharp modules
-        EnableKeyRotation: !Ref SecretsKeyRotationEnabled
+        EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
         KeyPolicy:
           Version: "2012-10-17"
-          Id: !Sub "${AWS::StackName}ModuleSecretsKeyPolicy"
+          Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
           Statement:
             - Effect: Allow
               Principal:
