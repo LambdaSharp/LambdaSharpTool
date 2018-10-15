@@ -36,8 +36,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public ParameterScope Scope { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-        public string ResourceName { get; set; }
         public IList<AParameter> Parameters { get; set; }
+        public string ResourceName { get; set; }
+        public object Reference;
     }
 
     public class SecretParameter : AParameter {
@@ -47,11 +48,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, string> EncryptionContext { get; set; }
     }
 
-    public class ValueParameter : AParameter {
-
-        //--- Properties ---
-        public object Value { get; set; }
-    }
+    public class ValueParameter : AParameter { }
 
     public class ValueListParameter : AParameter {
 
@@ -76,4 +73,34 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ReferencedResourceParameter : AResourceParameter { }
 
     public class CloudFormationResourceParameter : AResourceParameter { }
+
+    public abstract class AInputParameter : AParameter {
+
+        //--- Properties ---
+        public string Section { get; set; }
+        public string Label { get; set; }
+        public bool? NoEcho { get; set; }
+    }
+
+    public class ValueInputParameter : AInputParameter {
+
+        //--- Properties ---
+        public string Type { get; set; }
+        public string Default { get; set; }
+        public string ConstraintDescription { get; set; }
+        public string AllowedPattern { get; set; }
+        public IList<string> AllowedValues { get; set; }
+        public int? MaxLength { get; set; }
+        public int? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MinValue { get; set; }
+    }
+
+    public class SecretInputParameter : AInputParameter { }
+
+    public class ImportInputParameter : AInputParameter {
+
+        //--- Properties ---
+        public string Import { get; set; }
+    }
 }

@@ -2,14 +2,20 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
-    "FooInput": {
+    "InputParameter": {
       "Type": "String",
+      "Description": "required input parameter"
+    },
+    "InputParameterWithDefault": {
+      "Type": "String",
+      "Description": "input parameter with a default value",
       "Default": "a default value"
     },
-    "BarInput": {
+    "OtherModuleExportValue": {
       "Type": "String",
+      "Description": "cross-module import reference",
       "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
-      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
+      "ConstraintDescription": "must either be a cross-module import reference or a resource ARN",
       "Default": "$OtherModule::ExportValue"
     },
     "ModuleSecrets": {
@@ -17,25 +23,25 @@
       "Description": "Comma-separated list of optional secret keys",
       "Default": ""
     },
-    "ModuleDeadLetterQueueArn": {
+    "LambdaSharpDeadLetterQueueArn": {
       "Type": "String",
       "Description": "Dead letter queue for functions",
       "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
-      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
+      "ConstraintDescription": "must either be a cross-module import reference or a resource ARN",
       "Default": "$LambdaSharp::DeadLetterQueueArn"
     },
-    "ModuleLoggingStreamArn": {
+    "LambdaSharpLoggingStreamArn": {
       "Type": "String",
       "Description": "Logging kinesis stream for functions",
       "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
-      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
+      "ConstraintDescription": "must either be a cross-module import reference or a resource ARN",
       "Default": "$LambdaSharp::LoggingStreamArn"
     },
-    "ModuleDefaultSecretKeyArn": {
+    "LambdaSharpDefaultSecretKeyArn": {
       "Type": "String",
       "Description": "Default secret key for functions",
       "AllowedPattern": "^(\\$[\\w]+::[\\w]+|arn:[\\w:]+)$",
-      "ConstraintDescription": "must either be a LambdaSharp import reference or a resource ARN",
+      "ConstraintDescription": "must either be a cross-module import reference or a resource ARN",
       "Default": "$LambdaSharp::DefaultSecretKeyArn"
     },
     "DeploymentBucketName": {
@@ -103,7 +109,7 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "ModuleLoggingStreamArnIsImport",
+                      "LambdaSharpLoggingStreamArnIsImport",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -116,7 +122,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "ModuleLoggingStreamArn"
+                                        "Ref": "LambdaSharpLoggingStreamArn"
                                       }
                                     ]
                                   }
@@ -127,7 +133,7 @@
                         }
                       },
                       {
-                        "Ref": "ModuleLoggingStreamArn"
+                        "Ref": "LambdaSharpLoggingStreamArn"
                       }
                     ]
                   }
@@ -189,7 +195,7 @@
                           [
                             {
                               "Fn::If": [
-                                "ModuleDefaultSecretKeyArnIsImport",
+                                "LambdaSharpDefaultSecretKeyArnIsImport",
                                 {
                                   "Fn::ImportValue": {
                                     "Fn::Sub": [
@@ -202,7 +208,7 @@
                                               "Fn::Split": [
                                                 "$",
                                                 {
-                                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                                 }
                                               ]
                                             }
@@ -213,7 +219,7 @@
                                   }
                                 },
                                 {
-                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             },
@@ -234,7 +240,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "ModuleDeadLetterQueueArnIsImport",
+                      "LambdaSharpDeadLetterQueueArnIsImport",
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
@@ -247,7 +253,7 @@
                                     "Fn::Split": [
                                       "$",
                                       {
-                                        "Ref": "ModuleDeadLetterQueueArn"
+                                        "Ref": "LambdaSharpDeadLetterQueueArn"
                                       }
                                     ]
                                   }
@@ -258,7 +264,7 @@
                         }
                       },
                       {
-                        "Ref": "ModuleDeadLetterQueueArn"
+                        "Ref": "LambdaSharpDeadLetterQueueArn"
                       }
                     ]
                   }
@@ -314,7 +320,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "ModuleDeadLetterQueueArnIsImport",
+              "LambdaSharpDeadLetterQueueArnIsImport",
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
@@ -327,7 +333,7 @@
                             "Fn::Split": [
                               "$",
                               {
-                                "Ref": "ModuleDeadLetterQueueArn"
+                                "Ref": "LambdaSharpDeadLetterQueueArn"
                               }
                             ]
                           }
@@ -338,7 +344,7 @@
                 }
               },
               {
-                "Ref": "ModuleDeadLetterQueueArn"
+                "Ref": "LambdaSharpDeadLetterQueueArn"
               }
             ]
           }
@@ -358,7 +364,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "ModuleDeadLetterQueueArnIsImport",
+                "LambdaSharpDeadLetterQueueArnIsImport",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -371,7 +377,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "ModuleDeadLetterQueueArn"
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
                                 }
                               ]
                             }
@@ -382,13 +388,13 @@
                   }
                 },
                 {
-                  "Ref": "ModuleDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "ModuleDefaultSecretKeyArnIsImport",
+                "LambdaSharpDefaultSecretKeyArnIsImport",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -401,7 +407,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "ModuleDefaultSecretKeyArn"
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                                 }
                               ]
                             }
@@ -412,16 +418,22 @@
                   }
                 },
                 {
-                  "Ref": "ModuleDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             },
-            "STR_FOO": {
-              "Ref": "FooInput"
+            "STR_INPUT": {
+              "Ref": "InputParameter"
             },
-            "STR_BAR": {
+            "STR_INPUTWITHDEFAULT": {
+              "Ref": "InputParameterWithDefault"
+            },
+            "STR_SECRETINPUT": {
+              "Ref": "SecretInputParameter"
+            },
+            "STR_IMPORTEDINPUT": {
               "Fn::If": [
-                "BarInputIsImport",
+                "OtherModuleExportValueIsImport",
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
@@ -434,7 +446,7 @@
                               "Fn::Split": [
                                 "$",
                                 {
-                                  "Ref": "BarInput"
+                                  "Ref": "OtherModuleExportValue"
                                 }
                               ]
                             }
@@ -445,7 +457,37 @@
                   }
                 },
                 {
-                  "Ref": "BarInput"
+                  "Ref": "OtherModuleExportValue"
+                }
+              ]
+            },
+            "STR_HIDDENIMPORTPARAMETER": {
+              "Fn::If": [
+                "LambdaSharpLoggingStreamArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${Tier}-${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpLoggingStreamArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -477,7 +519,7 @@
       "Properties": {
         "DestinationArn": {
           "Fn::If": [
-            "ModuleLoggingStreamArnIsImport",
+            "LambdaSharpLoggingStreamArnIsImport",
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
@@ -490,7 +532,7 @@
                           "Fn::Split": [
                             "$",
                             {
-                              "Ref": "ModuleLoggingStreamArn"
+                              "Ref": "LambdaSharpLoggingStreamArn"
                             }
                           ]
                         }
@@ -501,7 +543,7 @@
               }
             },
             {
-              "Ref": "ModuleLoggingStreamArn"
+              "Ref": "LambdaSharpLoggingStreamArn"
             }
           ]
         },
@@ -519,7 +561,7 @@
     }
   },
   "Conditions": {
-    "BarInputIsImport": {
+    "OtherModuleExportValueIsImport": {
       "Fn::Equals": [
         {
           "Fn::Select": [
@@ -528,7 +570,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "BarInput"
+                  "Ref": "OtherModuleExportValue"
                 }
               ]
             }
@@ -537,7 +579,7 @@
         ""
       ]
     },
-    "ModuleDeadLetterQueueArnIsImport": {
+    "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
           "Fn::Select": [
@@ -546,7 +588,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "ModuleDeadLetterQueueArn"
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
                 }
               ]
             }
@@ -555,7 +597,7 @@
         ""
       ]
     },
-    "ModuleLoggingStreamArnIsImport": {
+    "LambdaSharpLoggingStreamArnIsImport": {
       "Fn::Equals": [
         {
           "Fn::Select": [
@@ -564,7 +606,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "ModuleLoggingStreamArn"
+                  "Ref": "LambdaSharpLoggingStreamArn"
                 }
               ]
             }
@@ -573,7 +615,7 @@
         ""
       ]
     },
-    "ModuleDefaultSecretKeyArnIsImport": {
+    "LambdaSharpDefaultSecretKeyArnIsImport": {
       "Fn::Equals": [
         {
           "Fn::Select": [
@@ -582,7 +624,7 @@
               "Fn::Split": [
                 "$",
                 {
-                  "Ref": "ModuleDefaultSecretKeyArn"
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
             }
@@ -595,22 +637,28 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "FooInput": {
-          "default": "FooInput"
+        "InputParameter": {
+          "default": "Input Parameter"
         },
-        "BarInput": {
-          "default": "BarInput"
+        "InputParameterWithDefault": {
+          "default": "Input Parameter (optional)"
+        },
+        "SecretInputParameter": {
+          "default": "Secret Input Parameter"
+        },
+        "OtherModuleExportValue": {
+          "default": "Reference"
         },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
-        "ModuleDeadLetterQueueArn": {
+        "LambdaSharpDeadLetterQueueArn": {
           "default": "Dead Letter Queue (ARN)"
         },
-        "ModuleLoggingStreamArn": {
+        "LambdaSharpLoggingStreamArn": {
           "default": "Logging Stream (ARN)"
         },
-        "ModuleDefaultSecretKeyArn": {
+        "LambdaSharpDefaultSecretKeyArn": {
           "default": "Secret Key (ARN)"
         },
         "DeploymentBucketName": {
@@ -629,11 +677,20 @@
       "ParameterGroups": [
         {
           "Label": {
-            "default": "Module Settings"
+            "default": "Plain Input Parameters"
           },
           "Parameters": [
-            "FooInput",
-            "BarInput"
+            "InputParameter",
+            "InputParameterWithDefault",
+            "SecretInputParameter"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Cross-Module References"
+          },
+          "Parameters": [
+            "OtherModuleExportValue"
           ]
         },
         {
@@ -649,9 +706,9 @@
             "default": "LambdaSharp Module Internal Dependencies"
           },
           "Parameters": [
-            "ModuleDeadLetterQueueArn",
-            "ModuleLoggingStreamArn",
-            "ModuleDefaultSecretKeyArn"
+            "LambdaSharpDeadLetterQueueArn",
+            "LambdaSharpLoggingStreamArn",
+            "LambdaSharpDefaultSecretKeyArn"
           ]
         },
         {

@@ -112,11 +112,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
                         ValidateNotBothStatements("Values", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Values", "Package", parameter.Package == null);
-
-                        // NOTE (2018-08-20, bjorg): special validation because of current `Values` expansion for resources
-                        if((parameter.Resource != null) && (parameter.Parameters != null)) {
-                            AddError("multiple values with a resource cannot have nested parameters");
-                        }
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Package", "Values", parameter.Values == null);
@@ -497,15 +492,36 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var input in inputs) {
                 ++index;
                 AtLocation(input.Name ?? $"[{index}]", () => {
-                    ValidateResourceName(input.Name, "");
                     if(input.Type == null) {
                         input.Type = "String";
                     }
-                    if(input.Import != null) {
+                    if(input.Secret != null) {
+                        Validate(input.Type == "String", "input type must be 'String'");
+                        ValidateNotBothStatements("Secret", "Name", input.Name == null);
+                        ValidateNotBothStatements("Secret", "Default", input.Default == null);
+                        ValidateNotBothStatements("Secret", "ConstraintDescription", input.ConstraintDescription == null);
+                        ValidateNotBothStatements("Secret", "AllowedPattern", input.AllowedPattern == null);
+                        ValidateNotBothStatements("Secret", "AllowedValues", input.AllowedValues == null);
+                        ValidateNotBothStatements("Secret", "MaxLength", input.MaxLength == null);
+                        ValidateNotBothStatements("Secret", "MaxValue", input.MaxValue == null);
+                        ValidateNotBothStatements("Secret", "MinLength", input.MinLength == null);
+                        ValidateNotBothStatements("Secret", "MinValue", input.MinValue == null);
+                        ValidateNotBothStatements("Secret", "NoEcho", input.NoEcho == null);
+                    } else if(input.Import != null) {
+                        Validate(input.Type == "String", "input type must be 'String'");
+                        Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
+                        ValidateNotBothStatements("Import", "Name", input.Name == null);
                         ValidateNotBothStatements("Import", "Default", input.Default == null);
                         ValidateNotBothStatements("Import", "ConstraintDescription", input.ConstraintDescription == null);
                         ValidateNotBothStatements("Import", "AllowedPattern", input.AllowedPattern == null);
                         ValidateNotBothStatements("Import", "AllowedValues", input.AllowedValues == null);
+                        ValidateNotBothStatements("Import", "MaxLength", input.MaxLength == null);
+                        ValidateNotBothStatements("Import", "MaxValue", input.MaxValue == null);
+                        ValidateNotBothStatements("Import", "MinLength", input.MinLength == null);
+                        ValidateNotBothStatements("Import", "MinValue", input.MinValue == null);
+                        ValidateNotBothStatements("Import", "NoEcho", input.NoEcho == null);
+                    } else {
+                        ValidateResourceName(input.Name, "");
                     }
                 });
             }

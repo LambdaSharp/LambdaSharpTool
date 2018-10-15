@@ -33,7 +33,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Version { get; set; }
         public string Description { get; set; }
         public IList<string> Pragmas { get; set; }
-        public IList<Input> Inputs { get; set; }
         public IList<object> Secrets { get; set; }
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
@@ -42,6 +41,49 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public object GetInputReference(string inputName) => Inputs.First(i => i.Name == inputName).Reference;
+
+        public object GetInputReference(string inputName) {
+
+            // drill down into the parameters collection
+            var parts = inputName.Split("::");
+            AParameter current = null;
+            var parameters = Parameters;
+            foreach(var part in parts) {
+                current = parameters?.FirstOrDefault(p => p.Name == part);
+                if(current == null) {
+                    break;
+                }
+                parameters = current.Parameters;
+            }
+            return current?.Reference ?? throw new KeyNotFoundException(inputName);
+        }
+
+        public IEnumerable<AParameter> GetAllParameters() {
+            var stack = new Stack<IEnumerator<AParameter>>();
+            stack.Push(Parameters.GetEnumerator());
+            try {
+                while(stack.Any()) {
+                    var top = stack.Peek();
+                    if(top.MoveNext()) {
+                        yield return top.Current;
+                        if(top.Current.Parameters?.Any() == true) {
+                            stack.Push(top.Current.Parameters.GetEnumerator());
+                        }
+                    } else {
+                        stack.Pop();
+                        try {
+                            top.Dispose();
+                        } catch { }
+                    }
+                }
+            } finally {
+                while(stack.Any()) {
+                    var top = stack.Pop();
+                    try {
+                        top.Dispose();
+                    } catch { }
+                }
+            }
+        }
      }
 }

@@ -38,13 +38,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
-            var freeInputs = new Dictionary<string, Input>();
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
 
             // resolve all inter-parameter references
             AtLocation("Parameters", () => {
-                DiscoverInputs(module.Inputs);
                 DiscoverParameters(module.Parameters);
 
                 // resolve parameter variables via substitution
@@ -135,52 +133,49 @@ namespace MindTouch.LambdaSharp.Tool {
             });
 
             // local functions
-            void DiscoverInputs(IEnumerable<Input> inputs) {
-                foreach(var input in inputs) {
-                    freeInputs[input.Name] = input;
-                }
-            }
-
-            void DiscoverParameters(IEnumerable<AParameter> parameters, string prefix = "") {
+            void DiscoverParameters(IEnumerable<AParameter> parameters) {
                 if(parameters == null) {
                     return;
                 }
                 foreach(var parameter in parameters) {
                     switch(parameter) {
                     case ValueParameter valueParameter:
-                        if(valueParameter.Value is string) {
-                            freeParameters[prefix + parameter.Name] = parameter;
+                        if(valueParameter.Reference is string) {
+                            freeParameters[parameter.ResourceName] = parameter;
                         } else {
-                            boundParameters[prefix + parameter.Name] = parameter;
+                            boundParameters[parameter.ResourceName] = parameter;
                         }
                         break;
                     case ValueListParameter listParameter:
                         if(listParameter.Values.All(value => value is string)) {
-                            freeParameters[prefix + parameter.Name] = parameter;
+                            freeParameters[parameter.ResourceName] = parameter;
                         } else {
-                            boundParameters[prefix + parameter.Name] = parameter;
+                            boundParameters[parameter.ResourceName] = parameter;
                         }
                         break;
                     case ReferencedResourceParameter referencedParameter:
                         if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
-                            freeParameters[prefix + parameter.Name] = parameter;
+                            freeParameters[parameter.ResourceName] = parameter;
                         } else {
-                            boundParameters[prefix + parameter.Name] = parameter;
+                            boundParameters[parameter.ResourceName] = parameter;
                         }
                         break;
                     case CloudFormationResourceParameter cloudFormationResourceParameter:
                         if(cloudFormationResourceParameter.Resource.Properties?.Any() != true) {
-                            freeParameters[prefix + parameter.Name] = parameter;
+                            freeParameters[parameter.ResourceName] = parameter;
                         } else {
-                            boundParameters[prefix + parameter.Name] = parameter;
+                            boundParameters[parameter.ResourceName] = parameter;
                         }
+                        break;
+                    case AInputParameter inputParameter:
+                        freeParameters[parameter.ResourceName] = parameter;
                         break;
                     default:
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
                         break;
                     }
-                    DiscoverParameters(parameter.Parameters, prefix + parameter.Name);
+                    DiscoverParameters(parameter.Parameters);
                 }
             }
 
@@ -201,14 +196,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation(parameter.Name, () => {
                         var doesNotContainBoundParameters = true;
                         switch(parameter) {
-                        case ValueParameter valueParameter:
-                            valueParameter.Value = Substitute(valueParameter.Value, CheckBoundParameters);
-                            break;
-                        case ValueListParameter listParameter:
-                            listParameter.Values = listParameter.Values.Select(value => Substitute(value, CheckBoundParameters)).ToList();
-                            break;
-                        case ReferencedResourceParameter referencedParameter:
-                            referencedParameter.Resource.ResourceReferences = referencedParameter.Resource.ResourceReferences.Select(value => Substitute(value, CheckBoundParameters)).ToList();
+                        case ValueParameter _:
+                        case ValueListParameter _:
+                        case ReferencedResourceParameter _:
+                            parameter.Reference = Substitute(parameter.Reference, CheckBoundParameters);
                             break;
                         case CloudFormationResourceParameter cloudFormationResourceParameter:
                             cloudFormationResourceParameter.Resource.Properties = (IDictionary<string, object>)Substitute(cloudFormationResourceParameter.Resource.Properties, CheckBoundParameters);
@@ -236,7 +227,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return progress;
             }
 
-            void ReportUnresolved(IEnumerable<AParameter> parameters, string prefix = "") {
+            void ReportUnresolved(IEnumerable<AParameter> parameters) {
                 if(parameters == null) {
                     return;
                 }
@@ -244,7 +235,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation(parameter.Name, () => {
                         switch(parameter) {
                         case ValueParameter valueParameter:
-                            Substitute(valueParameter.Value, missingName => {
+                            Substitute(valueParameter.Reference, missingName => {
                                 if(boundParameters.ContainsKey(missingName)) {
                                     AddError($"circular !Ref dependency on '{missingName}'");
                                 } else {
@@ -277,13 +268,14 @@ namespace MindTouch.LambdaSharp.Tool {
                         case CloudFormationResourceParameter _:
                         case PackageParameter _:
                         case SecretParameter _:
+                        case AInputParameter _:
 
                             // nothing to do
                             break;
                         default:
                             throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
                         }
-                        ReportUnresolved(parameter.Parameters, prefix + parameter.Name);
+                        ReportUnresolved(parameter.Parameters);
                     });
                 }
             }
@@ -393,32 +385,43 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 key = key.Replace("::", "");
                 found = null;
-                if(freeInputs.TryGetValue(key, out Input freeInput)) {
-                    found = freeInput.Reference;
-                } else if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
+                if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
                     switch(freeParameter) {
                     case ValueParameter valueParameter:
                         if(attribute != null) {
                             AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
                         }
-                        found = valueParameter.Value;
+                        found = freeParameter.Reference;
                         break;
                     case ValueListParameter listParameter:
                         if(attribute != null) {
-                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
+                            AddError($"reference '{key}' resolved to a list value, but is used in a Fn::GetAtt expression");
                         }
-                        found = FnJoin(",", listParameter.Values);
+                        found = freeParameter.Reference;
                         break;
                     case ReferencedResourceParameter referencedParameter:
                         if(attribute != null) {
-                            AddError($"reference '{key}' resolved to a literal value, but is used in a Fn::GetAtt expression");
+                            AddError($"reference '{key}' resolved to a referenced resource value, but is used in a Fn::GetAtt expression");
                         }
-                        found = FnJoin(",", referencedParameter.Resource.ResourceReferences);
+                        found = freeParameter.Reference;
                         break;
                     case CloudFormationResourceParameter _:
                         found = (attribute != null)
                             ? FnGetAtt(key, attribute)
-                            : FnRef(key);
+                            : freeParameter.Reference;
+                        break;
+                    case ValueInputParameter _:
+                    case SecretInputParameter _:
+                        if(attribute != null) {
+                            AddError($"reference '{key}' resolved to an input value, but is used in a Fn::GetAtt expression");
+                        }
+                        found = freeParameter.Reference;
+                        break;
+                    case ImportInputParameter importInputParameter:
+                        if(attribute != null) {
+                            AddError($"reference '{key}' resolved to an import value, but is used in a Fn::GetAtt expression");
+                        }
+                        found = freeParameter.Reference;
                         break;
 
                         // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?

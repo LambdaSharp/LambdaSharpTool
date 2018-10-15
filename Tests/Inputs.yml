@@ -4,19 +4,43 @@ Description: LambdaSharp CloudFormation Test
 
 Inputs:
 
-  - Name: FooInput
+  - Name: InputParameter
+    Section: Plain Input Parameters
+    Label: Input Parameter
+    Description: required input parameter
+
+  - Name: InputParameterWithDefault
+    Section: Plain Input Parameters
+    Label: Input Parameter (optional)
+    Description: input parameter with a default value
     Default: a default value
 
-  - Name: BarInput
-    Import: OtherModule::ExportValue
+  - Secret: SecretInputParameter
+    Section: Plain Input Parameters
+    Label: Secret Input Parameter
+    Description: encrypted input parameter
+
+  - Import: OtherModule::ExportValue
+    Section: Cross-Module References
+    Label: Reference
+    Description: cross-module import reference
 
 Parameters:
 
-  - Name: Foo
-    Value: !Ref FooInput
+  - Name: Input
+    Value: !Ref InputParameter
 
-  - Name: Bar
-    Value: !Ref BarInput
+  - Name: InputWithDefault
+    Value: !Ref InputParameterWithDefault
+
+  - Name: SecretInput
+    Value: !Ref SecretInputParameter
+
+  - Name: ImportedInput
+    Value: !Ref OtherModule::ExportValue
+
+  - Name: HiddenImportParameter
+    Value: !Ref LambdaSharp::LoggingStreamArn
 
 Functions:
 
