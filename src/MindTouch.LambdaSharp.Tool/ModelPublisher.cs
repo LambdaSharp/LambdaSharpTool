@@ -30,19 +30,21 @@ using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
-    public class ModelUploader : AModelProcessor {
+    public class ModelPublisher : AModelProcessor {
 
         //--- Fields ---
         private readonly TransferUtility _transferUtility;
+        private bool _changesDetected;
 
         //--- Constructors ---
-        public ModelUploader(Settings settings) : base(settings) {
+        public ModelPublisher(Settings settings) : base(settings) {
             _transferUtility = new TransferUtility(settings.S3Client);
         }
 
         //--- Methods ---
         public async Task<string> PublishAsync(ModuleManifest manifest) {
             Console.WriteLine($"Publishing module");
+            _changesDetected = false;
 
             // verify that all files referenced by manifest exist
             foreach(var file in manifest.FunctionAssets
@@ -67,7 +69,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 manifest.PackageAssets[i] = await UploadPackageAsync(manifest, manifest.PackageAssets[i], "package");
             }
             manifest.Template = await UploadJsonFileAsync(manifest, manifest.Template, "template");
-            return await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
+            var result = await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
+            if(!_changesDetected) {
+                Console.WriteLine($"=> No changes found to publish");
+            }
+            return result;
         }
 
         private async Task<string> UploadJsonFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {
@@ -85,6 +91,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ContentType = "application/json",
                     Key = key,
                 });
+                _changesDetected = true;
             }
             return key;
         }
@@ -97,6 +104,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(!await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
+                _changesDetected = true;
             }
 
             // delete the source zip file when there is no failure and the output directory is the working directory

@@ -152,7 +152,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // publish module
             if((dryRun == null) || (dryRun == DryRunLevel.Everything)) {
-                await new ModelUploader(settings).PublishAsync(manifest);
+                await new ModelPublisher(settings).PublishAsync(manifest);
             }
             if(HasErrors) {
                 return false;
