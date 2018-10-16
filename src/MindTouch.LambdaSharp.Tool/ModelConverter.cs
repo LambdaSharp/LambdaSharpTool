@@ -155,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool {
             , new List<object>());
 
             // add default secrets key that is imported from the input parameters
-            _module.Secrets.Add(_module.GetInputReference("LambdaSharp::DefaultSecretKeyArn"));
+            _module.Secrets.Add(_module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference);
 
             // create functions
             var functionIndex = 0;
@@ -201,14 +201,14 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = "DeadLetterQueueArn",
                     ResourceName = "ModuleDeadLetterQueueArn",
                     Description = "LambdaSharp Dead Letter Queue",
-                    Reference = FnRef("LambdaSharpDeadLetterQueueArn")
+                    Reference = FnRef("LambdaSharp::DeadLetterQueueArn")
                 },
                 new ValueParameter {
                     Scope = ParameterScope.Module,
                     Name = "LoggingStreamArn",
                     ResourceName = "ModuleLoggingStreamArn",
                     Description = "LambdaSharp Logging Stream",
-                    Reference = FnRef("LambdaSharpLoggingStreamArn")
+                    Reference = FnRef("LambdaSharp::LoggingStreamArn")
                 }
 
                 // TODO (2010-10-05, bjorg): add `Module::RestApi` as well?

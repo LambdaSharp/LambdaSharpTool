@@ -42,10 +42,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
 
-        public object GetInputReference(string inputName) {
+        public AParameter GetParameter(string parameterName) {
 
             // drill down into the parameters collection
-            var parts = inputName.Split("::");
+            var parts = parameterName.Split("::");
             AParameter current = null;
             var parameters = Parameters;
             foreach(var part in parts) {
@@ -55,7 +55,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 }
                 parameters = current.Parameters;
             }
-            return current?.Reference ?? throw new KeyNotFoundException(inputName);
+            return current ?? throw new KeyNotFoundException(parameterName);
         }
 
         public IEnumerable<AParameter> GetAllParameters() {

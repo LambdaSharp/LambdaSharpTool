@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -32,6 +33,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Constants ---
         private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
+
+        //--- Class Methods ---
+        private static void DebugWriteLine(string format) {
+//            Console.WriteLine(format);
+        }
 
         //--- Constructors ---
         public ModelReferenceResolver(Settings settings) : base(settings) { }
@@ -142,33 +148,42 @@ namespace MindTouch.LambdaSharp.Tool {
                     case ValueParameter valueParameter:
                         if(valueParameter.Reference is string) {
                             freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
                         } else {
                             boundParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
                     case ValueListParameter listParameter:
                         if(listParameter.Values.All(value => value is string)) {
                             freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
                         } else {
                             boundParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
                     case ReferencedResourceParameter referencedParameter:
                         if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
                             freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
                         } else {
                             boundParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
                     case CloudFormationResourceParameter cloudFormationResourceParameter:
                         if(cloudFormationResourceParameter.Resource.Properties?.Any() != true) {
                             freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
                         } else {
                             boundParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
                     case AInputParameter inputParameter:
                         freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
                         break;
                     default:
 
@@ -198,8 +213,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         switch(parameter) {
                         case ValueParameter _:
                         case ValueListParameter _:
-                        case ReferencedResourceParameter _:
                             parameter.Reference = Substitute(parameter.Reference, CheckBoundParameters);
+                            break;
+                        case ReferencedResourceParameter referencedResourceParameter:
+                            referencedResourceParameter.Resource.ResourceReferences = referencedResourceParameter.Resource.ResourceReferences.Select(r => Substitute(r, CheckBoundParameters)).ToList();
+                            parameter.Reference = FnJoin(",", referencedResourceParameter.Resource.ResourceReferences);
                             break;
                         case CloudFormationResourceParameter cloudFormationResourceParameter:
                             cloudFormationResourceParameter.Resource.Properties = (IDictionary<string, object>)Substitute(cloudFormationResourceParameter.Resource.Properties, CheckBoundParameters);
@@ -215,8 +233,9 @@ namespace MindTouch.LambdaSharp.Tool {
                             progress = true;
 
                             // promote bound variable to free variable
-                            freeParameters[kv.Key] = parameter;
-                            boundParameters.Remove(kv.Key);
+                            freeParameters[parameter.ResourceName] = parameter;
+                            boundParameters.Remove(parameter.ResourceName);
+DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonConvert.SerializeObject(parameter.Reference)}");
                         }
 
                         // local functions

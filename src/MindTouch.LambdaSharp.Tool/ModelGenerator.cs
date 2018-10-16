@@ -148,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 _resourceStatements.Add(new Statement {
                     Sid = "ModuleDeadLetterQueueLogging",
                     Effect = "Allow",
-                    Resource = _module.GetInputReference("LambdaSharp::DeadLetterQueueArn"),
+                    Resource = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference,
                     Action = new List<string> {
                         "sqs:SendMessage"
                     }
@@ -193,7 +193,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                         Sid = "CloudWatchLogsKinesisPermissions",
                                         Effect = "Allow",
                                         Action = "kinesis:PutRecord",
-                                        Resource = _module.GetInputReference("LambdaSharp::LoggingStreamArn")
+                                        Resource = _module.GetParameter("LambdaSharp::LoggingStreamArn").Reference
                                     }
                                 }
                             }
@@ -528,8 +528,8 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["MODULE_VERSION"] = _module.Version;
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
-            environmentVariables["DEADLETTERQUEUE"] = _module.GetInputReference("LambdaSharp::DeadLetterQueueArn");
-            environmentVariables["DEFAULTSECRETKEY"] = _module.GetInputReference("LambdaSharp::DefaultSecretKeyArn");
+            environmentVariables["DEADLETTERQUEUE"] = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference;
+            environmentVariables["DEFAULTSECRETKEY"] = _module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference;
             foreach(var environmentRefVariable in environmentRefVariables) {
                 environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
             }
@@ -573,7 +573,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     S3Key = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
-                    TargetArn = _module.GetInputReference("LambdaSharp::DeadLetterQueueArn")
+                    TargetArn = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference
                 },
                 Environment = new Lambda.FunctionTypes.Environment {
                     Variables = environmentVariables
@@ -592,7 +592,7 @@ namespace MindTouch.LambdaSharp.Tool {
             });
             if(function.HasFunctionRegistration) {
                 _stack.Add($"{function.Name}LogGroupSubscription", new SubscriptionFilter {
-                    DestinationArn = _module.GetInputReference("LambdaSharp::LoggingStreamArn"),
+                    DestinationArn = _module.GetParameter("LambdaSharp::LoggingStreamArn").Reference,
                     FilterPattern = "-\"*** \"",
                     LogGroupName = Fn.Ref(functionLogGroup),
                     RoleArn = Fn.GetAtt("CloudWatchLogsRole", "Arn")
@@ -603,8 +603,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var topicSources = function.Sources.OfType<TopicSource>();
             if(topicSources.Any()) {
                 foreach(var topicSource in topicSources) {
-                    var parameter = (AResourceParameter)_module.Parameters.First(p => p.Name == topicSource.TopicName);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.Ref(topicSource.TopicName), (suffix, arn) => {
+                    var parameter = (AResourceParameter)_module.GetParameter(topicSource.TopicName);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, parameter.Reference, (suffix, arn) => {
                         _stack.Add($"{function.Name}{topicSource.TopicName}SnsPermission{suffix}", new Lambda.Permission {
                             Action = "lambda:InvokeFunction",
                             SourceArn = arn,
@@ -715,8 +715,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var sqsSources = function.Sources.OfType<SqsSource>().ToList();
             if(sqsSources.Any()) {
                 foreach(var source in sqsSources) {
-                    var parameter = (AResourceParameter)_module.Parameters.First(p => p.Name == source.Queue);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.Queue, "Arn"), (suffix, arn) => {
+                    var parameter = (AResourceParameter)_module.GetParameter(source.Queue);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
                         _stack.Add($"{function.Name}{source.Queue}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             Enabled = true,
@@ -749,8 +749,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var dynamoDbSources = function.Sources.OfType<DynamoDBSource>().ToList();
             if(dynamoDbSources.Any()) {
                 foreach(var source in dynamoDbSources) {
-                    var parameter = (AResourceParameter)_module.Parameters.First(p => p.Name == source.DynamoDB);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.DynamoDB, "StreamArn"), (suffix, arn) => {
+                    var parameter = (AResourceParameter)_module.GetParameter(source.DynamoDB);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "StreamArn"), (suffix, arn) => {
                         _stack.Add($"{function.Name}{source.DynamoDB}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             StartingPosition = source.StartingPosition,
@@ -766,8 +766,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var kinesisSources = function.Sources.OfType<KinesisSource>().ToList();
             if(kinesisSources.Any()) {
                 foreach(var source in kinesisSources) {
-                    var parameter = (AResourceParameter)_module.Parameters.First(p => p.Name == source.Kinesis);
-                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(source.Kinesis, "Arn"), (suffix, arn) => {
+                    var parameter = (AResourceParameter)_module.GetParameter(source.Kinesis);
+                    EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
                         _stack.Add($"{function.Name}{source.Kinesis}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             StartingPosition = source.StartingPosition,
@@ -802,7 +802,7 @@ namespace MindTouch.LambdaSharp.Tool {
             case SecretParameter secretParameter:
                 if(parameter.Scope == ParameterScope.Function) {
                     if(secretParameter.EncryptionContext?.Any() == true) {
-                        environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Secret}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
+                        environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Reference}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
                     } else {
                         environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Reference;
                     }
@@ -816,7 +816,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case PackageParameter packageParameter:
                 if(parameter.Scope == ParameterScope.Function) {
-                    environmentRefVariables["STR_" + fullEnvName] = Fn.GetAtt(resourceName, "Result");
+                    environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                 }
                 _stack.Add(resourceName, new LambdaSharpResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
@@ -826,23 +826,17 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
-                    var resource = referenceResourceParameter.Resource;
                     if(parameter.Scope == ParameterScope.Function) {
-                        environmentRefVariables["STR_" + fullEnvName] = FnJoin(",", resource.ResourceReferences);
-                    }
-                    object resources;
-                    if(resource.ResourceReferences.Count == 1) {
-                        resources = resource.ResourceReferences.First();
-                    } else {
-                        resources = resource.ResourceReferences;
+                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                     }
 
                     // add permissions for resource
+                    var resource = referenceResourceParameter.Resource;
                     if(resource.Allow?.Any() == true) {
                         _resourceStatements.Add(new Statement {
                             Sid = resourceName,
                             Effect = "Allow",
-                            Resource = resources,
+                            Resource = parameter.Reference,
                             Action = resource.Allow
                         });
                     }
@@ -903,6 +897,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
                 break;
             case SecretInputParameter secretInputParameter:
+                _stack.Add(resourceName, new Parameter {
+                    Type = "String",
+                    Description = secretInputParameter.Description,
+                    NoEcho = secretInputParameter.NoEcho
+                });
                 break;
             case ImportInputParameter importInputParameter:
                 _stack.Add(resourceName, new Parameter {
