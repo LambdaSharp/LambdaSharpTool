@@ -30,6 +30,7 @@ using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Internal;
 using MindTouch.LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
@@ -74,13 +75,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         dryRun = value;
                     }
                     foreach(var settings in settingsCollection) {
-                        if(await Build(
+                        if(!await Build(
                             settings,
-                            dryRun,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                             skipAssemblyValidationOption.HasValue(),
                             skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation)
-                        ) == null) {
+                        )) {
                             break;
                         }
                     }
@@ -88,9 +88,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task<Module> Build(
+        public async Task<bool> Build(
             Settings settings,
-            DryRunLevel? dryRun,
             string outputCloudFormationFilePath,
             bool skipAssemblyValidation,
             bool skipFunctionBuild
@@ -98,7 +97,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             try {
                 if(!File.Exists(settings.ModuleSource)) {
                     AddError($"could not find '{settings.ModuleSource}'");
-                    return null;
+                    return false;
                 }
 
                 // read input file
@@ -109,19 +108,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // preprocess file
                 var tokenStream = new ModelPreprocessor(settings).Preprocess(source);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
 
                 // parse yaml module file
                 var parsedModule = new ModelParser(settings).Parse(tokenStream);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
 
                 // validate module
                 new ModelValidation(settings).Process(parsedModule);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
 
                 // TODO (2018-10-04, bjorg): refactor all model processing to use the strict model instead of the parsed model
@@ -140,32 +139,53 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // compile module file
                 var module = new ModelConverter(settings).Process(parsedModule);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
 
                 // resolve all parameter references
                 new ModelReferenceResolver(settings).Resolve(module);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
 
-                // generate cloudformation template
+                // generate & save cloudformation template
                 var template = new ModelGenerator(settings).Generate(module);
                 if(HasErrors) {
-                    return null;
+                    return false;
                 }
-
-                // save cloudformation template to disk
                 var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
                 if(outputCloudFormationDirectory != "") {
                     Directory.CreateDirectory(outputCloudFormationDirectory);
                 }
                 File.WriteAllText(outputCloudFormationFilePath, template);
+
+                // create & save module manifest
+                var assets = new List<ModuleManifestAsset>();
+                assets.AddRange(module.Functions.Where(f => f.PackagePath != null).Select(f => new ModuleManifestAsset {
+                    Type = "Lambda function",
+                    Path = Path.GetRelativePath(settings.OutputDirectory, f.PackagePath)
+                }));
+                assets.AddRange(module.Parameters.OfType<PackageParameter>().Select(p => new ModuleManifestAsset {
+                    Type = "package",
+                    Path = Path.GetRelativePath(settings.OutputDirectory, p.PackagePath)
+                }));
+                var manifest = new ModuleManifest {
+                    Name = module.Name,
+                    Version = module.Version,
+                    GitSha = settings.GitSha,
+                    Pragmas = module.Pragmas,
+                    Assets = assets
+                };
+                var manifestFilePath = Path.Combine(settings.OutputDirectory, "manifest.json");
+                if(!Directory.Exists(settings.OutputDirectory)) {
+                    Directory.CreateDirectory(settings.OutputDirectory);
+                }
+                File.WriteAllText(manifestFilePath, JsonConvert.SerializeObject(manifest, Formatting.Indented));
                 Console.WriteLine("=> Module processing done");
-                return module;
+                return true;
             } catch(Exception e) {
                 AddError(e);
-                return null;
+                return false;
             }
         }
     }

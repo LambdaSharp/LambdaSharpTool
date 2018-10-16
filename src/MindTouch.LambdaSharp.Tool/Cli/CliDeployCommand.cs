@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using MindTouch.LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -121,20 +122,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool skipFunctionBuild,
             Dictionary<string, string> inputs
         ) {
-            var module = await new CliBuildCommand().Build(
+            if(!await new CliBuildCommand().Build(
                 settings,
-                dryRun,
                 outputCloudFormationFilePath,
                 skipAssemblyValidation,
                 skipFunctionBuild
-            );
-            if((module == null) || HasErrors) {
+            )) {
                 return false;
             }
+            var manifestFile = File.ReadAllText(Path.Combine(settings.OutputDirectory, "manifest.json"));
+            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestFile);
 
             // reset settings when the 'LambdaSharp` module is being deployed
             await PopulateEnvironmentSettingsAsync(settings);
-            if(!module.HasPragma("no-environment-check")) {
+            if(!manifest.HasPragma("no-environment-check")) {
                 if(settings.EnvironmentVersion == null) {
 
                     // check that LambdaSharp Environment & Tool versions match
@@ -150,14 +151,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // upload assets
-            await new ModelUploader(settings).ProcessAsync(module, skipUpload: dryRun != null);
+            await new ModelUploader(settings).ProcessAsync(manifest, settings.OutputDirectory, skipUpload: dryRun != null);
 
             // serialize stack to disk
             var result = true;
             try {
                 if(dryRun == null) {
                     result = await new ModelUpdater(settings).DeployAsync(
-                        module,
+                        manifest,
                         altModuleName,
                         outputCloudFormationFilePath,
                         allowDataLoos,

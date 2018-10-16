@@ -40,26 +40,21 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public async Task ProcessAsync(Module module, bool skipUpload) {
+        public async Task ProcessAsync(ModuleManifest manifest, string assetsPath, bool skipUpload) {
 
             // upload functions and packages
             if(!skipUpload) {
                 Console.WriteLine($"Uploading module assets");
 
                 // upload function packages
-                foreach(var function in module.Functions.Where(f => f.PackagePath != null)) {
-                    await UploadPackageAsync(module, function.PackagePath, "Lambda function");
-                }
-
-                // upload file packages (NOTE: packages are cannot be nested, so just enumerate the top level parameters)
-                foreach(var parameter in module.Parameters.OfType<PackageParameter>()) {
-                    await UploadPackageAsync(module, parameter.PackagePath, "package");
+                foreach(var asset in manifest.Assets) {
+                    await UploadPackageAsync(manifest, Path.Combine(assetsPath, asset.Path), asset.Type);
                 }
             }
         }
 
-        private async Task UploadPackageAsync(Module module, string package, string description) {
-            var key = $"{Settings.DeploymentBucketPath}{module.Name}/{Path.GetFileName(package)}";
+        private async Task UploadPackageAsync(ModuleManifest manifest, string package, string description) {
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{Path.GetFileName(package)}";
 
             // only upload files that don't exist
             if(!await S3ObjectExistsAsync(key)) {

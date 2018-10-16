@@ -44,14 +44,14 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public async Task<bool> DeployAsync(
-            Module module,
+            ModuleManifest manifest,
             string altModuleName,
             string templateFile,
             bool allowDataLoss,
             bool protectStack,
             Dictionary<string, string> inputs
         ) {
-            var stackName = $"{Settings.Tier}-{altModuleName ?? module.Name}";
+            var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.Name}";
             if(altModuleName != null) {
 
                 // TODO (2018-10-09, bjorg): check if modules has any custom resources; if it does, fail, because it makes
@@ -71,9 +71,12 @@ namespace MindTouch.LambdaSharp.Tool {
             // upload cloudformation template
             string templateUrl = null;
             if(Settings.DeploymentBucketName != null) {
+
+                // upload cloudformation template
                 var template = File.ReadAllText(templateFile);
                 var minifiedTemplate = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(template), Formatting.None);
-                var templateS3Key = $"{Settings.DeploymentBucketPath}{module.Name}/cloudformation-v{module.Version}-{minifiedTemplate.ToMD5Hash()}.json";
+                var hash = minifiedTemplate.ToMD5Hash();
+                var templateS3Key = $"{Settings.DeploymentBucketPath}{manifest.Name}/cloudformation-v{manifest.Version}-{hash}.json";
                 templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{templateS3Key}";
                 Console.WriteLine($"=> Uploading CloudFormation template: s3://{Settings.DeploymentBucketName}/{templateS3Key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
@@ -81,6 +84,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     ContentBody = minifiedTemplate,
                     ContentType = "application/json",
                     Key = templateS3Key,
+                });
+
+                // upload module manifest
+                var manifestS3Key = $"{Settings.DeploymentBucketPath}{manifest.Name}/manifest-v{manifest.Version}-{hash}.json";
+                Console.WriteLine($"=> Uploading module manifest template: s3://{Settings.DeploymentBucketName}/{manifestS3Key}");
+                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentBody = JsonConvert.SerializeObject(manifest, Formatting.None),
+                    ContentType = "application/json",
+                    Key = manifestS3Key,
                 });
             }
 
