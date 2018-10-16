@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private ModuleNode _module;
 
         //--- Constructors ---
-        public ModelFilesPackager(Settings settings) : base(settings) { }
+        public ModelFilesPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public void Process(ModuleNode module) {

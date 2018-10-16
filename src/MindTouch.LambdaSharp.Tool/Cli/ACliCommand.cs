@@ -73,18 +73,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return (AccountId: awsAccountId, Region: awsRegion);
         }
 
-        protected Func<Task<IEnumerable<Settings>>> CreateSettingsInitializer(CommandLineApplication cmd) {
-            var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-            var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
+        protected Func<Task<Settings>> CreateSettingsInitializer(CommandLineApplication cmd, bool requireAwsProfile = true) {
+
+            // add misc options
             var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             var toolProfileOption = cmd.Option("--tool-profile|-T <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
-            var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
-            var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
-            var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
-            var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Module.yml)", multipleValues: true);
 
-            // add options for testing
+            // add hidden testing options
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--tool-version <VALUE>", "(test only) LambdaSharp tool version for profile (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
@@ -92,7 +88,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var deploymentBucketPathOption = cmd.Option("--deployment-bucket-path <NAME>", "(test only) S3 Bucket path used to deploy modules (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp tool configuration)", CommandOptionType.SingleValue);
             var environmentVersionOption = cmd.Option("--environment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
-            inputFileOption.ShowInHelpText = false;
+            awsAccountIdOption.ShowInHelpText = false;
+            awsRegionOption.ShowInHelpText = false;
+            toolVersionOption.ShowInHelpText = false;
+            deploymentBucketNameOption.ShowInHelpText = false;
+            deploymentBucketPathOption.ShowInHelpText = false;
+            deploymentNotificationTopicArnOption.ShowInHelpText = false;
+            environmentVersionOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
@@ -107,43 +109,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // initialize tool profile
                 var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE");
 
-                // initialize deployment tier value
-                var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                if(tier == null) {
-                    AddError("missing deployment tier name");
-                    return null;
-                }
-                if(tier == "Default") {
-                    AddError("deployment tier cannot be 'Default' because it is a reserved name");
-                    return null;
-                }
-
                 // initialize AWS profile
-                var awsAccount = await InitializeAwsProfile(
-                    awsProfileOption.Value(),
-                    awsAccountIdOption.Value(),
-                    awsRegionOption.Value()
-                );
-                if(awsAccount == null) {
+                (string AccountId, string Region)? awsAccount = null;
+                if(requireAwsProfile) {
+                    awsAccount = await InitializeAwsProfile(
+                        awsProfileOption.Value(),
+                        awsAccountIdOption.Value(),
+                        awsRegionOption.Value()
+                    );
+                    if(awsAccount == null) {
 
-                    // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`
-                    return null;
-                }
-
-                // check if a module file was specified using both the obsolete option and as argument
-                if(cmdArgument.Values.Any() && inputFileOption.HasValue()) {
-                    AddError("cannot specify --input and an argument at the same time");
-                    return null;
-                }
-                var moduleSources = new List<string>();
-                if(inputFileOption.HasValue()) {
-                    moduleSources.Add(inputFileOption.Value());
-                } else if(cmdArgument.Values.Any()) {
-                    moduleSources.AddRange(cmdArgument.Values);
-                } else {
-
-                    // add default entry so we can generate at least one settings instance
-                    moduleSources.Add(null);
+                        // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`
+                        return null;
+                    }
                 }
 
                 // create AWS clients
@@ -159,82 +137,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
                 // create a settings entry for each module filename
-                var result = new List<Settings>();
-                foreach(var moduleSource in moduleSources) {
-                    var source = moduleSource;
-                    string workingDirectory;
-                    string outputDirectory;
-                    if(moduleSource == null) {
-
-                        // default to local module file name
-                        workingDirectory = Directory.GetCurrentDirectory();
-                        outputDirectory = Path.Combine(workingDirectory, "bin");
-                        source = Path.Combine(workingDirectory, "Module.yml");
-                    } else {
-
-                        // module file is local
-                        source = Path.GetFullPath(moduleSource);
-
-                        // check if source is pointing to a path
-                        if(File.GetAttributes(source).HasFlag(FileAttributes.Directory)) {
-
-                            // append default module filename
-                            source = Path.Combine(source, "Module.yml");
-                        }
-                        workingDirectory = Path.GetDirectoryName(source);
-                        outputDirectory = Path.Combine(workingDirectory, "bin");
-                    }
-                    if(outputDirectoryOption.HasValue()) {
-                        outputDirectory = outputDirectoryOption.Value();
-                    }
-
-                    // initialize gitSha value
-                    var gitSha = gitShaOption.Value();
-                    if(gitSha == null) {
-
-                        // read the gitSha using `git` directly
-                        var process = new Process {
-                            StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
-                                RedirectStandardOutput = true,
-                                UseShellExecute = false,
-                                WorkingDirectory = workingDirectory
-                            }
-                        };
-                        try {
-                            process.Start();
-                            gitSha = process.StandardOutput.ReadToEnd().Trim();
-                            process.WaitForExit();
-                            if(process.ExitCode != 0) {
-                                Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
-                                gitSha = null;
-                            }
-                        } catch {
-                            Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
-                        }
-                    }
-                    result.Add(new Settings {
-                        ToolVersion = Version,
-                        ToolProfile = toolProfile,
-                        EnvironmentVersion = (environmentVersion != null) ? new Version(environmentVersion) : null,
-                        Tier = tier,
-                        BuildConfiguration = buildConfigurationOption.Value() ?? "Release",
-                        GitSha = gitSha,
-                        AwsRegion = awsAccount.Value.Region,
-                        AwsAccountId = awsAccount.Value.AccountId,
-                        DeploymentBucketName = deploymentBucketName,
-                        DeploymentBucketPath = deploymentBucketPath,
-                        DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
-                        ModuleSource = source,
-                        WorkingDirectory = workingDirectory,
-                        OutputDirectory = outputDirectory,
-                        ResourceMapping = new ResourceMapping(),
-                        SsmClient = ssmClient,
-                        CfClient = cfClient,
-                        KmsClient = kmsClient,
-                        S3Client = s3Client
-                    });
-                }
-                return result;
+                return new Settings {
+                    ToolVersion = Version,
+                    ToolProfile = toolProfile,
+                    EnvironmentVersion = (environmentVersion != null) ? new Version(environmentVersion) : null,
+                    AwsRegion = awsAccount.GetValueOrDefault().Region,
+                    AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
+                    DeploymentBucketName = deploymentBucketName,
+                    DeploymentBucketPath = deploymentBucketPath,
+                    DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
+                    ResourceMapping = new ResourceMapping(),
+                    SsmClient = ssmClient,
+                    CfClient = cfClient,
+                    KmsClient = kmsClient,
+                    S3Client = s3Client
+                };
             };
         }
 
@@ -261,10 +178,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return false;
         }
 
-        protected async Task PopulateEnvironmentSettingsAsync(Settings settings) {
+        protected async Task PopulateToolSettingsAsync(Settings settings) {
             if(
-                (settings.EnvironmentVersion == null)
-                || (settings.DeploymentBucketName == null)
+                (settings.DeploymentBucketName == null)
                 || (settings.DeploymentBucketPath == null)
                 || (settings.DeploymentNotificationsTopicArn == null)
             ) {
@@ -291,10 +207,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return kv.Value;
                     }
                 }
+            }
+        }
+
+        protected async Task PopulateEnvironmentSettingsAsync(Settings settings, string tier) {
+            if(settings.EnvironmentVersion == null) {
 
                 // import LambdaSharp settings
-                if(settings.Tier != null) {
-                    var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
+                if(tier != null) {
+                    var lambdaSharpPath = $"/{tier}/LambdaSharp/";
                     var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
 
                     // resolved values that are not yet set
@@ -312,6 +233,31 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                 }
             }
+        }
+
+        protected string GetGitShaValue(string workingDirectory) {
+
+            // read the gitSha using `git` directly
+            var process = new Process {
+                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
+                }
+            };
+            string gitsha = null;
+            try {
+                process.Start();
+                gitsha = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                    gitsha = null;
+                }
+            } catch {
+                Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+            }
+            return gitsha;
         }
     }
 }

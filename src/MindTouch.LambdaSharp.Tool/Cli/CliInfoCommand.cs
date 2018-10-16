@@ -47,13 +47,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(settings == null) {
                         return;
                     }
-                    await Info(settings.First());
+                    await Info(
+                        settings,
+                        Environment.GetEnvironmentVariable("LAMBDASHARP_TIER"),
+                        GetGitShaValue(Directory.GetCurrentDirectory())
+                    );
                 });
             });
         }
 
-        public async Task Info(Settings settings) {
-            await PopulateEnvironmentSettingsAsync(settings);
+        public async Task Info(Settings settings, string tier, string gitsha) {
+            await PopulateToolSettingsAsync(settings);
+            await PopulateEnvironmentSettingsAsync(settings, tier);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp Tool");
@@ -63,9 +68,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Module Deployment S3 Path: {settings.DeploymentBucketPath ?? "<NOT SET>"}");
             Console.WriteLine($"    Module Deployment Notifications Topic: {settings.DeploymentNotificationsTopicArn ?? "<NOT SET>"}");
             Console.WriteLine($"LambdaSharp Environment");
-            Console.WriteLine($"    Deployment Tier: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Deployment Tier: {tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
-            Console.WriteLine($"Git SHA: {settings.GitSha ?? "<NOT SET>"}");
+            Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Region: {settings.AwsRegion ?? "<NOT SET>"}");
             Console.WriteLine($"AWS Account Id: {settings.AwsAccountId ?? "<NOT SET>"}");
             Console.WriteLine($".Net Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");

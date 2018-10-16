@@ -40,18 +40,18 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModelUpdater : AModelProcessor {
 
         //--- Constructors ---
-        public ModelUpdater(Settings settings) : base(settings) { }
+        public ModelUpdater(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public async Task<bool> DeployAsync(
             ModuleManifest manifest,
             string altModuleName,
-            string templateFile,
             bool allowDataLoss,
             bool protectStack,
-            Dictionary<string, string> inputs
+            Dictionary<string, string> inputs,
+            string tier
         ) {
-            var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.Name}";
+            var stackName = $"{tier}-{altModuleName ?? manifest.Name}";
             if(altModuleName != null) {
 
                 // TODO (2018-10-09, bjorg): check if modules has any custom resources; if it does, fail, because it makes
@@ -118,11 +118,11 @@ namespace MindTouch.LambdaSharp.Tool {
             var parameters = new List<CloudFormationParameter> {
                 new CloudFormationParameter {
                     ParameterKey = "Tier",
-                    ParameterValue = Settings.Tier
+                    ParameterValue = tier
                 },
                 new CloudFormationParameter {
                     ParameterKey = "TierLowercase",
-                    ParameterValue = Settings.Tier.ToLowerInvariant()
+                    ParameterValue = tier.ToLowerInvariant()
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",

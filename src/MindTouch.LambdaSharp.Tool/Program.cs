@@ -57,12 +57,11 @@ namespace MindTouch.LambdaSharp.Tool {
             app.HelpOption();
 
             // register commands
-            new CliDeployCommand().Register(app);
             new CliInfoCommand().Register(app);
             new CliListCommand().Register(app);
             new CliNewCommand().Register(app);
             new CliConfigCommand().Register(app);
-            new CliBuildCommand().Register(app);
+            new CliBuildPublishDeployCommand().Register(app);
 
             // new command
             var showHelp = false;

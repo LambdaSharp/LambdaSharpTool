@@ -45,7 +45,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private Module _module;
 
         //--- Constructors ---
-        public ModelConverter(Settings settings) : base(settings) { }
+        public ModelConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public Module Process(ModuleNode module) {
@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // initialize module
             _module = new Module {
                 Name = module.Name,
-                Version = module.Version,
+                Version = VersionInfo.Parse(module.Version),
                 Description = module.Description,
                 Pragmas = module.Pragmas,
                 Functions = new List<Function>()

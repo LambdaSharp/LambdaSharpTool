@@ -117,10 +117,12 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Fields ---
         private readonly Settings _settings;
         private Stack<string> _locations = new Stack<string>();
+        private string _sourceFilename;
 
         //--- Constructors ---
-        protected AModelProcessor(Settings settings) {
+        protected AModelProcessor(Settings settings, string sourceFilename) {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _sourceFilename = sourceFilename;
         }
 
         //--- Properties ---
@@ -156,8 +158,13 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        protected void AddError(string message, Exception exception = null)
-            => Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{Settings.ModuleSource}]", exception);
+        protected void AddError(string message, Exception exception = null) {
+            if(_sourceFilename != null) {
+                Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{_sourceFilename}]", exception);
+            } else {
+                Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())}", exception);
+            }
+        }
 
         protected void AddError(Exception exception = null)
             => Settings.AddError(exception);

@@ -96,9 +96,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public Version ToolVersion { get; set; }
         public string ToolProfile { get; set; }
         public Version EnvironmentVersion { get; set; }
-        public string Tier { get; set; }
-        public string GitSha { get; set; }
-        public string BuildConfiguration { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
@@ -109,7 +106,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public IAmazonCloudFormation CfClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
-        public string ModuleSource { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
     }

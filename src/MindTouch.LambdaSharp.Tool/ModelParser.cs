@@ -30,7 +30,7 @@ namespace MindTouch.LambdaSharp.Tool {
     public class ModelParser : AModelProcessor {
 
         //--- Constructors ---
-        public ModelParser(Settings settings) : base(settings) { }
+        public ModelParser(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public ModuleNode Parse(YamlDotNet.Core.IParser yamlParser) {

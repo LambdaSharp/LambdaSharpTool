@@ -34,11 +34,15 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public class ModelPreprocessor : AModelProcessor {
 
+        //--- Fields ---
+        private string _selector;
+
         //--- Constructors ---
-        public ModelPreprocessor(Settings settings) : base(settings) { }
+        public ModelPreprocessor(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public IParser Preprocess(string source) {
+        public IParser Preprocess(string source, string selector) {
+            _selector = $":{selector ?? throw new ArgumentNullException(nameof(selector))}";
             var inputStream = YamlParser.Parse(source);
             var outputStream = new YamlStream {
                 Start = inputStream.Start,
@@ -85,15 +89,14 @@ namespace MindTouch.LambdaSharp.Tool {
                         End = inputMap.End
                     };
                     Tuple<string, AYamlValue> choice = null;
-                    var tierKey = ":" + Settings.Tier;
                     foreach(var inputEntry in inputMap.Entries) {
 
-                        // entries that start with `:` are considered a conditional based on the current deployment tier value
+                        // entries that start with `:` are considered a conditional based on the current selector
                         if(inputEntry.Key.Scalar.Value.StartsWith(":")) {
 
-                            // check if the key matches the deployment tier value or the key is `:Default` and no choice has been made yet
+                            // check if the key matches the selector or the key is `:Default` and no choice has been made yet
                             if(
-                                (inputEntry.Key.Scalar.Value == tierKey)
+                                (inputEntry.Key.Scalar.Value == _selector)
                                 || (
                                     (inputEntry.Key.Scalar.Value == ":Default")
                                     && (choice == null)

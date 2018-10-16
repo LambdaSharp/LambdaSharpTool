@@ -50,20 +50,40 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Constructors ---
-        public ModelFunctionPackager(Settings settings) : base(settings) { }
+        public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
-        public void Process(ModuleNode module, Version version, bool skipCompile, bool skipAssemblyValidation) {
-            var index = 0;
-            foreach(var function in module.Functions.Where(f => f.PackagePath == null)) {
-                ++index;
-                AtLocation(function.Name ?? $"[{index}]", () => {
-                    Validate(function.Name != null, "missing Name field");
-                    Process(module, function, version, skipCompile, skipAssemblyValidation);
+        public void Process(
+            ModuleNode module,
+            Version version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration
+        ) {
+            foreach(var function in module.Functions) {
+                AtLocation(function.Name, () => {
+                    Process(
+                        module,
+                        function,
+                        version,
+                        skipCompile,
+                        skipAssemblyValidation,
+                        gitsha,
+                        buildConfiguration
+                    );
                 });
             }
         }
 
-        private void Process(ModuleNode module, FunctionNode function, Version version, bool skipCompile, bool skipAssemblyValidation) {
+        private void Process(
+            ModuleNode module,
+            FunctionNode function,
+            Version version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration
+        ) {
 
             // compile function project
             string projectName = null;
@@ -171,7 +191,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     } catch { }
                 }
             }
-            var buildConfiguration = Settings.BuildConfiguration;
             Console.WriteLine($"Building function {projectName} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
@@ -214,8 +233,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
 
                 // add `gitsha.txt` if GitSha is supplied
-                if(Settings.GitSha != null) {
-                    File.WriteAllText(Path.Combine(tempDirectory, GITSHAFILE), Settings.GitSha);
+                if(gitsha != null) {
+                    File.WriteAllText(Path.Combine(tempDirectory, GITSHAFILE), gitsha);
                 }
 
                 // compress temp folder into new package

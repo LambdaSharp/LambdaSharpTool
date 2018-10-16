@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private HashSet<string> _names;
 
         //--- Constructors ---
-        public ModelValidation(Settings settings) : base(settings) { }
+        public ModelValidation(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public void Process(ModuleNode module) {

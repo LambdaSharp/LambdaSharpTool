@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private bool _changesDetected;
 
         //--- Constructors ---
-        public ModelPublisher(Settings settings) : base(settings) {
+        public ModelPublisher(Settings settings, string sourceFilename) : base(settings, sourceFilename) {
             _transferUtility = new TransferUtility(settings.S3Client);
         }
 
@@ -69,18 +69,27 @@ namespace MindTouch.LambdaSharp.Tool {
                 manifest.PackageAssets[i] = await UploadPackageAsync(manifest, manifest.PackageAssets[i], "package");
             }
             manifest.Template = await UploadJsonFileAsync(manifest, manifest.Template, "template");
-            var result = await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
-            if(!_changesDetected) {
+            var marker = await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
+            if(_changesDetected) {
+
+                // write version link entry
+                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentBody = marker,
+                    ContentType = "application/text",
+                    Key = $"{Settings.DeploymentBucketPath}{manifest.Name}/Versions/{manifest.Version}",
+                });
+            } else {
                 Console.WriteLine($"=> No changes found to publish");
             }
-            return result;
+            return $"s3://{Settings.DeploymentBucketName}/{marker}";
         }
 
         private async Task<string> UploadJsonFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
             var minified = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.None);
             var filenameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{filenameWithoutExtension}-v{manifest.Version}-{manifest.Hash}.json";
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/Assets/{filenameWithoutExtension}_v{manifest.Version}_{manifest.Hash}.json";
 
             // upload minified json
             if(!await S3ObjectExistsAsync(key)) {
@@ -98,7 +107,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
-            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{Path.GetFileName(filePath)}";
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
             if(!await S3ObjectExistsAsync(key)) {

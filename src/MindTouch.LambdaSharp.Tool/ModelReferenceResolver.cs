@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Constructors ---
-        public ModelReferenceResolver(Settings settings) : base(settings) { }
+        public ModelReferenceResolver(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public void Resolve(Module module) {

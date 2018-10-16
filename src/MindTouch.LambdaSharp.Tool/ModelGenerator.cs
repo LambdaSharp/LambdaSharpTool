@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private List<ApiRoute> _apiGatewayRoutes;
 
         //--- Constructors ---
-        public ModelGenerator(Settings settings) : base(settings) { }
+        public ModelGenerator(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public string Generate(Module module) {
@@ -578,7 +578,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
                     S3Bucket = Fn.Ref("DeploymentBucketName"),
-                    S3Key = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(function.PackagePath)}")
+                    S3Key = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference
@@ -830,7 +830,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
                     ["SourceBucketName"] = Fn.Ref("DeploymentBucketName"),
-                    ["SourcePackageKey"] = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/{Path.GetFileName(packageParameter.PackagePath)}")
+                    ["SourcePackageKey"] = Fn.Sub($"${{DeploymentBucketPath}}{_module.Name}/Assets/{Path.GetFileName(packageParameter.PackagePath)}")
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
