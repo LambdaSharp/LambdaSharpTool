@@ -31,18 +31,14 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Name { get; set; }
         public string Version { get; set; }
+        public string Hash { get; set; }
         public string GitSha { get; set; }
         public IList<string> Pragmas { get; set; }
-        public IList<ModuleManifestAsset> Assets { get; set; }
+        public string Template { get; set; }
+        public IList<string> FunctionAssets { get; set; }
+        public IList<string> PackageAssets { get; set; }
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-    }
-
-    public class ModuleManifestAsset {
-
-        //--- Properties ---
-        public string Type { get; set; }
-        public string Path { get; set; }
     }
 }

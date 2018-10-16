@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using Amazon.S3.Transfer;
 using Amazon.S3.Model;
 using MindTouch.LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharp.Tool {
 
@@ -40,34 +41,71 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Methods ---
-        public async Task ProcessAsync(ModuleManifest manifest, string assetsPath, bool skipUpload) {
+        public async Task<string> PublishAsync(ModuleManifest manifest) {
+            Console.WriteLine($"Publishing module");
 
-            // upload functions and packages
-            if(!skipUpload) {
-                Console.WriteLine($"Uploading module assets");
-
-                // upload function packages
-                foreach(var asset in manifest.Assets) {
-                    await UploadPackageAsync(manifest, Path.Combine(assetsPath, asset.Path), asset.Type);
+            // verify that all files referenced by manifest exist
+            foreach(var file in manifest.FunctionAssets
+                .Union(manifest.PackageAssets)
+                .Append(manifest.Template)
+                .Append("manifest.json")
+            ) {
+                var filepath =Path.Combine(Settings.OutputDirectory, file);
+                if(!File.Exists(filepath)) {
+                    AddError($"could not find: '{filepath}'");
                 }
             }
+            if(Settings.HasErrors) {
+                return null;
+            }
+
+            // upload assets
+            for(var i = 0; i < manifest.FunctionAssets.Count; ++i) {
+                manifest.FunctionAssets[i] = await UploadPackageAsync(manifest, manifest.FunctionAssets[i], "function");
+            }
+            for(var i = 0; i < manifest.PackageAssets.Count; ++i) {
+                manifest.PackageAssets[i] = await UploadPackageAsync(manifest, manifest.PackageAssets[i], "package");
+            }
+            manifest.Template = await UploadJsonFileAsync(manifest, manifest.Template, "template");
+            return await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
         }
 
-        private async Task UploadPackageAsync(ModuleManifest manifest, string package, string description) {
-            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{Path.GetFileName(package)}";
+        private async Task<string> UploadJsonFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {
+            var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
+            var minified = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.None);
+            var filenameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{filenameWithoutExtension}-v{manifest.Version}-{manifest.Hash}.json";
+
+            // upload minified json
+            if(!await S3ObjectExistsAsync(key)) {
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
+                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentBody = minified,
+                    ContentType = "application/json",
+                    Key = key,
+                });
+            }
+            return key;
+        }
+
+        private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
+            var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
             if(!await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
-                await _transferUtility.UploadAsync(package, Settings.DeploymentBucketName, key);
+                await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
             }
 
             // delete the source zip file when there is no failure and the output directory is the working directory
             if(Settings.OutputDirectory == Settings.WorkingDirectory) {
                 try {
-                    File.Delete(package);
+                    File.Delete(filePath);
                 } catch { }
             }
+            return key;
         }
 
         private async Task<bool> S3ObjectExistsAsync(string key) {

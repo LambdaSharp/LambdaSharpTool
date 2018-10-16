@@ -132,9 +132,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var manifestFile = File.ReadAllText(Path.Combine(settings.OutputDirectory, "manifest.json"));
             var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestFile);
-
-            // reset settings when the 'LambdaSharp` module is being deployed
             await PopulateEnvironmentSettingsAsync(settings);
+
+            // bootstrap module doesn't expect an environment to exist
             if(!manifest.HasPragma("no-environment-check")) {
                 if(settings.EnvironmentVersion == null) {
 
@@ -150,32 +150,37 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // upload assets
-            await new ModelUploader(settings).ProcessAsync(manifest, settings.OutputDirectory, skipUpload: dryRun != null);
+            // publish module
+            if((dryRun == null) || (dryRun == DryRunLevel.Everything)) {
+                await new ModelUploader(settings).PublishAsync(manifest);
+            }
+            if(HasErrors) {
+                return false;
+            }
 
-            // serialize stack to disk
-            var result = true;
+            // upload assets and deploy module
+            if(dryRun != null) {
+                return true;
+            }
             try {
-                if(dryRun == null) {
-                    result = await new ModelUpdater(settings).DeployAsync(
-                        manifest,
-                        altModuleName,
-                        outputCloudFormationFilePath,
-                        allowDataLoos,
-                        protectStack,
-                        inputs
-                    );
-                    if(settings.OutputDirectory == settings.WorkingDirectory) {
-                        try {
-                            File.Delete(outputCloudFormationFilePath);
-                        } catch { }
-                    }
+                var result = await new ModelUpdater(settings).DeployAsync(
+                    manifest,
+                    altModuleName,
+                    outputCloudFormationFilePath,
+                    allowDataLoos,
+                    protectStack,
+                    inputs
+                );
+                if(settings.OutputDirectory == settings.WorkingDirectory) {
+                    try {
+                        File.Delete(outputCloudFormationFilePath);
+                    } catch { }
                 }
+                return result;
             } catch(Exception e) {
                 AddError(e);
                 return false;
             }
-            return result;
         }
 
         private Dictionary<string, string> ReadInputParametersFiles(string filename) {

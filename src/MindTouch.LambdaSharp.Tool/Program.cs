@@ -37,7 +37,11 @@ namespace MindTouch.LambdaSharp.Tool {
     }
 
     public enum DryRunLevel {
+
+        // compile module, build assets, publish module
         Everything,
+
+        // compile module
         CloudFormation
     }
 

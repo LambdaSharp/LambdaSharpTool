@@ -159,22 +159,23 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
                 File.WriteAllText(outputCloudFormationFilePath, template);
 
-                // create & save module manifest
-                var assets = new List<ModuleManifestAsset>();
-                assets.AddRange(module.Functions.Where(f => f.PackagePath != null).Select(f => new ModuleManifestAsset {
-                    Type = "Lambda function",
-                    Path = Path.GetRelativePath(settings.OutputDirectory, f.PackagePath)
-                }));
-                assets.AddRange(module.Parameters.OfType<PackageParameter>().Select(p => new ModuleManifestAsset {
-                    Type = "package",
-                    Path = Path.GetRelativePath(settings.OutputDirectory, p.PackagePath)
-                }));
+                // generate & save module manifest
+                var functions = module.Functions
+                    .Where(f => f.PackagePath != null)
+                    .Select(f => Path.GetRelativePath(settings.OutputDirectory, f.PackagePath))
+                    .ToList();
+                var packages = module.Parameters.OfType<PackageParameter>()
+                    .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
+                    .ToList();
                 var manifest = new ModuleManifest {
                     Name = module.Name,
                     Version = module.Version,
+                    Hash = template.ToMD5Hash(),
                     GitSha = settings.GitSha,
                     Pragmas = module.Pragmas,
-                    Assets = assets
+                    Template = Path.GetRelativePath(settings.OutputDirectory, outputCloudFormationFilePath),
+                    FunctionAssets = functions,
+                    PackageAssets = packages
                 };
                 var manifestFilePath = Path.Combine(settings.OutputDirectory, "manifest.json");
                 if(!Directory.Exists(settings.OutputDirectory)) {
