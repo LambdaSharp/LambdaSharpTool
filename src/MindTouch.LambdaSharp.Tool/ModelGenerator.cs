@@ -119,13 +119,20 @@ namespace MindTouch.LambdaSharp.Tool {
             _resourceStatements.Add(new Statement {
                 Sid = "ModuleSecretsDecryption",
                 Effect = "Allow",
-                Resource = FnSplit(",", FnJoin(
+                Resource = FnSplit(
                     ",",
-                    new List<object> {
+                    FnIf(
+                        "ModuleSecretsIsEmpty",
                         FnJoin(",", _module.Secrets),
-                        FnRef("ModuleSecrets")
-                    }
-                )),
+                        FnJoin(
+                            ",",
+                            new List<object> {
+                                FnJoin(",", _module.Secrets),
+                                FnRef("ModuleSecrets")
+                            }
+                        )
+                    )
+                ),
                 Action = new List<string> {
                     "kms:Decrypt",
                     "kms:Encrypt",
@@ -133,6 +140,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     "kms:GenerateDataKeyWithoutPlaintext"
                 }
             });
+            _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
 
             // add parameters
             var environmentRefVariables = new Dictionary<string, object>();

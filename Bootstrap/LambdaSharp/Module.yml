@@ -50,6 +50,13 @@ Variables:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
+  - Name: DefaultSecretKeyAlias
+    Resource:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: !Sub "alias/${Tier}-LambdaSharpDefaultSecretKey"
+        TargetKeyId: !Ref DefaultSecretKey
+
   - Name: DefaultSecretKey
     Description: Default encryption/decryption key for LambdaSharp modules
     Resource:

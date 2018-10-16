@@ -92,7 +92,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }), null) ?? new List<AParameter>());
 
             // add LambdaSharp Module Internal Dependencies
-            section = "LambdaSharp Module Internal Dependencies";
+            section = "LambdaSharp Dependencies";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(new InputNode[] {
                 new InputNode {
                     Import = "LambdaSharp::DeadLetterQueueArn",

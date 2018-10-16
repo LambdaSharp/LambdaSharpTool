@@ -72,6 +72,14 @@ namespace MindTouch.LambdaSharp.Tool {
             };
         }
 
+        protected static object FnJoin(string separator, object parameters) {
+            return new Dictionary<string, object> {
+                ["Fn::Join"] = new List<object> {
+                    separator,
+                    parameters
+                }
+            };
+        }
         protected static object FnRef(string reference)
             => new Dictionary<string, object> {
                 ["Ref"] = reference

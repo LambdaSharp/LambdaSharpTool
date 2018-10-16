@@ -81,7 +81,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     foreach(var inputKeyValue in inputKeyOption.Values) {
                         var keyValue = inputKeyValue.Split('=', 2);
                         if(keyValue.Length != 2) {
-                            AddError($"bad format for input parameter: {keyValue}");
+                            AddError($"bad format for input parameter: {inputKeyValue}");
                         } else {
                             inputs[keyValue[0]] = keyValue[1];
                         }
