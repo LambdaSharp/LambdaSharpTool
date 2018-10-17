@@ -94,7 +94,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["Tier"] = Fn.Ref("Tier"),
                     ["ModuleId"] = Fn.Ref("AWS::StackName"),
                     ["ModuleName"] = _module.Name,
-                    ["ModuleVersion"] = _module.Version
+                    ["ModuleVersion"] = _module.Version.ToString()
                 });
             }
 
@@ -533,7 +533,7 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("AWS::StackName");
-            environmentVariables["MODULE_VERSION"] = _module.Version;
+            environmentVariables["MODULE_VERSION"] = _module.Version.ToString();
             environmentVariables["LAMBDA_NAME"] = function.Name;
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
             environmentVariables["DEADLETTERQUEUE"] = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference;

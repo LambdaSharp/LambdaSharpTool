@@ -69,7 +69,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 manifest.PackageAssets[i] = await UploadPackageAsync(manifest, manifest.PackageAssets[i], "package");
             }
             manifest.Template = await UploadJsonFileAsync(manifest, manifest.Template, "template");
-            var marker = await UploadJsonFileAsync(manifest, "manifest.json", "manifest");
+            var marker = await UploadManifestAsync(manifest, "manifest");
             if(_changesDetected) {
 
                 // write version link entry
@@ -105,6 +105,25 @@ namespace MindTouch.LambdaSharp.Tool {
             return key;
         }
 
+        private async Task<string> UploadManifestAsync(ModuleManifest manifest, string description) {
+            var minified = JsonConvert.SerializeObject(manifest, Formatting.None);
+            var filenameWithoutExtension = "manifest";
+            var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/Assets/{filenameWithoutExtension}_v{manifest.Version}_{manifest.Hash}.json";
+
+            // upload minified json
+            if(!await S3ObjectExistsAsync(key)) {
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
+                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentBody = minified,
+                    ContentType = "application/json",
+                    Key = key,
+                });
+                _changesDetected = true;
+            }
+            return key;
+        }
+
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
             var key = $"{Settings.DeploymentBucketPath}{manifest.Name}/Assets/{Path.GetFileName(filePath)}";
@@ -114,13 +133,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
                 _changesDetected = true;
-            }
-
-            // delete the source zip file when there is no failure and the output directory is the working directory
-            if(Settings.OutputDirectory == Settings.WorkingDirectory) {
-                try {
-                    File.Delete(filePath);
-                } catch { }
             }
             return key;
         }

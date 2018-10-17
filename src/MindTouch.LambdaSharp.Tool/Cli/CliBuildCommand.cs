@@ -59,23 +59,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
                 var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
                 var selectorOption = cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
+                var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
 
                 // misc options
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
-                var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
-                var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireAwsProfile: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-
-                    // initialize logging level
-                    if(verboseLevelOption.HasValue()) {
-                        if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
-
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
-                            return;
-                        }
-                    }
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -104,7 +94,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         if(File.GetAttributes(argument).HasFlag(FileAttributes.Directory)) {
 
                             // append default module filename
-                            moduleSource = Path.Combine(argument, "Module.yml");
+                            moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
                         } else {
                             moduleSource = Path.GetFullPath(argument);
                         }
@@ -145,19 +135,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
-                var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-
-                    // initialize logging level
-                    if(verboseLevelOption.HasValue()) {
-                        if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
-
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
-                            return;
-                        }
-                    }
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -187,10 +167,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                             // check if argument is pointing to a folder containing a module definition
                             if(File.Exists(Path.Combine(argument, "manifest.json"))) {
-
-                                // good to go
+                                settings.WorkingDirectory = Path.GetFullPath(argument);
+                                settings.OutputDirectory = settings.WorkingDirectory;
                             } else {
-                                moduleSource = Path.Combine(argument, "Module.yml");
+                                moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
                             }
                         } else if(Path.GetFileName(argument) == "Module.yml") {
                             moduleSource = Path.GetFullPath(argument);
@@ -251,19 +231,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
                 var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
-                var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-
-                    // initialize logging level
-                    if(verboseLevelOption.HasValue()) {
-                        if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
-
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
-                            return;
-                        }
-                    }
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -324,10 +294,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                             // check if argument is pointing to a folder containing a module definition
                             if(File.Exists(Path.Combine(argument, "manifest.json"))) {
-
-                                // good to go
+                                settings.WorkingDirectory = Path.GetFullPath(argument);
+                                settings.OutputDirectory = settings.WorkingDirectory;
                             } else {
-                                moduleSource = Path.Combine(argument, "Module.yml");
+                                moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
                             }
                         } else if(Path.GetFileName(argument) == "Module.yml") {
                             moduleSource = Path.GetFullPath(argument);
@@ -510,11 +480,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if((dryRun == null) || (dryRun == DryRunLevel.Everything)) {
                 var templateFilePath = manifest.Template;
                 var result = await new ModelPublisher(settings, manifestFile).PublishAsync(manifest);
-                if(settings.OutputDirectory == settings.WorkingDirectory) {
-                    try {
-                        File.Delete(templateFilePath);
-                    } catch { }
-                }
                 return result;
             }
             return "no-value";

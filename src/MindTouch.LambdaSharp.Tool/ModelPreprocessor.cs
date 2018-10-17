@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public IParser Preprocess(string source, string selector) {
-            _selector = $":{selector ?? throw new ArgumentNullException(nameof(selector))}";
+            _selector = (selector != null) ? $":{selector}" : null;
             var inputStream = YamlParser.Parse(source);
             var outputStream = new YamlStream {
                 Start = inputStream.Start,
@@ -67,6 +67,9 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private List<AYamlValue> ResolveChoices(List<AYamlValue> inputValues) {
+            if(_selector == null) {
+                return inputValues;
+            }
             var outputValues = new List<AYamlValue>();
             var counter = 0;
             foreach(var inputValue in inputValues) {

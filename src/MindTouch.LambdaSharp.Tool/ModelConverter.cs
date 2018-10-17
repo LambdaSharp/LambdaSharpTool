@@ -194,7 +194,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Name = "Version",
                     ResourceName = "ModuleVersion",
                     Description = "LambdaSharp module version",
-                    Reference = _module.Version
+                    Reference = _module.Version.ToString()
                 },
                 new ValueParameter {
                     Scope = ParameterScope.Module,
