@@ -569,7 +569,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // check that LambdaSharp Environment & Tool versions match
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(tier));
                 } else {
-                    if(settings.EnvironmentVersion.CompareTo(settings.ToolVersion) != VersionInfoCompare.Same) {
+                    if(settings.EnvironmentVersion != settings.ToolVersion) {
                         AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(tier));
                     }
                 }
@@ -651,24 +651,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // attempt to identify the newest version
-            var newest = new List<VersionInfo>();
-            foreach(var current in versions) {
-                if(!newest.Any(v => v.CompareTo(current) == VersionInfoCompare.Newer)) {
-
-                    // newest contains either only older or incomparable versions
-                    // => keep only incomparable versions and add current version
-                    newest = newest.Where(v => v.CompareTo(current) == VersionInfoCompare.Undefined)
-                        .Append(current)
-                        .ToList();
-                }
-            }
-
-            // check if we found a single, newest version
-            if(newest.Count != 1) {
-                AddError($"found more than one possible version match: {string.Join(" ", newest)}");
-                return null;;
-            }
-            return newest.First();
+            return versions.Max();
         }
 
         private async Task<string> GetS3ObjectContents(Settings settings, string key) {

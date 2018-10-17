@@ -24,14 +24,7 @@ using System;
 
 namespace MindTouch.LambdaSharp.Tool {
 
-    public enum VersionInfoCompare {
-        Undefined,
-        Older,
-        Newer,
-        Same
-    }
-
-    public class VersionInfo {
+    public class VersionInfo : IComparable<VersionInfo>, IEquatable<VersionInfo> {
 
         //--- Class Methods ---
         public static VersionInfo Parse(string text) {
@@ -60,8 +53,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Constructors ---
         private VersionInfo(Version version, string suffix) {
-            Version = version;
-            Suffix = suffix;
+            Version = version ?? throw new ArgumentNullException(nameof(version));
+            Suffix = suffix ?? throw new ArgumentNullException(nameof(suffix));
         }
 
         //--- Properties ---
@@ -74,65 +67,42 @@ namespace MindTouch.LambdaSharp.Tool {
             return new VersionInfo(Version, suffix);
         }
 
-        public VersionInfoCompare CompareTo(VersionInfo other) {
+        override public string ToString() => Version.ToString() + Suffix;
+
+        public bool Equals(VersionInfo other) {
+            if(other == null) {
+                return false;
+            }
             if(Suffix != other.Suffix) {
-
-                // versions with different suffixes cannot be compared
-                return VersionInfoCompare.Undefined;
+                throw new ArgumentException("version suffix mismatch", nameof(other));
             }
-            if(Version.Major > other.Version.Major) {
-                return VersionInfoCompare.Newer;
-            }
-            if(Version.Major < other.Version.Major) {
-                return VersionInfoCompare.Older;
-            }
-            if(Version.Minor > other.Version.Minor) {
-                return VersionInfoCompare.Newer;
-            }
-            if(Version.Minor < other.Version.Minor) {
-                return VersionInfoCompare.Older;
-            }
-            if(Version.Build > other.Version.Build) {
-                if(Version.Revision >= other.Version.Revision) {
-                    return VersionInfoCompare.Newer;
-                } else {
-
-                    // inconsistent build/revision comparisons yield no result
-                    return VersionInfoCompare.Undefined;
-                }
-            }
-            if(Version.Build < other.Version.Build) {
-                if(Version.Revision <= other.Version.Revision) {
-                    return VersionInfoCompare.Older;
-                } else {
-
-                    // inconsistent build/revision comparisons yield no result
-                    return VersionInfoCompare.Undefined;
-                }
-            }
-            if(Version.Revision > other.Version.Revision) {
-                if(Version.Build >= other.Version.Build) {
-                    return VersionInfoCompare.Newer;
-                } else {
-
-                    // inconsistent build/revision comparisons yield no result
-                    return VersionInfoCompare.Undefined;
-                }
-            }
-            if(Version.Revision < other.Version.Revision) {
-                if(Version.Build <= other.Version.Build) {
-                    return VersionInfoCompare.Older;
-                } else {
-
-                    // inconsistent build/revision comparison yields no result
-                    return VersionInfoCompare.Undefined;
-                }
-            }
-
-            // versions are equal
-            return VersionInfoCompare.Same;
+            return Version.CompareTo(other.Version) == 0;
         }
 
-        override public string ToString() => Version.ToString() + Suffix;
+        public override bool Equals(object obj){
+            if(ReferenceEquals(null, obj)) {
+                return false;
+            }
+            if(ReferenceEquals(this, obj)) {
+                return true;
+            }
+            if(obj.GetType() != GetType()) {
+                return false;
+            }
+            return Equals(obj as VersionInfo);
+	    }
+
+        public override int GetHashCode()
+            => Version.GetHashCode() & Suffix.GetHashCode();
+
+        public int CompareTo(VersionInfo other) {
+            if(other == null) {
+                throw new ArgumentNullException(nameof(other));
+            }
+            if(Suffix != other.Suffix) {
+                throw new ArgumentException("version suffix mismatch", nameof(other));
+            }
+            return Version.CompareTo(other.Version);
+        }
     }
 }

@@ -162,13 +162,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     AddError("unable to parse existing version");
                     return;
                 }
-                if(existingVersion.CompareTo(Version) == VersionInfoCompare.Older) {
+                if(existingVersion.CompareTo(Version) < 0) {
 
                     // TODO (2018-10-09, bjorg): logic for upgrading lambdasharp tool
                     AddError("upgrading is not yet supported");
                     return;
                 }
-                if(existingVersion.CompareTo(Version) == VersionInfoCompare.Newer) {
+                if(existingVersion.CompareTo(Version) > 0) {
                     Console.WriteLine();
                     Console.WriteLine($"WARNING: LambdaSharp tool configuration is more recent (v{existingVersion})");
                     return;
