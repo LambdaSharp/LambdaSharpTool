@@ -27,13 +27,17 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
     public class InputNode {
 
         //--- Properties ---
-        public string Name { get; set; }
+
+        // common
         public string Section { get; set; }
         public string Label { get; set; }
         public string Description { get; set; }
         public string Type { get; set; }
-        public string Import { get; set; }
-        public string Secret { get; set; }
+        public string Scope { get; set; }
+        public bool? NoEcho { get; set; }
+
+        // template input
+        public string Input { get; set; }
         public string Default { get; set; }
         public string ConstraintDescription { get; set; }
         public string AllowedPattern { get; set; }
@@ -42,6 +46,8 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public int? MaxValue { get; set; }
         public int? MinLength { get; set; }
         public int? MinValue { get; set; }
-        public bool? NoEcho { get; set; }
+
+        // cross-module reference
+        public string Import { get; set; }
     }
 }

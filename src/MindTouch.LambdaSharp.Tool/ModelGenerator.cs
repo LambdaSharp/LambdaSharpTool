@@ -844,7 +844,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         _resourceStatements.Add(new Statement {
                             Sid = resourceName,
                             Effect = "Allow",
-                            Resource = parameter.Reference,
+                            Resource = (resource.ResourceReferences.Count == 1)
+                                ? resource.ResourceReferences.First()
+                                : resource.ResourceReferences,
                             Action = resource.Allow
                         });
                     }
@@ -891,7 +893,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case ValueInputParameter valueInputParameter:
                 _stack.Add(resourceName, new Parameter {
-                    Type = valueInputParameter.Type,
+                    Type = (valueInputParameter.Type == "Secret") ? "String" : valueInputParameter.Type,
                     Description = valueInputParameter.Description,
                     Default = valueInputParameter.Default,
                     ConstraintDescription = valueInputParameter.ConstraintDescription,
@@ -903,24 +905,31 @@ namespace MindTouch.LambdaSharp.Tool {
                     MinValue = valueInputParameter.MinValue,
                     NoEcho = valueInputParameter.NoEcho
                 });
-                break;
-            case SecretInputParameter secretInputParameter:
-                _stack.Add(resourceName, new Parameter {
-                    Type = "String",
-                    Description = secretInputParameter.Description,
-                    NoEcho = secretInputParameter.NoEcho
-                });
+                if(parameter.Scope == ParameterScope.Function) {
+                    if(valueInputParameter.Type == "Secret") {
+                        environmentRefVariables["SEC_" + fullEnvName] = FnRef(resourceName);
+                    } else {
+                        environmentRefVariables["STR_" + fullEnvName] = FnRef(resourceName);
+                    }
+                }
                 break;
             case ImportInputParameter importInputParameter:
                 _stack.Add(resourceName, new Parameter {
-                    Type = "String",
+                    Type = (importInputParameter.Type == "Secret") ? "String" : importInputParameter.Type,
                     Description = importInputParameter.Description,
                     Default = "$" + importInputParameter.Import,
-                    ConstraintDescription = "must either be a cross-module import reference or a resource ARN",
-                    AllowedPattern =  @"^(\$[\w]+::[\w]+|arn:[\w:]+)$",
+                    ConstraintDescription = "must either be a cross-module import reference or a non-blank value",
+                    AllowedPattern =  @"^.+$",
                     NoEcho = importInputParameter.NoEcho
                 });
                 _stack.Add($"{resourceName}IsImport", new Condition(Fn.Equals(Fn.Select("0", Fn.Split("$", Fn.Ref(resourceName))), "")));
+                if(parameter.Scope == ParameterScope.Function) {
+                    if(importInputParameter.Type == "Secret") {
+                        environmentRefVariables["SEC_" + fullEnvName] = FnRef(resourceName);
+                    } else {
+                        environmentRefVariables["STR_" + fullEnvName] = FnRef(resourceName);
+                    }
+                }
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(parameter), parameter, "unknown parameter type");

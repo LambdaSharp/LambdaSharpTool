@@ -10,12 +10,12 @@ Description: LambdaSharp Environment
 
 Inputs:
 
-  - Name: LoggingStreamRetentionPeriod
+  - Input: LoggingStreamRetentionPeriod
     Label: Retention period (hours)
     Description: How long logging stream entries are kept before they are lost
     Default: 24
 
-  - Name: DefaultSecretKeyRotationEnabled
+  - Input: DefaultSecretKeyRotationEnabled
     Label: Enable key rotation
     Description: Rotate KMS key automatically every 365 days
     Default: false

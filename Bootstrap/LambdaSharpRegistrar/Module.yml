@@ -9,13 +9,13 @@ Version: 0.4-WIP
 
 Inputs:
 
-  - Name: RegistrationTableReadCapacity
+  - Input: RegistrationTableReadCapacity
     Section: Registration Table Settings
     Label: Read Capacity Units
     Description: Provisioned read capacity for registrations table
     Default: 1
 
-  - Name: RegistrationTableWriteCapacity
+  - Input: RegistrationTableWriteCapacity
     Section: Registration Table Settings
     Label: Write Capacity Units
     Description: Provisioned write capacity for registrations table

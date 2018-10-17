@@ -172,7 +172,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             } else {
                                 moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
                             }
-                        } else if(Path.GetFileName(argument) == "Module.yml") {
+                        } else if((Path.GetExtension(argument) == ".yml") || (Path.GetExtension(argument) == ".yaml")) {
                             moduleSource = Path.GetFullPath(argument);
                         } else if(Path.GetFileName(argument) == "manifest.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
@@ -199,8 +199,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 break;
                             }
                         }
-                        if(await PublishStepAsync(settings, dryRun) == null) {
-                            break;
+                        if(dryRun == null) {
+                            if(await PublishStepAsync(settings) == null) {
+                                break;
+                            }
                         }
                     }
                 });
@@ -299,7 +301,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             } else {
                                 moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
                             }
-                        } else if(Path.GetFileName(argument) == "Module.yml") {
+                        } else if((Path.GetExtension(argument) == ".yml") || (Path.GetExtension(argument) == ".yaml")) {
                             moduleSource = Path.GetFullPath(argument);
                         } else if(Path.GetFileName(argument) == "manifest.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
@@ -325,23 +327,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 break;
                             }
                         }
-                        if(moduleKey == null) {
-                            moduleKey = await PublishStepAsync(settings, dryRun);
+                        if(dryRun == null) {
                             if(moduleKey == null) {
+                                moduleKey = await PublishStepAsync(settings);
+                                if(moduleKey == null) {
+                                    break;
+                                }
+                            }
+                            if(!await DeployStepAsync(
+                                settings,
+                                dryRun,
+                                moduleKey,
+                                altModuleNameOption.Value(),
+                                allowDataLossOption.HasValue(),
+                                protectStackOption.HasValue(),
+                                inputs,
+                                tier
+                            )) {
                                 break;
                             }
-                        }
-                        if(!await DeployStepAsync(
-                            settings,
-                            dryRun,
-                            moduleKey,
-                            altModuleNameOption.Value(),
-                            allowDataLossOption.HasValue(),
-                            protectStackOption.HasValue(),
-                            inputs,
-                            tier
-                        )) {
-                            break;
                         }
                     }
                 });
@@ -456,10 +460,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<string> PublishStepAsync(
-            Settings settings,
-            DryRunLevel? dryRun
-        ) {
+        public async Task<string> PublishStepAsync(Settings settings) {
             var manifestFile = Path.Combine(settings.OutputDirectory, "manifest.json");
             if(!File.Exists(manifestFile)) {
                 AddError("folder does not contain a module manifest for publishing");
@@ -477,12 +478,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // publish module
-            if((dryRun == null) || (dryRun == DryRunLevel.Everything)) {
-                var templateFilePath = manifest.Template;
-                var result = await new ModelPublisher(settings, manifestFile).PublishAsync(manifest);
-                return result;
-            }
-            return "no-value";
+            var templateFilePath = manifest.Template;
+            return await new ModelPublisher(settings, manifestFile).PublishAsync(manifest);
         }
 
         public async Task<bool> DeployStepAsync(
@@ -526,7 +523,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(moduleKey.Contains(':')) {
                     var parts = moduleKey.Split(':', 2);
                     moduleName = parts[0];
-                    version = VersionInfo.Parse(parts[1]);
+                    if(parts[1] != "*") {
+                        version = VersionInfo.Parse(parts[1]);
+                    }
                 } else {
                     moduleName = moduleKey;
                 }

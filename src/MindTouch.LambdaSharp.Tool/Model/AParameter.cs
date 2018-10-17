@@ -80,12 +80,12 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Section { get; set; }
         public string Label { get; set; }
         public bool? NoEcho { get; set; }
+        public string Type { get; set; }
     }
 
     public class ValueInputParameter : AInputParameter {
 
         //--- Properties ---
-        public string Type { get; set; }
         public string Default { get; set; }
         public string ConstraintDescription { get; set; }
         public string AllowedPattern { get; set; }
@@ -95,8 +95,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public int? MinLength { get; set; }
         public int? MinValue { get; set; }
     }
-
-    public class SecretInputParameter : AInputParameter { }
 
     public class ImportInputParameter : AInputParameter {
 

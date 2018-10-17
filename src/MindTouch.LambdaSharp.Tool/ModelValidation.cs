@@ -491,26 +491,22 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var input in inputs) {
                 ++index;
-                AtLocation(input.Name ?? $"[{index}]", () => {
+                AtLocation(input.Input ?? $"[{index}]", () => {
                     if(input.Type == null) {
                         input.Type = "String";
                     }
-                    if(input.Secret != null) {
-                        Validate(input.Type == "String", "input type must be 'String'");
-                        ValidateNotBothStatements("Secret", "Name", input.Name == null);
-                        ValidateNotBothStatements("Secret", "Default", input.Default == null);
-                        ValidateNotBothStatements("Secret", "ConstraintDescription", input.ConstraintDescription == null);
-                        ValidateNotBothStatements("Secret", "AllowedPattern", input.AllowedPattern == null);
-                        ValidateNotBothStatements("Secret", "AllowedValues", input.AllowedValues == null);
-                        ValidateNotBothStatements("Secret", "MaxLength", input.MaxLength == null);
-                        ValidateNotBothStatements("Secret", "MaxValue", input.MaxValue == null);
-                        ValidateNotBothStatements("Secret", "MinLength", input.MinLength == null);
-                        ValidateNotBothStatements("Secret", "MinValue", input.MinValue == null);
-                        ValidateNotBothStatements("Secret", "NoEcho", input.NoEcho == null);
-                    } else if(input.Import != null) {
-                        Validate(input.Type == "String", "input type must be 'String'");
+                    switch(input.Scope){
+                    case null:
+                    case "Function":
+                    case "Module":
+                        break;
+                    default:
+                        AddError("invalid scope value; must either be 'Function' or 'Module'");
+                        break;
+                    }
+                    if(input.Import != null) {
                         Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
-                        ValidateNotBothStatements("Import", "Name", input.Name == null);
+                        ValidateNotBothStatements("Import", "Name", input.Input == null);
                         ValidateNotBothStatements("Import", "Default", input.Default == null);
                         ValidateNotBothStatements("Import", "ConstraintDescription", input.ConstraintDescription == null);
                         ValidateNotBothStatements("Import", "AllowedPattern", input.AllowedPattern == null);
@@ -521,7 +517,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Import", "MinValue", input.MinValue == null);
                         ValidateNotBothStatements("Import", "NoEcho", input.NoEcho == null);
                     } else {
-                        ValidateResourceName(input.Name, "");
+                        ValidateResourceName(input.Input, "");
                     }
                 });
             }
@@ -531,8 +527,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var output in outputs) {
                 ++index;
-                AtLocation(output.Name ?? output.Export ?? output.CustomResource ?? $"[{index}]", () => {
-                    if(output.Name != null) {
+                AtLocation(output.Output ?? output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                    if(output.Output != null) {
 
                         // TODO (2018-09-20, bjorg): add name validation
 
@@ -550,7 +546,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ) {
                             AddError("export must either have a Value attribute or match the name of an existing variable/parameter");
                         }
-                        ValidateNotBothStatements("Export", "Name", output.Name == null);
+                        ValidateNotBothStatements("Export", "Name", output.Output == null);
                         ValidateNotBothStatements("Export", "CustomResource", output.CustomResource == null);
                         ValidateNotBothStatements("Export", "Handler", output.Handler == null);
                     } else if(output.CustomResource != null) {
@@ -561,7 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
 
-                        ValidateNotBothStatements("CustomResource", "Name", output.Name == null);
+                        ValidateNotBothStatements("CustomResource", "Name", output.Output == null);
                         ValidateNotBothStatements("CustomResource", "Value", output.Value == null);
                     }
                 });

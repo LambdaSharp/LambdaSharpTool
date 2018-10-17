@@ -83,7 +83,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var section = "LambdaSharp Module Options";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(new InputNode[] {
                 new InputNode {
-                    Name = "ModuleSecrets",
+                    Input = "ModuleSecrets",
+                    Scope = "Module",
                     Section = section,
                     Label = "Secret Keys (ARNs)",
                     Description = "Comma-separated list of optional secret keys",
@@ -96,18 +97,21 @@ namespace MindTouch.LambdaSharp.Tool {
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(new InputNode[] {
                 new InputNode {
                     Import = "LambdaSharp::DeadLetterQueueArn",
+                    Scope = "Module",
                     Section = section,
                     Label = "Dead Letter Queue (ARN)",
                     Description = "Dead letter queue for functions"
                 },
                 new InputNode {
                     Import = "LambdaSharp::LoggingStreamArn",
+                    Scope = "Module",
                     Section = section,
                     Label = "Logging Stream (ARN)",
                     Description = "Logging kinesis stream for functions"
                 },
                 new InputNode {
                     Import = "LambdaSharp::DefaultSecretKeyArn",
+                    Scope = "Module",
                     Section = section,
                     Label = "Secret Key (ARN)",
                     Description = "Default secret key for functions"
@@ -118,25 +122,29 @@ namespace MindTouch.LambdaSharp.Tool {
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(new InputNode[] {
                 new InputNode {
-                    Name = "DeploymentBucketName",
+                    Input = "DeploymentBucketName",
+                    Scope = "Module",
                     Section = section,
                     Label = "S3 Bucket Name",
                     Description = "Source deployment S3 bucket name"
                 },
                 new InputNode {
-                    Name = "DeploymentBucketPath",
+                    Input = "DeploymentBucketPath",
+                    Scope = "Module",
                     Section = section,
                     Label = "S3 Bucket Path",
                     Description = "Source deployment S3 bucket path"
                 },
                 new InputNode {
-                    Name = "Tier",
+                    Input = "Tier",
+                    Scope = "Module",
                     Section = section,
                     Label = "Tier",
                     Description = "Module deployment tier"
                 },
                 new InputNode {
-                    Name = "TierLowercase",
+                    Input = "TierLowercase",
+                    Scope = "Module",
                     Section = section,
                     Label = "Tier (lowercase)",
                     Description = "Module deployment tier (lowercase)"
@@ -252,7 +260,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var input in inputs) {
                 ++index;
-                AtLocation(input.Name ?? input.Secret ?? input.Import, () => {
+                AtLocation(input.Input ?? input.Import, () => {
                     AInputParameter result = null;
                     if(input.Import != null) {
                         var parts = input.Import.Split("::", 2);
@@ -275,6 +283,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         var resourceName = input.Import.Replace("::", "");
                         result = new ImportInputParameter {
                             Name = parts[1],
+                            Type = input.Type,
                             ResourceName = resourceName,
                             Reference = FnIf(
                                 $"{resourceName}IsImport",
@@ -286,22 +295,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             Import = input.Import
                         };
                         parentParameter.Parameters.Add(result);
-                    } else if(input.Secret != null) {
-
-                        // create secret input
-                        result = new SecretInputParameter {
-                            Name = input.Secret,
-                            ResourceName = input.Secret,
-                            Reference = FnRef(input.Secret)
-                        };
                     } else {
 
                         // create regular input
                         result = new ValueInputParameter {
-                            Name = input.Name,
-                            ResourceName = input.Name,
-                            Reference = FnRef(input.Name),
-                            Type = input.Type ?? "String",
+                            Name = input.Input,
+                            ResourceName = input.Input,
+                            Reference = FnRef(input.Input),
                             Default = input.Default,
                             ConstraintDescription = input.ConstraintDescription,
                             AllowedPattern = input.AllowedPattern,
@@ -315,10 +315,11 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(result != null) {
 
                         // set AParameter fields
-                        result.Scope = ParameterScope.Function;
+                        result.Scope = Enum.Parse<ParameterScope>(input.Scope ?? "Function");
                         result.Description = input.Description;
 
                         // set AInputParamete fields
+                        result.Type = input.Type ?? "String";
                         result.Section = input.Section ?? "Module Settings";
                         result.Label = input.Label ?? result.Name;
                         result.NoEcho = input.NoEcho;
@@ -697,10 +698,10 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private AOutput ConvertOutput(int index, OutputNode output) {
-            return AtLocation<AOutput>(output.Name ?? $"[{index}]", () => {
-                if(output.Name != null) {
+            return AtLocation<AOutput>(output.Output ?? $"[{index}]", () => {
+                if(output.Output != null) {
                     return new StackOutput {
-                        Name = output.Name,
+                        Name = output.Output,
                         Description = output.Description,
                         Value = output.Value
                     };

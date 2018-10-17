@@ -18,7 +18,6 @@ if [ -z "$1" ]; then
 
     # run everything
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- info \
-        --tier test \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
         --environment-version 0.4 \

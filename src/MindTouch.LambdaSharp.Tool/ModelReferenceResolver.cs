@@ -412,7 +412,6 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                     case ValueListParameter _:
                     case ReferencedResourceParameter _:
                     case ValueInputParameter _:
-                    case SecretInputParameter _:
                     case ImportInputParameter _:
                         if(attribute != null) {
                             AddError($"reference '{key}' must resolved to a CloudFormation resource to be used with an Fn::GetAtt expression");
