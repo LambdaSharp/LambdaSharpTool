@@ -93,9 +93,9 @@ namespace MindTouch.LambdaSharp.Tool {
             => AddError($"internal error: {exception.Message}", exception);
 
         //--- Properties ---
-        public Version ToolVersion { get; set; }
+        public VersionInfo ToolVersion { get; set; }
         public string ToolProfile { get; set; }
-        public Version EnvironmentVersion { get; set; }
+        public VersionInfo EnvironmentVersion { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }

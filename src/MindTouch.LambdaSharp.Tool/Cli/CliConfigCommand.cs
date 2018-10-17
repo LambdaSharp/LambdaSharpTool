@@ -158,17 +158,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
             } else {
                 toolProfile = assumeToolProfile;
-                if(!Version.TryParse(GetToolSetting("Version"), out Version existingVersion)) {
+                if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
                     AddError("unable to parse existing version");
                     return;
                 }
-                if(existingVersion < Version) {
+                if(existingVersion.CompareTo(Version) == VersionInfoCompare.Older) {
 
                     // TODO (2018-10-09, bjorg): logic for upgrading lambdasharp tool
                     AddError("upgrading is not yet supported");
                     return;
                 }
-                if(existingVersion > Version) {
+                if(existingVersion.CompareTo(Version) == VersionInfoCompare.Newer) {
                     Console.WriteLine();
                     Console.WriteLine($"WARNING: LambdaSharp tool configuration is more recent (v{existingVersion})");
                     return;

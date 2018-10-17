@@ -54,7 +54,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         public void Process(
             ModuleNode module,
-            Version version,
+            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -78,7 +78,7 @@ namespace MindTouch.LambdaSharp.Tool {
         private void Process(
             ModuleNode module,
             FunctionNode function,
-            Version version,
+            VersionInfo version,
             bool skipCompile,
             bool skipAssemblyValidation,
             string gitsha,
@@ -185,7 +185,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function-{projectName}-*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{projectName}*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }
@@ -265,7 +265,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     }
-                    package = Path.Combine(Settings.OutputDirectory, $"function-{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+                    package = Path.Combine(Settings.OutputDirectory, $"function_{projectName}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
 
                 // compress folder contents

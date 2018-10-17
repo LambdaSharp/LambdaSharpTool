@@ -51,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool {
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
                 Name = "MindTouch.LambdaSharp.Tool",
-                FullName = $"MindTouch LambdaSharp Tool (v{VersionPrefixAndSuffix})",
+                FullName = $"MindTouch LambdaSharp Tool (v{Version})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();
@@ -76,7 +76,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 try {
                     app.Execute(args);
                 } catch(Exception e) {
-                    Console.WriteLine(e);
                     AddError(e);
                 }
                 if(Settings.HasErrors) {

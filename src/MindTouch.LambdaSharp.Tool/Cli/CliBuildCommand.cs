@@ -273,7 +273,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // initialize deployment tier value
                     var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if(tier == null) {
+                    if(string.IsNullOrEmpty(tier)) {
                         AddError("missing deployment tier name");
                         return;
                     }
@@ -505,13 +505,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string marker;
             if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
                 var uri = new Uri(moduleKey);
-                if(uri.Host != settings.DeploymentBucketName) {
-                    AddError("deploying from another S3 bucket than the deployment bucket is not supported");
-                    return false;
-                }
+                settings.DeploymentBucketName = uri.Host;
 
                 // absolute path always starts with '/', which needs to be removed
-                marker = uri.AbsolutePath.Substring(1);
+                var path = uri.AbsolutePath.Substring(1);
+                if(!path.EndsWith(".json", StringComparison.Ordinal)) {
+                    marker = await GetS3ObjectContents(settings, path);
+                    if(marker == null) {
+                        AddError($"could not find module location: {moduleKey})");
+                        return false;
+                    }
+                } else {
+                    marker = path;
+                }
             } else {
                 VersionInfo version = null;
                 string moduleName;
@@ -523,12 +529,29 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     version = VersionInfo.Parse(parts[1]);
                 } else {
                     moduleName = moduleKey;
-                    version = await FindNewestVersion(settings, moduleKey);
-                    if(HasErrors) {
-                        return false;
+                }
+
+                // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
+                marker = null;
+                foreach(var bucket in new[] {
+                    settings.DeploymentBucketName,
+                    $"lambdasharp-{settings.AwsRegion}"
+                }) {
+                    settings.DeploymentBucketName = bucket;
+                    if(version == null) {
+                        version = await FindNewestVersion(settings, moduleKey);
+                        if(HasErrors) {
+                            return false;
+                        }
+                        if(version == null) {
+                            continue;
+                        }
+                    }
+                    marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{version}");
+                    if(marker != null) {
+                        break;
                     }
                 }
-                marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{version}");
                 if(marker == null) {
                     AddError($"could not find module: {moduleName} (v{version})");
                     return false;
@@ -624,6 +647,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 );
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
+            if(!versions.Any()) {
+                return null;
+            }
 
             // attempt to identify the newest version
             var newest = new List<VersionInfo>();
@@ -639,16 +665,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
 
             // check if we found a single, newest version
-            switch(newest.Count) {
-            case 0:
-                AddError("could not find a published version");
-                return null;
-            case 1:
-                return newest.First();
-            default:
+            if(newest.Count != 1) {
                 AddError($"found more than one possible version match: {string.Join(" ", newest)}");
                 return null;;
             }
+            return newest.First();
         }
 
         private async Task<string> GetS3ObjectContents(Settings settings, string key) {

@@ -30,22 +30,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
     public class CliBase {
 
         //--- Class Fields ---
-        private static Version _version;
+        private static VersionInfo _version;
 
         //--- Class Constructor ---
         static CliBase() {
-            var version = FullVersion;
-            if(version.Build != 0) {
-                _version = new Version(version.Major, version.Minor, version.Build);
-            } else {
-                _version = new Version(version.Major, version.Minor);
-            }
+            _version = VersionInfo.Parse(typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
         }
 
         //--- Class Properties ---
-        protected static Version FullVersion => typeof(CliBase).Assembly.GetName().Version;
-        protected static string VersionPrefixAndSuffix => typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-        protected static Version Version => _version;
+        protected static VersionInfo Version => _version;
         protected static bool HasErrors => Settings.HasErrors;
 
         //--- Class Methods ---

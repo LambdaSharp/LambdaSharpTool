@@ -45,7 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                     // initialize deployment tier value
                     var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if(tier == null) {
+                    if(string.IsNullOrEmpty(tier)) {
                         AddError("missing deployment tier name");
                         return;
                     }

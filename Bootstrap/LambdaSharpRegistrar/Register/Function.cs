@@ -69,16 +69,16 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
 
-            // validate request
-            if(properties.Tier != DeploymentTier) {
-
-                // TODO (2018-10-11, bjorg): better exception
-                throw new Exception("tier mismatch");
-            }
-
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
             case "Custom::LambdaSharpRegisterModule": {
+
+                    // validate request
+                    if(properties.Tier != DeploymentTier) {
+
+                        // TODO (2018-10-11, bjorg): better exception
+                        throw new Exception("tier mismatch");
+                    }
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = PopulateOwnerMetaData(properties);
                     await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
@@ -87,6 +87,11 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             case "Custom::LambdaSharpRegisterFunction": {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
                     var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    if(owner == null) {
+
+                        // TODO (2018-10-11, bjorg): better exception
+                        throw new Exception("owner not found");
+                    }
                     owner = PopulateOwnerMetaData(properties, owner);
                     await _registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
                     return Respond($"registration:function:{properties.FunctionId}");
@@ -134,18 +139,18 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }
-            owner.Tier = properties.Tier;
-            owner.ModuleId = properties.ModuleId;
-            owner.ModuleName = properties.ModuleName;
-            owner.ModuleVersion = properties.ModuleVersion;
-            owner.FunctionId = properties.FunctionId;
-            owner.FunctionName = properties.FunctionName;
-            owner.FunctionLogGroupName = properties.FunctionLogGroupName;
-            owner.FunctionPlatform = properties.FunctionPlatform;
-            owner.FunctionFramework = properties.FunctionFramework;
-            owner.FunctionLanguage = properties.FunctionLanguage;
-            owner.FunctionMaxMemory = properties.FunctionMaxMemory;
-            owner.FunctionMaxDuration = TimeSpan.FromSeconds(properties.FunctionMaxDuration);
+            owner.Tier = properties.Tier ?? owner.Tier;
+            owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
+            owner.ModuleName = properties.ModuleName ?? owner.ModuleName;
+            owner.ModuleVersion = properties.ModuleVersion ?? owner.ModuleVersion;
+            owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
+            owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
+            owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;
+            owner.FunctionPlatform = properties.FunctionPlatform ?? owner.FunctionPlatform;
+            owner.FunctionFramework = properties.FunctionFramework ?? owner.FunctionFramework;
+            owner.FunctionLanguage = properties.FunctionLanguage ?? owner.FunctionLanguage;
+            owner.FunctionMaxMemory = Math.Max(properties.FunctionMaxMemory, owner.FunctionMaxMemory);
+            owner.FunctionMaxDuration = TimeSpan.FromSeconds(Math.Max(properties.FunctionMaxDuration, owner.FunctionMaxDuration.TotalSeconds));
             return owner;
         }
     }

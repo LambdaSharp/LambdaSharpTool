@@ -34,12 +34,22 @@ namespace MindTouch.LambdaSharp.Tool {
     public class VersionInfo {
 
         //--- Class Methods ---
-        public static VersionInfo Parse(string version) {
-            var index = version.IndexOf('-');
+        public static VersionInfo Parse(string text) {
+            var index = text.IndexOf('-');
             if(index < 0) {
-                return new VersionInfo(Version.Parse(version), "");
+                return new VersionInfo(Version.Parse(text), "");
             } else {
-                return new VersionInfo(Version.Parse(version.Substring(0, index)), version.Substring(index));
+                return new VersionInfo(Version.Parse(text.Substring(0, index)), text.Substring(index));
+            }
+        }
+
+        public static bool TryParse(string text, out VersionInfo version) {
+            try {
+                version = Parse(text);
+                return true;
+            } catch {
+                version = null;
+                return false;
             }
         }
 
@@ -55,6 +65,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         //--- Properties ---
+        public int Major => Version.Major;
+        public int Minor => Version.Minor;
         public bool IsPreRelease => Suffix.Length > 0;
 
         //--- Methods ---

@@ -140,7 +140,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return new Settings {
                     ToolVersion = Version,
                     ToolProfile = toolProfile,
-                    EnvironmentVersion = (environmentVersion != null) ? new Version(environmentVersion) : null,
+                    EnvironmentVersion = (environmentVersion != null) ? VersionInfo.Parse(environmentVersion) : null,
                     AwsRegion = awsAccount.GetValueOrDefault().Region,
                     AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                     DeploymentBucketName = deploymentBucketName,
@@ -189,11 +189,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(settings.ToolProfile != null) {
                     var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
                     var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
-                    if(!Version.TryParse(GetLambdaSharpToolSetting("Version"), out Version lambdaSharpToolVersion)) {
+                    if(!VersionInfo.TryParse(GetLambdaSharpToolSetting("Version"), out VersionInfo lambdaSharpToolVersion)) {
                         AddError("LambdaSharp tool is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
-                    if(lambdaSharpToolVersion < settings.ToolVersion) {
+                    if(lambdaSharpToolVersion.CompareTo(settings.ToolVersion) == VersionInfoCompare.Older) {
                         AddError($"LambdaSharp tool configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
@@ -222,7 +222,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(settings.EnvironmentVersion == null) {
                         var environmentVersion = GetLambdaSharpSetting("Version");
                         if(environmentVersion != null) {
-                            settings.EnvironmentVersion = new Version(environmentVersion);
+                            settings.EnvironmentVersion = VersionInfo.Parse(environmentVersion);
                         }
                     }
 
