@@ -91,7 +91,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // run build step
                     foreach(var argument in arguments) {
                         string moduleSource;
-                        if(File.GetAttributes(argument).HasFlag(FileAttributes.Directory)) {
+                        if(Directory.Exists(argument)) {
 
                             // append default module filename
                             moduleSource = Path.Combine(Path.GetFullPath(argument), "Module.yml");
@@ -163,7 +163,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // run build & publish steps
                     foreach(var argument in arguments) {
                         string moduleSource = null;
-                        if(File.GetAttributes(argument).HasFlag(FileAttributes.Directory)) {
+                        if(Directory.Exists(argument)) {
 
                             // check if argument is pointing to a folder containing a module definition
                             if(File.Exists(Path.Combine(argument, "manifest.json"))) {
@@ -290,7 +290,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     foreach(var argument in arguments) {
                         string moduleKey = null;
                         string moduleSource = null;
-                        if(File.GetAttributes(argument).HasFlag(FileAttributes.Directory)) {
+                        if(Directory.Exists(argument)) {
 
                             // check if argument is pointing to a folder containing a module definition
                             if(File.Exists(Path.Combine(argument, "manifest.json"))) {
@@ -612,15 +612,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var versions = new List<VersionInfo>();
             var request = new ListObjectsV2Request {
                 BucketName = settings.DeploymentBucketName,
-                Prefix = $"{settings.DeploymentBucketPath}{moduleName}/Versions/"
+                Prefix = $"{settings.DeploymentBucketPath}{moduleName}/Versions/",
+                Delimiter = "/",
+                MaxKeys = 100
             };
             do {
                 var response = await settings.S3Client.ListObjectsV2Async(request);
-                versions.AddRange(response.CommonPrefixes
-                    .Select(found => VersionInfo.Parse(found))
+                versions.AddRange(response.S3Objects
+                    .Select(found => VersionInfo.Parse(found.Key.Substring(request.Prefix.Length)))
                     .Where(v => !v.IsPreRelease)
                 );
-                request.ContinuationToken = response.ContinuationToken;
+                request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
 
             // attempt to identify the newest version
