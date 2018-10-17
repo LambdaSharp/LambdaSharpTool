@@ -55,6 +55,13 @@ namespace MindTouch.LambdaSharp.Tool {
 
     public class Settings {
 
+        //--- Constants ---
+#if DOTNETTOOL
+        public const string Lash = "dotnet lash";
+#else
+        public const string Lash = "lash";
+#endif
+
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Normal;
         private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
@@ -75,13 +82,13 @@ namespace MindTouch.LambdaSharp.Tool {
             var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
             if(configException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: complete the LambdaSharpTool configuration procedure for profile '{configException.Profile}'");
+                Console.WriteLine($"IMPORTANT: run '{Lash} config' to configure LambdaSharpTool for profile '{configException.Profile}'");
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: complete the LambdaSharp Environment bootstrap procedure for deployment tier '{setupException.Tier}'");
+                Console.WriteLine($"IMPORTANT: run '{Lash} setup' to setup the LambdaSharp Environment for deployment tier '{setupException.Tier}'");
                 return;
             }
         }
