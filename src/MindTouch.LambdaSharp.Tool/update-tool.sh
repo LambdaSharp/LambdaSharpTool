@@ -1,10 +1,10 @@
 rm *.nupkg
 
 dotnet publish \
-    --configuration NugetPublish
+    --configuration Release
 
 dotnet pack \
-    --configuration NugetPublish \
+    --configuration Release \
     --output ./
 
 dotnet nuget push \

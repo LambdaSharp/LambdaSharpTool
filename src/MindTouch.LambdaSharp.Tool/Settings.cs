@@ -56,10 +56,10 @@ namespace MindTouch.LambdaSharp.Tool {
     public class Settings {
 
         //--- Constants ---
-#if DOTNETTOOL
-        public const string Lash = "dotnet lash";
-#else
+#if DEBUG
         public const string Lash = "lash";
+#else
+        public const string Lash = "dotnet lash";
 #endif
 
         //--- Class Fields ---
