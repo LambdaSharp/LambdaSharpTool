@@ -83,7 +83,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(Version.Major > other.Version.Major) {
                 return VersionInfoCompare.Newer;
             }
-            if(Version.Major < other.Version.Minor) {
+            if(Version.Major < other.Version.Major) {
                 return VersionInfoCompare.Older;
             }
             if(Version.Minor > other.Version.Minor) {

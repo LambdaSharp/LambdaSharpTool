@@ -5,7 +5,11 @@
 
 ## BREAKING CHANGES
 
+* `--selector` is now required for conditional compilation (no longer tied to tier name)
+
 ## New λ# Tool Features
+
+* `last setup`
 
 ## Fixes
 
