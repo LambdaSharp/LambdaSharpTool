@@ -21,7 +21,7 @@
 
 using System;
 
-namespace MindTouch.LambdaSharpRegistrar {
+namespace MindTouch.LambdaSharpRegistrar.Registrations {
     public class OwnerMetaData {
 
         //--- Properties ---

@@ -34,6 +34,7 @@ using Amazon.Lambda.Serialization.Json;
 using Amazon.SimpleNotificationService;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.Reports;
+using MindTouch.LambdaSharpRegistrar.Registrations;
 using MindTouch.LambdaSharpRegistrar.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
@@ -171,12 +172,15 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             }
         }
 
-        private async Task PublishErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
+        private Task PublishErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
             try {
-                await PublishErrorReportToRollbarAsync(owner, report);
-                await _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report));
+                return Task.WhenAll(new[] {
+                    PublishErrorReportToRollbarAsync(owner, report),
+                    _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report))
+                });
             } catch(Exception) {
                 LambdaLogger.Log(SerializeJson(report) + "\n");
+                return Task.CompletedTask;
             }
         }
 
@@ -184,11 +188,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             if(owner == null) {
 
                 // TODO (2018-10-17, bjorg): how should we handle our own errors?
-                LogInfo($"no owner for {report.FunctionId}");
                 return;
             }
             if(owner.RollbarAccessToken == null) {
-                LogInfo($"no RollbarAccessToken for {report.FunctionId}");
                 return;
             }
 
@@ -204,8 +206,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                     Language = report.Language,
                     Framework = report.Framework,
                     Fingerprint = report.Fingerprint,
-                    Title = report.Message,
+                    Title = $"{report.FunctionName}: {report.Message}",
                     Custom = new {
+                        report.Message,
                         report.ModuleName,
                         report.ModuleVersion,
                         report.ModuleId,

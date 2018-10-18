@@ -40,7 +40,7 @@ namespace MindTouch.LambdaSharp {
         public abstract Task ProcessMessageAsync(TMessage message, ILambdaContext context);
 
         //--- Methods ---
-        public virtual TMessage Deserialize(string body) 
+        public virtual TMessage Deserialize(string body)
             => JsonConvert.DeserializeObject<TMessage>(body);
 
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
@@ -53,7 +53,7 @@ namespace MindTouch.LambdaSharp {
                     snsEventBody = reader.ReadToEnd();
                 }
             } catch(Exception e) {
-                LogError(e, "failed during message stream reading");
+                LogError(e);
                 throw;
             }
 
@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp {
             try {
                 snsEvent = JsonConvert.DeserializeObject<SNSEvent>(snsEventBody);
             } catch(Exception e) {
-                LogError(e, "failed during event deserialization");
+                LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);
                 return $"ERROR: {e.Message}";
             }
@@ -74,7 +74,7 @@ namespace MindTouch.LambdaSharp {
             try {
                 messageBody = snsEvent.Records.First().Sns.Message;
             } catch(Exception e) {
-                LogError(e, "failed accessing message body");
+                LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);
                 return $"ERROR: {e.Message}";
             }
@@ -82,7 +82,7 @@ namespace MindTouch.LambdaSharp {
             try {
                 message = Deserialize(messageBody);
             } catch(Exception e) {
-                LogError(e, "failed during message deserialization");
+                LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);
                 return $"ERROR: {e.Message}";
             }
@@ -95,7 +95,7 @@ namespace MindTouch.LambdaSharp {
             } catch(Exception e) when(!(e is ALambdaRetriableException)) {
 
                 // TODO (2018-06-14, bjorg): revisit how exceptions are surfaced
-                LogError(e, "failed during message processing");
+                LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);
                 return $"ERROR: {e.Message}";
             }

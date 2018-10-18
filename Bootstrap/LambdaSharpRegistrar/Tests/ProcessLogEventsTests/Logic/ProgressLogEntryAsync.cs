@@ -23,6 +23,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using MindTouch.LambdaSharp.Reports;
+using MindTouch.LambdaSharpRegistrar.Registrations;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;

@@ -6,6 +6,16 @@ Description: Module for generating errors
 
 Functions:
 
+  - Name: NearTimeout
+    Description: TODO - update NearTimeout description
+    Memory: 128
+    Timeout: 15
+
+  - Name: NearOutOfMemory
+    Description: TODO - update NearOutOfMemory description
+    Memory: 128
+    Timeout: 30
+
   - Name: FailBadEntryPoint
     Description: TODO - update FailBadEntryPoint description
     Memory: 128

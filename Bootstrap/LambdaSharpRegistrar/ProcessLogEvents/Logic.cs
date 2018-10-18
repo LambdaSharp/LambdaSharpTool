@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp.Reports;
+using MindTouch.LambdaSharpRegistrar.Registrations;
 
 namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
@@ -100,7 +101,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                         Level = "ERROR",
                         Raw = message.Trim(),
                         Timestamp = long.Parse(timestamp),
-                        Fingerprint = ToMD5Hash($"{owner.ModuleId}:{owner.FunctionId}:{mapping.Pattern}")
+                        Fingerprint = ToMD5Hash($"{owner.FunctionId}:{mapping.Pattern}")
                     };
 
                     // have handler fill in the rest from the matched error line
@@ -152,7 +153,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             var billedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["BilledDuration"].Value));
             var maxMemory = int.Parse(match.Groups["MaxMemory"].Value);
             var usedMemory = int.Parse(match.Groups["UsedMemory"].Value);
-            return _provider.SendUsageReportAsync(owner, new UsageReport {
+            var usage = new UsageReport {
                 BilledDuration = billedDuration,
                 UsedDuration = usedDuration,
                 UsedDurationPercent = (float)usedDuration.TotalMilliseconds / (float)owner.FunctionMaxDuration.TotalMilliseconds,
@@ -160,23 +161,34 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 MaxMemory = maxMemory,
                 UsedMemory = usedMemory,
                 UsedMemoryPercent = (float)usedMemory / (float)owner.FunctionMaxMemory
-            });
-        }
-
-        private Task SendErrorReport(OwnerMetaData owner, Action<ErrorReport> preparer) {
-            var report = new ErrorReport {
-                ModuleName = owner.ModuleName,
-                ModuleVersion = owner.ModuleVersion,
-                Tier = owner.Tier,
-                ModuleId = owner.ModuleId,
-                FunctionId = owner.FunctionId,
-                FunctionName = owner.FunctionName,
-                Platform = owner.FunctionPlatform,
-                Framework = owner.FunctionFramework,
-                Language = owner.FunctionLanguage
             };
-            preparer(report);
-            return _provider.SendErrorReportAsync(owner, report);
+            var tasks = new List<Task> {
+                _provider.SendUsageReportAsync(owner, usage)
+            };
+
+            // send error report if usage is near or exceeding limits
+            report.Message = null;
+            report.RequestId = requestId;
+            if(usage.UsedMemoryPercent >= 1.0f) {
+
+                // report out-of-memory error
+                report.Level = "ERROR";
+                report.Message = $"Process ran out of memory (Max: {usage.UsedMemory} MB)";
+                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Process ran out of memory");
+            } else if(usage.UsedDurationPercent >= 1.0f) {
+
+                // nothing to do since timeouts are reported separately
+            } else if((usage.UsedDurationPercent >= 0.85f) || (usage.UsedMemoryPercent >= 0.85f)) {
+
+                // report near out-of-memory/timeout warning
+                report.Level = "WARNING";
+                report.Message = $"Process nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
+                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Process nearing execution limits");
+            }
+            if(report.Message != null) {
+                tasks.Add(_provider.SendErrorReportAsync(owner, report));
+            }
+            return Task.WhenAll(tasks);
         }
     }
 }

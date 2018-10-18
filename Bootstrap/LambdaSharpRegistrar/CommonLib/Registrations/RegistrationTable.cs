@@ -24,7 +24,7 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
 
-namespace MindTouch.LambdaSharpRegistrar {
+namespace MindTouch.LambdaSharpRegistrar.Registrations {
 
     public class RegistrationTable {
 

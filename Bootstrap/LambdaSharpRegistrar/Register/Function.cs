@@ -27,6 +27,7 @@ using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.CustomResource;
+using MindTouch.LambdaSharpRegistrar.Registrations;
 using MindTouch.LambdaSharpRegistrar.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

@@ -94,7 +94,7 @@ namespace MindTouch.LambdaSharp.Slack {
                     // handle slack request
                     await HandleSlackRequestAsync(request);
                 } catch(Exception e) {
-                    LogError(e, e.Message);
+                    LogError(e);
                     Console.Error.WriteLine(e);
                 } finally {
                     Console.SetOut(consoleOutOriginal);

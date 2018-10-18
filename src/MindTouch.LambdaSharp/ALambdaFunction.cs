@@ -144,10 +144,10 @@ namespace MindTouch.LambdaSharp {
                 try {
                     result = await ProcessMessageStreamAsync(stream, context);
                 } catch(ALambdaRetriableException e) {
-                    LogErrorAsWarning(e, "failed during message stream processing");
+                    LogErrorAsWarning(e);
                     throw;
                 } catch(Exception e) {
-                    LogError(e, "failed during message stream processing");
+                    LogError(e);
                     throw;
                 }
                 return result;
@@ -272,11 +272,20 @@ namespace MindTouch.LambdaSharp {
         protected void LogWarn(string format, params object[] args)
             => Log(LambdaLogLevel.WARNING, exception: null, format: format, args: args);
 
+        protected void LogError(Exception exception)
+            => Log(LambdaLogLevel.ERROR, exception, exception.Message, new object[0]);
+
         protected void LogError(Exception exception, string format, params object[] args)
             => Log(LambdaLogLevel.ERROR, exception, format, args);
 
+        protected void LogErrorAsInfo(Exception exception)
+            => Log(LambdaLogLevel.INFO, exception, exception.Message, new object[0]);
+
         protected void LogErrorAsInfo(Exception exception, string format, params object[] args)
             => Log(LambdaLogLevel.INFO, exception, format, args);
+
+        protected void LogErrorAsWarning(Exception exception)
+            => Log(LambdaLogLevel.WARNING, exception, exception.Message, new object[0]);
 
         protected void LogErrorAsWarning(Exception exception, string format, params object[] args)
             => Log(LambdaLogLevel.WARNING, exception, format, args);
@@ -288,8 +297,8 @@ namespace MindTouch.LambdaSharp {
             => LambdaLogger.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{extra}");
 
         private void Log(LambdaLogLevel level, Exception exception, string format, params object[] args) {
-            string message = ErrorReporter.FormatMessage(format, args);
-            if(level >= LambdaLogLevel.WARNING) {
+            string message = ErrorReporter.FormatMessage(format, args) ?? exception?.Message;
+            if((level >= LambdaLogLevel.WARNING) && (exception != null)) {
                 if(ErrorReporter != null) {
                     try {
                         var report = ErrorReporter.CreateReport(RequestId, level.ToString(), exception, format, args);
