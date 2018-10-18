@@ -36,7 +36,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Class Methods ---
         private static void DebugWriteLine(string format) {
-//            Console.WriteLine(format);
+#if false
+            Console.WriteLine(format);
+#endif
         }
 
         //--- Constructors ---
@@ -130,9 +132,23 @@ namespace MindTouch.LambdaSharp.Tool {
                         function.Environment = new Dictionary<string, object>(
                             function.Environment.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
                         );
+
+                        // update VPC information
                         if(function.VPC != null) {
                             function.VPC.SecurityGroupIds = Substitute(function.VPC.SecurityGroupIds);
                             function.VPC.SubnetIds = Substitute(function.VPC.SubnetIds);
+                        }
+
+                        // update function sources
+                        foreach(var source in function.Sources) {
+                            switch(source) {
+                            case AlexaSource alexaSource:
+                                if(alexaSource.EventSourceToken != null) {
+                                    alexaSource.EventSourceToken = Substitute(alexaSource.EventSourceToken);
+                                }
+                                break;
+                            }
+
                         }
                     });
                 }

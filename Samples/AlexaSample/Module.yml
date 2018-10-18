@@ -2,6 +2,12 @@ Name: AlexaSample
 
 Description: A sample module using an Alexa skill
 
+Inputs:
+
+  - Input: AlexaSkillID
+    Description: Alexa Skill ID (optional)
+    Default: "*"
+
 Functions:
 
   - Name: MyFunction
@@ -9,4 +15,4 @@ Functions:
     Memory: 128
     Timeout: 30
     Sources:
-      - Alexa: "*"
+      - Alexa: !Ref AlexaSkillID

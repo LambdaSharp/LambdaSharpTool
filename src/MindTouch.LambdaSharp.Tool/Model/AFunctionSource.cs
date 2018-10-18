@@ -74,7 +74,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class AlexaSource : AFunctionSource {
 
         //--- Properties ---
-        public string EventSourceToken { get; set; }
+        public object EventSourceToken { get; set; }
     }
 
     public class DynamoDBSource : AFunctionSource {

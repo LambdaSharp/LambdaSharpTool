@@ -55,7 +55,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public int? BatchSize { get; set; }
 
         // Alexa Source
-        public string Alexa { get; set; }
+        public object Alexa { get; set; }
 
         // DynamoDB Source
         public string DynamoDB { get; set; }
