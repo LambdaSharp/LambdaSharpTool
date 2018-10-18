@@ -46,8 +46,19 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        //--- Fields ---
+        public static bool operator < (VersionInfo left, VersionInfo right)
+            => left.CompareTo(right) < 0;
 
+        public static bool operator > (VersionInfo left, VersionInfo right)
+            => left.CompareTo(right) > 0;
+
+        public static bool operator == (VersionInfo left, VersionInfo right)
+            => left.CompareTo(right) == 0;
+
+        public static bool operator != (VersionInfo left, VersionInfo right)
+            => left.CompareTo(right) != 0;
+
+        //--- Fields ---
         public readonly Version Version;
         public readonly string Suffix;
 
@@ -73,10 +84,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(other == null) {
                 return false;
             }
-            if(Suffix != other.Suffix) {
-                throw new ArgumentException("version suffix mismatch", nameof(other));
-            }
-            return Version.CompareTo(other.Version) == 0;
+            return CompareTo(other) == 0;
         }
 
         public override bool Equals(object obj){
@@ -93,16 +101,25 @@ namespace MindTouch.LambdaSharp.Tool {
 	    }
 
         public override int GetHashCode()
-            => Version.GetHashCode() & Suffix.GetHashCode();
+            => Version.GetHashCode() ^ Suffix.GetHashCode();
 
         public int CompareTo(VersionInfo other) {
             if(other == null) {
                 throw new ArgumentNullException(nameof(other));
             }
-            if(Suffix != other.Suffix) {
-                throw new ArgumentException("version suffix mismatch", nameof(other));
+            var result = Version.CompareTo(other.Version);
+            if(result != 0) {
+                return result;
             }
-            return Version.CompareTo(other.Version);
+
+            // a suffix indicates a pre-release version, but cannot be compared otherwise
+            if((Suffix == null) && (other.Suffix != null)) {
+                return 1;
+            }
+            if((Suffix != null) && (other.Suffix == null)) {
+                return -1;
+            }
+            return 0;
         }
     }
 }
