@@ -2,6 +2,12 @@ Name: Demo
 
 Description: LambdaSharp Demo
 
+Outputs:
+
+  - Export: NotifyRecorderTopic
+    Description: The topic that the lambda function subscribes to record messages
+    Value: !Ref SnsTopic
+
 Parameters:
 
   - Name: MessageTable
@@ -22,7 +28,6 @@ Parameters:
 
   - Name: SnsTopic
     Description: The topic that the lambda function subscribes to record messages
-    Export: NotifyRecorderTopic
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
