@@ -23,7 +23,7 @@ Parameters:
   LambdaSharpToolVersion:
     Type: String
     Description: LambdaSharpTool version
-    AllowedPattern: '\d+.\d+(.\d+(.\d+)?)?'
+    AllowedPattern: '\d+.\d+(.\d+(.\d+)?)?(-[\w]+)?'
     ConstraintDescription: 'Version number must have format: Major.Minor[.Build[.Revision]]'
 
   LambdaSharpToolProfile:

@@ -39,7 +39,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, object> Environment { get; set; }
         public string PackagePath { get; set; }
         public IList<string> Pragmas { get; set; }
-        public bool HasFunctionRegistration => !HasPragma("no-registration");
+        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;

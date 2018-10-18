@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -33,6 +34,7 @@ using Amazon.Lambda.Serialization.Json;
 using Amazon.SimpleNotificationService;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.Reports;
+using MindTouch.LambdaSharpRegistrar.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -70,6 +72,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         private string _usageTopicArn;
         private RegistrationTable _registrations;
         private Dictionary<string, OwnerMetaData> _cachedRegistrations;
+        private RollbarClient _rollbarClient;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -81,6 +84,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();
+            _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
         }
 
         public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis, ILambdaContext context) {
@@ -149,6 +153,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             if(!_cachedRegistrations.TryGetValue(id, out result)) {
                 result = await _registrations.GetOwnerMetaDataAsync(id);
                 if(result != null) {
+                    result.RollbarAccessToken = await DecryptSecretAsync(result.RollbarAccessToken);
                     _cachedRegistrations[id] = result;
                 }
             }
@@ -158,7 +163,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         private async Task SendErrorExceptionAsync(Exception exception, string format = null, params object[] args) {
             try {
                 var report = ErrorReporter.CreateReport(RequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
-                await PublishErrorReportAsync(report);
+                await PublishErrorReportAsync(null, report);
             } catch(Exception) {
 
                 // log the error; it's the best we can do
@@ -166,11 +171,96 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             }
         }
 
-        private async Task PublishErrorReportAsync(ErrorReport report) {
+        private async Task PublishErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
             try {
+                await PublishErrorReportToRollbarAsync(owner, report);
                 await _snsClient.PublishAsync(_errorTopicArn, SerializeJson(report));
             } catch(Exception) {
                 LambdaLogger.Log(SerializeJson(report) + "\n");
+            }
+        }
+
+        private async Task PublishErrorReportToRollbarAsync(OwnerMetaData owner, ErrorReport report) {
+            if(owner == null) {
+
+                // TODO (2018-10-17, bjorg): how should we handle our own errors?
+                LogInfo($"no owner for {report.FunctionId}");
+                return;
+            }
+            if(owner.RollbarAccessToken == null) {
+                LogInfo($"no RollbarAccessToken for {report.FunctionId}");
+                return;
+            }
+
+            // convert error report into rollbar data structure
+            var rollbar = new Rollbar {
+                AccessToken = owner.RollbarAccessToken,
+                Data = new Data {
+                    Environment = owner.Tier,
+                    Level = report.Level?.ToLowerInvariant() ?? "error",
+                    Timestamp = report.Timestamp,
+                    CodeVersion = report.GitSha,
+                    Platform = report.Platform,
+                    Language = report.Language,
+                    Framework = report.Framework,
+                    Fingerprint = report.Fingerprint,
+                    Title = report.Message,
+                    Custom = new {
+                        report.ModuleName,
+                        report.ModuleVersion,
+                        report.ModuleId,
+                        report.FunctionId,
+                        report.FunctionName,
+                        report.GitBranch,
+                        report.RequestId
+                    },
+                    Body = new DataBody {
+                        TraceChain = report.Traces?.Select(trace => new Trace {
+                            Exception = new ExceptionClass {
+                                Class = trace.Exception?.Type,
+                                Message = trace.Exception?.Message,
+                                Description = trace.Exception?.StackTrace
+                            },
+                            Frames = trace.Frames?.Select(frame => new Frame {
+                                Filename = frame.FileName,
+                                Lineno = frame.LineNumber.GetValueOrDefault(),
+                                Colno = frame.ColumnNumber.GetValueOrDefault(),
+                                Method = frame.MethodName
+                            }).ToArray()
+                        }).ToArray()
+                    }
+                }
+            };
+
+            // in case there are no captured traces, inject a simple error message
+            if(rollbar.Data.Body.TraceChain?.Any() != true) {
+                rollbar.Data.Body.TraceChain = null;
+                rollbar.Data.Body = new DataBody {
+                    Message = new Message {
+                        Body = report.Raw
+                    }
+                };
+            }
+
+            // send payload to rollbar
+            try {
+                var response = _rollbarClient.SendRollbarPayload(rollbar);
+                LogInfo($"Rollbar.SendRollbarPayload() succeeded: {response}");
+            } catch(WebException e) {
+                if(e.Response == null) {
+                    LogWarn($"Rollbar request failed (status: {e.Status}, message: {e.Message})");
+                } else {
+                    using(var stream = e.Response.GetResponseStream()) {
+                        if(stream == null) {
+                            LogWarn($"Rollbar.SendRollbarPayload() failed: {e.Status}");
+                        }
+                        using(var reader = new StreamReader(stream)) {
+                            LogWarn($"Rollbar.SendRollbarPayload() failed: {reader.ReadToEnd()}");
+                        }
+                    }
+                }
+            } catch(Exception e) {
+                LogErrorAsWarning(e, "Rollbar.SendRollbarPayload() failed");
             }
         }
 
@@ -178,10 +268,10 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         ErrorReport ILogicDependencyProvider.DeserializeErrorReport(string jsonReport)
             => DeserializeJson<ErrorReport>(jsonReport);
 
-        Task ILogicDependencyProvider.SendErrorReportAsync(ErrorReport report)
-            => PublishErrorReportAsync(report);
+        Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, ErrorReport report)
+            => PublishErrorReportAsync(owner, report);
 
-        async Task ILogicDependencyProvider.SendUsageReportAsync(UsageReport report)
+        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report)
             => await _snsClient.PublishAsync(_usageTopicArn, SerializeJson(report));
 
         void ILogicDependencyProvider.WriteLine(string message)

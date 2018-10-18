@@ -236,7 +236,7 @@ namespace MindTouch.LambdaSharp {
 
                     // plain string value
                     parameters.Add(EnvToVarKey(key), value);
-                } else if(key.StartsWith("SEC_", StringComparison.Ordinal)) {
+                } else if(key.StartsWith("SEC_", StringComparison.Ordinal) && (value.Length > 0)) {
 
                     // check for optional encrypt contexts
                     Dictionary<string, string> encryptionContext = null;

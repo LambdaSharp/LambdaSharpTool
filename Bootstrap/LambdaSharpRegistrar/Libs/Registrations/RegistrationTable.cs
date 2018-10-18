@@ -53,7 +53,9 @@ namespace MindTouch.LambdaSharpRegistrar {
                 FunctionFramework = TryGetAsString("FunctionFramework"),
                 FunctionLanguage = TryGetAsString("FunctionLanguage"),
                 FunctionMaxMemory = TryGetAsInt("FunctionMaxMemory"),
-                FunctionMaxDuration = TryGetAsTimeSpan("FunctionMaxDuration")
+                FunctionMaxDuration = TryGetAsTimeSpan("FunctionMaxDuration"),
+                RollbarProjectId = TryGetAsInt("RollbarProjectId"),
+                RollbarAccessToken = TryGetAsString("RollbarAccessToken")
             };
 
             // local functions
@@ -84,6 +86,11 @@ namespace MindTouch.LambdaSharpRegistrar {
                 document["FunctionLanguage"] = owner.FunctionLanguage;
                 document["FunctionMaxMemory"] = owner.FunctionMaxMemory;
                 document["FunctionMaxDuration"] = owner.FunctionMaxDuration.ToString();
+            }
+            if(owner.RollbarAccessToken != null) {
+                document["RollbarProjectId"] = owner.RollbarProjectId;
+                document["RollbarAccessToken"] = owner.RollbarAccessToken;
+
             }
             await _table.PutItemAsync(document);
         }

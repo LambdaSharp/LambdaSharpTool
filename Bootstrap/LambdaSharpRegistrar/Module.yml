@@ -1,5 +1,5 @@
 Pragmas:
-  - no-registration
+  - no-module-registration
 
 Name: LambdaSharpRegistrar
 
@@ -8,6 +8,20 @@ Description: LambdaSharp Modules and Functions Registrar
 Version: 0.4-WIP
 
 Inputs:
+
+  - Input: RollbarReadAccessToken
+    Type: Secret
+    Section: Rollbar Settings
+    Label: Read Access Token
+    Description: Account-level token for read operations
+    Default: ""
+
+  - Input: RollbarWriteAccessToken
+    Type: Secret
+    Section: Rollbar Settings
+    Label: Write Access Token
+    Description: Account-level token for write operations
+    Default: ""
 
   - Input: RegistrationTableReadCapacity
     Section: Registration Table Settings
@@ -87,7 +101,7 @@ Functions:
     Memory: 128
     Timeout: 30
     Pragmas:
-        - no-registration
+        - no-function-registration
     Sources:
       - Kinesis: LoggingStreamReference
 

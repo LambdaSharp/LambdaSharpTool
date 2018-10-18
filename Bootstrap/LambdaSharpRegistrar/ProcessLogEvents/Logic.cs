@@ -34,8 +34,8 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
     public interface ILogicDependencyProvider {
 
         //--- Methods ---
-        Task SendErrorReportAsync(ErrorReport report);
-        Task SendUsageReportAsync(UsageReport report);
+        Task SendErrorReportAsync(OwnerMetaData owner, ErrorReport report);
+        Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
         ErrorReport DeserializeErrorReport(string jsonReport);
         void WriteLine(string message);
     }
@@ -120,7 +120,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             report = _provider.DeserializeErrorReport(match.ToString());
             if((report.Version == "2018-09-27") && (report.Source == "LambdaError")) {
-                await _provider.SendErrorReportAsync(report);
+                await _provider.SendErrorReportAsync(owner, report);
             } else {
 
                 // TODO: bad json document
@@ -131,19 +131,19 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         private Task MatchLambdaExceptionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(report);
+            return _provider.SendErrorReportAsync(owner, report);
         }
 
         private Task MatchTimeoutAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(report);
+            return _provider.SendErrorReportAsync(owner, report);
         }
 
         private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(report);
+            return _provider.SendErrorReportAsync(owner, report);
         }
 
         private Task MatchExecutionReportAsync(OwnerMetaData owner, ErrorReport report, Match match) {
@@ -152,7 +152,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             var billedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["BilledDuration"].Value));
             var maxMemory = int.Parse(match.Groups["MaxMemory"].Value);
             var usedMemory = int.Parse(match.Groups["UsedMemory"].Value);
-            return _provider.SendUsageReportAsync(new UsageReport {
+            return _provider.SendUsageReportAsync(owner, new UsageReport {
                 BilledDuration = billedDuration,
                 UsedDuration = usedDuration,
                 UsedDurationPercent = (float)usedDuration.TotalMilliseconds / (float)owner.FunctionMaxDuration.TotalMilliseconds,
@@ -176,7 +176,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 Language = owner.FunctionLanguage
             };
             preparer(report);
-            return _provider.SendErrorReportAsync(report);
+            return _provider.SendErrorReportAsync(owner, report);
         }
     }
 }

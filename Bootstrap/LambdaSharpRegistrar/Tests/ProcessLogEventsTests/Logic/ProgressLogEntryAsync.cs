@@ -52,13 +52,13 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             public ErrorReport DeserializeErrorReport(string jsonReport)
                 => JsonConvert.DeserializeObject<ErrorReport>(jsonReport);
 
-            public Task SendErrorReportAsync(ErrorReport report) {
+            public Task SendErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
                 ErrorReport.Should().BeNull();
                 ErrorReport = report;
                 return Task.CompletedTask;
             }
 
-            public Task SendUsageReportAsync(UsageReport report) {
+            public Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report) {
                 UsageReport.Should().BeNull();
                 UsageReport = report;
                 return Task.CompletedTask;

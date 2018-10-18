@@ -1,6 +1,6 @@
 Pragmas:
   - no-environment-check
-  - no-registration
+  - no-module-registration
 
 Name: LambdaSharp
 

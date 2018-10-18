@@ -37,5 +37,7 @@ namespace MindTouch.LambdaSharpRegistrar {
         public string FunctionLanguage { get; set; }
         public int FunctionMaxMemory { get; set; }
         public TimeSpan FunctionMaxDuration { get; set; }
+        public int RollbarProjectId { get; set; }
+        public string RollbarAccessToken { get; set; }
     }
 }

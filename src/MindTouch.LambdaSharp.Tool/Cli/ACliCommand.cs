@@ -193,7 +193,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AddError("LambdaSharp tool is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
-                    if(lambdaSharpToolVersion.CompareTo(settings.ToolVersion) < 0) {
+                    if(lambdaSharpToolVersion.Version < settings.ToolVersion.Version) {
                         AddError($"LambdaSharp tool configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }

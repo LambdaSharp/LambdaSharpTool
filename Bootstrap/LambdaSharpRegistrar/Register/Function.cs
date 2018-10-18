@@ -21,11 +21,13 @@
 
 using System;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp;
 using MindTouch.LambdaSharp.CustomResource;
+using MindTouch.LambdaSharpRegistrar.RollbarApi;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -59,11 +61,17 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
         //--- Fields ---
         private RegistrationTable _registrations;
+        private RollbarClient _rollbarClient;
 
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
             var tableName = config.ReadText("RegistrationTable");
             _registrations = new RegistrationTable(new AmazonDynamoDBClient(), tableName);
+            _rollbarClient = new RollbarClient(
+                config.ReadText("RollbarReadAccessToken", defaultValue: null),
+                config.ReadText("RollbarWriteAccessToken", defaultValue: null),
+                message => LogInfo(message)
+            );
         }
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
@@ -81,6 +89,18 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                     }
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = PopulateOwnerMetaData(properties);
+
+                    // create new rollbar project
+                    if(_rollbarClient.HasTokens) {
+                        var name = $"{request.ResourceProperties.Tier}-{request.ResourceProperties.ModuleName}";
+                        var project = await _rollbarClient.CreateProject(name);
+                        var tokens = await _rollbarClient.ListProjectTokens(project.Id);
+                        var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
+                        owner.RollbarProjectId = project.Id;
+                        owner.RollbarAccessToken = await EncryptSecretAsync(token);
+                    }
+
+                    // create owner record
                     await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
                     return Respond($"registration:module:{properties.ModuleId}");
                 }
@@ -108,6 +128,20 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             switch(request.ResourceType) {
             case "Custom::LambdaSharpRegisterModule": {
                     LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
+
+                    // delete old rollbar project
+                    if(_rollbarClient.HasTokens) {
+                        var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                        try {
+                            if(owner.RollbarProjectId > 0) {
+                                await _rollbarClient.DeleteProject(owner.RollbarProjectId);
+                            }
+                        } catch(Exception e) {
+                            LogErrorAsWarning(e, "failed to delete rollbar project: {0}", owner.RollbarProjectId);
+                        }
+                    }
+
+                    // delete owner record
                     await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     break;
                 }

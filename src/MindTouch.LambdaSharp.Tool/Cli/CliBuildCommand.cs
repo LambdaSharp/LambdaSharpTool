@@ -256,7 +256,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // reading module inputs
                     var inputs = new Dictionary<string, string>();
                     if(inputsFileOption.HasValue()) {
-                        inputs = ReadInputParametersFiles(inputsFileOption.Value());
+                        inputs = ReadInputParametersFiles(settings, inputsFileOption.Value());
                         if(HasErrors) {
                             return;
                         }
@@ -569,7 +569,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     // check that LambdaSharp Environment & Tool versions match
                     AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(tier));
                 } else {
-                    if(settings.EnvironmentVersion != settings.ToolVersion) {
+                    if(settings.EnvironmentVersion.Version != settings.ToolVersion.Version) {
                         AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(tier));
                     }
                 }
@@ -597,7 +597,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return true;
         }
 
-        private Dictionary<string, string> ReadInputParametersFiles(string filename) {
+        private Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
                 AddError("cannot find inputs file");
                 return null;
@@ -606,16 +606,52 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             case ".yml":
             case ".yaml":
                 try {
-                    var parameters = new DeserializerBuilder()
+                    var inputs = new DeserializerBuilder()
                         .WithNamingConvention(new PascalCaseNamingConvention())
                         .Build()
                         .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
-                    return parameters.ToDictionary(
-                        kv => kv.Key,
+
+                    // resolve 'alias/' key names to key arns
+                    if(inputs.TryGetValue("ModuleSecrets", out object keys)) {
+                        if(keys is string key) {
+                            inputs["ModuleSecrets"] = ConvertAliasToKeyArn(key);
+                        } else if(keys is IList<object> list) {
+                            inputs["ModuleSecrets"] = list.Select(item => ConvertAliasToKeyArn(item as string)).ToList();
+                        }
+
+                        // assume key name is an alias and resolve it to its ARN
+                        string ConvertAliasToKeyArn(string keyId) {
+                            if(keyId == null) {
+                                return null;
+                            }
+                            if(keyId.StartsWith("arn:")) {
+                                return keyId;
+                            }
+                            if(keyId.StartsWith("alias/", StringComparison.Ordinal)) {
+                                try {
+                                    return settings.KmsClient.DescribeKeyAsync(keyId).Result.KeyMetadata.Arn;
+                                } catch(Exception e) {
+                                    AddError($"failed to resolve key alias: {keyId}", e);
+                                    return null;
+                                }
+                            }
+                            try {
+                                return settings.KmsClient.DescribeKeyAsync($"alias/{keyId}").Result.KeyMetadata.Arn;
+                            } catch(Exception e) {
+                                AddError($"failed to resolve key alias: {keyId}", e);
+                                return null;
+                            }
+                        }
+                    }
+
+                    // create final dictionary of input values
+                    var result = inputs.ToDictionary(
+                        kv => kv.Key.Replace("::", ""),
                         kv => (kv.Value is string text)
                             ? text
                             : string.Join(",", (IList<object>)kv.Value)
                     );
+                    return result;
                 } catch(YamlDotNet.Core.YamlException e) {
                     AddError($"parsing error near {e.Message}");
                 } catch(Exception e) {
