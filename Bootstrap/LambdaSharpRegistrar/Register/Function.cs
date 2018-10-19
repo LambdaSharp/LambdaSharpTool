@@ -58,6 +58,12 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
         public string Registration { get; set; }
     }
 
+    public class RegistrarException : ALambdaException {
+
+        //--- Constructors ---
+        public RegistrarException(string format, params object[] args) : base(format, args) { }
+    }
+
     public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
 
         //--- Fields ---
@@ -84,9 +90,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
                     // validate request
                     if(properties.Tier != DeploymentTier) {
-
-                        // TODO (2018-10-11, bjorg): better exception
-                        throw new Exception("tier mismatch");
+                        throw new RegistrarException("tier mismatch; received '{0}', expected '{1}'", properties.Tier, DeploymentTier);
                     }
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = PopulateOwnerMetaData(properties);
@@ -109,18 +113,14 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
                     var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     if(owner == null) {
-
-                        // TODO (2018-10-11, bjorg): better exception
-                        throw new Exception("owner not found");
+                        throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
                     }
                     owner = PopulateOwnerMetaData(properties, owner);
                     await _registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
                     return Respond($"registration:function:{properties.FunctionId}");
                 }
             default:
-
-                // TODO (2018-10-11, bjorg): better exception
-                throw new Exception($"bad resource type: {request.ResourceType}");
+                throw new RegistrarException("unrecognized resource type: {0}", request.ResourceType);
             }
         }
 
@@ -152,9 +152,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                     break;
                 }
             default:
-
-                // TODO (2018-10-11, bjorg): better exception
-                throw new Exception($"bad resource type: {request.ResourceType}");
+                throw new RegistrarException("unrecognized resource type: {0}", request.ResourceType);
             }
             return new Response<ResponseProperties>();
         }
