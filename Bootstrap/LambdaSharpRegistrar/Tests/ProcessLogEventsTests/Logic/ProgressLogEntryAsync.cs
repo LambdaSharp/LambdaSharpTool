@@ -30,10 +30,6 @@ using Xunit.Abstractions;
 
 namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
 
-    // TODO:
-    // * usage report getting close to being a time-out (error vs. warning)
-    // * usage report getting close to being out-of-memory (error vs. warning)
-
     public class ProgressLogEntryAsync {
 
         //--- Types ---
@@ -133,23 +129,6 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
         }
 
         [Fact]
-        public void ExecutionReportOutOfMemory() {
-
-            // TODO: this test should also issue an out-of-memory error
-
-            _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", "1539238963679").Wait();
-            _provider.UsageReport.Should().NotBeNull();
-            _provider.ErrorReport.Should().BeNull();
-            _provider.UsageReport.UsedDuration.Should().Be(TimeSpan.FromMilliseconds(1062.06));
-            _provider.UsageReport.BilledDuration.Should().Be(TimeSpan.FromMilliseconds(1000));
-            _provider.UsageReport.MaxDuration.Should().Be(TimeSpan.FromSeconds(10));
-            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.1062F, 0.00001F);
-            _provider.UsageReport.MaxMemory.Should().Be(128);
-            _provider.UsageReport.UsedMemory.Should().Be(128);
-            _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
-        }
-
-        [Fact]
         public void ExecutionReport() {
             _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB\t", "1539238963679").Wait();
             _provider.UsageReport.Should().NotBeNull();
@@ -163,9 +142,26 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(0.15625F, 0.0001F);
         }
 
-        private void CommonErrorReportAsserts() {
+        [Fact]
+        public void ExecutionReportOutOfMemory() {
+            _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", "1539238963679").Wait();
+            _provider.UsageReport.Should().NotBeNull();
+            _provider.UsageReport.UsedDuration.Should().Be(TimeSpan.FromMilliseconds(1062.06));
+            _provider.UsageReport.BilledDuration.Should().Be(TimeSpan.FromMilliseconds(1000));
+            _provider.UsageReport.MaxDuration.Should().Be(TimeSpan.FromSeconds(10));
+            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.1062F, 0.00001F);
+            _provider.UsageReport.MaxMemory.Should().Be(128);
+            _provider.UsageReport.UsedMemory.Should().Be(128);
+            _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
+
+            CommonErrorReportAsserts(usageReportCheck: false);
+            _provider.ErrorReport.Message.Should().Be("Process ran out of memory (Max: 128 MB)");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
+            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        }
+
+        private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
-            _provider.UsageReport.Should().BeNull();
             _provider.ErrorReport.ModuleName.Should().Be("ModuleName");
             _provider.ErrorReport.ModuleVersion.Should().Be("ModuleVersion");
             _provider.ErrorReport.Tier.Should().Be("Tier");
@@ -175,8 +171,9 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents.Tests {
             _provider.ErrorReport.Platform.Should().Be("Platform");
             _provider.ErrorReport.Framework.Should().Be("Framework");
             _provider.ErrorReport.Language.Should().Be("Language");
-            _provider.ErrorReport.GitSha.Should().Be("GitSha");
-            _provider.ErrorReport.GitBranch.Should().Be("GitBranch");
+            if(usageReportCheck) {
+                _provider.UsageReport.Should().BeNull();
+            }
         }
     }
 }
