@@ -854,15 +854,13 @@ namespace MindTouch.LambdaSharp.Tool {
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
                     object resourceAsStatementFn;
-                    var resourceAsParameterFn = Fn.Ref(resourceName);
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
                         resourceAsStatementFn = null;
-                        resourceAsParameterFn = null;
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
                     } else if(!ResourceMapping.TryParseResourceProperties(
                         resource.Type,
-                        resource.ResourceReferences.First(),
+                        ResourceMapping.GetArnReference(resource.Type, resourceName),
                         resource.Properties,
                         out resourceAsStatementFn,
                         out resourceTemplate
@@ -870,19 +868,17 @@ namespace MindTouch.LambdaSharp.Tool {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                     }
                     _stack.Add(resourceName, resourceTemplate, dependsOn: resource.DependsOn.ToArray());
-                    if(resource.Allow?.Any() == true) {
 
-                        // add permissions for resource
-                        if(resourceAsStatementFn != null) {
-                            _resourceStatements.Add(new Statement {
-                                Sid = resourceName,
-                                Effect = "Allow",
-                                Resource = resourceAsStatementFn,
-                                Action = resource.Allow
-                            });
-                        }
+                    // add permissions for resource
+                    if((resource.Allow?.Any() == true) && (resourceAsStatementFn != null)) {
+                        _resourceStatements.Add(new Statement {
+                            Sid = resourceName,
+                            Effect = "Allow",
+                            Resource = resourceAsStatementFn,
+                            Action = resource.Allow
+                        });
                     }
-                    if((parameter.Scope == ParameterScope.Function) && (resourceAsParameterFn != null)) {
+                    if(parameter.Scope == ParameterScope.Function) {
                         environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                     }
                 }

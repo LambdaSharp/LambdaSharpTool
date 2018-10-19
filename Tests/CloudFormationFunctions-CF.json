@@ -547,6 +547,9 @@
                 }
               ]
             },
+            "STR_MYRESOURCE": {
+              "Ref": "AWS::NoValue"
+            },
             "STR_MYCUSTOMRESOURCEPROPERTY": {
               "Fn::GetAtt": [
                 "MyResource",
