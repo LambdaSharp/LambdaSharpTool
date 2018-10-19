@@ -628,6 +628,14 @@
       }
     }
   },
+  "Outputs": {
+    "ModuleName": {
+      "Value": "TestModule"
+    },
+    "ModuleVersion": {
+      "Value": "1.0"
+    }
+  },
   "Conditions": {
     "ModuleSecretsIsEmpty": {
       "Fn::Equals": [

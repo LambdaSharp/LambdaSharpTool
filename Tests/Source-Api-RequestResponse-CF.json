@@ -876,11 +876,11 @@
     }
   },
   "Outputs": {
-    "ModuleRestApi": {
-      "Value": {
-        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/"
-      },
-      "Description": "TestModule API (v1.0)"
+    "ModuleName": {
+      "Value": "TestModule"
+    },
+    "ModuleVersion": {
+      "Value": "1.0"
     }
   },
   "Conditions": {
