@@ -446,7 +446,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             DestinationBucketParameterName = parameter.Package.Bucket,
                             DestinationKeyPrefix = parameter.Package.Prefix ?? "",
                             PackagePath = parameter.Package.PackagePath,
-                            Reference = Fn.GetAtt(resourceName, "Result")
+                            Reference = FnGetAtt(resourceName, "Result")
                         };
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {

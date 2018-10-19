@@ -41,6 +41,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
+                var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
 
                 // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
@@ -65,7 +66,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         settings,
                         allowDataLossOption.HasValue(),
                         protectStackOption.HasValue(),
-                        tier
+                        tier,
+                        forceDeployOption.HasValue()
                     );
                 });
             });
@@ -75,7 +77,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Settings settings,
             bool allowDataLoos,
             bool protectStack,
-            string tier
+            string tier,
+            bool forceDeploy
         ) {
             foreach(var module in new[] {
                 "LambdaSharp",
@@ -91,7 +94,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     allowDataLoos: allowDataLoos,
                     protectStack: protectStack,
                     inputs: new Dictionary<string, string>(),
-                    tier: tier
+                    tier: tier,
+                    forceDeploy: forceDeploy
                 );
             }
         }

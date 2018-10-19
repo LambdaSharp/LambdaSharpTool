@@ -27,6 +27,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.KeyManagementService;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -212,25 +213,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         protected async Task PopulateEnvironmentSettingsAsync(Settings settings, string tier) {
-            if(settings.EnvironmentVersion == null) {
+            if((settings.EnvironmentVersion == null) && (tier != null)) {
 
-                // import LambdaSharp settings
-                if(tier != null) {
-                    var lambdaSharpPath = $"/{tier}/LambdaSharp/";
-                    var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
-
-                    // resolved values that are not yet set
-                    if(settings.EnvironmentVersion == null) {
-                        var environmentVersion = GetLambdaSharpSetting("Version");
-                        if(environmentVersion != null) {
-                            settings.EnvironmentVersion = VersionInfo.Parse(environmentVersion);
-                        }
-                    }
-
-                    // local functions
-                    string GetLambdaSharpSetting(string name) {
-                        lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
-                        return kv.Value;
+                // check version of base LambadSharp module
+                var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = $"{tier}-LambdaSharp"
+                });
+                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                if(deployedOutputs != null) {
+                    var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                    var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                    if(
+                        (deployedName == "LambdaSharp")
+                        && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                    ) {
+                        settings.EnvironmentVersion = deployedVersion;
+                        return;
                     }
                 }
             }

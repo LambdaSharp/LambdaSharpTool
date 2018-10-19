@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using MindTouch.LambdaSharp.Tool.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
@@ -33,7 +34,7 @@ namespace MindTouch.LambdaSharp.Tool {
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
 
         //--- Class Methods ---
-        protected static object FnGetAtt(string logicalNameOfResource, string attributeName)
+        public static object FnGetAtt(string logicalNameOfResource, string attributeName)
             => new Dictionary<string, object> {
                 ["Fn::GetAtt"] = new List<object> {
                     logicalNameOfResource,
@@ -41,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
 
-        protected static object FnIf(string conditionName, object valueIfTrue, object valueIfFalse)
+        public static object FnIf(string conditionName, object valueIfTrue, object valueIfFalse)
             => new Dictionary<string, object> {
                 ["Fn::If"] = new List<object> {
                     conditionName,
@@ -50,12 +51,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
 
-        protected static object FnImportValue(object sharedValueToImport)
+        public static object FnImportValue(object sharedValueToImport)
             => new Dictionary<string, object> {
                 ["Fn::ImportValue"] = sharedValueToImport
             };
 
-        protected static object FnJoin(string separator, IList<object> parameters) {
+        public static object FnJoin(string separator, IList<object> parameters) {
             if(parameters.Count == 0) {
                 return "";
             }
@@ -73,7 +74,7 @@ namespace MindTouch.LambdaSharp.Tool {
             };
         }
 
-        protected static object FnJoin(string separator, object parameters) {
+        public static object FnJoin(string separator, object parameters) {
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {
                     separator,
@@ -81,12 +82,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
         }
-        protected static object FnRef(string reference)
+        public static object FnRef(string reference)
             => new Dictionary<string, object> {
                 ["Ref"] = reference
             };
 
-        protected static object FnSelect(string index, object listOfObjects)
+        public static object FnSelect(string index, object listOfObjects)
             => new Dictionary<string, object> {
                 ["Fn::Select"] = new List<object> {
                     index,
@@ -94,12 +95,12 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
 
-        protected static object FnSub(string input)
+        public static object FnSub(string input)
             => new Dictionary<string, object> {
                 ["Fn::Sub"] = input
             };
 
-        protected static object FnSub(string input, IDictionary<string, object> variables)
+        public static object FnSub(string input, IDictionary<string, object> variables)
             => new Dictionary<string, object> {
                 ["Fn::Sub"] = new List<object> {
                     input,
@@ -107,7 +108,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
 
-        protected static object FnSplit(string delimiter, object sourceString)
+        public static object FnSplit(string delimiter, object sourceString)
             => new Dictionary<string, object> {
                 ["Fn::Split"] = new List<object> {
                     delimiter,
@@ -161,11 +162,15 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         protected void AddError(string message, Exception exception = null) {
-            if(_sourceFilename != null) {
-                Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())} [{_sourceFilename}]", exception);
-            } else {
-                Settings.AddError($"{message} @ {string.Join("/", _locations.Reverse())}", exception);
+            var text = new StringBuilder();
+            text.Append(message);
+            if(_locations.Any()) {
+                text.Append($" @ {string.Join("/", _locations.Reverse())}");
             }
+            if(_sourceFilename != null) {
+                text.Append($" [{_sourceFilename}]");
+            }
+            Settings.AddError(text.ToString(), exception);
         }
 
         protected void AddError(Exception exception = null)

@@ -71,9 +71,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Deployment Tier: {tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
-            Console.WriteLine($"AWS Region: {settings.AwsRegion ?? "<NOT SET>"}");
-            Console.WriteLine($"AWS Account Id: {settings.AwsAccountId ?? "<NOT SET>"}");
-            Console.WriteLine($".Net Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"AWS");
+            Console.WriteLine($"    Region: {settings.AwsRegion ?? "<NOT SET>"}");
+            Console.WriteLine($"    Account Id: {((settings.AwsAccountId != null) ? "<SET>" : "<NOT SET>")}");
+            Console.WriteLine($"Tools");
+            Console.WriteLine($"    .Net Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
         }
 
         private string GetDotNetVersion() {
@@ -84,7 +87,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // read the dotnet version
             var process = new Process {
-                StartInfo = new ProcessStartInfo(dotNetExe, ArgumentEscaper.EscapeAndConcatenate(new[] { "--version" })) {
+                StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
                     RedirectStandardOutput = true,
                     UseShellExecute = false,
                     WorkingDirectory = Directory.GetCurrentDirectory()
@@ -99,6 +102,36 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
                 return dotnetVersion;
             } catch {
+                return null;
+            }
+        }
+
+        private string GetGitVersion() {
+
+            // constants
+            const string GIT_VERSION_PREFIX = "git version ";
+
+            // read the gitSha using `git` directly
+            var process = new Process {
+                StartInfo = new ProcessStartInfo("git", "--version") {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = Directory.GetCurrentDirectory()
+                }
+            };
+            try {
+                process.Start();
+                var gitVersion = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    return null;
+                }
+                if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
+                    gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
+                }
+                return gitVersion;
+            } catch {
+                Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
                 return null;
             }
         }

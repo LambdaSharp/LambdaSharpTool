@@ -68,15 +68,15 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // S3 Bucket resources must be granted permissions on the bucket AND the keys
                 return new object[] {
                     arnReference,
-                    Fn.Join("", arnReference, "/*")
+                    AModelProcessor.FnJoin("", new List<object> { arnReference, "/*" })
                 };
             case "AWS::DynamoDB::Table":
 
                 // DynamoDB resources must be granted permissions on the table AND the stream
                 return new object[] {
                     arnReference,
-                    Fn.Join("/", arnReference, "stream", "*"),
-                    Fn.Join("/", arnReference, "index", "*")
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream", "*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index", "*" })
                 };
             default:
                 return arnReference;
@@ -88,9 +88,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(type == null) {
 
                 // don't reference custom types
-                return Fn.Ref("AWS::NoValue");
+                return AModelProcessor.FnRef("AWS::NoValue");
             }
-            return Fn.Ref(logicalId);
+            return AModelProcessor.FnRef(logicalId);
         }
 
         public object GetArnReference(string awsType, string logicalId) {
@@ -98,7 +98,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             if(type == null) {
 
                 // don't reference custom types
-                return Fn.Ref("AWS::NoValue");
+                return AModelProcessor.FnRef("AWS::NoValue");
             }
             switch(awsType) {
             case "AWS::ApplicationAutoScaling::ScalingPolicy":
@@ -124,11 +124,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::StepFunctions::StateMachine":
 
                 // these AWS resources return their ARN using `!Ref`
-                return Fn.Ref(logicalId);
+                return AModelProcessor.FnRef(logicalId);
             default:
 
                 // most AWS resources expose an `Arn` attribute that we need to use
-                return Fn.GetAtt(logicalId, "Arn");
+                return AModelProcessor.FnGetAtt(logicalId, "Arn");
             }
         }
 
@@ -169,7 +169,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // S3 Bucket resources must be granted permissions on the bucket AND the keys
                 resourceAsStatementFn = new object[] {
                     arnReference,
-                    Fn.Join("", arnReference, "/*")
+                    AModelProcessor.FnJoin("", new List<object> { arnReference, "/*" })
                 };
                 break;
             case "AWS::DynamoDB::Table":
@@ -177,8 +177,8 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 // DynamoDB resources must be granted permissions on the table AND the stream AND the index
                 resourceAsStatementFn = new object[] {
                     arnReference,
-                    Fn.Join("/", arnReference, "stream/*"),
-                    Fn.Join("/", arnReference, "index/*")
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream/*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index/*" })
                 };
                 break;
             default:

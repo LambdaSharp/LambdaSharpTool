@@ -49,15 +49,42 @@ namespace MindTouch.LambdaSharp.Tool {
             bool allowDataLoss,
             bool protectStack,
             Dictionary<string, string> inputs,
-            string tier
+            string tier,
+            bool forceDeploy
         ) {
             var stackName = $"{tier}-{altModuleName ?? manifest.Name}";
-            if(altModuleName != null) {
 
-                // TODO (2018-10-09, bjorg): check if modules has any custom resources; if it does, fail, because it makes
-                //  no sense to allow multiple instantiations of a module with custom resources since they are global
+            // check version of previously deployed module
+            if(!forceDeploy) {
+                var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = stackName
+                });
+                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                if(deployedOutputs != null) {
+                    var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                    var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                    if(deployedName == null) {
+                        AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
+                        return false;
+                    }
+                    if(deployedName != manifest.Name) {
+                        AddError($"deployed module name ({deployedName}) does not match {manifest.Name}; use --force-deploy to proceed anyway");
+                        return false;
+                    }
+                    if(
+                        (deployedVersionText == null)
+                        || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                    ) {
+                        AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
+                        return false;
+                    }
+                    if(deployedVersion > VersionInfo.Parse(manifest.Version)) {
+                        AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.Version}; use --force-deploy to proceed anyway");
+                        return false;
+                    }
+                }
             }
-            Console.WriteLine($"Deploying stack: {stackName}");
+            Console.WriteLine($"Deploying stack: {stackName} [{manifest.Name}]");
 
             // check if cloudformation stack already exists
             var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
@@ -203,8 +230,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 var outputs = stack.Outputs;
                 if(outputs.Any()) {
                     Console.WriteLine("Stack output values:");
-                    foreach(var output in outputs) {
-                        Console.WriteLine($"=> {output.Description}: {output.OutputValue}");
+                    foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
+                        Console.WriteLine($"=> {output.Description ?? output.OutputKey}: {output.OutputValue}");
                     }
                 }
             }

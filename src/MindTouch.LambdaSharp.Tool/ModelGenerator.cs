@@ -252,12 +252,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         FailOnWarnings = true
                     });
 
-                    // add output parameter to easily located API
-                    _stack.Add("ModuleRestApi", new Humidifier.Output {
-                        Description = restApiDescription,
-                        Value = Fn.Sub("https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/")
-                    });
-
                     // create a RestApi role that can write logs
                     var restApiRoleName = restApiName + "Role";
                     _stack.Add(restApiRoleName, new IAM.Role {
@@ -345,6 +339,12 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // add outputs
+            _stack.Add("ModuleName", new Humidifier.Output {
+                Value = _module.Name
+            });
+            _stack.Add("ModuleVersion", new Humidifier.Output {
+                Value = _module.Version.ToString()
+            });
             foreach(var output in module.Outputs) {
                 switch(output) {
                 case StackOutput stackOutput:
@@ -374,7 +374,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 default:
                     throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
                 }
-
             }
 
             // generate JSON template

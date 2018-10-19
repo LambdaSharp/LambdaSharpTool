@@ -74,13 +74,3 @@ Variables:
               Action:
                 - kms:*
               Resource: "*"
-
-  - Name: EnvironmentVersion
-    Description: LambdaSharp module version
-    Resource:
-      Type: AWS::SSM::Parameter
-      Properties:
-        Type: String
-        Description: LambdaSharp module version
-        Value: !Ref Module::Version
-        Name: !Sub "/${Tier}/LambdaSharp/Version"
