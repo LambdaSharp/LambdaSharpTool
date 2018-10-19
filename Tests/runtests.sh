@@ -1,5 +1,5 @@
 lash() {
-    rm $1-CF.json
+    rm $1-CF.json > /dev/null 2>&1
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \
@@ -44,6 +44,7 @@ if [ -z "$1" ]; then
     lash Source-Kinesis
     lash Source-Macro
     lash Inputs
+    lash Outputs
 else
 
     # run requested test

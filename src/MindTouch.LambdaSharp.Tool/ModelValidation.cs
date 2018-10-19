@@ -553,8 +553,12 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(output.Output != null) {
 
                         // TODO (2018-09-20, bjorg): add name validation
-
-                        Validate(output.Value != null, "missing Value attribute");
+                        if(
+                            (output.Value == null)
+                            && (_module.Variables.Union(_module.Parameters).FirstOrDefault(p => p?.Name == output.Output) == null)
+                        ) {
+                            AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
+                        }
                         ValidateNotBothStatements("Name", "Export", output.Export == null);
                         ValidateNotBothStatements("Name", "CustomResource", output.CustomResource == null);
                         ValidateNotBothStatements("Name", "Handler", output.Handler == null);

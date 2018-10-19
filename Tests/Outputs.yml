@@ -1,0 +1,73 @@
+Name: TestModule
+
+Description: LambdaSharp CloudFormation Test
+
+Outputs:
+
+  # Module Outputs
+  - Output: SimpleValue
+
+  - Output: ManyValues
+
+  - Output: ResourceValue
+
+  - Output: OutputExpressionValue
+    Value: !Sub "${SimpleValue} with extra stuff"
+
+  # Module Exports
+  - Export: AnotherSimpleValue
+
+  - Export: AnotherManyValues
+
+  - Export: ExportExpressionValue
+    Value: !Sub "${AnotherSimpleValue} with extra stuff"
+
+  - Export: AnotherResourceValue
+
+  # Custom Resources
+  - CustomResource: TestModule::MyCustomSnsResource
+    Description: A custom resource handler
+    Handler: ResourceValue
+
+  - CustomResource: TestModule::MyCustomLambdaResource
+    Description: Another custom resource handler
+    Handler: Function
+
+Variables:
+
+  - Name: SimpleValue
+    Description: SimpleValue description
+    Value: this is a value
+
+  - Name: AnotherSimpleValue
+    Description: AnotherSimpleValue description
+    Value: another value
+
+  - Name: ManyValues
+    Description: ManyValues description
+    Values:
+      - first value
+      - second value
+
+  - Name: AnotherManyValues
+    Description: AnotherManyValues description
+    Values:
+      - another first value
+      - another second value
+
+  - Name: ResourceValue
+    Description: ResourceValue description
+    Resource:
+      Type: AWS::SNS::Topic
+
+  - Name: AnotherResourceValue
+    Description: AnotherResourceValue description
+    Resource:
+      Type: AWS::SNS::Topic
+
+Functions:
+
+  - Name: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
