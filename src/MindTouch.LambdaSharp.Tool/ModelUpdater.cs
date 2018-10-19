@@ -56,32 +56,37 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // check version of previously deployed module
             if(!forceDeploy) {
-                var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = stackName
-                });
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                if(deployedOutputs != null) {
-                    var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                    var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
-                    if(deployedName == null) {
-                        AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
-                        return false;
+                try {
+                    var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = stackName
+                    });
+                    var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                    if(deployedOutputs != null) {
+                        var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                        var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                        if(deployedName == null) {
+                            AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(deployedName != manifest.Name) {
+                            AddError($"deployed module name ({deployedName}) does not match {manifest.Name}; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(
+                            (deployedVersionText == null)
+                            || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                        ) {
+                            AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(deployedVersion > VersionInfo.Parse(manifest.Version)) {
+                            AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.Version}; use --force-deploy to proceed anyway");
+                            return false;
+                        }
                     }
-                    if(deployedName != manifest.Name) {
-                        AddError($"deployed module name ({deployedName}) does not match {manifest.Name}; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                    if(
-                        (deployedVersionText == null)
-                        || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
-                    ) {
-                        AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
-                        return false;
-                    }
-                    if(deployedVersion > VersionInfo.Parse(manifest.Version)) {
-                        AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.Version}; use --force-deploy to proceed anyway");
-                        return false;
-                    }
+                } catch(AmazonCloudFormationException) {
+
+                    // stack doesn't exist
                 }
             }
             Console.WriteLine($"Deploying stack: {stackName} [{manifest.Name}]");
