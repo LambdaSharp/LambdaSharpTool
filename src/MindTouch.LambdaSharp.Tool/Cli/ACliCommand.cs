@@ -214,22 +214,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         protected async Task PopulateEnvironmentSettingsAsync(Settings settings, string tier) {
             if((settings.EnvironmentVersion == null) && (tier != null)) {
+                try {
 
-                // check version of base LambadSharp module
-                var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = $"{tier}-LambdaSharp"
-                });
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                if(deployedOutputs != null) {
-                    var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
-                    var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
-                    if(
-                        (deployedName == "LambdaSharp")
-                        && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
-                    ) {
-                        settings.EnvironmentVersion = deployedVersion;
-                        return;
+                    // check version of base LambadSharp module
+                    var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = $"{tier}-LambdaSharp"
+                    });
+                    var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                    if(deployedOutputs != null) {
+                        var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                        var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                        if(
+                            (deployedName == "LambdaSharp")
+                            && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                        ) {
+                            settings.EnvironmentVersion = deployedVersion;
+                            return;
+                        }
                     }
+                } catch(AmazonCloudFormationException) {
+
+                    // stack doesn't exist
                 }
             }
         }
