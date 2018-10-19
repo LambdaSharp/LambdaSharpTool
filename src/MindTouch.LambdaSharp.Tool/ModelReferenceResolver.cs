@@ -196,8 +196,8 @@ DebugWriteLine($"FREE => {parameter.ResourceName}");
 DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
-                    case ReferencedResourceParameter referencedParameter:
-                        if(referencedParameter.Resource.ResourceReferences.All(value => value is string)) {
+                    case AResourceParameter resourceParameter:
+                        if(resourceParameter.Resource.ResourceReferences.All(value => value is string)) {
                             freeParameters[parameter.ResourceName] = parameter;
 DebugWriteLine($"FREE => {parameter.ResourceName}");
                         } else {
@@ -205,23 +205,14 @@ DebugWriteLine($"FREE => {parameter.ResourceName}");
 DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
-                    case CloudFormationResourceParameter cloudFormationResourceParameter:
-                        if(cloudFormationResourceParameter.Resource.Properties?.Any() != true) {
-                            freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
-                        } else {
-                            boundParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"BOUND => {parameter.ResourceName}");
-                        }
-                        break;
+                    case PackageParameter _:
+                    case SecretParameter _:
                     case AInputParameter inputParameter:
                         freeParameters[parameter.ResourceName] = parameter;
 DebugWriteLine($"FREE => {parameter.ResourceName}");
                         break;
                     default:
-
-                        // TODO (2018-10-03, bjorg): what about `SecretParameter` and `PackageParameter`?
-                        break;
+                        throw new ApplicationException($"unrecognized parameter type: {parameter?.GetType().ToString() ?? "null"}");
                     }
                     DiscoverParameters(parameter.Parameters);
                 }

@@ -1,4 +1,5 @@
 lash() {
+    rm $1-CF.json
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- deploy \
         --verbose:exceptions \
         --tier Test \

@@ -93,8 +93,6 @@ namespace MindTouch.LambdaSharp {
                 await ProcessMessageAsync(message, context);
                 return "Ok";
             } catch(Exception e) when(!(e is ALambdaRetriableException)) {
-
-                // TODO (2018-06-14, bjorg): revisit how exceptions are surfaced
                 LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);
                 return $"ERROR: {e.Message}";

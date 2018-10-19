@@ -163,10 +163,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return;
                 }
                 if(existingVersion < Version) {
-
-                    // TODO (2018-10-09, bjorg): logic for upgrading lambdasharp tool
-                    AddError("upgrading is not yet supported");
-                    return;
+                    Console.WriteLine($"LambdaSharp tool configuration appears to be out of date: (v{existingVersion})");
+                    var upgrade = Prompt.GetYesNo("Do you want to upgrade?", false);
+                    if(!upgrade) {
+                        return;
+                    }
                 } else if(existingVersion > Version) {
                     Console.WriteLine();
                     Console.WriteLine($"WARNING: LambdaSharp tool configuration is more recent (v{existingVersion})");

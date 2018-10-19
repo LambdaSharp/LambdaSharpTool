@@ -72,9 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
 
                 // make sure the stack is not already in an update operation
                 if(!mostRecentStackEvent.IsFinalStackEvent()) {
-
-                    // TODO (2018-10-09, bjorg): use specialized exception
-                    throw new Exception("stack appears to be undergoing an update operation");
+                    throw new System.InvalidOperationException("stack appears to be undergoing an update operation");
                 }
                 return mostRecentStackEvent.EventId;
             } catch(AmazonCloudFormationException) {
@@ -113,9 +111,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                     events.RemoveAt(0);
                 }
                 if(!foundMostRecentStackEvent) {
-
-                    // TODO (2018-10-09, bjorg): use specialized exception
-                    throw new Exception("unable to find starting event");
+                    throw new ApplicationException($"unable to find starting event for stack: {stackName}");
                 }
 
                 // report only on new events
