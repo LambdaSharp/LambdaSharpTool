@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool {
 #endif
 
         //--- Class Fields ---
-        public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Normal;
+        public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
 
         //--- Class Properties ---
@@ -108,7 +108,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public string DeploymentBucketName { get; set; }
         public string DeploymentBucketPath { get; set; }
         public string DeploymentNotificationsTopicArn { get; set; }
-        public ResourceMapping ResourceMapping { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

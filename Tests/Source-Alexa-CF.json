@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "AlexaSkillId": {
+      "Type": "String",
+      "Default": "*"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -440,6 +444,9 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
+            },
+            "STR_ALEXASKILLID": {
+              "Ref": "AlexaSkillId"
             }
           }
         },
@@ -522,11 +529,27 @@
         "Principal": "alexa-appkit.amazon.com"
       }
     },
-    "FunctionAlexaPermission4E6381D": {
+    "FunctionAlexaPermission2": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Principal": "alexa-appkit.amazon.com"
+      }
+    },
+    "FunctionAlexaPermission3": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "EventSourceToken": {
+          "Ref": "AlexaSkillId"
+        },
         "FunctionName": {
           "Fn::GetAtt": [
             "Function",
@@ -604,6 +627,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "AlexaSkillId": {
+          "default": "Alexa Skill Id"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -630,6 +656,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "AlexaSkillId"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

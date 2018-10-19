@@ -4,15 +4,14 @@ Description: LambdaSharp CloudFormation Test
 
 Inputs:
 
+  # Plain Input Parameters
   - Input: InputParameter
     Section: Plain Input Parameters
-    Label: Input Parameter
     Scope: Module
     Description: required input parameter
 
   - Input: InputParameterWithDefault
     Section: Plain Input Parameters
-    Label: Input Parameter (optional)
     Description: input parameter with a default value
     Scope: Module
     Default: a default value
@@ -20,21 +19,40 @@ Inputs:
   - Input: SecretInputParameter
     Type: Secret
     Section: Plain Input Parameters
-    Label: Secret Input Parameter
     Scope: Module
     Description: encrypted input parameter
 
+
+  # Cross-module references
   - Import: OtherModule::ExportValue
     Section: Cross-Module References
-    Label: Reference
     Scope: Module
     Description: cross-module import reference
 
   - Import: OtherModule::ExportSecret
     Type: Secret
     Section: Cross-Module References
-    Label: Reference
     Description: cross-module import reference
+
+  # Resource Input Parameters
+  - Input: ResourceInputParameter
+    Section: Resource Input Parameters
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadOnly
+
+  - Input: ResourceInputParameterOrCreate
+    Section: Resource Input Parameters
+    Default: ""
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Publish
+
+  - Import: OtherModule::ExportResource
+    Section: Resource Input Parameters
+    Resource:
+      Type: AWS::DynamoDB::Table
+      Allow: ReadOnly
 
 Parameters:
 

@@ -75,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     DryRunLevel? dryRun = null;
                     if(dryRunOption.HasValue()) {
                         DryRunLevel value;
-                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, out value)) {
+                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
                             // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
                             return;
@@ -147,7 +147,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     DryRunLevel? dryRun = null;
                     if(dryRunOption.HasValue()) {
                         DryRunLevel value;
-                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, out value)) {
+                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
                             // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
                             return;
@@ -245,7 +245,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     DryRunLevel? dryRun = null;
                     if(dryRunOption.HasValue()) {
                         DryRunLevel value;
-                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, out value)) {
+                        if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
                             // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
                             return;

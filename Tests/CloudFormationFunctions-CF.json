@@ -552,6 +552,9 @@
                 "MyResource",
                 "Result"
               ]
+            },
+            "STR_OTHERRESOURCE": {
+              "Ref": "OtherResource"
             }
           }
         },

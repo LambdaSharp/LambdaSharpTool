@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using MindTouch.LambdaSharp.Tool.Model;
 using MindTouch.LambdaSharp.Tool.Model.AST;
@@ -294,6 +295,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             ),
                             Import = input.Import
                         };
+
+                        // check if a resource definition is associated with the import statement
+                        if(input.Resource != null) {
+                            result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
+                        }
                         parentParameter.Parameters.Add(result);
                     } else {
 
@@ -311,6 +317,18 @@ namespace MindTouch.LambdaSharp.Tool {
                             MinLength = input.MinLength,
                             MinValue = input.MinValue
                         };
+
+                        // check if a resource definition is associated with the input statement
+                        if(input.Resource != null) {
+                            if(input.Default == "") {
+                                result.Reference = FnIf(
+                                    $"{result.Name}Created",
+                                    ResourceMapping.GetArnReference(input.Resource.Type, $"{result.Name}CreatedInstance"),
+                                    FnRef(result.Name)
+                                );
+                            }
+                            result.Resource = ConvertResource(new List<object> { result.Reference }, input.Resource);
+                        }
                     }
                     if(result != null) {
 
@@ -321,12 +339,38 @@ namespace MindTouch.LambdaSharp.Tool {
                         // set AInputParamete fields
                         result.Type = input.Type ?? "String";
                         result.Section = input.Section ?? "Module Settings";
-                        result.Label = input.Label ?? result.Name;
+                        result.Label = input.Label ?? PrettifyLabel(input.Import ?? input.Input);
                         result.NoEcho = input.NoEcho;
 
                         // add result, unless it's an cross-module reference
                         if(input.Import == null) {
                             resultList.Add(result);
+                        }
+
+                        // local function
+                        string PrettifyLabel(string name) {
+                            var builder = new StringBuilder();
+                            var isUppercase = true;
+                            foreach(var c in name) {
+                                if(char.IsDigit(c)) {
+                                    if(!isUppercase) {
+                                        builder.Append(' ');
+                                    }
+                                    isUppercase = true;
+                                    builder.Append(c);
+                                } else if(char.IsLetter(c)) {
+                                    if(isUppercase) {
+                                        isUppercase = char.IsUpper(c);
+                                        builder.Append(c);
+                                    } else {
+                                        if(isUppercase = char.IsUpper(c)) {
+                                            builder.Append(' ');
+                                        }
+                                        builder.Append(c);
+                                    }
+                                }
+                            }
+                            return builder.ToString();
                         }
                     }
                 });
@@ -431,11 +475,12 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // managed resource
                         AtLocation("Resource", () => {
+                            var reference = ResourceMapping.GetArnReference(parameter.Resource.Type, resourceName);
                             result = new CloudFormationResourceParameter {
                                 Scope = scope,
                                 Name = parameter.Name,
                                 Description = parameter.Description,
-                                Resource = ConvertResource(new List<object>(), parameter.Resource),
+                                Resource = ConvertResource(new List<object> { reference }, parameter.Resource),
                                 Reference = FnRef(resourceName)
                             };
                         });
@@ -503,7 +548,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                             // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
                             allowSet.Add(allowStatement);
-                        } else if(Settings.ResourceMapping.TryResolveAllowShorthand(resource.Type, allowStatement, out IList<string> allowedList)) {
+                        } else if(ResourceMapping.TryResolveAllowShorthand(resource.Type, allowStatement, out IList<string> allowedList)) {
                             foreach(var allowed in allowedList) {
                                 allowSet.Add(allowed);
                             }
@@ -537,7 +582,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ResourceReferences = resourceReferences,
                 Allow = allowList,
                 Properties = resource.Properties,
-                DependsOn = resource.DependsOn
+                DependsOn = resource.DependsOn ?? new List<string>()
             };
         }
 

@@ -52,11 +52,31 @@ namespace MindTouch.LambdaSharp.Tool {
         public static bool operator > (VersionInfo left, VersionInfo right)
             => left.CompareTo(right) > 0;
 
-        public static bool operator == (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) == 0;
+        public static bool operator == (VersionInfo left, VersionInfo right) {
+            if(ReferenceEquals(left, right)) {
+                return true;
+            }
+            if(ReferenceEquals(left, null)) {
+                return false;
+            }
+            if(ReferenceEquals(right, null)) {
+                return false;
+            }
+            return left.CompareTo(right) == 0;
+        }
 
-        public static bool operator != (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) != 0;
+        public static bool operator != (VersionInfo left, VersionInfo right) {
+            if(!ReferenceEquals(left, right)) {
+                return false;
+            }
+            if(ReferenceEquals(left, null)) {
+                return true;
+            }
+            if(ReferenceEquals(right, null)) {
+                return true;
+            }
+            return left.CompareTo(right) != 0;
+        }
 
         //--- Fields ---
         public readonly Version Version;
@@ -81,8 +101,11 @@ namespace MindTouch.LambdaSharp.Tool {
         override public string ToString() => Version.ToString() + Suffix;
 
         public bool Equals(VersionInfo other) {
-            if(other == null) {
+            if(ReferenceEquals(null, other)) {
                 return false;
+            }
+            if(ReferenceEquals(this, other)) {
+                return true;
             }
             return CompareTo(other) == 0;
         }
@@ -104,7 +127,7 @@ namespace MindTouch.LambdaSharp.Tool {
             => Version.GetHashCode() ^ Suffix.GetHashCode();
 
         public int CompareTo(VersionInfo other) {
-            if(other == null) {
+            if(object.ReferenceEquals(other, null)) {
                 throw new ArgumentNullException(nameof(other));
             }
             var result = Version.CompareTo(other.Version);

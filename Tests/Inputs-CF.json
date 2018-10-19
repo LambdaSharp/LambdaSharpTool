@@ -29,6 +29,19 @@
       "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
       "Default": "$OtherModule::ExportSecret"
     },
+    "OtherModuleExportResource": {
+      "Type": "String",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module import reference or a non-blank value",
+      "Default": "$OtherModule::ExportResource"
+    },
+    "ResourceInputParameter": {
+      "Type": "String"
+    },
+    "ResourceInputParameterOrCreate": {
+      "Type": "String",
+      "Default": ""
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -90,6 +103,11 @@
         "ModuleName": "TestModule",
         "ModuleVersion": "1.0"
       }
+    },
+    "ResourceInputParameterOrCreateCreatedInstance": {
+      "Type": "AWS::SNS::Topic",
+      "Condition": "ResourceInputParameterOrCreateCreated",
+      "Properties": {}
     },
     "CloudWatchLogsRole": {
       "Type": "AWS::IAM::Role",
@@ -274,6 +292,178 @@
                             ]
                           }
                         ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "OtherModuleExportResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:Query",
+                    "dynamodb:Scan"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::If": [
+                        "OtherModuleExportResourceIsImport",
+                        {
+                          "Fn::ImportValue": {
+                            "Fn::Sub": [
+                              "${Tier}-${Import}",
+                              {
+                                "Import": {
+                                  "Fn::Select": [
+                                    "1",
+                                    {
+                                      "Fn::Split": [
+                                        "$",
+                                        {
+                                          "Ref": "OtherModuleExportResource"
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "Ref": "OtherModuleExportResource"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::If": [
+                              "OtherModuleExportResourceIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${Tier}-${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "OtherModuleExportResource"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "OtherModuleExportResource"
+                              }
+                            ]
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::If": [
+                              "OtherModuleExportResourceIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${Tier}-${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "OtherModuleExportResource"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "OtherModuleExportResource"
+                              }
+                            ]
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "ResourceInputParameter",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "ResourceInputParameter"
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Ref": "ResourceInputParameter"
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "ResourceInputParameterOrCreate",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "ResourceInputParameterOrCreateCreated",
+                      {
+                        "Ref": "ResourceInputParameterOrCreateCreatedInstance"
+                      },
+                      {
+                        "Ref": "ResourceInputParameterOrCreate"
                       }
                     ]
                   }
@@ -469,7 +659,78 @@
               ]
             },
             "SEC_OTHERMODULE_EXPORTSECRET": {
-              "Ref": "OtherModuleExportSecret"
+              "Fn::If": [
+                "OtherModuleExportSecretIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${Tier}-${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "OtherModuleExportSecret"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "OtherModuleExportSecret"
+                }
+              ]
+            },
+            "STR_OTHERMODULE_EXPORTRESOURCE": {
+              "Fn::If": [
+                "OtherModuleExportResourceIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${Tier}-${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "OtherModuleExportResource"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "OtherModuleExportResource"
+                }
+              ]
+            },
+            "STR_RESOURCEINPUTPARAMETER": {
+              "Ref": "ResourceInputParameter"
+            },
+            "STR_RESOURCEINPUTPARAMETERORCREATE": {
+              "Fn::If": [
+                "ResourceInputParameterOrCreateCreated",
+                {
+                  "Ref": "ResourceInputParameterOrCreateCreatedInstance"
+                },
+                {
+                  "Ref": "ResourceInputParameterOrCreate"
+                }
+              ]
             },
             "STR_INPUT": {
               "Ref": "InputParameter"
@@ -654,6 +915,32 @@
         ""
       ]
     },
+    "OtherModuleExportResourceIsImport": {
+      "Fn::Equals": [
+        {
+          "Fn::Select": [
+            "0",
+            {
+              "Fn::Split": [
+                "$",
+                {
+                  "Ref": "OtherModuleExportResource"
+                }
+              ]
+            }
+          ]
+        },
+        ""
+      ]
+    },
+    "ResourceInputParameterOrCreateCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "ResourceInputParameterOrCreate"
+        },
+        ""
+      ]
+    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -716,16 +1003,25 @@
           "default": "Input Parameter"
         },
         "InputParameterWithDefault": {
-          "default": "Input Parameter (optional)"
+          "default": "Input Parameter With Default"
         },
         "SecretInputParameter": {
           "default": "Secret Input Parameter"
         },
         "OtherModuleExportValue": {
-          "default": "Reference"
+          "default": "Other Module Export Value"
         },
         "OtherModuleExportSecret": {
-          "default": "Reference"
+          "default": "Other Module Export Secret"
+        },
+        "OtherModuleExportResource": {
+          "default": "Other Module Export Resource"
+        },
+        "ResourceInputParameter": {
+          "default": "Resource Input Parameter"
+        },
+        "ResourceInputParameterOrCreate": {
+          "default": "Resource Input Parameter Or Create"
         },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
@@ -770,6 +1066,16 @@
           "Parameters": [
             "OtherModuleExportValue",
             "OtherModuleExportSecret"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Resource Input Parameters"
+          },
+          "Parameters": [
+            "OtherModuleExportResource",
+            "ResourceInputParameter",
+            "ResourceInputParameterOrCreate"
           ]
         },
         {

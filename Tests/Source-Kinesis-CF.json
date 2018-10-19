@@ -446,6 +446,9 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
+            },
+            "STR_STREAM": {
+              "Ref": "Stream"
             }
           }
         },

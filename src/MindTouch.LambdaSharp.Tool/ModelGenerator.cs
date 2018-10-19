@@ -390,7 +390,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["ParameterLabels"] = _module.GetAllParameters().OfType<AInputParameter>().ToDictionary(input => input.ResourceName, input => new Dictionary<string, object> {
                         ["default"] = input.Label
                     }),
-                    ["ParameterGroups"] = _module.GetAllParameters().OfType<AInputParameter>().ToLookup(input => input.Section)
+                    ["ParameterGroups"] = _module.GetAllParameters().OfType<AInputParameter>()
+                        .GroupBy(input => input.Section)
                         .Select(section => new Dictionary<string, object> {
                             ["Label"] = new Dictionary<string, string> {
                                 ["default"] = section.Key
@@ -853,29 +854,23 @@ namespace MindTouch.LambdaSharp.Tool {
             case CloudFormationResourceParameter cloudFormationResourceParameter: {
                     var resource = cloudFormationResourceParameter.Resource;
                     object resourceAsStatementFn;
-                    object resourceAsParameterFn;
+                    var resourceAsParameterFn = Fn.Ref(resourceName);
                     Humidifier.Resource resourceTemplate;
                     if(resource.Type.StartsWith("Custom::")) {
                         resourceAsStatementFn = null;
                         resourceAsParameterFn = null;
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
-                    } else if(!Settings.ResourceMapping.TryParseResourceProperties(
+                    } else if(!ResourceMapping.TryParseResourceProperties(
                         resource.Type,
-                        resourceName,
+                        resource.ResourceReferences.First(),
                         resource.Properties,
                         out resourceAsStatementFn,
-                        out resourceAsParameterFn,
                         out resourceTemplate
                     )) {
                         throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                     }
                     _stack.Add(resourceName, resourceTemplate, dependsOn: resource.DependsOn.ToArray());
                     if(resource.Allow?.Any() == true) {
-
-                        // only add parameters that the lambda functions are allowed to access
-                        if((parameter.Scope == ParameterScope.Function) && (resourceAsParameterFn != null)) {
-                            environmentRefVariables["STR_" + fullEnvName] = resourceAsParameterFn;
-                        }
 
                         // add permissions for resource
                         if(resourceAsStatementFn != null) {
@@ -887,27 +882,71 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
                     }
+                    if((parameter.Scope == ParameterScope.Function) && (resourceAsParameterFn != null)) {
+                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
+                    }
                 }
                 break;
-            case ValueInputParameter valueInputParameter:
-                _stack.Add(resourceName, new Parameter {
-                    Type = (valueInputParameter.Type == "Secret") ? "String" : valueInputParameter.Type,
-                    Description = valueInputParameter.Description,
-                    Default = valueInputParameter.Default,
-                    ConstraintDescription = valueInputParameter.ConstraintDescription,
-                    AllowedPattern = valueInputParameter.AllowedPattern,
-                    AllowedValues = valueInputParameter.AllowedValues?.ToList(),
-                    MaxLength = valueInputParameter.MaxLength,
-                    MaxValue = valueInputParameter.MaxValue,
-                    MinLength = valueInputParameter.MinLength,
-                    MinValue = valueInputParameter.MinValue,
-                    NoEcho = valueInputParameter.NoEcho
-                });
-                if(parameter.Scope == ParameterScope.Function) {
-                    if(valueInputParameter.Type == "Secret") {
-                        environmentRefVariables["SEC_" + fullEnvName] = FnRef(resourceName);
-                    } else {
-                        environmentRefVariables["STR_" + fullEnvName] = FnRef(resourceName);
+            case ValueInputParameter valueInputParameter: {
+                    _stack.Add(resourceName, new Parameter {
+                        Type = (valueInputParameter.Type == "Secret") ? "String" : valueInputParameter.Type,
+                        Description = valueInputParameter.Description,
+                        Default = valueInputParameter.Default,
+                        ConstraintDescription = valueInputParameter.ConstraintDescription,
+                        AllowedPattern = valueInputParameter.AllowedPattern,
+                        AllowedValues = valueInputParameter.AllowedValues?.ToList(),
+                        MaxLength = valueInputParameter.MaxLength,
+                        MaxValue = valueInputParameter.MaxValue,
+                        MinLength = valueInputParameter.MinLength,
+                        MinValue = valueInputParameter.MinValue,
+                        NoEcho = valueInputParameter.NoEcho
+                    });
+
+                    // check if a conditional resource definition is attached to the input parameter
+                    var resource = valueInputParameter.Resource;
+                    if(resource != null) {
+                        object resourceAsStatementFn;
+
+                        // create resource when no input is provided
+                        if(valueInputParameter.Default == "") {
+                            Humidifier.Resource resourceTemplate;
+                            if(resource.Type.StartsWith("Custom::")) {
+                                resourceAsStatementFn = null;
+                                resourceTemplate = new CustomResource(resource.Type, resource.Properties);
+                            } else if(!ResourceMapping.TryParseResourceProperties(
+                                resource.Type,
+                                parameter.Reference,
+                                resource.Properties,
+                                out resourceAsStatementFn,
+                                out resourceTemplate
+                            )) {
+                                throw new NotImplementedException($"resource type is not supported: {resource.Type}");
+                            }
+                            var condition = $"{resourceName}Created";
+                            _stack.Add(condition, new Condition(Fn.Equals(Fn.Ref(resourceName), "")));
+                            _stack.Add($"{resourceName}CreatedInstance", resourceTemplate, condition: condition, dependsOn: resource.DependsOn.ToArray());
+                        } else {
+
+                            // resource must always be provided as an input
+                            resourceAsStatementFn = ResourceMapping.ExpandResourceReference(resource.Type, resource.ResourceReferences.First());
+                        }
+
+                        // add requested permission to input resource
+                        if(resource.Allow?.Any() == true) {
+                            _resourceStatements.Add(new Statement {
+                                Sid = resourceName,
+                                Effect = "Allow",
+                                Resource = resourceAsStatementFn,
+                                Action = resource.Allow
+                            });
+                        }
+                    }
+                    if(parameter.Scope == ParameterScope.Function) {
+                        if(valueInputParameter.Type == "Secret") {
+                            environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
+                        } else {
+                            environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
+                        }
                     }
                 }
                 break;
@@ -921,11 +960,24 @@ namespace MindTouch.LambdaSharp.Tool {
                     NoEcho = importInputParameter.NoEcho
                 });
                 _stack.Add($"{resourceName}IsImport", new Condition(Fn.Equals(Fn.Select("0", Fn.Split("$", Fn.Ref(resourceName))), "")));
+
+                // check if we need to add permissions for imported resource (expected to be an ARN)
+                if(importInputParameter.Resource != null) {
+                    var resource = importInputParameter.Resource;
+                    if(resource.Allow?.Any() == true) {
+                        _resourceStatements.Add(new Statement {
+                            Sid = resourceName,
+                            Effect = "Allow",
+                            Resource = ResourceMapping.ExpandResourceReference(resource.Type, resource.ResourceReferences.First()),
+                            Action = resource.Allow
+                        });
+                    }
+                }
                 if(parameter.Scope == ParameterScope.Function) {
                     if(importInputParameter.Type == "Secret") {
-                        environmentRefVariables["SEC_" + fullEnvName] = FnRef(resourceName);
+                        environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
                     } else {
-                        environmentRefVariables["STR_" + fullEnvName] = FnRef(resourceName);
+                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                     }
                 }
                 break;

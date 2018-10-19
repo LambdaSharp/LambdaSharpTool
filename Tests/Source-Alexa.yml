@@ -2,6 +2,11 @@ Name: TestModule
 
 Description: LambdaSharp CloudFormation Test
 
+Inputs:
+
+  - Input: AlexaSkillId
+    Default: "*"
+
 Functions:
 
   - Name: Function
@@ -11,3 +16,4 @@ Functions:
     Sources:
       - Alexa: "*"
       - Alexa: amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      - Alexa: !Ref AlexaSkillId

@@ -1,4 +1,4 @@
-"AWS::DynamoDB::Table":
+AWS::DynamoDB::Table:
   ReadOnly:
     - dynamodb:BatchGetItem
     - dynamodb:DescribeStream
@@ -28,8 +28,7 @@
     - dynamodb:ListStreams
   Full:
     - dynamodb:*
-
-"AWS::S3::Bucket":
+AWS::S3::Bucket:
   ReadOnly:
     - s3:GetObject
     - s3:GetObjectAcl
@@ -67,7 +66,7 @@
   Full:
     - s3:*
 
-"AWS::SNS::Topic":
+AWS::SNS::Topic:
   Subscribe:
     - sns:Subscribe
   Publish:
@@ -92,7 +91,7 @@
   Full:
     - sqs:*
 
-"AWS::Kinesis::Stream":
+AWS::Kinesis::Stream:
   Subscribe:
     - kinesis:DescribeStream
     - kinesis:GetRecords

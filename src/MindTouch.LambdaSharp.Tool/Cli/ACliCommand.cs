@@ -98,12 +98,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return async () => {
 
                 // initialize logging level
-                if(verboseLevelOption.HasValue()) {
-                    if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
+                if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
 
-                        // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
-                        return null;
-                    }
+                    // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
+                    return null;
                 }
 
                 // initialize tool profile
@@ -146,7 +144,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     DeploymentBucketName = deploymentBucketName,
                     DeploymentBucketPath = deploymentBucketPath,
                     DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
-                    ResourceMapping = new ResourceMapping(),
                     SsmClient = ssmClient,
                     CfClient = cfClient,
                     KmsClient = kmsClient,
@@ -155,7 +152,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             };
         }
 
-        protected bool TryParseEnumOption<T>(CommandOption option, T defaultvalue, out T result) where T : struct {
+        protected bool TryParseEnumOption<T>(CommandOption option, T missingValue, T defaultvalue, out T result) where T : struct {
+            if(!option.HasValue()) {
+                result = missingValue;
+                return true;
+            }
             if(option.Value() == null) {
                 result = defaultvalue;
                 return true;

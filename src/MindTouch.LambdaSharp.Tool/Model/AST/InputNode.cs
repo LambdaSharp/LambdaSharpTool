@@ -46,8 +46,10 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public int? MaxValue { get; set; }
         public int? MinLength { get; set; }
         public int? MinValue { get; set; }
+        public ResourceNode Resource { get; set; }
 
         // cross-module reference
         public string Import { get; set; }
+        // public ResourceNode Resource { get; set; }
     }
 }

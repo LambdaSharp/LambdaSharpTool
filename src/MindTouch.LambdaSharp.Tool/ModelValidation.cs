@@ -163,10 +163,12 @@ namespace MindTouch.LambdaSharp.Tool {
             } else if(resource.Type == null) {
                 AddError("missing Type attribute");
             } else if(
-                resource.Type.StartsWith("AWS::")
-                && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
+                resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
+                && !ResourceMapping.IsResourceTypeSupported(resource.Type)
             ) {
                 AddError($"unsupported resource type: {resource.Type}");
+            } else if(!resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                Validate(resource.Allow == null, "'Allow' attribute is not valid for custom resources");
             }
 
             // validate dependencies
@@ -516,8 +518,28 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Import", "MinLength", input.MinLength == null);
                         ValidateNotBothStatements("Import", "MinValue", input.MinValue == null);
                         ValidateNotBothStatements("Import", "NoEcho", input.NoEcho == null);
+                        if(input.Resource != null) {
+                            AtLocation("Resource", () => {
+                                Validate(input.Type == "String", "input 'Type' must be string");
+                                Validate(input.Resource.Type != null, "'Type' attribute is required");
+                                Validate(input.Resource.Allow != null, "'Allow' attribute is required");
+                                ValidateNotBothStatements("Import", "Properties", input.Resource.Properties == null);
+                                Validate(input.Resource.DependsOn?.Any() != true, "'DependsOn' cannot be used on an input");
+                            });
+                        }
                     } else {
                         ValidateResourceName(input.Input, "");
+                        if(input.Resource != null) {
+                            AtLocation("Resource", () => {
+                                Validate(input.Type == "String", "input 'Type' must be string");
+                                Validate(input.Resource.DependsOn?.Any() != true, "'DependsOn' cannot be used on an input");
+                                if(input.Default == null) {
+                                    Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
+                                } else {
+                                    Validate(input.Default == "", "'Default' must be a blank string");
+                                }
+                            });
+                        }
                     }
                 });
             }
