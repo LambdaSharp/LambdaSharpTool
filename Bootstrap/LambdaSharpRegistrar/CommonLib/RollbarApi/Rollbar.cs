@@ -122,10 +122,7 @@ namespace MindTouch.LambdaSharpRegistrar.RollbarApi
         public string Filename { get; set; }
 
         [JsonProperty("lineno")]
-        public long Lineno { get; set; }
-
-        [JsonProperty("colno", NullValueHandling = NullValueHandling.Ignore)]
-        public long? Colno { get; set; }
+        public int? Lineno { get; set; }
 
         [JsonProperty("method")]
         public string Method { get; set; }

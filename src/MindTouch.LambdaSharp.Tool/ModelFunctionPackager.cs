@@ -105,8 +105,10 @@ namespace MindTouch.LambdaSharp.Tool {
             // determine the function type
             var folderPath = Path.Combine(Settings.WorkingDirectory, folderName);
             if(File.Exists(Path.Combine(folderPath, $"{folderName}.csproj"))) {
+                function.Language = "csharp";
                 ProcessDotNet(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, $"{folderName}.csproj"));
             } else if(File.Exists(Path.Combine(folderPath, "index.js"))) {
+                function.Language = "javascript";
                 ProcessJavascript(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, "index.js"));
             } else {
                 AddError("could not location the function implementation");

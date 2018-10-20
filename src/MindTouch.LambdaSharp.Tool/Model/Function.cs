@@ -32,6 +32,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string S3Location { get; set; }
         public string Handler { get; set; }
         public string Runtime { get; set; }
+        public string Language { get; set; }
         public string Memory { get; set; }
         public string Timeout { get; set; }
         public string ReservedConcurrency { get; set; }

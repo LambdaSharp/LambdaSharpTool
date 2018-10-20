@@ -552,7 +552,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     ["FunctionLogGroupName"] = Fn.Sub($"/aws/lambda/${{{function.Name}}}"),
                     ["FunctionPlatform"] = "AWS Lambda",
                     ["FunctionFramework"] = function.Runtime,
-                    ["FunctionLanguage"] = "csharp",
+                    ["FunctionLanguage"] = function.Language,
                     ["FunctionMaxMemory"] = function.Memory,
                     ["FunctionMaxDuration"] = function.Timeout
                 }, dependsOn: new[] { "ModuleRegistration" });

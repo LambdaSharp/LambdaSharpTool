@@ -29,6 +29,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using MindTouch.LambdaSharp.Reports;
 using MindTouch.LambdaSharpRegistrar.Registrations;
+using Newtonsoft.Json;
 
 namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
@@ -45,6 +46,17 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
 
         //--- Types ---
         private delegate Task MatchHandlerAsync(OwnerMetaData owner, ErrorReport report, Match match);
+
+        private class JavascriptException {
+
+            //--- Properties ---
+            public string ErrorMessage { get; set; }
+            public string ErrorType { get; set; }
+            public List<string> StackTrace { get; set; }
+        }
+
+        //--- Class Fields ---
+        private static Regex _javascriptTrace = new Regex(@"(?<Function>.*)\((?<File>.*):(?<Line>[\d]+):(?<Column>[\d]+)\)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
 
         //--- Class Methods ---
         private static (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
@@ -71,13 +83,25 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
         public Logic(ILogicDependencyProvider provider) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)[] {
+
+                // Lambda report entries
                 CreateMatchPattern(@"^START RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
                 CreateMatchPattern(@"^END RequestId: (?<RequestId>[\da-f\-]+).*$", IgnoreEntryAsync),
                 CreateMatchPattern(@"^REPORT RequestId: (?<RequestId>[\da-f\-]+)\s*Duration: (?<UsedDuration>[\d\.]+) ms\s*Billed Duration: (?<BilledDuration>[\d\.]+) ms\s*Memory Size: (?<MaxMemory>[\d\.]+) MB\s*Max Memory Used: (?<UsedMemory>[\d\.]+) MB\s*$", MatchExecutionReportAsync),
+
+                // LambdaSharp error report
                 CreateMatchPattern(@"^\s*{.*}\s*$", MatchLambdaSharpJsonLogEntryAsync),
+
+                // Lambda .Net exception
                 CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): LambdaException$", MatchLambdaExceptionAsync),
-                CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+) (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Task timed out after (?<Duration>[\d\.]+) seconds)$", MatchTimeoutAsync),
-                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchProcessExitedBeforeCompletionAsync)
+
+                // Lambda timeout error
+                CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+)\s+(?<RequestId>[\da-f\-]+) (?<ErrorMessage>Task timed out after (?<Duration>[\d\.]+) seconds)$", MatchTimeoutAsync),
+                CreateMatchPattern(@"^RequestId: (?<RequestId>[\da-f\-]+) (?<ErrorMessage>Process exited before completing request)$", MatchProcessExitedBeforeCompletionAsync),
+
+                // Javascript errors
+                CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+)\s+(?<RequestId>[\da-f\-]+)\s+(?<ErrorMessage>{""errorMessage.*})\s*$", MatchJavascriptExceptionAsync),
+                CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): SyntaxError$", MatchJavascriptSyntaxErrorAsync),
             };
         }
 
@@ -105,7 +129,12 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                     };
 
                     // have handler fill in the rest from the matched error line
-                    await mapping.HandlerAsync(owner, report, match);
+                    try {
+                        await mapping.HandlerAsync(owner, report, match);
+                    } catch {
+                        report.Message = "Processing log entry failed";
+                        await _provider.SendErrorReportAsync(owner, report);
+                    }
                     return true;
                 }
             }
@@ -123,9 +152,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             if((report.Version == "2018-09-27") && (report.Source == "LambdaError")) {
                 await _provider.SendErrorReportAsync(owner, report);
             } else {
-
-                // TODO: bad json document
-                throw new Exception("bad json document");
+                throw new Exception();
             }
         }
 
@@ -189,6 +216,40 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 tasks.Add(_provider.SendErrorReportAsync(owner, report));
             }
             return Task.WhenAll(tasks);
+        }
+
+        private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report.RequestId = match.Groups["RequestId"].Value;
+            var error = JsonConvert.DeserializeObject<JavascriptException>(match.Groups["ErrorMessage"].Value);
+            report.Message = error.ErrorMessage;
+            if(error.StackTrace?.Any() == true) {
+                report.Traces = new List<ErrorReportStackTrace> {
+                    new ErrorReportStackTrace {
+                        Exception = new ErrorReportExceptionInfo {
+                            Type = "Error",
+                            Message = error.ErrorMessage
+                        },
+                        Frames = error.StackTrace.Select(trace => {
+                            var traceMatch = _javascriptTrace.Match(trace);
+                            var frame = new ErrorReportStackFrame {
+                                MethodName = traceMatch.Groups["Function"].Value.Trim(),
+                                FileName = traceMatch.Groups["File"].Value
+                            };
+                            if(int.TryParse(traceMatch.Groups["Line"].Value, out int line)) {
+                                frame.LineNumber = line;
+                            }
+                            return frame;
+                        }).ToList()
+                    }
+                };
+            }
+            return _provider.SendErrorReportAsync(owner, report);
+        }
+
+        private Task MatchJavascriptSyntaxErrorAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+            report.Message = match.Groups["ErrorMessage"].Value;
+            report.RequestId = match.Groups["RequestId"].Value;
+            return _provider.SendErrorReportAsync(owner, report);
         }
     }
 }

@@ -620,6 +620,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     PackagePath = function.PackagePath,
                     Handler = function.Handler,
                     Runtime = function.Runtime,
+                    Language = function.Language,
                     Memory = function.Memory,
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,

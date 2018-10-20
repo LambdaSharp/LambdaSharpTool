@@ -227,7 +227,6 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                             Frames = trace.Frames?.Select(frame => new Frame {
                                 Filename = frame.FileName,
                                 Lineno = frame.LineNumber.GetValueOrDefault(),
-                                Colno = frame.ColumnNumber.GetValueOrDefault(),
                                 Method = frame.MethodName
                             }).ToArray()
                         }).ToArray()
