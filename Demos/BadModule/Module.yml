@@ -40,3 +40,18 @@ Functions:
     Description: Throws an exception in the constructor
     Memory: 128
     Timeout: 15
+
+  - Name: JsBadSyntax
+    Description: Throws an exception in Javascript function
+    Memory: 128
+    Timeout: 15
+
+  - Name: JsError
+    Description: Throws an exception in Javascript function
+    Memory: 128
+    Timeout: 15
+
+  - Name: JsThrow
+    Description: Throws an exception in Javascript function
+    Memory: 128
+    Timeout: 15
