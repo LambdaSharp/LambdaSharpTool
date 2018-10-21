@@ -1,5 +1,4 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
 Inputs:
@@ -7,42 +6,42 @@ Inputs:
   # Plain Input Parameters
   - Input: InputParameter
     Section: Plain Input Parameters
-    Scope: Module
     Description: required input parameter
 
   - Input: InputParameterWithDefault
     Section: Plain Input Parameters
     Description: input parameter with a default value
-    Scope: Module
     Default: a default value
 
   - Input: SecretInputParameter
     Type: Secret
     Section: Plain Input Parameters
-    Scope: Module
     Description: encrypted input parameter
 
 
   # Cross-module references
   - Import: OtherModule::ExportValue
     Section: Cross-Module References
-    Scope: Module
     Description: cross-module import reference
 
   - Import: OtherModule::ExportSecret
     Type: Secret
     Section: Cross-Module References
     Description: cross-module import reference
+    Scope: "*"
+
 
   # Resource Input Parameters
   - Input: ResourceInputParameter
     Section: Resource Input Parameters
+    Scope: "*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadOnly
 
   - Input: ResourceInputParameterOrCreate
     Section: Resource Input Parameters
+    Scope: "*"
     Default: ""
     Resource:
       Type: AWS::SNS::Topic
@@ -50,30 +49,36 @@ Inputs:
 
   - Import: OtherModule::ExportResource
     Section: Resource Input Parameters
+    Scope: "*"
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: ReadOnly
 
-Parameters:
+Variables:
 
-  - Name: Input
+  - Var: Input
+    Scope: "*"
     Value: !Ref InputParameter
 
-  - Name: InputWithDefault
+  - Var: InputWithDefault
+    Scope: "*"
     Value: !Ref InputParameterWithDefault
 
-  - Name: SecretInput
+  - Var: SecretInput
+    Scope: "*"
     Value: !Ref SecretInputParameter
 
-  - Name: ImportedInput
+  - Var: ImportedInput
+    Scope: "*"
     Value: !Ref OtherModule::ExportValue
 
-  - Name: HiddenImportParameter
+  - Var: HiddenImportParameter
+    Scope: "*"
     Value: !Ref LambdaSharp::LoggingStreamArn
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30

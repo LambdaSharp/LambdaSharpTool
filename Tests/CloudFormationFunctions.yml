@@ -1,10 +1,9 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Variables:
 
-  - Name: MyResource
+  - Var: MyResource
     Description: A CloudFormation dummy resource
     Resource:
       Type: Custom::Something
@@ -31,18 +30,20 @@ Parameters:
           Parameters:
             Param1: Value2
 
-  - Name: MyCustomResourceProperty
+  - Var: MyCustomResourceProperty
     Description: A value from my custom resources
+    Scope: "*"
     Value: !GetAtt MyResource.Result
 
-  - Name: OtherResource
+  - Var: OtherResource
     Description: A CloudFormation dummy resource to reference
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30

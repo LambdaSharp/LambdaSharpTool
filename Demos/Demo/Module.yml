@@ -1,5 +1,4 @@
-Name: Demo
-
+Module: Demo
 Description: LambdaSharp Demo
 
 Outputs:
@@ -8,9 +7,10 @@ Outputs:
     Description: The topic that the lambda function subscribes to record messages
     Value: !Ref SnsTopic
 
-Parameters:
+Variables:
 
-  - Name: MessageTable
+  - Var: MessageTable
+    Scope: "*"
     Description: DynamoDB table for storing received messages
     Resource:
       Type: AWS::DynamoDB::Table
@@ -26,13 +26,13 @@ Parameters:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
 
-  - Name: SnsTopic
+  - Var: SnsTopic
     Description: The topic that the lambda function subscribes to record messages
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
 
-  - Name: UsagePlan
+  - Var: UsagePlan
     Description: Limit usage for REST API
     Resource:
       Type: AWS::ApiGateway::UsagePlan
@@ -48,14 +48,14 @@ Parameters:
 
 Functions:
 
-  - Name: RecordMessage
+  - Function: RecordMessage
     Description: Record message in a DynamoDB table
     Memory: 128
     Timeout: 30
     Sources:
       - Topic: SnsTopic
 
-  - Name: SlackCommand
+  - Function: SlackCommand
     Description: Respond to slack commands
     Memory: 128
     Timeout: 30

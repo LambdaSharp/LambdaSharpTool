@@ -83,26 +83,6 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve references in resource properties
             AtLocation("Variables", () => {
                 foreach(var parameter in module.GetAllParameters()
-                    .Where(p => p.Scope == ParameterScope.Module)
-                    .OfType<AResourceParameter>()
-                    .Where(p => p.Resource?.Properties != null)
-                ) {
-                    AtLocation(parameter.Name, () => {
-                        AtLocation("Resource", () => {
-                            AtLocation("Properties", () => {
-                                parameter.Resource.Properties = new Dictionary<string, object>(
-                                    parameter.Resource.Properties.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
-                                );
-                            });
-                        });
-                    });
-                }
-            });
-
-            // resolve references in resource properties
-            AtLocation("Parameters", () => {
-                foreach(var parameter in module.GetAllParameters()
-                    .Where(p => p.Scope == ParameterScope.Function)
                     .OfType<AResourceParameter>()
                     .Where(p => p.Resource?.Properties != null)
                 ) {

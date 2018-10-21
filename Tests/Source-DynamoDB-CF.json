@@ -400,7 +400,7 @@
             "Ref": "DeploymentBucketName"
           },
           "S3Key": {
-            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/TestModule.Function-NOCOMPILE.zip"
+            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/Function-NOCOMPILE.zip"
           }
         },
         "DeadLetterConfig": {

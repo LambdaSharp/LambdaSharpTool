@@ -28,7 +28,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
     public class FunctionNode {
 
         //--- Properties ---
-        public string Name { get; set; }
+        public string Function { get; set; }
         public string Description { get; set; }
         public IList<FunctionSourceNode> Sources { get; set; }
         public string Project { get; set; }

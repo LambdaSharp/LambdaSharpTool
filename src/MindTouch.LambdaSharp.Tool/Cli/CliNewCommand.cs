@@ -205,7 +205,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // set default namespace if none is set
             if(rootNamespace == null) {
-                rootNamespace = $"{module.Name}.{functionName}";
+                rootNamespace = $"{module.Module}.{functionName}";
             }
 
             // create directory for function project
@@ -273,7 +273,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // insert function definition
             moduleLines.InsertRange(functionsIndex, new[] {
                 "",
-                $"  - Name: {functionName}",
+                $"  - Function: {functionName}",
                 $"    Description: TODO - update {functionName} description",
                 $"    Memory: {functionMemory}",
                 $"    Timeout: {functionTimeout}",

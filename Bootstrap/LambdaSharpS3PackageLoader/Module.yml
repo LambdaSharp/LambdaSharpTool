@@ -1,7 +1,5 @@
-Name: LambdaSharpS3PackageLoader
-
+Module: LambdaSharpS3PackageLoader
 Version: 0.4-WIP
-
 Description: LambdaSharp S3 Package Loader
 
 Outputs:
@@ -12,7 +10,7 @@ Outputs:
 
 Variables:
 
-  - Name: S3TargetBucketPermissions
+  - Var: S3TargetBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
       - !Sub "arn:aws:s3:::${TierLowercase}-*"
@@ -21,7 +19,7 @@ Variables:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
 
-  - Name: S3DeploymentBucketPermissions
+  - Var: S3DeploymentBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
       - !Sub "arn:aws:s3:::${DeploymentBucketName}"
@@ -30,15 +28,14 @@ Variables:
       Type: AWS::S3::Bucket
       Allow: ReadOnly
 
-Parameters:
-
-  - Name: CustomResourceTopic
+  - Var: CustomResourceTopic
     Description: Custom resource topic for deploying packages to S3 buckets
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
 
-  - Name: ManifestBucket
+  - Var: ManifestBucket
+    Scope: "*"
     Description: Bucket to store information about uploaded packages
     Resource:
       Type: AWS::S3::Bucket
@@ -46,7 +43,7 @@ Parameters:
 
 Functions:
 
-  - Name: ResourceHandler
+  - Function: ResourceHandler
     Description: LambdaSharp S3 Package Loader handler
     Memory: 128
     Timeout: 300

@@ -1,11 +1,8 @@
+Module: LambdaSharpRegistrar
+Version: 0.4-WIP
+Description: LambdaSharp Modules and Functions Registrar
 Pragmas:
   - no-module-registration
-
-Name: LambdaSharpRegistrar
-
-Description: LambdaSharp Modules and Functions Registrar
-
-Version: 0.4-WIP
 
 Inputs:
 
@@ -14,6 +11,7 @@ Inputs:
     Section: Rollbar Settings
     Label: Read Access Token
     Description: Account-level token for read operations
+    Scope: Register
     Default: ""
 
   - Input: RollbarWriteAccessToken
@@ -21,6 +19,7 @@ Inputs:
     Section: Rollbar Settings
     Label: Write Access Token
     Description: Account-level token for write operations
+    Scope: Register
     Default: ""
 
   - Input: RegistrationTableReadCapacity
@@ -35,7 +34,7 @@ Inputs:
     Description: Provisioned write capacity for registrations table
     Default: 1
 
-Outputs:
+  Outputs:
 
   - CustomResource: LambdaSharp::Register::Module
     Description: Custom resources for registering LambdaSharp modules
@@ -51,35 +50,36 @@ Outputs:
 
 Variables:
 
-  - Name: LoggingStreamReference
+  - Var: LoggingStreamReference
     Description: Reference to the Kinesis stream used to ingest the function logs
     Value: !Ref Module::LoggingStreamArn
     Resource:
       Type: AWS::Kinesis::Stream
       Allow: Subscribe
 
-  - Name: RegistrationTopic
+  - Var: RegistrationTopic
     Description: Custom resource topic for registering LambdaSharp modules
     Resource:
       Type: AWS::SNS::Topic
       Allow: Subscribe
 
-Parameters:
-
-  - Name: ErrorReportTopic
+  - Var: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors
+    Scope: ProcessLogEvents
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
-  - Name: UsageReportTopic
+  - Var: UsageReportTopic
     Description: SNS topic for LambdaSharp function usage reports
+    Scope: ProcessLogEvents
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
-  - Name: RegistrationTable
+  - Var: RegistrationTable
     Description: DynamoDb table for storing function registrations
+    Scope: "*"
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: ReadWrite
@@ -96,7 +96,7 @@ Parameters:
 
 Functions:
 
-  - Name: ProcessLogEvents
+  - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions
     Memory: 128
     Timeout: 30
@@ -105,7 +105,7 @@ Functions:
     Sources:
       - Kinesis: LoggingStreamReference
 
-  - Name: Register
+  - Function: Register
     Description: Register LambdaSharp modules and functions
     Memory: 128
     Timeout: 30

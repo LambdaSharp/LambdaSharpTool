@@ -47,14 +47,13 @@ namespace MindTouch.LambdaSharp.Tool {
         private void Validate(ModuleNode module) {
             _module = module;
             _names = new HashSet<string>();
-            Validate(module.Name != null, "missing module name");
+            Validate(module.Module != null, "missing module name");
 
             // ensure collections are present
             module.Pragmas = module.Pragmas ?? new List<string>();
             module.Secrets = module.Secrets ?? new List<string>();
             module.Inputs = module.Inputs ?? new List<InputNode>();
             module.Variables = module.Variables ?? new List<ParameterNode>();
-            module.Parameters = module.Parameters ?? new List<ParameterNode>();
             module.Functions = module.Functions ?? new List<FunctionNode>();
             module.Outputs = module.Outputs ?? new List<OutputNode>();
 
@@ -70,7 +69,6 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
             AtLocation("Inputs", () => ValidateInputs(module.Inputs));
             AtLocation("Variables", () => ValidateParameters(module.Variables));
-            AtLocation("Parameters", () => ValidateParameters(module.Parameters));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
             AtLocation("Outputs", () => ValidateOutputs(module.Outputs));
         }
@@ -99,9 +97,9 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var parameter in parameters) {
                 ++index;
-                AtLocation(parameter.Name ?? $"[{index}]", () => {
-                    ValidateResourceName(parameter.Name, prefix);
-                    Validate(Regex.IsMatch(parameter.Name, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
+                AtLocation(parameter.Var ?? $"[{index}]", () => {
+                    ValidateResourceName(parameter.Var, prefix);
+                    Validate(Regex.IsMatch(parameter.Var, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
                     if(parameter.Secret != null) {
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
@@ -133,11 +131,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             AddError("parameter package cannot be nested");
                         }
                     }
-                    if(parameter.Parameters != null) {
-                        AtLocation("Parameters", () => {
+                    if(parameter.Collection != null) {
+                        AtLocation("Collection", () => {
 
                             // recursively validate nested parameters
-                            ValidateParameters(parameter.Parameters, prefix + "::" + parameter.Name);
+                            ValidateParameters(parameter.Collection, prefix + "::" + parameter.Var);
                         });
                     }
                     if(parameter.Resource != null) {
@@ -177,12 +175,12 @@ namespace MindTouch.LambdaSharp.Tool {
             } else {
                 AtLocation("DependsOn", () => {
                     foreach(var dependency in resource.DependsOn) {
-                        var dependentParameter = _module.VariablesAndParameters.FirstOrDefault(p => p.Name == dependency);
+                        var dependentParameter = _module.Variables.FirstOrDefault(p => p.Var == dependency);
                         if(dependentParameter == null) {
                             AddError($"could not find dependency '{dependency}'");
                         } else if(dependentParameter.Resource == null) {
                             AddError($"cannot depend on literal parameter '{dependency}'");
-                        } else if(parameter.Name == dependency) {
+                        } else if(parameter.Var == dependency) {
                             AddError($"dependency cannot be on itself '{dependency}'");
                         }
                     }
@@ -206,8 +204,8 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var function in functions) {
                 ++index;
-                AtLocation(function.Name ?? $"[{index}]", () => {
-                    ValidateResourceName(function.Name, "");
+                AtLocation(function.Function ?? $"[{index}]", () => {
+                    ValidateResourceName(function.Function, "");
                     Validate(function.Memory != null, "missing Memory attribute");
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
                     Validate(function.Timeout != null, "missing Name attribute");
@@ -481,7 +479,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateSourceParameter(string name, string awsType, string typeDescription) {
-            var parameter = _module.VariablesAndParameters.FirstOrDefault(p => p.Name == name);
+            var parameter = _module.Variables.FirstOrDefault(p => p.Var == name);
             if(parameter == null) {
                 AddError($"could not find parameter for {typeDescription}: '{name}'");
             } else if(parameter?.Resource?.Type != awsType) {
@@ -496,15 +494,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 AtLocation(input.Input ?? $"[{index}]", () => {
                     if(input.Type == null) {
                         input.Type = "String";
-                    }
-                    switch(input.Scope){
-                    case null:
-                    case "Function":
-                    case "Module":
-                        break;
-                    default:
-                        AddError("invalid scope value; must either be 'Function' or 'Module'");
-                        break;
                     }
                     if(input.Import != null) {
                         Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
@@ -555,7 +544,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // TODO (2018-09-20, bjorg): add name validation
                         if(
                             (output.Value == null)
-                            && (_module.Variables.Union(_module.Parameters).FirstOrDefault(p => p?.Name == output.Output) == null)
+                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Output) == null)
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }
@@ -568,7 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         if(
                             (output.Value == null)
-                            && (_module.Variables.Union(_module.Parameters).FirstOrDefault(p => p?.Name == output.Export) == null)
+                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Export) == null)
                         ) {
                             AddError("export must either have a Value attribute or match the name of an existing variable/parameter");
                         }

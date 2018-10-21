@@ -1,18 +1,19 @@
-Name: TestModule
+Module: TestModule
 
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Variables:
 
-  - Name: Bucket
+  - Var: Bucket
     Description: Description for Bucket resource
+    Scope: "*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30

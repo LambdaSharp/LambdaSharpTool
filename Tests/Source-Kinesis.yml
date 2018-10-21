@@ -1,10 +1,9 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Variables:
 
-  - Name: Stream
+  - Var: Stream
     Description: Description for Kinesis stream
     Resource:
       Type: AWS::Kinesis::Stream
@@ -13,7 +12,7 @@ Parameters:
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30

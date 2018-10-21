@@ -61,7 +61,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string buildConfiguration
         ) {
             foreach(var function in module.Functions) {
-                AtLocation(function.Name, () => {
+                AtLocation(function.Function, () => {
                     Process(
                         module,
                         function,
@@ -86,16 +86,16 @@ namespace MindTouch.LambdaSharp.Tool {
         ) {
 
             // identify folder for function
-            var folderName = new[] { function.Name, $"{module.Name}.{function.Name}" }
+            var folderName = new[] { function.Function, $"{module.Module}.{function.Function}" }
                 .FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
             if(folderName == null) {
-                AddError($"could not locate function directory for {function.Name}");
+                AddError($"could not locate function directory for {function.Function}");
                 return;
             }
 
             // delete old packages
             if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Name}*.zip")) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Function}*.zip")) {
                     try {
                         File.Delete(file);
                     } catch { }
@@ -205,13 +205,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
+                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
                 return;
             }
 
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
-            Console.WriteLine($"Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
+            Console.WriteLine($"Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
             Console.WriteLine("=> Restoring project dependencies");
@@ -222,7 +222,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // compile project
             Console.WriteLine("=> Building AWS Lambda package");
-            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Name + ".zip");
+            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Function + ".zip");
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
                 AddError("`dotnet lambda package` command failed");
                 return;
@@ -250,7 +250,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         return;
                     }
                 }
-                function.PackagePath = CreatePackage(function.Name, gitsha, tempDirectory);
+                function.PackagePath = CreatePackage(function.Function, gitsha, tempDirectory);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -340,11 +340,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 function.Runtime = "nodejs8.10";
             }
             if(skipCompile) {
-                function.PackagePath = $"{function.Name}-NOCOMPILE.zip";
+                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
                 return;
             }
-            Console.WriteLine($"Building function {function.Name} [{function.Runtime}]");
-            function.PackagePath = CreatePackage(function.Name, gitsha, projectFolder);
+            Console.WriteLine($"Building function {function.Function} [{function.Runtime}]");
+            function.PackagePath = CreatePackage(function.Function, gitsha, projectFolder);
         }
 
         private string CreatePackage(string functionName, string gitsha, string folder) {

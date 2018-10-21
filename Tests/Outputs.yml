@@ -1,5 +1,4 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
 Outputs:
@@ -35,39 +34,39 @@ Outputs:
 
 Variables:
 
-  - Name: SimpleValue
+  - Var: SimpleValue
     Description: SimpleValue description
     Value: this is a value
 
-  - Name: AnotherSimpleValue
+  - Var: AnotherSimpleValue
     Description: AnotherSimpleValue description
     Value: another value
 
-  - Name: ManyValues
+  - Var: ManyValues
     Description: ManyValues description
     Values:
       - first value
       - second value
 
-  - Name: AnotherManyValues
+  - Var: AnotherManyValues
     Description: AnotherManyValues description
     Values:
       - another first value
       - another second value
 
-  - Name: ResourceValue
+  - Var: ResourceValue
     Description: ResourceValue description
     Resource:
       Type: AWS::SNS::Topic
 
-  - Name: AnotherResourceValue
+  - Var: AnotherResourceValue
     Description: AnotherResourceValue description
     Resource:
       Type: AWS::SNS::Topic
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30

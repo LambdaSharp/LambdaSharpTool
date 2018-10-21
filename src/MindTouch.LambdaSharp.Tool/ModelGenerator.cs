@@ -806,7 +806,9 @@ namespace MindTouch.LambdaSharp.Tool {
             var resourceName = parameter.ResourceName;
             switch(parameter) {
             case SecretParameter secretParameter:
-                if(parameter.Scope == ParameterScope.Function) {
+
+                // TODO (2018-10-21, bjorg): each function needs its own environment
+                if(parameter.Scope.Any()) {
                     if(secretParameter.EncryptionContext?.Any() == true) {
                         environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Reference}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
                     } else {
@@ -816,12 +818,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 break;
             case ValueParameter _:
             case ValueListParameter _:
-                if(parameter.Scope == ParameterScope.Function) {
+
+                // TODO (2018-10-21, bjorg): each function needs its own environment
+                if(parameter.Scope.Any()) {
                     environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                 }
                 break;
             case PackageParameter packageParameter:
-                if(parameter.Scope == ParameterScope.Function) {
+
+                // TODO (2018-10-21, bjorg): each function needs its own environment
+                if(parameter.Scope.Any()) {
                     environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                 }
                 _stack.Add(resourceName, new LambdaSharpResource("LambdaSharp::S3::Package") {
@@ -832,7 +838,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
-                    if(parameter.Scope == ParameterScope.Function) {
+
+                    // TODO (2018-10-21, bjorg): each function needs its own environment
+                    if(parameter.Scope.Any()) {
                         environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                     }
 
@@ -877,7 +885,9 @@ namespace MindTouch.LambdaSharp.Tool {
                             Action = resource.Allow
                         });
                     }
-                    if(parameter.Scope == ParameterScope.Function) {
+
+                    // TODO (2018-10-21, bjorg): each function needs its own environment
+                    if(parameter.Scope.Any()) {
                         environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
                     }
                 }
@@ -936,7 +946,9 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
                     }
-                    if(parameter.Scope == ParameterScope.Function) {
+
+                    // TODO (2018-10-21, bjorg): each function needs its own environment
+                    if(parameter.Scope.Any()) {
                         if(valueInputParameter.Type == "Secret") {
                             environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
                         } else {
@@ -968,7 +980,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         });
                     }
                 }
-                if(parameter.Scope == ParameterScope.Function) {
+
+                // TODO (2018-10-21, bjorg): each function needs its own environment
+                if(parameter.Scope.Any()) {
                     if(importInputParameter.Type == "Secret") {
                         environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
                     } else {

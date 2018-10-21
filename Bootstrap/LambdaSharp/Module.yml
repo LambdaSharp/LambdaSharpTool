@@ -1,12 +1,9 @@
+Module: LambdaSharp
+Version: 0.4-WIP
+Description: LambdaSharp Environment
 Pragmas:
   - no-environment-check
   - no-module-registration
-
-Name: LambdaSharp
-
-Version: 0.4-WIP
-
-Description: LambdaSharp Environment
 
 Inputs:
 
@@ -36,13 +33,13 @@ Outputs:
 
 Variables:
 
-  - Name: DeadLetterQueue
+  - Var: DeadLetterQueue
     Description: SQS queue used by LambdaSharp functions for failed messages
     Resource:
       Type: AWS::SQS::Queue
       Allow: None
 
-  - Name: LoggingStream
+  - Var: LoggingStream
     Description: Kinesis stream for consolidated logging
     Resource:
       Type: AWS::Kinesis::Stream
@@ -50,14 +47,14 @@ Variables:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
-  - Name: DefaultSecretKeyAlias
+  - Var: DefaultSecretKeyAlias
     Resource:
       Type: AWS::KMS::Alias
       Properties:
         AliasName: !Sub "alias/${Tier}-LambdaSharpDefaultSecretKey"
         TargetKeyId: !Ref DefaultSecretKey
 
-  - Name: DefaultSecretKey
+  - Var: DefaultSecretKey
     Description: Default encryption/decryption key for LambdaSharp modules
     Resource:
       Type: AWS::KMS::Key

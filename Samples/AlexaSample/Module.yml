@@ -1,5 +1,4 @@
-Name: AlexaSample
-
+Module: AlexaSample
 Description: A sample module using an Alexa skill
 
 Inputs:
@@ -10,7 +9,7 @@ Inputs:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an Alexa Skill
     Memory: 128
     Timeout: 30
