@@ -3,7 +3,7 @@ Description: LambdaSharp Demo
 
 Outputs:
 
-  - Export: NotifyRecorderTopic
+  - Output: NotifyRecorderTopic
     Description: The topic that the lambda function subscribes to record messages
     Value: !Ref SnsTopic
 

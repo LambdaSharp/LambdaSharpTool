@@ -47,6 +47,11 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "Module deployment tier (lowercase)"
+    },
+    "DeploymentParent": {
+      "Type": "String",
+      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Default": ""
     }
   },
   "Resources": {
@@ -727,6 +732,14 @@
         },
         ""
       ]
+    },
+    "ModuleIsNotNested": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeploymentParent"
+        },
+        ""
+      ]
     }
   },
   "Metadata": {
@@ -758,6 +771,9 @@
         },
         "TierLowercase": {
           "default": "Tier (lowercase)"
+        },
+        "DeploymentParent": {
+          "default": "Parent Stack Name"
         }
       },
       "ParameterGroups": [
@@ -795,7 +811,8 @@
             "DeploymentBucketName",
             "DeploymentBucketPath",
             "Tier",
-            "TierLowercase"
+            "TierLowercase",
+            "DeploymentParent"
           ]
         }
       ]

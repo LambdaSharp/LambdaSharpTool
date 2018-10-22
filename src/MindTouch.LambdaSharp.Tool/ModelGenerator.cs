@@ -147,7 +147,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var parameter in _module.Parameters) {
                 AddParameter(parameter, "", environmentRefVariables);
             }
-            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("ParentModuleId"), "")));
+            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
 
             // check if we need to create a module IAM role (only needed by functions)
             if(_module.Functions.Any()) {

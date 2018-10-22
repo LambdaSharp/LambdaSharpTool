@@ -143,10 +143,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     Description = "Module deployment tier (lowercase)"
                 },
                 new InputNode {
-                    Input = "ParentModuleId",
+                    Input = "DeploymentParent",
                     Section = section,
-                    Label = "Parent Module ID",
-                    Description = "Parent module ID in case of a nested module deployment",
+                    Label = "Parent Stack Name",
+                    Description = "Parent stack name for nested deployments, blank otherwise",
                     Default = ""
                 },
             }), null) ?? new List<AParameter>());

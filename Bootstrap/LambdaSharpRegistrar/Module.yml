@@ -44,9 +44,9 @@ Inputs:
     Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
 
-  - Export: ErrorReportTopic
+  - Output: ErrorReportTopic
 
-  - Export: UsageReportTopic
+  - Output: UsageReportTopic
 
 Variables:
 

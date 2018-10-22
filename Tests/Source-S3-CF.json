@@ -47,6 +47,11 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "Module deployment tier (lowercase)"
+    },
+    "DeploymentParent": {
+      "Type": "String",
+      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Default": ""
     }
   },
   "Resources": {
@@ -651,8 +656,11 @@
             "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::S3::Subscription"
           }
         },
-        "BucketName": {
-          "Ref": "Bucket"
+        "BucketArn": {
+          "Fn::GetAtt": [
+            "Bucket",
+            "Arn"
+          ]
         },
         "FunctionArn": {
           "Fn::GetAtt": [
@@ -690,10 +698,7 @@
           "Ref": "AWS::AccountId"
         },
         "SourceArn": {
-          "Fn::GetAtt": [
-            "InputBucket",
-            "Arn"
-          ]
+          "Ref": "InputBucket"
         }
       }
     },
@@ -705,7 +710,7 @@
             "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::S3::Subscription"
           }
         },
-        "BucketName": {
+        "BucketArn": {
           "Ref": "InputBucket"
         },
         "FunctionArn": {
@@ -800,6 +805,14 @@
         },
         ""
       ]
+    },
+    "ModuleIsNotNested": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeploymentParent"
+        },
+        ""
+      ]
     }
   },
   "Metadata": {
@@ -831,6 +844,9 @@
         },
         "TierLowercase": {
           "default": "Tier (lowercase)"
+        },
+        "DeploymentParent": {
+          "default": "Parent Stack Name"
         }
       },
       "ParameterGroups": [
@@ -868,7 +884,8 @@
             "DeploymentBucketName",
             "DeploymentBucketPath",
             "Tier",
-            "TierLowercase"
+            "TierLowercase",
+            "DeploymentParent"
           ]
         }
       ]

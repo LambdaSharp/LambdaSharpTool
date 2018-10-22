@@ -19,15 +19,15 @@ Inputs:
 
 Outputs:
 
-  - Export: DeadLetterQueueArn
+  - Output: DeadLetterQueueArn
     Description: LambdaSharp Dead Letter Queue
     Value: !GetAtt DeadLetterQueue.Arn
 
-  - Export: LoggingStreamArn
+  - Output: LoggingStreamArn
     Description: LambdaSharp Logging Stream
     Value: !GetAtt LoggingStream.Arn
 
-  - Export: DefaultSecretKeyArn
+  - Output: DefaultSecretKeyArn
     Description: LambdaSharp Default Secrets Key
     Value: !GetAtt DefaultSecretKey.Arn
 

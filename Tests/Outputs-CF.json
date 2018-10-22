@@ -43,6 +43,11 @@
     "TierLowercase": {
       "Type": "String",
       "Description": "Module deployment tier (lowercase)"
+    },
+    "DeploymentParent": {
+      "Type": "String",
+      "Description": "Parent stack name for nested deployments, blank otherwise",
+      "Default": ""
     }
   },
   "Resources": {
@@ -65,10 +70,6 @@
       }
     },
     "ResourceValue": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "AnotherResourceValue": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
     },
@@ -529,9 +530,29 @@
       "Value": "this is a value",
       "Description": "SimpleValue description"
     },
+    "SimpleValueExport": {
+      "Value": "this is a value",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::SimpleValue"
+        }
+      },
+      "Description": "SimpleValue description",
+      "Condition": "ModuleIsNotNested"
+    },
     "ManyValues": {
       "Value": "first value,second value",
       "Description": "ManyValues description"
+    },
+    "ManyValuesExport": {
+      "Value": "first value,second value",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ManyValues"
+        }
+      },
+      "Description": "ManyValues description",
+      "Condition": "ModuleIsNotNested"
     },
     "ResourceValue": {
       "Value": {
@@ -539,45 +560,29 @@
       },
       "Description": "ResourceValue description"
     },
+    "ResourceValueExport": {
+      "Value": {
+        "Ref": "ResourceValue"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ResourceValue"
+        }
+      },
+      "Description": "ResourceValue description",
+      "Condition": "ModuleIsNotNested"
+    },
     "OutputExpressionValue": {
       "Value": "this is a value with extra stuff"
     },
-    "AnotherSimpleValue": {
-      "Value": "another value",
+    "OutputExpressionValueExport": {
+      "Value": "this is a value with extra stuff",
       "Export": {
         "Name": {
-          "Fn::Sub": "${AWS::StackName}::AnotherSimpleValue"
+          "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
         }
       },
-      "Description": "AnotherSimpleValue description"
-    },
-    "AnotherManyValues": {
-      "Value": "another first value,another second value",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::AnotherManyValues"
-        }
-      },
-      "Description": "AnotherManyValues description"
-    },
-    "ExportExpressionValue": {
-      "Value": "another value with extra stuff",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ExportExpressionValue"
-        }
-      }
-    },
-    "AnotherResourceValue": {
-      "Value": {
-        "Ref": "AnotherResourceValue"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::AnotherResourceValue"
-        }
-      },
-      "Description": "AnotherResourceValue description"
+      "Condition": "ModuleIsNotNested"
     },
     "TestModuleMyCustomSnsResourceHandler": {
       "Value": {
@@ -664,6 +669,14 @@
         },
         ""
       ]
+    },
+    "ModuleIsNotNested": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeploymentParent"
+        },
+        ""
+      ]
     }
   },
   "Metadata": {
@@ -692,6 +705,9 @@
         },
         "TierLowercase": {
           "default": "Tier (lowercase)"
+        },
+        "DeploymentParent": {
+          "default": "Parent Stack Name"
         }
       },
       "ParameterGroups": [
@@ -721,7 +737,8 @@
             "DeploymentBucketName",
             "DeploymentBucketPath",
             "Tier",
-            "TierLowercase"
+            "TierLowercase",
+            "DeploymentParent"
           ]
         }
       ]
