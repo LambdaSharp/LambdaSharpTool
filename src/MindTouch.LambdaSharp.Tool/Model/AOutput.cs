@@ -35,13 +35,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public object Value { get; set; }
     }
 
-    public class ExportOutput : AOutput {
-
-        //--- Properties ---
-        public string ExportName { get; set; }
-        public object Value { get; set; }
-    }
-
     public class CustomResourceHandlerOutput : AOutput {
 
         //--- Properties ---

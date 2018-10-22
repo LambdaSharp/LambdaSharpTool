@@ -550,7 +550,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var output in outputs) {
                 ++index;
-                AtLocation(output.Output ?? output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                AtLocation(output.Output ?? output.CustomResource ?? $"[{index}]", () => {
                     if(output.Output != null) {
 
                         // TODO (2018-09-20, bjorg): add name validation
@@ -560,22 +560,8 @@ namespace MindTouch.LambdaSharp.Tool {
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }
-                        ValidateNotBothStatements("Name", "Export", output.Export == null);
                         ValidateNotBothStatements("Name", "CustomResource", output.CustomResource == null);
                         ValidateNotBothStatements("Name", "Handler", output.Handler == null);
-                    } else if(output.Export != null) {
-
-                        // TODO (2018-09-20, bjorg): add export name validation
-
-                        if(
-                            (output.Value == null)
-                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Export) == null)
-                        ) {
-                            AddError("export must either have a Value attribute or match the name of an existing variable/parameter");
-                        }
-                        ValidateNotBothStatements("Export", "Name", output.Output == null);
-                        ValidateNotBothStatements("Export", "CustomResource", output.CustomResource == null);
-                        ValidateNotBothStatements("Export", "Handler", output.Handler == null);
                     } else if(output.CustomResource != null) {
 
                         // TODO (2018-09-20, bjorg): add custom resource name validation

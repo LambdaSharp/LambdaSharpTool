@@ -31,11 +31,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Description { get; set; }
         public object Value { get; set; }
 
-        // Export Output
-        public string Export { get; set; }
-        // public string Description { get; set; }
-        // public object Value { get; set; }
-
         // Custom Resource Handler Output
         public string CustomResource { get; set; }
         public string Handler { get; set; }

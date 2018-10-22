@@ -141,7 +141,14 @@ namespace MindTouch.LambdaSharp.Tool {
                     Section = section,
                     Label = "Tier (lowercase)",
                     Description = "Module deployment tier (lowercase)"
-                }
+                },
+                new InputNode {
+                    Input = "ParentModuleId",
+                    Section = section,
+                    Label = "Parent Module ID",
+                    Description = "Parent module ID in case of a nested module deployment",
+                    Default = ""
+                },
             }), null) ?? new List<AParameter>());
             parameters.AddRange(AtLocation("Variables", () => ConvertParameters(module, module.Variables), null) ?? new List<AParameter>());
             _module.Parameters = parameters;
@@ -783,46 +790,25 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private AOutput ConvertOutput(int index, OutputNode output) {
-            return AtLocation<AOutput>(output.Output ?? $"[{index}]", () => {
+            return AtLocation<AOutput>(output.Output ?? output.CustomResource ?? $"[{index}]", () => {
                 if(output.Output != null) {
                     var value = output.Value;
                     var description = output.Description;
                     if(value == null) {
 
-                        // NOTE: if no value is provided, we expect the export name to correspond to a
-                        //  parameter name; if it does, we export the !Ref value of that parameter; in
-                        //  addition, we assume its description if none is provided.
-
-                        value = FnRef(output.Output);
-                        if(description == null) {
-                            var parameter = _module.Parameters.First(p => p.Name == output.Output);
-                            description = parameter.Description;
-                        }
-
-                    }
-                    return new StackOutput {
-                        Name = output.Output,
-                        Description = description,
-                        Value = value
-                    };
-                }
-                if(output.Export != null) {
-                    var value = output.Value;
-                    var description = output.Description;
-                    if(value == null) {
 
                         // NOTE: if no value is provided, we expect the export name to correspond to a
-                        //  parameter name; if it does, we export the !Ref value of that parameter; in
+                        //  parameter name; if it does, we export the ARN value of that parameter; in
                         //  addition, we assume its description if none is provided.
 
-                        var parameter = _module.Parameters.First(p => p.Name == output.Export);
+                        var parameter = _module.Parameters.First(p => p.Name == output.Output);
                         value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
                         if(description == null) {
                             description = parameter.Description;
                         }
                     }
-                    return new ExportOutput {
-                        ExportName = output.Export,
+                    return new StackOutput {
+                        Name = output.Output,
                         Description = description,
                         Value = value
                     };

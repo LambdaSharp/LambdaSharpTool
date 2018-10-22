@@ -108,11 +108,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             stackOutput.Value = Substitute(stackOutput.Value);
                         });
                         break;
-                    case ExportOutput exportOutput:
-                        AtLocation(exportOutput.ExportName, () => {
-                            exportOutput.Value = Substitute(exportOutput.Value);
-                        });
-                        break;
                     case CustomResourceHandlerOutput customResourceHandlerOutput:
 
                         // nothing to do

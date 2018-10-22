@@ -147,6 +147,7 @@ namespace MindTouch.LambdaSharp.Tool {
             foreach(var parameter in _module.Parameters) {
                 AddParameter(parameter, "", environmentRefVariables);
             }
+            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("ParentModuleId"), "")));
 
             // check if we need to create a module IAM role (only needed by functions)
             if(_module.Functions.Any()) {
@@ -352,14 +353,13 @@ namespace MindTouch.LambdaSharp.Tool {
                         Description = stackOutput.Description,
                         Value = stackOutput.Value
                     });
-                    break;
-                case ExportOutput exportOutput:
-                    _stack.Add(exportOutput.ExportName, new Humidifier.Output {
-                        Description = exportOutput.Description,
-                        Value = exportOutput.Value,
+                    _stack.Add($"{stackOutput.Name}Export", new Humidifier.Output {
+                        Description = stackOutput.Description,
+                        Value = stackOutput.Value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.ExportName}")
-                        }
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{stackOutput.Name}")
+                        },
+                        Condition = "ModuleIsNotNested"
                     });
                     break;
                 case CustomResourceHandlerOutput customResourceHandlerOutput:
