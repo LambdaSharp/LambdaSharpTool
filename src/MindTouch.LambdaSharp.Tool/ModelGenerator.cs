@@ -613,13 +613,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var topicSource in topicSources) {
                     var parameter = (AResourceParameter)_module.GetParameter(topicSource.TopicName);
                     EnumerateOrDefault(parameter.Resource.ResourceReferences, parameter.Reference, (suffix, arn) => {
-                        _stack.Add($"{function.Name}{topicSource.TopicName}SnsPermission{suffix}", new Lambda.Permission {
+                        _stack.Add($"{function.Name}{parameter.ResourceName}SnsPermission{suffix}", new Lambda.Permission {
                             Action = "lambda:InvokeFunction",
                             SourceArn = arn,
                             FunctionName = Fn.GetAtt(function.Name, "Arn"),
                             Principal = "sns.amazonaws.com"
                         });
-                        _stack.Add($"{function.Name}{topicSource.TopicName}Subscription{suffix}", new SNS.Subscription {
+                        _stack.Add($"{function.Name}{parameter.ResourceName}Subscription{suffix}", new SNS.Subscription {
                             Endpoint = Fn.GetAtt(function.Name, "Arn"),
                             Protocol = "lambda",
                             TopicArn = arn
@@ -689,33 +689,41 @@ namespace MindTouch.LambdaSharp.Tool {
             // check if function has any S3 event sources
             var s3Sources = function.Sources.OfType<S3Source>().ToList();
             if(s3Sources.Any()) {
-                foreach(var grp in s3Sources.ToLookup(source => source.Bucket)) {
+                foreach(var grp in s3Sources
+                    .Select(source => new {
+                        Parameter = (AResourceParameter)_module.GetParameter(source.Bucket),
+                        Source = source
+                    }).ToLookup(tuple => tuple.Parameter.ResourceName)
+                ) {
                     var functionS3Permission = $"{function.Name}{grp.Key}S3Permission";
                     var functionS3Subscription = $"{function.Name}{grp.Key}S3Subscription";
-                    _stack.Add(functionS3Permission, new Lambda.Permission {
-                        Action = "lambda:InvokeFunction",
-                        SourceAccount = Fn.Ref("AWS::AccountId"),
-                        SourceArn = Fn.GetAtt(grp.Key, "Arn"),
-                        FunctionName = Fn.GetAtt(function.Name, "Arn"),
-                        Principal = "s3.amazonaws.com"
+
+                    EnumerateOrDefault(grp.First().Parameter.Resource.ResourceReferences, Fn.GetAtt(grp.Key, "Arn"), (suffix, arn) => {
+                        _stack.Add(functionS3Permission, new Lambda.Permission {
+                            Action = "lambda:InvokeFunction",
+                            SourceAccount = Fn.Ref("AWS::AccountId"),
+                            SourceArn = arn,
+                            FunctionName = Fn.GetAtt(function.Name, "Arn"),
+                            Principal = "s3.amazonaws.com"
+                        });
+                        _stack.Add(functionS3Subscription, new LambdaSharpResource("LambdaSharp::S3::Subscription") {
+                            ["BucketArn"] = arn,
+                            ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
+                            ["Filters"] = grp.Select(tuple => {
+                                var filter = new Dictionary<string, object>() {
+                                    ["Events"] = tuple.Source.Events,
+                                };
+                                if(tuple.Source.Prefix != null) {
+                                    filter["Prefix"] = tuple.Source.Prefix;
+                                }
+                                if(tuple.Source.Suffix != null) {
+                                    filter["Suffix"] = tuple.Source.Suffix;
+                                }
+                                return filter;
+                            }).ToList()
+                        });
+                        _stack.AddDependsOn(functionS3Subscription, functionS3Permission);
                     });
-                    _stack.Add(functionS3Subscription, new LambdaSharpResource("LambdaSharp::S3::Subscription") {
-                        ["BucketName"] = Fn.Ref(grp.Key),
-                        ["FunctionArn"] = Fn.GetAtt(function.Name, "Arn"),
-                        ["Filters"] = grp.Select(source => {
-                            var filter = new Dictionary<string, object>() {
-                                ["Events"] = source.Events,
-                            };
-                            if(source.Prefix != null) {
-                                filter["Prefix"] = source.Prefix;
-                            }
-                            if(source.Suffix != null) {
-                                filter["Suffix"] = source.Suffix;
-                            }
-                            return filter;
-                        }).ToList()
-                    });
-                    _stack.AddDependsOn(functionS3Subscription, functionS3Permission);
                 }
             }
 
@@ -725,7 +733,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var source in sqsSources) {
                     var parameter = (AResourceParameter)_module.GetParameter(source.Queue);
                     EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
-                        _stack.Add($"{function.Name}{source.Queue}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                        _stack.Add($"{function.Name}{parameter.ResourceName}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             Enabled = true,
                             EventSourceArn = arn,
@@ -757,7 +765,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var source in dynamoDbSources) {
                     var parameter = (AResourceParameter)_module.GetParameter(source.DynamoDB);
                     EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "StreamArn"), (suffix, arn) => {
-                        _stack.Add($"{function.Name}{source.DynamoDB}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                        _stack.Add($"{function.Name}{parameter.ResourceName}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             StartingPosition = source.StartingPosition,
                             Enabled = true,
@@ -774,7 +782,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var source in kinesisSources) {
                     var parameter = (AResourceParameter)_module.GetParameter(source.Kinesis);
                     EnumerateOrDefault(parameter.Resource.ResourceReferences, Fn.GetAtt(parameter.ResourceName, "Arn"), (suffix, arn) => {
-                        _stack.Add($"{function.Name}{source.Kinesis}EventMapping{suffix}", new Lambda.EventSourceMapping {
+                        _stack.Add($"{function.Name}{parameter.ResourceName}EventMapping{suffix}", new Lambda.EventSourceMapping {
                             BatchSize = source.BatchSize,
                             StartingPosition = source.StartingPosition,
                             Enabled = true,

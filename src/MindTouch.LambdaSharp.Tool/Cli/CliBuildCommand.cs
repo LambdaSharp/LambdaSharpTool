@@ -215,7 +215,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // deploy options
                 var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module file/folder (default: Module.yml)", multipleValues: true);
-                var altModuleNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleOrNoValue);
+                var instanceNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleValue);
                 var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
@@ -339,7 +339,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 settings,
                                 dryRun,
                                 moduleKey,
-                                altModuleNameOption.Value(),
+                                instanceNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
                                 inputs,

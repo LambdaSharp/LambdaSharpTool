@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
     public class RequestProperties {
 
         //--- Properties ---
-        public string BucketName { get; set; }
+        public string BucketArn { get; set; }
         public string FunctionArn { get; set; }
         public IList<Filter> Filters { get; set; }
     }
@@ -74,32 +74,38 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
+
+            // extract bucket name from arn (arn:aws:s3:::bucket_name)
+            var bucketName = properties.BucketArn.Split(':')[5];
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
-                BucketName = properties.BucketName
+                BucketName = bucketName
             });
             Add(config.LambdaFunctionConfigurations, properties);
             await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
-                BucketName = properties.BucketName,
+                BucketName = bucketName,
                 LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
             });
             return new Response<ResponseProperties> {
-                PhysicalResourceId = $"s3subscription:{properties.BucketName}:{properties.FunctionArn}",
+                PhysicalResourceId = $"s3subscription:{bucketName}:{properties.FunctionArn}",
                 Properties = new ResponseProperties {
-                    Result = $"s3://{properties.BucketName}/"
+                    Result = $"s3://{bucketName}/"
                 }
             };
         }
 
         protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
+
+            // extract bucket name from arn (arn:aws:s3:::bucket_name)
+            var bucketName = properties.BucketArn.Split(':')[5];
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
-                BucketName = properties.BucketName
+                BucketName = bucketName
             });
             Remove(config.LambdaFunctionConfigurations, properties);
             await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
-                BucketName = properties.BucketName,
+                BucketName = bucketName,
                 LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
@@ -109,13 +115,16 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
 
         protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
             var properties = request.ResourceProperties;
+
+            // extract bucket name from arn (arn:aws:s3:::bucket_name)
+            var bucketName = properties.BucketArn.Split(':')[5];
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
-                BucketName = properties.BucketName
+                BucketName = bucketName
             });
             Remove(config.LambdaFunctionConfigurations, request.OldResourceProperties);
             Add(config.LambdaFunctionConfigurations, properties);
             await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
-                BucketName = properties.BucketName,
+                BucketName = bucketName,
                 LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
@@ -123,7 +132,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             return new Response<ResponseProperties> {
                 PhysicalResourceId = request.PhysicalResourceId,
                 Properties = new ResponseProperties {
-                    Result = $"s3://{properties.BucketName}/"
+                    Result = $"s3://{bucketName}/"
                 }
             };
         }

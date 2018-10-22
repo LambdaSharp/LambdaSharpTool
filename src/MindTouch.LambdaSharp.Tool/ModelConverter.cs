@@ -498,7 +498,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                     Name = parameter.Var,
                                     Description = parameter.Description,
                                     Resource = resource,
-                                    Reference = FnJoin(",", resource.ResourceReferences)
+                                    Reference = parameter.Value
                                 };
                             });
                         } else {
@@ -815,12 +815,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         //  parameter name; if it does, we export the !Ref value of that parameter; in
                         //  addition, we assume its description if none is provided.
 
-                        value = FnRef(output.Export);
+                        var parameter = _module.Parameters.First(p => p.Name == output.Export);
+                        value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
                         if(description == null) {
-                            var parameter = _module.Parameters.First(p => p.Name == output.Export);
                             description = parameter.Description;
                         }
-
                     }
                     return new ExportOutput {
                         ExportName = output.Export,
