@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "InputStream": {
+      "Type": "String",
+      "Description": "Description for Kinesis input stream"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -531,6 +535,20 @@
         },
         "StartingPosition": "LATEST"
       }
+    },
+    "FunctionInputStreamEventMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 15,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Ref": "InputStream"
+        },
+        "FunctionName": {
+          "Ref": "Function"
+        },
+        "StartingPosition": "LATEST"
+      }
     }
   },
   "Outputs": {
@@ -608,6 +626,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "InputStream": {
+          "default": "Input Stream"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -634,6 +655,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "InputStream"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

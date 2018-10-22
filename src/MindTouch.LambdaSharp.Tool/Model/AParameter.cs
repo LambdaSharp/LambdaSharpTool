@@ -68,14 +68,13 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
     public class CloudFormationResourceParameter : AResourceParameter { }
 
-    public abstract class AInputParameter : AParameter {
+    public abstract class AInputParameter : AResourceParameter {
 
         //--- Properties ---
         public string Section { get; set; }
         public string Label { get; set; }
         public bool? NoEcho { get; set; }
         public string Type { get; set; }
-        public Resource Resource { get; set; }
     }
 
     public class ValueInputParameter : AInputParameter {

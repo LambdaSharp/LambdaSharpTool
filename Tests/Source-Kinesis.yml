@@ -1,6 +1,13 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
+Inputs:
+
+  - Input: InputStream
+    Description: Description for Kinesis input stream
+    Resource:
+      Type: AWS::Kinesis::Stream
+
 Variables:
 
   - Var: Stream
@@ -18,4 +25,6 @@ Functions:
     Timeout: 30
     Sources:
       - Kinesis: Stream
+        BatchSize: 15
+      - Kinesis: InputStream
         BatchSize: 15

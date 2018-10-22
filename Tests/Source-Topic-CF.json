@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "InputTopic": {
+      "Type": "String",
+      "Description": "Description for Input Topic"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -253,6 +257,16 @@
                         ]
                       }
                     ]
+                  }
+                },
+                {
+                  "Sid": "InputTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "InputTopic"
                   }
                 },
                 {
@@ -553,6 +567,37 @@
           "Ref": "Topic"
         }
       }
+    },
+    "FunctionInputTopicSnsPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "InputTopic"
+        }
+      }
+    },
+    "FunctionInputTopicSubscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "Function",
+            "Arn"
+          ]
+        },
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "InputTopic"
+        }
+      }
     }
   },
   "Outputs": {
@@ -630,6 +675,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "InputTopic": {
+          "default": "Input Topic"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -656,6 +704,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "InputTopic"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

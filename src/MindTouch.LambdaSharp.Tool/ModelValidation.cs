@@ -479,11 +479,23 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateSourceParameter(string name, string awsType, string typeDescription) {
+            var input = _module.Inputs.FirstOrDefault(i => i.Input == name);
+            var import = _module.Inputs.FirstOrDefault(i => i.Import == name);
             var parameter = _module.Variables.FirstOrDefault(p => p.Var == name);
-            if(parameter == null) {
-                AddError($"could not find parameter for {typeDescription}: '{name}'");
-            } else if(parameter?.Resource?.Type != awsType) {
-                AddError($"parameter for function source must be an {typeDescription} resource: '{name}'");
+            if(input != null) {
+                if(input.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else if(import != null) {
+                if(import.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else if(parameter != null) {
+                if(parameter.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else {
+                AddError($"could not find function source: '{name}'");
             }
         }
 

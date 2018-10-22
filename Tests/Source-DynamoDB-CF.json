@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "InputTable": {
+      "Type": "String",
+      "Description": "Description for DynamoDB input table"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -273,6 +277,45 @@
                   }
                 },
                 {
+                  "Sid": "InputTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "InputTable"
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "InputTable"
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "InputTable"
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
                   "Sid": "Table",
                   "Effect": "Allow",
                   "Action": [
@@ -508,6 +551,9 @@
                 }
               ]
             },
+            "STR_INPUTTABLE": {
+              "Ref": "InputTable"
+            },
             "STR_TABLE": {
               "Ref": "Table"
             }
@@ -595,6 +641,20 @@
         },
         "StartingPosition": "LATEST"
       }
+    },
+    "FunctionInputTableEventMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 100,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Ref": "InputTable"
+        },
+        "FunctionName": {
+          "Ref": "Function"
+        },
+        "StartingPosition": "LATEST"
+      }
     }
   },
   "Outputs": {
@@ -672,6 +732,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "InputTable": {
+          "default": "Input Table"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -698,6 +761,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "InputTable"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

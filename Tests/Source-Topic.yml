@@ -1,6 +1,14 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
+Inputs:
+
+  - Input: InputTopic
+    Description: Description for Input Topic
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
 Variables:
 
   - Var: Topic
@@ -17,3 +25,4 @@ Functions:
     Timeout: 30
     Sources:
       - Topic: Topic
+      - Topic: InputTopic

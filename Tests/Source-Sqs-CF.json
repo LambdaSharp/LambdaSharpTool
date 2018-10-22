@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "InputSqs": {
+      "Type": "String",
+      "Description": "Description for SQS input resource"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -257,6 +261,23 @@
                         ]
                       }
                     ]
+                  }
+                },
+                {
+                  "Sid": "InputSqs",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Ref": "InputSqs"
                   }
                 },
                 {
@@ -588,6 +609,19 @@
           "Ref": "Function"
         }
       }
+    },
+    "FunctionInputSqsEventMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 10,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Ref": "InputSqs"
+        },
+        "FunctionName": {
+          "Ref": "Function"
+        }
+      }
     }
   },
   "Outputs": {
@@ -665,6 +699,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "InputSqs": {
+          "default": "Input Sqs"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -691,6 +728,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "InputSqs"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

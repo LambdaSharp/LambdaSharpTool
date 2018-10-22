@@ -83,6 +83,7 @@ namespace MindTouch.LambdaSharp.Tool {
             // resolve references in resource properties
             AtLocation("Variables", () => {
                 foreach(var parameter in module.GetAllParameters()
+                    .Where(p => !(p is AInputParameter))
                     .OfType<AResourceParameter>()
                     .Where(p => p.Resource?.Properties != null)
                 ) {
@@ -176,6 +177,12 @@ DebugWriteLine($"FREE => {parameter.ResourceName}");
 DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
+                    case PackageParameter _:
+                    case SecretParameter _:
+                    case AInputParameter inputParameter:
+                        freeParameters[parameter.ResourceName] = parameter;
+DebugWriteLine($"FREE => {parameter.ResourceName}");
+                        break;
                     case AResourceParameter resourceParameter:
                         if(resourceParameter.Resource.ResourceReferences.All(value => value is string)) {
                             freeParameters[parameter.ResourceName] = parameter;
@@ -184,12 +191,6 @@ DebugWriteLine($"FREE => {parameter.ResourceName}");
                             boundParameters[parameter.ResourceName] = parameter;
 DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
-                        break;
-                    case PackageParameter _:
-                    case SecretParameter _:
-                    case AInputParameter inputParameter:
-                        freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
                         break;
                     default:
                         throw new ApplicationException($"unrecognized parameter type: {parameter?.GetType().ToString() ?? "null"}");

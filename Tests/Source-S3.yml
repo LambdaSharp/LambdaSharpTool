@@ -2,6 +2,15 @@ Module: TestModule
 
 Description: LambdaSharp CloudFormation Test
 
+Inputs:
+
+  - Input: InputBucket
+    Description: Description for Bucket resource
+    Scope: "*"
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: ReadWrite
+
 Variables:
 
   - Var: Bucket
@@ -19,6 +28,12 @@ Functions:
     Timeout: 30
     Sources:
       - S3: Bucket
+        Events:
+          - "s3:ObjectCreated:*"
+          - "s3:ObjectRemoved:*"
+        Prefix: images/
+        Suffix: .png
+      - S3: InputBucket
         Events:
           - "s3:ObjectCreated:*"
           - "s3:ObjectRemoved:*"
