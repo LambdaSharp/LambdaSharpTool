@@ -2,7 +2,7 @@ Module: DemoS3Bucket
 
 Outputs:
 
-  - Export: Bucket
+  - Output: Bucket
 
 Variables:
 

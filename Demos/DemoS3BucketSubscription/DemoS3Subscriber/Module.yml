@@ -5,7 +5,7 @@ Inputs:
   - Import: DemoS3Bucket::Bucket
     Resource:
       Type: AWS::S3::Bucket
-      Allow: ReadWrite
+      Allow: Read
 
 Functions:
 
