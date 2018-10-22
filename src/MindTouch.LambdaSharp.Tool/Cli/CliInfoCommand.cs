@@ -39,6 +39,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Show LambdaSharp settings";
 
+                // info options
+                var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
+
                 // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
@@ -50,13 +53,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     await Info(
                         settings,
                         Environment.GetEnvironmentVariable("LAMBDASHARP_TIER"),
-                        GetGitShaValue(Directory.GetCurrentDirectory())
+                        GetGitShaValue(Directory.GetCurrentDirectory()),
+                        showSensitiveInformationOption.HasValue()
                     );
                 });
             });
         }
 
-        public async Task Info(Settings settings, string tier, string gitsha) {
+        public async Task Info(
+            Settings settings,
+            string tier,
+            string gitsha,
+            bool showSensitive
+        ) {
             await PopulateToolSettingsAsync(settings);
             await PopulateEnvironmentSettingsAsync(settings, tier);
 
@@ -66,17 +75,24 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Version: {settings.ToolVersion}");
             Console.WriteLine($"    Module Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             Console.WriteLine($"    Module Deployment S3 Path: {settings.DeploymentBucketPath ?? "<NOT SET>"}");
-            Console.WriteLine($"    Module Deployment Notifications Topic: {settings.DeploymentNotificationsTopicArn ?? "<NOT SET>"}");
+            Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopicArn ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Environment");
             Console.WriteLine($"    Deployment Tier: {tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS");
             Console.WriteLine($"    Region: {settings.AwsRegion ?? "<NOT SET>"}");
-            Console.WriteLine($"    Account Id: {((settings.AwsAccountId != null) ? "<SET>" : "<NOT SET>")}");
+            Console.WriteLine($"    Account Id: {ConcealAwsAccountId(settings.AwsAccountId ?? "<NOT SET>")}");
             Console.WriteLine($"Tools");
             Console.WriteLine($"    .Net Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
+
+            string ConcealAwsAccountId(string text) {
+                if(showSensitive || (settings.AwsAccountId == null)) {
+                    return text;
+                }
+                return text.Replace(settings.AwsAccountId, new string('*', settings.AwsAccountId.Length));
+            }
         }
 
         private string GetDotNetVersion() {
