@@ -404,7 +404,7 @@
             "Ref": "DeploymentBucketName"
           },
           "S3Key": {
-            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/TestModule.Function-NOCOMPILE.zip"
+            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/Function-NOCOMPILE.zip"
           }
         },
         "DeadLetterConfig": {
@@ -511,6 +511,30 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
+            },
+            "STR_SOURCEVALUEPARAMETER": "This is a literal value",
+            "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
+            "STR_SOURCERESOURCEPARAMETER": {
+              "Ref": "SourceResourceParameter"
+            },
+            "STR_SOURCEVALUELISTPARAMETER": "first,second,third",
+            "STR_SOURCEEXPRESSIONLISTPARAMETER": {
+              "Fn::Join": [
+                ",",
+                [
+                  "This is a literal value",
+                  "This is a literal value",
+                  {
+                    "Ref": "SourceResourceParameter"
+                  },
+                  "literal value"
+                ]
+              ]
+            },
+            "STR_SOURCEPARAMETERCOLLECTION": "",
+            "STR_SOURCEPARAMETERCOLLECTION_FIRSTSOURCEVALUEPARAMETER": "A nested literal source value",
+            "STR_SOURCEPARAMETERCOLLECTION_SECONDSOURCERESOURCEPARAMETER": {
+              "Ref": "SourceParameterCollectionSecondSourceResourceParameter"
             },
             "STR_SAMPLEPARAMETERCOLLECTION": "",
             "STR_SAMPLEPARAMETERCOLLECTION_FIRSTNESTEDPARAMETER": "A literal value",

@@ -1,117 +1,134 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
 Variables:
 
-  - Name: SourceValueParameter
+  - Var: SourceValueParameter
     Description: Literal value
+    Scope: "*"
     Value: This is a literal value
 
-  - Name: SourceExpressionParameter
+  - Var: SourceExpressionParameter
     Description: CloudFormation !Ref expression
+    Scope: "*"
     Value: !Ref SourceValueParameter
 
-  - Name: SourceResourceParameter
+  - Var: SourceResourceParameter
     Description: CloudFormation Resource
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
-  - Name: SourceValueListParameter
+  - Var: SourceValueListParameter
     Description: List of literal values
+    Scope: "*"
     Values:
       - first
       - second
       - third
 
-  - Name: SourceExpressionListParameter
+  - Var: SourceExpressionListParameter
     Description: List of literal values
+    Scope: "*"
     Values:
       - !Ref SourceValueParameter
       - !Ref SourceExpressionParameter
       - !Ref SourceResourceParameter
       - literal value
 
-  - Name: SourceParameterCollection
+  - Var: SourceParameterCollection
     Description: Description for collection parameter
-    Parameters:
+    Scope: "*"
+    Collection:
 
-      - Name: FirstSourceValueParameter
+      - Var: FirstSourceValueParameter
         Description: Nested parameter with a literal value
+        Scope: "*"
         Value: A nested literal source value
 
-      - Name: SecondSourceResourceParameter
+      - Var: SecondSourceResourceParameter
         Description: CloudFormation Resource
+        Scope: "*"
         Resource:
           Type: AWS::SNS::Topic
           Allow: Publish
           Properties:
             DisplayName: !Ref SourceValueParameter
 
-Parameters:
-
-  - Name: SampleParameterCollection
+  - Var: SampleParameterCollection
     Description: Description for collection parameter
-    Parameters:
+    Scope: "*"
+    Collection:
 
-      - Name: FirstNestedParameter
+      - Var: FirstNestedParameter
         Description: First nested parameter
+        Scope: "*"
         Value: A literal value
 
-      - Name: SecondNestedParameter
+      - Var: SecondNestedParameter
         Description: Second nested parameter
+        Scope: "*"
         Values:
           - one
           - two
           - three
 
-      - Name: ThirdNestedParameter
+      - Var: ThirdNestedParameter
         Description: Third nested parameter
+        Scope: "*"
         Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
         Resource:
           Type: AWS::SNS::Topic
           Allow: Publish
 
-      - Name: FourthNestedParameter
+      - Var: FourthNestedParameter
         Description: Fourth nested parameter
+        Scope: "*"
         Resource:
           Type: AWS::SNS::Topic
           Allow: Subscribe
 
-      - Name: FifthNestedParameter
+      - Var: FifthNestedParameter
         Description: Fifth nested parameter
+        Scope: "*"
         Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
 
-      - Name: SixthNestedParameter
+      - Var: SixthNestedParameter
         Description: Sixth nested parameter
+        Scope: "*"
         Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
           "Spe|cial": "Char|acter"
 
-      - Name: SeventhParameter
+      - Var: SeventhParameter
         Description: Seventh nested parameter
+        Scope: "*"
         Value: !Ref SingleResourceParameter
 
-  - Name: OtherParameterCollection
+  - Var: OtherParameterCollection
     Description: Description for collection parameter
+    Scope: "*"
     Value: This collection has a value
-    Parameters:
+    Collection:
 
-      - Name: FirstNestedParameter
+      - Var: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection
+        Scope: "*"
         Value: Another literal value
 
-  - Name: SingleResourceParameter
+  - Var: SingleResourceParameter
     Description: Second nested parameter
     Value: "arn:aws:sns:*:*:*"
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
-  - Name: MultiResourceParameter
+  - Var: MultiResourceParameter
     Description: Second nested parameter
+    Scope: "*"
     Values:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
@@ -120,8 +137,9 @@ Parameters:
       Allow: Publish
 
   # !Ref reference use-cases
-  - Name: SourceSubExpressions
+  - Var: SourceSubExpressions
     Description: CloudFormation !Sub expressions
+    Scope: "*"
     Values:
       - !Sub "${SourceValueParameter}"
       - !Sub "${SourceExpressionParameter}"
@@ -133,18 +151,21 @@ Parameters:
       - !Sub "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
 
   # !Ref module variables
-  - Name: MyModuleName
+  - Var: MyModuleName
+    Scope: "*"
     Value: !Ref Module::Name
 
-  - Name: MyModuleId
+  - Var: MyModuleId
+    Scope: "*"
     Value: !Ref Module::Id
 
-  - Name: MyModuleVersion
+  - Var: MyModuleVersion
+    Scope: "*"
     Value: !Ref Module::Version
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30
