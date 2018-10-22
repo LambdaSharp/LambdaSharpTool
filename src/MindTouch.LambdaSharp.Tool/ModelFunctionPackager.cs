@@ -105,10 +105,8 @@ namespace MindTouch.LambdaSharp.Tool {
             // determine the function type
             var folderPath = Path.Combine(Settings.WorkingDirectory, folderName);
             if(File.Exists(Path.Combine(folderPath, $"{folderName}.csproj"))) {
-                function.Language = "csharp";
                 ProcessDotNet(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, $"{folderName}.csproj"));
             } else if(File.Exists(Path.Combine(folderPath, "index.js"))) {
-                function.Language = "javascript";
                 ProcessJavascript(module, function, version, skipCompile, skipAssemblyValidation, gitsha, buildConfiguration, folderPath, Path.Combine(folderPath, "index.js"));
             } else {
                 AddError("could not location the function implementation");
@@ -127,9 +125,10 @@ namespace MindTouch.LambdaSharp.Tool {
             string projectFolder,
             string project
         ) {
-            var projectName = Path.GetFileNameWithoutExtension(project);
+            function.Language = "csharp";
 
             // compile function project
+            var projectName = Path.GetFileNameWithoutExtension(project);
             XDocument csproj = null;
             XElement mainPropertyGroup = null;
             if(!AtLocation("Project", () => {
@@ -329,6 +328,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string projectFolder,
             string project
         ) {
+            function.Language = "javascript";
 
             // check if we need to set a default handler
             if(function.Handler == null) {
