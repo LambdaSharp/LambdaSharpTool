@@ -78,7 +78,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // add misc options
             var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-            var toolProfileOption = cmd.Option("--tool-profile|-T <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
+            var toolProfileOption = cmd.Option("--tool-profile|-TP <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
             // add hidden testing options
@@ -106,7 +106,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // initialize tool profile
-                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE");
+                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
 
                 // initialize AWS profile
                 (string AccountId, string Region)? awsAccount = null;
