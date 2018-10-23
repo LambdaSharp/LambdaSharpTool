@@ -131,11 +131,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             AddError("parameter package cannot be nested");
                         }
                     }
-                    if(parameter.Collection != null) {
+                    if(parameter.Variables != null) {
                         AtLocation("Collection", () => {
 
                             // recursively validate nested parameters
-                            ValidateParameters(parameter.Collection, prefix + "::" + parameter.Var);
+                            ValidateParameters(parameter.Variables, prefix + "::" + parameter.Var);
                         });
                     }
                     if(parameter.Resource != null) {

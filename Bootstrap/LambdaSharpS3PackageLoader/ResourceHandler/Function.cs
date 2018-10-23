@@ -49,7 +49,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
     public class ResponseProperties {
 
         //--- Properties ---
-        public string Result { get; set; }
+        public string Url { get; set; }
     }
 
     public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
@@ -119,7 +119,7 @@ namespace MindTouch.LambdaSharpS3PackageLoader.ResourceHandler {
             return new Response<ResponseProperties> {
                 PhysicalResourceId = $"s3package:{properties.DestinationBucketName}:{properties.DestinationKeyPrefix}:{properties.SourcePackageKey}",
                 Properties = new ResponseProperties {
-                    Result = $"s3://{properties.DestinationBucketName}/{properties.DestinationKeyPrefix}"
+                    Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKeyPrefix}"
                 }
             };
         }

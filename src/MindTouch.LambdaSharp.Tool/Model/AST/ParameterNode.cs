@@ -36,6 +36,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public IList<object> Values { get; set; }
         public object Value { get; set; }
         public ParameterPackageNode Package { get; set; }
-        public IList<ParameterNode> Collection { get; set; }
+        public IList<ParameterNode> Variables { get; set; }
     }
 }

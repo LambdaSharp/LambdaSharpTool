@@ -492,7 +492,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             DestinationBucketParameterName = parameter.Package.Bucket,
                             DestinationKeyPrefix = parameter.Package.Prefix ?? "",
                             PackagePath = parameter.Package.PackagePath,
-                            Reference = FnGetAtt(resourceName, "Result")
+                            Reference = FnGetAtt(resourceName, "Url")
                         };
                     } else if(parameter.Value != null) {
                         if(parameter.Resource != null) {
@@ -533,11 +533,11 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
 
                 // check if there are nested parameters
-                if(parameter.Collection != null) {
+                if(parameter.Variables != null) {
                     AtLocation("Collection", () => {
                         var nestedParameters = ConvertParameters(
                             module,
-                            parameter.Collection,
+                            parameter.Variables,
                             resourceName
                         );
 

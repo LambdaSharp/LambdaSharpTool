@@ -40,7 +40,7 @@ Variables:
   - Var: SourceParameterCollection
     Description: Description for collection parameter
     Scope: "*"
-    Collection:
+    Variables:
 
       - Var: FirstSourceValueParameter
         Description: Nested parameter with a literal value
@@ -59,7 +59,7 @@ Variables:
   - Var: SampleParameterCollection
     Description: Description for collection parameter
     Scope: "*"
-    Collection:
+    Variables:
 
       - Var: FirstNestedParameter
         Description: First nested parameter
@@ -111,7 +111,7 @@ Variables:
     Description: Description for collection parameter
     Scope: "*"
     Value: This collection has a value
-    Collection:
+    Variables:
 
       - Var: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection

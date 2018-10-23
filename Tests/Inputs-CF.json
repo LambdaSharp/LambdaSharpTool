@@ -76,13 +76,13 @@
       "Type": "String",
       "Description": "Source deployment S3 bucket path"
     },
-    "Tier": {
+    "DeploymentPrefix": {
       "Type": "String",
-      "Description": "Module deployment tier"
+      "Description": "Module deployment prefix"
     },
-    "TierLowercase": {
+    "DeploymentPrefixLowercase": {
       "Type": "String",
-      "Description": "Module deployment tier (lowercase)"
+      "Description": "Module deployment prefix (lowercase)"
     },
     "DeploymentParent": {
       "Type": "String",
@@ -96,11 +96,8 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::Register::Module"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Module"
           }
-        },
-        "Tier": {
-          "Ref": "Tier"
         },
         "ModuleId": {
           "Ref": "AWS::StackName"
@@ -147,7 +144,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${Tier}-${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -232,7 +229,7 @@
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
-                                    "${Tier}-${Import}",
+                                    "${DeploymentPrefix}${Import}",
                                     {
                                       "Import": {
                                         "Fn::Select": [
@@ -266,7 +263,7 @@
                                     {
                                       "Fn::ImportValue": {
                                         "Fn::Sub": [
-                                          "${Tier}-${Import}",
+                                          "${DeploymentPrefix}${Import}",
                                           {
                                             "Import": {
                                               "Fn::Select": [
@@ -321,7 +318,7 @@
                         {
                           "Fn::ImportValue": {
                             "Fn::Sub": [
-                              "${Tier}-${Import}",
+                              "${DeploymentPrefix}${Import}",
                               {
                                 "Import": {
                                   "Fn::Select": [
@@ -355,7 +352,7 @@
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
-                                    "${Tier}-${Import}",
+                                    "${DeploymentPrefix}${Import}",
                                     {
                                       "Import": {
                                         "Fn::Select": [
@@ -394,7 +391,7 @@
                               {
                                 "Fn::ImportValue": {
                                   "Fn::Sub": [
-                                    "${Tier}-${Import}",
+                                    "${DeploymentPrefix}${Import}",
                                     {
                                       "Import": {
                                         "Fn::Select": [
@@ -485,7 +482,7 @@
                       {
                         "Fn::ImportValue": {
                           "Fn::Sub": [
-                            "${Tier}-${Import}",
+                            "${DeploymentPrefix}${Import}",
                             {
                               "Import": {
                                 "Fn::Select": [
@@ -524,7 +521,7 @@
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
-            "Fn::Sub": "${Tier}-CustomResource-LambdaSharp::Register::Function"
+            "Fn::Sub": "${DeploymentPrefix}CustomResource-LambdaSharp::Register::Function"
           }
         },
         "ModuleId": {
@@ -565,7 +562,7 @@
               {
                 "Fn::ImportValue": {
                   "Fn::Sub": [
-                    "${Tier}-${Import}",
+                    "${DeploymentPrefix}${Import}",
                     {
                       "Import": {
                         "Fn::Select": [
@@ -593,9 +590,6 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "TIER": {
-              "Ref": "Tier"
-            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -609,7 +603,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -639,7 +633,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -669,7 +663,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -699,7 +693,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -752,7 +746,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -782,7 +776,7 @@
                 {
                   "Fn::ImportValue": {
                     "Fn::Sub": [
-                      "${Tier}-${Import}",
+                      "${DeploymentPrefix}${Import}",
                       {
                         "Import": {
                           "Fn::Select": [
@@ -838,7 +832,7 @@
             {
               "Fn::ImportValue": {
                 "Fn::Sub": [
-                  "${Tier}-${Import}",
+                  "${DeploymentPrefix}${Import}",
                   {
                     "Import": {
                       "Fn::Select": [
@@ -1062,11 +1056,11 @@
         "DeploymentBucketPath": {
           "default": "S3 Bucket Path"
         },
-        "Tier": {
-          "default": "Tier"
+        "DeploymentPrefix": {
+          "default": "Prefix"
         },
-        "TierLowercase": {
-          "default": "Tier (lowercase)"
+        "DeploymentPrefixLowercase": {
+          "default": "Prefix (lowercase)"
         },
         "DeploymentParent": {
           "default": "Parent Stack Name"
@@ -1127,8 +1121,8 @@
           "Parameters": [
             "DeploymentBucketName",
             "DeploymentBucketPath",
-            "Tier",
-            "TierLowercase",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
             "DeploymentParent"
           ]
         }
