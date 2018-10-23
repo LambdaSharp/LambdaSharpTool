@@ -144,5 +144,20 @@ namespace MindTouch.LambdaSharp.Tool {
             }
             return 0;
         }
+
+        public bool IsCompatibleWith(VersionInfo other) {
+            if((Suffix != null) && (other.Suffix == null) || ((Suffix == null) && (other.Suffix != null))) {
+                return false;
+            }
+            if(Major != other.Major) {
+                return false;
+            }
+            if(Version.Major != 0) {
+                return Minor == other.Minor;
+            }
+
+            // when Major version is 0, we rely on Minor and Build to match
+            return ((Minor == other.Minor) && (Version.Build == other.Version.Build));
+        }
     }
 }
