@@ -537,14 +537,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     $"lambdasharp-{settings.AwsRegion}"
                 }) {
                     settings.DeploymentBucketName = bucket;
+                    version = await FindNewestVersion(settings, moduleKey, version);
+                    if(HasErrors) {
+                        return false;
+                    }
                     if(version == null) {
-                        version = await FindNewestVersion(settings, moduleKey);
-                        if(HasErrors) {
-                            return false;
-                        }
-                        if(version == null) {
-                            continue;
-                        }
+                        continue;
                     }
                     marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{version}");
                     if(marker != null) {
@@ -664,7 +662,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName) {
+        private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo version) {
 
             // enumerate versions in bucket
             var versions = new List<VersionInfo>();
@@ -678,7 +676,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var response = await settings.S3Client.ListObjectsV2Async(request);
                 versions.AddRange(response.S3Objects
                     .Select(found => VersionInfo.Parse(found.Key.Substring(request.Prefix.Length)))
-                    .Where(v => !v.IsPreRelease)
+                    .Where(v => (!v.IsPreRelease) && ((version == null) || v.IsCompatibleWith(version)))
                 );
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);
