@@ -175,7 +175,14 @@
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
                   ],
-                  "Resource": "arn:aws:logs:*:*:*"
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "FunctionLogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "ModuleSecretsDecryption",
@@ -444,73 +451,6 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
-            "MODULE_NAME": "TestModule",
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_VERSION": "1.0",
-            "LAMBDA_NAME": "Function",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
-            "DEADLETTERQUEUE": {
-              "Fn::If": [
-                "LambdaSharpDeadLetterQueueArnIsImport",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDeadLetterQueueArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDeadLetterQueueArn"
-                }
-              ]
-            },
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "LambdaSharpDefaultSecretKeyArnIsImport",
-                {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
-                                {
-                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                }
-                              ]
-                            }
-                          ]
-                        }
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Ref": "LambdaSharpDefaultSecretKeyArn"
-                }
-              ]
-            },
             "STR_SOURCEVALUEPARAMETER": "This is a literal value",
             "STR_SOURCEEXPRESSIONPARAMETER": "This is a literal value",
             "STR_SOURCERESOURCEPARAMETER": {
@@ -617,7 +557,74 @@
             "STR_MYMODULEID": {
               "Ref": "AWS::StackName"
             },
-            "STR_MYMODULEVERSION": "1.0"
+            "STR_MYMODULEVERSION": "1.0",
+            "MODULE_NAME": "TestModule",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_VERSION": "1.0",
+            "LAMBDA_NAME": "Function",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpDeadLetterQueueArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpDeadLetterQueueArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpDeadLetterQueueArn"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpDefaultSecretKeyArnIsImport",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpDefaultSecretKeyArn"
+                }
+              ]
+            }
           }
         },
         "Handler": "TestModule.Function::MindTouch.LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",

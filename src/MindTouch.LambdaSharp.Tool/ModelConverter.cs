@@ -671,7 +671,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     Timeout = function.Timeout,
                     ReservedConcurrency = function.ReservedConcurrency,
                     VPC = vpc,
-                    Environment = function.Environment ?? new Dictionary<string, object>(),
+                    Environment = function.Environment.ToDictionary(kv => "STR_" + kv.Key.Replace("::", "_").ToUpperInvariant(), kv => kv.Value) ?? new Dictionary<string, object>(),
                     Pragmas = function.Pragmas
                 };
             }, null);

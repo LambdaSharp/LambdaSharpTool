@@ -267,7 +267,14 @@
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
                   ],
-                  "Resource": "arn:aws:logs:*:*:*"
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "FunctionLogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "ModuleSecretsDecryption",
@@ -479,6 +486,15 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
+            "STR_MYCUSTOMRESOURCEPROPERTY": {
+              "Fn::GetAtt": [
+                "MyResource",
+                "Result"
+              ]
+            },
+            "STR_OTHERRESOURCE": {
+              "Ref": "OtherResource"
+            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -545,15 +561,6 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
-            },
-            "STR_MYCUSTOMRESOURCEPROPERTY": {
-              "Fn::GetAtt": [
-                "MyResource",
-                "Result"
-              ]
-            },
-            "STR_OTHERRESOURCE": {
-              "Ref": "OtherResource"
             }
           }
         },

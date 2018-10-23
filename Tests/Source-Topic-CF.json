@@ -169,7 +169,14 @@
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
                   ],
-                  "Resource": "arn:aws:logs:*:*:*"
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "FunctionLogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "ModuleSecretsDecryption",

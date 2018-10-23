@@ -186,7 +186,14 @@
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
                   ],
-                  "Resource": "arn:aws:logs:*:*:*"
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "FunctionLogGroup",
+                        "Arn"
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "ModuleSecretsDecryption",
@@ -483,6 +490,12 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
+            "STR_INPUTTABLE": {
+              "Ref": "InputTable"
+            },
+            "STR_TABLE": {
+              "Ref": "Table"
+            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -549,12 +562,6 @@
                   "Ref": "LambdaSharpDefaultSecretKeyArn"
                 }
               ]
-            },
-            "STR_INPUTTABLE": {
-              "Ref": "InputTable"
-            },
-            "STR_TABLE": {
-              "Ref": "Table"
             }
           }
         },

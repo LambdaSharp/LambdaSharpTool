@@ -102,10 +102,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 new Statement {
                     Sid = "ModuleLogStreamAccess",
                     Effect = "Allow",
-
-                    // TODO (2018-10-09, bjorg): we should be able to make the resource target a lot more
-                    //  specific since we know all the function names already; and we create the log groups
-                    //  for them.
                     Resource = "arn:aws:logs:*:*:*",
                     Action = new List<string> {
                         "logs:CreateLogStream",
@@ -142,9 +138,8 @@ namespace MindTouch.LambdaSharp.Tool {
             _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
 
             // add parameters
-            var environmentRefVariables = new Dictionary<string, object>();
             foreach(var parameter in _module.Parameters) {
-                AddParameter(parameter, "", environmentRefVariables);
+                AddParameter(parameter, "");
             }
             _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
 
@@ -237,7 +232,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 foreach(var function in _module.Functions) {
-                    AddFunction(function, environmentRefVariables);
+                    AddFunction(function);
                 }
 
                 // check if an API gateway needs to be created
@@ -525,10 +520,10 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void AddFunction(Function function, IDictionary<string, object> environmentRefVariables) {
+        private void AddFunction(Function function) {
 
             // initialize function environment variables
-            var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
+            var environmentVariables = function.Environment.ToDictionary(kv => kv.Key, kv => (dynamic)kv.Value);
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("AWS::StackName");
             environmentVariables["MODULE_VERSION"] = _module.Version.ToString();
@@ -536,9 +531,6 @@ namespace MindTouch.LambdaSharp.Tool {
             environmentVariables["LAMBDA_RUNTIME"] = function.Runtime;
             environmentVariables["DEADLETTERQUEUE"] = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference;
             environmentVariables["DEFAULTSECRETKEY"] = _module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference;
-            foreach(var environmentRefVariable in environmentRefVariables) {
-                environmentVariables[environmentRefVariable.Key] = environmentRefVariable.Value;
-            }
 
             // create function registration
             if(_module.HasModuleRegistration && function.HasFunctionRegistration) {
@@ -695,7 +687,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 ) {
                     var functionS3Permission = $"{function.Name}{grp.Key}S3Permission";
                     var functionS3Subscription = $"{function.Name}{grp.Key}S3Subscription";
-
                     EnumerateOrDefault(grp.First().Parameter.Resource.ResourceReferences, Fn.GetAtt(grp.Key, "Arn"), (suffix, arn) => {
                         _stack.Add(functionS3Permission, new Lambda.Permission {
                             Action = "lambda:InvokeFunction",
@@ -805,37 +796,24 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void AddParameter(
             AParameter parameter,
-            string envPrefix,
-            IDictionary<string, object> environmentRefVariables
+            string envPrefix
         ) {
             var fullEnvName = envPrefix + parameter.Name.ToUpperInvariant();
             var resourceName = parameter.ResourceName;
             switch(parameter) {
             case SecretParameter secretParameter:
-
-                // TODO (2018-10-21, bjorg): each function needs its own environment
-                if(parameter.Scope.Any()) {
-                    if(secretParameter.EncryptionContext?.Any() == true) {
-                        environmentRefVariables["SEC_" + fullEnvName] = $"{secretParameter.Reference}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}";
-                    } else {
-                        environmentRefVariables["SEC_" + fullEnvName] = secretParameter.Reference;
-                    }
+                if(secretParameter.EncryptionContext?.Any() == true) {
+                    AddEnvironmentParameter("Secret", $"{secretParameter.Reference}|{string.Join("|", secretParameter.EncryptionContext.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"))}");
+                } else {
+                    AddEnvironmentParameter("Secret", secretParameter.Reference);
                 }
                 break;
             case ValueParameter _:
             case ValueListParameter _:
-
-                // TODO (2018-10-21, bjorg): each function needs its own environment
-                if(parameter.Scope.Any()) {
-                    environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                }
+                AddEnvironmentParameter("String", parameter.Reference);
                 break;
             case PackageParameter packageParameter:
-
-                // TODO (2018-10-21, bjorg): each function needs its own environment
-                if(parameter.Scope.Any()) {
-                    environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                }
+                AddEnvironmentParameter("String", parameter.Reference);
                 _stack.Add(resourceName, new LambdaSharpResource("LambdaSharp::S3::Package") {
                     ["DestinationBucketName"] = Fn.Ref(packageParameter.DestinationBucketParameterName),
                     ["DestinationKeyPrefix"] = packageParameter.DestinationKeyPrefix,
@@ -844,11 +822,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 });
                 break;
             case ReferencedResourceParameter referenceResourceParameter: {
-
-                    // TODO (2018-10-21, bjorg): each function needs its own environment
-                    if(parameter.Scope.Any()) {
-                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                    }
+                    AddEnvironmentParameter("String", parameter.Reference);
 
                     // add permissions for resource
                     var resource = referenceResourceParameter.Resource;
@@ -891,11 +865,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             Action = resource.Allow
                         });
                     }
-
-                    // TODO (2018-10-21, bjorg): each function needs its own environment
-                    if(parameter.Scope.Any()) {
-                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                    }
+                    AddEnvironmentParameter("String", parameter.Reference);
                 }
                 break;
             case ValueInputParameter valueInputParameter: {
@@ -952,15 +922,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
                     }
-
-                    // TODO (2018-10-21, bjorg): each function needs its own environment
-                    if(parameter.Scope.Any()) {
-                        if(valueInputParameter.Type == "Secret") {
-                            environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
-                        } else {
-                            environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                        }
-                    }
+                    AddEnvironmentParameter(valueInputParameter.Type, parameter.Reference);
                 }
                 break;
             case ImportInputParameter importInputParameter:
@@ -986,15 +948,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         });
                     }
                 }
-
-                // TODO (2018-10-21, bjorg): each function needs its own environment
-                if(parameter.Scope.Any()) {
-                    if(importInputParameter.Type == "Secret") {
-                        environmentRefVariables["SEC_" + fullEnvName] = parameter.Reference;
-                    } else {
-                        environmentRefVariables["STR_" + fullEnvName] = parameter.Reference;
-                    }
-                }
+                AddEnvironmentParameter(importInputParameter.Type, parameter.Reference);
                 break;
             default:
                 throw new ArgumentOutOfRangeException(nameof(parameter), parameter, "unknown parameter type");
@@ -1003,11 +957,18 @@ namespace MindTouch.LambdaSharp.Tool {
             // check if nested parameters need to be added
             if(parameter.Parameters?.Any() == true) {
                 foreach(var nestedParameter in parameter.Parameters) {
-                    AddParameter(
-                        nestedParameter,
-                        fullEnvName + "_",
-                        environmentRefVariables
-                    );
+                    AddParameter(nestedParameter, fullEnvName + "_");
+                }
+            }
+
+            // local function
+            void AddEnvironmentParameter(string type, object value) {
+                foreach(var function in parameter.Scope.Select(name => _module.Functions.First(f => f.Name == name))) {
+                    if(type == "Secret") {
+                        function.Environment["SEC_" + fullEnvName] = value;
+                    } else {
+                        function.Environment["STR_" + fullEnvName] = value;
+                    }
                 }
             }
         }

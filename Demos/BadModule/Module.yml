@@ -5,17 +5,17 @@ Description: Module for generating errors
 Functions:
 
   - Function: NearTimeout
-    Description: TODO - update NearTimeout description
+    Description: Gets within 1 second of a timeout
     Memory: 128
     Timeout: 15
 
   - Function: NearOutOfMemory
-    Description: TODO - update NearOutOfMemory description
+    Description: Uses most of the available memory
     Memory: 128
     Timeout: 30
 
   - Function: FailBadEntryPoint
-    Description: TODO - update FailBadEntryPoint description
+    Description: Bad handler definition for assembly
     Memory: 128
     Timeout: 30
 
