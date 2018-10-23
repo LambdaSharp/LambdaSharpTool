@@ -12,7 +12,7 @@ Variables:
 
   - Var: S3BucketPermissions
     Description: LambdaSharpS3Subscriber requires notification configuration access to all S3 buckets
-    Value: !Sub "arn:aws:s3:::${TierLowercase}-*"
+    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
     Resource:
       Type: AWS::S3::Bucket
       Allow:

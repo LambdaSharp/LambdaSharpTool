@@ -131,16 +131,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     Description = "Source deployment S3 bucket path"
                 },
                 new InputNode {
-                    Input = "Tier",
+                    Input = "DeploymentPrefix",
                     Section = section,
-                    Label = "Tier",
-                    Description = "Module deployment tier"
+                    Label = "Prefix",
+                    Description = "Module deployment prefix"
                 },
                 new InputNode {
-                    Input = "TierLowercase",
+                    Input = "DeploymentPrefixLowercase",
                     Section = section,
-                    Label = "Tier (lowercase)",
-                    Description = "Module deployment tier (lowercase)"
+                    Label = "Prefix (lowercase)",
+                    Description = "Module deployment prefix (lowercase)"
                 },
                 new InputNode {
                     Input = "DeploymentParent",
@@ -304,7 +304,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             ResourceName = resourceName,
                             Reference = FnIf(
                                 $"{resourceName}IsImport",
-                                FnImportValue(FnSub("${Tier}-${Import}", new Dictionary<string, object> {
+                                FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
                                     ["Import"] = FnSelect("1", FnSplit("$", FnRef(resourceName)))
                                 })),
                                 FnRef(resourceName)
@@ -615,7 +615,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         resource.Properties = new Dictionary<string, object>();
                     }
                     if(!resource.Properties.ContainsKey("ServiceToken")) {
-                        resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{Tier}}-CustomResource-{customResourceName}"));
+                        resource.Properties["ServiceToken"] = FnImportValue(FnSub($"${{DeploymentPrefix}}CustomResource-{customResourceName}"));
                     }
 
                     // convert type name to a custom AWS resource type

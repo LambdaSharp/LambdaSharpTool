@@ -52,7 +52,7 @@ namespace MindTouch.LambdaSharp.Tool {
             string tier,
             bool forceDeploy
         ) {
-            var stackName = $"{tier}-{altModuleName ?? manifest.Name}";
+            var stackName = $"{tier}-{altModuleName ?? manifest.ModuleName}";
 
             // check version of previously deployed module
             if(!forceDeploy) {
@@ -68,8 +68,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
                             return false;
                         }
-                        if(deployedName != manifest.Name) {
-                            AddError($"deployed module name ({deployedName}) does not match {manifest.Name}; use --force-deploy to proceed anyway");
+                        if(deployedName != manifest.ModuleName) {
+                            AddError($"deployed module name ({deployedName}) does not match {manifest.ModuleName}; use --force-deploy to proceed anyway");
                             return false;
                         }
                         if(
@@ -79,8 +79,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
                             return false;
                         }
-                        if(deployedVersion > VersionInfo.Parse(manifest.Version)) {
-                            AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.Version}; use --force-deploy to proceed anyway");
+                        if(deployedVersion > VersionInfo.Parse(manifest.ModuleVersion)) {
+                            AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.ModuleVersion}; use --force-deploy to proceed anyway");
                             return false;
                         }
                     }
@@ -89,7 +89,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     // stack doesn't exist
                 }
             }
-            Console.WriteLine($"Deploying stack: {stackName} [{manifest.Name}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{manifest.ModuleName}]");
 
             // check if cloudformation stack already exists
             var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
@@ -149,12 +149,12 @@ namespace MindTouch.LambdaSharp.Tool {
             // initialize template parameters
             var parameters = new List<CloudFormationParameter> {
                 new CloudFormationParameter {
-                    ParameterKey = "Tier",
-                    ParameterValue = tier
+                    ParameterKey = "DeploymentPrefix",
+                    ParameterValue = string.IsNullOrEmpty(tier) ? "" : tier + "-"
                 },
                 new CloudFormationParameter {
-                    ParameterKey = "TierLowercase",
-                    ParameterValue = tier.ToLowerInvariant()
+                    ParameterKey = "DeploymentPrefixLowercase",
+                    ParameterValue = string.IsNullOrEmpty(tier) ? "" : tier.ToLowerInvariant() + "-"
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",

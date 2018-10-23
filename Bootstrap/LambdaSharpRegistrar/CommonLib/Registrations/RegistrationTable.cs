@@ -42,7 +42,6 @@ namespace MindTouch.LambdaSharpRegistrar.Registrations {
                 return null;
             }
             return new OwnerMetaData {
-                Tier = TryGetAsString("Tier"),
                 ModuleId = TryGetAsString("ModuleId"),
                 ModuleName = TryGetAsString("ModuleName"),
                 ModuleVersion = TryGetAsString("ModuleVersion"),
@@ -72,7 +71,6 @@ namespace MindTouch.LambdaSharpRegistrar.Registrations {
         public async Task PutOwnerMetaDataAsync(string id, OwnerMetaData owner) {
             var document = new Document {
                 ["Id"] = id,
-                ["Tier"] = owner.Tier,
                 ["ModuleId"] = owner.ModuleId,
                 ["ModuleName"] = owner.ModuleName,
                 ["ModuleVersion"] = owner.ModuleVersion

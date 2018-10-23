@@ -37,7 +37,6 @@ namespace MindTouch.LambdaSharp.Reports {
         // Origin
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
-        public string Tier { get; set; }
         public string ModuleId { get; set; }
         public string FunctionId { get; set; }
         public string FunctionName { get; set; }

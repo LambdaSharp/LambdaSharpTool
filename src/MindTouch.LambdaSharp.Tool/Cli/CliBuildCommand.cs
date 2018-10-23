@@ -440,8 +440,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     .Select(p => Path.GetRelativePath(settings.OutputDirectory, p.PackagePath))
                     .ToList();
                 var manifest = new ModuleManifest {
-                    Name = module.Name,
-                    Version = module.Version.ToString(),
+                    ModuleName = module.Name,
+                    ModuleVersion = module.Version.ToString(),
                     Hash = template.ToMD5Hash(),
                     GitSha = gitsha,
                     Pragmas = module.Pragmas,

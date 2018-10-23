@@ -72,7 +72,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Constructors ---
         public LambdaSharpResource(string typeName) : base("Custom::" + typeName.Replace("::", "")) {
-            this["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{Tier}}-CustomResource-{typeName}"));
+            this["ServiceToken"] = AModelProcessor.FnImportValue(AModelProcessor.FnSub($"${{DeploymentPrefix}}CustomResource-{typeName}"));
         }
     }
 }

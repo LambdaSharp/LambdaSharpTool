@@ -25,7 +25,6 @@ namespace MindTouch.LambdaSharpRegistrar.Registrations {
     public class OwnerMetaData {
 
         //--- Properties ---
-        public string Tier { get; set; }
         public string ModuleId { get; set; }
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }

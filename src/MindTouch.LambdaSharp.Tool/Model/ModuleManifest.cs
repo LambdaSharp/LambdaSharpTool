@@ -29,8 +29,9 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Properties ---
-        public string Name { get; set; }
-        public string Version { get; set; }
+        public string Version { get; set; } = "2018-10-22";
+        public string ModuleName { get; set; }
+        public string ModuleVersion { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
         public IList<string> Pragmas { get; set; }

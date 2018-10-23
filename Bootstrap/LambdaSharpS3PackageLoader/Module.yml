@@ -13,8 +13,8 @@ Variables:
   - Var: S3TargetBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Values:
-      - !Sub "arn:aws:s3:::${TierLowercase}-*"
-      - !Sub "arn:aws:s3:::${TierLowercase}-*/*"
+      - !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+      - !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*/*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite

@@ -102,7 +102,6 @@ namespace MindTouch.LambdaSharp {
         protected string ModuleName { get; private set; }
         protected string ModuleId { get; private set; }
         protected string ModuleVersion { get; private set; }
-        protected string DeploymentTier { get; private set; }
         protected string FunctionId { get; private set; }
         protected string FunctionName { get; private set; }
         protected string DefaultSecretKey { get; private set; }
@@ -159,7 +158,6 @@ namespace MindTouch.LambdaSharp {
         protected virtual async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
 
             // read configuration from environment variables
-            DeploymentTier = envSource.Read("TIER");
             ModuleName = envSource.Read("MODULE_NAME");
             ModuleId = envSource.Read("MODULE_ID");
             ModuleVersion = envSource.Read("MODULE_VERSION");
@@ -168,11 +166,10 @@ namespace MindTouch.LambdaSharp {
             FunctionId = context.InvokedFunctionArn.Split(':')[5];
             FunctionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
-            LogInfo($"TIER = {DeploymentTier}");
-            LogInfo($"MODULE = {ModuleName}");
-            LogInfo($"MODULE_ID = {ModuleId}");
+            LogInfo($"MODULE_NAME = {ModuleName}");
             LogInfo($"MODULE_VERSION = {ModuleVersion}");
-            LogInfo($"FUNCTION = {FunctionName}");
+            LogInfo($"MODULE_ID = {ModuleId}");
+            LogInfo($"FUNCTION_NAME = {FunctionName}");
             LogInfo($"FUNCTION_ID = {FunctionId}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
             LogInfo($"DEFAULTSECRETKEY = {DefaultSecretKey ?? "NONE"}");
@@ -189,7 +186,6 @@ namespace MindTouch.LambdaSharp {
                 ModuleId,
                 ModuleName,
                 ModuleVersion,
-                DeploymentTier,
                 FunctionId,
                 FunctionName,
                 framework,

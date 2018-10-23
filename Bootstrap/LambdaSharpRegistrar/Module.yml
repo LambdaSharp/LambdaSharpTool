@@ -34,7 +34,7 @@ Inputs:
     Description: Provisioned write capacity for registrations table
     Default: 1
 
-  Outputs:
+Outputs:
 
   - CustomResource: LambdaSharp::Register::Module
     Description: Custom resources for registering LambdaSharp modules

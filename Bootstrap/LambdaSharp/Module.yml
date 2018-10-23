@@ -51,7 +51,7 @@ Variables:
     Resource:
       Type: AWS::KMS::Alias
       Properties:
-        AliasName: !Sub "alias/${Tier}-LambdaSharpDefaultSecretKey"
+        AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
         TargetKeyId: !Ref DefaultSecretKey
 
   - Var: DefaultSecretKey

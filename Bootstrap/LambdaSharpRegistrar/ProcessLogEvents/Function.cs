@@ -198,7 +198,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             var rollbar = new Rollbar {
                 AccessToken = owner.RollbarAccessToken,
                 Data = new Data {
-                    Environment = owner.Tier,
+                    Environment = report.ModuleId,
                     Level = report.Level?.ToLowerInvariant() ?? "error",
                     Timestamp = report.Timestamp,
                     CodeVersion = report.GitSha,

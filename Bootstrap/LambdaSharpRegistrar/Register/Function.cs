@@ -38,7 +38,6 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
     public class RequestProperties {
 
         //--- Properties ---
-        public string Tier { get; set; }
         public string ModuleId { get; set; }
         public string ModuleName { get; set; }
         public string ModuleVersion { get; set; }
@@ -87,17 +86,12 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             // determine the kind of registration that is requested
             switch(request.ResourceType) {
             case "Custom::LambdaSharpRegisterModule": {
-
-                    // validate request
-                    if(properties.Tier != DeploymentTier) {
-                        throw new RegistrarException("tier mismatch; received '{0}', expected '{1}'", properties.Tier, DeploymentTier);
-                    }
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = $"{request.ResourceProperties.Tier}-{request.ResourceProperties.ModuleName}";
+                        var name = request.ResourceProperties.ModuleId;
                         var project = await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
                         var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
@@ -172,7 +166,6 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }
-            owner.Tier = properties.Tier ?? owner.Tier;
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
             owner.ModuleName = properties.ModuleName ?? owner.ModuleName;
             owner.ModuleVersion = properties.ModuleVersion ?? owner.ModuleVersion;

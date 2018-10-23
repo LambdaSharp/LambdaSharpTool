@@ -91,7 +91,6 @@ namespace MindTouch.LambdaSharp.Tool {
             // add module registration
             if(_module.HasModuleRegistration) {
                 _stack.Add("ModuleRegistration", new LambdaSharpResource("LambdaSharp::Register::Module") {
-                    ["Tier"] = Fn.Ref("Tier"),
                     ["ModuleId"] = Fn.Ref("AWS::StackName"),
                     ["ModuleName"] = _module.Name,
                     ["ModuleVersion"] = _module.Version.ToString()
@@ -367,7 +366,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         Description = customResourceHandlerOutput.Description,
                         Value = Fn.Ref(customResourceHandlerOutput.Handler),
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{Tier}}-CustomResource-{customResourceHandlerOutput.CustomResourceName}")
+                            ["Name"] = Fn.Sub($"${{DeploymentPrefix}}CustomResource-{customResourceHandlerOutput.CustomResourceName}")
                         }
                     });
                     break;
@@ -530,7 +529,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // initialize function environment variables
             var environmentVariables = function.Environment.ToDictionary(kv => "STR_" + kv.Key.ToUpperInvariant(), kv => (dynamic)kv.Value);
-            environmentVariables["TIER"] = Fn.Ref("Tier");
             environmentVariables["MODULE_NAME"] = _module.Name;
             environmentVariables["MODULE_ID"] = Fn.Ref("AWS::StackName");
             environmentVariables["MODULE_VERSION"] = _module.Version.ToString();
@@ -798,7 +796,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(macroSources.Any()) {
                 foreach(var source in macroSources) {
                     _stack.Add($"{function.Name}{source.MacroName}Macro", new CustomResource("AWS::CloudFormation::Macro") {
-                        ["Name"] = Fn.Sub("${Tier}-" + source.MacroName),
+                        ["Name"] = Fn.Sub("${DeploymentPrefix}" + source.MacroName),
                         ["FunctionName"] = Fn.Ref(function.Name)
                     });
                 }
