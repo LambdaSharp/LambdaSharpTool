@@ -10,7 +10,7 @@ Functions:
     Sources:
 
       # a simple rate expression
-      - Schedule: rate(1 min)
+      - Schedule: rate(1 minute)
 
       # a complex cron expression
       - Schedule: cron(0/15 11-17 ? * * *)

@@ -35,12 +35,13 @@ LAMBDASHARP_TIER=ReleaseTest$SUFFIX
 
 lash deploy \
     $LAMBDASHARP/Bootstrap/LambdaSharp/Module.yml \
+    $LAMBDASHARP/Bootstrap/LambdaSharpRegistrar/Module.yml \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Module.yml \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Module.yml
 
 # Deploy the λ# Demo Module
 
-lash deploy Demo/Module.yml
+lash deploy Demos/Demo/Module.yml
 
 # Deploy all λ# Sample Modules
 

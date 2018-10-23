@@ -627,7 +627,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         ScheduleExpression = scheduleSources[i].Expression,
                         Targets = new List<Events.RuleTypes.Target> {
                             new Events.RuleTypes.Target {
-                                Id = Fn.Sub($"${{AWS::StackName}}Module{name}ScheduleEvent"),
+                                Id = Fn.Sub("${AWS::StackName}" + name),
                                 Arn = Fn.GetAtt(function.Name, "Arn"),
                                 InputTransformer = new Events.RuleTypes.InputTransformer {
                                     InputPathsMap = new Dictionary<string, dynamic> {

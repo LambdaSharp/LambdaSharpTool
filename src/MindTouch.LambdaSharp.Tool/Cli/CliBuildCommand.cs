@@ -53,7 +53,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // build options
                 var modulesArgument = cmd.Argument("<NAME>", "(optional) Path to module file/folder (default: Module.yml)", multipleValues: true);
-                var skipFunctionBuildOption = cmd.Option("--skip-function-build", "(optional) Do not build the function projects", CommandOptionType.NoValue);
                 var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
                 var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
@@ -106,7 +105,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             settings,
                             outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                             skipAssemblyValidationOption.HasValue(),
-                            skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation),
+                            dryRun == DryRunLevel.CloudFormation,
                             gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
@@ -125,7 +124,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module file/folder (default: Module.yml)", multipleValues: true);
-                var skipFunctionBuildOption = cmd.Option("--skip-function-build", "(optional) Do not build the function projects", CommandOptionType.NoValue);
                 var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
                 var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
@@ -190,7 +188,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 settings,
                                 outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                                 skipAssemblyValidationOption.HasValue(),
-                                skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation),
+                                dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
@@ -224,7 +222,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
 
                 // build options
-                var skipFunctionBuildOption = cmd.Option("--skip-function-build", "(optional) Do not build the function projects", CommandOptionType.NoValue);
                 var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
                 var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
                 var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
@@ -319,7 +316,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 settings,
                                 outputCloudFormationFilePathOption.Value() ?? Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                                 skipAssemblyValidationOption.HasValue(),
-                                skipFunctionBuildOption.HasValue() || (dryRun == DryRunLevel.CloudFormation),
+                                dryRun == DryRunLevel.CloudFormation,
                                 gitShaOption.Value() ?? GetGitShaValue(settings.WorkingDirectory),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
