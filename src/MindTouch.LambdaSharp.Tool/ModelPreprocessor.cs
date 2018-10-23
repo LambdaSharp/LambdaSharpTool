@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public IParser Preprocess(string source, string selector) {
-            _selector = (selector != null) ? $":{selector}" : null;
+            _selector = ":" + (selector ?? "Default");
             var inputStream = YamlParser.Parse(source);
             var outputStream = new YamlStream {
                 Start = inputStream.Start,
