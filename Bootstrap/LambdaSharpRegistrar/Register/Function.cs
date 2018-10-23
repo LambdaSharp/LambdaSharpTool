@@ -68,6 +68,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
         //--- Fields ---
         private RegistrationTable _registrations;
         private RollbarClient _rollbarClient;
+        private string _rollbarProjectPrefix;
 
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
@@ -78,6 +79,7 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                 config.ReadText("RollbarWriteAccessToken", defaultValue: null),
                 message => LogInfo(message)
             );
+            _rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
         }
 
         protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
@@ -91,8 +93,9 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = request.ResourceProperties.ModuleId;
-                        var project = await _rollbarClient.CreateProject(name);
+                        var name = _rollbarProjectPrefix + request.ResourceProperties.ModuleName;
+                        var project = await _rollbarClient.FindProjectByName(name)
+                            ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
                         var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
                         owner.RollbarProjectId = project.Id;
@@ -125,16 +128,19 @@ namespace MindTouch.LambdaSharpRegistrar.Register {
                     LogInfo($"Removing Module: Id={properties.ModuleId}, Name={properties.ModuleName}, Version={properties.ModuleVersion}");
 
                     // delete old rollbar project
-                    if(_rollbarClient.HasTokens) {
-                        var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
-                        try {
-                            if(owner.RollbarProjectId > 0) {
-                                await _rollbarClient.DeleteProject(owner.RollbarProjectId);
-                            }
-                        } catch(Exception e) {
-                            LogErrorAsWarning(e, "failed to delete rollbar project: {0}", owner.RollbarProjectId);
-                        }
-                    }
+
+                    // TODO (2018-10-22, bjorg): only delete rollbar project if ALL registrations have been deleted
+
+                    // if(_rollbarClient.HasTokens) {
+                    //     var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    //     try {
+                    //         if(owner.RollbarProjectId > 0) {
+                    //             await _rollbarClient.DeleteProject(owner.RollbarProjectId);
+                    //         }
+                    //     } catch(Exception e) {
+                    //         LogErrorAsWarning(e, "failed to delete rollbar project: {0}", owner.RollbarProjectId);
+                    //     }
+                    // }
 
                     // delete owner record
                     await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");

@@ -167,8 +167,7 @@ namespace MindTouch.LambdaSharpRegistrar.RollbarApi {
             });
             var result = JsonConvert.DeserializeObject<RollbarResponse>(await httpResponse.Content.ReadAsStringAsync());
             if((httpResponse.StatusCode == (HttpStatusCode)422) && (result.Message == "Project with this name already exists")) {
-                var allProjects = await ListAllProjects();
-                return allProjects.First(project => projectName.Equals(project.Name, StringComparison.InvariantCultureIgnoreCase));
+                return await FindProjectByName(projectName) ?? throw new Exception($"could not find project: {projectName}");
             }
             if(!httpResponse.IsSuccessStatusCode) {
                 throw new Exception($"http operation failed: {httpResponse.StatusCode}");
@@ -194,6 +193,16 @@ namespace MindTouch.LambdaSharpRegistrar.RollbarApi {
             }
             var list = JsonConvert.DeserializeObject<List<RollbarProject>>(JsonConvert.SerializeObject(result.Result));
             return list.Where(project => project.Name != null).ToArray();
+        }
+
+        public async Task<RollbarProject> FindProjectByName(string projectName) {
+
+            // Rollbar has a 32-character limit on project names
+            if(projectName.Length > 32) {
+                projectName = projectName.Substring(0, 32);
+            }
+            var allProjects = await ListAllProjects();
+            return allProjects.FirstOrDefault(project => projectName.Equals(project.Name, StringComparison.InvariantCultureIgnoreCase));
         }
 
         public async Task<RollbarProject> GetProject(int projectId) {
