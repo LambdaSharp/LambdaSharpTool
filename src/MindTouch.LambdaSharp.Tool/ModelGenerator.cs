@@ -739,11 +739,27 @@ namespace MindTouch.LambdaSharp.Tool {
                 foreach(var source in alexaSources) {
                     ++index;
                     var suffix = index.ToString();
+
+                    // check if we need to create a conditional expression for a non-literal token
+                    var eventSourceToken = source.EventSourceToken;
+                    if(eventSourceToken is string token) {
+                        if(token == "*") {
+                            eventSourceToken = null;
+                        }
+                    } else if(eventSourceToken != null) {
+                        var condition = $"{function.Name}AlexaIsBlank{suffix}";
+                        eventSourceToken = Fn.If(
+                            condition,
+                            Fn.Ref("AWS::NoValue"),
+                            source.EventSourceToken
+                        );
+                        _stack.Add(condition, new Condition(Fn.Equals(source.EventSourceToken, "*")));
+                    }
                     _stack.Add($"{function.Name}AlexaPermission{suffix}", new Lambda.Permission {
                         Action = "lambda:InvokeFunction",
                         FunctionName = Fn.GetAtt(function.Name, "Arn"),
                         Principal = "alexa-appkit.amazon.com",
-                        EventSourceToken = source.EventSourceToken
+                        EventSourceToken = eventSourceToken
                     });
                 }
             }

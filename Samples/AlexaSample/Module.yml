@@ -4,7 +4,7 @@ Description: A sample module using an Alexa skill
 Inputs:
 
   - Input: AlexaSkillID
-    Description: Alexa Skill ID (optional)
+    Description: Alexa Skill ID
     Default: "*"
 
 Functions:

@@ -754,12 +754,8 @@ namespace MindTouch.LambdaSharp.Tool {
                     };
                 }
                 if(source.Alexa != null) {
-                    var alexaSkillId = source.Alexa;
-                    if((source.Alexa is string alexa) && (string.IsNullOrWhiteSpace(alexa) || (alexa == "*"))) {
-                        alexaSkillId = null;
-                    }
                     return new AlexaSource {
-                        EventSourceToken = alexaSkillId
+                        EventSourceToken = source.Alexa
                     };
                 }
                 if(source.DynamoDB != null) {

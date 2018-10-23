@@ -544,7 +544,15 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "EventSourceToken": {
-          "Ref": "AlexaSkillId"
+          "Fn::If": [
+            "FunctionAlexaIsBlank3",
+            {
+              "Ref": "AWS::NoValue"
+            },
+            {
+              "Ref": "AlexaSkillId"
+            }
+          ]
         },
         "FunctionName": {
           "Fn::GetAtt": [
@@ -633,6 +641,14 @@
           "Ref": "DeploymentParent"
         },
         ""
+      ]
+    },
+    "FunctionAlexaIsBlank3": {
+      "Fn::Equals": [
+        {
+          "Ref": "AlexaSkillId"
+        },
+        "*"
       ]
     }
   },
