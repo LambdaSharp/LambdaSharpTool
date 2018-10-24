@@ -121,25 +121,25 @@ namespace MindTouch.LambdaSharp.Tool {
                 new InputNode {
                     Input = "DeploymentBucketName",
                     Section = section,
-                    Label = "S3 Bucket Name",
+                    Label = "Deployment S3 Bucket",
                     Description = "Source deployment S3 bucket name"
                 },
                 new InputNode {
                     Input = "DeploymentBucketPath",
                     Section = section,
-                    Label = "S3 Bucket Path",
+                    Label = "Deployment S3 Path",
                     Description = "Source deployment S3 bucket path"
                 },
                 new InputNode {
                     Input = "DeploymentPrefix",
                     Section = section,
-                    Label = "Prefix",
+                    Label = "Deployment Prefix",
                     Description = "Module deployment prefix"
                 },
                 new InputNode {
                     Input = "DeploymentPrefixLowercase",
                     Section = section,
-                    Label = "Prefix (lowercase)",
+                    Label = "Deployment Prefix (lowercase)",
                     Description = "Module deployment prefix (lowercase)"
                 },
                 new InputNode {
