@@ -1,8 +1,8 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool & Framework (v0.3)
+# LambdaSharp Tool & Framework (v0.4)
 
-**[Read what's new in the latest release.](Docs/ReleaseNotes-Cebes.md)**
+**[Read what's new in the latest release.](Docs/ReleaseNotes-Damo.md)**
 
 The objective of λ# is to accelerate the innovation velocity of serverless solutions. Developers should be able to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
