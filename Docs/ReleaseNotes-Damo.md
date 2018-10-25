@@ -30,19 +30,27 @@ With the addition of new sections to the module file, and with an eye towards th
 
 Also, variables are no longer always added to function environments. Instead, the scope of a variable is controlled by the `Scope` attribute (see below). The old behavior caused too many cases of circular dependencies, which are always tedious to diagnose.
 
+### λ# Tool
+
+Function folders no longer need to be prefixed with the module name. They will still be found for backwards compatibility, but the new recommended naming is to just use the function name as folder name.
+
+With the introduction of `--tool-profile` there was the need to rename `--profile` to `--aws-profile` to avoid ambiguity.
+
+### λ# Assemblies
+
+* The `ALambdaFunction<TRequest>` base class was removed. Instead, use `ALambdaFunction<TRequest, TResponse>`.
+
 
 
 VVVVV ***CONTINUE HERE*** VVVV
 
 
-
-### λ# Tool
-
-* `--profile` is now `--aws-profile`
-* nested function folders no longer need the `{ModuleName}.` prefix
-
 ## New λ# Tool Features
 
+* multi-stage deployment (build, publish, deploy)
+* CloudWatch Logs
+    * clean-up on function deletion
+    * log retention limit
 * dotnet global tool
 * `lash setup`
 * `lash config`: configure tool for deployments
@@ -56,8 +64,12 @@ VVVVV ***CONTINUE HERE*** VVVV
 * `lash build`: compile all .Net projects and `Module.yml` file
 * `lash publish`: unzip and copy assets from zip file to deployment S3 bucket
 * `lash info`
-    * show `dotnet` tool info (if any) when doing `lash info`
+    * show `dotnet` tool version
+    * show `git` tool version
+    * hide sensitive information (account id) unless `--show-sensitive` option is used
+* `lash encrypt`
 * input path can be a directory instead of the module file (will look for `Module.yml`)
+* javascript functions
 
 * parameter file
     * ability to add cloudformation template parameters when deploying a module
@@ -71,6 +83,13 @@ VVVVV ***CONTINUE HERE*** VVVV
             - alias/...
         ```
 * cli option `--tool-profile` or use environment variable `LAMBDASHARP_PROFILE`; if not provided, defaults to `Default`
+
+* `ModuleSecrets` input
+* `Module::Id`
+* `Module::Name`
+* `Module::Version`
+* `Module::DeadLetterQueueArn`
+* `Module::LoggingStreamArn`
 
 ## New λ# Module Features
 
@@ -118,11 +137,20 @@ VVVVV ***CONTINUE HERE*** VVVV
 
 ## New λ# Environment Features
 * module registration (similar to what we did with rollbar)
+* configurable (LambdaSharp Module)
+    * `LoggingStreamRetentionPeriod`
+    * `DefaultSecretKeyRotationEnabled`
 
 ## New λ# Assembly Features
 * `ALambdaFunction` now has `DecryptSecretAsync()` and `EncryptSecretAsync()` methods (uses DefaultSecretKey by default)
 
+## New λ# Assemblies Features
 
+* `string DecryptSecretAsync(string secret, Dictionary<string, string> encryptionContext = null)`
+* `string EncryptSecretAsync(string text, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null)`
+* `T T DeserializeJson<T>(Stream stream)`
+* `T DeserializeJson<T>(string json)`
+* `string SerializeJson(object value)`
 ## Fixes
 
 ## Internal Changes
