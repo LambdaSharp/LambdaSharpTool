@@ -45,22 +45,19 @@ namespace MindTouch.LambdaSharp.Slack {
         public static HttpClient HttpClient = new HttpClient();
 
         //--- Fields ---
-        private string _slackVerificationTokenName;
         private string _slackVerificationToken;
 
         //--- Abstract Methods ---
         protected abstract Task HandleSlackRequestAsync(SlackRequest request);
 
         //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config) {
+        public override async Task InitializeAsync(LambdaConfig config) {
 
             // check if an alternative name for the slack token was given
-            if(_slackVerificationTokenName != null) {
-                _slackVerificationToken = config.ReadText(_slackVerificationTokenName);
-            } else {
-                _slackVerificationToken = config.ReadText("SlackToken", null);
+            _slackVerificationToken = config.ReadText("SlackToken", defaultValue: null);
+            if(_slackVerificationToken == "") {
+                _slackVerificationToken = null;
             }
-            return Task.CompletedTask;
         }
 
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
@@ -87,7 +84,7 @@ namespace MindTouch.LambdaSharp.Slack {
                     Console.SetError(consoleErrorWriter);
 
                     // validate the slack token (assuming one was configured)
-                    if(!(_slackVerificationTokenName?.Equals(request.Token) ?? true)) {
+                    if(!(_slackVerificationToken?.Equals(request.Token) ?? true)) {
                         throw new SlackVerificationTokenMismatchException();
                     }
 
@@ -114,13 +111,6 @@ namespace MindTouch.LambdaSharp.Slack {
                 }
             }
             return "Ok";
-        }
-
-        protected override async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
-            await base.InitializeAsync(envSource, context);
-
-            // retrieve the optional parameter name for the slack token
-            _slackVerificationTokenName = envSource.Read("SLACKTOKENNAME");
         }
 
         protected Task<bool> RespondInChannel(SlackRequest request, string text, params SlackResponseAttachment[] attachments)

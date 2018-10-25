@@ -1,6 +1,13 @@
 Module: Demo
 Description: LambdaSharp Demo
 
+Inputs:
+
+  - Input: SlackToken
+    Description: Slack verification token
+    Scope: SlackCommand
+    Default: ""
+
 Outputs:
 
   - Output: NotifyRecorderTopic

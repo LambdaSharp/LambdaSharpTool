@@ -1,6 +1,13 @@
 Module: SlackCommandSample
 Description: A sample module integrating with Slack
 
+Inputs:
+
+  - Input: SlackToken
+    Description: Slack verification token
+    Scope: MyFunction
+    Default: ""
+
 Functions:
 
   - Function: MyFunction
