@@ -38,7 +38,9 @@ With the introduction of `--tool-profile` there was the need to rename `--profil
 
 ### λ# Assemblies
 
-* The `ALambdaFunction<TRequest>` base class was removed. Instead, use `ALambdaFunction<TRequest, TResponse>`.
+CloudFormation resources are now always resolved to the ARN of the created resource. Previously, created resources were resolved using the `!Ref` operation, which varies by resource type. This change was necessary to homogenize CloudFormation resources with resource references found in input parameters and cross-module references. For convenience, the `AwsConverters` class contains methods for extracting resource names from S3/SQS/DynamoDB/etc. ARNs.
+
+The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunction<TRequest, TResponse>`.
 
 
 
