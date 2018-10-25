@@ -4,7 +4,7 @@ Description: A sample module using Kinesis streams
 Variables:
 
   - Var: Table
-    Scope: *
+    Scope: "*"
     Description: Description for DynamoDB table
     Resource:
       Type: AWS::DynamoDB::Table

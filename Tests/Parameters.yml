@@ -5,24 +5,24 @@ Variables:
 
   - Var: SourceValueParameter
     Description: Literal value
-    Scope: *
+    Scope: "*"
     Value: This is a literal value
 
   - Var: SourceExpressionParameter
     Description: CloudFormation !Ref expression
-    Scope: *
+    Scope: "*"
     Value: !Ref SourceValueParameter
 
   - Var: SourceResourceParameter
     Description: CloudFormation Resource
-    Scope: *
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
   - Var: SourceValueListParameter
     Description: List of literal values
-    Scope: *
+    Scope: "*"
     Values:
       - first
       - second
@@ -30,7 +30,7 @@ Variables:
 
   - Var: SourceExpressionListParameter
     Description: List of literal values
-    Scope: *
+    Scope: "*"
     Values:
       - !Ref SourceValueParameter
       - !Ref SourceExpressionParameter
@@ -39,17 +39,17 @@ Variables:
 
   - Var: SourceParameterCollection
     Description: Description for collection parameter
-    Scope: *
+    Scope: "*"
     Variables:
 
       - Var: FirstSourceValueParameter
         Description: Nested parameter with a literal value
-        Scope: *
+        Scope: "*"
         Value: A nested literal source value
 
       - Var: SecondSourceResourceParameter
         Description: CloudFormation Resource
-        Scope: *
+        Scope: "*"
         Resource:
           Type: AWS::SNS::Topic
           Allow: Publish
@@ -58,17 +58,17 @@ Variables:
 
   - Var: SampleParameterCollection
     Description: Description for collection parameter
-    Scope: *
+    Scope: "*"
     Variables:
 
       - Var: FirstNestedParameter
         Description: First nested parameter
-        Scope: *
+        Scope: "*"
         Value: A literal value
 
       - Var: SecondNestedParameter
         Description: Second nested parameter
-        Scope: *
+        Scope: "*"
         Values:
           - one
           - two
@@ -76,7 +76,7 @@ Variables:
 
       - Var: ThirdNestedParameter
         Description: Third nested parameter
-        Scope: *
+        Scope: "*"
         Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
         Resource:
           Type: AWS::SNS::Topic
@@ -84,19 +84,19 @@ Variables:
 
       - Var: FourthNestedParameter
         Description: Fourth nested parameter
-        Scope: *
+        Scope: "*"
         Resource:
           Type: AWS::SNS::Topic
           Allow: Subscribe
 
       - Var: FifthNestedParameter
         Description: Fifth nested parameter
-        Scope: *
+        Scope: "*"
         Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
 
       - Var: SixthNestedParameter
         Description: Sixth nested parameter
-        Scope: *
+        Scope: "*"
         Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
@@ -104,31 +104,31 @@ Variables:
 
       - Var: SeventhParameter
         Description: Seventh nested parameter
-        Scope: *
+        Scope: "*"
         Value: !Ref SingleResourceParameter
 
   - Var: OtherParameterCollection
     Description: Description for collection parameter
-    Scope: *
+    Scope: "*"
     Value: This collection has a value
     Variables:
 
       - Var: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection
-        Scope: *
+        Scope: "*"
         Value: Another literal value
 
   - Var: SingleResourceParameter
     Description: Second nested parameter
     Value: "arn:aws:sns:*:*:*"
-    Scope: *
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
       Allow: Publish
 
   - Var: MultiResourceParameter
     Description: Second nested parameter
-    Scope: *
+    Scope: "*"
     Values:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
@@ -139,7 +139,7 @@ Variables:
   # !Ref reference use-cases
   - Var: SourceSubExpressions
     Description: CloudFormation !Sub expressions
-    Scope: *
+    Scope: "*"
     Values:
       - !Sub "${SourceValueParameter}"
       - !Sub "${SourceExpressionParameter}"
@@ -152,15 +152,15 @@ Variables:
 
   # !Ref module variables
   - Var: MyModuleName
-    Scope: *
+    Scope: "*"
     Value: !Ref Module::Name
 
   - Var: MyModuleId
-    Scope: *
+    Scope: "*"
     Value: !Ref Module::Id
 
   - Var: MyModuleVersion
-    Scope: *
+    Scope: "*"
     Value: !Ref Module::Version
 
 Functions:

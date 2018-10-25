@@ -32,12 +32,12 @@ Variables:
 
   - Var: MyCustomResourceProperty
     Description: A value from my custom resources
-    Scope: *
+    Scope: "*"
     Value: !GetAtt MyResource.Result
 
   - Var: OtherResource
     Description: A CloudFormation dummy resource to reference
-    Scope: *
+    Scope: "*"
     Resource:
       Type: AWS::SNS::Topic
 

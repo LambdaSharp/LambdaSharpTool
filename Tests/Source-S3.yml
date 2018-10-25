@@ -6,7 +6,7 @@ Inputs:
 
   - Input: InputBucket
     Description: Description for Bucket resource
-    Scope: *
+    Scope: "*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
@@ -15,7 +15,7 @@ Variables:
 
   - Var: Bucket
     Description: Description for Bucket resource
-    Scope: *
+    Scope: "*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
