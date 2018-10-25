@@ -35,7 +35,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("list", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "List LambdaSharp modules";
+                cmd.Description = "List deployed LambdaSharp modules";
 
                 // command options
                 var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);

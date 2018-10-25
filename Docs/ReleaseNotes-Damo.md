@@ -55,6 +55,7 @@ VVVVV ***CONTINUE HERE*** VVVV
     * log retention limit
 * dotnet global tool
 * `lash setup`
+    * `lash setup` should work with local packages as well (`--local`)
 * `lash config`: configure tool for deployments
 * `lash deploy`: run create-stack command with required parameters
     * check if deployed module name matches
@@ -137,6 +138,7 @@ VVVVV ***CONTINUE HERE*** VVVV
 * allow `!Ref` for alexa skill
 * substitute parameter values in `!Ref` and `!Sub` operations
     * find and replace `!Ref` parameter references in-place rather than to letting cloudformation replace them for us
+* ability to specify the attribute to obtain the ARN
 
 ## New λ# Environment Features
 * module registration (similar to what we did with rollbar)
@@ -154,6 +156,8 @@ VVVVV ***CONTINUE HERE*** VVVV
 * `T T DeserializeJson<T>(Stream stream)`
 * `T DeserializeJson<T>(string json)`
 * `string SerializeJson(object value)`
+
+
 ## Fixes
 
 ## Internal Changes
