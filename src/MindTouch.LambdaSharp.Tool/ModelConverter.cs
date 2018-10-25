@@ -521,12 +521,15 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // managed resource
                         AtLocation("Resource", () => {
+                            var reference = (parameter.Resource.ArnAttribute != null)
+                                ? FnGetAtt(resourceName, parameter.Resource.ArnAttribute)
+                                : ResourceMapping.GetArnReference(parameter.Resource.Type, resourceName);
                             result = new CloudFormationResourceParameter {
                                 Scope = ConvertScope(module, parameter.Scope),
                                 Name = parameter.Var,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(new List<object>(), parameter.Resource),
-                                Reference = ResourceMapping.GetArnReference(parameter.Resource.Type, resourceName)
+                                Reference = reference
                             };
                         });
                     }
