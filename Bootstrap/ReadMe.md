@@ -66,6 +66,7 @@ __Using Powershell:__
 lash deploy `
     --tier Demo `
     $LAMBDASHARP\Bootstrap\LambdaSharp `
+    $LAMBDASHARP\Bootstrap\LambdaSharpRegistrar `
     $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader `
     $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber
 ```
@@ -75,6 +76,7 @@ __Using Bash:__
 lash deploy \
     --tier Demo \
     $LAMBDASHARP/Bootstrap/LambdaSharp \
+    $LAMBDASHARP/Bootstrap/LambdaSharpRegistrar \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader \
     $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber
 ```

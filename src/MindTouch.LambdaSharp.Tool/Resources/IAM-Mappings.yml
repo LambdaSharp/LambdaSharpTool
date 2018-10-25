@@ -28,6 +28,7 @@ AWS::DynamoDB::Table:
     - dynamodb:ListStreams
   Full:
     - dynamodb:*
+
 AWS::S3::Bucket:
   ReadOnly:
     - s3:GetObject

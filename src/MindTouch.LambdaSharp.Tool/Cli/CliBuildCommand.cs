@@ -520,7 +520,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 string moduleName;
 
                 // check if a version suffix is specified
-                if(moduleKey.Contains(':')) {
+                // NOTE: avoid matching on "C:/" strings!
+                if(moduleKey.IndexOf(':', StringComparison.Ordinal) > 1) {
                     var parts = moduleKey.Split(':', 2);
                     moduleName = parts[0];
                     if(parts[1] != "*") {

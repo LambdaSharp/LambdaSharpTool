@@ -406,6 +406,9 @@ namespace MindTouch.LambdaSharp.Tool {
                     File.Delete(Path.Combine(folder, GITSHAFILE));
                 } catch { }
             }
+            if(!Directory.Exists(Settings.OutputDirectory)) {
+                Directory.CreateDirectory(Settings.OutputDirectory);
+            }
             File.Move(zipTempPackage, package);
             return package;
         }
