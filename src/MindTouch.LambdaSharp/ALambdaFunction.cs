@@ -84,7 +84,6 @@ namespace MindTouch.LambdaSharp {
         private bool _initialized;
         private LambdaConfig _appConfig;
 
-
         //--- Constructors ---
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
 

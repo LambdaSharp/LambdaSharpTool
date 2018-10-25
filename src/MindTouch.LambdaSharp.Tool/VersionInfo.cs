@@ -94,10 +94,6 @@ namespace MindTouch.LambdaSharp.Tool {
         public bool IsPreRelease => Suffix.Length > 0;
 
         //--- Methods ---
-        public VersionInfo WithSuffix(string suffix) {
-            return new VersionInfo(Version, suffix);
-        }
-
         override public string ToString() => Version.ToString() + Suffix;
 
         public bool Equals(VersionInfo other) {
@@ -146,7 +142,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         public bool IsCompatibleWith(VersionInfo other) {
-            if((Suffix != null) && (other.Suffix == null) || ((Suffix == null) && (other.Suffix != null))) {
+            if(Suffix != other.Suffix) {
                 return false;
             }
             if(Major != other.Major) {

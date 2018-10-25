@@ -65,7 +65,7 @@ namespace MindTouch.LambdaSharp.Tool {
             new CliSetupCommand().Register(app);
             new CliEncryptCommand().Register(app);
 
-            // new command
+            // no command
             var showHelp = false;
             app.OnExecute(() => {
                 showHelp = true;
@@ -77,6 +77,8 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
                 try {
                     app.Execute(args);
+                } catch(CommandParsingException e) {
+                    AddError(e.Message);
                 } catch(Exception e) {
                     AddError(e);
                 }

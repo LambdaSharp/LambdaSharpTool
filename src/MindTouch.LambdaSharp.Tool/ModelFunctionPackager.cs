@@ -190,12 +190,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     .Elements("PackageReference")
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("MindTouch.LambdaSharp", StringComparison.Ordinal) ?? false);
                 if(includes != null) {
-                    var expectedVersion = $"{version.Major}.{version.Minor}";
                     foreach(var include in includes) {
-                        var libraryVersion = include.Attribute("Version")?.Value ?? "missing";
-                        if(!VersionMatch(expectedVersion, libraryVersion)) {
-                            var library = include.Attribute("Include").Value;
-                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersion}')");
+                        var expectedVersion = VersionInfo.Parse($"{version.Major}.{version.Minor}{version.Suffix}");
+                        var library = include.Attribute("Include").Value;
+                        var libraryVersionText = include.Attribute("Version")?.Value;
+                        if(libraryVersionText == null) {
+                            AddError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
+                        } if(!VersionInfo.TryParse(libraryVersionText, out VersionInfo libraryVersion)) {
+                            AddError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                        } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
+                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                     if(Settings.HasErrors) {
