@@ -70,6 +70,7 @@ VVVVV ***CONTINUE HERE*** VVVV
     * show `git` tool version
     * hide sensitive information (account id) unless `--show-sensitive` option is used
 * `lash encrypt`
+* `lash new function --language javascript`
 * input path can be a directory instead of the module file (will look for `Module.yml`)
 * javascript functions
 

@@ -94,6 +94,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
+                    var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (either: csharp, javascript; default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
@@ -123,6 +124,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             useProjectReference = false;
                         }
 
+                        // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
+                        var functionMemory = 128;
+                        var functionTimeout = 30;
+
                         // determine function name
                         if(cmdArgument.Values.Any() && nameOption.HasValue()) {
                             AddError("cannot specify --name and an argument at the same time");
@@ -145,7 +150,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             frameworkOption.Value() ?? "netcoreapp2.1",
                             useProjectReference,
                             workingDirectory,
-                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml")
+                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
+                            languageOption.Value() ?? "csharp",
+                            functionMemory,
+                            functionTimeout
                         );
                     });
                 });
@@ -185,12 +193,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string framework,
             bool useProjectReference,
             string workingDirectory,
-            string moduleFile
+            string moduleFile,
+            string language,
+            int functionMemory,
+            int functionTimeout
         ) {
-
-            // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
-            var functionMemory = 128;
-            var functionTimeout = 30;
 
             // parse yaml module file
             if(!File.Exists(moduleFile)) {
@@ -221,37 +228,36 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return;
             }
 
-            // create function project
-            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
-            var substitutions = new Dictionary<string, string> {
-                ["FRAMEWORK"] = framework,
-                ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_PROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
-                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
-            };
-            try {
-                var projectContents = ReadResource(
-                    useProjectReference
-                        ? "NewFunctionProjectLocal.xml"
-                        : "NewFunctionProjectNuget.xml",
-                    substitutions
+            // create function file
+            switch(language) {
+            case "csharp":
+                NewCSharpFunction(
+                    lambdasharpDirectory,
+                    functionName,
+                    rootNamespace,
+                    framework,
+                    useProjectReference,
+                    workingDirectory,
+                    moduleFile,
+                    functionMemory,
+                    functionTimeout,
+                    projectDirectory
                 );
-                File.WriteAllText(projectFile, projectContents);
-                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
-            } catch(Exception e) {
-                AddError($"unable to create project file '{projectFile}'", e);
-                return;
-            }
-
-            // create function source code
-            var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource("NewFunction.txt", substitutions);
-            try {
-                File.WriteAllText(functionFile, functionContents);
-                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
-            } catch(Exception e) {
-                AddError($"unable to create function file '{functionFile}'", e);
-                return;
+                break;
+            case "javascript":
+                NewJavascriptFunction(
+                    lambdasharpDirectory,
+                    functionName,
+                    rootNamespace,
+                    framework,
+                    useProjectReference,
+                    workingDirectory,
+                    moduleFile,
+                    functionMemory,
+                    functionTimeout,
+                    projectDirectory
+                );
+                break;
             }
 
             // update YAML module file
@@ -279,6 +285,78 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 $"    Timeout: {functionTimeout}",
             });
             File.WriteAllLines(moduleFile, moduleLines);
+        }
+
+        public void NewCSharpFunction(
+            string lambdasharpDirectory,
+            string functionName,
+            string rootNamespace,
+            string framework,
+            bool useProjectReference,
+            string workingDirectory,
+            string moduleFile,
+            int functionMemory,
+            int functionTimeout,
+            string projectDirectory
+        ) {
+
+            // create function project
+            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            var substitutions = new Dictionary<string, string> {
+                ["FRAMEWORK"] = framework,
+                ["ROOTNAMESPACE"] = rootNamespace,
+                ["LAMBDASHARP_PROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
+                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
+            };
+            try {
+                var projectContents = ReadResource(
+                    useProjectReference
+                        ? "NewCSharpFunctionProjectLocal.xml"
+                        : "NewCSharpFunctionProjectNuget.xml",
+                    substitutions
+                );
+                File.WriteAllText(projectFile, projectContents);
+                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create project file '{projectFile}'", e);
+                return;
+            }
+
+            // create function source code
+            var functionFile = Path.Combine(projectDirectory, "Function.cs");
+            var functionContents = ReadResource("NewCSharpFunction.txt", substitutions);
+            try {
+                File.WriteAllText(functionFile, functionContents);
+                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create function file '{functionFile}'", e);
+                return;
+            }
+        }
+
+        public void NewJavascriptFunction(
+            string lambdasharpDirectory,
+            string functionName,
+            string rootNamespace,
+            string framework,
+            bool useProjectReference,
+            string workingDirectory,
+            string moduleFile,
+            int functionMemory,
+            int functionTimeout,
+            string projectDirectory
+        ) {
+
+            // create function source code
+            var functionFile = Path.Combine(projectDirectory, "index.js");
+            var functionContents = ReadResource("NewJSFunction.txt");
+            try {
+                File.WriteAllText(functionFile, functionContents);
+                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create function file '{functionFile}'", e);
+                return;
+            }
         }
     }
 }

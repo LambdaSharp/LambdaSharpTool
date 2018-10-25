@@ -515,7 +515,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Description = parameter.Description,
                                 Reference = parameter.Value
                             };
-
                         }
                     } else if(parameter.Resource != null) {
 

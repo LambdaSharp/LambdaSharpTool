@@ -63,7 +63,8 @@ lash deploy \
 mkdir Test$SUFFIX
 cd Test$SUFFIX
 lash new module MyModule
-lash new function MyFunction
+lash new function MyFirstFunction
+lash new function --language javascript MySecondFunction
 lash deploy
 cd ..
 
