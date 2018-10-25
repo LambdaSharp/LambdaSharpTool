@@ -698,16 +698,16 @@
           "default": "Secret Key (ARN)"
         },
         "DeploymentBucketName": {
-          "default": "S3 Bucket Name"
+          "default": "Deployment S3 Bucket"
         },
         "DeploymentBucketPath": {
-          "default": "S3 Bucket Path"
+          "default": "Deployment S3 Path"
         },
         "DeploymentPrefix": {
-          "default": "Prefix"
+          "default": "Deployment Prefix"
         },
         "DeploymentPrefixLowercase": {
-          "default": "Prefix (lowercase)"
+          "default": "Deployment Prefix (lowercase)"
         },
         "DeploymentParent": {
           "default": "Parent Stack Name"
