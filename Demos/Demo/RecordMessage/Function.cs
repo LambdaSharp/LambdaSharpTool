@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharpDemo.RecordEvents {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config) {
-            var tableName = config.ReadText("MessageTable");
+            var tableName = AwsConverters.ConvertDynamoDBArnToName(config.ReadText("MessageTable"));
             _table = new MessageTable(tableName);
             return Task.CompletedTask;
         }

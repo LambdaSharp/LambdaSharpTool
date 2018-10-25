@@ -76,7 +76,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = properties.BucketArn.Split(':')[5];
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -99,7 +99,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = properties.BucketArn.Split(':')[5];
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });
@@ -117,7 +117,7 @@ namespace MindTouch.LambdaSharpS3Subscriber.ResourceHandler {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
-            var bucketName = properties.BucketArn.Split(':')[5];
+            var bucketName = AwsConverters.ConvertBucketArnToName(properties.BucketArn);
             var config = await _s3Client.GetBucketNotificationAsync(new GetBucketNotificationRequest {
                 BucketName = bucketName
             });

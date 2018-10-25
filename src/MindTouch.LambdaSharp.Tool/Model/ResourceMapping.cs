@@ -83,21 +83,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             }
         }
 
-        public object GetReference(string awsType, string logicalId) {
-            if(awsType == null) {
-
-                // use !Ref for non-resource type references
-                return AModelProcessor.FnRef(logicalId);
-            }
-            var type = GetHumidifierType(awsType);
-            if(type == null) {
-
-                // don't reference custom types
-                return AModelProcessor.FnRef("AWS::NoValue");
-            }
-            return AModelProcessor.FnRef(logicalId);
-        }
-
         public object GetArnReference(string awsType, string logicalId) {
             if(awsType == null) {
 

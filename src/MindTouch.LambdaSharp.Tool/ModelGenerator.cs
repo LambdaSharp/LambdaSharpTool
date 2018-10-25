@@ -863,7 +863,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         resourceTemplate = new CustomResource(resource.Type, resource.Properties);
                     } else if(!ResourceMapping.TryParseResourceProperties(
                         resource.Type,
-                        ResourceMapping.GetArnReference(resource.Type, resourceName),
+                        cloudFormationResourceParameter.Reference,
                         resource.Properties,
                         out resourceAsStatementFn,
                         out resourceTemplate

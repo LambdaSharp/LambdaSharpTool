@@ -81,7 +81,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
             _snsClient = new AmazonSimpleNotificationServiceClient();
             _errorTopicArn = config.ReadText("ErrorReportTopic");
             _usageTopicArn = config.ReadText("UsageReportTopic");
-            var tableName = config.ReadText("RegistrationTable");
+            var tableName = AwsConverters.ConvertDynamoDBArnToName(config.ReadText("RegistrationTable"));
             var dynamoClient = new AmazonDynamoDBClient();
             _registrations = new RegistrationTable(dynamoClient, tableName);
             _cachedRegistrations = new Dictionary<string, OwnerMetaData>();

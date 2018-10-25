@@ -526,7 +526,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Name = parameter.Var,
                                 Description = parameter.Description,
                                 Resource = ConvertResource(new List<object>(), parameter.Resource),
-                                Reference = ResourceMapping.GetReference(parameter.Resource.Type, resourceName)
+                                Reference = ResourceMapping.GetArnReference(parameter.Resource.Type, resourceName)
                             };
                         });
                     }
