@@ -1,13 +1,113 @@
 ![λ#](../Docs/LambdaSharp_v2_small.png)
 
-# Setup LambdaSharp Environment
+# Setup LambdaSharp Tool & Environment
 
-Setting up the λ# environment is required for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
+## Step 1: Installing λ# Tool
 
-## Setup λ# Tool
+As of v0.4, the λ# tool can be installed as a global `dotnet` tool. Simply run the `dotnet` tool installation command:
+
+__Using PowerShell/Bash:__
+```bash
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
+```
+
+Alternatively, for λ# contributors, the tool can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
+
+Once installed, validate that the command works by running it.
+
+__Using Powershell/Bash:__
+```bash
+dotnet lash
+```
+
+The following text should appear (or similar):
+```
+MindTouch LambdaSharp Tool (v0.4)
+
+Project Home: https://github.com/LambdaSharp/LambdaSharpTool
+
+Usage: MindTouch.LambdaSharp.Tool [options] [command]
+
+Options:
+  -?|-h|--help  Show help information
+
+Commands:
+  build         Build LambdaSharp module
+  config        Configure LambdaSharp environment
+  deploy        Deploy LambdaSharp module
+  encrypt       Encrypt with Default LambdaSharp Secrets Key
+  info          Show LambdaSharp settings
+  list          List LambdaSharp modules
+  new           Create new LambdaSharp module or function
+  publish       Publish LambdaSharp module
+  setup         Setup LambdaSharp environment
+
+Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
+```
+
+## Step 2: Configure λ# Tool
+
+Before the λ# tool can be used, it must be configured. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
+
+__Using Powershell/Bash:__
+```bash
+dotnet lash config
+```
+
+The λ# tool can be configured for multiple tool profiles using the `--tool-profile` option. When omitted, the _Default_ tool profile is assumed. The λ# tool configuration is stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so that it can be shared across teams on the same AWS account.
+
+## Step 3: Setup λ# Environment
+
+λ# must be setup for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.). Once setup, λ# modules can be deployed.
+
+__Using Powershell/Bash:__
+```bash
+dotnet lash setup --tier Demo
+```
+
+__NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
+
+Run the `list` command to confirm that all λ# modules were deployed successfully:
+
+__Using Powershell/Bash:__
+```bash
+dotnet lash list --tier Demo
+```
+
+The following text should appear (or similar):
+```
+MindTouch LambdaSharp Tool (v0.4) - List deployed LambdaSharp modules
+
+MODULE                        STATUS                DATE
+LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12
+LambdaSharpRegistrar          [UPDATE_COMPLETE]     2018-10-25 13:58:56
+LambdaSharpS3Subscriber       [UPDATE_COMPLETE]     2018-10-25 13:59:47
+LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
+
+Found 4 modules for deployment tier 'Demo'
+```
+
+## Optional: Use λ# Environment Variable
+
+The following environment variables are checked when their corresponding options are omitted from the λ# command line.
+* `LAMBDASHARP_TIER`: Replaces the need for the `--tier` option.
+* `LAMBDASHARP_PROFILE`: Replaces the need for the `--tool-profile` option.
+
+__Using PowerShell:__
+```powershell
+New-Variable -Name LAMBDASHARP_TIER -Value Demo
+```
+
+__Using Bash:__
+```bash
+export LAMBDASHARP_TIER=Demo
+```
+
+## For λ# Contributors: Installing λ# Tool from GitHub
 
 The λ# tool is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# tool.
 
+__Using Powershell/Bash:__
 ```bash
 git clone https://github.com/LambdaSharp/LambdaSharpTool.git
 ```
@@ -28,93 +128,4 @@ export LAMBDASHARP=/Repos/LambdaSharpTool
 alias lash="dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj --"
 ```
 
-Once setup, validate that the command works by running:
-```bash
-lash
-```
-
-The following text should appear (or similar):
-```
-MindTouch LambdaSharp Tool (v0.3)
-
-Project Home: https://github.com/LambdaSharp/LambdaSharpTool
-
-Usage: MindTouch.LambdaSharp.Tool [options] [command]
-
-Options:
-  -?|-h|--help  Show help information
-
-Commands:
-  deploy        Deploy LambdaSharp module
-  info          Show LambdaSharp settings
-  list          List LambdaSharp modules
-  new           Create new LambdaSharp asset
-
-Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
-```
-
-## Bootstrap λ# Environment
-
-The λ# environment requires an AWS account to be setup for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.). Once setup, λ# modules can be deployed.
-
-The following command creates the AWS resources needed to deploy λ# modules, such as a the deployment bucket, dead-letter queue, S3 package loader, etc. For the purpose of this tutorial, we use `Demo` as the new deployment tier name.
-
-Ths step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
-
-__Using Powershell:__
-```powershell
-lash deploy `
-    --tier Demo `
-    $LAMBDASHARP\Bootstrap\LambdaSharp `
-    $LAMBDASHARP\Bootstrap\LambdaSharpRegistrar `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3PackageLoader `
-    $LAMBDASHARP\Bootstrap\LambdaSharpS3Subscriber
-```
-
-__Using Bash:__
-```bash
-lash deploy \
-    --tier Demo \
-    $LAMBDASHARP/Bootstrap/LambdaSharp \
-    $LAMBDASHARP/Bootstrap/LambdaSharpRegistrar \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber
-```
-
-## Validate λ# Environment
-
-Run the `list` command to confirm that all λ# modules were deployed successfully:
-
-```bash
-lash list --tier Demo
-```
-
-The following text should appear (or similar):
-```
-MindTouch LambdaSharp Tool (v0.4) - List LambdaSharp modules
-
-MODULE                        STATUS             DATE
-LambdaSharp                   [CREATE_COMPLETE]  2018-08-19 22:48:45
-LambdaSharpS3PackageLoader    [CREATE_COMPLETE]  2018-08-22 01:06:02
-LambdaSharpS3Subscriber       [CREATE_COMPLETE]  2018-09-03 15:46:36
-
-Found 3 modules for deployment tier 'Demo'
-```
-## Use `LAMBDASHARP_TIER` Environment Variable
-
-You can omit the `--tier` option from the λ# tool command line if you define the `LAMBDASHARP_TIER` environment variable instead.
-
-__Using PowerShell:__
-```powershell
-New-Variable -Name LAMBDASHARP_TIER -Value Demo
-```
-
-__Using Bash:__
-```bash
-export LAMBDASHARP_TIER=Demo
-```
-
-Once `LAMBDASHARP_TIER` is defined, the following command will produce the same result.
-```bash
-lash list
-```
+__IMPORTANT:__ make sure to always use your  `lash` alias instead of the `dotnet lash` command.
