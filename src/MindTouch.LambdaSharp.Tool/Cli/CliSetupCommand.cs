@@ -42,6 +42,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+                var versionOption = cmd.Option("--version", "(optional) Specify version for LambdaSharp modules (default: same as tool version)", CommandOptionType.SingleValue);
+                var localOption = cmd.Option("--local", "(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
+                var remoteOption = cmd.Option("--no-local", "(optional) Force the setup command to use the published LambdaSharp bootstrap modules", CommandOptionType.NoValue);
 
                 // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
@@ -62,12 +65,27 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AddError("deployment tier cannot be 'Default' because it is a reserved name");
                         return;
                     }
+
+                    // determine if we want to install modules for a local check-out
+                    string localPath = null;
+                    if(!remoteOption.HasValue()) {
+                        if(localOption.HasValue()) {
+                            localPath = localOption.Value();
+                        } else {
+                            var env = Environment.GetEnvironmentVariable("LAMBDASHARP");
+                            if(env != null) {
+                                localPath = Path.Combine(env, "Bootstrap");
+                            }
+                        }
+                    }
                     await Setup(
                         settings,
                         allowDataLossOption.HasValue(),
                         protectStackOption.HasValue(),
                         tier,
-                        forceDeployOption.HasValue()
+                        forceDeployOption.HasValue(),
+                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
+                        localPath
                     );
                 });
             });
@@ -78,25 +96,74 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool allowDataLoos,
             bool protectStack,
             string tier,
-            bool forceDeploy
+            bool forceDeploy,
+            VersionInfo version,
+            string localPath
         ) {
+            Console.WriteLine($"Readying module for deployment tier '{tier}'");
             foreach(var module in new[] {
                 "LambdaSharp",
                 "LambdaSharpRegistrar",
                 "LambdaSharpS3Subscriber",
                 "LambdaSharpS3PackageLoader"
             }) {
-                await new CliBuildPublishDeployCommand().DeployStepAsync(
-                    settings,
-                    dryRun: null,
-                    moduleKey: $"{module}:{Version}",
-                    instanceName: null,
-                    allowDataLoos: allowDataLoos,
-                    protectStack: protectStack,
-                    inputs: new Dictionary<string, string>(),
-                    tier: tier,
-                    forceDeploy: forceDeploy
-                );
+                var command = new CliBuildPublishDeployCommand();
+                if(localPath != null) {
+                    var moduleSource = Path.Combine(localPath, module, "Module.yml");
+                    settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
+                    settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
+
+                    // build local module
+                    if(!await command.BuildStepAsync(
+                        settings,
+                        Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                        skipAssemblyValidation: true,
+                        skipFunctionBuild: false,
+                        gitsha: null,
+                        buildConfiguration: "Release",
+                        selector: null,
+                        moduleSource: moduleSource
+                    )) {
+                        break;
+                    }
+
+                    // publish module
+                    var moduleKey = await command.PublishStepAsync(settings);
+                    if(moduleKey == null) {
+                        break;
+                    }
+
+                    // deploy module
+                    if(!await command.DeployStepAsync(
+                        settings,
+                        dryRun: null,
+                        moduleKey: moduleKey,
+                        instanceName: null,
+                        allowDataLoos: allowDataLoos,
+                        protectStack: protectStack,
+                        inputs: new Dictionary<string, string>(),
+                        tier: tier,
+                        forceDeploy: forceDeploy
+                    )) {
+                        break;
+                    }
+                } else {
+
+                    // deploy from published bucket
+                    if(!await command.DeployStepAsync(
+                        settings,
+                        dryRun: null,
+                        moduleKey: $"{module}:{version}",
+                        instanceName: null,
+                        allowDataLoos: allowDataLoos,
+                        protectStack: protectStack,
+                        inputs: new Dictionary<string, string>(),
+                        tier: tier,
+                        forceDeploy: forceDeploy
+                    )) {
+                        break;
+                    }
+                }
             }
         }
     }
