@@ -35,7 +35,7 @@ Variables:
       Allow: Subscribe
 
   - Var: ManifestBucket
-    Scope: "*"
+    Scope: *
     Description: Bucket to store information about uploaded packages
     Resource:
       Type: AWS::S3::Bucket

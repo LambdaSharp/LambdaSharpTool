@@ -5,7 +5,7 @@ Inputs:
 
   - Input: InputTable
     Description: Description for DynamoDB input table
-    Scope: "*"
+    Scope: *
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: Subscribe
@@ -14,7 +14,7 @@ Variables:
 
   - Var: Table
     Description: Description for DynamoDB table
-    Scope: "*"
+    Scope: *
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: Subscribe

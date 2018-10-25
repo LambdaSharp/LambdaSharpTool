@@ -10,7 +10,7 @@ Outputs:
 Variables:
 
   - Var: MessageTable
-    Scope: "*"
+    Scope: *
     Description: DynamoDB table for storing received messages
     Resource:
       Type: AWS::DynamoDB::Table

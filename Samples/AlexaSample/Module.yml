@@ -5,7 +5,7 @@ Inputs:
 
   - Input: AlexaSkillID
     Description: Alexa Skill ID
-    Default: "*"
+    Default: *
 
 Functions:
 

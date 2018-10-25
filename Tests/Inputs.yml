@@ -28,20 +28,20 @@ Inputs:
     Type: Secret
     Section: Cross-Module References
     Description: cross-module import reference
-    Scope: "*"
+    Scope: *
 
 
   # Resource Input Parameters
   - Input: ResourceInputParameter
     Section: Resource Input Parameters
-    Scope: "*"
+    Scope: *
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadOnly
 
   - Input: ResourceInputParameterOrCreate
     Section: Resource Input Parameters
-    Scope: "*"
+    Scope: *
     Default: ""
     Resource:
       Type: AWS::SNS::Topic
@@ -49,7 +49,7 @@ Inputs:
 
   - Import: OtherModule::ExportResource
     Section: Resource Input Parameters
-    Scope: "*"
+    Scope: *
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: ReadOnly
@@ -57,23 +57,23 @@ Inputs:
 Variables:
 
   - Var: Input
-    Scope: "*"
+    Scope: *
     Value: !Ref InputParameter
 
   - Var: InputWithDefault
-    Scope: "*"
+    Scope: *
     Value: !Ref InputParameterWithDefault
 
   - Var: SecretInput
-    Scope: "*"
+    Scope: *
     Value: !Ref SecretInputParameter
 
   - Var: ImportedInput
-    Scope: "*"
+    Scope: *
     Value: !Ref OtherModule::ExportValue
 
   - Var: HiddenImportParameter
-    Scope: "*"
+    Scope: *
     Value: !Ref LambdaSharp::LoggingStreamArn
 
 Functions:

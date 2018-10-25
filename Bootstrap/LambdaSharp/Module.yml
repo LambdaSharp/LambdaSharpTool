@@ -70,4 +70,4 @@ Variables:
                 AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
               Action:
                 - kms:*
-              Resource: "*"
+              Resource: *

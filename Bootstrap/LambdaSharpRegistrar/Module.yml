@@ -86,7 +86,7 @@ Variables:
 
   - Var: RegistrationTable
     Description: DynamoDb table for storing function registrations
-    Scope: "*"
+    Scope: *
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: ReadWrite
