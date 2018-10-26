@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2006-2018 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -33,7 +33,7 @@ using MindTouch.LambdaSharp.Tool.Internal;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
-    public class CliConfigCommand : ACliCommand {
+    public class CliToolCommand : ACliCommand {
 
         //--- Class Methods ---
         private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {

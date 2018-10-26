@@ -524,7 +524,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     marker = path;
                 }
             } else {
-                VersionInfo version = null;
+                VersionInfo requestedVersion = null;
                 string moduleName;
 
                 // check if a version suffix is specified
@@ -533,7 +533,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var parts = moduleKey.Split(':', 2);
                     moduleName = parts[0];
                     if(parts[1] != "*") {
-                        version = VersionInfo.Parse(parts[1]);
+                        requestedVersion = VersionInfo.Parse(parts[1]);
                     }
                 } else {
                     moduleName = moduleKey;
@@ -546,20 +546,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     $"lambdasharp-{settings.AwsRegion}"
                 }) {
                     settings.DeploymentBucketName = bucket;
-                    version = await FindNewestVersion(settings, moduleKey, version);
+                    var foundVersion = await FindNewestVersion(settings, moduleName, requestedVersion);
                     if(HasErrors) {
                         return false;
                     }
-                    if(version == null) {
+                    if(foundVersion == null) {
                         continue;
                     }
-                    marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{version}");
+                    marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{requestedVersion}");
                     if(marker != null) {
                         break;
                     }
                 }
                 if(marker == null) {
-                    AddError($"could not find module: {moduleName} (v{version})");
+                    AddError($"could not find module: {moduleName} (v{requestedVersion})");
                     return false;
                 }
             }
@@ -670,7 +670,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo version) {
+        private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo requestedVersion) {
 
             // enumerate versions in bucket
             var versions = new List<VersionInfo>();
@@ -684,7 +684,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var response = await settings.S3Client.ListObjectsV2Async(request);
                 versions.AddRange(response.S3Objects
                     .Select(found => VersionInfo.Parse(found.Key.Substring(request.Prefix.Length)))
-                    .Where(v => (!v.IsPreRelease) && ((version == null) || v.IsCompatibleWith(version)))
+                    .Where(version => (requestedVersion == null) ? !version.IsPreRelease : version.IsCompatibleWith(requestedVersion))
                 );
                 request.ContinuationToken = response.NextContinuationToken;
             } while(request.ContinuationToken != null);

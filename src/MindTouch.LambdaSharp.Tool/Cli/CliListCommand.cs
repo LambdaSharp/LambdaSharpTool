@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "List deployed LambdaSharp modules";
 
                 // command options
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();

@@ -33,14 +33,14 @@ Options:
 
 Commands:
   build         Build LambdaSharp module
-  config        Configure LambdaSharp environment
   deploy        Deploy LambdaSharp module
-  encrypt       Encrypt with Default LambdaSharp Secrets Key
-  info          Show LambdaSharp settings
-  list          List LambdaSharp modules
+  encrypt       Encrypt Value
+  info          Show LambdaSharp information
+  init          Initialize LambdaSharp deployment tier
+  list          List deployed LambdaSharp modules
   new           Create new LambdaSharp module or function
   publish       Publish LambdaSharp module
-  setup         Setup LambdaSharp environment
+  tool          Configure LambdaSharp tool
 
 Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
 ```
@@ -56,13 +56,13 @@ dotnet lash tool
 
 The λ# tool can be configured for multiple tool profiles using the `--tool-profile` option. When omitted, the _Default_ tool profile is assumed. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
 
-## Step 3: Setup λ# Environment
+## Step 3: Initialize λ# Environment
 
-λ# must be setup for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.). Once setup, λ# modules can be deployed.
+λ# must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) before modules can be deployed.
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash new tier Demo
+dotnet lash init --tier Demo
 ```
 
 __NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).
