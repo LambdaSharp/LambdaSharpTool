@@ -59,11 +59,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp function";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new function (e.g. MyFunction)", CommandOptionType.SingleValue);
                     var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
-                    var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (either: csharp, javascript; default: csharp)", CommandOptionType.SingleValue);
+                    var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
@@ -98,14 +97,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         var functionTimeout = 30;
 
                         // determine function name
-                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
-                            AddError("cannot specify --name and an argument at the same time");
-                            return;
-                        }
                         string functionName;
-                        if(nameOption.HasValue()) {
-                            functionName = nameOption.Value();
-                        } else if(cmdArgument.Values.Any()) {
+                        if(cmdArgument.Values.Any()) {
                             functionName = cmdArgument.Values.First();
                         } else {
                             AddError("missing function name argument");
