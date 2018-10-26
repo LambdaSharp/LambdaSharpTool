@@ -40,9 +40,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("encrypt", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Encrypt with Default LambdaSharp Secrets Key";
-                var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ot use", CommandOptionType.SingleValue);
-                var tierOption = cmd.Option("--tier|-T <NAME>", "Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+                cmd.Description = "Encrypt Value";
+                var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
+                var tierOption = AddTierOption(cmd);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
@@ -59,9 +59,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AddError("must provide a key id with --key");
                         return;
                     }
+
+                    // if no argument is provided, read text from standard in
+                    var text = valueArgument.Value;
+                    if(text == null) {
+                        var builder = new StringBuilder();
+                        for(var input = Console.ReadLine(); input != null; input = Console.ReadLine()) {
+                            builder.AppendLine(input);
+                        }
+                        text = builder.ToString();
+                    }
+
                     var result = await EncryptAsync(
                         keyId,
-                        valueArgument.Value
+                        text
                     );
                     Console.WriteLine();
                     Console.WriteLine(result);
