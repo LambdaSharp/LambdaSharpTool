@@ -378,7 +378,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // read input file
                 Console.WriteLine();
-                Console.WriteLine($"Processing module: {moduleSource}");
+                Console.WriteLine($"Processing module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
                 var source = await File.ReadAllTextAsync(moduleSource);
 
                 // preprocess file
