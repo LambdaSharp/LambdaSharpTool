@@ -57,17 +57,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Configure LambdaSharp environment";
                 var toolProfileOption = AddToolProfileOption(cmd);
-                var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
-                var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path", "(optional) S3 bucket path for module deployments (default: 'Modules/')", CommandOptionType.SingleValue);
-                var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
+                var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
+                var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path <PATH>", "(optional) S3 bucket path for module deployments (default: Modules/)", CommandOptionType.SingleValue);
+                var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
-                var toolProfileArgument = cmd.Argument("<NAME>", "(optional) Profile name for LambdaSharp tool (default: 'Default')");
 
                 // command options
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     await Setup(
-                        toolProfileOption.Value() ?? toolProfileArgument.Values.FirstOrDefault(),
+                        toolProfileOption.Value(),
                         moduleS3BucketNameOption.Value(),
                         moduleS3BucketPathOption.Value(),
                         cloudFormationNotificationsTopicArnOption.Value(),
@@ -99,20 +98,30 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             if(!lambdaSharpToolSettings.Any()) {
                 Console.WriteLine($"Configuring a new profile for LambdaSharp tool");
 
-                // if no tool profile name is specified, go into interactive mode to request tool configuration parameters
-                if(toolProfile == null) {
-
-                    // prompt for values
-                    toolProfile = Prompt.GetString("Profile name:", "Default");
-                    moduleS3BucketName = Prompt.GetString("Existing S3 bucket name for module deployments (empty value creates new bucket):") ?? "";
-                    moduleS3BucketPath = Prompt.GetString("S3 bucket path for module deployments:", "Modules/");
-                    cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):") ?? "";
+                // prompt for missing values
+                if(toolProfile != null) {
+                    Console.WriteLine($"Creating tool profile: {toolProfile}");
                 } else {
-
-                    // set defaults for missing values
-                    moduleS3BucketName = moduleS3BucketName ?? "";
-                    moduleS3BucketPath = moduleS3BucketPath ?? "Modules/";
-                    cloudFormationNotificationsTopicArn = cloudFormationNotificationsTopicArn ?? "";
+                    toolProfile = Prompt.GetString("Tool profile name:", "Default");
+                }
+                if(moduleS3BucketName == "") {
+                    Console.WriteLine($"Creating new S3 bucket");
+                } else if(moduleS3BucketName != null) {
+                    Console.WriteLine($"Using existing S3 bucket name: {moduleS3BucketName}");
+                } else {
+                    moduleS3BucketName = Prompt.GetString("Existing S3 bucket name for module deployments (blank value creates new bucket):") ?? "";
+                }
+                if(moduleS3BucketPath != null) {
+                    Console.WriteLine($"Using S3 bucket path: {moduleS3BucketPath}");
+                } else {
+                    moduleS3BucketPath = Prompt.GetString("S3 bucket path for module deployments:", "Modules/");
+                }
+                if(cloudFormationNotificationsTopicArn == "") {
+                    Console.WriteLine($"Creating new SNS topic for CloudFormation notifications");
+                } else if(cloudFormationNotificationsTopicArn != null) {
+                    Console.WriteLine($"SNS topic ARN for CloudFormation notifications: {cloudFormationNotificationsTopicArn}");
+                } else {
+                    cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):") ?? "";
                 }
 
                 // create lambdasharp tool resources stack
@@ -157,6 +166,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Console.WriteLine($"=> Stack creation FAILED (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                 }
             } else {
+
+                // check if exiting profile needs to be upgraded
                 toolProfile = assumeToolProfile;
                 if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
                     AddError("unable to parse existing version");
@@ -168,9 +179,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(!upgrade) {
                         return;
                     }
-                } else if(existingVersion > Version) {
+                } else if(!existingVersion.IsCompatibleWith(Version)) {
                     Console.WriteLine();
-                    Console.WriteLine($"WARNING: LambdaSharp tool configuration is more recent (v{existingVersion})");
+                    Console.WriteLine($"WARNING: LambdaSharp tool is not compatible with v{existingVersion}");
                     return;
                 }
                 try {
