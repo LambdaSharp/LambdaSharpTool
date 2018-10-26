@@ -102,6 +102,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
         public string ToolProfile { get; set; }
+        public bool ToolProfileExplicitlyProvided { get; set; }
         public VersionInfo EnvironmentVersion { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }

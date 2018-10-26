@@ -13,9 +13,6 @@ dotnet lash config
 
 <dl>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
-
 <dt><code>--module-s3-bucket-name &lt;NAME&gt;</code></dt>
 <dd>(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)</dd>
 
@@ -28,6 +25,15 @@ dotnet lash config
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
 
+<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+
+<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
+
+<dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
+<dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
+
 </dl>
 
 ## Examples
@@ -36,13 +42,14 @@ dotnet lash config
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config --tool-profile Demo
+dotnet lash config
 ```
 
 Output:
 ```
 MindTouch LambdaSharp Tool (v0.4) - Configure LambdaSharp environment
 Configuring a new profile for LambdaSharp tool
+Tool profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
 S3 bucket path for module deployments: [Modules/]
 Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):

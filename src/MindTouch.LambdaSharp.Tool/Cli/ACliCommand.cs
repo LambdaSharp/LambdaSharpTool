@@ -86,8 +86,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         protected Func<Task<Settings>> CreateSettingsInitializer(CommandLineApplication cmd, bool requireAwsProfile = true) {
 
             // add misc options
-            var awsProfileOption = AddAwsProfileOption(cmd);
+            CommandOption awsProfileOption = null;
             var toolProfileOption = AddToolProfileOption(cmd);
+            if(requireAwsProfile) {
+                awsProfileOption = AddAwsProfileOption(cmd);
+            }
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
             // add hidden testing options
@@ -148,6 +151,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return new Settings {
                     ToolVersion = Version,
                     ToolProfile = toolProfile,
+                    ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
                     EnvironmentVersion = (environmentVersion != null) ? VersionInfo.Parse(environmentVersion) : null,
                     AwsRegion = awsAccount.GetValueOrDefault().Region,
                     AwsAccountId = awsAccount.GetValueOrDefault().AccountId,

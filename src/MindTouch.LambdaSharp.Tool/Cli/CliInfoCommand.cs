@@ -37,12 +37,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("info", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Show LambdaSharp settings";
+                cmd.Description = "Show LambdaSharp information";
 
                 // info options
+                var tierOption = AddTierOption(cmd);
                 var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
-
-                // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -52,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     await Info(
                         settings,
-                        Environment.GetEnvironmentVariable("LAMBDASHARP_TIER"),
+                        tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER"),
                         GetGitShaValue(Directory.GetCurrentDirectory()),
                         showSensitiveInformationOption.HasValue()
                     );

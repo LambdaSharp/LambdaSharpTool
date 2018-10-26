@@ -56,17 +56,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("config", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Configure LambdaSharp environment";
-                var toolProfileOption = AddToolProfileOption(cmd);
+k
+                // config options
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
                 var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path <PATH>", "(optional) S3 bucket path for module deployments (default: Modules/)", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
-
-                // command options
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                    await Setup(
-                        toolProfileOption.Value(),
+                    var settings = await initSettingsCallback();
+                    if(settings == null) {
+                        return;
+                    }
+                    await Config(
+                        settings,
                         moduleS3BucketNameOption.Value(),
                         moduleS3BucketPathOption.Value(),
                         cloudFormationNotificationsTopicArnOption.Value(),
@@ -78,8 +82,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task Setup(
-            string toolProfile,
+        private async Task Config(
+            Settings settings,
             string moduleS3BucketName,
             string moduleS3BucketPath,
             string cloudFormationNotificationsTopicArn,
@@ -92,17 +96,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             });
 
             // try to read tool settings
-            var assumeToolProfile = toolProfile ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
-            var lambdaSharpToolPath = $"/LambdaSharpTool/{assumeToolProfile}/";
+            var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
             var lambdaSharpToolSettings = await ssmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
             if(!lambdaSharpToolSettings.Any()) {
                 Console.WriteLine($"Configuring a new profile for LambdaSharp tool");
 
                 // prompt for missing values
-                if(toolProfile != null) {
-                    Console.WriteLine($"Creating tool profile: {toolProfile}");
+                if(settings.ToolProfileExplicitlyProvided) {
+                    Console.WriteLine($"Creating tool profile: {settings.ToolProfile}");
                 } else {
-                    toolProfile = Prompt.GetString("Tool profile name:", "Default");
+                    settings.ToolProfile = Prompt.GetString("Tool profile name:", "Default");
                 }
                 if(moduleS3BucketName == "") {
                     Console.WriteLine($"Creating new S3 bucket");
@@ -125,7 +128,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // create lambdasharp tool resources stack
-                var stackName = $"LambdaSharpTool-{toolProfile}";
+                var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
                 Console.WriteLine($"=> Stack creation initiated for {stackName}");
                 var request = new CreateStackRequest {
                     StackName = stackName,
@@ -152,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         },
                         new Parameter {
                             ParameterKey = "LambdaSharpToolProfile",
-                            ParameterValue = toolProfile
+                            ParameterValue = settings.ToolProfile
                         }
                     },
                     EnableTerminationProtection = protectStack,
@@ -168,7 +171,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             } else {
 
                 // check if exiting profile needs to be upgraded
-                toolProfile = assumeToolProfile;
                 if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
                     AddError("unable to parse existing version");
                     return;
@@ -185,7 +187,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return;
                 }
                 try {
-                    var stackName = $"LambdaSharpTool-{toolProfile}";
+                    var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
                     Console.WriteLine($"=> Stack update initiated for {stackName}");
                     var mostRecentStackEventId = await cfClient.GetMostRecentStackEventIdAsync(stackName);
                     var request = new UpdateStackRequest {
