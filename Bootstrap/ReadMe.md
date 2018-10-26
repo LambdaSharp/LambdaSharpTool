@@ -103,6 +103,33 @@ __Using Bash:__
 export LAMBDASHARP_TIER=Demo
 ```
 
+## Optional: Customize LambdaSharpRegistrar Settings
+
+The registrar is responsible for tracking the registration of all deployed modules and functions. Once registered, the registrar processes the CloudWatch logs of all functions and sends errors/warnings to the SNS `ErrorReportTopic`.
+
+### Rollbar Settings
+
+The registrar can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the registrar needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
+
+The registrar expects the access tokens to be encrypted, which can easily be done with the [`dotnet lash encrypt`](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) command.
+
+settings for the registrar have to be updated with the following va
+
+|Parameter|Description|Default|
+|---|---|---|
+|`RollbarReadAccessToken`|Account-level token for read operations|""|
+|`RollbarWriteAccessToken`|Account-level token for write operations|""|
+|`RollbarProjectPrefix`|Optional prefix when creating Rollbar projects|""|
+
+### Registration Table Settings
+
+The registrar uses a DynamoDB table to store module and functions registrations. For larger λ# deployments it may be necessary to provision more read/write capacity.
+
+|Parameter|Description|Default|
+|---|---|---|
+|`RegistrationTableReadCapacity`|Provisioned read capacity for registrations table|1|
+|`RegistrationTableWriteCapacity`|Provisioned write capacity for registrations table|1|
+
 ## For λ# Contributors: Installing λ# Tool from GitHub
 
 The λ# tool is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# tool.
