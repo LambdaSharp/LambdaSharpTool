@@ -50,7 +50,7 @@ namespace MindTouch.LambdaSharp.Tool {
             Validate(module.Module != null, "missing module name");
 
             // ensure collections are present
-            module.Pragmas = module.Pragmas ?? new List<string>();
+            module.Pragmas = module.Pragmas ?? new List<object>();
             module.Secrets = module.Secrets ?? new List<string>();
             module.Inputs = module.Inputs ?? new List<InputNode>();
             module.Variables = module.Variables ?? new List<ParameterNode>();

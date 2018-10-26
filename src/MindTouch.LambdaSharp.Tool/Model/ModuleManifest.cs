@@ -34,7 +34,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string ModuleVersion { get; set; }
         public string Hash { get; set; }
         public string GitSha { get; set; }
-        public IList<string> Pragmas { get; set; }
+        public IList<object> Pragmas { get; set; }
         public string Template { get; set; }
         public IList<string> FunctionAssets { get; set; }
         public IList<string> PackageAssets { get; set; }

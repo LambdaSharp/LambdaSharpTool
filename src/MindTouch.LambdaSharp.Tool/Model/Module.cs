@@ -32,7 +32,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
         public string Description { get; set; }
-        public IList<string> Pragmas { get; set; }
+        public IList<object> Pragmas { get; set; }
         public IList<object> Secrets { get; set; }
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
