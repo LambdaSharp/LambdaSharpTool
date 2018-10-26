@@ -56,7 +56,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("config", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Configure LambdaSharp environment";
-                var toolProfileOption = cmd.Option("--tool-profile|-TP <NAME>", "(optional) Profile name for LambdaSharp tool (default: 'Default')", CommandOptionType.SingleValue);
+                var toolProfileOption = AddToolProfileOption(cmd);
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
                 var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path", "(optional) S3 bucket path for module deployments (default: 'Modules/')", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);

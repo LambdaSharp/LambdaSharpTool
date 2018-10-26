@@ -38,8 +38,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "List deployed LambdaSharp modules";
 
                 // command options
-                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-                var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
+                var tierOption = AddTierOption(cmd);
+                var awsProfileOption = AddAwsProfileOption(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 

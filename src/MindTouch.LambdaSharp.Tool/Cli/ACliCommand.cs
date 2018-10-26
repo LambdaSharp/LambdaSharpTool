@@ -74,11 +74,20 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return (AccountId: awsAccountId, Region: awsRegion);
         }
 
+        protected CommandOption AddTierOption(CommandLineApplication cmd)
+            => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+
+        protected CommandOption AddAwsProfileOption(CommandLineApplication cmd)
+            => cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+
+        protected CommandOption AddToolProfileOption(CommandLineApplication cmd)
+            => cmd.Option("--tool-profile|-TP <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
+
         protected Func<Task<Settings>> CreateSettingsInitializer(CommandLineApplication cmd, bool requireAwsProfile = true) {
 
             // add misc options
-            var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-            var toolProfileOption = cmd.Option("--tool-profile|-TP <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
+            var awsProfileOption = AddAwsProfileOption(cmd);
+            var toolProfileOption = AddToolProfileOption(cmd);
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
             // add hidden testing options

@@ -40,6 +40,28 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
     public class CliBuildPublishDeployCommand : ACliCommand {
 
+        //--- Class Methods ---
+        public static CommandOption AddSkipAssemblyValidationOption(CommandLineApplication cmd)
+            => cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
+
+        public static CommandOption AddBuildConfigurationOption(CommandLineApplication cmd)
+            => cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
+
+        public static CommandOption AddGitShaOption(CommandLineApplication cmd)
+            => cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+
+        public static CommandOption AddOutputPathOption(CommandLineApplication cmd)
+            => cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
+
+        public static CommandOption AddSelectorOption(CommandLineApplication cmd)
+            => cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
+
+        public static CommandOption AddCloudFormationOutputOption(CommandLineApplication cmd)
+            => cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
+
+        public static CommandOption AddDryRunOption(CommandLineApplication cmd)
+            => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
+
         //--- Methods ---
         public void Register(CommandLineApplication app) {
 
@@ -53,15 +75,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // build options
                 var modulesArgument = cmd.Argument("<NAME>", "(optional) Path to module file/folder (default: Module.yml)", multipleValues: true);
-                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
-                var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-                var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
-                var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
-                var selectorOption = cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
-                var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
+                var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var buildConfigurationOption = AddBuildConfigurationOption(cmd);
+                var gitShaOption = AddGitShaOption(cmd);
+                var outputDirectoryOption = AddOutputPathOption(cmd);
+                var selectorOption = AddSelectorOption(cmd);
+                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
 
                 // misc options
-                var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
+                var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireAwsProfile: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -124,15 +146,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module file/folder (default: Module.yml)", multipleValues: true);
-                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
-                var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-                var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
-                var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
-                var selectorOption = cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
+                var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var buildConfigurationOption = AddBuildConfigurationOption(cmd);
+                var gitShaOption = AddGitShaOption(cmd);
+                var outputDirectoryOption = AddOutputPathOption(cmd);
+                var selectorOption = AddSelectorOption(cmd);
+                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
 
                 // misc options
-                var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
-                var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
+                var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -214,7 +236,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // deploy options
                 var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module file/folder (default: Module.yml)", multipleValues: true);
                 var instanceNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleValue);
-                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+                var tierOption = AddTierOption(cmd);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
@@ -222,15 +244,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
 
                 // build options
-                var skipAssemblyValidationOption = cmd.Option("--skip-assembly-validation", "(optional) Disable validating LambdaSharp assembly references in function project files", CommandOptionType.NoValue);
-                var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-                var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
-                var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
-                var selectorOption = cmd.Option("--selector <NAME>", "(optional) Selector for resolving conditional compilation choices in module", CommandOptionType.SingleValue);
+                var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var buildConfigurationOption = AddBuildConfigurationOption(cmd);
+                var gitShaOption = AddGitShaOption(cmd);
+                var outputDirectoryOption = AddOutputPathOption(cmd);
+                var selectorOption = AddSelectorOption(cmd);
 
                 // misc options
-                var dryRunOption = cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
-                var outputCloudFormationFilePathOption = cmd.Option("--cf-output <FILE>", "(optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
+                var dryRunOption = AddDryRunOption(cmd);
+                var outputCloudFormationFilePathOption = AddCloudFormationOutputOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");

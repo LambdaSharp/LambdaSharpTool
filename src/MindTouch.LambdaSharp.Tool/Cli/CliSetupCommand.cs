@@ -38,7 +38,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("setup", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Setup LambdaSharp environment";
-                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+                var tierOption = AddTierOption(cmd);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
