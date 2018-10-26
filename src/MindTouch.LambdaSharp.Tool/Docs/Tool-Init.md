@@ -71,5 +71,5 @@ Done (duration: 00:05:41.6557981)
 ```
 
 ## For λ# Contributors
-The `init` command builds and deploys the local modules when the `LAMBDASHARP` environment variable is set. To force `init` to use the published module definitions instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
+The `init` command builds and deploys the local bootstrap modules when the `LAMBDASHARP` environment variable is set. To force `init` to use the published bootstrap modules instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
 
