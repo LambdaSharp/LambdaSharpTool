@@ -56,7 +56,7 @@ namespace MindTouch.LambdaSharp {
             // convert from 'arn:aws:lambda:us-east-2:123456789012:function:function-name'
             //  to 'function-name'
             var parts = arn.Split(':');
-            if((parts.Length != 6) || (parts[0] != "arn") || (parts[1] != "aws") || (parts[2] != "lambda") || (parts[6] != "function")) {
+            if((parts.Length != 7) || (parts[0] != "arn") || (parts[1] != "aws") || (parts[2] != "lambda") || (parts[5] != "function")) {
                 throw new ArgumentException("unexpected format", nameof(arn));
             }
             return parts[6];
