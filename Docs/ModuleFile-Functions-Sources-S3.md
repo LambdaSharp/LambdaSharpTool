@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - ??? Function Source
+# LambdaSharp Module - S3 Function Source
 
 See [S3 Bucket sample](../Samples/S3Sample/) for an example of how to use the S3 Bucket source.
 
