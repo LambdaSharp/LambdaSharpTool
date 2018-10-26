@@ -103,6 +103,13 @@ __Using Bash:__
 export LAMBDASHARP_TIER=Demo
 ```
 
+## Optional: Customize LambdaSharp Settings
+
+|Parameter|Description|Default|
+|---|---|---|
+|`LoggingStreamRetentionPeriod`|How long logging stream entries are kept before they are lost|24|
+|`DefaultSecretKeyRotationEnabled`|Rotate KMS key automatically every 365 days|false|
+
 ## Optional: Customize LambdaSharpRegistrar Settings
 
 The registrar is responsible for tracking the registration of all deployed modules and functions. Once registered, the registrar processes the CloudWatch logs of all functions and sends errors/warnings to the SNS `ErrorReportTopic`.
