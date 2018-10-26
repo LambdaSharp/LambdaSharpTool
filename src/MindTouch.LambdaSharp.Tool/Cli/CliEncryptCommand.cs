@@ -42,22 +42,25 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Encrypt Value";
                 var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
-                var tierOption = AddTierOption(cmd);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                    var keyId = keyOption.Value();
-                    var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if((keyId == null) && (tier != null)) {
-                        keyId = $"alias/{tier}-LambdaSharpDefaultSecretKey";
+                    var settings = await initSettingsCallback();
+                    if(settings == null) {
+                        return;
                     }
 
-                    // check if a key id was provided
+                    // either use an explicitly provided key ID or use the default key for the deployment
+                    var keyId = keyOption.Value();
                     if(keyId == null) {
-                        AddError("must provide a key id with --key");
-                        return;
+                        if(settings.Tier == null) {
+                            AddError("must provide a key id with --key");
+                            return;
+                        }
+                        keyId = $"alias/{settings.Tier}-LambdaSharpDefaultSecretKey";
                     }
 
                     // if no argument is provided, read text from standard in

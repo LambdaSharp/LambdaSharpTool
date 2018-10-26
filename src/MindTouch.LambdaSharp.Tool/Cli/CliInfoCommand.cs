@@ -40,7 +40,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "Show LambdaSharp information";
 
                 // info options
-                var tierOption = AddTierOption(cmd);
                 var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
@@ -51,7 +50,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     }
                     await Info(
                         settings,
-                        tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER"),
                         GetGitShaValue(Directory.GetCurrentDirectory()),
                         showSensitiveInformationOption.HasValue()
                     );
@@ -61,12 +59,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         public async Task Info(
             Settings settings,
-            string tier,
             string gitsha,
             bool showSensitive
         ) {
             await PopulateToolSettingsAsync(settings);
-            await PopulateEnvironmentSettingsAsync(settings, tier);
+            await PopulateEnvironmentSettingsAsync(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp Tool");
@@ -76,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Module Deployment S3 Path: {settings.DeploymentBucketPath ?? "<NOT SET>"}");
             Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopicArn ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Environment");
-            Console.WriteLine($"    Deployment Tier: {tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Deployment Tier: {settings.Tier ?? "<NOT SET>"}");
             Console.WriteLine($"    Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS");

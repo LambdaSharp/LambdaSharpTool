@@ -49,10 +49,9 @@ namespace MindTouch.LambdaSharp.Tool {
             bool allowDataLoss,
             bool protectStack,
             Dictionary<string, string> inputs,
-            string tier,
             bool forceDeploy
         ) {
-            var stackName = $"{tier}-{altModuleName ?? manifest.ModuleName}";
+            var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.ModuleName}";
 
             // check version of previously deployed module
             if(!forceDeploy) {
@@ -150,11 +149,11 @@ namespace MindTouch.LambdaSharp.Tool {
             var parameters = new List<CloudFormationParameter> {
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentPrefix",
-                    ParameterValue = string.IsNullOrEmpty(tier) ? "" : tier + "-"
+                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier + "-"
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentPrefixLowercase",
-                    ParameterValue = string.IsNullOrEmpty(tier) ? "" : tier.ToLowerInvariant() + "-"
+                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier.ToLowerInvariant() + "-"
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketName",

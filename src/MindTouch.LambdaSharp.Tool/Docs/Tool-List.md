@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# λ# Tool - List Command
+# LambdaSharp Tool - List Command
 
 The `list` command is used to list all deployed modules on a deployment tier.
 
@@ -11,8 +11,14 @@ The `list` command is used to list all deployed modules on a deployment tier.
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
 
-<dt><code>--aws-profile &lt;NAME&gt;</code></dt>
+<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+
+<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
+
+<dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
+<dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
 
 </dl>
 

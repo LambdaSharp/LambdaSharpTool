@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
@@ -51,38 +52,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("new", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Create new LambdaSharp module or function";
-
-                // module sub-command
-                cmd.Command("module", subCmd => {
-                    subCmd.HelpOption();
-                    subCmd.Description = "Create new LambdaSharp module";
-
-                    // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
-                    nameOption.ShowInHelpText = false;
-                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
-                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. MyModule)");
-                    subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
-                            AddError("cannot specify --name and an argument at the same time");
-                            return;
-                        }
-                        string moduleName;
-                        if(nameOption.HasValue()) {
-                            moduleName = nameOption.Value();
-                        } else if(cmdArgument.Values.Any()) {
-                            moduleName = cmdArgument.Values.First();
-                        } else {
-                            AddError("missing module name argument");
-                            return;
-                        }
-                        NewModule(
-                            moduleName,
-                            Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
-                        );
-                    });
-                });
 
                 // function sub-command
                 cmd.Command("function", subCmd => {
@@ -157,6 +126,84 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         );
                     });
                 });
+
+                // module sub-command
+                cmd.Command("module", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new LambdaSharp module";
+
+                    // sub-command options
+                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. MyModule)", CommandOptionType.SingleValue);
+                    nameOption.ShowInHelpText = false;
+                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. MyModule)");
+                    subCmd.OnExecute(() => {
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
+                            AddError("cannot specify --name and an argument at the same time");
+                            return;
+                        }
+                        string moduleName;
+                        if(nameOption.HasValue()) {
+                            moduleName = nameOption.Value();
+                        } else if(cmdArgument.Values.Any()) {
+                            moduleName = cmdArgument.Values.First();
+                        } else {
+                            AddError("missing module name argument");
+                            return;
+                        }
+                        NewModule(
+                            moduleName,
+                            Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory())
+                        );
+                    });
+                });
+
+                // tier sub-command
+                cmd.Command("tier", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Setup LambdaSharp environment";
+
+                    // setup options
+                    var allowDataLossOption = subCmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
+                    var protectStackOption = subCmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
+                    var forceDeployOption = subCmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+                    var versionOption = subCmd.Option("--version", "(optional) Specify version for LambdaSharp modules (default: same as tool version)", CommandOptionType.SingleValue);
+                    var localOption = subCmd.Option("--local", "(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
+                    var remoteOption = subCmd.Option("--no-local", "(optional) Force the setup command to use the published LambdaSharp bootstrap modules", CommandOptionType.NoValue);
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        var settings = await initSettingsCallback();
+                        if(settings == null) {
+                            return;
+                        }
+
+                        // determine if we want to install modules from a local check-out
+                        string localPath = null;
+                        if(!remoteOption.HasValue()) {
+                            if(localOption.HasValue()) {
+                                localPath = localOption.Value();
+                            } else {
+                                var env = Environment.GetEnvironmentVariable("LAMBDASHARP");
+                                if(env != null) {
+                                    localPath = Path.Combine(env, "Bootstrap");
+                                }
+                            }
+                        }
+                        await NewTier(
+                            settings,
+                            allowDataLossOption.HasValue(),
+                            protectStackOption.HasValue(),
+                            forceDeployOption.HasValue(),
+                            versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
+                            localPath
+                        );
+                    });
+                });
+
+                // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
                     Console.WriteLine(cmd.GetHelpText());
                 });
@@ -356,6 +403,67 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             } catch(Exception e) {
                 AddError($"unable to create function file '{functionFile}'", e);
                 return;
+            }
+        }
+
+        public async Task NewTier(
+            Settings settings,
+            bool allowDataLoos,
+            bool protectStack,
+            bool forceDeploy,
+            VersionInfo version,
+            string localPath
+        ) {
+            Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            foreach(var module in new[] {
+                "LambdaSharp",
+                "LambdaSharpRegistrar",
+                "LambdaSharpS3Subscriber",
+                "LambdaSharpS3PackageLoader"
+            }) {
+                var command = new CliBuildPublishDeployCommand();
+                var moduleKey = $"{module}:{version}";
+
+                // check if the module must be built and published first
+                if(localPath != null) {
+                    var moduleSource = Path.Combine(localPath, module, "Module.yml");
+                    settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
+                    settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
+
+                    // build local module
+                    if(!await command.BuildStepAsync(
+                        settings,
+                        Path.Combine(settings.OutputDirectory, "cloudformation.json"),
+                        skipAssemblyValidation: true,
+                        skipFunctionBuild: false,
+                        gitsha: null,
+                        buildConfiguration: "Release",
+                        selector: null,
+                        moduleSource: moduleSource
+                    )) {
+                        break;
+                    }
+
+                    // publish module
+                    moduleKey = await command.PublishStepAsync(settings);
+                    if(moduleKey == null) {
+                        break;
+                    }
+                }
+
+                // deploy published module
+                if(!await command.DeployStepAsync(
+                    settings,
+                    dryRun: null,
+                    moduleKey: moduleKey,
+                    instanceName: null,
+                    allowDataLoos: allowDataLoos,
+                    protectStack: protectStack,
+                    inputs: new Dictionary<string, string>(),
+                    forceDeploy: forceDeploy
+                )) {
+                    break;
+                }
             }
         }
     }

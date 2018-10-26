@@ -74,22 +74,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return (AccountId: awsAccountId, Region: awsRegion);
         }
 
-        protected CommandOption AddTierOption(CommandLineApplication cmd)
-            => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-
-        protected CommandOption AddAwsProfileOption(CommandLineApplication cmd)
-            => cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-
-        protected CommandOption AddToolProfileOption(CommandLineApplication cmd)
-            => cmd.Option("--tool-profile|-TP <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
-
-        protected Func<Task<Settings>> CreateSettingsInitializer(CommandLineApplication cmd, bool requireAwsProfile = true) {
+        protected Func<Task<Settings>> CreateSettingsInitializer(
+            CommandLineApplication cmd,
+            bool requireAwsProfile = true,
+            bool requireDeploymentTier = true
+        ) {
+            CommandOption tierOption = null;
+            CommandOption awsProfileOption = null;
 
             // add misc options
-            CommandOption awsProfileOption = null;
-            var toolProfileOption = AddToolProfileOption(cmd);
+            if(requireDeploymentTier) {
+                tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+            }
+            var toolProfileOption = cmd.Option("--tool-profile|-TP <NAME>", "(optional) Use a specific LambdaSharp tool profile (default: Default)", CommandOptionType.SingleValue);
             if(requireAwsProfile) {
-                awsProfileOption = AddAwsProfileOption(cmd);
+                awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
@@ -120,6 +119,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // initialize tool profile
                 var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
 
+                // initialize deployment tier
+                string tier = null;
+                if(requireDeploymentTier) {
+                    tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
+                    if(string.IsNullOrEmpty(tier)) {
+                        AddError("missing deployment tier name");
+                    } else if(tier == "Default") {
+                        AddError("deployment tier cannot be 'Default' because it is a reserved name");
+                    }
+                }
+
                 // initialize AWS profile
                 (string AccountId, string Region)? awsAccount = null;
                 if(requireAwsProfile) {
@@ -128,11 +138,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         awsAccountIdOption.Value(),
                         awsRegionOption.Value()
                     );
-                    if(awsAccount == null) {
-
-                        // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`
-                        return null;
-                    }
+                }
+                if(HasErrors) {
+                    return null;
                 }
 
                 // create AWS clients
@@ -153,6 +161,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     ToolProfile = toolProfile,
                     ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
                     EnvironmentVersion = (environmentVersion != null) ? VersionInfo.Parse(environmentVersion) : null,
+                    Tier = tier,
                     AwsRegion = awsAccount.GetValueOrDefault().Region,
                     AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                     DeploymentBucketName = deploymentBucketName,
@@ -225,13 +234,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        protected async Task PopulateEnvironmentSettingsAsync(Settings settings, string tier) {
-            if((settings.EnvironmentVersion == null) && (tier != null)) {
+        protected async Task PopulateEnvironmentSettingsAsync(Settings settings) {
+            if((settings.EnvironmentVersion == null) && (settings.Tier != null)) {
                 try {
 
                     // check version of base LambadSharp module
                     var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
-                        StackName = $"{tier}-LambdaSharp"
+                        StackName = $"{settings.Tier}-LambdaSharp"
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                     if(deployedOutputs != null) {

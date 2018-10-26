@@ -51,10 +51,10 @@ Before the λ# tool can be used, it must be configured. The configuration step o
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config
+dotnet lash tool
 ```
 
-The λ# tool can be configured for multiple tool profiles using the `--tool-profile` option. When omitted, the _Default_ tool profile is assumed. The λ# tool configuration is stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so that it can be shared across teams on the same AWS account.
+The λ# tool can be configured for multiple tool profiles using the `--tool-profile` option. When omitted, the _Default_ tool profile is assumed. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
 
 ## Step 3: Setup λ# Environment
 
@@ -62,7 +62,7 @@ The λ# tool can be configured for multiple tool profiles using the `--tool-prof
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash setup --tier Demo
+dotnet lash new tier Demo
 ```
 
 __NOTE:__ This step must to be repeated for each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.).

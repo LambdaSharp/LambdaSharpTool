@@ -12,7 +12,16 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 <dd>Specify encryption key ID or alias to use</dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
+
+<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+
+<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
+
+<dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
+<dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
 
 </dl>
 

@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# λ# Tool - Info Command
+# LambdaSharp Tool - Info Command
 
 The `info` command is used to show information about the current tool profile, λ# environment, and installed command line tools.
 
@@ -8,11 +8,11 @@ The `info` command is used to show information about the current tool profile, �
 
 <dl>
 
-<dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
-
 <dt><code>--show-sensitive</code></dt>
 <dd>(optional) Show sensitive information</dd>
+
+<dt><code>--tier|-T &lt;NAME&gt;</code></dt>
+<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
 
 <dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>

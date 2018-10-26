@@ -1,13 +1,8 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# λ# Tool - Config Command
+# LambdaSharp Tool - Tool Command
 
-The `config` command is used to configure λ# tool. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
-
-__Using Powershell/Bash:__
-```bash
-dotnet lash config
-```
+The `tool` command is used to configure λ# tool. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
 
 ## Options
 
@@ -42,12 +37,12 @@ dotnet lash config
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config
+dotnet lash tool
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Configure LambdaSharp environment
+MindTouch LambdaSharp Tool (v0.4) - Configure LambdaSharp tool
 Configuring a new profile for LambdaSharp tool
 Tool profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
@@ -72,12 +67,12 @@ Done (duration: 00:00:40.0739292)
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config --tool-profile Demo --module-s3-bucket-name="" --module-s3-bucket-path="Modules/" --cloudformation-notifications-topic=""
+dotnet lash tool --tool-profile Demo --module-s3-bucket-name="" --module-s3-bucket-path="Modules/" --cloudformation-notifications-topic=""
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4-WIP) - Configure LambdaSharp environment
+MindTouch LambdaSharp Tool (v0.4-WIP) - Configure LambdaSharp tool
 Configuring a new profile for LambdaSharp tool
 Creating tool profile: Demo
 Creating new S3 bucket
@@ -97,4 +92,3 @@ CREATE_COMPLETE                     AWS::CloudFormation::Stack                  
 
 Done (duration: 00:00:36.3661853)
 ```
-

@@ -53,16 +53,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {
-            app.Command("config", cmd => {
+            app.Command("tool", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Configure LambdaSharp environment";
-k
-                // config options
+                cmd.Description = "Configure LambdaSharp tool";
+
+                // tool options
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
                 var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path <PATH>", "(optional) S3 bucket path for module deployments (default: Modules/)", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
-                var initSettingsCallback = CreateSettingsInitializer(cmd);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();

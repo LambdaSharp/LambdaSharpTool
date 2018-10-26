@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireAwsProfile: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireAwsProfile: false, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -155,7 +155,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -236,7 +236,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // deploy options
                 var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module file/folder (default: Module.yml)", multipleValues: true);
                 var instanceNameOption = cmd.Option("--name", "(optional) Specify an alternate module name for the deployment (default: module name)", CommandOptionType.SingleValue);
-                var tierOption = AddTierOption(cmd);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
@@ -293,22 +292,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
 
-                    // initialize deployment tier value
-                    var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if(string.IsNullOrEmpty(tier)) {
-                        AddError("missing deployment tier name");
-                        return;
-                    }
-                    if(tier == "Default") {
-                        AddError("deployment tier cannot be 'Default' because it is a reserved name");
-                        return;
-                    }
-
                     // check if one or more arguments have been specified
                     var arguments = publishedModulesArgument.Values.Any()
                         ? publishedModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
-                    Console.WriteLine($"Readying module for deployment tier '{tier}'");
+                    Console.WriteLine($"Readying module for deployment tier '{settings.Tier}'");
                     foreach(var argument in arguments) {
                         string moduleKey = null;
                         string moduleSource = null;
@@ -362,7 +350,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
                                 inputs,
-                                tier,
                                 forceDeployOption.HasValue()
                             )) {
                                 break;
@@ -511,11 +498,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool allowDataLoos,
             bool protectStack,
             Dictionary<string, string> inputs,
-            string tier,
             bool forceDeploy
         ) {
             await PopulateToolSettingsAsync(settings);
-            await PopulateEnvironmentSettingsAsync(settings, tier);
+            await PopulateEnvironmentSettingsAsync(settings);
 
             // module key formats
             // * MODULENAME:VERSION
@@ -586,13 +572,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // bootstrap module doesn't expect an environment to exist
             if(forceDeploy || !manifest.HasPragma("no-environment-check")) {
                 if(settings.EnvironmentVersion == null) {
-                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(tier));
+                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 } else {
 
                     // check that LambdaSharp environment & tool versions match
                     if(!settings.ToolVersion.IsCompatibleWith(settings.EnvironmentVersion)) {
-                        AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(tier));
+                        AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                         return false;
                     }
                 }
@@ -607,7 +593,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         allowDataLoos,
                         protectStack,
                         inputs,
-                        tier,
                         forceDeploy
                     );
                 } catch(Exception e) {
