@@ -1,16 +1,17 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Build Command
+# LambdaSharp Tool - Publish Command
 
-The `build` command compiles the module and all of its assets in preparation for publishing. If the module contains functions, their dependencies are resolved, the function project is built, and a Lambda-ready package is created. If the module contains file packages, the files are compressed into a zip archive.
+The `publish` command is used to upload the compiled module and its assets to the λ# tool deployment bucket.
 
 ## Arguments
 
-The `build` command takes an optional path. The path can either refer to a module file or a folder containing a `Module.yml` file.
+The `publish` command takes an optional path. The path can either refer to a manifest file, a module file, or a folder containing a `Module.yml` file. If the path does not refer to a manifest file, the `publish` command will invoke the `build` command to compile the module file and its assets.
 
 ```bash
 lash new function MyNewFunction
 ```
+
 
 ## Options
 
@@ -47,16 +48,16 @@ lash new function MyNewFunction
 
 ## Examples
 
-### Build module in current folder
+### Build and publish module in current folder
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash build
+dotnet lash publish
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp Tool (v0.4) - Publish LambdaSharp module
 
 Processing module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -70,33 +71,30 @@ Building function SlackCommand [netcoreapp2.1, Release]
 => Decompressing AWS Lambda package
 => Finalizing AWS Lambda package
 => Module processing done
+Publishing module: Demo
+=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
+=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
+=> Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
+=> Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
 
-Done (duration: 00:00:11.0292989)
+Done (duration: 00:00:27.8416454)
 ```
 
-### Build module in a nested folder
+### Publish manifest
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash build Demo
+dotnet lash publish Demo/bin/manifest.json
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp Tool (v0.4) - Publish LambdaSharp module
+Publishing module: Demo
+=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
+=> Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip
+=> Uploading template: s3://lambdasharp-bucket-name/Modules/Demo/Assets/cloudformation_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
+=> Uploading manifest: s3://lambdasharp-bucket-name/Modules/Demo/Assets/manifest_v1.0_F2E9DA098FB8B0EB118F5839947467A6.json
 
-Processing module: Demo\Module.yml
-Building function RecordMessage [netcoreapp2.1, Release]
-=> Restoring project dependencies
-=> Building AWS Lambda package
-=> Decompressing AWS Lambda package
-=> Finalizing AWS Lambda package
-Building function SlackCommand [netcoreapp2.1, Release]
-=> Restoring project dependencies
-=> Building AWS Lambda package
-=> Decompressing AWS Lambda package
-=> Finalizing AWS Lambda package
-=> Module processing done
-
-Done (duration: 00:00:11.0292989)
+Done (duration: 00:00:16.6464580)
 ```

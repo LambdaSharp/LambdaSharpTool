@@ -43,7 +43,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public async Task<string> PublishAsync(ModuleManifest manifest) {
-            Console.WriteLine($"Publishing module");
+            Console.WriteLine($"Publishing module: {manifest.ModuleName}");
             _changesDetected = false;
 
             // verify that all files referenced by manifest exist
