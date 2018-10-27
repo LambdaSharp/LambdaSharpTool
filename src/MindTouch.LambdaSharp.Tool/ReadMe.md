@@ -14,7 +14,7 @@ The λ# tool is used to process the module file, compile the C# projects, upload
 1. [`new function`](Docs/Tool-NewFunction.md): add a new function
 1. [`encrypt`](Docs/Tool-Encrypt.md): encrypt a value with a managed encryption key
 1. [`list`](Docs/Tool-List.md): list deployed modules
-1. [`info`](#info-command): show information about tool setup
+1. [`info`](Docs/Tool-Info.md): show information about tool setup
 
 ## Setup Commands
 1. [`tool`](Docs/Tool-Tool.md): configure λ# tool
