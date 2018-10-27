@@ -12,7 +12,7 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 <dd>Specify encryption key ID or alias to use</dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
 <dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>

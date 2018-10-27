@@ -12,7 +12,7 @@ The `info` command is used to show information about the current tool profile, Î
 <dd>(optional) Show sensitive information</dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
 <dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>

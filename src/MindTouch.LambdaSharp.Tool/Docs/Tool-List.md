@@ -9,7 +9,7 @@ The `list` command is used to list all deployed modules on a deployment tier.
 <dl>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
-<dd>(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)</dd>
+<dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
 <dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>

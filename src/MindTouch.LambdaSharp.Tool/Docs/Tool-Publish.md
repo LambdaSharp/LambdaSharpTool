@@ -2,16 +2,17 @@
 
 # LambdaSharp Tool - Publish Command
 
-The `publish` command is used to upload the compiled module and its assets to the λ# tool deployment bucket.
+The `publish` command is used to upload the compiled module and its assets to the deployment bucket.
 
 ## Arguments
 
-The `publish` command takes an optional path. The path can either refer to a manifest file, a module file, or a folder containing a `Module.yml` file. If the path does not refer to a manifest file, the `publish` command will invoke the `build` command to compile the module file and its assets.
+The `publish` command takes an optional path. The path can either refer to a manifest file, a module file, or a folder containing a `Module.yml` file.
+
+If the path does not refer to a manifest file, the `publish` command invokes the `build` command to compile the module and its assets.
 
 ```bash
 lash new function MyNewFunction
 ```
-
 
 ## Options
 
@@ -40,6 +41,9 @@ lash new function MyNewFunction
 
 <dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+
+<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
 
 <dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
