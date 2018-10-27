@@ -217,7 +217,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     function.VPC = function.VPC ?? new Dictionary<string, object>();
                     ValidateFunctionSource(function.Sources);
                     if(function.Pragmas == null) {
-                        function.Pragmas = new List<string>();
+                        function.Pragmas = new List<object>();
                     }
                 });
             }

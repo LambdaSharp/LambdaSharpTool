@@ -30,17 +30,17 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         //--- Properties ---
         public string Function { get; set; }
         public string Description { get; set; }
-        public IList<FunctionSourceNode> Sources { get; set; }
-        public string Project { get; set; }
-        public string Runtime { get; set; }
-        public string Language { get; set; }
-        public string Handler { get; set; }
         public string Memory { get; set; }
         public string Timeout { get; set; }
+        public string Project { get; set; }
+        public string Handler { get; set; }
+        public string Runtime { get; set; }
+        public string Language { get; set; }
         public string ReservedConcurrency { get; set; }
         public Dictionary<string, object> VPC { get; set; }
         public Dictionary<string, object> Environment { get; set; }
         public string PackagePath { get; set; }
-        public IList<string> Pragmas { get; set; }
+        public IList<FunctionSourceNode> Sources { get; set; }
+        public IList<object> Pragmas { get; set; }
    }
 }

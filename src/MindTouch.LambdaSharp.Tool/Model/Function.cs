@@ -39,7 +39,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public FunctionVpc VPC;
         public IDictionary<string, object> Environment { get; set; }
         public string PackagePath { get; set; }
-        public IList<string> Pragmas { get; set; }
+        public IList<object> Pragmas { get; set; }
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
