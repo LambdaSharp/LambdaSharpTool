@@ -82,7 +82,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
             if(configException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} tool' to configure LambdaSharp tool for profile '{configException.Profile}'");
+                Console.WriteLine($"IMPORTANT: run '{Lash} tool' to configure LambdaSharp CLI for profile '{configException.Profile}'");
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();

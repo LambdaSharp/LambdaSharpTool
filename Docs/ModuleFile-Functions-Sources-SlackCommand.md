@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Function - Slack Command Source
 
-For Slack commands, the λ# tool deploys an asynchronous API Gateway endpoint that avoids timeout errors due to slow Lambda functions. See [Slack Command sample](../Samples/SlackCommandSample/) for an example of how to use the Slack Command source.
+For Slack commands, the λ# CLI deploys an asynchronous API Gateway endpoint that avoids timeout errors due to slow Lambda functions. See [Slack Command sample](../Samples/SlackCommandSample/) for an example of how to use the Slack Command source.
 
 __Topics__
 * [Syntax](#syntax)

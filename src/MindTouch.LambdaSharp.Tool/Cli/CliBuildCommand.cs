@@ -576,9 +576,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 } else {
 
-                    // check that LambdaSharp environment & tool versions match
+                    // check that LambdaSharp environment & CLI versions match
                     if(!settings.ToolVersion.IsCompatibleWith(settings.EnvironmentVersion)) {
-                        AddError($"LambdaSharp tool (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                         return false;
                     }
                 }

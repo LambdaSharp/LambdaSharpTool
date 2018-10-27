@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Parameter - Package Section
 
-The `Package` section in a [λ# Module Parameter](ModuleFile-Parameters.md) indicates that local files need to be packaged into a compressed archive that can be deployed. The package definition specifies the local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# tool creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+The `Package` section in a [λ# Module Parameter](ModuleFile-Parameters.md) indicates that local files need to be packaged into a compressed archive that can be deployed. The package definition specifies the local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# CLI creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
 
 __Topics__
 * [Syntax](#syntax)

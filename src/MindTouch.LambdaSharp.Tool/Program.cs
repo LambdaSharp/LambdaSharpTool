@@ -51,13 +51,13 @@ namespace MindTouch.LambdaSharp.Tool {
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
                 Name = "MindTouch.LambdaSharp.Tool",
-                FullName = $"MindTouch LambdaSharp Tool (v{Version})",
+                FullName = $"MindTouch LambdaSharp CLI (v{Version})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();
 
             // register commands
-            new CliToolCommand().Register(app);
+            new CliConfigCommand().Register(app);
             new CliInitCommand().Register(app);
             new CliInfoCommand().Register(app);
             new CliListCommand().Register(app);

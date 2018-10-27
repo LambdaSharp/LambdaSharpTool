@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Build Command
+# LambdaSharp CLI - Build Command
 
 The `build` command compiles the module and all of its assets in preparation for publishing. If the module contains functions, their dependencies are resolved, the function project is built, and a Lambda-ready package is created. If the module contains file packages, the files are compressed into a zip archive.
 
@@ -37,8 +37,8 @@ lash new function MyNewFunction
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
@@ -56,7 +56,7 @@ dotnet lash build
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
 
 Processing module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -83,7 +83,7 @@ dotnet lash build Demo
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
 
 Processing module: Demo\Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]

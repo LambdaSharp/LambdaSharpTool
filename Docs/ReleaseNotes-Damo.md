@@ -30,11 +30,11 @@ With the addition of new sections to the module file, and with an eye towards th
 
 Also, variables are no longer always added to function environments. Instead, the scope of a variable is controlled by the `Scope` attribute (see below). The old behavior caused too many cases of circular dependencies, which are always tedious to diagnose.
 
-### λ# Tool
+### λ# CLI
 
 Function folders no longer need to be prefixed with the module name. They will still be found for backwards compatibility, but the new recommended naming is to just use the function name as folder name.
 
-With the introduction of `--tool-profile` there was the need to rename `--profile` to `--aws-profile` to avoid ambiguity.
+With the introduction of `--cli-profile` there was the need to rename `--profile` to `--aws-profile` to avoid ambiguity.
 
 ### λ# Assemblies
 
@@ -47,7 +47,7 @@ The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunct
 VVVVV ***CONTINUE HERE*** VVVV
 
 
-## New λ# Tool Features
+## New λ# CLI Features
 
 * multi-stage deployment (build, publish, deploy)
 * CloudWatch Logs
@@ -56,7 +56,7 @@ VVVVV ***CONTINUE HERE*** VVVV
 * dotnet global tool
 * `lash setup`
     * `lash setup` should work with local packages as well (`--local`)
-* `lash config`: configure tool for deployments
+* `lash config`: configure CLI for deployments
 * `lash deploy`: run create-stack command with required parameters
     * check if deployed module name matches
     * check if deployed module version is greater
@@ -64,7 +64,7 @@ VVVVV ***CONTINUE HERE*** VVVV
     * check that `ModuleName` matches the deployment
     * check that the deployed module is the same version or newer
     * use `--force-deploy` to deploy anyway
-* `lash build`: compile all .Net projects and `Module.yml` file
+* `lash build`: compile all .NET projects and `Module.yml` file
 * `lash publish`: unzip and copy assets from zip file to deployment S3 bucket
 * `lash info`
     * show `dotnet` tool version
@@ -86,7 +86,7 @@ VVVVV ***CONTINUE HERE*** VVVV
             - arn:...
             - alias/...
         ```
-* cli option `--tool-profile` or use environment variable `LAMBDASHARP_PROFILE`; if not provided, defaults to `Default`
+* cli option `--cli-profile` or use environment variable `LAMBDASHARP_PROFILE`; if not provided, defaults to `Default`
 
 * `ModuleSecrets` input
 * `Module::Id`
@@ -140,7 +140,7 @@ VVVVV ***CONTINUE HERE*** VVVV
     * find and replace `!Ref` parameter references in-place rather than to letting cloudformation replace them for us
 * ability to specify the attribute to obtain the ARN
 
-## New λ# Environment Features
+## New λ# Deployment Tier Features
 * module registration (similar to what we did with rollbar)
 * configurable (LambdaSharp Module)
     * `LoggingStreamRetentionPeriod`

@@ -2,7 +2,7 @@
 
 # LambdaSharp Module
 
-The λ# module file defines the parameters and functions of a module. Parameters can be either values or AWS resources. Functions are .NET Core projects that are wired up to various invocation sources defined in the module file. Parameters, resources, and their access permissions are shared across all functions that are part of the same module. The λ# tool generates the CloudFormation template, compiles .NET Core projects, uploads all assets, and automatically creates/updates the CloudFormation stack.
+The λ# module file defines the parameters and functions of a module. Parameters can be either values or AWS resources. Functions are .NET Core projects that are wired up to various invocation sources defined in the module file. Parameters, resources, and their access permissions are shared across all functions that are part of the same module. The λ# CLI generates the CloudFormation template, compiles .NET Core projects, uploads all assets, and automatically creates/updates the CloudFormation stack.
 
 __Topics__
 * [Syntax](#syntax)

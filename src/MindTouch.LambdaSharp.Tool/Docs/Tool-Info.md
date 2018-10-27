@@ -1,8 +1,8 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Info Command
+# LambdaSharp CLI - Info Command
 
-The `info` command is used to show information about the current tool profile, λ# environment, and installed command line tools.
+The `info` command is used to show information about the current CLI profile, λ# environment, and installed command line tools.
 
 ## Options
 
@@ -14,8 +14,8 @@ The `info` command is used to show information about the current tool profile, �
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -36,22 +36,22 @@ dotnet lash info --tier Demo
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Show LambdaSharp information
-LambdaSharp Tool
+MindTouch LambdaSharp CLI (v0.4) - Show LambdaSharp information
+LambdaSharp CLI
     Profile: Default
     Version: 0.4
-    Module Deployment S3 Bucket: lambdasharptool-demo-deploymentbucket-1rbgf8nbmwn1o
+    Module Deployment S3 Bucket: lambdasharp-bucket-name
     Module Deployment S3 Path: Modules/
     Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Demo-DeploymentNotificationTopic-1V8UD7UQVW3KD
-LambdaSharp Environment
-    Deployment Tier: Demo
+LambdaSharp Deployment Tier
+    Name: Demo
     Version: 0.4
 Git SHA: dd84a2a4b87dcf2e4a802b79d12c489c30836623
 AWS
     Region: us-west-2
     Account Id: ************
 Tools
-    .Net Core CLI Version: 2.1.402
+    .NET Core CLI Version: 2.1.402
     Git CLI Version: 2.18.0.windows.1
 
 Done (duration: 00:00:01.3788826)

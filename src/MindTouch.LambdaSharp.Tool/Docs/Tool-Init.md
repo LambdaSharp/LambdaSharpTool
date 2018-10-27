@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Init Command
+# LambdaSharp CLI - Init Command
 
 The `init` command is used to both initialize a new deployment tier and update an existing one.
 
@@ -18,7 +18,7 @@ The `init` command is used to both initialize a new deployment tier and update a
 <dd>(optional) Force module deployment</dd>
 
 <dt><code>--version &lt;VERSION&gt;</code></dt>
-<dd>(optional) Specify version for LambdaSharp modules (default: same as tool version)</dd>
+<dd>(optional) Specify version for LambdaSharp modules (default: same as CLI version)</dd>
 
 <dt><code>--local &lt;PATH&gt;</code></dt>
 <dd>(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)</dd>
@@ -26,8 +26,8 @@ The `init` command is used to both initialize a new deployment tier and update a
 <dt><code>--use-published</code></dt>
 <dd>(optional) Force the init command to use the published LambdaSharp bootstrap modules</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -48,7 +48,7 @@ dotnet lash init --tier Demo
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Initialize LambdaSharp deployment tier
+MindTouch LambdaSharp CLI (v0.4) - Initialize LambdaSharp deployment tier
 Creating new deployment tier 'Demo'
 Deploying stack: Demo-LambdaSharp [LambdaSharp]
 => Stack creation initiated for Demo-LambdaSharp

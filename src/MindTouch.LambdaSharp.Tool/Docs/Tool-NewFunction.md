@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - New Function Command
+# LambdaSharp CLI - New Function Command
 
 The `new function` command is used to add a function to an existing module. The command can either create a C# or a Javascript function using the `--language` option.
 
@@ -47,7 +47,7 @@ dotnet lash new function MyNewFunction
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Create new LambdaSharp module or function
+MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
 Created project file: MyNewFunction\MyNewFunction.csproj
 Created function file: MyNewFunction\Function.cs
 
@@ -63,7 +63,7 @@ dotnet lash new function --language javascript MyNewFunction
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Create new LambdaSharp module or function
+MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
 Created function file: MyNewFunction\index.js
 
 Done (duration: 00:00:00.1011796)

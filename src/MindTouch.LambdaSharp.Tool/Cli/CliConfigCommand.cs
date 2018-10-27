@@ -33,7 +33,7 @@ using MindTouch.LambdaSharp.Tool.Internal;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
-    public class CliToolCommand : ACliCommand {
+    public class CliConfigCommand : ACliCommand {
 
         //--- Class Methods ---
         private static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
@@ -53,9 +53,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {
-            app.Command("tool", cmd => {
+            app.Command("config", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Configure LambdaSharp tool";
+                cmd.Description = "Configure LambdaSharp CLI";
 
                 // tool options
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
@@ -95,17 +95,17 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 ["VERSION"] = Version.ToString()
             });
 
-            // try to read tool settings
+            // try to read CLI settings
             var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
             var lambdaSharpToolSettings = await ssmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
             if(!lambdaSharpToolSettings.Any()) {
-                Console.WriteLine($"Configuring a new profile for LambdaSharp tool");
+                Console.WriteLine($"Configuring a new profile for LambdaSharp CLI");
 
                 // prompt for missing values
                 if(settings.ToolProfileExplicitlyProvided) {
-                    Console.WriteLine($"Creating tool profile: {settings.ToolProfile}");
+                    Console.WriteLine($"Creating CLI profile: {settings.ToolProfile}");
                 } else {
-                    settings.ToolProfile = Prompt.GetString("Tool profile name:", "Default");
+                    settings.ToolProfile = Prompt.GetString("CLI profile name:", "Default");
                 }
                 if(moduleS3BucketName == "") {
                     Console.WriteLine($"Creating new S3 bucket");
@@ -127,7 +127,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):") ?? "";
                 }
 
-                // create lambdasharp tool resources stack
+                // create lambdasharp CLI resources stack
                 var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
                 Console.WriteLine($"=> Stack creation initiated for {stackName}");
                 var request = new CreateStackRequest {
@@ -176,14 +176,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return;
                 }
                 if(existingVersion < Version) {
-                    Console.WriteLine($"LambdaSharp tool configuration appears to be out of date: (v{existingVersion})");
+                    Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date: (v{existingVersion})");
                     var upgrade = Prompt.GetYesNo("Do you want to upgrade?", false);
                     if(!upgrade) {
                         return;
                     }
                 } else if(!existingVersion.IsCompatibleWith(Version)) {
                     Console.WriteLine();
-                    Console.WriteLine($"WARNING: LambdaSharp tool is not compatible with v{existingVersion}");
+                    Console.WriteLine($"WARNING: LambdaSharp CLI is not compatible with v{existingVersion}");
                     return;
                 }
                 try {

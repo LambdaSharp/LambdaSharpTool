@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - List Command
+# LambdaSharp CLI - List Command
 
 The `list` command is used to list all deployed modules on a deployment tier.
 
@@ -11,8 +11,8 @@ The `list` command is used to list all deployed modules on a deployment tier.
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -33,7 +33,7 @@ dotnet lash list --tier Demo
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - List deployed LambdaSharp modules
+MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
 
 MODULE                        STATUS                DATE
 LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12

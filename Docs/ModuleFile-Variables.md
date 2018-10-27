@@ -38,7 +38,7 @@ Parameters:
     Value: Hello {{Who}}!
 ```
 
-Variables can also be used in other variables to create compound values. The order of definitions for variables is not important. However, beware to avoid cyclic dependencies, otherwise the λ# tool will be unable to resolve the variable value.
+Variables can also be used in other variables to create compound values. The order of definitions for variables is not important. However, beware to avoid cyclic dependencies, otherwise the λ# CLI will be unable to resolve the variable value.
 
 ```yaml
 Variables:
@@ -68,4 +68,4 @@ Functions:
 
 ## Notes
 
-Beware that using the `{{GitSha}}` in substitutions will cause the CloudFormation template to change with every Git revision. This means that the λ# tool will trigger a stack update every time. Even if no other values have changed!
+Beware that using the `{{GitSha}}` in substitutions will cause the CloudFormation template to change with every Git revision. This means that the λ# CLI will trigger a stack update every time. Even if no other values have changed!

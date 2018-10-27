@@ -1,10 +1,10 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Deploy Command
+# LambdaSharp CLI - Deploy Command
 
 The `deploy` command is used to deploy a published module.
 
-CloudFormation stacks created by the λ# tool have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are being accidentally replaced.
+CloudFormation stacks created by the λ# CLI have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are being accidentally replaced.
 
 ## Arguments
 
@@ -60,8 +60,8 @@ If the argument refers to a module file, the `deploy` command invokes the `build
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -82,7 +82,7 @@ dotnet lash deploy
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Deploy LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Deploy LambdaSharp module
 Readying module for deployment tier 'Demo'
 
 Processing module: Module.yml
@@ -134,7 +134,7 @@ dotnet lash deploy Demo/bin/manifest.json
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4-WIP) - Deploy LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4-WIP) - Deploy LambdaSharp module
 Readying module for deployment tier 'Demo'
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip

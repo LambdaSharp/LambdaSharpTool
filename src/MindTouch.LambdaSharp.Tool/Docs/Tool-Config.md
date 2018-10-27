@@ -1,8 +1,8 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Tool Command
+# LambdaSharp CLI - Config Command
 
-The `tool` command is used to configure λ# tool. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
+The `config` command is used to configure λ# CLI. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences. The λ# CLI configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
 
 ## Options
 
@@ -20,8 +20,8 @@ The `tool` command is used to configure λ# tool. The configuration step optiona
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -33,18 +33,18 @@ The `tool` command is used to configure λ# tool. The configuration step optiona
 
 ## Examples
 
-### Configure a new tool profile with interactive prompts
+### Configure a new CLI profile with interactive prompts
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash tool
+dotnet lash config
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Configure LambdaSharp tool
-Configuring a new profile for LambdaSharp tool
-Tool profile name: [Default]
+MindTouch LambdaSharp CLI (v0.4) - Configure LambdaSharp CLI
+Configuring a new profile for LambdaSharp CLI
+CLI profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
 S3 bucket path for module deployments: [Modules/]
 Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):
@@ -63,18 +63,18 @@ CREATE_COMPLETE                     AWS::CloudFormation::Stack                  
 Done (duration: 00:00:40.0739292)
 ```
 
-### Configure a new tool profile without any prompts
+### Configure a new CLI profile without any prompts
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash tool --tool-profile Demo --module-s3-bucket-name="" --module-s3-bucket-path="Modules/" --cloudformation-notifications-topic=""
+dotnet lash config --cli-profile Demo --module-s3-bucket-name="" --module-s3-bucket-path="Modules/" --cloudformation-notifications-topic=""
 ```
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4-WIP) - Configure LambdaSharp tool
-Configuring a new profile for LambdaSharp tool
-Creating tool profile: Demo
+MindTouch LambdaSharp CLI (v0.4-WIP) - Configure LambdaSharp CLI
+Configuring a new profile for LambdaSharp CLI
+Creating CLI profile: Demo
 Creating new S3 bucket
 Using S3 bucket path: Modules/
 Creating new SNS topic for CloudFormation notifications

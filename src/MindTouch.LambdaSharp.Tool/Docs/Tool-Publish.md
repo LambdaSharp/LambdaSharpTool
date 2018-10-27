@@ -1,6 +1,6 @@
 ![λ#](../../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool - Publish Command
+# LambdaSharp CLI - Publish Command
 
 The `publish` command is used to upload the compiled module and its assets to the deployment bucket.
 
@@ -39,8 +39,8 @@ lash new function MyNewFunction
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>(optional) Generate output assets without deploying (0=everything, 1=cloudformation)</dd>
 
-<dt><code>--tool-profile|-TP &lt;NAME&gt;</code></dt>
-<dd>(optional) Use a specific LambdaSharp tool profile (default: Default)</dd>
+<dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
+<dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific AWS profile from the AWS credentials file</dd>
@@ -61,7 +61,7 @@ dotnet lash publish
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Publish LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
 
 Processing module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -93,7 +93,7 @@ dotnet lash publish Demo/bin/manifest.json
 
 Output:
 ```
-MindTouch LambdaSharp Tool (v0.4) - Publish LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip

@@ -1,17 +1,17 @@
 ![λ#](../Docs/LambdaSharp_v2_small.png)
 
-# Setup LambdaSharp Tool & Environment
+# Setup LambdaSharp CLI & Deployment Tier
 
-## Step 1: Installing λ# Tool
+## Step 1: Installing λ# CLI
 
-As of v0.4, the λ# tool can be installed as a global `dotnet` tool. Simply run the `dotnet` tool installation command:
+As of v0.4, the λ# CLI can be installed as a global `dotnet` tool. Simply run the `dotnet` tool installation command:
 
 __Using PowerShell/Bash:__
 ```bash
 dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
 ```
 
-Alternatively, for λ# contributors, the tool can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
+Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
 
 Once installed, validate that the command works by running it.
 
@@ -22,7 +22,7 @@ dotnet lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.4)
+MindTouch LambdaSharp CLI (v0.4)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
@@ -40,23 +40,23 @@ Commands:
   list          List deployed LambdaSharp modules
   new           Create new LambdaSharp module or function
   publish       Publish LambdaSharp module
-  tool          Configure LambdaSharp tool
+  tool          Configure LambdaSharp CLI
 
 Run 'MindTouch.LambdaSharp.Tool [command] --help' for more information about a command.
 ```
 
-## Step 2: Configure λ# Tool
+## Step 2: Configure λ# CLI
 
-Before the λ# tool can be used, it must be configured. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
+Before the λ# CLI can be used, it must be configured. The configuration step optionally creates needed resources for deploying λ# modules and captures deployment preferences.
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash tool
+dotnet lash config
 ```
 
-The λ# tool can be configured for multiple tool profiles using the `--tool-profile` option. When omitted, the _Default_ tool profile is assumed. The λ# tool configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
+The λ# CLI can be configured for multiple CLI profiles using the `--cli-profile` option. When omitted, the _Default_ CLI profile is assumed. The λ# CLI configuration options are stored in [AWS System Manager Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html), so they can be shared across teams on the same AWS account.
 
-## Step 3: Initialize λ# Environment
+## Step 3: Initialize λ# Deployment Tier
 
 λ# must initialize each deployment tier (e.g. `Test`, `Stage`, `Prod`, etc.) before modules can be deployed.
 
@@ -76,7 +76,7 @@ dotnet lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp Tool (v0.4) - List deployed LambdaSharp modules
+MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
 
 MODULE                        STATUS                DATE
 LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12
@@ -87,11 +87,11 @@ LambdaSharpS3PackageLoader    [UPDATE_COMPLETE]     2018-10-25 14:00:20
 Found 4 modules for deployment tier 'Demo'
 ```
 
-## Optional: Use λ# Environment Variable
+## Optional: λ# Environment Variables
 
 The following environment variables are checked when their corresponding options are omitted from the λ# command line.
 * `LAMBDASHARP_TIER`: Replaces the need for the `--tier` option.
-* `LAMBDASHARP_PROFILE`: Replaces the need for the `--tool-profile` option.
+* `LAMBDASHARP_PROFILE`: Replaces the need for the `--cli-profile` option.
 
 __Using PowerShell:__
 ```powershell
@@ -137,16 +137,16 @@ The registrar uses a DynamoDB table to store module and functions registrations.
 |`RegistrationTableReadCapacity`|Provisioned read capacity for registrations table|1|
 |`RegistrationTableWriteCapacity`|Provisioned write capacity for registrations table|1|
 
-## For λ# Contributors: Installing λ# Tool from GitHub
+## For λ# Contributors: Installing λ# from GitHub
 
-The λ# tool is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# tool.
+λ# is distributed as [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). Switch to your preferred folder for Git projects and create a clone of the λ# repository.
 
 __Using Powershell/Bash:__
 ```bash
 git clone https://github.com/LambdaSharp/LambdaSharpTool.git
 ```
 
-Define the `LAMBDASHARP` environment variable to point to the folder of the `LambdaSharpTool` clone. Furthermore, define `lash` as an alias to invoke the λ# tool. The following script assumes the λ# tool was cloned into the `/Repos/LambdaSharpTool` directory.
+Define the `LAMBDASHARP` environment variable to point to the folder of the `LambdaSharpTool` clone. Furthermore, define `lash` as an alias to invoke the λ# CLI. The following script assumes λ# was cloned into the `/Repos/LambdaSharpTool` directory.
 
 __Using PowerShell:__
 ```powershell

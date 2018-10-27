@@ -96,7 +96,7 @@ The <code>EncryptionContext</code> section is an optional mapping of key-value p
 
 <dt><code>Import</code></dt>
 <dd>
-The <code>Import</code> attribute specifies a path to the AWS Systems Manager Parameter Store. At build time, the λ# tool imports the value and stores it in a Lambda function environment variable. If the value starts with <code>/</code>, it will be used as an absolute key path. Otherwise, it will be prefixed with <code>/{{Tier}}/</code> to create an import path specific to the deployment tier.
+The <code>Import</code> attribute specifies a path to the AWS Systems Manager Parameter Store. At build time, the λ# CLI imports the value and stores it in a Lambda function environment variable. If the value starts with <code>/</code>, it will be used as an absolute key path. Otherwise, it will be prefixed with <code>/{{Tier}}/</code> to create an import path specific to the deployment tier.
 
 <i>Required</i>: No. At most one <code>Value</code>, <code>Values</code>, <code>Secret</code>, or <code>Import</code> can be specified at a time.
 
@@ -105,7 +105,7 @@ The <code>Import</code> attribute specifies a path to the AWS Systems Manager Pa
 
 <dt><code>Package</code></dt>
 <dd>
-The <code>Package</code> section specifies local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# tool creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+The <code>Package</code> section specifies local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# CLI creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
 
 <i>Required</i>: No. At most one <code>Value</code>, <code>Values</code>, <code>Secret</code>, <code>Import</code>, or <code>Package</code> can be specified at a time.
 

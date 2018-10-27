@@ -2,7 +2,7 @@
 
 # LambdaSharp Schedule Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
 ## Module File
 
@@ -58,7 +58,7 @@ public class Function : ALambdaFunction<LambdaScheduleEvent> {
 
 ## Reference
 
-The λ# tool creates a CloudWatch Events rule for each schedule expression. The `Name` value, when provided, is injected using an input transformer. This allows the receiving code to differentiate invocations across different events.
+The λ# CLI creates a CloudWatch Events rule for each schedule expression. The `Name` value, when provided, is injected using an input transformer. This allows the receiving code to differentiate invocations across different events.
 
 ```csharp
 public class LambdaScheduleEvent {

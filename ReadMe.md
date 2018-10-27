@@ -1,40 +1,55 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp Tool & Framework (v0.4)
+# LambdaSharp CLI & Framework (v0.4)
 
 **[Read what's new in the latest release.](Docs/ReleaseNotes-Damo.md)**
 
-The objective of λ# is to accelerate the innovation velocity of serverless solutions. Developers should be able to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
+λ# is a CLI and a framework for rapid serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation template that provide simple, yet flexible, deployment options.
 
-λ# is a .NET Core 2.x framework and tooling for rapid application development, deployment, and management of [AWS Lambda](https://aws.amazon.com/lambda/) functions and serverless infrastructure. Resources are automatically converted into parameters for easy access by AWS Lambda C# functions. Furthermore, λ# modules are composable by exchanging resource references using the [AWS Systems Manager Parameter Store](https://aws.amazon.com/systems-manager/features/).
+The objective of λ# is to accelerate the innovation velocity of serverless solutions. It allows developers to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
 
-When creating a λ# module, you only need to worry about three files:
-* The AWS Lambda C# code
-* The .NET Core project file
-* The λ# module file
+## Prerequisite
+
+1. [Configure AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+1. [Install .NET Core 2.x](https://www.microsoft.com/net/download)
 
 ## Getting Started
 
-**[Before getting started, you must setup your λ# Environment.](Bootstrap/)**
+The λ# CLI is installed as a [.NET Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools).
 
-Once setup, creating modules with Lambda functions and deploying them only requires a few steps.
+```bash
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
+```
+
+Once installed, the λ# CLI needs to be configured.
+```bash
+dotnet lash config
+```
+
+Finally, a deployment tier must be initialized.
+```bash
+dotnet lash init --tier Demo
+```
+
+## Deploy your First λ# Module
+
+Creating modules with Lambda functions and deploying them only requires a few steps.
 
 ```bash
 # Create a new λ# module
-lash new module MySampleModule
+dotnet lash new module MySampleModule
 
 # Add a function to the λ# module
-lash new function MyFunction
+dotnet lash new function MyFunction
 
 # Deploy the λ# module
-lash deploy
+dotnet lash deploy
 ```
 
-The λ# tool uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the parameters, resources, and functions.
+The λ# CLI uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
 
 ```yaml
-Name: MySampleModule
-
+Module: MySampleModule
 Version: 1.0
 
 Functions:
@@ -77,11 +92,11 @@ namespace MySampleModule.MyFunction {
 
 ## Learn More
 
-1. [Setup λ# Environment **(required)**](Bootstrap/)
+1. [Setup λ# CLI](Bootstrap/)
+1. [λ# CLI Reference](src/MindTouch.LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
 1. [Module File Reference](Docs/ModuleFile.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
-1. [λ# Tool Reference](src/MindTouch.LambdaSharp.Tool/)
 1. [Release Notes](Docs/ReadMe.md)
 
 ## License

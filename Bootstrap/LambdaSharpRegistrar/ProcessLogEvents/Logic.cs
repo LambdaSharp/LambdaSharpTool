@@ -92,7 +92,7 @@ namespace MindTouch.LambdaSharpRegistrar.ProcessLogEvents {
                 // LambdaSharp error report
                 CreateMatchPattern(@"^\s*{.*}\s*$", MatchLambdaSharpJsonLogEntryAsync),
 
-                // Lambda .Net exception
+                // Lambda .NET exception
                 CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): LambdaException$", MatchLambdaExceptionAsync),
 
                 // Lambda timeout error

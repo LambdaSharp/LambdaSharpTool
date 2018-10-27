@@ -2,7 +2,7 @@
 
 # LambdaSharp SNS Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
 ## Module File
 
@@ -59,7 +59,7 @@ public class Function : ALambdaEventFunction<MyMessage> {
 
 ## Reference
 
-The λ# tool automatically creates the required permissions to allow the subscribed SNS topic to invoke the Lambda function.
+The λ# CLI automatically creates the required permissions to allow the subscribed SNS topic to invoke the Lambda function.
 
 Thw following YAML shows the permission granted to the AWS SNS service.
 

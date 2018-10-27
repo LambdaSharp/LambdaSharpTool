@@ -2,7 +2,7 @@
 
 # LambdaSharp Kinesis Stream Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
 ## Module File
 
