@@ -99,6 +99,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ++index;
                 AtLocation(parameter.Var ?? $"[{index}]", () => {
                     ValidateResourceName(parameter.Var, prefix);
+                    ValidateScope(parameter.Scope);
                     Validate(Regex.IsMatch(parameter.Var, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
                     if(parameter.Secret != null) {
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
@@ -507,6 +508,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     if(input.Type == null) {
                         input.Type = "String";
                     }
+                    ValidateScope(input.Scope);
                     if(input.Import != null) {
                         Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
                         ValidateNotBothStatements("Import", "Name", input.Input == null);
@@ -588,6 +590,40 @@ namespace MindTouch.LambdaSharp.Tool {
             } else {
 
                 // TODO (2018-10-09, bjorg): regex name validation
+            }
+        }
+
+        private void ValidateScope(object scope) {
+            AtLocation("Scope", () => {
+                if(scope == null) {
+                    return;
+                }
+                var names = new List<string>();
+                if(scope is string text) {
+                    names.AddRange(text.Split(",").Select(v => v.Trim()).Where(v => v.Length > 0));
+                }
+                if(scope is IList<object> list) {
+                    foreach(var entry in list) {
+                        if(entry is string value) {
+                            names.AddRange(value.Split(",").Select(v => v.Trim()).Where(v => v.Length > 0));
+                        } else {
+                            AddError("invalid function name");
+                        }
+                    }
+                }
+                foreach(var name in names) {
+                    ValidateFunctionName(name);
+                }
+            });
+
+            // local function
+            void ValidateFunctionName(string function) {
+                if(function == "*") {
+                    return;
+                }
+                if(!_module.Functions.Any(f => f.Function == function)) {
+                    AddError($"could not find function named: {function}");
+                }
             }
         }
     }

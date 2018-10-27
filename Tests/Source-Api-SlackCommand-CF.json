@@ -2,6 +2,11 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "SlackToken": {
+      "Type": "String",
+      "Description": "Slack verification token",
+      "Default": ""
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -373,6 +378,9 @@
         "Description": "My function (v1.0)",
         "Environment": {
           "Variables": {
+            "STR_SLACKTOKEN": {
+              "Ref": "SlackToken"
+            },
             "MODULE_NAME": "TestModule",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
@@ -777,6 +785,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "SlackToken": {
+          "default": "Slack Token"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -806,6 +817,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "SlackToken"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"

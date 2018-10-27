@@ -5,7 +5,7 @@ Inputs:
 
   - Input: SlackToken
     Description: Slack verification token
-    Scope: MyFunction
+    Scope: Function
     Default: ""
 
 Functions:
