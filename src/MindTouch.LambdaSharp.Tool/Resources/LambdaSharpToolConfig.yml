@@ -10,10 +10,6 @@ Parameters:
     AllowedPattern: '[a-z0-9\-]*'
     ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
 
-  DeploymentBucketPath:
-    Type: String
-    Description: S3 key prefix to be used for deployments by LambdaSharpTool
-
   DeploymentNotificationTopicArn:
     Type: String
     Description: SNS topic for CloudFormation notifications used by LambdaSharpTool (if blank, an SNS topic is created)
@@ -44,7 +40,6 @@ Metadata:
           default: LambdaSharp Deployment Settings
         Parameters:
           - DeploymentBucketName
-          - DeploymentBucketPath
           - DeploymentNotificationTopicArn
     ParameterLabels:
       LambdaSharpToolProfile:
@@ -53,15 +48,12 @@ Metadata:
         default: Version
       DeploymentBucketName:
         default: S3 Bucket Name
-      DeploymentBucketPath:
-        default: S3 Bucket Path
       DeploymentNotificationTopicArn:
         default: SNS Topic ARN
 
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref DeploymentBucketName, "" ]
   CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopicArn, "" ]
-  HasDeploymentBucketPath: !Not [ !Equals [ !Ref DeploymentBucketPath, "" ]]
 
 Resources:
 
@@ -106,15 +98,6 @@ Resources:
         !Ref DeploymentBucket,
         !Ref DeploymentBucketName
       ]
-
-  DeploymentBucketPathSsmParameter:
-    Type: AWS::SSM::Parameter
-    Condition: HasDeploymentBucketPath
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentBucketPath'
-      Description: S3 key prefix to install modules
-      Type: String
-      Value: !Ref DeploymentBucketPath
 
   # SNS CloudFormation Notification Topic
   DeploymentNotificationTopic:
