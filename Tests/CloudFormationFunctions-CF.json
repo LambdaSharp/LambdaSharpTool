@@ -2,6 +2,10 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
+    "RootDomainName": {
+      "Type": "String",
+      "Default": "example.org"
+    },
     "ModuleSecrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
@@ -31,10 +35,6 @@
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "Source deployment S3 bucket name"
-    },
-    "DeploymentBucketPath": {
-      "Type": "String",
-      "Description": "Source deployment S3 bucket path"
     },
     "DeploymentPrefix": {
       "Type": "String",
@@ -441,7 +441,7 @@
             "Ref": "DeploymentBucketName"
           },
           "S3Key": {
-            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/Function-NOCOMPILE.zip"
+            "Fn::Sub": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
           }
         },
         "DeadLetterConfig": {
@@ -707,6 +707,9 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
+        "RootDomainName": {
+          "default": "Root Domain Name"
+        },
         "ModuleSecrets": {
           "default": "Secret Keys (ARNs)"
         },
@@ -722,9 +725,6 @@
         "DeploymentBucketName": {
           "default": "Deployment S3 Bucket"
         },
-        "DeploymentBucketPath": {
-          "default": "Deployment S3 Path"
-        },
         "DeploymentPrefix": {
           "default": "Deployment Prefix"
         },
@@ -736,6 +736,14 @@
         }
       },
       "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Module Settings"
+          },
+          "Parameters": [
+            "RootDomainName"
+          ]
+        },
         {
           "Label": {
             "default": "LambdaSharp Module Options"
@@ -760,13 +768,17 @@
           },
           "Parameters": [
             "DeploymentBucketName",
-            "DeploymentBucketPath",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
             "DeploymentParent"
           ]
         }
       ]
+    },
+    "LambdaSharp::Manifest": {
+      "ModuleName": "TestModule",
+      "ModuleVersion": "1.0",
+      "Pragmas": []
     }
   }
 }

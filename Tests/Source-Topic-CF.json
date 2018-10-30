@@ -36,10 +36,6 @@
       "Type": "String",
       "Description": "Source deployment S3 bucket name"
     },
-    "DeploymentBucketPath": {
-      "Type": "String",
-      "Description": "Source deployment S3 bucket path"
-    },
     "DeploymentPrefix": {
       "Type": "String",
       "Description": "Module deployment prefix"
@@ -363,7 +359,7 @@
             "Ref": "DeploymentBucketName"
           },
           "S3Key": {
-            "Fn::Sub": "${DeploymentBucketPath}TestModule/Assets/Function-NOCOMPILE.zip"
+            "Fn::Sub": "Modules/TestModule/Assets/Function-NOCOMPILE.zip"
           }
         },
         "DeadLetterConfig": {
@@ -700,9 +696,6 @@
         "DeploymentBucketName": {
           "default": "Deployment S3 Bucket"
         },
-        "DeploymentBucketPath": {
-          "default": "Deployment S3 Path"
-        },
         "DeploymentPrefix": {
           "default": "Deployment Prefix"
         },
@@ -746,13 +739,17 @@
           },
           "Parameters": [
             "DeploymentBucketName",
-            "DeploymentBucketPath",
             "DeploymentPrefix",
             "DeploymentPrefixLowercase",
             "DeploymentParent"
           ]
         }
       ]
+    },
+    "LambdaSharp::Manifest": {
+      "ModuleName": "TestModule",
+      "ModuleVersion": "1.0",
+      "Pragmas": []
     }
   }
 }

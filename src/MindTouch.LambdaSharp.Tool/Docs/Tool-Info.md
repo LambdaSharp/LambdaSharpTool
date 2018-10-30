@@ -41,7 +41,6 @@ LambdaSharp CLI
     Profile: Default
     Version: 0.4
     Module Deployment S3 Bucket: lambdasharp-bucket-name
-    Module Deployment S3 Path: Modules/
     Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Demo-DeploymentNotificationTopic-1V8UD7UQVW3KD
 LambdaSharp Deployment Tier
     Name: Demo

@@ -11,9 +11,6 @@ The `config` command is used to configure λ# CLI. The configuration step option
 <dt><code>--module-s3-bucket-name &lt;NAME&gt;</code></dt>
 <dd>(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)</dd>
 
-<dt><code>--module-s3-bucket-path &lt;PATH&gt;</code></dt>
-<dd>(optional) S3 bucket path for module deployments (default: Modules/)</dd>
-
 <dt><code>--cloudformation-notifications-topic &lt;ARN&gt;</code></dt>
 <dd>(optional) Existing SNS topic ARN for CloudFormation notifications (blank value creates new bucket)</dd>
 
@@ -46,7 +43,6 @@ MindTouch LambdaSharp CLI (v0.4) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
 CLI profile name: [Default]
 Existing S3 bucket name for module deployments (blank value creates new bucket):
-S3 bucket path for module deployments: [Modules/]
 Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):
 => Stack creation initiated for LambdaSharpTool-Demo
 CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Demo (User Initiated)
@@ -67,7 +63,7 @@ Done (duration: 00:00:40.0739292)
 
 __Using Powershell/Bash:__
 ```bash
-dotnet lash config --cli-profile Demo --module-s3-bucket-name="" --module-s3-bucket-path="Modules/" --cloudformation-notifications-topic=""
+dotnet lash config --cli-profile Demo --module-s3-bucket-name="" --cloudformation-notifications-topic=""
 ```
 
 Output:
@@ -76,12 +72,10 @@ MindTouch LambdaSharp CLI (v0.4-WIP) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
 Creating CLI profile: Demo
 Creating new S3 bucket
-Using S3 bucket path: Modules/
 Creating new SNS topic for CloudFormation notifications
 => Stack creation initiated for LambdaSharpTool-Demo
 CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              LambdaSharpTool-Demo (User Initiated)
 CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         DeploymentNotificationTopic
-CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketPathSsmParameter
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     StackNameSsmParameter
 ...
 CREATE_IN_PROGRESS                  AWS::SSM::Parameter                                     DeploymentBucketNameSsmParameter

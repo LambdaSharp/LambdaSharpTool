@@ -8,9 +8,8 @@ lash() {
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
         --tier-version 0.4 \
-        --tool-version 0.4 \
+        --cli-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-bucket-path Modules/ \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         $1.yml
 }
@@ -24,9 +23,8 @@ if [ -z "$1" ]; then
         --aws-region us-east-1 \
         --tier Test \
         --tier-version 0.4 \
-        --tool-version 0.4 \
+        --cli-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-bucket-path Modules/ \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
 
     if [ $? -ne 0 ]; then

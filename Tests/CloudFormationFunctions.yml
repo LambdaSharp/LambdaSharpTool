@@ -1,6 +1,11 @@
 Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
+Inputs:
+
+  - Input: RootDomainName
+    Default: "example.org"
+
 Variables:
 
   - Var: MyResource
