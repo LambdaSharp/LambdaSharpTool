@@ -134,10 +134,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             ParameterValue = moduleS3BucketName
                         },
                         new Parameter {
-                            ParameterKey = "DeploymentBucketPath",
-                            ParameterValue = "Modules/"
-                        },
-                        new Parameter {
                             ParameterKey = "DeploymentNotificationTopicArn",
                             ParameterValue = cloudFormationNotificationsTopicArn
                         },
@@ -190,10 +186,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         Parameters = new List<Parameter> {
                             new Parameter {
                                 ParameterKey = "DeploymentBucketName",
-                                UsePreviousValue = true
-                            },
-                            new Parameter {
-                                ParameterKey = "DeploymentBucketPath",
                                 UsePreviousValue = true
                             },
                             new Parameter {
