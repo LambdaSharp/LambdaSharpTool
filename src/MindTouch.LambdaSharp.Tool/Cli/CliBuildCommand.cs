@@ -505,23 +505,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // module key formats
             // * MODULENAME:VERSION
-            // * s3://bucket-name/path/cloudformation.json
+            // * s3://bucket-name/Modules/{ModuleName}/{Version}/
 
-            string marker;
+            string manifestPath;
             if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
                 var uri = new Uri(moduleKey);
                 settings.DeploymentBucketName = uri.Host;
 
                 // absolute path always starts with '/', which needs to be removed
                 var path = uri.AbsolutePath.Substring(1);
-                if(!path.EndsWith(".json", StringComparison.Ordinal)) {
-                    marker = await GetS3ObjectContents(settings, path);
-                    if(marker == null) {
-                        AddError($"could not find module location: {moduleKey})");
-                        return false;
-                    }
+                if(!path.EndsWith("/manifest.json", StringComparison.Ordinal)) {
+                    manifestPath = path.TrimEnd('/') + "/manifest.json";
                 } else {
-                    marker = path;
+                    manifestPath = path;
                 }
             } else {
                 VersionInfo requestedVersion = null;
@@ -540,34 +536,39 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
 
                 // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                marker = null;
-                foreach(var bucket in new[] {
-                    settings.DeploymentBucketName,
-                    $"lambdasharp-{settings.AwsRegion}"
-                }) {
-                    settings.DeploymentBucketName = bucket;
-                    var foundVersion = await FindNewestVersion(settings, moduleName, requestedVersion);
-                    if(HasErrors) {
+                var originalDeploymentBucketName = settings.DeploymentBucketName;
+                try {
+                    manifestPath = null;
+                    foreach(var bucket in new[] {
+                        settings.DeploymentBucketName,
+                        $"lambdasharp-{settings.AwsRegion}"
+                    }) {
+                        settings.DeploymentBucketName = bucket;
+                        var foundVersion = await FindNewestVersion(settings, moduleName, requestedVersion);
+                        if(HasErrors) {
+                            return false;
+                        }
+                        if(foundVersion == null) {
+                            continue;
+                        }
+                        manifestPath = $"Modules/{moduleName}/Versions/{foundVersion}/manifest.json";
+                    }
+                    if(manifestPath == null) {
+                        AddError($"could not find module: {moduleName} (v{requestedVersion})");
                         return false;
                     }
-                    if(foundVersion == null) {
-                        continue;
-                    }
-                    marker = await GetS3ObjectContents(settings, $"Modules/{moduleName}/Versions/{requestedVersion}");
-                    if(marker != null) {
-                        break;
-                    }
-                }
-                if(marker == null) {
-                    AddError($"could not find module: {moduleName} (v{requestedVersion})");
-                    return false;
+                } finally {
+                    settings.DeploymentBucketName = originalDeploymentBucketName;
                 }
             }
 
             // download manifest
-            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(
-                await GetS3ObjectContents(settings, marker)
-            );
+            var manifestText = await GetS3ObjectContents(settings, manifestPath);
+            if(manifestText == null) {
+                AddError($"could not load manifest from s3://{settings.DeploymentBucketName}/{manifestPath}");
+                return false;
+            }
+            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
             // bootstrap module doesn't expect a deployment tier to exist
             if(forceDeploy || !manifest.HasPragma("no-tier-version-check")) {
@@ -682,8 +683,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             };
             do {
                 var response = await settings.S3Client.ListObjectsV2Async(request);
-                versions.AddRange(response.S3Objects
-                    .Select(found => VersionInfo.Parse(found.Key.Substring(request.Prefix.Length)))
+                versions.AddRange(response.CommonPrefixes
+                    .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
+                    .Select(found => VersionInfo.Parse(found))
                     .Where(version => (requestedVersion == null) ? !version.IsPreRelease : version.IsCompatibleWith(requestedVersion))
                 );
                 request.ContinuationToken = response.NextContinuationToken;

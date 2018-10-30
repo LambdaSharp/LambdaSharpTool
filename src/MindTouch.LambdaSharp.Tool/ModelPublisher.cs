@@ -73,16 +73,8 @@ namespace MindTouch.LambdaSharp.Tool {
             manifest.Template = await UploadTemplateFileAsync(manifest, manifest.Template, "template");
 
             // upload LambdaSharp manifest
-            var marker = await UploadManifestAsync(manifest, "manifest");
+            var manifestPath = await UploadManifestAsync(manifest, "manifest");
             if(_changesDetected) {
-
-                // write version link entry
-                await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
-                    BucketName = Settings.DeploymentBucketName,
-                    ContentBody = marker,
-                    ContentType = "application/text",
-                    Key = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}",
-                });
 
                 // store copy of cloudformation template under version number
                 await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
@@ -96,14 +88,14 @@ namespace MindTouch.LambdaSharp.Tool {
                 // store copy of cloudformation template under version
                 await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
                     SourceBucket = Settings.DeploymentBucketName,
-                    SourceKey = marker,
+                    SourceKey = manifestPath,
                     DestinationBucket = Settings.DeploymentBucketName,
                     DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/manifest.json"
                 });
             } else {
                 Console.WriteLine($"=> No changes found to publish");
             }
-            return $"s3://{Settings.DeploymentBucketName}/{marker}";
+            return $"s3://{Settings.DeploymentBucketName}/{manifestPath}";
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {

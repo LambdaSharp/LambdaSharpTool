@@ -394,6 +394,11 @@ namespace MindTouch.LambdaSharp.Tool {
                             ["Parameters"] = section.Select(input => input.ResourceName).ToList()
                         }
                     )
+                },
+                ["LambdaSharp::Manifest"] = new Dictionary<string, object> {
+                    ["ModuleName"] = _module.Name,
+                    ["ModuleVersion"] = _module.Version.ToString(),
+                    ["Pragmas"] = _module.Pragmas
                 }
             });
             template = JsonConvert.SerializeObject(json, Formatting.Indented);
