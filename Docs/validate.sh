@@ -33,29 +33,27 @@ lash() {
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=ReleaseTest$SUFFIX
 
+lash init
+
+# Deploy the λ# Demos
+
 lash deploy \
-    $LAMBDASHARP/Bootstrap/LambdaSharp/Module.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpRegistrar/Module.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3PackageLoader/Module.yml \
-    $LAMBDASHARP/Bootstrap/LambdaSharpS3Subscriber/Module.yml
-
-# Deploy the λ# Demo Module
-
-lash deploy Demos/Demo/Module.yml
+    Demos/Demo \
+    Demos/BadModule
 
 # Deploy all λ# Sample Modules
 
 lash deploy \
-    Samples/AlexaSample/Module.yml \
-    Samples/ApiSample/Module.yml \
-    Samples/DynamoDBSample/Module.yml \
-    Samples/KinesisSample/Module.yml \
-    Samples/MacroSample/Module.yml \
-    Samples/S3Sample/Module.yml \
-    Samples/ScheduleSample/Module.yml \
-    Samples/SlackCommandSample/Module.yml \
-    Samples/SnsSample/Module.yml \
-    Samples/SqsSample/Module.yml
+    Samples/AlexaSample \
+    Samples/ApiSample \
+    Samples/DynamoDBSample \
+    Samples/KinesisSample \
+    Samples/MacroSample \
+    Samples/S3Sample \
+    Samples/ScheduleSample \
+    Samples/SlackCommandSample \
+    Samples/SnsSample \
+    Samples/SqsSample
 
 # Create a Default λ# Module and Deploy it
 

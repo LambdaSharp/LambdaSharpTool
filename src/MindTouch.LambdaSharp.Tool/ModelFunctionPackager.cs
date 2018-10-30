@@ -217,14 +217,13 @@ namespace MindTouch.LambdaSharp.Tool {
             Console.WriteLine($"Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
-            Console.WriteLine("=> Restoring project dependencies");
+            Console.WriteLine("=> Building AWS Lambda package");
             if(!DotNetRestore(projectDirectory)) {
                 AddError("`dotnet restore` command failed");
                 return;
             }
 
             // compile project
-            Console.WriteLine("=> Building AWS Lambda package");
             var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Function + ".zip");
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
                 AddError("`dotnet lambda package` command failed");
@@ -242,7 +241,6 @@ namespace MindTouch.LambdaSharp.Tool {
             try {
 
                 // extract existing package into temp folder
-                Console.WriteLine("=> Decompressing AWS Lambda package");
                 if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                     ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
                     File.Delete(dotnetOutputPackage);
@@ -391,7 +389,6 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // compress folder contents
-            Console.WriteLine("=> Finalizing AWS Lambda package");
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                 using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
                     foreach(var file in files) {

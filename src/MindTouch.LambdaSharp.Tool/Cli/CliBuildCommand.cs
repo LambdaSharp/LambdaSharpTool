@@ -62,6 +62,73 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public static CommandOption AddDryRunOption(CommandLineApplication cmd)
             => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
 
+        public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
+            if(!File.Exists(filename)) {
+                AddError("cannot find inputs file");
+                return null;
+            }
+            switch(Path.GetExtension(filename).ToLowerInvariant()) {
+            case ".yml":
+            case ".yaml":
+                try {
+                    var inputs = new DeserializerBuilder()
+                        .WithNamingConvention(new PascalCaseNamingConvention())
+                        .Build()
+                        .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
+
+                    // resolve 'alias/' key names to key arns
+                    if(inputs.TryGetValue("ModuleSecrets", out object keys)) {
+                        if(keys is string key) {
+                            inputs["ModuleSecrets"] = ConvertAliasToKeyArn(key);
+                        } else if(keys is IList<object> list) {
+                            inputs["ModuleSecrets"] = list.Select(item => ConvertAliasToKeyArn(item as string)).ToList();
+                        }
+
+                        // assume key name is an alias and resolve it to its ARN
+                        string ConvertAliasToKeyArn(string keyId) {
+                            if(keyId == null) {
+                                return null;
+                            }
+                            if(keyId.StartsWith("arn:")) {
+                                return keyId;
+                            }
+                            if(keyId.StartsWith("alias/", StringComparison.Ordinal)) {
+                                try {
+                                    return settings.KmsClient.DescribeKeyAsync(keyId).Result.KeyMetadata.Arn;
+                                } catch(Exception e) {
+                                    AddError($"failed to resolve key alias: {keyId}", e);
+                                    return null;
+                                }
+                            }
+                            try {
+                                return settings.KmsClient.DescribeKeyAsync($"alias/{keyId}").Result.KeyMetadata.Arn;
+                            } catch(Exception e) {
+                                AddError($"failed to resolve key alias: {keyId}", e);
+                                return null;
+                            }
+                        }
+                    }
+
+                    // create final dictionary of input values
+                    var result = inputs.ToDictionary(
+                        kv => kv.Key.Replace("::", ""),
+                        kv => (kv.Value is string text)
+                            ? text
+                            : string.Join(",", (IList<object>)kv.Value)
+                    );
+                    return result;
+                } catch(YamlDotNet.Core.YamlException e) {
+                    AddError($"parsing error near {e.Message}");
+                } catch(Exception e) {
+                    AddError(e);
+                }
+                return null;
+            default:
+                AddError("incompatible inputs file format");
+                return null;
+            }
+        }
+
         //--- Methods ---
         public void Register(CommandLineApplication app) {
 
@@ -602,73 +669,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
             }
             return true;
-        }
-
-        private Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
-            if(!File.Exists(filename)) {
-                AddError("cannot find inputs file");
-                return null;
-            }
-            switch(Path.GetExtension(filename).ToLowerInvariant()) {
-            case ".yml":
-            case ".yaml":
-                try {
-                    var inputs = new DeserializerBuilder()
-                        .WithNamingConvention(new PascalCaseNamingConvention())
-                        .Build()
-                        .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
-
-                    // resolve 'alias/' key names to key arns
-                    if(inputs.TryGetValue("ModuleSecrets", out object keys)) {
-                        if(keys is string key) {
-                            inputs["ModuleSecrets"] = ConvertAliasToKeyArn(key);
-                        } else if(keys is IList<object> list) {
-                            inputs["ModuleSecrets"] = list.Select(item => ConvertAliasToKeyArn(item as string)).ToList();
-                        }
-
-                        // assume key name is an alias and resolve it to its ARN
-                        string ConvertAliasToKeyArn(string keyId) {
-                            if(keyId == null) {
-                                return null;
-                            }
-                            if(keyId.StartsWith("arn:")) {
-                                return keyId;
-                            }
-                            if(keyId.StartsWith("alias/", StringComparison.Ordinal)) {
-                                try {
-                                    return settings.KmsClient.DescribeKeyAsync(keyId).Result.KeyMetadata.Arn;
-                                } catch(Exception e) {
-                                    AddError($"failed to resolve key alias: {keyId}", e);
-                                    return null;
-                                }
-                            }
-                            try {
-                                return settings.KmsClient.DescribeKeyAsync($"alias/{keyId}").Result.KeyMetadata.Arn;
-                            } catch(Exception e) {
-                                AddError($"failed to resolve key alias: {keyId}", e);
-                                return null;
-                            }
-                        }
-                    }
-
-                    // create final dictionary of input values
-                    var result = inputs.ToDictionary(
-                        kv => kv.Key.Replace("::", ""),
-                        kv => (kv.Value is string text)
-                            ? text
-                            : string.Join(",", (IList<object>)kv.Value)
-                    );
-                    return result;
-                } catch(YamlDotNet.Core.YamlException e) {
-                    AddError($"parsing error near {e.Message}");
-                } catch(Exception e) {
-                    AddError(e);
-                }
-                return null;
-            default:
-                AddError("incompatible inputs file format");
-                return null;
-            }
         }
 
         private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo requestedVersion) {

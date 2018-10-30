@@ -19,7 +19,7 @@
 
 Module: LambdaSharp
 Version: 0.4-WIP
-Description: LambdaSharp Environment
+Description: LambdaSharp Deployment Tier
 Pragmas:
   - no-tier-version-check
   - no-lambdasharp-dependencies
@@ -147,6 +147,7 @@ Variables:
           RollbarProjectPrefix: !Ref RollbarProjectPrefix
           RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
           RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
+          ModuleSecrets: !Ref ModuleSecrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
@@ -165,6 +166,7 @@ Variables:
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
+          ModuleSecrets: !Ref ModuleSecrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
@@ -183,6 +185,7 @@ Variables:
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
+          ModuleSecrets: !Ref ModuleSecrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn

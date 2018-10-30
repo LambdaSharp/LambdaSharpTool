@@ -110,8 +110,16 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             };
 
-            // add decryption permission for requested keys
-            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+            // add parameters
+            foreach(var parameter in _module.Parameters) {
+                AddParameter(parameter, "");
+            }
+            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
+
+            // check if we need to create a module IAM role (only needed by functions)
+            if(_module.Functions.Any()) {
+
+                // add decryption permission for requested keys
                 _resourceStatements.Add(new Statement {
                     Sid = "ModuleSecretsDecryption",
                     Effect = "Allow",
@@ -137,17 +145,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 });
                 _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
-            }
-
-            // add parameters
-            foreach(var parameter in _module.Parameters) {
-                AddParameter(parameter, "");
-            }
-            _stack.Add($"ModuleIsNotNested", new Condition(Fn.Equals(Fn.Ref("DeploymentParent"), "")));
-
-            // check if we need to create a module IAM role (only needed by functions)
-            if(_module.Functions.Any()) {
-                _apiGatewayRoutes = new List<ApiRoute>();
 
                 // permissions needed for dead-letter queue
                 _resourceStatements.Add(new Statement {
@@ -233,6 +230,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     }
                 });
+                _apiGatewayRoutes = new List<ApiRoute>();
                 foreach(var function in _module.Functions) {
                     AddFunction(function);
                 }

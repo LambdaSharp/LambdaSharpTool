@@ -80,21 +80,20 @@ namespace MindTouch.LambdaSharp.Tool {
             var parameters = new List<AParameter>();
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, module.Inputs), null) ?? new List<AParameter>());
 
-            // add standard parameters (unless requested otherwise)
-            string section;
-            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+            // add LambdaSharp Module Options
+            var section = "LambdaSharp Module Options";
+            parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
+                new InputNode {
+                    Input = "ModuleSecrets",
+                    Section = section,
+                    Label = "Secret Keys (ARNs)",
+                    Description = "Comma-separated list of optional secret keys",
+                    Default = ""
+                }
+            }), null) ?? new List<AParameter>());
 
-                // add LambdaSharp Module Options
-                section = "LambdaSharp Module Options";
-                parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
-                    new InputNode {
-                        Input = "ModuleSecrets",
-                        Section = section,
-                        Label = "Secret Keys (ARNs)",
-                        Description = "Comma-separated list of optional secret keys",
-                        Default = ""
-                    }
-                }), null) ?? new List<AParameter>());
+            // add standard parameters (unless requested otherwise)
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
 
                 // add LambdaSharp Module Internal Dependencies
                 section = "LambdaSharp Dependencies";

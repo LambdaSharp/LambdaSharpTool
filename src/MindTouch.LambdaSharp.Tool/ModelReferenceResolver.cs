@@ -63,6 +63,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             });
 
+            // resolve references in input resource properties
             AtLocation("Inputs", () => {
                 foreach(var parameter in module.GetAllParameters()
                     .OfType<AInputParameter>()

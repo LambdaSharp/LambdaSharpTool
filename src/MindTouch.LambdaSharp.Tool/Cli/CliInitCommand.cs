@@ -60,11 +60,33 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp bootstrap modules", CommandOptionType.NoValue);
+                var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
+                var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();
                     if(settings == null) {
+                        return;
+                    }
+
+                    // reading module inputs
+                    var inputs = new Dictionary<string, string>();
+                    if(inputsFileOption.HasValue()) {
+                        inputs = CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, inputsFileOption.Value());
+                        if(HasErrors) {
+                            return;
+                        }
+                    }
+                    foreach(var inputKeyValue in inputOption.Values) {
+                        var keyValue = inputKeyValue.Split('=', 2);
+                        if(keyValue.Length != 2) {
+                            AddError($"bad format for input parameter: {inputKeyValue}");
+                        } else {
+                            inputs[keyValue[0]] = keyValue[1];
+                        }
+                    }
+                    if(HasErrors) {
                         return;
                     }
 
@@ -75,7 +97,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
-                        localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")
+                        localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP"),
+                        inputs
                     );
                 });
             });
@@ -87,7 +110,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool protectStack,
             bool forceDeploy,
             VersionInfo version,
-            string lambdaSharpPath
+            string lambdaSharpPath,
+            Dictionary<string, string> inputs
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
@@ -135,7 +159,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 instanceName: null,
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,
-                inputs: new Dictionary<string, string>(),
+                inputs: inputs,
                 forceDeploy: forceDeploy
             );
         }
