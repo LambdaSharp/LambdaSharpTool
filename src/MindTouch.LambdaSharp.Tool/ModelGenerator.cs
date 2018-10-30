@@ -568,7 +568,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 Role = Fn.GetAtt("ModuleRole", "Arn"),
                 Code = new Lambda.FunctionTypes.Code {
                     S3Bucket = Fn.Ref("DeploymentBucketName"),
-                    S3Key = Fn.Sub($"$Modules/{_module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
+                    S3Key = Fn.Sub($"Modules/{_module.Name}/Assets/{Path.GetFileName(function.PackagePath)}")
                 },
                 DeadLetterConfig = new Lambda.FunctionTypes.DeadLetterConfig {
                     TargetArn = _module.GetParameter("LambdaSharp::DeadLetterQueueArn").Reference
