@@ -161,8 +161,7 @@ Variables:
     Description: LambdaSharp S3 Lambda Function Subscriber
     Resource:
       Type: AWS::CloudFormation::Stack
-      DependsOn:
-        - Registrar
+      DependsOn: Registrar
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
@@ -180,8 +179,7 @@ Variables:
     Description: LambdaSharp S3 Package Loader
     Resource:
       Type: AWS::CloudFormation::Stack
-      DependsOn:
-        - Registrar
+      DependsOn: Registrar
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
