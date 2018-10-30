@@ -53,6 +53,9 @@ namespace MindTouch.LambdaSharp.Tool {
         ) {
             var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.ModuleName}";
 
+            // check if cloudformation stack already exists and is in a final state
+            var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
+
             // check version of previously deployed module
             if(!forceDeploy) {
                 try {
@@ -89,9 +92,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
             }
             Console.WriteLine($"Deploying stack: {stackName} [{manifest.ModuleName}]");
-
-            // check if cloudformation stack already exists
-            var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
