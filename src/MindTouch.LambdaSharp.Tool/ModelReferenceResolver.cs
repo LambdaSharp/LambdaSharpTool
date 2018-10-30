@@ -50,14 +50,14 @@ namespace MindTouch.LambdaSharp.Tool {
             var boundParameters = new Dictionary<string, AParameter>();
 
             // resolve all inter-parameter references
-            AtLocation("Parameters", () => {
+            AtLocation("Variables", () => {
                 DiscoverParameters(module.Parameters);
 
                 // resolve parameter variables via substitution
                 while(ResolveParameters(boundParameters.ToList()));
 
                 // report circular dependencies, if any
-                ReportUnresolved(module.Parameters);
+                ReportUnresolvedParameters(module.Parameters);
                 if(Settings.HasErrors) {
                     return;
                 }
@@ -71,9 +71,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
-                                parameter.Resource.Properties = new Dictionary<string, object>(
-                                    parameter.Resource.Properties.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
-                                );
+                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
                             });
                         });
                     });
@@ -90,9 +88,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     AtLocation(parameter.Name, () => {
                         AtLocation("Resource", () => {
                             AtLocation("Properties", () => {
-                                parameter.Resource.Properties = new Dictionary<string, object>(
-                                    parameter.Resource.Properties.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
-                                );
+                                parameter.Resource.Properties = parameter.Resource.Properties.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, ReportMissingReference));
                             });
                         });
                     });
@@ -105,7 +101,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     switch(output) {
                     case StackOutput stackOutput:
                         AtLocation(stackOutput.Name, () => {
-                            stackOutput.Value = Substitute(stackOutput.Value);
+                            stackOutput.Value = Substitute(stackOutput.Value, ReportMissingReference);
                         });
                         break;
                     case CustomResourceHandlerOutput customResourceHandlerOutput:
@@ -122,9 +118,7 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Functions", () => {
                 foreach(var function in module.Functions) {
                     AtLocation(function.Name, () => {
-                        function.Environment = new Dictionary<string, object>(
-                            function.Environment.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value)))
-                        );
+                        function.Environment = function.Environment.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value));
 
                         // update VPC information
                         if(function.VPC != null) {
@@ -246,7 +240,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                 return progress;
             }
 
-            void ReportUnresolved(IEnumerable<AParameter> parameters) {
+            void ReportUnresolvedParameters(IEnumerable<AParameter> parameters) {
                 if(parameters == null) {
                     return;
                 }
@@ -254,34 +248,16 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                     AtLocation(parameter.Name, () => {
                         switch(parameter) {
                         case ValueParameter valueParameter:
-                            Substitute(valueParameter.Reference, missingName => {
-                                if(boundParameters.ContainsKey(missingName)) {
-                                    AddError($"circular !Ref dependency on '{missingName}'");
-                                } else {
-                                    AddError($"could not find !Ref dependency '{missingName}'");
-                                }
-                            });
+                            Substitute(valueParameter.Reference, ReportMissingReference);
                             break;
                         case ValueListParameter valueListParameter:
                             foreach(var item in valueListParameter.Values) {
-                                Substitute(item, missingName => {
-                                    if(boundParameters.ContainsKey(missingName)) {
-                                        AddError($"circular !Ref dependency on '{missingName}'");
-                                    } else {
-                                        AddError($"could not find !Ref dependency '{missingName}'");
-                                    }
-                                });
+                                Substitute(item, ReportMissingReference);
                             }
                             break;
                         case ReferencedResourceParameter referencedResourceParameter:
                             foreach(var item in referencedResourceParameter.Resource.ResourceReferences) {
-                                Substitute(item, missingName => {
-                                    if(boundParameters.ContainsKey(missingName)) {
-                                        AddError($"circular !Ref dependency on '{missingName}'");
-                                    } else {
-                                        AddError($"could not find !Ref dependency '{missingName}'");
-                                    }
-                                });
+                                Substitute(item, ReportMissingReference);
                             }
                             break;
                         case CloudFormationResourceParameter _:
@@ -294,15 +270,28 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                         default:
                             throw new InvalidOperationException($"cannot check unresolved references for this type: {parameter?.GetType()}");
                         }
-                        ReportUnresolved(parameter.Parameters);
+                        ReportUnresolvedParameters(parameter.Parameters);
                     });
                 }
             }
 
+            void ReportMissingReference(string missingName) {
+                if(boundParameters.ContainsKey(missingName)) {
+                    AddError($"circular !Ref dependency on '{missingName}'");
+                } else {
+                    AddError($"could not find !Ref dependency '{missingName}'");
+                }
+            }
+
             object Substitute(object value, Action<string> missing = null) {
+
+                // check if we need to convert the dictionary keys to be strings
+                if(value is IDictionary<object, object> objectMap) {
+                    value = objectMap.ToDictionary(kv => (string)kv.Key, kv => kv.Value);
+                }
                 switch(value) {
                 case IDictionary<string, object> map:
-                    map = new Dictionary<string, object>(map.Select(kv => new KeyValuePair<string, object>(kv.Key, Substitute(kv.Value, missing))));
+                    map = map.ToDictionary(kv => kv.Key, kv => Substitute(kv.Value, missing));
                     if(map.Count == 1) {
 
                         // handle !Ref expression
@@ -310,6 +299,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                             if(TrySubstitute(refKey, null, out object found)) {
                                 return found ?? map;
                             }
+DebugWriteLine($"NOT FOUND => {refKey}");
                             missing?.Invoke(refKey);
                             return map;
                         }
@@ -325,6 +315,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                             if(TrySubstitute(getAttKey, getAttAttribute, out object found)) {
                                 return found ?? map;
                             }
+DebugWriteLine($"NOT FOUND => {getAttKey}");
                             missing?.Invoke(getAttKey);
                             return map;
                         }
@@ -368,6 +359,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                                         subArgs.Add(argName, found);
                                         return "${" + argName + "}";
                                     }
+DebugWriteLine($"NOT FOUND => {name[0]}");
                                     missing?.Invoke(name[0]);
                                 }
                                 return matchText;
@@ -393,6 +385,7 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                 default:
 
                     // nothing further to substitute
+DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return value;
                 }
             }
