@@ -80,40 +80,45 @@ namespace MindTouch.LambdaSharp.Tool {
             var parameters = new List<AParameter>();
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, module.Inputs), null) ?? new List<AParameter>());
 
-            // add LambdaSharp Module Options
-            var section = "LambdaSharp Module Options";
-            parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
-                new InputNode {
-                    Input = "ModuleSecrets",
-                    Section = section,
-                    Label = "Secret Keys (ARNs)",
-                    Description = "Comma-separated list of optional secret keys",
-                    Default = ""
-                }
-            }), null) ?? new List<AParameter>());
+            // add standard parameters (unless requested otherwise)
+            string section;
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
 
-            // add LambdaSharp Module Internal Dependencies
-            section = "LambdaSharp Dependencies";
-            parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
-                new InputNode {
-                    Import = "LambdaSharp::DeadLetterQueueArn",
-                    Section = section,
-                    Label = "Dead Letter Queue (ARN)",
-                    Description = "Dead letter queue for functions"
-                },
-                new InputNode {
-                    Import = "LambdaSharp::LoggingStreamArn",
-                    Section = section,
-                    Label = "Logging Stream (ARN)",
-                    Description = "Logging kinesis stream for functions"
-                },
-                new InputNode {
-                    Import = "LambdaSharp::DefaultSecretKeyArn",
-                    Section = section,
-                    Label = "Secret Key (ARN)",
-                    Description = "Default secret key for functions"
-                }
-            }), null) ?? new List<AParameter>());
+                // add LambdaSharp Module Options
+                section = "LambdaSharp Module Options";
+                parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
+                    new InputNode {
+                        Input = "ModuleSecrets",
+                        Section = section,
+                        Label = "Secret Keys (ARNs)",
+                        Description = "Comma-separated list of optional secret keys",
+                        Default = ""
+                    }
+                }), null) ?? new List<AParameter>());
+
+                // add LambdaSharp Module Internal Dependencies
+                section = "LambdaSharp Dependencies";
+                parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
+                    new InputNode {
+                        Import = "LambdaSharp::DeadLetterQueueArn",
+                        Section = section,
+                        Label = "Dead Letter Queue (ARN)",
+                        Description = "Dead letter queue for functions"
+                    },
+                    new InputNode {
+                        Import = "LambdaSharp::LoggingStreamArn",
+                        Section = section,
+                        Label = "Logging Stream (ARN)",
+                        Description = "Logging kinesis stream for functions"
+                    },
+                    new InputNode {
+                        Import = "LambdaSharp::DefaultSecretKeyArn",
+                        Section = section,
+                        Label = "Secret Key (ARN)",
+                        Description = "Default secret key for functions"
+                    }
+                }), null) ?? new List<AParameter>());
+            }
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
@@ -156,7 +161,9 @@ namespace MindTouch.LambdaSharp.Tool {
             , new List<object>());
 
             // add default secrets key that is imported from the input parameters
-            _module.Secrets.Add(_module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference);
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+                _module.Secrets.Add(_module.GetParameter("LambdaSharp::DefaultSecretKeyArn").Reference);
+            }
 
             // create functions
             var functionIndex = 0;
@@ -187,31 +194,35 @@ namespace MindTouch.LambdaSharp.Tool {
                     Scope = new List<string>(),
                     Name = "Name",
                     ResourceName = "ModuleName",
-                    Description = "LambdaSharp module name",
+                    Description = "Module name",
                     Reference = _module.Name
                 },
                 new ValueParameter {
                     Scope = new List<string>(),
                     Name = "Version",
                     ResourceName = "ModuleVersion",
-                    Description = "LambdaSharp module version",
+                    Description = "Module version",
                     Reference = _module.Version.ToString()
-                },
-                new ValueParameter {
-                    Scope = new List<string>(),
-                    Name = "DeadLetterQueueArn",
-                    ResourceName = "ModuleDeadLetterQueueArn",
-                    Description = "LambdaSharp Dead Letter Queue",
-                    Reference = FnRef("LambdaSharp::DeadLetterQueueArn")
-                },
-                new ValueParameter {
-                    Scope = new List<string>(),
-                    Name = "LoggingStreamArn",
-                    ResourceName = "ModuleLoggingStreamArn",
-                    Description = "LambdaSharp Logging Stream",
-                    Reference = FnRef("LambdaSharp::LoggingStreamArn")
                 }
             };
+            if(!module.Pragmas.Contains("no-lambdasharp-dependencies")) {
+                moduleParameters.AddRange(new List<AParameter> {
+                    new ValueParameter {
+                        Scope = new List<string>(),
+                        Name = "DeadLetterQueueArn",
+                        ResourceName = "ModuleDeadLetterQueueArn",
+                        Description = "LambdaSharp Dead Letter Queue",
+                        Reference = FnRef("LambdaSharp::DeadLetterQueueArn")
+                    },
+                    new ValueParameter {
+                        Scope = new List<string>(),
+                        Name = "LoggingStreamArn",
+                        ResourceName = "ModuleLoggingStreamArn",
+                        Description = "LambdaSharp Logging Stream",
+                        Reference = FnRef("LambdaSharp::LoggingStreamArn")
+                    }
+                });
+            }
             if(module.Functions.Any(function => function.Sources.Any(source => (source.Api != null) || (source.SlackCommand != null)))) {
                 moduleParameters.AddRange(new List<AParameter> {
 
@@ -794,7 +805,13 @@ namespace MindTouch.LambdaSharp.Tool {
                         //  addition, we assume its description if none is provided.
 
                         var parameter = _module.Parameters.First(p => p.Name == output.Output);
-                        value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
+                        if(parameter is AInputParameter) {
+
+                            // input parameters are always expected to be in ARN format
+                            value = FnRef(parameter.Name);
+                        } else {
+                            value = ResourceMapping.GetArnReference((parameter as AResourceParameter)?.Resource?.Type, parameter.ResourceName);
+                        }
                         if(description == null) {
                             description = parameter.Description;
                         }

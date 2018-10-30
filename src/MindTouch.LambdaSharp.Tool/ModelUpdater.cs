@@ -185,7 +185,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         TemplateURL = templateUrl
                     };
                     var response = await Settings.CfClient.UpdateStackAsync(request);
-                    var outcome = await Settings.CfClient.TrackStackUpdateAsync(response.StackId, mostRecentStackEventId);
+                    var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
                         Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                         ShowStackResult(outcome.Stack);
@@ -214,7 +214,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     TemplateURL = templateUrl
                 };
                 var response = await Settings.CfClient.CreateStackAsync(request);
-                var outcome = await Settings.CfClient.TrackStackUpdateAsync(response.StackId, mostRecentStackEventId);
+                var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                     ShowStackResult(outcome.Stack);

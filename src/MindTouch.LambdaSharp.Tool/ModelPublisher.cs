@@ -68,7 +68,11 @@ namespace MindTouch.LambdaSharp.Tool {
             for(var i = 0; i < manifest.PackageAssets.Count; ++i) {
                 manifest.PackageAssets[i] = await UploadPackageAsync(manifest, manifest.PackageAssets[i], "package");
             }
-            manifest.Template = await UploadJsonFileAsync(manifest, manifest.Template, "template");
+
+            // upload CloudFormation template
+            manifest.Template = await UploadTemplateFileAsync(manifest, manifest.Template, "template");
+
+            // upload LambdaSharp manifest
             var marker = await UploadManifestAsync(manifest, "manifest");
             if(_changesDetected) {
 
@@ -79,19 +83,36 @@ namespace MindTouch.LambdaSharp.Tool {
                     ContentType = "application/text",
                     Key = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}",
                 });
+
+                // store copy of cloudformation template under version number
+                await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
+                    SourceBucket = Settings.DeploymentBucketName,
+                    SourceKey = manifest.Template,
+                    DestinationBucket = Settings.DeploymentBucketName,
+                    DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/cloudformation.json",
+                    ContentType = "application/json"
+                });
+
+                // store copy of cloudformation template under version
+                await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
+                    SourceBucket = Settings.DeploymentBucketName,
+                    SourceKey = marker,
+                    DestinationBucket = Settings.DeploymentBucketName,
+                    DestinationKey = $"Modules/{manifest.ModuleName}/Versions/{manifest.ModuleVersion}/manifest.json"
+                });
             } else {
                 Console.WriteLine($"=> No changes found to publish");
             }
             return $"s3://{Settings.DeploymentBucketName}/{marker}";
         }
 
-        private async Task<string> UploadJsonFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {
+        private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string relativeFilePath, string description) {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
             var minified = JsonConvert.SerializeObject(JsonConvert.DeserializeObject(File.ReadAllText(filePath)), Formatting.None);
             var filenameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
-            var key = $"Modules/{manifest.ModuleName}/Assets/{filenameWithoutExtension}_v{manifest.ModuleVersion}_{manifest.Hash}.json";
 
             // upload minified json
+            var key = $"Modules/{manifest.ModuleName}/Assets/cloudformation_v{manifest.ModuleVersion}_{manifest.Hash}.json";
             if(!await S3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {

@@ -122,7 +122,7 @@ namespace MindTouch.LambdaSharp.Tool.Internal {
                         // we found an event we already saw in the past, no point in looking at more events
                         break;
                     }
-                    if(IsFinalStackEvent(evt)) {
+                    if(IsFinalStackEvent(evt) && (evt.LogicalResourceId == stackName)) {
 
                         // event signals stack creation/update completion; time to stop
                         active = false;

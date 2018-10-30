@@ -569,16 +569,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 await GetS3ObjectContents(settings, marker)
             );
 
-            // bootstrap module doesn't expect an environment to exist
-            if(forceDeploy || !manifest.HasPragma("no-environment-check")) {
-                if(settings.EnvironmentVersion == null) {
-                    AddError("could not determine the LambdaSharp Environment version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+            // bootstrap module doesn't expect a deployment tier to exist
+            if(forceDeploy || !manifest.HasPragma("no-tier-version-check")) {
+                if(settings.TierVersion == null) {
+                    AddError("could not determine the LambdaSharp deployment tier version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 } else {
 
                     // check that LambdaSharp environment & CLI versions match
-                    if(!settings.ToolVersion.IsCompatibleWith(settings.EnvironmentVersion)) {
-                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and environment (v{settings.EnvironmentVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    if(!settings.ToolVersion.IsCompatibleWith(settings.TierVersion)) {
+                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and deployment tier (v{settings.TierVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                         return false;
                     }
                 }

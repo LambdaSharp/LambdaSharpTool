@@ -98,13 +98,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var environmentVersionOption = cmd.Option("--environment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
+            var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp deployment tier version (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
             deploymentNotificationTopicArnOption.ShowInHelpText = false;
-            environmentVersionOption.ShowInHelpText = false;
+            tierVersionOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
@@ -148,7 +148,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var s3Client = new AmazonS3Client();
 
                 // initialize LambdaSharp deployment values
-                var environmentVersion = environmentVersionOption.Value();
+                var tierVersion = tierVersionOption.Value();
                 var deploymentBucketName = deploymentBucketNameOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
@@ -157,7 +157,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     ToolVersion = Version,
                     ToolProfile = toolProfile,
                     ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
-                    EnvironmentVersion = (environmentVersion != null) ? VersionInfo.Parse(environmentVersion) : null,
+                    TierVersion = (tierVersion != null) ? VersionInfo.Parse(tierVersion) : null,
                     Tier = tier,
                     AwsRegion = awsAccount.GetValueOrDefault().Region,
                     AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
@@ -229,7 +229,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         }
 
         protected async Task PopulateEnvironmentSettingsAsync(Settings settings) {
-            if((settings.EnvironmentVersion == null) && (settings.Tier != null)) {
+            if((settings.TierVersion == null) && (settings.Tier != null)) {
                 try {
 
                     // check version of base LambadSharp module
@@ -244,7 +244,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                             (deployedName == "LambdaSharp")
                             && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
                         ) {
-                            settings.EnvironmentVersion = deployedVersion;
+                            settings.TierVersion = deployedVersion;
                             return;
                         }
                     }

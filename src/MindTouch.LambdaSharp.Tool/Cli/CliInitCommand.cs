@@ -89,14 +89,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             VersionInfo version,
             string lambdaSharpPath
         ) {
+            var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
             foreach(var module in new[] {
-                "LambdaSharp",
-                "LambdaSharpRegistrar",
+                "LambdaSharpS3PackageLoader",
                 "LambdaSharpS3Subscriber",
-                "LambdaSharpS3PackageLoader"
+                "LambdaSharpRegistrar",
+                "LambdaSharp"
             }) {
-                var command = new CliBuildPublishDeployCommand();
                 var moduleKey = $"{module}:{version}";
 
                 // check if the module must be built and published first
@@ -125,21 +125,19 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         break;
                     }
                 }
-
-                // deploy published module
-                if(!await command.DeployStepAsync(
-                    settings,
-                    dryRun: null,
-                    moduleKey: moduleKey,
-                    instanceName: null,
-                    allowDataLoos: allowDataLoos,
-                    protectStack: protectStack,
-                    inputs: new Dictionary<string, string>(),
-                    forceDeploy: forceDeploy
-                )) {
-                    break;
-                }
             }
+
+            // deploy LambdaSharp module
+            await command.DeployStepAsync(
+                settings,
+                dryRun: null,
+                moduleKey: $"LambdaSharp:{version}",
+                instanceName: null,
+                allowDataLoos: allowDataLoos,
+                protectStack: protectStack,
+                inputs: new Dictionary<string, string>(),
+                forceDeploy: forceDeploy
+            );
         }
     }
 }

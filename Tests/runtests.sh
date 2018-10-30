@@ -7,7 +7,7 @@ lash() {
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --environment-version 0.4 \
+        --tier-version 0.4 \
         --tool-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-bucket-path Modules/ \
@@ -22,7 +22,8 @@ if [ -z "$1" ]; then
         --verbose:exceptions \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --environment-version 0.4 \
+        --tier Test \
+        --tier-version 0.4 \
         --tool-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-bucket-path Modules/ \

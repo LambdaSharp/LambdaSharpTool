@@ -557,6 +557,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(
                             (output.Value == null)
                             && (_module.Variables.FirstOrDefault(p => p?.Var == output.Output) == null)
+                            && (_module.Inputs.FirstOrDefault(i => i?.Input == output.Output) == null)
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }

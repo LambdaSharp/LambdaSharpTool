@@ -150,7 +150,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     TemplateBody = template
                 };
                 var response = await cfClient.CreateStackAsync(request);
-                var outcome = await cfClient.TrackStackUpdateAsync(response.StackId, mostRecentStackEventId: null);
+                var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                 } else {
@@ -204,7 +204,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         TemplateBody = template
                     };
                     var response = await cfClient.UpdateStackAsync(request);
-                    var outcome = await cfClient.TrackStackUpdateAsync(response.StackId, mostRecentStackEventId);
+                    var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
                         Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                     } else {

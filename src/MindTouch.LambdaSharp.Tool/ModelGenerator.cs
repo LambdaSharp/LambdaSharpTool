@@ -111,31 +111,33 @@ namespace MindTouch.LambdaSharp.Tool {
             };
 
             // add decryption permission for requested keys
-            _resourceStatements.Add(new Statement {
-                Sid = "ModuleSecretsDecryption",
-                Effect = "Allow",
-                Resource = FnSplit(
-                    ",",
-                    FnIf(
-                        "ModuleSecretsIsEmpty",
-                        FnJoin(",", _module.Secrets),
-                        FnJoin(
-                            ",",
-                            new List<object> {
-                                FnJoin(",", _module.Secrets),
-                                FnRef("ModuleSecrets")
-                            }
+            if(!_module.HasPragma("no-lambdasharp-dependencies")) {
+                _resourceStatements.Add(new Statement {
+                    Sid = "ModuleSecretsDecryption",
+                    Effect = "Allow",
+                    Resource = FnSplit(
+                        ",",
+                        FnIf(
+                            "ModuleSecretsIsEmpty",
+                            FnJoin(",", _module.Secrets),
+                            FnJoin(
+                                ",",
+                                new List<object> {
+                                    FnJoin(",", _module.Secrets),
+                                    FnRef("ModuleSecrets")
+                                }
+                            )
                         )
-                    )
-                ),
-                Action = new List<string> {
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                }
-            });
-            _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
+                    ),
+                    Action = new List<string> {
+                        "kms:Decrypt",
+                        "kms:Encrypt",
+                        "kms:GenerateDataKey",
+                        "kms:GenerateDataKeyWithoutPlaintext"
+                    }
+                });
+                _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
+            }
 
             // add parameters
             foreach(var parameter in _module.Parameters) {

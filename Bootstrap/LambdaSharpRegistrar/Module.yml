@@ -43,8 +43,8 @@ Inputs:
 
   - Input: RollbarProjectPrefix
     Section: Rollbar Settings
-    Label: Optional prefix when creating Rollbar projects
-    Description:
+    Label: Project Prefix
+    Description: Optional prefix when creating Rollbar projects
     Scope: Register
     Default: ""
 

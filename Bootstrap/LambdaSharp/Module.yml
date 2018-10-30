@@ -21,60 +21,44 @@ Module: LambdaSharp
 Version: 0.4-WIP
 Description: LambdaSharp Environment
 Pragmas:
-  - no-environment-check
+  - no-tier-version-check
+  - no-lambdasharp-dependencies
   - no-module-registration
 
 Inputs:
 
-  - Input: LoggingStreamRetentionPeriod
-    Label: Retention period (hours)
-    Description: How long logging stream entries are kept before they are lost
-    Default: 24
-
-  - Input: DefaultSecretKeyRotationEnabled
-    Label: Enable key rotation
-    Description: Rotate KMS key automatically every 365 days
-    Default: false
-
-Outputs:
-
-  - Output: DeadLetterQueueArn
-    Description: LambdaSharp Dead Letter Queue
-    Value: !GetAtt DeadLetterQueue.Arn
-
-  - Output: LoggingStreamArn
-    Description: LambdaSharp Logging Stream
-    Value: !GetAtt LoggingStream.Arn
-
-  - Output: DefaultSecretKeyArn
-    Description: LambdaSharp Default Secrets Key
-    Value: !GetAtt DefaultSecretKey.Arn
-
-Variables:
-
-  - Var: DeadLetterQueue
-    Description: SQS queue used by LambdaSharp functions for failed messages
+  # LambdaSharp Tier Settings
+  - Input: DeadLetterQueueArn
+    Section: LambdaSharp Tier Settings
+    Label: Dead Letter Queue (ARN)
+    Description: Dead letter queue for functions (leave blank to create a new queue)
+    Default: ""
     Resource:
       Type: AWS::SQS::Queue
       Allow: None
 
-  - Var: LoggingStream
-    Description: Kinesis stream for consolidated logging
+  - Input: LoggingStreamArn
+    Section: LambdaSharp Tier Settings
+    Label: Logging Stream (ARN)
+    Description: Logging kinesis stream for functions (leave blank to create a new stream)
+    Default: ""
     Resource:
       Type: AWS::Kinesis::Stream
       Properties:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
-  - Var: DefaultSecretKeyAlias
-    Resource:
-      Type: AWS::KMS::Alias
-      Properties:
-        AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-        TargetKeyId: !Ref DefaultSecretKey
+  - Input: LoggingStreamRetentionPeriod
+    Section: LambdaSharp Tier Settings
+    Label: Retention period (hours)
+    Description: How long logging stream entries are kept before they are lost
+    Default: 24
 
-  - Var: DefaultSecretKey
-    Description: Default encryption/decryption key for LambdaSharp modules
+  - Input: DefaultSecretKeyArn
+    Section: LambdaSharp Tier Settings
+    Label: Secret Key (ARN)
+    Description: Default secret key for functions (leave blank to create a new key)
+    Default: ""
     Resource:
       Type: AWS::KMS::Key
       Properties:
@@ -90,3 +74,123 @@ Variables:
               Action:
                 - kms:*
               Resource: "*"
+
+  - Input: DefaultSecretKeyRotationEnabled
+    Section: LambdaSharp Tier Settings
+    Label: Enable key rotation
+    Description: Rotate KMS key automatically every 365 days
+    Default: false
+
+  # Rollbar Settings
+  - Input: RollbarReadAccessToken
+    Type: Secret
+    Section: Rollbar Settings
+    Label: Read Access Token
+    Description: Account-level token for read operations
+    Default: ""
+
+  - Input: RollbarWriteAccessToken
+    Type: Secret
+    Section: Rollbar Settings
+    Label: Write Access Token
+    Description: Account-level token for write operations
+    Default: ""
+
+  - Input: RollbarProjectPrefix
+    Section: Rollbar Settings
+    Label: Project Prefix
+    Description: Optional prefix when creating Rollbar projects
+    Default: ""
+
+  # Module Registration Table Settings
+  - Input: RegistrationTableReadCapacity
+    Section: Module Registration Table Settings
+    Label: Read Capacity Units
+    Description: Provisioned read capacity for registrations table
+    Default: 1
+
+  - Input: RegistrationTableWriteCapacity
+    Section: Module Registration Table Settings
+    Label: Write Capacity Units
+    Description: Provisioned write capacity for registrations table
+    Default: 1
+
+Outputs:
+
+  - Output: DeadLetterQueueArn
+    Description: LambdaSharp Dead Letter Queue
+
+  - Output: LoggingStreamArn
+    Description: LambdaSharp Logging Stream
+
+  - Output: DefaultSecretKeyArn
+    Description: LambdaSharp Default Secrets Key
+
+Variables:
+
+  - Var: DefaultSecretKeyAlias
+    Resource:
+      Type: AWS::KMS::Alias
+      Properties:
+        AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+        TargetKeyId: !Ref DefaultSecretKeyArn
+
+  - Var: Registrar
+    Description: LambdaSharp Modules and Functions Registrar
+    Resource:
+      Type: AWS::CloudFormation::Stack
+      Properties:
+        NotificationARNS: !Ref AWS::NotificationARNs
+        Parameters:
+          RollbarReadAccessToken: !Ref RollbarReadAccessToken
+          RollbarWriteAccessToken: !Ref RollbarWriteAccessToken
+          RollbarProjectPrefix: !Ref RollbarProjectPrefix
+          RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
+          RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
+          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
+          DeploymentBucketName: !Ref DeploymentBucketName
+          DeploymentPrefix: !Ref DeploymentPrefix
+          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
+          DeploymentParent: !Ref AWS::StackName
+        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpRegistrar/Versions/${Module::Version}/cloudformation.json"
+        TimeoutInMinutes: 5
+
+  - Var: S3Subscriber
+    Description: LambdaSharp S3 Lambda Function Subscriber
+    Resource:
+      Type: AWS::CloudFormation::Stack
+      DependsOn:
+        - Registrar
+      Properties:
+        NotificationARNS: !Ref AWS::NotificationARNs
+        Parameters:
+          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
+          DeploymentBucketName: !Ref DeploymentBucketName
+          DeploymentPrefix: !Ref DeploymentPrefix
+          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
+          DeploymentParent: !Ref AWS::StackName
+        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3Subscriber/Versions/${Module::Version}/cloudformation.json"
+        TimeoutInMinutes: 5
+
+  - Var: S3PackageLoader
+    Description: LambdaSharp S3 Package Loader
+    Resource:
+      Type: AWS::CloudFormation::Stack
+      DependsOn:
+        - Registrar
+      Properties:
+        NotificationARNS: !Ref AWS::NotificationARNs
+        Parameters:
+          LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
+          LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
+          LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
+          DeploymentBucketName: !Ref DeploymentBucketName
+          DeploymentPrefix: !Ref DeploymentPrefix
+          DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
+          DeploymentParent: !Ref AWS::StackName
+        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3PackageLoader/Versions/${Module::Version}/cloudformation.json"
+        TimeoutInMinutes: 5
