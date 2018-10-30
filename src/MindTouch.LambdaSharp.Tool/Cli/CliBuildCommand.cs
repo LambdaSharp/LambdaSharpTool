@@ -553,7 +553,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     if(foundVersion == null) {
                         continue;
                     }
-                    marker = await GetS3ObjectContents(settings, $"{settings.DeploymentBucketPath}{moduleName}/Versions/{requestedVersion}");
+                    marker = await GetS3ObjectContents(settings, $"Modules/{moduleName}/Versions/{requestedVersion}");
                     if(marker != null) {
                         break;
                     }
@@ -676,7 +676,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var versions = new List<VersionInfo>();
             var request = new ListObjectsV2Request {
                 BucketName = settings.DeploymentBucketName,
-                Prefix = $"{settings.DeploymentBucketPath}{moduleName}/Versions/",
+                Prefix = $"Modules/{moduleName}/Versions/",
                 Delimiter = "/",
                 MaxKeys = 100
             };

@@ -97,14 +97,12 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var deploymentBucketPathOption = cmd.Option("--deployment-bucket-path <NAME>", "(test only) S3 Bucket path used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var environmentVersionOption = cmd.Option("--environment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
-            deploymentBucketPathOption.ShowInHelpText = false;
             deploymentNotificationTopicArnOption.ShowInHelpText = false;
             environmentVersionOption.ShowInHelpText = false;
             return async () => {
@@ -152,7 +150,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // initialize LambdaSharp deployment values
                 var environmentVersion = environmentVersionOption.Value();
                 var deploymentBucketName = deploymentBucketNameOption.Value();
-                var deploymentBucketPath = deploymentBucketPathOption.Value();
                 var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
                 // create a settings entry for each module filename
@@ -165,7 +162,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     AwsRegion = awsAccount.GetValueOrDefault().Region,
                     AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                     DeploymentBucketName = deploymentBucketName,
-                    DeploymentBucketPath = deploymentBucketPath,
                     DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
                     SsmClient = ssmClient,
                     CfClient = cfClient,
@@ -205,7 +201,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         protected async Task PopulateToolSettingsAsync(Settings settings) {
             if(
                 (settings.DeploymentBucketName == null)
-                || (settings.DeploymentBucketPath == null)
                 || (settings.DeploymentNotificationsTopicArn == null)
             ) {
 
@@ -222,7 +217,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         return;
                     }
                     settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
-                    settings.DeploymentBucketPath = settings.DeploymentBucketPath ?? GetLambdaSharpToolSetting("DeploymentBucketPath");
                     settings.DeploymentNotificationsTopicArn = settings.DeploymentNotificationsTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
 
                     // local functions

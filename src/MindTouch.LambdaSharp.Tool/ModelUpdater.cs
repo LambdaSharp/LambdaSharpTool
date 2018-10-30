@@ -161,7 +161,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 },
                 new CloudFormationParameter {
                     ParameterKey = "DeploymentBucketPath",
-                    ParameterValue = Settings.DeploymentBucketPath ?? ""
+                    ParameterValue = "Modules/"
                 }
             };
             foreach(var input in inputs) {

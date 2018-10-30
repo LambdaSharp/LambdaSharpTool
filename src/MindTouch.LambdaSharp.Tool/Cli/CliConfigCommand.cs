@@ -59,7 +59,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // tool options
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
-                var moduleS3BucketPathOption = cmd.Option("--module-s3-bucket-path <PATH>", "(optional) S3 bucket path for module deployments (default: Modules/)", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
@@ -72,7 +71,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     await Config(
                         settings,
                         moduleS3BucketNameOption.Value(),
-                        moduleS3BucketPathOption.Value(),
                         cloudFormationNotificationsTopicArnOption.Value(),
                         protectStackOption.HasValue(),
                         new AmazonCloudFormationClient(),
@@ -85,7 +83,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         private async Task Config(
             Settings settings,
             string moduleS3BucketName,
-            string moduleS3BucketPath,
             string cloudFormationNotificationsTopicArn,
             bool protectStack,
             IAmazonCloudFormation cfClient,
@@ -114,11 +111,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 } else {
                     moduleS3BucketName = Prompt.GetString("Existing S3 bucket name for module deployments (blank value creates new bucket):") ?? "";
                 }
-                if(moduleS3BucketPath != null) {
-                    Console.WriteLine($"Using S3 bucket path: {moduleS3BucketPath}");
-                } else {
-                    moduleS3BucketPath = Prompt.GetString("S3 bucket path for module deployments:", "Modules/");
-                }
                 if(cloudFormationNotificationsTopicArn == "") {
                     Console.WriteLine($"Creating new SNS topic for CloudFormation notifications");
                 } else if(cloudFormationNotificationsTopicArn != null) {
@@ -143,7 +135,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         },
                         new Parameter {
                             ParameterKey = "DeploymentBucketPath",
-                            ParameterValue = moduleS3BucketPath
+                            ParameterValue = "Modules/"
                         },
                         new Parameter {
                             ParameterKey = "DeploymentNotificationTopicArn",
