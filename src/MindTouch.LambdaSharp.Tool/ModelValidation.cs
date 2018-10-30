@@ -538,8 +538,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Validate(input.Resource.DependsOn?.Any() != true, "'DependsOn' cannot be used on an input");
                                 if(input.Default == null) {
                                     Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
-                                } else {
-                                    Validate(input.Default == "", "'Default' must be a blank string");
                                 }
                             });
                         }

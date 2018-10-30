@@ -336,7 +336,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // check if a resource definition is associated with the input statement
                         if(input.Resource != null) {
-                            if(input.Default == "") {
+                            if(input.Default != null) {
                                 result.Reference = FnIf(
                                     $"{result.Name}Created",
                                     ResourceMapping.GetArnReference(input.Resource.Type, $"{result.Name}CreatedInstance"),

@@ -905,7 +905,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         object resourceAsStatementFn;
 
                         // create resource when no input is provided
-                        if(valueInputParameter.Default == "") {
+                        if(valueInputParameter.Default != null) {
                             Humidifier.Resource resourceTemplate;
                             if(resource.Type.StartsWith("Custom::")) {
                                 resourceAsStatementFn = null;
@@ -920,7 +920,7 @@ namespace MindTouch.LambdaSharp.Tool {
                                 throw new NotImplementedException($"resource type is not supported: {resource.Type}");
                             }
                             var condition = $"{resourceName}Created";
-                            _stack.Add(condition, new Condition(Fn.Equals(Fn.Ref(resourceName), "")));
+                            _stack.Add(condition, new Condition(Fn.Equals(Fn.Ref(resourceName), valueInputParameter.Default)));
                             _stack.Add($"{resourceName}CreatedInstance", resourceTemplate, condition: condition, dependsOn: resource.DependsOn.ToArray());
                         } else {
 

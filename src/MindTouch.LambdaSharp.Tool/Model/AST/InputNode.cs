@@ -51,5 +51,6 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         // cross-module reference
         public string Import { get; set; }
         // public ResourceNode Resource { get; set; }
-    }
+        // public string Type { get; set; }
+   }
 }
