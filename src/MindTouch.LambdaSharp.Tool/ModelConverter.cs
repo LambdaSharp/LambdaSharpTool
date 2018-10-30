@@ -227,15 +227,33 @@ namespace MindTouch.LambdaSharp.Tool {
 
                     // TODO (2010-10-19, bjorg): figure out how to make this work
 
-                    // new ValueParameter {
-                    //     Scope = ParameterScope.Module,
+                    // new CloudFormationResourceParameter {
+                    //     Scope = new List<string>(),
                     //     Name = "RestApi",
                     //     ResourceName = "ModuleRestApi",
+                    //     Description = $"{_module.Name} API (v{_module.Version})",
+                    //     Reference = FnRef("ModuleRestApi"),
+                    //     Resource = new Resource {
+                    //         Type = "AWS::ApiGateway::RestApi",
+                    //         ResourceReferences = new List<object>(),
+                    //         Properties = new Dictionary<string, object> {
+                    //             ["Name"] = FnSub("${AWS::StackName} Module API"),
+                    //             ["Description"] = $"{_module.Name} API (v{_module.Version})",
+                    //             ["FailOnWarnings"] = true
+                    //         }
+                    //     }
+                    // },
+
+                    // // TODO (2018-10-30, bjorg): convert to a resource
+                    // new ValueParameter {
+                    //     Scope = new List<string>(),
+                    //     Name = "RestApiStage",
+                    //     ResourceName = "ModuleRestApiStage",
                     //     Description = "LambdaSharp module REST API",
-                    //     Reference = FnRef("ModuleRestApi")
+                    //     Reference = FnRef("ModuleRestApiStage")
                     // },
                     // new ValueParameter {
-                    //     Scope = ParameterScope.Module,
+                    //     Scope = new List<string>(),
                     //     Name = "RestApiUrl",
                     //     ResourceName = "ModuleRestApiUrl",
                     //     Description = "LambdaSharp module REST API URL",

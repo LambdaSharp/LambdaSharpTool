@@ -397,6 +397,21 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return true;
                 }
                 key = key.Replace("::", "");
+
+                // TODO (2018-10-30, bjorg): avoid this hack by properly declaring these resources instead
+                switch(key) {
+                case "ModuleRestApi":
+                case "ModuleRestApiStage":
+                case "ModuleRestApiAccount":
+                    found = (attribute != null)
+                        ? FnGetAtt(key, attribute)
+                        : FnRef(key);
+                    return true;
+                default:
+                    break;
+                }
+
+                // see if the requested key can be resolved using a free parameter
                 found = null;
                 if(freeParameters.TryGetValue(key, out AParameter freeParameter)) {
                     switch(freeParameter) {

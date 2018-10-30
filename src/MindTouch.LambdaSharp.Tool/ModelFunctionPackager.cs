@@ -214,10 +214,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
-            Console.WriteLine($"Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
+            Console.WriteLine($"=> Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
-            Console.WriteLine("=> Building AWS Lambda package");
             if(!DotNetRestore(projectDirectory)) {
                 AddError("`dotnet restore` command failed");
                 return;
@@ -345,7 +344,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
                 return;
             }
-            Console.WriteLine($"Building function {function.Function} [{function.Runtime}]");
+            Console.WriteLine($"=> Building function {function.Function} [{function.Runtime}]");
             function.PackagePath = CreatePackage(function.Function, gitsha, projectFolder);
         }
 
