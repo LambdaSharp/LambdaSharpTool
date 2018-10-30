@@ -175,7 +175,8 @@ namespace MindTouch.LambdaSharp.Tool {
                 resource.DependsOn = new List<string>();
             } else {
                 AtLocation("DependsOn", () => {
-                    foreach(var dependency in resource.DependsOn) {
+                    var dependencies = ConvertToStringList(resource.DependsOn);
+                    foreach(var dependency in dependencies) {
                         var dependentParameter = _module.Variables.FirstOrDefault(p => p.Var == dependency);
                         if(dependentParameter == null) {
                             AddError($"could not find dependency '{dependency}'");
@@ -522,20 +523,20 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Import", "MinValue", input.MinValue == null);
                         ValidateNotBothStatements("Import", "NoEcho", input.NoEcho == null);
                         if(input.Resource != null) {
+                            Validate(input.Type == "String", "input 'Type' must be string");
                             AtLocation("Resource", () => {
-                                Validate(input.Type == "String", "input 'Type' must be string");
                                 Validate(input.Resource.Type != null, "'Type' attribute is required");
                                 Validate(input.Resource.Allow != null, "'Allow' attribute is required");
                                 ValidateNotBothStatements("Import", "Properties", input.Resource.Properties == null);
-                                Validate(input.Resource.DependsOn?.Any() != true, "'DependsOn' cannot be used on an input");
+                                Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
                             });
                         }
                     } else {
                         ValidateResourceName(input.Input, "");
                         if(input.Resource != null) {
+                            Validate(input.Type == "String", "input 'Type' must be string");
                             AtLocation("Resource", () => {
-                                Validate(input.Type == "String", "input 'Type' must be string");
-                                Validate(input.Resource.DependsOn?.Any() != true, "'DependsOn' cannot be used on an input");
+                                Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
                                 if(input.Default == null) {
                                     Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
                                 }

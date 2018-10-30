@@ -404,21 +404,9 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(scope == null) {
                     return new List<string>();
                 }
-                List<string> scopeNames;
-                if(scope is string text) {
-
-                    // convert plain string into list of values
-                    scopeNames = text.Split(",")
-                        .Select(item => item.Trim())
-                        .ToList();
-                } else if((scope is IList<object> list) && (list.All(item => item is string))) {
-                    scopeNames = new List<string>(list.Cast<string>());
-                } else {
-                    AddError("invalid Scope value");
-                    return new List<string>();
-                }
 
                 // resolve scope wildcard
+                var scopeNames = ConvertToStringList(scope);
                 if(scopeNames.Contains("*")) {
                     scopeNames.Remove("*");
                     scopeNames.AddRange(module.Functions.Select(item => item.Function));
@@ -579,16 +567,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var allowList = new List<string>();
             if(resource.Allow != null) {
                 AtLocation("Allow", () => {
-                    if(resource.Allow is string inlineValue) {
-
-                        // inline values can be separated by `,`
-                        allowList.AddRange(inlineValue.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries));
-                    } else if(resource.Allow is IList<object> allowed) {
-                        allowList = allowed.Cast<string>().ToList();
-                    } else {
-                        AddError("invalid Allow value");
-                        return;
-                    }
+                    allowList.AddRange(ConvertToStringList(resource.Allow));
 
                     // resolve shorthands and de-duplicated statements
                     var allowSet = new HashSet<string>();
@@ -634,7 +613,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 ResourceReferences = resourceReferences,
                 Allow = allowList,
                 Properties = resource.Properties,
-                DependsOn = resource.DependsOn ?? new List<string>()
+                DependsOn = ConvertToStringList(resource.DependsOn)
             };
         }
 

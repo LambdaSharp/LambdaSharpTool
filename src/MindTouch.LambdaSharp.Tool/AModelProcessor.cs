@@ -175,5 +175,21 @@ namespace MindTouch.LambdaSharp.Tool {
 
         protected void AddError(Exception exception = null)
             => Settings.AddError(exception);
-    }
+
+        protected List<string> ConvertToStringList(object value) {
+            var result = new List<string>();
+            if(value is string inlineValue) {
+
+                // inline values can be separated by `,`
+                result.AddRange(inlineValue.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            } else if(value is IList<string> stringList) {
+                result = stringList.ToList();
+            } else if(value is IList<object> objectList) {
+                result = objectList.Cast<string>().ToList();
+            } else if(value != null) {
+                AddError("invalid value");
+            }
+            return result;
+        }
+   }
 }

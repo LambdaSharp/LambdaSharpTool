@@ -98,7 +98,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp deployment tier version (default: read from LambdaSharp environment configuration)", CommandOptionType.SingleValue);
+            var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp deployment tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;

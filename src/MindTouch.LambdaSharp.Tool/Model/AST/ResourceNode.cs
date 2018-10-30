@@ -30,7 +30,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Type { get; set; }
         public object Allow { get; set; }
         public IDictionary<string, object> Properties { get; set; }
-        public IList<string> DependsOn { get; set; }
+        public object DependsOn { get; set; }
         public string ArnAttribute { get; set; }
     }
 }
