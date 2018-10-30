@@ -116,7 +116,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 } else if(cloudFormationNotificationsTopicArn != null) {
                     Console.WriteLine($"SNS topic ARN for CloudFormation notifications: {cloudFormationNotificationsTopicArn}");
                 } else {
-                    cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new bucket):") ?? "";
+                    cloudFormationNotificationsTopicArn = Prompt.GetString("Existing SNS topic ARN for CloudFormation notifications (empty value creates new topic):") ?? "";
                 }
 
                 // create lambdasharp CLI resources stack
