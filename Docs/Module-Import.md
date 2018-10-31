@@ -55,11 +55,11 @@ The <code>Label</code> specifies a human readable label for the import parameter
 
 <dt><code>Resource</code></dt>
 <dd>
-> TODO: resource
+The <code>Resource</code> section specifies the AWS resource type and its IAM access permissions for the import parameter.
 
 <i>Required</i>: No
 
-<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
+<i>Type</i>: [Resource Definition](Module-Resource.md)
 </dd>
 
 <dt><code>Scope</code></dt>

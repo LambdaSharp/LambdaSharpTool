@@ -19,14 +19,6 @@ BatchSize: Int
 ## Properties
 
 <dl>
-<dt><code>Sqs</code></dt>
-<dd>
-The <code>Sqs</code> attribute specifies the name of a resource parameter of type <code>AWS::SQS::Queue</code> that the Lambda function fetches messages from.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
 
 <dt><code>BatchSize</code></dt>
 <dd>
@@ -36,4 +28,14 @@ The <code>BatchSize</code> attribute specifies the maximum number of messages to
 
 <i>Type</i>: Int
 </dd>
+
+<dt><code>Sqs</code></dt>
+<dd>
+The <code>Sqs</code> attribute specifies the name of a resource parameter of type <code>AWS::SQS::Queue</code> that the Lambda function fetches messages from.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
 </dl>

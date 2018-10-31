@@ -19,6 +19,7 @@ ApiKeyRequired: Boolean
 
 ## Properties
 <dl>
+
 <dt><code>Api</code></dt>
 <dd>
 The <code>Api</code> attribute specifies the HTTP method and resource path that is mapped to the Lambda function. The notation is <span style="white-space: nowrap">>code>METHOD /resource/subresource/{param}</code></span>. The API Gateway instance, the API Gateway resources, and the API Gateway methods are automatically created for the module when an API Gateway source is used.
@@ -26,15 +27,6 @@ The <code>Api</code> attribute specifies the HTTP method and resource path that 
 <b>NOTE</b>: The API Gateway resource can be referenced by its logical ID `ModuleRestApi`. Similarly, `ModuleRestApiStage` references the API Gateway stage resource.
 
 <i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
-<dt><code>OperationName</code></dt>
-<dd>
-The <code>OperationName</code> attribute holds a friendly operation name for the method.
-
-<i>Required</i>: No
 
 <i>Type</i>: String
 </dd>
@@ -47,6 +39,16 @@ The <code>ApiKeyRequired</code> attribute indicates whether the method requires 
 
 <i>Type</i>: Boolean
 </dd>
+
+<dt><code>OperationName</code></dt>
+<dd>
+The <code>OperationName</code> attribute holds a friendly operation name for the method.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
 </dl>
 
 ## Examples

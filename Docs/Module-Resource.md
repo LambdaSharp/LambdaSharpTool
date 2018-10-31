@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variable - Resource Section
+# LambdaSharp Module - Resource Section
 
 The presence of the `Resource` section in a [λ# Module Variable](Module-Variable.md) indicates that the variable corresponds to an AWS resource.
 

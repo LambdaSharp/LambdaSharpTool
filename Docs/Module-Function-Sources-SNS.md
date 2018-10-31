@@ -18,6 +18,7 @@ Topic: String
 ## Properties
 
 <dl>
+
 <dt><code>Topic</code></dt>
 <dd>
 The <code>Topic</code> attribute specifies the name of a resource parameter of type <code>AWS::SNS::Topic</code> that the Lambda function subscribes to.
@@ -26,6 +27,7 @@ The <code>Topic</code> attribute specifies the name of a resource parameter of t
 
 <i>Type</i>: String
 </dd>
+
 </dl>
 
 ## Examples

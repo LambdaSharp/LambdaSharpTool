@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Variables - Secret Definition
 
-> TODO
+> TODO: description
 
 __Topics__
 * [Syntax](#syntax)
@@ -26,29 +26,11 @@ Variables:
 
 <dl>
 
-<dt><code>Var</code></dt>
-<dd>
-The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Description</code></dt>
 <dd>
 The <code>Description</code> attribute specifies the variable description.
 
 <i>Required</i>: No
-
-<i>Type</i>: String
-</dd>
-
-<dt><code>Secret</code></dt>
-<dd>
-The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>ModuleSecrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
-
-<i>Required</i>: Yes
 
 <i>Type</i>: String
 </dd>
@@ -60,6 +42,24 @@ The <code>EncryptionContext</code> section is an optional mapping of key-value p
 <i>Required</i>: No
 
 <i>Type</i>: Key-Value Pair Mapping
+</dd>
+
+<dt><code>Secret</code></dt>
+<dd>
+The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>ModuleSecrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>Var</code></dt>
+<dd>
+The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>Variables</code></dt>
@@ -75,4 +75,4 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO
+> TODO: examples

@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Variables - CloudFormation Resource Definition
 
-> TODO
+> TODO: description
 
 __Topics__
 * [Syntax](#syntax)
@@ -25,15 +25,6 @@ Variables:
 
 <dl>
 
-<dt><code>Var</code></dt>
-<dd>
-The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Description</code></dt>
 <dd>
 The <code>Description</code> attribute specifies the variable description.
@@ -45,13 +36,20 @@ The <code>Description</code> attribute specifies the variable description.
 
 <dt><code>Resource</code></dt>
 <dd>
-The parameter value corresponds to one or more AWS resources. A new, managed AWS resource is created when the <code>Resource</code> section is used without the <code>Value</code> attribute. Otherwise, one or more existing AWS resources are referenced. The resulting resource value (ARN, Queue URL, etc.) becomes the parameter value after initialization and can be retrieve during function initialization.
+The <code>Resource</code> section specifies the AWS resource type and its IAM access permissions for the variable. The resource definition is used to create new resource and associate with the variable.
 
-The <code>Resource</code> section cannot be used in conjunction with the <code>Secret</code> attribute.
+<i>Required</i>: Yes
 
-<i>Required</i>: No
+<i>Type</i>: [Resource Definition](Module-Resource.md)
+</dd>
 
-<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
+<dt><code>Var</code></dt>
+<dd>
+The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>Variables</code></dt>
@@ -67,4 +65,4 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO
+> TODO: examples

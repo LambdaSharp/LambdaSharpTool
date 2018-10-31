@@ -2,6 +2,7 @@
 
 # LambdaSharp Module Variable - Package Section
 
+> TODO: description
 The `Package` section in a [λ# Module Variable](Module-Variables.md) indicates that local files need to be packaged into a compressed archive that can be deployed. The package definition specifies the local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# CLI creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
 
 __Topics__
@@ -12,6 +13,7 @@ __Topics__
 ## Syntax
 
 ```yaml
+Package: String
 Files: String
 Bucket: String
 Prefix: String
@@ -20,6 +22,16 @@ Prefix: String
 ## Properties
 
 <dl>
+
+<dt><code>Bucket</code></dt>
+<dd>
+The <code>Bucket</code> attribute specifies the name of a resource parameter of type <code>AWS::S3::Bucket</code> that is the destination for the files.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
 <dt><code>Files</code></dt>
 <dd>
 The <code>Files</code> attribute specifies a path to a local folder. The path can optionally have a wildcard suffix (e.g. <code>*.json</code>). If the wildcard suffix is omitted, all files and sub-folders are included, recursively. Otherwise, only the top folder and files matching the wildcard are included.
@@ -29,9 +41,9 @@ The <code>Files</code> attribute specifies a path to a local folder. The path ca
 <i>Type</i>: String
 </dd>
 
-<dt><code>Bucket</code></dt>
+<dt><code>Package</code></dt>
 <dd>
-The <code>Bucket</code> attribute specifies the name of a resource parameter of type <code>AWS::S3::Bucket</code> that is the destination for the files.
+The <code>Package</code> attribute specifies a variable name.
 
 <i>Required</i>: Yes
 
@@ -46,8 +58,9 @@ The <code>Prefix</code> attribute specifies a key prefix that is prepended to al
 
 <i>Type</i>: String
 </dd>
+
 </dl>
 
 ## Examples
 
-> TODO: add examples
+> TODO: examples

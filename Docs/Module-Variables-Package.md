@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Variables - Package Definition
 
-> TODO
+> TODO: description
 
 __Topics__
 * [Syntax](#syntax)
@@ -25,15 +25,6 @@ Variables:
 
 <dl>
 
-<dt><code>Var</code></dt>
-<dd>
-The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Description</code></dt>
 <dd>
 The <code>Description</code> attribute specifies the variable description.
@@ -52,6 +43,15 @@ The <code>Package</code> section specifies local files with a destination S3 buc
 <i>Type</i>: [Package Definition](Module-Variables-Packages.md)
 </dd>
 
+<dt><code>Var</code></dt>
+<dd>
+The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
 <dt><code>Variables</code></dt>
 <dd>
 The <code>Variables</code> section contains a collection of nested variables. To reference a nested variable, combine the parent variable and nested variables names with a double-colon (e.g. <code>Parent::NestedVariable</code>).
@@ -65,4 +65,4 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO
+> TODO: examples

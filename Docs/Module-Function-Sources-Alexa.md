@@ -18,6 +18,7 @@ Alexa: String
 ## Properties
 
 <dl>
+
 <dt><code>Alexa</code></dt>
 <dd>
 The <code>Alexa</code> attribute can either specify an Alexa Skill ID or the wildcard value (<code>"*"</code>) to allow any Alexa skill to invoke it.
@@ -26,6 +27,7 @@ The <code>Alexa</code> attribute can either specify an Alexa Skill ID or the wil
 
 <i>Type</i>: String Expression
 </dd>
+
 </dl>
 
 ## Examples

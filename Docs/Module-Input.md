@@ -145,11 +145,11 @@ The <code>NoEcho</code> attribute specifies whether to mask the input parameter 
 
 <dt><code>Resource</code></dt>
 <dd>
-> TODO: resource
+The <code>Resource</code> section specifies the AWS resource type and its IAM access permissions for the input parameter. The resource definition is used to create new resource in case the input parameter has a <code>Default</code> attribute and no input value was provided.
 
 <i>Required</i>: No
 
-<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
+<i>Type</i>: [Resource Definition](Module-Resource.md)
 </dd>
 
 <dt><code>Scope</code></dt>

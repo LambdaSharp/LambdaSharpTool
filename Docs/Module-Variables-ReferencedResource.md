@@ -2,7 +2,7 @@
 
 # LambdaSharp Module Variables - Referenced Resource Definition
 
-> TODO
+> TODO: description
 In addition, variables can be associated to resources, which will grant the module IAM role the requested permissions.
 
 __Topics__
@@ -27,15 +27,6 @@ Variables:
 
 <dl>
 
-<dt><code>Var</code></dt>
-<dd>
-The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
-
 <dt><code>Description</code></dt>
 <dd>
 The <code>Description</code> attribute specifies the variable description.
@@ -43,6 +34,15 @@ The <code>Description</code> attribute specifies the variable description.
 <i>Required</i>: No
 
 <i>Type</i>: String
+</dd>
+
+<dt><code>Resource</code></dt>
+<dd>
+The <code>Resource</code> section specifies the AWS resource type and its IAM access permissions for the resource referenced by the <code>Value</code> attribute.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: [Resource Definition](Module-Resource.md)
 </dd>
 
 <dt><code>Value</code></dt>
@@ -54,17 +54,13 @@ The <code>Value</code> attribute specifies the value for the parameter. When use
 <i>Type</i>: String
 </dd>
 
-<dt><code>Resource</code></dt>
+<dt><code>Var</code></dt>
 <dd>
-> TODO: fix definition
+The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
-The variable corresponds to one or more AWS resources. A new, managed AWS resource is created when the <code>Resource</code> section is used without the <code>Value</code> attribute. Otherwise, one or more existing AWS resources are referenced. The resulting resource value (ARN, Queue URL, etc.) becomes the parameter value after initialization and can be retrieve during function initialization.
+<i>Required</i>: Yes
 
-The <code>Resource</code> section cannot be used in conjunction with the <code>Secret</code> attribute.
-
-<i>Required</i>: No
-
-<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
+<i>Type</i>: String
 </dd>
 
 <dt><code>Variables</code></dt>
@@ -80,4 +76,4 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO
+> TODO: examples

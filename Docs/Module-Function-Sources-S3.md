@@ -21,14 +21,6 @@ Suffix: String
 ## Properties
 
 <dl>
-<dt><code>S3</code></dt>
-<dd>
-The <code>S3</code> attribute specifies the name of a resource parameter of type <code>AWS::S3::Bucket</code> that is the origin of the events.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
 
 <dt><code>Events</code></dt>
 <dd>
@@ -48,6 +40,15 @@ The <code>Prefix</code> attribute specifies a filter to limit invocations to obj
 <i>Type</i>: String
 </dd>
 
+<dt><code>S3</code></dt>
+<dd>
+The <code>S3</code> attribute specifies the name of a resource parameter of type <code>AWS::S3::Bucket</code> that is the origin of the events.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
 <dt><code>Suffix</code></dt>
 <dd>
 The <code>Suffix</code> attribute specifies a filter to limit invocations to object key names that end with the attribute value.
@@ -56,6 +57,7 @@ The <code>Suffix</code> attribute specifies a filter to limit invocations to obj
 
 <i>Type</i>: String
 </dd>
+
 </dl>
 
 ## Examples

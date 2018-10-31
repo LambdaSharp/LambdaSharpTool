@@ -19,14 +19,6 @@ StartingPosition: String
 ## Properties
 
 <dl>
-<dt><code>Kinesis</code></dt>
-<dd>
-The <code>Kinesis</code> attribute specifies the name of a resource parameter of type <code>AWS::Kinesis::Stream</code> that the Lambda function receives messages from.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
 
 <dt><code>BatchSize</code></dt>
 <dd>
@@ -35,6 +27,15 @@ The <code>BatchSize</code> attribute specifies the maximum number of messages to
 <i>Required</i>: No
 
 <i>Type</i>: Int
+</dd>
+
+<dt><code>Kinesis</code></dt>
+<dd>
+The <code>Kinesis</code> attribute specifies the name of a resource parameter of type <code>AWS::Kinesis::Stream</code> that the Lambda function receives messages from.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>StartingPosition</code></dt>
@@ -47,4 +48,5 @@ The <code>StartingPosition</code> attribute specifies the position in the Kinesi
 
 <i>Valid Values</i>: <code>TRIM_HORIZON</code> | <code>LATEST</code>
 </dd>
+
 </dl>

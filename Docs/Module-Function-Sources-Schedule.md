@@ -19,14 +19,6 @@ Name: String
 ## Properties
 
 <dl>
-<dt><code>Schedule</code></dt>
-<dd>
-The <code>Schedule</code> attribute specifies a <code>cron</code> or <code>rate</code> expression that defines a schedule for regularly invoking the Lambda function. See <a href="https://docs.aws.amazon.com/lambda/latest/dg/tutorial-scheduled-events-schedule-expressions.html">Schedule Expressions Using Rate or Cron</a> for more information.
-
-<i>Required</i>: Yes
-
-<i>Type</i>: String
-</dd>
 
 <dt><code>Name</code></dt>
 <dd>
@@ -36,6 +28,16 @@ The <code>Name</code> attribute specifies a name for this CloudWatch Schedule Ev
 
 <i>Type</i>: String
 </dd>
+
+<dt><code>Schedule</code></dt>
+<dd>
+The <code>Schedule</code> attribute specifies a <code>cron</code> or <code>rate</code> expression that defines a schedule for regularly invoking the Lambda function. See <a href="https://docs.aws.amazon.com/lambda/latest/dg/tutorial-scheduled-events-schedule-expressions.html">Schedule Expressions Using Rate or Cron</a> for more information.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
 </dl>
 
 ## Examples

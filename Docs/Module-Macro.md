@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Macro Definition
 
-The `Macro` definition is register a [CloudFormation Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html) for the deployment tier. The handler must be a Lambda function. Once deployed, the macro is available to all subsequent module deployments.
+The `Macro` definition registers a [CloudFormation Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html) for the deployment tier. The handler must be a Lambda function. Once deployed, the macro is available to all subsequent module deployments.
 
 __Topics__
 * [Syntax](#syntax)
