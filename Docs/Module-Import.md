@@ -135,5 +135,5 @@ The following import parameter types are supported:
   Description: Topic ARN
   Resource:
     Type: AWS::SNS::Topic
-    Allow: publish
+    Allow: Publish
 ```

@@ -233,7 +233,7 @@ The following input parameter types are supported:
   Description: A topic ARN
   Resource:
     Type: AWS::SNS::Topic
-    Allow: publish
+    Allow: Publish
 ```
 
 ### An optional module input that generates a resource on default value
@@ -244,5 +244,5 @@ The following input parameter types are supported:
   Default: ""
   Resource:
     Type: AWS::SNS::Topic
-    Allow: publish
+    Allow: Publish
 ```

@@ -77,7 +77,7 @@ The <code>Handler</code> attribute specifies the name of an SNS topic input para
 - Var: AccountReportGeneratorTopic
   Resource:
     Type: AWS::SNS::Topic
-    Allow: publish
+    Allow: Publish
 
 # ...
 

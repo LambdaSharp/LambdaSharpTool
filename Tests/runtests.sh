@@ -37,7 +37,7 @@ if [ -z "$1" ]; then
     lash Source-S3
     lash Source-Sqs
     lash Source-Alexa
-    lash Parameters
+    lash Variables
     lash CloudFormationFunctions
     lash Source-DynamoDB
     lash Source-Kinesis

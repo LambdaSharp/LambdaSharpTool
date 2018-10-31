@@ -66,12 +66,12 @@ namespace MySampleModule.MyFunction {
 
     public class FunctionRequest {
 
-        // TODO: add request fields
+        // add request fields
     }
 
     public class FunctionResponse {
 
-        // TODO: add response fields
+        // add response fields
     }
 
     public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
@@ -82,7 +82,7 @@ namespace MySampleModule.MyFunction {
 
         public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
 
-            // TODO: add business logic
+            // add business logic
 
             return new FunctionResponse();
         }
