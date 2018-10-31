@@ -128,4 +128,20 @@ The <code>Sources</code> section specifies zero or more source definitions the L
 
 ## Examples
 
-> TODO
+### A vanilla Lambda function
+
+```yaml
+- Function: MyFunction
+  Memory: 128
+  Timeout: 15
+```
+
+### A Lambda function with an SNS event source
+
+```yaml
+- Function: MyFunction
+  Memory: 128
+  Timeout: 15
+  Sources:
+    - SNS: MySnsTopic
+```
