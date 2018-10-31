@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Output Definition
+# LambdaSharp Module - Output Value
 
 Output values are converted into [CloudFormation export](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-exports.html) values for top-level stacks. For nested stacks, output values are converted into CloudFormation stack outputs. This behavior prevents other modules from taking dependencies on nested stacks.
 
@@ -23,7 +23,7 @@ Value: String
 
 <dt><code>Output</code></dt>
 <dd>
-The <code>Output</code> attribute specifies the name of the module's output variable. If the <code>Output</code> value matches an input or variable name, the <code>Description<code> and <code>Value</code> attributes are copied from the matching input or variable when omitted.
+The <code>Output</code> attribute specifies the name of the module's output variable. If the <code>Output</code> value matches an input or variable name, the <code>Description</code> and <code>Value</code> attributes are copied from the matching input or variable when omitted.
 
 <i>Required</i>: Yes
 

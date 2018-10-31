@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - Alexa Source Definition
+# LambdaSharp Module Function - Alexa Source
 
 See [Alexa sample](../Samples/AlexaSample/) for an example of how to use an Alexa skill as source.
 

@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - DynamoDB Stream Source Definition
+# LambdaSharp Module Function - DynamoDB Stream Source
 
 See [DynamoDB Stream sample](../Samples/DynamoDBSample/) for an example of how to use the DynamoDB Stream source.
 

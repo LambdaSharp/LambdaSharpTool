@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Definition
+# LambdaSharp Module
 
 A λ# module definition specifies the input parameters, output values, resources, and functions of a module.
 

@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Custom Resource Definition
+# LambdaSharp Module - Custom Resource Output
 
 The `CustomResource` definition is used to register a custom resource handler for a deployment tier. The handler can either be an SNS topic or Lambda function. Once deployed, the custom resource is available to all subsequent module deployments.
 

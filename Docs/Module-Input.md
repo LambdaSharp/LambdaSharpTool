@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Input Definition
+# LambdaSharp Module - Input Parameter
 
 Input parameters are specified at module deployment time by the λ# CLI. Input parameters can also be modified subsequently by updating the CloudFormation stack in the AWS console.
 

@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Schedule Function Source Definition
+# LambdaSharp Module - Schedule Source
 
 See [CloudWatch Schedule Event sample](../Samples/ScheduleSample/) for an example of how to use the CloudWatch Schedule Event source.
 
