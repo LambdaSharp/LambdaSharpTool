@@ -75,7 +75,7 @@ The <code>Secrets</code> section specifies which KMS keys can be used to decrypt
 
 <i>Required:</i> No
 
-<i>Type:</i> List of String (see [Secrets Section](ModuleFile-Secrets.md))
+<i>Type:</i> List of String (see [Secrets Section](Module-Secrets.md))
 </dd>
 
 <dt><code>Inputs</code></dt>
@@ -84,7 +84,7 @@ The <code>Inputs</code> section specifies the input parameter definitions for th
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Input Parameter Definition](ModuleFile-Inputs.md)
+<i>Type:</i> List of [Input Parameter Definition](Module-Inputs.md)
 </dd>
 
 <dt><code>Outputs</code></dt>
@@ -93,7 +93,7 @@ The <code>Output</code> section specifies the output value definitions for the m
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Output Value Definition](ModuleFile-Parameters.md)
+<i>Type:</i> List of [Output Value Definition](Module-Parameters.md)
 </dd>
 
 <dt><code>Variables</code></dt>
@@ -102,7 +102,7 @@ The <code>Variables</code> section defines the literal values and resources for 
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Variable Definition](ModuleFile-Variables.md)
+<i>Type:</i> List of [Variable Definition](Module-Variables.md)
 </dd>
 
 <dt><code>Functions</code></dt>
@@ -111,7 +111,7 @@ The <code>Functions</code> section defines the lambda functions that are part of
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Function Definition](ModuleFile-Functions.md)
+<i>Type:</i> List of [Function Definition](Module-Function.md)
 </dd>
 
 </dl>

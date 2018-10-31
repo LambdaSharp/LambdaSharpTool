@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - CloudFormation Macro Source
+# LambdaSharp Module Function - CloudFormation Macro Source Definition
 
 See [CloudFormation Macro sample](../Samples/MacroSample/) for an example of how to define a CloudFormation Macro source.
 

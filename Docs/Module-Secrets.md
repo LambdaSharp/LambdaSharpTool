@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Secrets Section
 
-The `Secrets` section, in the [λ# Module](ModuleFile.md), lists which KMS keys can be used to decrypt parameter values. The module IAM role will get the `mks:Decrypt` permission to use these keys.
+The `Secrets` section, in the [λ# Module](Module.md), lists which KMS keys can be used to decrypt parameter values. The module IAM role will get the `mks:Decrypt` permission to use these keys.
 
 __Topics__
 * [Syntax](#syntax)
@@ -22,7 +22,7 @@ When KMS key is referenced by an alias, it is resolved on the account used when 
 
 ```yaml
 Secrets:
-  - KeyAlias
+  - alias/KeyAlias
 ```
 
 When a KMS key is referenced using an ARN, it is used as is.

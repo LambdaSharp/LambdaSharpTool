@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - Kinesis Stream Source
+# LambdaSharp Module Function - Kinesis Stream Source Definition
 
 See [Kinesis Stream sample](../Samples/KinesisSample/) for an example of how to use the Kinesis Stream source.
 

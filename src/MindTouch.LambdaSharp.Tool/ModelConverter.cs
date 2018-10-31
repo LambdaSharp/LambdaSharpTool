@@ -282,7 +282,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // assume key name is an alias and resolve it to its ARN
                 try {
-                    var response = Settings.KmsClient.DescribeKeyAsync($"alias/{secret}").Result;
+                    var response = Settings.KmsClient.DescribeKeyAsync(secret).Result;
                     return response.KeyMetadata.Arn;
                 } catch(Exception e) {
                     AddError($"failed to resolve key alias: {secret}", e);

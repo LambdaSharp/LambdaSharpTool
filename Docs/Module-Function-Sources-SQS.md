@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - SQS Source
+# LambdaSharp Module Function - SQS Source Definition
 
 See [SQS Queue sample](../Samples/SqsSample/) for an example of how to use the SQS Queue source.
 

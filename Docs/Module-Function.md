@@ -1,12 +1,13 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Functions Section
+# LambdaSharp Module - Function Definition
 
-The `Functions` section, in the [Module](ModuleFile.md) definition, may contain zero or more function definitions. Each definition corresponds to a that is compiled and deployed. The deployed Lambda functions are prefixed with `${Module::Id}-` to uniquely distinguish them from other functions.
+The `Function` definition specifies a Lambda function for deployment. Each definition is compiled and uploaded as part of the deployment process. The deployed Lambda function is prefixed with `${Module::Id}-` to uniquely distinguish is from other functions.
 
 __Topics__
 * [Syntax](#syntax)
 * [Properties](#properties)
+* [Examples](#examples)
 
 ## Syntax
 
@@ -120,7 +121,11 @@ The <code>Sources</code> section specifies zero or more source definitions the L
 
 <i>Required</i>: No
 
-<i>Type</i>: List of [Source Definition](ModuleFile-Functions-Sources.md)
+<i>Type</i>: List of [Source Definition](Module-Function-Sources.md)
 </dd>
+
 </dl>
 
+## Examples
+
+> TODO

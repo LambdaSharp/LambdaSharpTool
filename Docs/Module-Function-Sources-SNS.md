@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Function - SNS Topic Source
+# LambdaSharp Module Function - SNS Topic Source Definition
 
 See [SNS Topic sample](../Samples/SnsSample/) for an example of how to use the SNS Topic source.
 

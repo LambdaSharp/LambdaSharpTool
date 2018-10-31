@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4) - 2018-10-17
+# λ# - Damo (v0.4-RC1) - 2018-10-31
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -30,7 +30,9 @@ With the addition of new sections to the module file, and with an eye towards th
 
 Also, variables are no longer always added to function environments. Instead, the scope of a variable is controlled by the `Scope` attribute (see below). The old behavior caused too many cases of circular dependencies, which are always tedious to diagnose.
 
-### λ# CLI
+### λ# Tool
+
+The λ# Tool has been renamed to λ# CLI.
 
 Function folders no longer need to be prefixed with the module name. They will still be found for backwards compatibility, but the new recommended naming is to just use the function name as folder name.
 
@@ -44,11 +46,14 @@ The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunct
 
 
 
-VVVVV ***CONTINUE HERE*** VVVV
+> TODO VVVVV ***CONTINUE HERE*** VVVV
+BREAKING CHANGE
+* replaces `Values` with `Value`
 
 
 ## New λ# CLI Features
 
+* lambdasharp deploys as a single stack (w/ nested stacks)
 * multi-stage deployment (build, publish, deploy)
 * CloudWatch Logs
     * clean-up on function deletion
@@ -97,6 +102,7 @@ VVVVV ***CONTINUE HERE*** VVVV
 
 ## New λ# Module Features
 
+* allow `DependsOn: Registrar`
 * `Inputs` section
     * `Section` and `Label` attribute
     * `Input`
