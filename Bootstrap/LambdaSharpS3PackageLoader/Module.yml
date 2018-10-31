@@ -24,7 +24,7 @@ Description: LambdaSharp S3 Package Loader
 Outputs:
 
   - CustomResource: LambdaSharp::S3::Package
-    Description: Custom resource for for deploying packages to S3 buckets
+    Description: Custom resource for deploying packages to S3 buckets
     Handler: CustomResourceTopic
 
 Variables:
