@@ -6,7 +6,7 @@ The `build` command compiles the module and all of its assets in preparation for
 
 ## Arguments
 
-The `build` command takes an optional path. The path can either refer to a module file or a folder containing a `Module.yml` file.
+The `build` command takes an optional path. The path can either refer to a module definition or a folder containing a `Module.yml` file.
 
 ```bash
 lash new function MyNewFunction

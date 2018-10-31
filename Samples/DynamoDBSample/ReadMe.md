@@ -4,9 +4,9 @@
 
 Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
+Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
 
 Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 

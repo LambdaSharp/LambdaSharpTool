@@ -56,13 +56,15 @@ The <code>Value</code> attribute specifies the value for the parameter. When use
 
 <dt><code>Resource</code></dt>
 <dd>
-The parameter value corresponds to one or more AWS resources. A new, managed AWS resource is created when the <code>Resource</code> section is used without the <code>Value</code> attribute. Otherwise, one or more existing AWS resources are referenced. The resulting resource value (ARN, Queue URL, etc.) becomes the parameter value after initialization and can be retrieve during function initialization.
+> TODO: fix definition
+
+The variable corresponds to one or more AWS resources. A new, managed AWS resource is created when the <code>Resource</code> section is used without the <code>Value</code> attribute. Otherwise, one or more existing AWS resources are referenced. The resulting resource value (ARN, Queue URL, etc.) becomes the parameter value after initialization and can be retrieve during function initialization.
 
 The <code>Resource</code> section cannot be used in conjunction with the <code>Secret</code> attribute.
 
 <i>Required</i>: No
 
-<i>Type</i>: [Resource Definition](Module-Parameters-Resources.md)
+<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
 </dd>
 
 <dt><code>Variables</code></dt>

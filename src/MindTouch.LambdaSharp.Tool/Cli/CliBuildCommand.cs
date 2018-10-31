@@ -141,7 +141,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "Build LambdaSharp module";
 
                 // build options
-                var modulesArgument = cmd.Argument("<NAME>", "(optional) Path to module file/folder (default: Module.yml)", multipleValues: true);
+                var modulesArgument = cmd.Argument("<NAME>", "(optional) Path to module definition/folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
@@ -212,7 +212,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "Publish LambdaSharp module";
 
                 // build options
-                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module file/folder (default: Module.yml)", multipleValues: true);
+                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module definition/folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
@@ -301,7 +301,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 cmd.Description = "Deploy LambdaSharp module";
 
                 // deploy options
-                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module file/folder (default: Module.yml)", multipleValues: true);
+                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module definition/folder (default: Module.yml)", multipleValues: true);
                 var moduleIdOption = cmd.Option("--id <ID>", "(optional) Specify a module ID for the deployment (default: module name)", CommandOptionType.SingleValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
@@ -454,7 +454,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     return false;
                 }
 
-                // parse yaml module file
+                // parse yaml module definition
                 var parsedModule = new ModelParser(settings, moduleSource).Parse(tokenStream);
                 if(HasErrors) {
                     return false;
@@ -481,7 +481,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 // package all files
                 new ModelFilesPackager(settings, moduleSource).Process(parsedModule);
 
-                // compile module file
+                // compile module definition
                 var module = new ModelConverter(settings, moduleSource).Process(parsedModule);
                 if(HasErrors) {
                     return false;

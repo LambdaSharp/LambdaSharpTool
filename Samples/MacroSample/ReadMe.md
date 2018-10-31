@@ -4,7 +4,7 @@
 
 Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
-## Module File
+## Module Definition
 
 Creating a function that is invoked by a CloudFormation macro is straightforward. Simple define a function that lists the CloudFormation Macros it expects to handle in its `Sources` section using the `Macro` attribute. Note that a single Lambda function can handle multiple CloudFormation macros.
 

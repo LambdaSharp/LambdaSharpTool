@@ -4,7 +4,7 @@
 
 Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
-## Module File
+## Module Definition
 
 Creating a function that is invoked by an [Alexa Skill](https://developer.amazon.com/alexa-skills-kit) requires two steps. First, an Alexa Skill must be created with an [Amazon Developer account](https://developer.amazon.com/). Second, the function must have the `Alexa` attribute in its `Sources` section.
 

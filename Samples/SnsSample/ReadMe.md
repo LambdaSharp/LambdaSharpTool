@@ -4,9 +4,9 @@
 
 Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by an SNS topics requires two steps. First, the SNS topic must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Topic` attribute.
+Creating a function that is invoked by an SNS topics requires two steps. First, the SNS topic must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Topic` attribute.
 
 Lambda functions require the `sns:Subscribe` permission on the SNS topic. Either request it explicitly or use a [resource permission shorthand](../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml) instead.
 

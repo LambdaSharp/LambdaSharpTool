@@ -51,7 +51,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public Module Process(ModuleNode module) {
 
-            // convert module file
+            // convert module definition
             try {
                 return Convert(module);
             } catch(Exception e) {

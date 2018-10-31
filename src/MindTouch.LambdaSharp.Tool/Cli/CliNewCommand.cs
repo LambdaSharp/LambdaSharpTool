@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
-                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
+                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
                     var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
                     var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
@@ -168,7 +168,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var moduleFile = Path.Combine(moduleDirectory, "Module.yml");
             if(File.Exists(moduleFile)) {
-                AddError($"module file '{moduleFile}' already exists");
+                AddError($"module definition '{moduleFile}' already exists");
                 return;
             }
             try {
@@ -176,9 +176,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     ["MODULENAME"] = moduleName
                 });
                 File.WriteAllText(moduleFile, module);
-                Console.WriteLine($"Created module file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
+                Console.WriteLine($"Created module definition: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
             } catch(Exception e) {
-                AddError($"unable to create module file '{moduleFile}'", e);
+                AddError($"unable to create module definition '{moduleFile}'", e);
             }
         }
 
@@ -195,7 +195,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             int functionTimeout
         ) {
 
-            // parse yaml module file
+            // parse yaml module definition
             if(!File.Exists(moduleFile)) {
                 AddError($"could not find module '{moduleFile}'");
                 return;
@@ -256,7 +256,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 break;
             }
 
-            // update YAML module file
+            // update YAML module definition
             var moduleLines = File.ReadAllLines(moduleFile).ToList();
 
             // check if `Functions:` section needs to be added

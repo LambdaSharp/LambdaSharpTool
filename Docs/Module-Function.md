@@ -74,7 +74,7 @@ The <code>Timeout</code> attribute specifies the execution time limit in seconds
 <dd>
 The <code>Project</code> attribute specifies the relative path of the .NET Core project file location for the lambda function.
 
-<i>Required</i>: Conditional. By default, the .NET Core project file is expected to be located in a sub-folder of the module file. The name of the sub-folder and project file are expected to match the function name. If that is not the case, then the <code>Project</code> attribute must be specified. Otherwise, it can be omitted.
+<i>Required</i>: Conditional. By default, the .NET Core project file is expected to be located in a sub-folder of the module definition. The name of the sub-folder and project file are expected to match the function name. If that is not the case, then the <code>Project</code> attribute must be specified. Otherwise, it can be omitted.
 
 <i>Type</i>: String
 </dd>

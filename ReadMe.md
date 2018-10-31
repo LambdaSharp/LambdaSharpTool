@@ -54,7 +54,7 @@ Version: 1.0
 
 Functions:
 
- - Name: MyFunction
+ - Function: MyFunction
    Memory: 128
    Timeout: 30
 ```
@@ -95,7 +95,7 @@ namespace MySampleModule.MyFunction {
 1. [Setup λ# CLI](Bootstrap/)
 1. [λ# CLI Reference](src/MindTouch.LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
-1. [Module File Reference](Docs/Module.md)
+1. [Module Definition Reference](Docs/Module.md)
 1. [Folder Structure Reference](Docs/FolderStructure.md)
 1. [Release Notes](Docs/ReadMe.md)
 

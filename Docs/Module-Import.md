@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Import Definition
 
-> TODO: description
+The `Import` definition is used to create cross-module references. By default, these references are resolved by CloudFormation at deployment time. However,they can also be redirected to a different module output value or be given an specific value instead. This capability makes it possible to have a default behavior that is mostly convenient, while enabling modules to be re-wired to import parameters from other modules, or to be given existing values for testing or legacy purposes.
 
 __Topics__
 * [Syntax](#syntax)
@@ -24,13 +24,56 @@ Resource:
 
 ## Properties
 
-> TODO: Import, Section, Label, Scope, Resource
-
 <dl>
 
 <dt><code>Description</code></dt>
 <dd>
-A string of up to 4000 characters that describes the input variable.
+The <code>Description</code> attribute specifies the description string to be associated with the import parameter.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>Import</code></dt>
+<dd>
+The <code>Import</code> attribute specifies the cross-module reference using <code>ModuleName::OutputName</code> as notation.
+
+<i>Required</i>: Yes
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>Label</code></dt>
+<dd>
+The <code>Label</code> specifies a human readable label for the import parameter. This label is used instead of the import parameter name by the AWS Console when updating a CloudFormation stack.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>Resource</code></dt>
+<dd>
+> TODO: resource
+
+<i>Required</i>: No
+
+<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
+</dd>
+
+<dt><code>Scope</code></dt>
+<dd>
+The <code>Scope</code> attribute specifies which functions need to have access to this import parameter. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the import parameter, then <code>"*"</code> can be used as a wildcard.
+
+<i>Required</i>: No
+
+<i>Type</i>: Either String or List of String
+</dd>
+
+<dt><code>Section</code></dt>
+<dd>
+The <code>Section</code> attribute specifies a title for grouping related module inputs together. The AWS Console uses the title for laying out module inputs into sections. The order of the sections and the order of the module inputs in the section is determined by the order in which they occur in the module definition.
 
 <i>Required</i>: No
 
@@ -39,13 +82,13 @@ A string of up to 4000 characters that describes the input variable.
 
 <dt><code>Type</code></dt>
 <dd>
-The <code>Type</code> attribute specifies the data type for the input variable. When omitted, the type is assumed to be <code>String</code>.
+The <code>Type</code> attribute specifies the data type for the import parameter. When omitted, the type is assumed to be <code>String</code>.
 
 <i>Required</i>: No
 
 <i>Type</i>: String
 
-The following input variable types are supported:
+The following import parameter types are supported:
 
 <dl>
 
@@ -56,10 +99,10 @@ The following input variable types are supported:
 <dd>An encrypted string.</dd>
 
 <dt><code>Number</code></dt>
-<dd>An integer or float. The input value is validated as a number. However, when you use the input variable elsewhere in your module (for example, by using the <code>!Ref</code> function), the input value becomes a string.</dd>
+<dd>An integer or float. The import value is validated as a number. However, when you use the import parameter elsewhere in your module (for example, by using the <code>!Ref</code> function), the import value becomes a string.</dd>
 
 <dt><code>List&lt;Number&gt;</code></dt>
-<dd>An array of integers or floats that are separated by commas. The input value is validated as numbers. However, when you use the input variable elsewhere in your module (for example, by using the <code>!Ref</code> function), the input value becomes a list of strings.</dd>
+<dd>An array of integers or floats that are separated by commas. The import value is validated as numbers. However, when you use the import parameter elsewhere in your module (for example, by using the <code>!Ref</code> function), the import value becomes a list of strings.</dd>
 
 <dt><code>CommaDelimitedList</code></dt>
 <dd>An array of literal strings that are separated by commas. The total number of strings should be one more than the total number of commas. Also, each member string is space trimmed.</dd>
@@ -73,13 +116,24 @@ The following input variable types are supported:
 </dl>
 </dd>
 
-
-
-
-
 </dl>
 
 
 ## Examples
 
-> TODO: add examples
+### Import a module output
+
+```yaml
+- Import: MyModule::MyOutputTopic
+  Description: Topic ARN
+```
+
+### Import a module output and associate IAM permissions
+
+```yaml
+- Import: MyModule::MyOutputTopic
+  Description: Topic ARN
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: publish
+```

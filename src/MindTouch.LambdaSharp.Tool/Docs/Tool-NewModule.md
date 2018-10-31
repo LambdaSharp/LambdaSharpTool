@@ -2,7 +2,7 @@
 
 # LambdaSharp CLI - New Module Command
 
-The `new module` command is used to create a new module file.
+The `new module` command is used to create a new module definition.
 
 ## Arguments
 
@@ -33,7 +33,7 @@ dotnet lash new module MyNewModule
 Output:
 ```
 MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
-Created module file: Module.yml
+Created module definition: Module.yml
 
 Done (duration: 00:00:00.0168295)
 ```

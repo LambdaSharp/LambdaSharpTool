@@ -4,9 +4,9 @@
 
 Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
+Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
 
 Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
 

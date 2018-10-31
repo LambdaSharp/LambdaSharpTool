@@ -6,7 +6,7 @@ The `publish` command is used to upload the compiled module and its assets to th
 
 ## Arguments
 
-The `publish` command takes an optional path. The path can either refer to a manifest file, a module file, or a folder containing a `Module.yml` file.
+The `publish` command takes an optional path. The path can either refer to a manifest file, a module definition, or a folder containing a `Module.yml` file.
 
 If the path does not refer to a manifest file, the `publish` command invokes the `build` command to compile the module and its assets.
 

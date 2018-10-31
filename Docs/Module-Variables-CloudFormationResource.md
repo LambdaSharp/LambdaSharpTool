@@ -51,7 +51,7 @@ The <code>Resource</code> section cannot be used in conjunction with the <code>S
 
 <i>Required</i>: No
 
-<i>Type</i>: [Resource Definition](Module-Parameters-Resources.md)
+<i>Type</i>: [Resource Definition](Module-Variables-Resources.md)
 </dd>
 
 <dt><code>Variables</code></dt>

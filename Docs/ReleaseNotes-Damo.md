@@ -4,7 +4,7 @@
 
 ## What's New
 
-The objective of the λ# 0.4 _Damo_ release has been to enable λ# modules to be deployed to different tiers without requiring the module, or underlying code, to be rebuilt each time. To achieve this objective, all compile-time operations have been translated into equivalent CloudFormation operations that can be resolved at stack creation time. This change required adding support for [CloudFormation parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html), which means that λ# modules can now be parameterized. For added convenience, λ# generates a [CloudFormation interface](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudformation-interface.html), so that parameters can be laid out in a logical manner.
+The objective of the λ# 0.4 _Damo_ release has been to enable λ# modules to be deployed to different tiers without requiring the module, or underlying code, to be rebuilt each time. To achieve this objective, all compile-time operations have been translated into equivalent CloudFormation operations that can be resolved at stack creation time. This change required adding support for [CloudFormation parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html), which means that λ# modules can now be parameterized. For added convenience, λ# generates a [CloudFormation interface](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudformation-interface.html), so that input parameters can be laid out in a logical manner.
 
 In addition, λ# 0.4 _Damo_ introduces a new module composition model that makes it easy to deploy modules that build on each other. A design challenge was to make this new composition model both easy to use while maintaining flexibility in how module dependencies are resolved. The solution leverages [CloudFormation exports](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-exports.html) which provide built-in tracking of dependencies and termination protection.
 
@@ -18,9 +18,9 @@ The following change may impact modules you have created using previous releases
 
 The role of the pre-processor has been greatly reduced to make generated CloudFormation templates more portable. As such, support for variable substitutions using the moustache (`{{ }}`) notation has been removed. Conditional inclusion is still supported, but since it is done at the pre-processor level, the benefits are no longer available after the build phase is complete. To select which conditional inclusions to keep, use the new `--selector` option with the `build` command. For convenience, the `deploy` command defaults to using the `--tier` option value as selector, if no selector is provided. This makes running the `deploy` command very similar to what it was in the past.
 
-### Module File
+### Module Definition
 
-With the addition of new sections to the module file, and with an eye towards the future, some attributes/sections have been renamed for consistency.
+With the addition of new sections to the module definition, and with an eye towards the future, some attributes/sections have been renamed for consistency.
 * The module name is now specified with the `Module` attribute (previously `Name`).
 * The function name is now specified with the `Function` attribute (previously `Name`).
 * Variables--formerly parameters--are now specified in the `Variables` section (previously `Parameters`). Similarly, for nested variables. The previous name was causing confusion with CloudFormation terminology.
@@ -49,6 +49,7 @@ The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunct
 > TODO VVVVV ***CONTINUE HERE*** VVVV
 BREAKING CHANGE
 * replaces `Values` with `Value`
+* macro is now an output value
 
 
 ## New λ# CLI Features
@@ -77,7 +78,7 @@ BREAKING CHANGE
     * hide sensitive information (account id) unless `--show-sensitive` option is used
 * `lash encrypt`
 * `lash new function --language javascript`
-* input path can be a directory instead of the module file (will look for `Module.yml`)
+* input path can be a directory instead of the module definition (will look for `Module.yml`)
 * javascript functions
 
 * parameter file

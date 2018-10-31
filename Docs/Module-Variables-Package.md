@@ -49,7 +49,7 @@ The <code>Package</code> section specifies local files with a destination S3 buc
 
 <i>Required</i>: Yes
 
-<i>Type</i>: [Package Definition](Module-Parameters-Packages.md)
+<i>Type</i>: [Package Definition](Module-Variables-Packages.md)
 </dd>
 
 <dt><code>Variables</code></dt>

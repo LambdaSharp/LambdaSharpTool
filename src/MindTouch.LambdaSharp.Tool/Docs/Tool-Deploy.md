@@ -8,11 +8,11 @@ CloudFormation stacks created by the λ# CLI have termination protection enabled
 
 ## Arguments
 
-The `deploy` command takes an optional argument. The argument can either be the name of a published module with an optional version constraint, a path to a manifest file, a path to a module file, or a path to a folder containing a `Module.yml` file.
+The `deploy` command takes an optional argument. The argument can either be the name of a published module with an optional version constraint, a path to a manifest file, a path to a module definition, or a path to a folder containing a `Module.yml` file.
 
 If the argument refers to a manifest file, the `deploy` command invokes `publish` command to upload the module and its assets to the deployment bucket.
 
-If the argument refers to a module file, the `deploy` command invokes the `build` command to compile the module and all its assets, followed by the `publish` command to upload all built assets.
+If the argument refers to a module definition, the `deploy` command invokes the `build` command to compile the module and all its assets, followed by the `publish` command to upload all built assets.
 
 ## Options
 
@@ -164,7 +164,7 @@ Done (duration: 00:01:21.7651019)
 
 ### Deploy a module with an inputs file
 
-The `deploy` command can optionally take a YAML file to specify the module input values. The YAML file must be a map of key-value pairs, where each key corresponds to a module input. The value can either be a literal value (string, number, boolean) or a list. Lists are automatically concatenated into a comma-separated string of values.
+The `deploy` command can optionally take a YAML file to specify the module input parameters. The YAML file must be a map of key-value pairs, where each key corresponds to a module input. The value can either be a literal value (string, number, boolean) or a list. Lists are automatically concatenated into a comma-separated string of values.
 
 The `ModuleSecrets` key has some additional, special processing rules. `ModuleSecrets` is used to enable a module to use additional managed encryption keys. These can be specified with an account specified key ID or with an account-agnostic key alias. When a key alias is used, the `deploy` command automatically resolves it to a key ID before using it as an input value.
 

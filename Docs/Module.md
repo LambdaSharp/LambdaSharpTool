@@ -4,7 +4,7 @@
 
 A λ# module definition specifies the input parameters, output values, resources, and functions of a module.
 
-Input parameters can either be provided at module deployment time or imported from other modules using cross-module references. In addition, optional input parameters can also act as conditional resources that are created when an input value is omitted.
+Input parameters can either be provided at module deployment time or imported from other modules using cross-module references. In addition, optional input parameters can also act as conditional resources that are created when an input parameter is omitted.
 
 Output values can be accessed by other modules using cross-module references. Output values can also be definitions for custom resource handlers that can be used by other modules during their deployment.
 
@@ -93,7 +93,7 @@ The <code>Output</code> section specifies the output value definitions for the m
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Output Value Definition](Module-Parameters.md)
+<i>Type:</i> List of [Output Value Definition](Module-Outputs.md)
 </dd>
 
 <dt><code>Variables</code></dt>
@@ -107,7 +107,7 @@ The <code>Variables</code> section defines the literal values and resources for 
 
 <dt><code>Functions</code></dt>
 <dd>
-The <code>Functions</code> section defines the lambda functions that are part of the module. All functions receive the same IAM role and have equal access to all parameters.
+The <code>Functions</code> section defines the lambda functions that are part of the module.
 
 <i>Required:</i> No
 
