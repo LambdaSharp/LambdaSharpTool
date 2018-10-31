@@ -168,6 +168,26 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "InputTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "InputTopic"
+                  }
+                },
+                {
+                  "Sid": "Topic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "Topic"
+                  }
+                },
+                {
                   "Sid": "ModuleSecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -255,26 +275,6 @@
                         ]
                       }
                     ]
-                  }
-                },
-                {
-                  "Sid": "InputTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "InputTopic"
-                  }
-                },
-                {
-                  "Sid": "Topic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Subscribe"
-                  ],
-                  "Resource": {
-                    "Ref": "Topic"
                   }
                 },
                 {
@@ -604,14 +604,6 @@
     }
   },
   "Conditions": {
-    "ModuleSecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "ModuleSecrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -670,6 +662,14 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    },
+    "ModuleSecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "ModuleSecrets"
         },
         ""
       ]

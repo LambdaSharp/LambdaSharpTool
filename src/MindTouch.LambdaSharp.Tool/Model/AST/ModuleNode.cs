@@ -32,9 +32,9 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Version { get; set; }
         public string Description { get; set; }
         public IList<object> Pragmas { get; set; }
+        public IList<string> Secrets { get; set; }
         public IList<InputNode> Inputs { get; set; }
         public IList<OutputNode> Outputs { get; set; }
-        public IList<string> Secrets { get; set; }
         public IList<ParameterNode> Variables { get; set; }
         public IList<FunctionNode> Functions { get; set; }
     }

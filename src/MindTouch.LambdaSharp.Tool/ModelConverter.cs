@@ -465,33 +465,6 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Reference = parameter.Secret
                             };
                         });
-                    } else if(parameter.Values != null) {
-                        if(parameter.Resource != null) {
-                            AtLocation("Resource", () => {
-
-                                // list of existing resources
-                                var resource = ConvertResource(parameter.Values, parameter.Resource);
-                                result = new ReferencedResourceParameter {
-                                    Scope = ConvertScope(module, parameter.Scope),
-                                    Name = parameter.Var,
-                                    Description = parameter.Description,
-                                    Resource = resource,
-                                    Reference = FnJoin(",", resource.ResourceReferences)
-                                };
-                            });
-                        } else {
-
-                            // list of values
-                            AtLocation("Values", () => {
-                                result = new ValueListParameter {
-                                    Scope = ConvertScope(module, parameter.Scope),
-                                    Name = parameter.Var,
-                                    Description = parameter.Description,
-                                    Values = parameter.Values,
-                                    Reference = FnJoin(",", parameter.Values)
-                                };
-                            });
-                        }
                     } else if(parameter.Package != null) {
 
                         // package value
@@ -509,13 +482,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             AtLocation("Resource", () => {
 
                                 // existing resource
-                                var resource = ConvertResource(new List<object> { parameter.Value }, parameter.Resource);
+                                var resource = ConvertResource((parameter.Value as IList<object>) ?? new List<object> { parameter.Value }, parameter.Resource);
                                 result = new ReferencedResourceParameter {
                                     Scope = ConvertScope(module, parameter.Scope),
                                     Name = parameter.Var,
                                     Description = parameter.Description,
                                     Resource = resource,
-                                    Reference = parameter.Value
+                                    Reference = FnJoin(",", resource.ResourceReferences)
                                 };
                             });
                         } else {
@@ -523,7 +496,9 @@ namespace MindTouch.LambdaSharp.Tool {
                                 Scope = ConvertScope(module, parameter.Scope),
                                 Name = parameter.Var,
                                 Description = parameter.Description,
-                                Reference = parameter.Value
+                                Reference = (parameter.Value is IList<object> values)
+                                    ? FnJoin(",", values)
+                                    : parameter.Value
                             };
                         }
                     } else if(parameter.Resource != null) {

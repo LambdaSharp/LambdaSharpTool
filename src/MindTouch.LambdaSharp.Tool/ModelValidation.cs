@@ -103,17 +103,10 @@ namespace MindTouch.LambdaSharp.Tool {
                     Validate(Regex.IsMatch(parameter.Var, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
                     if(parameter.Secret != null) {
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
-                    } else if(parameter.Values != null) {
-                        ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
-                        ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
-                        ValidateNotBothStatements("Values", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Values", "Package", parameter.Package == null);
                     } else if(parameter.Package != null) {
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Package", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
@@ -152,12 +145,10 @@ namespace MindTouch.LambdaSharp.Tool {
                 ValidateNotBothStatements("Value", "Properties", resource.Properties == null);
                 if(parameter.Value is string text) {
                     ValidateARN(text);
-                }
-            } else if(parameter.Values != null) {
-                resource.Type = resource.Type ?? "AWS";
-                ValidateNotBothStatements("Values", "Properties", resource.Properties == null);
-                foreach(var value in parameter.Values) {
-                    ValidateARN(value);
+                } else if(parameter.Value is IList<object> values) {
+                    foreach(var value in values) {
+                        ValidateARN(value);
+                    }
                 }
             } else if(resource.Type == null) {
                 AddError("missing Type attribute");

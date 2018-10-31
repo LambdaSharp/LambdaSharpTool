@@ -172,6 +172,63 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "InputSqs",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Ref": "InputSqs"
+                  }
+                },
+                {
+                  "Sid": "Sqs1",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Sqs1",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
+                  "Sid": "Sqs2",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ChangeMessageVisibility",
+                    "sqs:ChangeMessageVisibilityBatch",
+                    "sqs:DeleteMessage",
+                    "sqs:DeleteMessageBatch",
+                    "sqs:GetQueueAttributes",
+                    "sqs:GetQueueUrl",
+                    "sqs:ListQueueTags",
+                    "sqs:ReceiveMessage"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "Sqs2",
+                      "Arn"
+                    ]
+                  }
+                },
+                {
                   "Sid": "ModuleSecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -258,63 +315,6 @@
                           }
                         ]
                       }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "InputSqs",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:ChangeMessageVisibility",
-                    "sqs:ChangeMessageVisibilityBatch",
-                    "sqs:DeleteMessage",
-                    "sqs:DeleteMessageBatch",
-                    "sqs:GetQueueAttributes",
-                    "sqs:GetQueueUrl",
-                    "sqs:ListQueueTags",
-                    "sqs:ReceiveMessage"
-                  ],
-                  "Resource": {
-                    "Ref": "InputSqs"
-                  }
-                },
-                {
-                  "Sid": "Sqs1",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:ChangeMessageVisibility",
-                    "sqs:ChangeMessageVisibilityBatch",
-                    "sqs:DeleteMessage",
-                    "sqs:DeleteMessageBatch",
-                    "sqs:GetQueueAttributes",
-                    "sqs:GetQueueUrl",
-                    "sqs:ListQueueTags",
-                    "sqs:ReceiveMessage"
-                  ],
-                  "Resource": {
-                    "Fn::GetAtt": [
-                      "Sqs1",
-                      "Arn"
-                    ]
-                  }
-                },
-                {
-                  "Sid": "Sqs2",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sqs:ChangeMessageVisibility",
-                    "sqs:ChangeMessageVisibilityBatch",
-                    "sqs:DeleteMessage",
-                    "sqs:DeleteMessageBatch",
-                    "sqs:GetQueueAttributes",
-                    "sqs:GetQueueUrl",
-                    "sqs:ListQueueTags",
-                    "sqs:ReceiveMessage"
-                  ],
-                  "Resource": {
-                    "Fn::GetAtt": [
-                      "Sqs2",
-                      "Arn"
                     ]
                   }
                 },
@@ -628,14 +628,6 @@
     }
   },
   "Conditions": {
-    "ModuleSecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "ModuleSecrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -694,6 +686,14 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    },
+    "ModuleSecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "ModuleSecrets"
         },
         ""
       ]

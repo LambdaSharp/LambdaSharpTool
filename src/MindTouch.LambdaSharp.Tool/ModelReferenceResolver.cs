@@ -158,15 +158,6 @@ DebugWriteLine($"FREE => {parameter.ResourceName}");
 DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         }
                         break;
-                    case ValueListParameter listParameter:
-                        if(listParameter.Values.All(value => value is string)) {
-                            freeParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"FREE => {parameter.ResourceName}");
-                        } else {
-                            boundParameters[parameter.ResourceName] = parameter;
-DebugWriteLine($"BOUND => {parameter.ResourceName}");
-                        }
-                        break;
                     case PackageParameter _:
                     case SecretParameter _:
                     case AInputParameter inputParameter:
@@ -207,7 +198,6 @@ DebugWriteLine($"BOUND => {parameter.ResourceName}");
                         var doesNotContainBoundParameters = true;
                         switch(parameter) {
                         case ValueParameter _:
-                        case ValueListParameter _:
                             parameter.Reference = Substitute(parameter.Reference, CheckBoundParameters);
                             break;
                         case ReferencedResourceParameter referencedResourceParameter:
@@ -250,11 +240,6 @@ DebugWriteLine($"RESOLVED => {parameter.ResourceName} = {Newtonsoft.Json.JsonCon
                         switch(parameter) {
                         case ValueParameter valueParameter:
                             Substitute(valueParameter.Reference, ReportMissingReference);
-                            break;
-                        case ValueListParameter valueListParameter:
-                            foreach(var item in valueListParameter.Values) {
-                                Substitute(item, ReportMissingReference);
-                            }
                             break;
                         case ReferencedResourceParameter referencedResourceParameter:
                             foreach(var item in referencedResourceParameter.Resource.ResourceReferences) {
@@ -418,7 +403,6 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     case ValueParameter _:
                     case SecretParameter _:
                     case PackageParameter _:
-                    case ValueListParameter _:
                     case ReferencedResourceParameter _:
                     case ValueInputParameter _:
                     case ImportInputParameter _:

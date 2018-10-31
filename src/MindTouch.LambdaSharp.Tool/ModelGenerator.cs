@@ -830,7 +830,6 @@ namespace MindTouch.LambdaSharp.Tool {
                 }
                 break;
             case ValueParameter _:
-            case ValueListParameter _:
                 AddEnvironmentParameter("String", parameter.Reference);
                 break;
             case PackageParameter packageParameter:

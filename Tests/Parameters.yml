@@ -23,7 +23,7 @@ Variables:
   - Var: SourceValueListParameter
     Description: List of literal values
     Scope: "*"
-    Values:
+    Value:
       - first
       - second
       - third
@@ -31,7 +31,7 @@ Variables:
   - Var: SourceExpressionListParameter
     Description: List of literal values
     Scope: "*"
-    Values:
+    Value:
       - !Ref SourceValueParameter
       - !Ref SourceExpressionParameter
       - !Ref SourceResourceParameter
@@ -69,7 +69,7 @@ Variables:
       - Var: SecondNestedParameter
         Description: Second nested parameter
         Scope: "*"
-        Values:
+        Value:
           - one
           - two
           - three
@@ -129,7 +129,7 @@ Variables:
   - Var: MultiResourceParameter
     Description: Second nested parameter
     Scope: "*"
-    Values:
+    Value:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
     Resource:
@@ -140,7 +140,7 @@ Variables:
   - Var: SourceSubExpressions
     Description: CloudFormation !Sub expressions
     Scope: "*"
-    Values:
+    Value:
       - !Sub "${SourceValueParameter}"
       - !Sub "${SourceExpressionParameter}"
       - !Sub "${SourceResourceParameter}"

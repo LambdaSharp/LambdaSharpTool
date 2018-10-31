@@ -633,14 +633,6 @@
     }
   },
   "Conditions": {
-    "ModuleSecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "ModuleSecrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -699,6 +691,14 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    },
+    "ModuleSecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "ModuleSecrets"
         },
         ""
       ]

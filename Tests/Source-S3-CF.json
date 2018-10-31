@@ -168,96 +168,6 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "ModuleSecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::Split": [
-                      ",",
-                      {
-                        "Fn::If": [
-                          "ModuleSecretsIsEmpty",
-                          {
-                            "Fn::If": [
-                              "LambdaSharpDefaultSecretKeyArnIsImport",
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Sub": [
-                                    "${DeploymentPrefix}${Import}",
-                                    {
-                                      "Import": {
-                                        "Fn::Select": [
-                                          "1",
-                                          {
-                                            "Fn::Split": [
-                                              "$",
-                                              {
-                                                "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                              }
-                                            ]
-                                          }
-                                        ]
-                                      }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "Ref": "LambdaSharpDefaultSecretKeyArn"
-                              }
-                            ]
-                          },
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                {
-                                  "Fn::If": [
-                                    "LambdaSharpDefaultSecretKeyArnIsImport",
-                                    {
-                                      "Fn::ImportValue": {
-                                        "Fn::Sub": [
-                                          "${DeploymentPrefix}${Import}",
-                                          {
-                                            "Import": {
-                                              "Fn::Select": [
-                                                "1",
-                                                {
-                                                  "Fn::Split": [
-                                                    "$",
-                                                    {
-                                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                                    }
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Ref": "ModuleSecrets"
-                                }
-                              ]
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                },
-                {
                   "Sid": "InputBucket",
                   "Effect": "Allow",
                   "Action": [
@@ -354,6 +264,96 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "Sid": "ModuleSecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "ModuleSecretsIsEmpty",
+                          {
+                            "Fn::If": [
+                              "LambdaSharpDefaultSecretKeyArnIsImport",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${DeploymentPrefix}${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "LambdaSharpDefaultSecretKeyArn"
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                {
+                                  "Fn::If": [
+                                    "LambdaSharpDefaultSecretKeyArnIsImport",
+                                    {
+                                      "Fn::ImportValue": {
+                                        "Fn::Sub": [
+                                          "${DeploymentPrefix}${Import}",
+                                          {
+                                            "Import": {
+                                              "Fn::Select": [
+                                                "1",
+                                                {
+                                                  "Fn::Split": [
+                                                    "$",
+                                                    {
+                                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Ref": "LambdaSharpDefaultSecretKeyArn"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Ref": "ModuleSecrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -737,14 +737,6 @@
     }
   },
   "Conditions": {
-    "ModuleSecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "ModuleSecrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -803,6 +795,14 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    },
+    "ModuleSecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "ModuleSecrets"
         },
         ""
       ]

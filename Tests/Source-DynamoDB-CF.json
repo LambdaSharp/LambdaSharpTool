@@ -185,6 +185,91 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "InputTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": [
+                    {
+                      "Ref": "InputTable"
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "InputTable"
+                          },
+                          "stream",
+                          "*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Ref": "InputTable"
+                          },
+                          "index",
+                          "*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "Table",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:DescribeStream",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:ListStreams"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "Table",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Table",
+                              "Arn"
+                            ]
+                          },
+                          "stream/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "Table",
+                              "Arn"
+                            ]
+                          },
+                          "index/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
                   "Sid": "ModuleSecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
@@ -273,91 +358,6 @@
                       }
                     ]
                   }
-                },
-                {
-                  "Sid": "InputTable",
-                  "Effect": "Allow",
-                  "Action": [
-                    "dynamodb:DescribeStream",
-                    "dynamodb:GetRecords",
-                    "dynamodb:GetShardIterator",
-                    "dynamodb:ListStreams"
-                  ],
-                  "Resource": [
-                    {
-                      "Ref": "InputTable"
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Ref": "InputTable"
-                          },
-                          "stream",
-                          "*"
-                        ]
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Ref": "InputTable"
-                          },
-                          "index",
-                          "*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "Table",
-                  "Effect": "Allow",
-                  "Action": [
-                    "dynamodb:DescribeStream",
-                    "dynamodb:GetRecords",
-                    "dynamodb:GetShardIterator",
-                    "dynamodb:ListStreams"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "Table",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "Table",
-                              "Arn"
-                            ]
-                          },
-                          "stream/*"
-                        ]
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "/",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "Table",
-                              "Arn"
-                            ]
-                          },
-                          "index/*"
-                        ]
-                      ]
-                    }
-                  ]
                 },
                 {
                   "Sid": "ModuleDeadLetterQueueLogging",
@@ -664,14 +664,6 @@
     }
   },
   "Conditions": {
-    "ModuleSecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "ModuleSecrets"
-        },
-        ""
-      ]
-    },
     "LambdaSharpDeadLetterQueueArnIsImport": {
       "Fn::Equals": [
         {
@@ -730,6 +722,14 @@
       "Fn::Equals": [
         {
           "Ref": "DeploymentParent"
+        },
+        ""
+      ]
+    },
+    "ModuleSecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "ModuleSecrets"
         },
         ""
       ]

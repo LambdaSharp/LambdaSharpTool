@@ -30,7 +30,7 @@ Variables:
 
   - Var: ManyValues
     Description: ManyValues description
-    Values:
+    Value:
       - first value
       - second value
 
