@@ -126,6 +126,14 @@ Outputs:
   - Output: DefaultSecretKeyArn
     Description: LambdaSharp Default Secrets Key
 
+  - Output: ErrorReportTopic
+    Description: SNS topic for LambdaSharp module errors
+    Value: !GetAtt Registrar.Outputs.ErrorReportTopic
+
+  - Output: UsageReportTopic
+    Description: SNS topic for LambdaSharp function usage reports
+    Value: !GetAtt Registrar.Outputs.UsageReportTopic
+
 Variables:
 
   - Var: DefaultSecretKeyAlias
