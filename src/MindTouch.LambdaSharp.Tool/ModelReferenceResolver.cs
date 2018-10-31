@@ -105,7 +105,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             stackOutput.Value = Substitute(stackOutput.Value, ReportMissingReference);
                         });
                         break;
-                    case CustomResourceHandlerOutput customResourceHandlerOutput:
+                    case CustomResourceHandlerOutput _:
+                    case MacroOutput _:
 
                         // nothing to do
                         break;

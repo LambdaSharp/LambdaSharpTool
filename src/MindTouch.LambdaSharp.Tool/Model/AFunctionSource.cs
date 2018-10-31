@@ -92,10 +92,4 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
     }
-
-    public class MacroSource : AFunctionSource {
-
-        //--- Properties ---
-        public string MacroName { get; set; }
-    }
 }

@@ -41,7 +41,6 @@ if [ -z "$1" ]; then
     lash CloudFormationFunctions
     lash Source-DynamoDB
     lash Source-Kinesis
-    lash Source-Macro
     lash Inputs
     lash Outputs
 else

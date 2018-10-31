@@ -365,6 +365,15 @@ namespace MindTouch.LambdaSharp.Tool {
                         }
                     });
                     break;
+                case MacroOutput macroOutput:
+                    _stack.Add($"{macroOutput.Macro}Macro", new CustomResource("AWS::CloudFormation::Macro") {
+
+                        // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
+                        ["Name"] = Fn.Sub("${DeploymentPrefix}" + macroOutput.Macro),
+                        ["Description"] = macroOutput.Description ?? "",
+                        ["FunctionName"] = Fn.Ref(macroOutput.Handler)
+                    });
+                    break;
                 default:
                     throw new InvalidOperationException($"cannot generate output for this type: {output?.GetType()}");
                 }
@@ -799,17 +808,6 @@ namespace MindTouch.LambdaSharp.Tool {
                             EventSourceArn = arn,
                             FunctionName = Fn.Ref(function.Name)
                         });
-                    });
-                }
-            }
-
-            // check if function has any CloudFormation Macro event sources
-            var macroSources = function.Sources.OfType<MacroSource>().ToList();
-            if(macroSources.Any()) {
-                foreach(var source in macroSources) {
-                    _stack.Add($"{function.Name}{source.MacroName}Macro", new CustomResource("AWS::CloudFormation::Macro") {
-                        ["Name"] = Fn.Sub("${DeploymentPrefix}" + source.MacroName),
-                        ["FunctionName"] = Fn.Ref(function.Name)
                     });
                 }
             }

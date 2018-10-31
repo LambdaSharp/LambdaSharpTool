@@ -26,14 +26,19 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
         //--- Properties ---
 
-        // Stack Output
-        public string Output { get; set; }
+        // common
         public string Description { get; set; }
+
+        // stack output
+        public string Output { get; set; }
         public object Value { get; set; }
 
-        // Custom Resource Handler Output
+        // custom resource handler
         public string CustomResource { get; set; }
         public string Handler { get; set; }
-        // public string Description { get; set; }
+
+        // macro
+        public string Macro { get; set; }
+        // public string Handler { get; set; }
     }
 }

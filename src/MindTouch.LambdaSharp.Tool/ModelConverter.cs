@@ -750,15 +750,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         StartingPosition = source.StartingPosition ?? "LATEST"
                     };
                 }
-                if(source.Macro != null) {
-                    var macroName = source.Macro;
-                    if((macroName == "") || (macroName == "*")) {
-                        macroName = function.Function;
-                    }
-                    return new MacroSource {
-                        MacroName = macroName
-                    };
-                }
                 return null;
             }, null);
         }
@@ -796,6 +787,13 @@ namespace MindTouch.LambdaSharp.Tool {
                 if(output.CustomResource != null) {
                     return new CustomResourceHandlerOutput {
                         CustomResourceName = output.CustomResource,
+                        Description = output.Description,
+                        Handler = output.Handler
+                    };
+                }
+                if(output.Macro != null) {
+                    return new MacroOutput {
+                        Macro = output.Macro,
                         Description = output.Description,
                         Handler = output.Handler
                     };

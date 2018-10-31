@@ -235,7 +235,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Api", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Api", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Api", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Api", "Macro", source.Macro == null);
                     } else if(source.Schedule != null) {
                         ValidateNotBothStatements("Schedule", "Api", source.Api == null);
                         ValidateNotBothStatements("Schedule", "OperationName", source.OperationName == null);
@@ -253,7 +252,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Schedule", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Schedule", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Schedule", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Schedule", "Macro", source.Macro == null);
 
                         // TODO (2018-06-27, bjorg): add cron/rate expression validation
                     } else if(source.S3 != null) {
@@ -271,7 +269,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("S3", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("S3", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("S3", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("S3", "Macro", source.Macro == null);
 
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
 
@@ -294,7 +291,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("SlackCommand", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("SlackCommand", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("SlackCommand", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("SlackCommand", "Macro", source.Macro == null);
                     } else if(source.Topic != null) {
                         ValidateNotBothStatements("Topic", "Api", source.Api == null);
                         ValidateNotBothStatements("Topic", "Integration", source.Integration == null);
@@ -313,7 +309,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Topic", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Topic", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Topic", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Topic", "Macro", source.Macro == null);
 
                         // verify source exists
                         ValidateSourceParameter(source.Topic, "AWS::SNS::Topic", "SNS topic");
@@ -334,7 +329,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Sqs", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Sqs", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Sqs", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Sqs", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -363,7 +357,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Alexa", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Alexa", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Alexa", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Alexa", "Macro", source.Macro == null);
                     } else if(source.DynamoDB != null) {
                         ValidateNotBothStatements("DynamoDB", "Api", source.Api == null);
                         ValidateNotBothStatements("DynamoDB", "Integration", source.Integration == null);
@@ -380,7 +373,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("DynamoDB", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("DynamoDB", "Alexa", source.Alexa == null);
                         ValidateNotBothStatements("DynamoDB", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("DynamoDB", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -418,7 +410,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Kinesis", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Kinesis", "Alexa", source.Alexa == null);
                         ValidateNotBothStatements("Kinesis", "DynamoDB", source.DynamoDB == null);
-                        ValidateNotBothStatements("Kinesis", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -440,23 +431,6 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // verify source exists
                         ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
-                    } else if(source.Macro != null) {
-                        ValidateNotBothStatements("Macro", "Api", source.Api == null);
-                        ValidateNotBothStatements("Macro", "Integration", source.Integration == null);
-                        ValidateNotBothStatements("Macro", "OperationName", source.OperationName == null);
-                        ValidateNotBothStatements("Macro", "APiKeyRequired", source.ApiKeyRequired == null);
-                        ValidateNotBothStatements("Macro", "Schedule", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "Name", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "S3", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "Events", source.Events == null);
-                        ValidateNotBothStatements("Macro", "Prefix", source.Prefix == null);
-                        ValidateNotBothStatements("Macro", "Suffix", source.Suffix == null);
-                        ValidateNotBothStatements("Macro", "SlackCommand", source.SlackCommand == null);
-                        ValidateNotBothStatements("Macro", "Topic", source.Topic == null);
-                        ValidateNotBothStatements("Macro", "Sqs", source.Sqs == null);
-                        ValidateNotBothStatements("Macro", "Alexa", source.Alexa == null);
-                        ValidateNotBothStatements("Macro", "DynamoDB", source.DynamoDB == null);
-                        ValidateNotBothStatements("Macro", "Kinesis", source.Kinesis == null);
                     } else {
                         AddError("unknown source");
                     }
@@ -553,8 +527,9 @@ namespace MindTouch.LambdaSharp.Tool {
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }
-                        ValidateNotBothStatements("Name", "CustomResource", output.CustomResource == null);
-                        ValidateNotBothStatements("Name", "Handler", output.Handler == null);
+                        ValidateNotBothStatements("Output", "CustomResource", output.CustomResource == null);
+                        ValidateNotBothStatements("Output", "Handler", output.Handler == null);
+                        ValidateNotBothStatements("Output", "Macro", output.Macro == null);
                     } else if(output.CustomResource != null) {
 
                         // TODO (2018-09-20, bjorg): add custom resource name validation
@@ -563,8 +538,17 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
 
-                        ValidateNotBothStatements("CustomResource", "Name", output.Output == null);
+                        ValidateNotBothStatements("CustomResource", "Output", output.Output == null);
                         ValidateNotBothStatements("CustomResource", "Value", output.Value == null);
+                        ValidateNotBothStatements("CustomResource", "Macro", output.Macro == null);
+                    } else if(output.Macro != null) {
+                        ValidateNotBothStatements("Macro", "Output", output.Output == null);
+                        ValidateNotBothStatements("Macro", "CustomResource", output.CustomResource == null);
+
+                        // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
+
+                    } else {
+                        AddError("unknown output");
                     }
                 });
             }

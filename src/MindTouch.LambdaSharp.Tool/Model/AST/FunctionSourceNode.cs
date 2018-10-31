@@ -66,8 +66,5 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Kinesis { get; set; }
         // int? BatchSize { get; set; }
         // string StartingPosition { get; set; }
-
-        // Macro Source
-        public string Macro { get; set; }
    }
 }

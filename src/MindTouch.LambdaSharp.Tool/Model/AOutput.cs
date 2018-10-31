@@ -41,4 +41,11 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string CustomResourceName { get; set; }
         public string Handler { get; set; }
     }
+
+    public class MacroOutput : AOutput {
+
+        //--- Properties ---
+        public string Macro { get; set; }
+        public string Handler { get; set; }
+    }
 }
