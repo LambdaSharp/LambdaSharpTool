@@ -18,8 +18,8 @@ If the argument refers to a module file, the `deploy` command invokes the `build
 
 <dl>
 
-<dt><code>--name &lt;NAME&gt;</code></dt>
-<dd>(optional) Specify an alternate module name for the deployment (default: module name)</dd>
+<dt><code>--id &lt;ID&gt;</code></dt>
+<dd>(optional) Specify a module ID for the deployment (default: module name)</dd>
 
 <dt><code>--inputs &lt;FILE&gt;</code></dt>
 <dd>(optional) Specify filename to read module inputs from (default: none)</dd>
