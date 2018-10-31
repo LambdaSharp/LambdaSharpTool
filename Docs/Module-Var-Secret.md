@@ -1,8 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - Secret Definition
+# LambdaSharp Module - Encrypted Secret Variable
 
-> TODO: description
+The secret variable is used to pass in a pre-encrypted secret value. Using secret variables is useful during rapid prototyping. However, secret values are not portable between AWS regions or accounts. Therefore it is advisable to pass in secrets using [input parameters](Module-Input.md) instead.
 
 __Topics__
 * [Syntax](#syntax)
@@ -84,4 +84,10 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO: examples
+### Embedded secret value
+
+```yaml
+- Var: MySecretValue
+  Scope: "*"
+  Secret: AQICAHgSrVOcRYhYRlcuUe2MsGsBpVM/uMqHGnk3lkiOr+Z4zQGrRmlk9rU/TOvCvGY6dfIhAAAAfjB8BgkqhkiG9w0BBwagbzBtAgEAMGgGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMr8I+r9lmyxKCU0sRAgEQgDv9TJYptRdwGMkDbH3dn7r5sQZeA5rIDOtOlK8/Wx535kTZe20XJQLGmFORpDLDjVECnFg/P3mDdgr0uA==
+```

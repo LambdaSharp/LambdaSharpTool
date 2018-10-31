@@ -1,9 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variable - Package Section
+# LambdaSharp Module - Package Variable
 
-> TODO: description
-The `Package` section indicates that local files need to be packaged into a compressed archive that can be deployed. The package definition specifies the local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# CLI creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+The package variable specifies a local path to be compressed into a package. The compressed package is then uploaded with other module assets during the publishing process. The compressed package is then deployed to a specified bucket when the module is deployed.
 
 __Topics__
 * [Syntax](#syntax)

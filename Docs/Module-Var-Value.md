@@ -1,8 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - Value Definition
+# LambdaSharp Module - Literal Value Variable
 
-> TODO: description
+A literal value variable is useful for capturing values thar are reused in multiple places, or for creating composite values from other variables or input parameters. Instead of hard-coded values, it is advisable to use [input parameters](Module-Input.md) with default value instead.
 
 __Topics__
 * [Syntax](#syntax)
@@ -44,16 +44,16 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 
 <dt><code>Value</code></dt>
 <dd>
-The <code>Value</code> attribute specifies the value for the parameter. When used in conjunction with the <code>Resource</code> section, the <code>Value</code> attribute must be a plaintext value and must begin with <code>arn:</code> or be a global wildcard (i.e. <code>*</code>). If no <code>Resource</code> attribute is present, the value can be a CloudFormation expression (e.g. <code>!Ref MyResource</code>).
+The <code>Value</code> attribute specifies the value for the parameter. The <code>Value</code> can be a single value or a list of values. Lists of values are concatenated into a comma-separated list when being passed to a Lambda function.
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or List Expression
 </dd>
 
 <dt><code>Var</code></dt>
 <dd>
-The <code>Var</code> attribute specifies the variable name.
+The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
 
 <i>Required</i>: Yes
 
@@ -73,4 +73,25 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO: examples
+### Literal value
+
+```yaml
+- Var: MyValue
+  Value: Hello World!
+```
+
+### List of values
+
+```yaml
+- Var: MyList
+  Value:
+    - First
+    - Second
+```
+
+### Expression value
+
+```yaml
+- Var: MyExpression
+  Value: !Sub "${AWS::StackName}-${AWS::Region}"
+```

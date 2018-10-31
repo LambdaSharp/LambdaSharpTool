@@ -1,9 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - Referenced Resource Definition
+# LambdaSharp Module - Referenced Resource Variable
 
-> TODO: description
-In addition, variables can be associated to resources, which will grant the module IAM role the requested permissions.
+A referenced resource variable is used to grant access to a pattern of resources. No new resources are created when a reference resource variable is defined.
 
 __Topics__
 * [Syntax](#syntax)
@@ -56,7 +55,7 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 
 <dt><code>Value</code></dt>
 <dd>
-The <code>Value</code> attribute specifies the value for the parameter. When used in conjunction with the <code>Resource</code> section, the <code>Value</code> attribute must be a plaintext value and must begin with <code>arn:</code> or be a global wildcard (i.e. <code>*</code>). If no <code>Resource</code> attribute is present, the value can be a CloudFormation expression (e.g. <code>!Ref MyResource</code>).
+The <code>Value</code> attribute specifies the value for the parameter. If the <code>Value</code> attribute is a list of resource names, the IAM permissions are requested for all of them.
 
 <i>Required</i>: Yes
 
@@ -85,4 +84,14 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO: examples
+### Request full access to all S3 buckets
+
+```yaml
+- Var: GrantBucketAccess
+  Value:
+    - arn:aws:s3:::*
+    - arn:aws:s3:::*/*
+  Resource:
+    Type: AWS::S3::Bucket
+    Allow: Full
+```

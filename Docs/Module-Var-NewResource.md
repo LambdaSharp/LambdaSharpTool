@@ -1,8 +1,8 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - CloudFormation Resource Definition
+# LambdaSharp Module - New Resource Variable
 
-> TODO: description
+A new resource variable instantiates a CloudFormation resource using the `Type` attribute and settings of the optional `Properties` section.
 
 __Topics__
 * [Syntax](#syntax)
@@ -87,6 +87,7 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ```yaml
 - Var: MyDynamoDBTable
+  Scope: "*"
   Resource:
     Type: AWS::DynamoDB::Table
     Allow: Subscribe
@@ -116,6 +117,7 @@ The <code>Variables</code> section contains a collection of nested variables. To
 # ...
 
 - Var: MyDynamoDBTable
+  Scope: "*"
   Resource:
     Type: AWS::DynamoDB::Table
     Allow: Subscribe
