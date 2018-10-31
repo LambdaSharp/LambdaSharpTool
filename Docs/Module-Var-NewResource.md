@@ -43,6 +43,15 @@ The <code>Resource</code> section specifies the AWS resource type and its IAM ac
 <i>Type</i>: [Resource Definition](Module-Resource.md)
 </dd>
 
+<dt><code>Scope</code></dt>
+<dd>
+The <code>Scope</code> attribute specifies which functions need to have access to this import parameter. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the import parameter, then <code>"*"</code> can be used as a wildcard.
+
+<i>Required</i>: No
+
+<i>Type</i>: Either String or List of String
+</dd>
+
 <dt><code>Var</code></dt>
 <dd>
 The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
@@ -65,4 +74,59 @@ The <code>Variables</code> section contains a collection of nested variables. To
 
 ## Examples
 
-> TODO: examples
+### Create an SNS topic
+
+```yaml
+- Var: MyTopic
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+```
+
+### Create a DynamoDB Table
+
+```yaml
+- Var: MyDynamoDBTable
+  Resource:
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+```
+
+### Create a DynamoDB Table configured by input parameters
+
+```yaml
+- Input: DynamoReadCapacity
+  Type: Number
+  Default: 1
+
+- Input: DynamoWriteCapacity
+  Type: Number
+  Default: 1
+
+# ...
+
+- Var: MyDynamoDBTable
+  Resource:
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: !Ref DynamoReadCapacity
+        WriteCapacityUnits: !Ref DynamoWriteCapacity
+```

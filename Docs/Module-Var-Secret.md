@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - Package Definition
+# LambdaSharp Module Variables - Secret Definition
 
 > TODO: description
 
@@ -15,8 +15,9 @@ __Topics__
 Var: String
 Description: String
 Scope: ScopeDefinition
-Package:
-  PackageDefinition
+Secret: String
+EncryptionContext:
+  Key-Value Mapping
 Variables:
   - ParameterDefinition
 ```
@@ -34,13 +35,31 @@ The <code>Description</code> attribute specifies the variable description.
 <i>Type</i>: String
 </dd>
 
-<dt><code>Package</code></dt>
+<dt><code>EncryptionContext</code></dt>
 <dd>
-The <code>Package</code> section specifies local files with a destination S3 bucket and an optional destination key prefix. At build time, the λ# CLI creates a package of the local files and automatically copies them to the destination S3 bucket during deployment.
+The <code>EncryptionContext</code> section is an optional mapping of key-value pairs used for decrypting the <code>Secret</code> value.
+
+<i>Required</i>: No
+
+<i>Type</i>: Key-Value Pair Mapping
+</dd>
+
+<dt><code>Scope</code></dt>
+<dd>
+The <code>Scope</code> attribute specifies which functions need to have access to this import parameter. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the import parameter, then <code>"*"</code> can be used as a wildcard.
+
+<i>Required</i>: No
+
+<i>Type</i>: Either String or List of String
+</dd>
+
+<dt><code>Secret</code></dt>
+<dd>
+The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>ModuleSecrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
 
 <i>Required</i>: Yes
 
-<i>Type</i>: [Package Definition](Module-Variables-Packages.md)
+<i>Type</i>: String
 </dd>
 
 <dt><code>Var</code></dt>

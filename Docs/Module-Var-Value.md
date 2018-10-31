@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module Variables - Secret Definition
+# LambdaSharp Module Variables - Value Definition
 
 > TODO: description
 
@@ -15,9 +15,7 @@ __Topics__
 Var: String
 Description: String
 Scope: ScopeDefinition
-Secret: String
-EncryptionContext:
-  Key-Value Mapping
+Value: String
 Variables:
   - ParameterDefinition
 ```
@@ -35,18 +33,18 @@ The <code>Description</code> attribute specifies the variable description.
 <i>Type</i>: String
 </dd>
 
-<dt><code>EncryptionContext</code></dt>
+<dt><code>Scope</code></dt>
 <dd>
-The <code>EncryptionContext</code> section is an optional mapping of key-value pairs used for decrypting the <code>Secret</code> value.
+The <code>Scope</code> attribute specifies which functions need to have access to this import parameter. The <code>Scope</code> attribute can be a comma-separated list or a YAML list of function names. If all function need the import parameter, then <code>"*"</code> can be used as a wildcard.
 
 <i>Required</i>: No
 
-<i>Type</i>: Key-Value Pair Mapping
+<i>Type</i>: Either String or List of String
 </dd>
 
-<dt><code>Secret</code></dt>
+<dt><code>Value</code></dt>
 <dd>
-The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>ModuleSecrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
+The <code>Value</code> attribute specifies the value for the parameter. When used in conjunction with the <code>Resource</code> section, the <code>Value</code> attribute must be a plaintext value and must begin with <code>arn:</code> or be a global wildcard (i.e. <code>*</code>). If no <code>Resource</code> attribute is present, the value can be a CloudFormation expression (e.g. <code>!Ref MyResource</code>).
 
 <i>Required</i>: Yes
 
@@ -55,7 +53,7 @@ The <code>Secret</code> attribute specifies an encrypted value that is decrypted
 
 <dt><code>Var</code></dt>
 <dd>
-The <code>Var</code> attribute specifies the variable name. The name must start with a letter and followed only by letters or digits. Punctuation marks are not allowed. All names are case-sensitive.
+The <code>Var</code> attribute specifies the variable name.
 
 <i>Required</i>: Yes
 

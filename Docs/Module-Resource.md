@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Resource Section
 
-The presence of the `Resource` section in a [λ# Module Variable](Module-Variable.md) indicates that the variable corresponds to an AWS resource.
+The `Resource` section specifies the resource type and requested IAM permissions.
 
 Access permissions can be specified using the IAM `Allow` notation or the λ# shorthand notation for supported resources. See the [λ# Shorthand by Resource Type](../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml) YAML file for up-to-date support.
 
