@@ -29,20 +29,25 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         //--- Properties ---
 
         // common
-        public string Var { get; set; }
         public string Description { get; set; }
         public object Scope { get; set; }
         public IList<ParameterNode> Variables { get; set; }
 
         // value
+        public string Var { get; set; }
         public object Value { get; set; }
         public ResourceNode Resource { get; set; }
 
         // secret
+        // public string Var { get; set; }
         public string Secret { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
 
         // package
-        public ParameterPackageNode Package { get; set; }
+        public string Package { get; set; }
+        public string Files { get; set; }
+        public string Bucket { get; set; }
+        public string Prefix { get; set; }
+        public string PackagePath { get; set; }
     }
 }

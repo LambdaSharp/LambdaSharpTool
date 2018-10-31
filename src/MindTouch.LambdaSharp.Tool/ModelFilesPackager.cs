@@ -42,7 +42,7 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Methods ---
         public void Process(ModuleNode module) {
             _module = module;
-            foreach(var parameter in module.Variables.Where(p => (p.Package != null) && (p.Package.PackagePath == null))) {
+            foreach(var parameter in module.Variables.Where(p => p.Package != null)) {
                 AtLocation(parameter.Var, () => {
                     ProcessParameter(parameter);
                 });
@@ -57,7 +57,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 string folder;
                 string filePattern;
                 SearchOption searchOption;
-                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Package.Files);
+                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Files);
                 if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
                     folder = Path.GetFullPath(packageFiles);
                     filePattern = "*";
@@ -103,7 +103,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         zipArchive.CreateEntryFromFile(file, filename);
                     }
                 }
-                parameter.Package.PackagePath = package;
+                parameter.PackagePath = package;
             });
         }
     }

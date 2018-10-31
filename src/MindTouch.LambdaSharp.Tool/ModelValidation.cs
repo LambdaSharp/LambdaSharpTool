@@ -97,36 +97,48 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var parameter in parameters) {
                 ++index;
-                AtLocation(parameter.Var ?? $"[{index}]", () => {
-                    ValidateResourceName(parameter.Var, prefix);
+                AtLocation(parameter.Var ?? parameter.Package ?? $"[{index}]", () => {
                     ValidateScope(parameter.Scope);
-                    Validate(Regex.IsMatch(parameter.Var, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
                     if(parameter.Secret != null) {
+                        ValidateResourceName(parameter.Var, prefix);
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
+                    } else if(parameter.Value != null) {
+                        ValidateResourceName(parameter.Var, prefix);
+                        ValidateNotBothStatements("Value", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Value", "EncryptionContext", parameter.EncryptionContext == null);
+                        ValidateNotBothStatements("Value", "Package", parameter.Package == null);
                     } else if(parameter.Package != null) {
+                        ValidateResourceName(parameter.Package, prefix);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Package", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
 
                         // check if required attributes are present
-                        Validate(parameter.Package.Files != null, "missing 'Files' attribute");
-                        Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
-                        if(parameter.Package.Bucket != null) {
+                        Validate(parameter.Files != null, "missing 'Files' attribute");
+                        Validate(parameter.Bucket != null, "missing 'Bucket' attribute");
+                        if(parameter.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type
-                            ValidateSourceParameter(parameter.Package.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
+                            ValidateSourceParameter(parameter.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
                         }
 
                         // check if package is nested
                         if(prefix != "") {
                             AddError("parameter package cannot be nested");
                         }
+                    } else if(parameter.Resource != null) {
+                        ValidateResourceName(parameter.Var, prefix);
+                        ValidateNotBothStatements("Resource", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Resource", "EncryptionContext", parameter.EncryptionContext == null);
+                        ValidateNotBothStatements("Resource", "Package", parameter.Package == null);
+                    } else if(parameter.Variables == null) {
+                        AddError("unknown variable type");
                     }
                     if(parameter.Variables != null) {
-                        AtLocation("Collection", () => {
+                        AtLocation("Variables", () => {
 
                             // recursively validate nested parameters
                             ValidateParameters(parameter.Variables, prefix + "::" + parameter.Var);
@@ -432,7 +444,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // verify source exists
                         ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
                     } else {
-                        AddError("unknown source");
+                        AddError("unknown source type");
                     }
                 });
             }
@@ -548,7 +560,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
 
                     } else {
-                        AddError("unknown output");
+                        AddError("unknown output type");
                     }
                 });
             }
@@ -563,8 +575,7 @@ namespace MindTouch.LambdaSharp.Tool {
             } else if(!_names.Add(fullname)) {
                 AddError($"duplicate name '{fullname}'");
             } else {
-
-                // TODO (2018-10-09, bjorg): regex name validation
+                Validate(Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
             }
         }
 

@@ -50,6 +50,7 @@ The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunct
 BREAKING CHANGE
 * replaces `Values` with `Value`
 * macro is now an output value
+* `Package` is now a keyword like `Var`
 
 
 ## New λ# CLI Features

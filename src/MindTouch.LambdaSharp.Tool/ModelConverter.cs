@@ -470,11 +470,11 @@ namespace MindTouch.LambdaSharp.Tool {
                         // package value
                         result = new PackageParameter {
                             Scope = ConvertScope(module, parameter.Scope),
-                            Name = parameter.Var,
+                            Name = parameter.Package,
                             Description = parameter.Description,
-                            DestinationBucketParameterName = parameter.Package.Bucket,
-                            DestinationKeyPrefix = parameter.Package.Prefix ?? "",
-                            PackagePath = parameter.Package.PackagePath,
+                            DestinationBucketParameterName = parameter.Bucket,
+                            DestinationKeyPrefix = parameter.Prefix ?? "",
+                            PackagePath = parameter.PackagePath,
                             Reference = FnGetAtt(resourceName, "Url")
                         };
                     } else if(parameter.Value != null) {
@@ -521,7 +521,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // check if there are nested parameters
                 if(parameter.Variables != null) {
-                    AtLocation("Collection", () => {
+                    AtLocation("Variables", () => {
                         var nestedParameters = ConvertParameters(
                             module,
                             parameter.Variables,
