@@ -74,14 +74,6 @@ Resources:
       Type: String
       Value: !Ref AWS::StackName
 
-  StackIdSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/StackId'
-      Description: LambdaSharp CloudFormation stack ID
-      Type: String
-      Value: !Ref AWS::StackId
-
   # S3 Deployment Bucket & Path
   DeploymentBucket:
     Type: AWS::S3::Bucket
