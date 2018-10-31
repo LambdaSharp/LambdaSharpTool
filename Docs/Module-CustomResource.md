@@ -32,8 +32,6 @@ Handler: String
 
 ## Properties
 
-> TODO: CustomResource, Handler
-
 <dl>
 
 <dt><code>CustomResource</code></dt>
