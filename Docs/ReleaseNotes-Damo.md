@@ -85,17 +85,17 @@ BREAKING CHANGE
 * parameter file
     * ability to add cloudformation template parameters when deploying a module
     * ability to use secrets as cloudformation parameters (`Secret:` attribute)
-    * translate aliases to ARNs in parameters.yml file under the `ModuleSecrets`
+    * translate aliases to ARNs in parameters.yml file under the `Secrets`
     * ability to specify a list of input parameters for a key
         ```yaml
         MySecret: xyz
-        ModuleSecrets:
+        Secrets:
             - arn:...
             - alias/...
         ```
 * cli option `--cli-profile` or use environment variable `LAMBDASHARP_PROFILE`; if not provided, defaults to `Default`
 
-* `ModuleSecrets` input
+* `Secrets` input
 * `Module::Id`
 * `Module::Name`
 * `Module::Version`

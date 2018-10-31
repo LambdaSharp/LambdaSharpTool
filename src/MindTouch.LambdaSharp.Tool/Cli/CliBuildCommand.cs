@@ -77,11 +77,11 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         .Deserialize<Dictionary<string, object>>(File.ReadAllText(filename));
 
                     // resolve 'alias/' key names to key arns
-                    if(inputs.TryGetValue("ModuleSecrets", out object keys)) {
+                    if(inputs.TryGetValue("Secrets", out object keys)) {
                         if(keys is string key) {
-                            inputs["ModuleSecrets"] = ConvertAliasToKeyArn(key);
+                            inputs["Secrets"] = key.Split(',').Select(item => ConvertAliasToKeyArn(item.Trim())).ToList();
                         } else if(keys is IList<object> list) {
-                            inputs["ModuleSecrets"] = list.Select(item => ConvertAliasToKeyArn(item as string)).ToList();
+                            inputs["Secrets"] = list.Select(item => ConvertAliasToKeyArn(item as string)).ToList();
                         }
 
                         // assume key name is an alias and resolve it to its ARN

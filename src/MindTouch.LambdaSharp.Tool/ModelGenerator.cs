@@ -121,18 +121,18 @@ namespace MindTouch.LambdaSharp.Tool {
 
                 // add decryption permission for requested keys
                 _resourceStatements.Add(new Statement {
-                    Sid = "ModuleSecretsDecryption",
+                    Sid = "SecretsDecryption",
                     Effect = "Allow",
                     Resource = FnSplit(
                         ",",
                         FnIf(
-                            "ModuleSecretsIsEmpty",
+                            "SecretsIsEmpty",
                             FnJoin(",", _module.Secrets),
                             FnJoin(
                                 ",",
                                 new List<object> {
                                     FnJoin(",", _module.Secrets),
-                                    FnRef("ModuleSecrets")
+                                    FnRef("Secrets")
                                 }
                             )
                         )
@@ -144,7 +144,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         "kms:GenerateDataKeyWithoutPlaintext"
                     }
                 });
-                _stack.Add("ModuleSecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("ModuleSecrets"), "")));
+                _stack.Add("SecretsIsEmpty", new Condition(Fn.Equals(Fn.Ref("Secrets"), "")));
 
                 // permissions needed for dead-letter queue
                 _resourceStatements.Add(new Statement {

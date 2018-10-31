@@ -55,7 +55,7 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 
 <dt><code>Secret</code></dt>
 <dd>
-The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>ModuleSecrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
+The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>Secrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
 
 <i>Required</i>: Yes
 

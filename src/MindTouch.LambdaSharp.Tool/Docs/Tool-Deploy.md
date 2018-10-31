@@ -166,14 +166,14 @@ Done (duration: 00:01:21.7651019)
 
 The `deploy` command can optionally take a YAML file to specify the module input parameters. The YAML file must be a map of key-value pairs, where each key corresponds to a module input. The value can either be a literal value (string, number, boolean) or a list. Lists are automatically concatenated into a comma-separated string of values.
 
-The `ModuleSecrets` key has some additional, special processing rules. `ModuleSecrets` is used to enable a module to use additional managed encryption keys. These can be specified with an account specified key ID or with an account-agnostic key alias. When a key alias is used, the `deploy` command automatically resolves it to a key ID before using it as an input value.
+The `Secrets` key has some additional, special processing rules. `Secrets` is used to enable a module to use additional managed encryption keys. These can be specified with an account specified key ID or with an account-agnostic key alias. When a key alias is used, the `deploy` command automatically resolves it to a key ID before using it as an input value.
 
 ```yaml
 ParameterValue: parameter value
 ParameterCommaSeparatedList:
     - first value
     - second value
-ModuleSecrets:
+Secrets:
     - alias/MySecretKey
 ```
 

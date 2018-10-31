@@ -155,7 +155,7 @@ Variables:
           RollbarProjectPrefix: !Ref RollbarProjectPrefix
           RegistrationTableReadCapacity: !Ref RegistrationTableReadCapacity
           RegistrationTableWriteCapacity: !Ref RegistrationTableWriteCapacity
-          ModuleSecrets: !Ref ModuleSecrets
+          Secrets: !Ref Secrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
@@ -174,7 +174,7 @@ Variables:
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
-          ModuleSecrets: !Ref ModuleSecrets
+          Secrets: !Ref Secrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn
@@ -193,7 +193,7 @@ Variables:
       Properties:
         NotificationARNS: !Ref AWS::NotificationARNs
         Parameters:
-          ModuleSecrets: !Ref ModuleSecrets
+          Secrets: !Ref Secrets
           LambdaSharpDeadLetterQueueArn: !Ref DeadLetterQueueArn
           LambdaSharpLoggingStreamArn: !Ref LoggingStreamArn
           LambdaSharpDefaultSecretKeyArn: !Ref DefaultSecretKeyArn

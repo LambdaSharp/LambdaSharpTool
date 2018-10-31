@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var section = "LambdaSharp Module Options";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
                 new InputNode {
-                    Input = "ModuleSecrets",
+                    Input = "Secrets",
                     Section = section,
                     Label = "Secret Keys (ARNs)",
                     Description = "Comma-separated list of optional secret keys",
