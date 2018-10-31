@@ -7,7 +7,6 @@ The `Sources` section lists the event source for a [LambdaSharp function](Module
 __Definitions__
 * [Alexa Source](Module-Function-Sources-Alexa.md)
 * [API Gateway Source](Module-Function-Sources-APIGateway.md)
-* [CloudFormation Macro Source](Module-Function-Sources-Macro.md)
 * [CloudWatch Schedule Event Source](Module-Function-Sources-Schedule.md)
 * [DynamoDB Stream Source](Module-Function-Sources-DynamoDB.md)
 * [Kinesis Stream Source](Module-Function-Sources-Kinesis.md)

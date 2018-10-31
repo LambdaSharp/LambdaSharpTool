@@ -13,19 +13,18 @@ Optionally, the `Sqs` attribute can specify the maximum number of messages to re
 Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 
 ```yaml
-Name: SqsSample
-
+Module: SqsSample
 Description: A sample module using SQS queues
 
-Parameters:
+Variables:
 
-  - Name: MyFirstQueue
+  - Var: MyFirstQueue
     Description: A sample SQS queue
     Resource:
       Type: AWS::SQS::Queue
       Allow: Receive
 
-  - Name: MySecondQueue
+  - Var: MySecondQueue
     Description: A sample SQS queue
     Resource:
       Type: AWS::SQS::Queue
@@ -33,7 +32,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a SQS queue
     Memory: 128
     Timeout: 15

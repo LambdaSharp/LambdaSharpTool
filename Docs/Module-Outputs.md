@@ -11,3 +11,4 @@ Custom resource definitions create new types of resources that can be used by ot
 __Definitions__
 * [Output Value](Module-Output.md)
 * [Custom Resource](Module-CustomResource.md)
+* [Macro](Module-Macro.md)

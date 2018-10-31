@@ -11,13 +11,12 @@ Creating a function that is invoked by an [Alexa Skill](https://developer.amazon
 Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invocation to a specific Alexa Skill.
 
 ```yaml
-Name: AlexaSample
-
+Module: AlexaSample
 Description: A sample module using an Alexa skill
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an Alexa Skill
     Memory: 128
     Timeout: 30

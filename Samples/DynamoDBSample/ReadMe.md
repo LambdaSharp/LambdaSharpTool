@@ -11,13 +11,12 @@ Creating a function that is invoked by a DynamoDB stream requires two steps. Fir
 Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 
 ```yaml
-Name: DynamoDBSample
-
+Module: DynamoDBSample
 Description: A sample module using Kinesis streams
 
-Parameters:
+Variables:
 
-  - Name: Table
+  - Var: Table
     Description: Description for DynamoDB table
     Resource:
       Type: AWS::DynamoDB::Table
@@ -35,7 +34,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a DynamoDB stream
     Memory: 128
     Timeout: 15

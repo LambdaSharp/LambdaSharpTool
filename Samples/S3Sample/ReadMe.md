@@ -11,19 +11,18 @@ Creating a function that is invoked by a S3 bucket events requires two steps. Fi
 Optionally, the `S3` attribute can specify specific [S3 events](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html#notification-how-to-event-types-and-destinations) to listen to, an S3 key prefix and suffix.
 
 ```yaml
-Name: S3Sample
-
+Module: S3Sample
 Description: A sample module integrating with S3 Bucket events
 
-Parameters:
+Variables:
 
-  - Name: MyFirstBucket
+  - Var: MyFirstBucket
     Description: The S3 Bucket the function is listening to
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadWrite
 
-  - Name: MySecondBucket
+  - Var: MySecondBucket
     Description: The S3 Bucket the function is listening to
     Resource:
       Type: AWS::S3::Bucket
@@ -31,7 +30,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an S3 Bucket event
     Memory: 128
     Timeout: 30

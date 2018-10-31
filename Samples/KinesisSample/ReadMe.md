@@ -11,13 +11,13 @@ Creating a function that is invoked by a Kinesis stream requires two steps. Firs
 Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
 
 ```yaml
-Name: KinesisSample
+Module: KinesisSample
 
 Description: A sample module using Kinesis streams
 
-Parameters:
+Variables:
 
-  - Name: Stream
+  - Var: Stream
     Description: Description for Kinesis stream
     Resource:
       Type: AWS::Kinesis::Stream
@@ -26,7 +26,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a Kinesis stream
     Memory: 128
     Timeout: 15

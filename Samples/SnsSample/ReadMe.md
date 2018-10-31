@@ -11,13 +11,12 @@ Creating a function that is invoked by an SNS topics requires two steps. First, 
 Lambda functions require the `sns:Subscribe` permission on the SNS topic. Either request it explicitly or use a [resource permission shorthand](../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml) instead.
 
 ```yaml
-Name: SnsSample
-
+Module: SnsSample
 Description: A sample module using an SNS topic
 
-Parameters:
+Variables:
 
-  - Name: MyTopic
+  - Var: MyTopic
     Description: An SNS topic used to invoke the function.
     Resource:
       Type: AWS::SNS::Topic
@@ -25,7 +24,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an SNS topic
     Memory: 128
     Timeout: 30

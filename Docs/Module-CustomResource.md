@@ -36,7 +36,7 @@ Handler: String
 
 <dt><code>CustomResource</code></dt>
 <dd>
-The <code>CustomResource</code> attribute specifies the name of the custom resource type. The name must contain a double-colon (<code>::</code>), such as <code>ModuleName::ResourceType</code>.
+The <code>CustomResource</code> attribute specifies the name of the custom resource type. Custom resource types are globally defined per deployment tier. The name must contain a double-colon (<code>::</code>), such as <code>ModuleName::ResourceType</code>.
 
 <i>Required</i>: Yes
 
