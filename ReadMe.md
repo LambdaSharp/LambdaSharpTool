@@ -2,7 +2,7 @@
 
 # LambdaSharp CLI & Framework (v0.4)
 
-**[Read what's new in the latest release.](Docs/ReleaseNotes-Damo.md)**
+**[Read what's new in the 0.4 "Damo" release.](Docs/ReleaseNotes-Damo.md)**
 
 λ# is a CLI and a framework for rapid serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation template that provide simple, yet flexible, deployment options.
 
