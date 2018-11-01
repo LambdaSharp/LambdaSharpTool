@@ -10,6 +10,8 @@ In addition, λ# 0.4 _Damo_ introduces a new module composition model that makes
 
 Finally, λ# 0.4 _Damo_ introduces a new core service--the `λ# Registrar`--that is responsible for registering modules and processing the CloudWatch Logs of their deployed Lambda functions. By monitoring the logs, `λ# Registrar` can automatically detect and report out-of-memory and timeout failures. As an extra bonus, `λ# Registrar` can optionally be integrated with [Rollbar](http://rollbar.com) to create projects per module to track their warnings and errors.
 
+
+
 ## BREAKING CHANGES
 
 The following change may impact modules created with previous releases.
@@ -39,6 +41,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 * CloudFormation resources are now always resolved to the ARN of the created resource. Previously, created resources were resolved using the `!Ref` operation, which varies by resource type. This change was necessary to homogenize CloudFormation resources with resource references found in module parameters and cross-module references. For convenience, the `AwsConverters` class contains methods for extracting resource names from S3/SQS/DynamoDB/etc. ARNs.
 * The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunction<TRequest, TResponse>`.
+
 
 
 ## New λ# CLI Features
