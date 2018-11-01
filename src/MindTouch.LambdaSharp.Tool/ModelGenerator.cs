@@ -666,13 +666,13 @@ namespace MindTouch.LambdaSharp.Tool {
                             }
                         }
                     });
+                    _stack.Add(name + "Permission", new Lambda.Permission {
+                        Action = "lambda:InvokeFunction",
+                        SourceArn = Fn.GetAtt(name, "Arn"),
+                        FunctionName = Fn.GetAtt(function.Name, "Arn"),
+                        Principal = "events.amazonaws.com"
+                    });
                 }
-                _stack.Add(function.Name + "ScheduleEventPermission", new Lambda.Permission {
-                    Action = "lambda:InvokeFunction",
-                    SourceAccount = Fn.Ref("AWS::AccountId"),
-                    FunctionName = Fn.GetAtt(function.Name, "Arn"),
-                    Principal = "events.amazonaws.com"
-                });
             }
 
             // check if function has any API gateway event sources

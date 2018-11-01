@@ -534,7 +534,7 @@
         ]
       }
     },
-    "FunctionScheduleEventPermission": {
+    "FunctionScheduleEvent1Permission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -545,8 +545,11 @@
           ]
         },
         "Principal": "events.amazonaws.com",
-        "SourceAccount": {
-          "Ref": "AWS::AccountId"
+        "SourceArn": {
+          "Fn::GetAtt": [
+            "FunctionScheduleEvent1",
+            "Arn"
+          ]
         }
       }
     }
