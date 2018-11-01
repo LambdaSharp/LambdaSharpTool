@@ -45,7 +45,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: true);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();

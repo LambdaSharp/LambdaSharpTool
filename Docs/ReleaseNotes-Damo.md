@@ -159,15 +159,29 @@ The pre-deployment check can be skipped with the `--force-deploy` option.
 
 ### Misc
 
-* input path can be a directory instead of the module definition (will look for `Module.yml`)
-* `lash info`
-    * show `dotnet` tool version
-    * show `git` tool version
-    * hide sensitive information (account id) unless `--show-sensitive` option is used
-* `lash encrypt`
-* `lash new function --language javascript`
+#### λ# Info
+
+The `info` command was enhanced to show information about other installed tools that λ# CLI depends on, such as `dotnet` and `git`. In addition, sensitive information--like the AWS account ID--are hidden unless `--show-sensitive` option is used.
+
+See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
+
+#### λ# Encrypt
+
+The `encrypt` command was added to make it easier to encrypt sensitive information. The command can either use a specific KMS key or use the default KMS key for the deployment tier.
+
+See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
+
+### λ# Encrypt
+
+The `new function` command now allows specifying the target language when adding a function.
+
+See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
 
 
+
+
+
+> TODO: continue here
 
 ## New λ# Module Features
 
