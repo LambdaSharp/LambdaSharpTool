@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Literal Value Variable
 
-A literal value variable is useful for capturing values thar are reused in multiple places, or for creating composite values from other variables or input parameters. Instead of hard-coded values, it is advisable to use [input parameters](Module-Input.md) with default value instead.
+A literal value variable is useful for capturing values thar are reused in multiple places, or for creating composite values from other variables or module parameters. Instead of hard-coded values, it is advisable to use [module parameters](Module-Parameter.md) with default value instead.
 
 __Topics__
 * [Syntax](#syntax)

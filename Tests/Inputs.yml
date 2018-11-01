@@ -4,16 +4,16 @@ Description: LambdaSharp CloudFormation Test
 Inputs:
 
   # Plain Input Parameters
-  - Input: InputParameter
+  - Parameter: InputParameter
     Section: Plain Input Parameters
     Description: required input parameter
 
-  - Input: InputParameterWithDefault
+  - Parameter: InputParameterWithDefault
     Section: Plain Input Parameters
     Description: input parameter with a default value
     Default: a default value
 
-  - Input: SecretInputParameter
+  - Parameter: SecretInputParameter
     Type: Secret
     Section: Plain Input Parameters
     Description: encrypted input parameter
@@ -32,14 +32,14 @@ Inputs:
 
 
   # Resource Input Parameters
-  - Input: ResourceInputParameter
+  - Parameter: ResourceInputParameter
     Section: Resource Input Parameters
     Scope: "*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadOnly
 
-  - Input: ResourceInputParameterOrCreate
+  - Parameter: ResourceInputParameterOrCreate
     Section: Resource Input Parameters
     Scope: "*"
     Default: ""

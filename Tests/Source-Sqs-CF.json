@@ -6,7 +6,7 @@
       "Type": "String",
       "Description": "Description for SQS input resource"
     },
-    "ModuleSecrets": {
+    "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
       "Default": ""
@@ -229,7 +229,7 @@
                   }
                 },
                 {
-                  "Sid": "ModuleSecretsDecryption",
+                  "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
                     "kms:Decrypt",
@@ -242,7 +242,7 @@
                       ",",
                       {
                         "Fn::If": [
-                          "ModuleSecretsIsEmpty",
+                          "SecretsIsEmpty",
                           {
                             "Fn::If": [
                               "LambdaSharpDefaultSecretKeyArnIsImport",
@@ -308,7 +308,7 @@
                                   ]
                                 },
                                 {
-                                  "Ref": "ModuleSecrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -690,10 +690,10 @@
         ""
       ]
     },
-    "ModuleSecretsIsEmpty": {
+    "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "ModuleSecrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -705,7 +705,7 @@
         "InputSqs": {
           "default": "Input Sqs"
         },
-        "ModuleSecrets": {
+        "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
         "LambdaSharpDeadLetterQueueArn": {
@@ -744,7 +744,7 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "ModuleSecrets"
+            "Secrets"
           ]
         },
         {

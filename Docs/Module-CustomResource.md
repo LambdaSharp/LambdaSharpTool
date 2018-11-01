@@ -54,7 +54,7 @@ The <code>Description</code> attribute specifies the description of the module's
 
 <dt><code>Handler</code></dt>
 <dd>
-The <code>Handler</code> attribute specifies the name of an SNS topic input parameter or variable, or a function name.
+The <code>Handler</code> attribute specifies the name of an SNS topic parameter, variable, or function.
 
 <i>Required</i>: Yes
 

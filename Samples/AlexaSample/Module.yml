@@ -3,7 +3,7 @@ Description: A sample module using an Alexa skill
 
 Inputs:
 
-  - Input: AlexaSkillID
+  - Parameter: AlexaSkillID
     Description: Alexa Skill ID
     Default: "*"
 

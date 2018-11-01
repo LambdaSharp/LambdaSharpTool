@@ -3,7 +3,7 @@ Description: LambdaSharp CloudFormation Test
 
 Inputs:
 
-  - Input: InputStream
+  - Parameter: InputStream
     Description: Description for Kinesis input stream
     Resource:
       Type: AWS::Kinesis::Stream

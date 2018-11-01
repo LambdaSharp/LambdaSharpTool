@@ -458,7 +458,7 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateSourceParameter(string name, string awsType, string typeDescription) {
-            var input = _module.Inputs.FirstOrDefault(i => i.Input == name);
+            var input = _module.Inputs.FirstOrDefault(i => i.Parameter == name);
             var import = _module.Inputs.FirstOrDefault(i => i.Import == name);
             var parameter = _module.Variables.FirstOrDefault(p => p.Var == name);
             if(input != null) {
@@ -482,14 +482,14 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var input in inputs) {
                 ++index;
-                AtLocation(input.Input ?? $"[{index}]", () => {
+                AtLocation(input.Parameter ?? $"[{index}]", () => {
                     if(input.Type == null) {
                         input.Type = "String";
                     }
                     ValidateScope(input.Scope);
                     if(input.Import != null) {
                         Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
-                        ValidateNotBothStatements("Import", "Name", input.Input == null);
+                        ValidateNotBothStatements("Import", "Parameter", input.Parameter == null);
                         ValidateNotBothStatements("Import", "Default", input.Default == null);
                         ValidateNotBothStatements("Import", "ConstraintDescription", input.ConstraintDescription == null);
                         ValidateNotBothStatements("Import", "AllowedPattern", input.AllowedPattern == null);
@@ -509,7 +509,7 @@ namespace MindTouch.LambdaSharp.Tool {
                             });
                         }
                     } else {
-                        ValidateResourceName(input.Input, "");
+                        ValidateResourceName(input.Parameter, "");
                         if(input.Resource != null) {
                             Validate(input.Type == "String", "input 'Type' must be string");
                             AtLocation("Resource", () => {
@@ -535,7 +535,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         if(
                             (output.Value == null)
                             && (_module.Variables.FirstOrDefault(p => p?.Var == output.Output) == null)
-                            && (_module.Inputs.FirstOrDefault(i => i?.Input == output.Output) == null)
+                            && (_module.Inputs.FirstOrDefault(i => i?.Parameter == output.Output) == null)
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }

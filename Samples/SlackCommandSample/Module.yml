@@ -3,7 +3,7 @@ Description: A sample module integrating with Slack
 
 Inputs:
 
-  - Input: SlackToken
+  - Parameter: SlackToken
     Description: Slack verification token
     Scope: MyFunction
     Default: ""

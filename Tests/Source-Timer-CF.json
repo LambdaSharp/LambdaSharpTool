@@ -2,7 +2,7 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "LambdaSharp CloudFormation Test (v1.0)",
   "Parameters": {
-    "ModuleSecrets": {
+    "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
       "Default": ""
@@ -160,7 +160,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "ModuleSecretsDecryption",
+                  "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
                     "kms:Decrypt",
@@ -173,7 +173,7 @@
                       ",",
                       {
                         "Fn::If": [
-                          "ModuleSecretsIsEmpty",
+                          "SecretsIsEmpty",
                           {
                             "Fn::If": [
                               "LambdaSharpDefaultSecretKeyArnIsImport",
@@ -239,7 +239,7 @@
                                   ]
                                 },
                                 {
-                                  "Ref": "ModuleSecrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -622,10 +622,10 @@
         ""
       ]
     },
-    "ModuleSecretsIsEmpty": {
+    "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "ModuleSecrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -634,7 +634,7 @@
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
-        "ModuleSecrets": {
+        "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
         "LambdaSharpDeadLetterQueueArn": {
@@ -665,7 +665,7 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "ModuleSecrets"
+            "Secrets"
           ]
         },
         {

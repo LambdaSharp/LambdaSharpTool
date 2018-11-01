@@ -25,7 +25,7 @@ Pragmas:
 
 Inputs:
 
-  - Input: RollbarReadAccessToken
+  - Parameter: RollbarReadAccessToken
     Type: Secret
     Section: Rollbar Settings
     Label: Read Access Token
@@ -33,7 +33,7 @@ Inputs:
     Scope: Register
     Default: ""
 
-  - Input: RollbarWriteAccessToken
+  - Parameter: RollbarWriteAccessToken
     Type: Secret
     Section: Rollbar Settings
     Label: Write Access Token
@@ -41,20 +41,20 @@ Inputs:
     Scope: Register
     Default: ""
 
-  - Input: RollbarProjectPrefix
+  - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
     Label: Project Prefix
     Description: Optional prefix when creating Rollbar projects
     Scope: Register
     Default: ""
 
-  - Input: RegistrationTableReadCapacity
+  - Parameter: RegistrationTableReadCapacity
     Section: Registration Table Settings
     Label: Read Capacity Units
     Description: Provisioned read capacity for registrations table
     Default: 1
 
-  - Input: RegistrationTableWriteCapacity
+  - Parameter: RegistrationTableWriteCapacity
     Section: Registration Table Settings
     Label: Write Capacity Units
     Description: Provisioned write capacity for registrations table

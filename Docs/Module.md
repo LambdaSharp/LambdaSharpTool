@@ -2,13 +2,13 @@
 
 # LambdaSharp Module
 
-A λ# module definition specifies the input parameters, output values, resources, and functions of a module.
+A λ# module definition specifies the parameters, output values, resources, and functions of a module.
 
-Input value can either be provided at module deployment time or imported from other modules using cross-module references. In addition, optional input parameters can also act as conditional resources that are created when an input value is omitted.
+Parameter value can either be provided at module deployment time or imported from other modules using cross-module references. In addition, optional module parameters can also act as conditional resources that are created when a parameter value is omitted.
 
 Output values can be accessed by other modules using cross-module references. Output values can also be definitions for custom resource handlers that can be used by other modules during their deployment.
 
-Resources are defined in the `Variables` section and can be configured using input parameters or other module variables.
+Resources are defined in the `Variables` section and can be configured using module parameters or other module variables.
 
 Functions can be wired up to respond to various event sources, such as SQS, SNS, API Gateway, or even Slack Commands. Functions can be implemented using .NET Core projects or Javascript files.
 
@@ -61,7 +61,7 @@ The <code>Functions</code> section defines the Lambda functions and their source
 
 <dt><code>Inputs</code></dt>
 <dd>
-The <code>Inputs</code> section specifies the input parameters for the module.
+The <code>Inputs</code> section specifies the module parameters and imports.
 
 <i>Required:</i> No
 

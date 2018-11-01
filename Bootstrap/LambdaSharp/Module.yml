@@ -28,7 +28,7 @@ Pragmas:
 Inputs:
 
   # LambdaSharp Tier Settings
-  - Input: DeadLetterQueueArn
+  - Parameter: DeadLetterQueueArn
     Section: LambdaSharp Tier Settings
     Label: Dead Letter Queue (ARN)
     Description: Dead letter queue for functions (leave blank to create a new queue)
@@ -37,7 +37,7 @@ Inputs:
       Type: AWS::SQS::Queue
       Allow: None
 
-  - Input: LoggingStreamArn
+  - Parameter: LoggingStreamArn
     Section: LambdaSharp Tier Settings
     Label: Logging Stream (ARN)
     Description: Logging kinesis stream for functions (leave blank to create a new stream)
@@ -48,13 +48,13 @@ Inputs:
         RetentionPeriodHours: !Ref LoggingStreamRetentionPeriod
         ShardCount: 1
 
-  - Input: LoggingStreamRetentionPeriod
+  - Parameter: LoggingStreamRetentionPeriod
     Section: LambdaSharp Tier Settings
     Label: Retention period (hours)
     Description: How long logging stream entries are kept before they are lost
     Default: 24
 
-  - Input: DefaultSecretKeyArn
+  - Parameter: DefaultSecretKeyArn
     Section: LambdaSharp Tier Settings
     Label: Secret Key (ARN)
     Description: Default secret key for functions (leave blank to create a new key)
@@ -75,41 +75,41 @@ Inputs:
                 - kms:*
               Resource: "*"
 
-  - Input: DefaultSecretKeyRotationEnabled
+  - Parameter: DefaultSecretKeyRotationEnabled
     Section: LambdaSharp Tier Settings
     Label: Enable key rotation
     Description: Rotate KMS key automatically every 365 days
     Default: false
 
   # Rollbar Settings
-  - Input: RollbarReadAccessToken
+  - Parameter: RollbarReadAccessToken
     Type: Secret
     Section: Rollbar Settings
     Label: Read Access Token
     Description: Account-level token for read operations
     Default: ""
 
-  - Input: RollbarWriteAccessToken
+  - Parameter: RollbarWriteAccessToken
     Type: Secret
     Section: Rollbar Settings
     Label: Write Access Token
     Description: Account-level token for write operations
     Default: ""
 
-  - Input: RollbarProjectPrefix
+  - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
     Label: Project Prefix
     Description: Optional prefix when creating Rollbar projects
     Default: ""
 
   # Module Registration Table Settings
-  - Input: RegistrationTableReadCapacity
+  - Parameter: RegistrationTableReadCapacity
     Section: Module Registration Table Settings
     Label: Read Capacity Units
     Description: Provisioned read capacity for registrations table
     Default: 1
 
-  - Input: RegistrationTableWriteCapacity
+  - Parameter: RegistrationTableWriteCapacity
     Section: Module Registration Table Settings
     Label: Write Capacity Units
     Description: Provisioned write capacity for registrations table

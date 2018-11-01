@@ -3,7 +3,7 @@ Description: LambdaSharp CloudFormation Test
 
 Inputs:
 
-  - Input: RootDomainName
+  - Parameter: RootDomainName
     Default: "example.org"
 
 Variables:

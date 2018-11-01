@@ -84,7 +84,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var section = "LambdaSharp Module Options";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
                 new InputNode {
-                    Input = "Secrets",
+                    Parameter = "Secrets",
                     Section = section,
                     Label = "Secret Keys (ARNs)",
                     Description = "Comma-separated list of optional secret keys",
@@ -123,25 +123,25 @@ namespace MindTouch.LambdaSharp.Tool {
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
             parameters.AddRange(AtLocation("Inputs", () => ConvertInputs(module, new InputNode[] {
                 new InputNode {
-                    Input = "DeploymentBucketName",
+                    Parameter = "DeploymentBucketName",
                     Section = section,
                     Label = "Deployment S3 Bucket",
                     Description = "Source deployment S3 bucket name"
                 },
                 new InputNode {
-                    Input = "DeploymentPrefix",
+                    Parameter = "DeploymentPrefix",
                     Section = section,
                     Label = "Deployment Prefix",
                     Description = "Module deployment prefix"
                 },
                 new InputNode {
-                    Input = "DeploymentPrefixLowercase",
+                    Parameter = "DeploymentPrefixLowercase",
                     Section = section,
                     Label = "Deployment Prefix (lowercase)",
                     Description = "Module deployment prefix (lowercase)"
                 },
                 new InputNode {
-                    Input = "DeploymentParent",
+                    Parameter = "DeploymentParent",
                     Section = section,
                     Label = "Parent Stack Name",
                     Description = "Parent stack name for nested deployments, blank otherwise",
@@ -299,7 +299,7 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var input in inputs) {
                 ++index;
-                AtLocation(input.Input ?? input.Import, () => {
+                AtLocation(input.Parameter ?? input.Import, () => {
                     AInputParameter result = null;
                     if(input.Import != null) {
                         var parts = input.Import.Split("::", 2);
@@ -343,9 +343,9 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // create regular input
                         result = new ValueInputParameter {
-                            Name = input.Input,
-                            ResourceName = input.Input,
-                            Reference = FnRef(input.Input),
+                            Name = input.Parameter,
+                            ResourceName = input.Parameter,
+                            Reference = FnRef(input.Parameter),
                             Default = input.Default,
                             ConstraintDescription = input.ConstraintDescription,
                             AllowedPattern = input.AllowedPattern,
@@ -377,7 +377,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         // set AInputParamete fields
                         result.Type = input.Type ?? "String";
                         result.Section = input.Section ?? "Module Settings";
-                        result.Label = input.Label ?? PrettifyLabel(input.Import ?? input.Input);
+                        result.Label = input.Label ?? PrettifyLabel(input.Import ?? input.Parameter);
                         result.NoEcho = input.NoEcho;
 
                         // add result, unless it's an cross-module reference

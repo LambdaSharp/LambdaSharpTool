@@ -103,14 +103,14 @@ The <code>Variables</code> section contains a collection of nested variables. To
         WriteCapacityUnits: 1
 ```
 
-### Create a DynamoDB Table configured by input parameters
+### Create a DynamoDB Table configured by module parameters
 
 ```yaml
-- Input: DynamoReadCapacity
+- Parameter: DynamoReadCapacity
   Type: Number
   Default: 1
 
-- Input: DynamoWriteCapacity
+- Parameter: DynamoWriteCapacity
   Type: Number
   Default: 1
 

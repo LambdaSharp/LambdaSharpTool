@@ -3,7 +3,7 @@ Description: LambdaSharp CloudFormation Test
 
 Inputs:
 
-  - Input: InputSqs
+  - Parameter: InputSqs
     Description: Description for SQS input resource
     Resource:
       Type: AWS::SQS::Queue

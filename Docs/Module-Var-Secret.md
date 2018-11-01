@@ -2,7 +2,7 @@
 
 # LambdaSharp Module - Encrypted Secret Variable
 
-The secret variable is used to pass in a pre-encrypted secret value. Using secret variables is useful during rapid prototyping. However, secret values are not portable between AWS regions or accounts. Therefore it is advisable to pass in secrets using [input parameters](Module-Input.md) instead.
+The secret variable is used to pass in a pre-encrypted secret value. Using secret variables is useful during rapid prototyping. However, secret values are not portable between AWS regions or accounts. Therefore it is advisable to pass in secrets using [module parameters](Module-Parameter.md) instead.
 
 __Topics__
 * [Syntax](#syntax)
@@ -55,7 +55,7 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 
 <dt><code>Secret</code></dt>
 <dd>
-The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>Secrets</code> input parameter to grant <code>kms:Decrypt</code> to module IAM role.
+The <code>Secret</code> attribute specifies an encrypted value that is decrypted at runtime by the Lambda function. Note that the required decryption key must either be specified in the <code>Secrets</code> section or be passed in using the <code>Secrets</code> parameter to grant <code>kms:Decrypt</code> to module IAM role.
 
 <i>Required</i>: Yes
 

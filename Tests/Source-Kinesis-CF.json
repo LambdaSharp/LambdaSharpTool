@@ -6,7 +6,7 @@
       "Type": "String",
       "Description": "Description for Kinesis input stream"
     },
-    "ModuleSecrets": {
+    "Secrets": {
       "Type": "String",
       "Description": "Comma-separated list of optional secret keys",
       "Default": ""
@@ -170,7 +170,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "ModuleSecretsDecryption",
+                  "Sid": "SecretsDecryption",
                   "Effect": "Allow",
                   "Action": [
                     "kms:Decrypt",
@@ -183,7 +183,7 @@
                       ",",
                       {
                         "Fn::If": [
-                          "ModuleSecretsIsEmpty",
+                          "SecretsIsEmpty",
                           {
                             "Fn::If": [
                               "LambdaSharpDefaultSecretKeyArnIsImport",
@@ -249,7 +249,7 @@
                                   ]
                                 },
                                 {
-                                  "Ref": "ModuleSecrets"
+                                  "Ref": "Secrets"
                                 }
                               ]
                             ]
@@ -617,10 +617,10 @@
         ""
       ]
     },
-    "ModuleSecretsIsEmpty": {
+    "SecretsIsEmpty": {
       "Fn::Equals": [
         {
-          "Ref": "ModuleSecrets"
+          "Ref": "Secrets"
         },
         ""
       ]
@@ -632,7 +632,7 @@
         "InputStream": {
           "default": "Input Stream"
         },
-        "ModuleSecrets": {
+        "Secrets": {
           "default": "Secret Keys (ARNs)"
         },
         "LambdaSharpDeadLetterQueueArn": {
@@ -671,7 +671,7 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "ModuleSecrets"
+            "Secrets"
           ]
         },
         {

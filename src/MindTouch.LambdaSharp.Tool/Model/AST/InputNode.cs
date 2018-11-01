@@ -37,7 +37,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public bool? NoEcho { get; set; }
 
         // template input
-        public string Input { get; set; }
+        public string Parameter { get; set; }
         public string Default { get; set; }
         public string ConstraintDescription { get; set; }
         public string AllowedPattern { get; set; }

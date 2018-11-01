@@ -3,7 +3,7 @@ Description: LambdaSharp Demo
 
 Inputs:
 
-  - Input: SlackToken
+  - Parameter: SlackToken
     Description: Slack verification token
     Scope: SlackCommand
     Default: ""
