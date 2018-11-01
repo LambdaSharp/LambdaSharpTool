@@ -19,6 +19,7 @@ Properties:
   ResourceProperties
 DependsOn:
   - String
+ArnAttribute: String
 ```
 
 ## Properties
@@ -32,6 +33,15 @@ The <code>Allow</code> attribute can either a comma-separated, single string val
 <i>Required</i>: No
 
 <i>Type</i>: Either String or List of String
+</dd>
+
+<dt><code>ArnAttribute</code></dt>
+<dd>
+The <code>ArnAttribute</code> attribute specifies the name of the resource attribute to use in a <code>!GetAtt</code> expression to obtain the resource ARN. By default, the λ# CLI automatically maps known AWS resource types to the appropriate ARN attribute name. However, if no such mapping is defined, the λ# CLI generates a <code>!Ref</code> expression instead. The ARN is required for associating IAM permissions with resource.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>DependsOn</code></dt>
