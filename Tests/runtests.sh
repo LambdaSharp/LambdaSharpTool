@@ -43,6 +43,7 @@ if [ -z "$1" ]; then
     lash Source-Kinesis
     lash Inputs
     lash Outputs
+    lash Package
 else
 
     # run requested test
