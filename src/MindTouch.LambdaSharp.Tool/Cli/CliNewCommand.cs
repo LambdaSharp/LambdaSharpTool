@@ -301,7 +301,9 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_PROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
+                ["LAMBDASHARP_PROJECT"] = useProjectReference
+                    ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj"))
+                    : "(not used)",
                 ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
             };
             try {
