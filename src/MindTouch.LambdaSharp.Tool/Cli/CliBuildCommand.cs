@@ -637,20 +637,21 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
-            // runtime module doesn't expect a deployment tier to exist
-            if(forceDeploy || !manifest.HasPragma("no-tier-version-check")) {
-                if(settings.RuntimeVersion == null) {
+            // check that the LambdaSharp runtime & CLI versions match
+            if(settings.RuntimeVersion == null) {
+
+                // runtime module doesn't expect a deployment tier to exist
+                if(!forceDeploy && !manifest.HasPragma("no-tier-version-check")) {
                     AddError("could not determine the LambdaSharp runtime version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
-                } else {
-
-                    // check that the LambdaSharp runtime & CLI versions match
-                    if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
-                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        return false;
-                    }
+                }
+            } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
+                if(!forceDeploy) {
+                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    return false;
                 }
             }
+
 
             // deploy module
             if(dryRun == null) {
