@@ -1,6 +1,6 @@
 ![λ#](../Docs/LambdaSharp_v2_small.png)
 
-# Setup LambdaSharp CLI & Deployment Tier
+# Setup LambdaSharp CLI & Runtime
 
 ## Step 1: Installing λ# CLI
 

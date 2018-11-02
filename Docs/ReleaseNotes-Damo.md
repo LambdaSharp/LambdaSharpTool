@@ -10,6 +10,13 @@ In addition, λ# 0.4 _Damo_ introduces a new module composition model that makes
 
 Finally, λ# 0.4 _Damo_ introduces a new core service--the `λ# Registrar`--that is responsible for registering modules and processing the CloudWatch Logs of their deployed Lambda functions. By monitoring the logs, `λ# Registrar` can automatically detect and report out-of-memory and timeout failures. As an extra bonus, `λ# Registrar` can optionally be integrated with [Rollbar](http://rollbar.com) to create projects per module to track their warnings and errors.
 
+__Topics__
+1. [Break Changes](#breaking-changes)
+1. [New λ# CLI Features](#new-λ-cli-features)
+1. [New λ# Module Features](#new-λ-module-features)
+1. [New λ# Runtime Features](#new-λ-runtime-features)
+1. [New λ# Assembly Features](#new-λ-assembly-features)
+1. [Internal Changes](#internal-changes)
 
 
 ## BREAKING CHANGES
@@ -162,24 +169,23 @@ The pre-deployment check can be skipped with the `--force-deploy` option.
 
 ### Other CLI Commands
 
-#### λ# Info
+#### Info Command
 
 The `info` command was enhanced to show information about other installed tools that λ# CLI depends on, such as `dotnet` and `git`. In addition, sensitive information--like the AWS account ID--are hidden unless `--show-sensitive` option is used.
 
 See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
 
-#### λ# Encrypt
+#### Encrypt Command
 
 The `encrypt` command was added to make it easier to encrypt sensitive information. The command can either use a specific KMS key or use the default KMS key for the deployment tier.
 
 See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
 
-### λ# Encrypt
+### New Function Command
 
 The `new function` command now allows specifying the target language when adding a function.
 
 See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
-
 
 
 ## New λ# Module Features
@@ -285,6 +291,7 @@ The built-in variables can be accessed like other variables:
   Value: !Sub "${Module::Name} (v${Module::Version})"
 ```
 
+
 ### Module Inputs
 
 λ# modules can now define parameters and imports (a.k.a. cross-module references) in the [`Inputs` section](Module-Inputs.md).
@@ -350,7 +357,7 @@ Furthermore, module imports can associate IAM permissions to the import value.
     Type: AWS::SNS::Topic
     Allow: Publish
 ```
-
+See [module imports documentation](Module-Import.md) for more details.
 
 #### CloudFormation Interface
 
@@ -365,22 +372,57 @@ Module parameters and imports can be modified when updating a CloudFormation sta
 
 ### Module Outputs
 
+λ# modules can have three kinds of outputs: exports, custom resources, and macros.
 
-> TODO
-* `Output`
-* `CustomResource`
-    ```yaml
-    - CustomResource: LambdaSharp::S3PackageLoader
-        Handler: CustomResourceTopic
-        Description: SNS Topic ARN for subscribing to S3 buckets
-    ```
-* `Output:` without a `Value:` attribute should check if there is a parameter/variable with the same name and export it using `!Ref`; also reuse `Description:` attribute is none is specified
-* Export pattern:
-    * shared resource: `${Tier}-${ModuleId}::{VariableName}`
-    * custom resource: `${Tier}-CustomResource-${CustomResourceName}`
-    * use CloudFormation stack exports for custom resources
-        * benefit is that it will track which stacks are currently using it
-* `Macro`
+Module exports are converted into [CloudFormation export](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-stack-exports.html) values for top-level stacks. For nested stacks, the module exports are converted into CloudFormation stack outputs. This behavior prevents other modules from taking dependencies on nested stacks.
+```yaml
+- Var: MyQueue
+  Resource:
+    Type: AWS::SQS::Queue
+    Allow: Send
+
+# ...
+
+- Export: QueueArn
+  Description:
+  Value: !GetAtt MyQueue.Arn
+```
+See [module exports documentation](Module-Export.md) for more details.
+
+Custom resource definitions create new types of resources that can be used by other modules. Custom resources are a powerful way to expand the capabilities of modules beyond those provided by CloudFormation.
+```yaml
+- CustomResource: Accounting::Report
+  Description: Custom resource for creating accounting reports
+  Handler: AccountReportGenerator
+
+# ...
+
+- Function: AccountReportGenerator
+  Memory: 128
+  Timeout: 30
+  Sources:
+    - SNS: AccountReportGeneratorTopic
+```
+See [custom resource documentation](Module-CustomResource.md) for more details.
+
+A macro definition creates a CloudFormation macro for the deployment tier. The handler must be a Lambda function. Once deployed, the macro is available to all subsequent module deployments.
+```yaml
+- Macro: ToUpper
+  Description: CloudFormation macro for converting a string to uppercase
+  Handler: StringOpFunction
+
+- Macro: ToLower
+  Description: CloudFormation macro for converting a string to uppercase
+  Handler: StringOpFunction
+
+# ...
+
+- Function: StringOpFunction
+  Memory: 128
+  Timeout: 15
+```
+See [macro documentation](Module-Macro.md) for more details.
+
 
 ### Misc
 
@@ -402,31 +444,34 @@ The Alexa source definition now allows expressions when setting the Alexa Skill 
 
 ## New λ# Runtime Features
 
-> TODO
-* module registration (similar to what we did with rollbar)
-* configurable (LambdaSharp Module)
-    * `LoggingStreamRetentionPeriod`
-    * `DefaultSecretKeyRotationEnabled`
-* CloudWatch Logs
-    * clean-up on function deletion
-    * log retention limit
+The λ# runtime is now a top-level CloudFormation stack with supporting modules deployed as nested stacks.
+
+### λ# Registrar
+
+The newest runtime module is the `Registrar`, which is responsible for registering modules and functions. Upon registration, function logs are centrally processed to detect warnings and errors.
+
+The `Registrar` can optionally be configured to integrate with [Rollbar](https://rollbar.com/mindtouch/nexus-indexer/) to create tracking projects on module deployment.
+
+See the [λ# CLI & Runtime documentation](../Runtime/) for more details.
 
 ## New λ# Assembly Features
 
-* `ALambdaFunction` now has `DecryptSecretAsync()` and `EncryptSecretAsync()` methods (uses DefaultSecretKey by default)
-* `string DecryptSecretAsync(string secret, Dictionary<string, string> encryptionContext = null)`
-* `string EncryptSecretAsync(string text, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null)`
-* `T T DeserializeJson<T>(Stream stream)`
-* `T DeserializeJson<T>(string json)`
-* `string SerializeJson(object value)`
+### ALambdaFunction Class
 
+The following methods were added to the `ALambdaFunction` abstract, base class:
+* `string DecryptSecretAsync(string secret, Dictionary<string, string> encryptionContext = null)`<br/>
+This method decrypts a base64-encoded string value.
+* `string EncryptSecretAsync(string text, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null)`<br/>
+This method encrypt a string into a base64-encoded string. By default, the method uses the `DefaultSecretKeyArn` KMS key to encrypt the string.
+* `T T DeserializeJson<T>(Stream stream)`<br/>
+This method deserializes a stream using the built-in AWS Lambda .Net SDK JSON deserializer.
+* `T DeserializeJson<T>(string json)`<br/>
+This method deserializes a string using the built-in AWS Lambda .Net SDK JSON deserializer.
+* `string SerializeJson(object value)`<br/>
+This method serializes an object into a JSON string using the built-in AWS Lambda .Net SDK JSON deserializer.
 
-## Fixes
 
 ## Internal Changes
 
-* change `${Tier}-` to `${DeploymentPrefix}`
-* need to create module `manifest.json` file that contains the version, module name, and dependencies
-* always add `ModuleVersion` to output values
-* `cloudformation-v{version}-{md5}.json`
-* there is now the notion of a module ID, which is the instance name of the module
+* The `${Tier}-` expression has been replaced with `${DeploymentPrefix}` in CloudFormation templates.
+* Lambda CloudWatch Logs are now configured to self-delete log stream entries after seven (7) days. In addition, the log group is now deleted when the function is deleted during module tear-down.
