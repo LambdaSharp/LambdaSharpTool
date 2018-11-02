@@ -42,6 +42,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
 
+        //--- Class Methods ---
+        public static CommandOption AddTierOption(CommandLineApplication cmd)
+            => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+
         //--- Methods ---
         protected async Task<(string AccountId, string Region)?> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null) {
 
@@ -84,7 +88,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
             // add misc options
             if(requireDeploymentTier) {
-                tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
+                tierOption = AddTierOption(cmd);
             }
             var toolProfileOption = cmd.Option("--cli-profile|-CLI <NAME>", "(optional) Use a specific LambdaSharp CLI profile (default: Default)", CommandOptionType.SingleValue);
             if(requireAwsProfile) {
@@ -255,12 +259,13 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
         }
 
-        protected string GetGitShaValue(string workingDirectory) {
+        protected string GetGitShaValue(string workingDirectory, bool showWarningOnFailure = true) {
 
             // read the gitSha using `git` directly
             var process = new Process {
                 StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     WorkingDirectory = workingDirectory
                 }
@@ -271,11 +276,15 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 gitsha = process.StandardOutput.ReadToEnd().Trim();
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
-                    Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                    if(showWarningOnFailure) {
+                        Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                    }
                     gitsha = null;
                 }
             } catch {
-                Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+                if(showWarningOnFailure) {
+                    Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+                }
             }
             return gitsha;
         }

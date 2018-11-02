@@ -41,16 +41,18 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // info options
                 var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
-                var initSettingsCallback = CreateSettingsInitializer(cmd);
+                var tierOption = AddTierOption(cmd);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;
                     }
+                    settings.Tier = tierOption.Value();
                     await Info(
                         settings,
-                        GetGitShaValue(Directory.GetCurrentDirectory()),
+                        GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
                         showSensitiveInformationOption.HasValue()
                     );
                 });
@@ -100,6 +102,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var process = new Process {
                 StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     WorkingDirectory = Directory.GetCurrentDirectory()
                 }
@@ -126,6 +129,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             var process = new Process {
                 StartInfo = new ProcessStartInfo("git", "--version") {
                     RedirectStandardOutput = true,
+                    RedirectStandardError = true,
                     UseShellExecute = false,
                     WorkingDirectory = Directory.GetCurrentDirectory()
                 }
@@ -142,7 +146,6 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 }
                 return gitVersion;
             } catch {
-                Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
                 return null;
             }
         }
