@@ -153,7 +153,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // when Major version is 0, we rely on Minor and Build to match
-            return ((Minor == other.Minor) && (Version.Build == other.Version.Build));
+            return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
     }
 }
