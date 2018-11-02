@@ -56,7 +56,7 @@ dotnet lash build
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Build LambdaSharp module
 
 Compiling module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -83,7 +83,7 @@ dotnet lash build Demo
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Build LambdaSharp module
 
 Compiling module: Demo\Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]

@@ -47,7 +47,7 @@ dotnet lash new function MyNewFunction
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Create new LambdaSharp module or function
 Created project file: MyNewFunction\MyNewFunction.csproj
 Created function file: MyNewFunction\Function.cs
 
@@ -63,7 +63,7 @@ dotnet lash new function --language javascript MyNewFunction
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Create new LambdaSharp module or function
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Create new LambdaSharp module or function
 Created function file: MyNewFunction\index.js
 
 Done (duration: 00:00:00.1011796)

@@ -48,7 +48,7 @@ dotnet lash init --tier Demo
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Initialize LambdaSharp deployment tier
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Initialize LambdaSharp deployment tier
 Creating new deployment tier 'Demo'
 Deploying stack: Demo-LambdaSharp [LambdaSharp]
 => Stack creation initiated for Demo-LambdaSharp

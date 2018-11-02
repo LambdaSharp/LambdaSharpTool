@@ -61,7 +61,7 @@ dotnet lash publish
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Publish LambdaSharp module
 
 Compiling module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
@@ -93,7 +93,7 @@ dotnet lash publish Demo/bin/manifest.json
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Publish LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Publish LambdaSharp module
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip

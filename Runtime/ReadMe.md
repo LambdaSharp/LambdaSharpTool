@@ -8,7 +8,7 @@ As of v0.4, the λ# CLI can be installed as a global `dotnet` tool. Simply run t
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4-RC1
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.0.1-RC1
 ```
 
 Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.
@@ -22,7 +22,7 @@ dotnet lash
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp CLI (v0.4)
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1)
 
 Project Home: https://github.com/LambdaSharp/LambdaSharpTool
 
@@ -76,7 +76,7 @@ dotnet lash list --tier Demo
 
 The following text should appear (or similar):
 ```
-MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - List deployed LambdaSharp modules
 
 MODULE                        STATUS                DATE
 LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12

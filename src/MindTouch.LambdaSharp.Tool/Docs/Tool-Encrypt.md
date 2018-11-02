@@ -36,7 +36,7 @@ dotnet lash encrypt --tier Demo "My private API key"
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Encrypt Value
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Encrypt Value
 
 AQICAHgSrVOcRYhYRlcuUe2MsGsBpVM/uMqHGnk3lkiOr+Z4zQEcazWl2Yj7k4FOaQvxigjlAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMLkz18nq708B6qAwLAgEQgB6R8WTqQOGsd3unH3aJom9G7cFIiVZcI6B/H69AlEc=
 
@@ -52,7 +52,7 @@ dotnet lash encrypt --key alias/MyOtherKey < api-key.txt
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - Encrypt Value
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - Encrypt Value
 
 AQICAHgSrVOcRYhYRlcuUe2MsGsBpVM/uMqHGnk3lkiOr+Z4zQGny1unpOQD2gXQetH+kePVAAAAYTBfBgkqhkiG9w0BBwagUjBQAgEAMEsGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMcuq8txyppwr47P/zAgEQgB5GsXDieoaObT6YaCxPEUGrlSy8Yvu8P9FWnIoEvgs=
 

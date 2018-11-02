@@ -33,7 +33,7 @@ dotnet lash list --tier Demo
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4) - List deployed LambdaSharp modules
+MindTouch LambdaSharp CLI (v0.4.0.1-RC1) - List deployed LambdaSharp modules
 
 MODULE                        STATUS                DATE
 LambdaSharp                   [UPDATE_COMPLETE]     2018-10-25 13:57:12
