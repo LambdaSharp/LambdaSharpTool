@@ -61,6 +61,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var moduleS3BucketNameOption = cmd.Option("--module-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments", CommandOptionType.SingleValue);
                 var cloudFormationNotificationsTopicArnOption = cmd.Option("--cloudformation-notifications-topic <ARN>", "(optional) Existing SNS topic ARN for CloudFormation notifications ", CommandOptionType.SingleValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
+                var forceUpdateOption = cmd.Option("--force-update", "(optional) Force CLI profile update", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -73,6 +74,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         moduleS3BucketNameOption.Value(),
                         cloudFormationNotificationsTopicArnOption.Value(),
                         protectStackOption.HasValue(),
+                        forceUpdateOption.HasValue(),
                         new AmazonCloudFormationClient(),
                         new AmazonSimpleSystemsManagementClient()
                     );
@@ -85,6 +87,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             string moduleS3BucketName,
             string cloudFormationNotificationsTopicArn,
             bool protectStack,
+            bool forceUpdate,
             IAmazonCloudFormation cfClient,
             IAmazonSimpleSystemsManagement ssmClient
         ) {
@@ -159,20 +162,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             } else {
 
                 // check if exiting profile needs to be upgraded
-                if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
-                    AddError("unable to parse existing version");
-                    return;
-                }
-                if(existingVersion < Version) {
-                    Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date: (v{existingVersion})");
-                    var upgrade = Prompt.GetYesNo("Do you want to upgrade?", false);
-                    if(!upgrade) {
+                if(!forceUpdate) {
+                    if(!VersionInfo.TryParse(GetToolSetting("Version"), out VersionInfo existingVersion)) {
+                        AddError("unable to parse existing version; use --force-update to proceed anyway");
                         return;
                     }
-                } else if(!existingVersion.IsCompatibleWith(Version)) {
-                    Console.WriteLine();
-                    Console.WriteLine($"WARNING: LambdaSharp CLI is not compatible with v{existingVersion}");
-                    return;
+                    if(existingVersion < Version) {
+                        Console.WriteLine($"LambdaSharp CLI configuration appears to be out of date: (v{existingVersion})");
+                        var upgrade = Prompt.GetYesNo("Do you want to upgrade?", false);
+                        if(!upgrade) {
+                            return;
+                        }
+                    } else if(!existingVersion.IsCompatibleWith(Version)) {
+                        Console.WriteLine();
+                        Console.WriteLine($"WARNING: LambdaSharp CLI is not compatible with v{existingVersion}; use --force-update to proceed anyway");
+                        return;
+                    }
                 }
                 try {
                     var stackName = $"LambdaSharpTool-{settings.ToolProfile}";
