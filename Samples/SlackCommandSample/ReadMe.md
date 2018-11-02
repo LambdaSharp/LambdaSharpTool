@@ -2,7 +2,7 @@
 
 # LambdaSharp Slack Command Function
 
-Before you begin, make sure to [setup your λ# CLI](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
 
 ## Module Definition
 

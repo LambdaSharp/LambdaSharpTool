@@ -445,7 +445,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // read input file
                 Console.WriteLine();
-                Console.WriteLine($"Processing module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
+                Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleSource)}");
                 var source = await File.ReadAllTextAsync(moduleSource);
 
                 // preprocess file
@@ -527,7 +527,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Directory.CreateDirectory(settings.OutputDirectory);
                 }
                 File.WriteAllText(manifestFilePath, JsonConvert.SerializeObject(manifest, Formatting.Indented));
-                Console.WriteLine("=> Module processing done");
+                Console.WriteLine("=> Module compilation done");
                 return true;
             } catch(Exception e) {
                 AddError(e);
@@ -568,7 +568,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool forceDeploy
         ) {
             await PopulateToolSettingsAsync(settings);
-            await PopulateEnvironmentSettingsAsync(settings);
+            await PopulateRuntimeSettingsAsync(settings);
 
             // module key formats
             // * MODULENAME:VERSION
@@ -637,16 +637,16 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
-            // bootstrap module doesn't expect a deployment tier to exist
+            // runtime module doesn't expect a deployment tier to exist
             if(forceDeploy || !manifest.HasPragma("no-tier-version-check")) {
-                if(settings.TierVersion == null) {
-                    AddError("could not determine the LambdaSharp deployment tier version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                if(settings.RuntimeVersion == null) {
+                    AddError("could not determine the LambdaSharp runtime version", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 } else {
 
-                    // check that LambdaSharp deployment tier & CLI versions match
-                    if(!settings.ToolVersion.IsCompatibleWith(settings.TierVersion)) {
-                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and deployment tier (v{settings.TierVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    // check that the LambdaSharp runtime & CLI versions match
+                    if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
+                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                         return false;
                     }
                 }

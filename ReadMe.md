@@ -26,7 +26,7 @@ Once installed, the λ# CLI needs to be configured.
 dotnet lash config
 ```
 
-Finally, a deployment tier must be initialized.
+Finally, a deployment tier must be initialized with the λ# runtime.
 ```bash
 dotnet lash init --tier Demo
 ```
@@ -92,7 +92,7 @@ namespace MySampleModule.MyFunction {
 
 ## Learn More
 
-1. [Setup λ# CLI](Bootstrap/)
+1. [Setup λ# CLI](Runtime/)
 1. [λ# CLI Reference](src/MindTouch.LambdaSharp.Tool/)
 1. [λ# Samples](Samples/)
 1. [Module Definition Reference](Docs/Module.md)

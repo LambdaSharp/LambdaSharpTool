@@ -58,7 +58,7 @@ Output:
 ```
 MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
 
-Processing module: Module.yml
+Compiling module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
 => Restoring project dependencies
 => Building AWS Lambda package
@@ -69,7 +69,7 @@ Building function SlackCommand [netcoreapp2.1, Release]
 => Building AWS Lambda package
 => Decompressing AWS Lambda package
 => Finalizing AWS Lambda package
-=> Module processing done
+=> Module compilation done
 
 Done (duration: 00:00:11.0292989)
 ```
@@ -85,7 +85,7 @@ Output:
 ```
 MindTouch LambdaSharp CLI (v0.4) - Build LambdaSharp module
 
-Processing module: Demo\Module.yml
+Compiling module: Demo\Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
 => Restoring project dependencies
 => Building AWS Lambda package
@@ -96,7 +96,7 @@ Building function SlackCommand [netcoreapp2.1, Release]
 => Building AWS Lambda package
 => Decompressing AWS Lambda package
 => Finalizing AWS Lambda package
-=> Module processing done
+=> Module compilation done
 
 Done (duration: 00:00:11.0292989)
 ```

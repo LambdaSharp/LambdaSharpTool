@@ -44,7 +44,7 @@ LambdaSharp CLI
     Module Deployment Notifications Topic: arn:aws:sns:us-west-2:************:LambdaSharpTool-Demo-DeploymentNotificationTopic-1V8UD7UQVW3KD
 LambdaSharp Deployment Tier
     Name: Demo
-    Version: 0.4
+    Runtime Version: 0.4
 Git SHA: dd84a2a4b87dcf2e4a802b79d12c489c30836623
 AWS
     Region: us-west-2

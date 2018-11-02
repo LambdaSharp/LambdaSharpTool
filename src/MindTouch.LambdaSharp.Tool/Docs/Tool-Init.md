@@ -21,10 +21,10 @@ The `init` command is used to both initialize a new deployment tier and update a
 <dd>(optional) Specify version for LambdaSharp modules (default: same as CLI version)</dd>
 
 <dt><code>--local &lt;PATH&gt;</code></dt>
-<dd>(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)</dd>
+<dd>(optional) Provide a path to a local check-out of the LambdaSharp runtime modules (default: LAMBDASHARP environment variable)</dd>
 
 <dt><code>--use-published</code></dt>
-<dd>(optional) Force the init command to use the published LambdaSharp bootstrap modules</dd>
+<dd>(optional) Force the init command to use the published LambdaSharp runtime modules</dd>
 
 <dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
@@ -71,5 +71,5 @@ Done (duration: 00:05:41.6557981)
 ```
 
 ## For λ# Contributors
-The `init` command builds and deploys the local bootstrap modules when the `LAMBDASHARP` environment variable is set. To force `init` to use the published bootstrap modules instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
+The `init` command builds and deploys the local λ# runtime modules when the `LAMBDASHARP` environment variable is set. To force `init` to use the published λ# runtime modules instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
 

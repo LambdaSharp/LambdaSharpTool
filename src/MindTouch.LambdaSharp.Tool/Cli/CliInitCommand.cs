@@ -58,8 +58,8 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
-                var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp bootstrap modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
-                var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp bootstrap modules", CommandOptionType.NoValue);
+                var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp runtime modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
+                var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp runtime modules", CommandOptionType.NoValue);
                 var inputsFileOption = cmd.Option("--inputs|-I <FILE>", "(optional) Specify filename to read module inputs from (default: none)", CommandOptionType.SingleValue);
                 var inputOption = cmd.Option("--input|-KV <KEY>=<VALUE>", "(optional) Specify module input key-value pair (can be used multiple times)", CommandOptionType.MultipleValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
@@ -125,7 +125,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // check if the module must be built and published first
                 if(lambdaSharpPath != null) {
-                    var moduleSource = Path.Combine(lambdaSharpPath, "Bootstrap", module, "Module.yml");
+                    var moduleSource = Path.Combine(lambdaSharpPath, "Runtime", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
                     settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
 

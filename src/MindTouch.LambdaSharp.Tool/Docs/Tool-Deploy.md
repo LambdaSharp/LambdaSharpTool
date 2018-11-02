@@ -85,7 +85,7 @@ Output:
 MindTouch LambdaSharp CLI (v0.4) - Deploy LambdaSharp module
 Readying module for deployment tier 'Demo'
 
-Processing module: Module.yml
+Compiling module: Module.yml
 Building function RecordMessage [netcoreapp2.1, Release]
 => Restoring project dependencies
 => Building AWS Lambda package
@@ -96,7 +96,7 @@ Building function SlackCommand [netcoreapp2.1, Release]
 => Building AWS Lambda package
 => Decompressing AWS Lambda package
 => Finalizing AWS Lambda package
-=> Module processing done
+=> Module compilation done
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_SlackCommand_8207022C95970006F597FF6060366C34.zip

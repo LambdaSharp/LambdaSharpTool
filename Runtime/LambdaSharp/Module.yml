@@ -19,7 +19,7 @@
 
 Module: LambdaSharp
 Version: 0.4-WIP
-Description: LambdaSharp Deployment Tier
+Description: LambdaSharp Runtime
 Pragmas:
   - no-tier-version-check
   - no-lambdasharp-dependencies
@@ -56,7 +56,7 @@ Inputs:
 
   - Parameter: DefaultSecretKeyArn
     Section: LambdaSharp Tier Settings
-    Label: Secret Key (ARN)
+    Label: Default Secret Key (ARN)
     Description: Default secret key for functions (leave blank to create a new key)
     Default: ""
     Resource:

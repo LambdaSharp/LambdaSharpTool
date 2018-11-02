@@ -63,7 +63,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             bool showSensitive
         ) {
             await PopulateToolSettingsAsync(settings);
-            await PopulateEnvironmentSettingsAsync(settings);
+            await PopulateRuntimeSettingsAsync(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp CLI");
@@ -73,7 +73,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopicArn ?? "<NOT SET>")}");
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
-            Console.WriteLine($"    Version: {settings.TierVersion?.ToString() ?? "<NOT SET>"}");
+            Console.WriteLine($"    Runtime Version: {settings.RuntimeVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
             Console.WriteLine($"AWS");
             Console.WriteLine($"    Region: {settings.AwsRegion ?? "<NOT SET>"}");

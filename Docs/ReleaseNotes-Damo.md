@@ -58,12 +58,12 @@ As part of the λ# CLI setup procedure, the CLI must be configured for the AWS a
 dotnet lash config
 ```
 
-Initializing a deployment tier has been streamlined into a single command, which deploys the required bootstrap modules from a public λ# bucket. Alternatively, for λ# contributors, the CLI can deploy a locally compiled version of the bootstrap modules.
+Initializing a deployment tier has been streamlined into a single command, which deploys the λ# runtime modules from a public bucket. Alternatively, for λ# contributors, the CLI can deploy a locally compiled version of the λ# runtime modules.
 ```bash
 dotnet lash init --tier Demo
 ```
 
-For complete instructions and options, check out the updated [setup documentation](../Bootstrap/).
+For complete instructions and options, check out the updated [setup documentation](../Runtime/).
 
 ### Build, Publish, and Deploy
 
@@ -182,24 +182,93 @@ See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewF
 
 
 
-
-
-> TODO: continue here
-
 ## New λ# Module Features
 
-### Default Variables
+### Variables
 
-* `Module::Id`
-* `Module::Name`
-* `Module::Version`
-* `Module::DeadLetterQueueArn`
-* `Module::LoggingStreamArn`
-* `Module::DefaultSecretKeyArn`
-* `Variables`
-    * add `Scope:` attribute to variables (can either be `*` or a list of function names)
+The `Variables` section defines literal values and resources. Variables can either be used to build other variables or passed into Lambda functions using the `Scope` attribute. Variables can define plaintext values, secrets, packages, or resources. When defining resources, variables can grant the module IAM role the permissions to act upon the resources.
+
+To scope a variable to all functions, use the wildcard value (`*`):
+```yaml
+- Var: My Variable
+  Scope: "*"
+  Value: Best variable ever
+```
+
+To scope a variable to specific functions, list them by name:
+```yaml
+- Var: MyVariable
+  Scope:
+    - MyFirstFunction
+    - MyOtherFunction
+  Value: Another best variable!
+```
+
+#### Reusable Parameters and Variables
+
+λ# module parameters and variables can now be referenced by other variables and resource properties.
+
+The following example shows how a variable can be used by another variable:
+```yaml
+- Var: Greeting
+  Value: Hello
+
+- Var: Message
+  Value: !Sub "${Greeting} World!"
+```
+
+The same is also true for module parameters:
+```yaml
+- Parameter: Greeting
+  Description: The greeting to use in the welcome message
+
+# ...
+
+- Var: Message
+  Value: !Sub "${Greeting} World!"
+```
+
+> TODO
 * substitute parameter values in `!Ref` and `!Sub` operations
     * find and replace `!Ref` parameter references in-place rather than to letting cloudformation replace them for us
+
+
+#### Nested Variables
+
+λ# module variables can be organized into hierarchies. The value of a nested variable is accessed by creating a path to it using a double-colon as separator (`::`).
+```yaml
+- Var: Greetings
+  Variables:
+
+    - Var: Coming
+      Value: Hello
+
+    - Var: Leaving
+      Value: Bye
+
+- Var: Message
+  Value: !Sub "${Greetings::Coming} World!"
+```
+
+#### Default Variables
+
+Some module variables are always defined. These include:
+* `Module::Id`: the name of the deployed CloudFormation stack
+* `Module::Name`:  the name of the module
+* `Module::Version`: the version of the module
+* `Module::DeadLetterQueueArn`: the default dead-letter queue
+* `Module::LoggingStreamArn`: the default function logging stream
+* `Module::DefaultSecretKeyArn`: the default secret encryption key
+
+The built-in variables can be accessed like other variables:
+```yaml
+- Var: UseBuiltInVariable
+  Value: !Ref Module::Version
+
+- Var: InlineBuiltInVariables
+  Value: !Sub "${Module::Name} (v${Module::Version})"
+```
+
 
 ### Module Inputs
 
@@ -246,7 +315,7 @@ See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewF
 * allow `!Ref` for alexa skill
 * ability to specify the attribute name to obtain the ARN in cloudformation resources
 
-## New λ# Deployment Tier Features
+## New λ# Runtime Features
 
 * module registration (similar to what we did with rollbar)
 * configurable (LambdaSharp Module)
