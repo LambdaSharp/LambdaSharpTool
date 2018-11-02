@@ -32,7 +32,7 @@ namespace MindTouch.LambdaSharp.Tool {
             if(index < 0) {
                 return new VersionInfo(Version.Parse(text), "");
             } else {
-                return new VersionInfo(Version.Parse(text.Substring(0, index)), text.Substring(index));
+                return new VersionInfo(Version.Parse(text.Substring(0, index)), text.Substring(index).TrimEnd('*'));
             }
         }
 

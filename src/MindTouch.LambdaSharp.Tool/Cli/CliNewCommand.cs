@@ -304,7 +304,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 ["LAMBDASHARP_PROJECT"] = useProjectReference
                     ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj"))
                     : "(not used)",
-                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
+                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}{Version.Suffix}*"
             };
             try {
                 var projectContents = ReadResource(
