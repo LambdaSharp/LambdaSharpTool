@@ -7,7 +7,7 @@ lash() {
         --dryrun:cloudformation \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --tier-version 0.4 \
+        --runtime-version 0.4 \
         --cli-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
@@ -19,10 +19,10 @@ if [ -z "$1" ]; then
     # run everything
     dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- info \
         --verbose:exceptions \
+        --tier Test \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --tier Test \
-        --tier-version 0.4 \
+        --runtime-version 0.4 \
         --cli-version 0.4 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic-arn  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic

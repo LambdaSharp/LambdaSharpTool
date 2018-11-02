@@ -755,8 +755,8 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private AOutput ConvertOutput(int index, OutputNode output) {
-            return AtLocation<AOutput>(output.Output ?? output.CustomResource ?? $"[{index}]", () => {
-                if(output.Output != null) {
+            return AtLocation<AOutput>(output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                if(output.Export != null) {
                     var value = output.Value;
                     var description = output.Description;
                     if(value == null) {
@@ -766,7 +766,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         //  parameter name; if it does, we export the ARN value of that parameter; in
                         //  addition, we assume its description if none is provided.
 
-                        var parameter = _module.Parameters.First(p => p.Name == output.Output);
+                        var parameter = _module.Parameters.First(p => p.Name == output.Export);
                         if(parameter is AInputParameter) {
 
                             // input parameters are always expected to be in ARN format
@@ -778,8 +778,8 @@ namespace MindTouch.LambdaSharp.Tool {
                             description = parameter.Description;
                         }
                     }
-                    return new StackOutput {
-                        Name = output.Output,
+                    return new ExportOutput {
+                        Name = output.Export,
                         Description = description,
                         Value = value
                     };

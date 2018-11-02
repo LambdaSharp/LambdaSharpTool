@@ -28,7 +28,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Description { get; set; }
     }
 
-    public class StackOutput : AOutput {
+    public class ExportOutput : AOutput {
 
         //--- Properties ---
         public string Name { get; set; }

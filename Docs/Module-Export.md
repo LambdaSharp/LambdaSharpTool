@@ -12,7 +12,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-Output: String
+Export: String
 Description: String
 Value: String
 ```
@@ -21,9 +21,9 @@ Value: String
 
 <dl>
 
-<dt><code>Output</code></dt>
+<dt><code>Export</code></dt>
 <dd>
-The <code>Output</code> attribute specifies the name of the module's output variable. If the <code>Output</code> value matches a parameter or variable name, the <code>Description</code> and <code>Value</code> attributes are copied from the matching parameter or variable when omitted.
+The <code>Export</code> attribute specifies the name of the module's export value. If the <code>Export</code> name matches a parameter or variable name, the <code>Description</code> and <code>Value</code> attributes are copied from the matching parameter or variable when omitted.
 
 <i>Required</i>: Yes
 
@@ -55,7 +55,7 @@ The <code>Value</code> attribute specifies either a literal output value or an e
 ### Output value is a literal value
 
 ```yaml
-- Output: FixedValue
+- Export: FixedValue
   Description:
   Value: Hello World!
 ```
@@ -70,7 +70,7 @@ The <code>Value</code> attribute specifies either a literal output value or an e
 
 # ...
 
-- Output: QueueArn
+- Export: QueueArn
   Description:
   Value: !GetAtt MyQueue.Arn
 ```
@@ -85,5 +85,5 @@ The <code>Value</code> attribute specifies either a literal output value or an e
     Allow: Send
 
 # ...
-- Output: MyQueue
+- Export: MyQueue
 ```

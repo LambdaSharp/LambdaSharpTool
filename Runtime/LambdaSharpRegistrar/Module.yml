@@ -70,9 +70,9 @@ Outputs:
     Description: Custom resources for registering LambdaSharp functions
     Handler: RegistrationTopic
 
-  - Output: ErrorReportTopic
+  - Export: ErrorReportTopic
 
-  - Output: UsageReportTopic
+  - Export: UsageReportTopic
 
 Variables:
 

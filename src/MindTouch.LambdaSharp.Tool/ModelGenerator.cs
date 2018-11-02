@@ -342,16 +342,16 @@ namespace MindTouch.LambdaSharp.Tool {
             });
             foreach(var output in module.Outputs) {
                 switch(output) {
-                case StackOutput stackOutput:
-                    _stack.Add(stackOutput.Name, new Humidifier.Output {
-                        Description = stackOutput.Description,
-                        Value = stackOutput.Value
+                case ExportOutput exportOutput:
+                    _stack.Add(exportOutput.Name, new Humidifier.Output {
+                        Description = exportOutput.Description,
+                        Value = exportOutput.Value
                     });
-                    _stack.Add($"{stackOutput.Name}Export", new Humidifier.Output {
-                        Description = stackOutput.Description,
-                        Value = stackOutput.Value,
+                    _stack.Add($"{exportOutput.Name}Export", new Humidifier.Output {
+                        Description = exportOutput.Description,
+                        Value = exportOutput.Value,
                         Export = new Dictionary<string, dynamic> {
-                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{stackOutput.Name}")
+                            ["Name"] = Fn.Sub($"${{AWS::StackName}}::{exportOutput.Name}")
                         },
                         Condition = "ModuleIsNotNested"
                     });

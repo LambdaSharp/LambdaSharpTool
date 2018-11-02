@@ -4,13 +4,13 @@ Description: LambdaSharp CloudFormation Test
 Outputs:
 
   # Module Outputs
-  - Output: SimpleValue
+  - Export: SimpleValue
 
-  - Output: ManyValues
+  - Export: ManyValues
 
-  - Output: ResourceValue
+  - Export: ResourceValue
 
-  - Output: OutputExpressionValue
+  - Export: OutputExpressionValue
     Value: !Sub "${SimpleValue} with extra stuff"
 
   # Custom Resources

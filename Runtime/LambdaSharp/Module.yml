@@ -117,20 +117,20 @@ Inputs:
 
 Outputs:
 
-  - Output: DeadLetterQueueArn
+  - Export: DeadLetterQueueArn
     Description: LambdaSharp Dead Letter Queue
 
-  - Output: LoggingStreamArn
+  - Export: LoggingStreamArn
     Description: LambdaSharp Logging Stream
 
-  - Output: DefaultSecretKeyArn
+  - Export: DefaultSecretKeyArn
     Description: LambdaSharp Default Secrets Key
 
-  - Output: ErrorReportTopic
+  - Export: ErrorReportTopic
     Description: SNS topic for LambdaSharp module errors
     Value: !GetAtt Registrar.Outputs.ErrorReportTopic
 
-  - Output: UsageReportTopic
+  - Export: UsageReportTopic
     Description: SNS topic for LambdaSharp function usage reports
     Value: !GetAtt Registrar.Outputs.UsageReportTopic
 

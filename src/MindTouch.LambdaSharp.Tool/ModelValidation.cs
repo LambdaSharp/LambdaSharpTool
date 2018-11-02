@@ -528,14 +528,14 @@ namespace MindTouch.LambdaSharp.Tool {
             var index = 0;
             foreach(var output in outputs) {
                 ++index;
-                AtLocation(output.Output ?? output.CustomResource ?? $"[{index}]", () => {
-                    if(output.Output != null) {
+                AtLocation(output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                    if(output.Export != null) {
 
                         // TODO (2018-09-20, bjorg): add name validation
                         if(
                             (output.Value == null)
-                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Output) == null)
-                            && (_module.Inputs.FirstOrDefault(i => i?.Parameter == output.Output) == null)
+                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Export) == null)
+                            && (_module.Inputs.FirstOrDefault(i => i?.Parameter == output.Export) == null)
                         ) {
                             AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
                         }
@@ -550,11 +550,11 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
 
-                        ValidateNotBothStatements("CustomResource", "Output", output.Output == null);
+                        ValidateNotBothStatements("CustomResource", "Output", output.Export == null);
                         ValidateNotBothStatements("CustomResource", "Value", output.Value == null);
                         ValidateNotBothStatements("CustomResource", "Macro", output.Macro == null);
                     } else if(output.Macro != null) {
-                        ValidateNotBothStatements("Macro", "Output", output.Output == null);
+                        ValidateNotBothStatements("Macro", "Output", output.Export == null);
                         ValidateNotBothStatements("Macro", "CustomResource", output.CustomResource == null);
 
                         // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function

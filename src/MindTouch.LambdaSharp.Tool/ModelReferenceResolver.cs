@@ -100,9 +100,9 @@ namespace MindTouch.LambdaSharp.Tool {
             AtLocation("Outputs", () => {
                 foreach(var output in module.Outputs) {
                     switch(output) {
-                    case StackOutput stackOutput:
-                        AtLocation(stackOutput.Name, () => {
-                            stackOutput.Value = Substitute(stackOutput.Value, ReportMissingReference);
+                    case ExportOutput exportOutput:
+                        AtLocation(exportOutput.Name, () => {
+                            exportOutput.Value = Substitute(exportOutput.Value, ReportMissingReference);
                         });
                         break;
                     case CustomResourceHandlerOutput _:

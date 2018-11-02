@@ -10,7 +10,7 @@ Inputs:
 
 Outputs:
 
-  - Output: NotifyRecorderTopic
+  - Export: NotifyRecorderTopic
     Description: The topic that the lambda function subscribes to record messages
     Value: !Ref SnsTopic
 

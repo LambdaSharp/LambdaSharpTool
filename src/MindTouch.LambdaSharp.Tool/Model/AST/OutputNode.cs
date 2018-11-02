@@ -30,7 +30,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Description { get; set; }
 
         // stack output
-        public string Output { get; set; }
+        public string Export { get; set; }
         public object Value { get; set; }
 
         // custom resource handler
