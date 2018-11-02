@@ -17,6 +17,9 @@ The `config` command is used to configure λ# CLI. The configuration step option
 <dt><code>--protect</code></dt>
 <dd>(optional) Enable termination protection for the CloudFormation stack</dd>
 
+<dt><code>--force-update</code></dt>
+<dd>(optional) Force CLI profile update</dd>
+
 <dt><code>--cli-profile|-CLI &lt;NAME&gt;</code></dt>
 <dd>(optional) Use a specific LambdaSharp CLI profile (default: Default)</dd>
 
