@@ -17,6 +17,11 @@
 > TODO
 </dd>
 
+<dt><b>Cross-Module Reference</b></dt>
+<dd>
+> TODO
+</dd>
+
 <dt><b>Deploy</b></dt>
 <dd>
 > TODO
@@ -31,6 +36,9 @@
 <dd>
 > TODO
 </dd>
+
+<dt><b>Import</b></dt>
+<dd>(see <i>Cross-Module Reference</i>)</dd>
 
 <dt><b>Module Definition</b></dt>
 <dd>

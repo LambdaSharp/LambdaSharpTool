@@ -160,7 +160,7 @@ The λ# CLI goes through a pre-deployment check before updating an existing Clou
 The pre-deployment check can be skipped with the `--force-deploy` option.
 
 
-### Misc
+### Other CLI Commands
 
 #### λ# Info
 
@@ -324,6 +324,34 @@ In addition to the default CloudFormation parameter types, λ# modules can have 
   Type: Secret
 ```
 
+#### Module Imports (a.k.a. Cross-Module References)
+
+λ# module imports enable a module to reference output values from another module. This mechanism is also known as _cross-module references_. Cross-module references are implemented using CloudFormation parameters, conditionals, exports, and the [`!ImportValue` function](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-importvalue.html) to reference them. The complexity of cross-module references implementation is hidden behind a usage mechanism consistent with module parameters and variables.
+
+The λ# implementation of cross-module references enables CloudFormation to resolve references at deployment time. However, they can also be redirected to a different module output value or be given an specific value instead. This capability makes it possible to have a default behavior that is mostly convenient, while enabling modules to be re-wired to import parameters from other modules, or to be given existing values for testing or legacy purposes.
+
+```yaml
+- Import: MyOtherModule::Topic
+  Scope: "*"
+  Description: Topic ARN for notifying users
+
+# ...
+
+- Var: MyTopic
+  Value: !Ref MyOtherModule::Topic
+```
+
+The default value for the module import is `$MyOtherModule::Topic`, which instructs CloudFormation to translate the module import to `!ImportValue "MyOtherModule::Topic"` (**NOTE:** deployment prefix was omitted for brevity). Setting the import value to `$SomeModule::OtherTopic` instructs CloudFormation to translate the module import to `!ImportValue "SomeModule::OtherTopic"` instead. Alternatively, the import value could be set to an existing resource ARN, suh as `arn:aws:sns:use-east-1:123456789012:ExistingTopic`. In this case, CloudFormation will use the ARN directly without using `!ImportValue`.
+
+Furthermore, module imports can associate IAM permissions to the import value.
+```yaml
+- Import: MyOtherModule::Topic
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+```
+
+
 #### CloudFormation Interface
 
 Module parameters and imports can be modified when updating a CloudFormation stack. By default, the module parameters and imports are shown using labels derived from their names in a section labeled _Module Settings_. The automatically generated labels insert spaces between lowercase characters/digits and uppercase characters (e.g. `MyParameterValue` becomes `My Parameter Value`). However, parameters and imports can be organized into custom sections by using the `Section` attribute with a custom label using the `Label` attribute. Sections and labels are useful to make configuring modules post-deployment more user friendly.
@@ -334,14 +362,11 @@ Module parameters and imports can be modified when updating a CloudFormation sta
   Label: My Favorite Parameter # (automatic label would have been "My Parameter")
 ```
 
-#### Import Parameters (a.k.a. Cross-Module References)
-
-
-> TODO
 
 ### Module Outputs
 
 
+> TODO
 * `Output`
 * `CustomResource`
     ```yaml
@@ -355,14 +380,29 @@ Module parameters and imports can be modified when updating a CloudFormation sta
     * custom resource: `${Tier}-CustomResource-${CustomResourceName}`
     * use CloudFormation stack exports for custom resources
         * benefit is that it will track which stacks are currently using it
+* `Macro`
 
 ### Misc
 
-* allow `!Ref` for alexa skill
-* ability to specify the attribute name to obtain the ARN in cloudformation resources
+#### Alexa Source
+
+The Alexa source definition now allows expressions when setting the Alexa Skill ID.
+```yaml
+- Parameter: AlexaSkillId
+  Default: "*"
+
+# ...
+
+- Function: Function
+  Memory: 128
+  Timeout: 30
+  Sources:
+    - Alexa: !Ref AlexaSkillId
+```
 
 ## New λ# Runtime Features
 
+> TODO
 * module registration (similar to what we did with rollbar)
 * configurable (LambdaSharp Module)
     * `LoggingStreamRetentionPeriod`
