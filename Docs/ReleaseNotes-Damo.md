@@ -228,10 +228,26 @@ The same is also true for module parameters:
   Value: !Sub "${Greeting} World!"
 ```
 
-> TODO
-* substitute parameter values in `!Ref` and `!Sub` operations
-    * find and replace `!Ref` parameter references in-place rather than to letting cloudformation replace them for us
+Similarly, the `!Ref` expression can be used to reuse a variable or parameter.
+```yaml
+- Parameter: Topic
 
+# ...
+
+- Var: MyTopic
+  Value: !Ref Topic
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+```
+
+**NOTE:** the previous example is very common and λ# provides a shorthand notation for it.
+```yaml
+- Parameter: Topic
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+```
 
 #### Nested Variables
 
@@ -269,46 +285,76 @@ The built-in variables can be accessed like other variables:
   Value: !Sub "${Module::Name} (v${Module::Version})"
 ```
 
-
 ### Module Inputs
 
-* allow `DependsOn: Foo`
-* `Inputs` section
-    * `Section` and `Label` attribute
-    * `Input`
-    * `Import`
-        * use `ConstraintDescription` & `AllowedPattern`
-        * use cloudformation input pattern validation for `!Import:` defaults
-    * add `Scope:` attribute to input parameters (can either be `Module` or `Function`)
-    * conditional inputs
-        * conditional resources
-        * auto-create resource if an input is not provided
-            ```yaml
-            Inputs:
-                - Name: Foo
-                Default: ""
-                Resource:
-                    Type: ABC
-                    Properties:
-                        XYZ: 123
-            ```
-    * `Type: Secret` for input/import
+λ# modules can now define parameters and imports (a.k.a. cross-module references) in the [`Inputs` section](Module-Inputs.md).
+
+#### Module Parameters
+
+λ# module parameters are modelled after [CloudFormation parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html) and support all of their attributes. See the [parameters documentation](Module-Parameters.md) for more details.
+
+In addition, a λ# module parameter can associate IAM permission with its parameter value, similar to variables.
+```yaml
+- Parameter: Topic
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+```
+
+This concept is taken one step further with conditional resources, which are only created when the module parameter is set to its default value. Otherwise the provided parameter value is used. In either case, the resource is associated with the requested IAM permissions.
+```yaml
+- Parameter: Topic
+  Description: Provide the ARN for an existing topic or leave blank to create a new one.
+  Default: ""
+  Resource:
+    Type: AWS::SNS::Topic
+    Allow: Publish
+    Properties:
+      DisplayName: My Topic
+```
+
+**NOTE:** the `Properties` section is ignored if a non-default parameter value is used since no resource is being created.
+
+#### Module Secret Parameters
+
+In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
+
+```yaml
+- Parameter: MyApiKey
+  Type: Secret
+```
+
+#### CloudFormation Interface
+
+Module parameters and imports can be modified when updating a CloudFormation stack. By default, the module parameters and imports are shown using labels derived from their names in a section labeled _Module Settings_. The automatically generated labels insert spaces between lowercase characters/digits and uppercase characters (e.g. `MyParameterValue` becomes `My Parameter Value`). However, parameters and imports can be organized into custom sections by using the `Section` attribute with a custom label using the `Label` attribute. Sections and labels are useful to make configuring modules post-deployment more user friendly.
+
+```yaml
+- Parameter: MyParameter
+  Section: My Module Settings
+  Label: My Favorite Parameter # (automatic label would have been "My Parameter")
+```
+
+#### Import Parameters (a.k.a. Cross-Module References)
+
+
+> TODO
 
 ### Module Outputs
-* `Outputs` section
-    * `Output`
-    * `CustomResource`
-        ```yaml
-        - CustomResource: LambdaSharp::S3PackageLoader
-            Handler: CustomResourceTopic
-            Description: SNS Topic ARN for subscribing to S3 buckets
-        ```
-    * `Output:` without a `Value:` attribute should check if there is a parameter/variable with the same name and export it using `!Ref`; also reuse `Description:` attribute is none is specified
-    * Export pattern:
-        * shared resource: `${Tier}-${ModuleId}::{VariableName}`
-        * custom resource: `${Tier}-CustomResource-${CustomResourceName}`
-        * use CloudFormation stack exports for custom resources
-            * benefit is that it will track which stacks are currently using it
+
+
+* `Output`
+* `CustomResource`
+    ```yaml
+    - CustomResource: LambdaSharp::S3PackageLoader
+        Handler: CustomResourceTopic
+        Description: SNS Topic ARN for subscribing to S3 buckets
+    ```
+* `Output:` without a `Value:` attribute should check if there is a parameter/variable with the same name and export it using `!Ref`; also reuse `Description:` attribute is none is specified
+* Export pattern:
+    * shared resource: `${Tier}-${ModuleId}::{VariableName}`
+    * custom resource: `${Tier}-CustomResource-${CustomResourceName}`
+    * use CloudFormation stack exports for custom resources
+        * benefit is that it will track which stacks are currently using it
 
 ### Misc
 
