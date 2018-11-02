@@ -68,7 +68,7 @@ dotnet lash config --cli-profile Demo --module-s3-bucket-name="" --cloudformatio
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4-WIP) - Configure LambdaSharp CLI
+MindTouch LambdaSharp CLI (v0.4) - Configure LambdaSharp CLI
 Configuring a new profile for LambdaSharp CLI
 Creating CLI profile: Demo
 Creating new S3 bucket

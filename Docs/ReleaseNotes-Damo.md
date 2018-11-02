@@ -57,7 +57,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 The λ# CLI is now a global dotnet tool, which makes it trivial to install. No more need to check-out the [LambdaSharpTool GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool) for creating modules unless to contribute to it.
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4-WIP
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4-RC1
 ```
 
 As part of the λ# CLI setup procedure, the CLI must be configured for the AWS account. The configuration step creates a profile and resources required to deploy λ# modules. The profile information is stored in the AWS Parameter Store so that it can be shared with team members. Multiple CLI profiles can be configured when needed.

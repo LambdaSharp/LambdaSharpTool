@@ -134,7 +134,7 @@ dotnet lash deploy Demo/bin/manifest.json
 
 Output:
 ```
-MindTouch LambdaSharp CLI (v0.4-WIP) - Deploy LambdaSharp module
+MindTouch LambdaSharp CLI (v0.4) - Deploy LambdaSharp module
 Readying module for deployment tier 'Demo'
 Publishing module: Demo
 => Uploading function: s3://lambdasharp-bucket-name/Modules/Demo/Assets/function_RecordMessage_4E05BDFA74DAC87A05165A4D5B609B39.zip

@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharpRegistrar
-Version: 0.4-WIP
+Version: 0.4-RC1
 Description: LambdaSharp Modules and Functions Registrar
 Pragmas:
   - no-module-registration
