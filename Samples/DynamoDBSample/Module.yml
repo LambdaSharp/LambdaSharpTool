@@ -1,10 +1,10 @@
-Name: DynamoDBSample
-
+Module: DynamoDBSample
 Description: A sample module using Kinesis streams
 
-Parameters:
+Variables:
 
-  - Name: Table
+  - Var: Table
+    Scope: "*"
     Description: Description for DynamoDB table
     Resource:
       Type: AWS::DynamoDB::Table
@@ -24,7 +24,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a DynamoDB stream
     Memory: 128
     Timeout: 15

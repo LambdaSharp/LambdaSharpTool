@@ -1,9 +1,9 @@
-Name: ApiSample
-
+Module: ApiSample
 Description: A sample module integrating with API Gateway
 
 Functions:
-  - Name: MyFunction
+
+  - Function: MyFunction
     Description: This function is invoked by API Gateway
     Memory: 128
     Timeout: 30

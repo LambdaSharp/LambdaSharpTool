@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace MindTouch.LambdaSharp.Tool.Cli {
@@ -51,6 +52,73 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             app.Command("new", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Create new LambdaSharp module or function";
+
+                // function sub-command
+                cmd.Command("function", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new LambdaSharp function";
+
+                    // sub-command options
+                    var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
+                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
+                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
+                    var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
+                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
+                    inputFileOption.ShowInHelpText = false;
+                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
+                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
+                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
+                    subCmd.OnExecute(() => {
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
+
+                        // validate project vs. nuget reference options
+                        bool useProjectReference;
+                        if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
+                            AddError("cannot use --use-project-reference and --use-nuget-reference at the same time");
+                            return;
+                        }
+                        if(useProjectReferenceOption.HasValue()) {
+                            if(lambdasharpDirectory == null) {
+                                AddError("missing LAMBDASHARP environment variable");
+                                return;
+                            }
+                            useProjectReference = true;
+                        } else if(useNugetReferenceOption.HasValue()) {
+                            useProjectReference = false;
+                        } else if(lambdasharpDirectory != null) {
+                            useProjectReference = true;
+                        } else {
+                            useProjectReference = false;
+                        }
+
+                        // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
+                        var functionMemory = 128;
+                        var functionTimeout = 30;
+
+                        // determine function name
+                        string functionName;
+                        if(cmdArgument.Values.Any()) {
+                            functionName = cmdArgument.Values.First();
+                        } else {
+                            AddError("missing function name argument");
+                            return;
+                        }
+                        var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
+                        NewFunction(
+                            lambdasharpDirectory,
+                            functionName,
+                            namespaceOption.Value(),
+                            frameworkOption.Value() ?? "netcoreapp2.1",
+                            useProjectReference,
+                            workingDirectory,
+                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
+                            languageOption.Value() ?? "csharp",
+                            functionMemory,
+                            functionTimeout
+                        );
+                    });
+                });
 
                 // module sub-command
                 cmd.Command("module", subCmd => {
@@ -84,78 +152,14 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     });
                 });
 
-                // function sub-command
-                cmd.Command("function", subCmd => {
-                    subCmd.HelpOption();
-                    subCmd.Description = "Create new LambdaSharp function";
-
-                    // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new function (e.g. MyFunction)", CommandOptionType.SingleValue);
-                    var namespaceOption = subCmd.Option("--namespace|-ns <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
-                    var directoryOption = subCmd.Option("--working-directory|-wd <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
-                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
-                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
-                    inputFileOption.ShowInHelpText = false;
-                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
-                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
-                    var cmdArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
-                    subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-
-                        // validate project vs. nuget reference options
-                        bool useProjectReference;
-                        if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
-                            AddError("cannot use --use-project-reference and --use-nuget-reference at the same time");
-                            return;
-                        }
-                        if(useProjectReferenceOption.HasValue()) {
-                            if(lambdasharpDirectory == null) {
-                                AddError("missing LAMBDASHARP environment variable");
-                                return;
-                            }
-                            useProjectReference = true;
-                        } else if(useNugetReferenceOption.HasValue()) {
-                            useProjectReference = false;
-                        } else if(lambdasharpDirectory != null) {
-                            useProjectReference = true;
-                        } else {
-                            useProjectReference = false;
-                        }
-
-                        // determine function name
-                        if(cmdArgument.Values.Any() && nameOption.HasValue()) {
-                            AddError("cannot specify --name and an argument at the same time");
-                            return;
-                        }
-                        string functionName;
-                        if(nameOption.HasValue()) {
-                            functionName = nameOption.Value();
-                        } else if(cmdArgument.Values.Any()) {
-                            functionName = cmdArgument.Values.First();
-                        } else {
-                            AddError("missing function name argument");
-                            return;
-                        }
-                        var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
-                        NewFunction(
-                            lambdasharpDirectory,
-                            functionName,
-                            namespaceOption.Value(),
-                            frameworkOption.Value() ?? "netcoreapp2.1",
-                            useProjectReference,
-                            workingDirectory,
-                            Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml")
-                        );
-                    });
-                });
+                // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
                     Console.WriteLine(cmd.GetHelpText());
                 });
             });
         }
 
-        private void NewModule(string moduleName, string moduleDirectory) {
+        public void NewModule(string moduleName, string moduleDirectory) {
             try {
                 Directory.CreateDirectory(moduleDirectory);
             } catch(Exception e) {
@@ -164,7 +168,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             }
             var moduleFile = Path.Combine(moduleDirectory, "Module.yml");
             if(File.Exists(moduleFile)) {
-                AddError($"module file '{moduleFile}' already exists");
+                AddError($"module definition '{moduleFile}' already exists");
                 return;
             }
             try {
@@ -172,46 +176,43 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     ["MODULENAME"] = moduleName
                 });
                 File.WriteAllText(moduleFile, module);
-                Console.WriteLine($"Created module file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
+                Console.WriteLine($"Created module definition: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
             } catch(Exception e) {
-                AddError($"unable to create module file '{moduleFile}'", e);
+                AddError($"unable to create module definition '{moduleFile}'", e);
             }
         }
 
-        private void NewFunction(
+        public void NewFunction(
             string lambdasharpDirectory,
             string functionName,
             string rootNamespace,
             string framework,
             bool useProjectReference,
             string workingDirectory,
-            string moduleFile
+            string moduleFile,
+            string language,
+            int functionMemory,
+            int functionTimeout
         ) {
 
-            // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
-            var functionMemory = 128;
-            var functionTimeout = 30;
-
-            // parse yaml module file
+            // parse yaml module definition
             if(!File.Exists(moduleFile)) {
                 AddError($"could not find module '{moduleFile}'");
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
-            var module = new ModelParser().Parse(moduleContents);
+            var module = new ModelParser(new Settings(), moduleFile).Parse(moduleContents);
             if(HasErrors) {
                 return;
             }
-            var moduleName = module.Name;
 
             // set default namespace if none is set
             if(rootNamespace == null) {
-                rootNamespace = $"{moduleName}.{functionName}";
+                rootNamespace = $"{module.Module}.{functionName}";
             }
 
             // create directory for function project
-            var moduleFunctionName = $"{moduleName}.{functionName}";
-            var projectDirectory = Path.Combine(workingDirectory, moduleFunctionName);
+            var projectDirectory = Path.Combine(workingDirectory, functionName);
             if(Directory.Exists(projectDirectory)) {
                 AddError($"project directory '{projectDirectory}' already exists");
                 return;
@@ -223,40 +224,39 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 return;
             }
 
-            // create function project
-            var projectFile = Path.Combine(projectDirectory, moduleFunctionName + ".csproj");
-            var substitutions = new Dictionary<string, string> {
-                ["FRAMEWORK"] = framework,
-                ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_PROJECT"] = Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj")),
-                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}.*"
-            };
-            try {
-                var projectContents = ReadResource(
-                    useProjectReference
-                        ? "NewFunctionProjectLocal.xml"
-                        : "NewFunctionProjectNuget.xml",
-                    substitutions
+            // create function file
+            switch(language) {
+            case "csharp":
+                NewCSharpFunction(
+                    lambdasharpDirectory,
+                    functionName,
+                    rootNamespace,
+                    framework,
+                    useProjectReference,
+                    workingDirectory,
+                    moduleFile,
+                    functionMemory,
+                    functionTimeout,
+                    projectDirectory
                 );
-                File.WriteAllText(projectFile, projectContents);
-                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
-            } catch(Exception e) {
-                AddError($"unable to create project file '{projectFile}'", e);
-                return;
+                break;
+            case "javascript":
+                NewJavascriptFunction(
+                    lambdasharpDirectory,
+                    functionName,
+                    rootNamespace,
+                    framework,
+                    useProjectReference,
+                    workingDirectory,
+                    moduleFile,
+                    functionMemory,
+                    functionTimeout,
+                    projectDirectory
+                );
+                break;
             }
 
-            // create function source code
-            var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource("NewFunction.txt", substitutions);
-            try {
-                File.WriteAllText(functionFile, functionContents);
-                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
-            } catch(Exception e) {
-                AddError($"unable to create function file '{functionFile}'", e);
-                return;
-            }
-
-            // update YAML module file
+            // update YAML module definition
             var moduleLines = File.ReadAllLines(moduleFile).ToList();
 
             // check if `Functions:` section needs to be added
@@ -275,12 +275,86 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // insert function definition
             moduleLines.InsertRange(functionsIndex, new[] {
                 "",
-                $"  - Name: {functionName}",
+                $"  - Function: {functionName}",
                 $"    Description: TODO - update {functionName} description",
                 $"    Memory: {functionMemory}",
                 $"    Timeout: {functionTimeout}",
             });
             File.WriteAllLines(moduleFile, moduleLines);
+        }
+
+        public void NewCSharpFunction(
+            string lambdasharpDirectory,
+            string functionName,
+            string rootNamespace,
+            string framework,
+            bool useProjectReference,
+            string workingDirectory,
+            string moduleFile,
+            int functionMemory,
+            int functionTimeout,
+            string projectDirectory
+        ) {
+
+            // create function project
+            var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
+            var substitutions = new Dictionary<string, string> {
+                ["FRAMEWORK"] = framework,
+                ["ROOTNAMESPACE"] = rootNamespace,
+                ["LAMBDASHARP_PROJECT"] = useProjectReference
+                    ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "MindTouch.LambdaSharp", "MindTouch.LambdaSharp.csproj"))
+                    : "(not used)",
+                ["LAMBDASHARP_VERSION"] = $"{Version.Major}.{Version.Minor}{Version.Suffix}*"
+            };
+            try {
+                var projectContents = ReadResource(
+                    useProjectReference
+                        ? "NewCSharpFunctionProjectLocal.xml"
+                        : "NewCSharpFunctionProjectNuget.xml",
+                    substitutions
+                );
+                File.WriteAllText(projectFile, projectContents);
+                Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create project file '{projectFile}'", e);
+                return;
+            }
+
+            // create function source code
+            var functionFile = Path.Combine(projectDirectory, "Function.cs");
+            var functionContents = ReadResource("NewCSharpFunction.txt", substitutions);
+            try {
+                File.WriteAllText(functionFile, functionContents);
+                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create function file '{functionFile}'", e);
+                return;
+            }
+        }
+
+        public void NewJavascriptFunction(
+            string lambdasharpDirectory,
+            string functionName,
+            string rootNamespace,
+            string framework,
+            bool useProjectReference,
+            string workingDirectory,
+            string moduleFile,
+            int functionMemory,
+            int functionTimeout,
+            string projectDirectory
+        ) {
+
+            // create function source code
+            var functionFile = Path.Combine(projectDirectory, "index.js");
+            var functionContents = ReadResource("NewJSFunction.txt");
+            try {
+                File.WriteAllText(functionFile, functionContents);
+                Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
+            } catch(Exception e) {
+                AddError($"unable to create function file '{functionFile}'", e);
+                return;
+            }
         }
     }
 }

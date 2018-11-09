@@ -29,9 +29,10 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         //--- Properties ---
         public string Name { get; set; }
         public string Description { get; set; }
-        public string Export { get; set; }
-        public string FullName { get; set; }
+        public IList<string> Scope { get; set; }
         public IList<AParameter> Parameters { get; set; }
+        public string ResourceName { get; set; }
+        public object Reference;
     }
 
     public class SecretParameter : AParameter {
@@ -41,17 +42,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public IDictionary<string, string> EncryptionContext { get; set; }
     }
 
-    public class StringParameter : AParameter {
-
-        //--- Properties ---
-        public string Value { get; set; }
-    }
-
-    public class StringListParameter : AParameter {
-
-        //--- Properties ---
-        public IList<string> Values { get; set; }
-    }
+    public class ValueParameter : AParameter { }
 
     public class PackageParameter : AParameter {
 
@@ -59,12 +50,6 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string DestinationBucketParameterName { get; set; }
         public string DestinationKeyPrefix { get; set; }
         public string PackagePath { get; set; }
-    }
-
-    public class ExpressionParameter : AParameter {
-
-        //--- Properties ---
-        public object Expression { get; set; }
     }
 
     public abstract class AResourceParameter : AParameter {
@@ -76,4 +61,32 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class ReferencedResourceParameter : AResourceParameter { }
 
     public class CloudFormationResourceParameter : AResourceParameter { }
+
+    public abstract class AInputParameter : AResourceParameter {
+
+        //--- Properties ---
+        public string Section { get; set; }
+        public string Label { get; set; }
+        public bool? NoEcho { get; set; }
+        public string Type { get; set; }
+    }
+
+    public class ValueInputParameter : AInputParameter {
+
+        //--- Properties ---
+        public string Default { get; set; }
+        public string ConstraintDescription { get; set; }
+        public string AllowedPattern { get; set; }
+        public IList<string> AllowedValues { get; set; }
+        public int? MaxLength { get; set; }
+        public int? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MinValue { get; set; }
+    }
+
+    public class ImportInputParameter : AInputParameter {
+
+        //--- Properties ---
+        public string Import { get; set; }
+    }
 }

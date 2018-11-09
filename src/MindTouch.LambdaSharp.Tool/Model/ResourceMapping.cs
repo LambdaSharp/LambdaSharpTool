@@ -57,39 +57,44 @@ namespace MindTouch.LambdaSharp.Tool.Model {
                 && awsTypeShorthands.TryGetValue(shorthand, out allowed);
         }
 
-        public bool TryParseResourceProperties(
-            string awsType,
-            string logicalId,
-            object properties,
-            out object resourceArnFn,
-            out object resourceParamFn,
-            out Humidifier.Resource resourceTemplate
-        ) {
+        public object ExpandResourceReference(string awsType, object arnReference) {
+
+            // NOTE: some AWS resources require additional sub-resource reference
+            //  to properly apply permissions across the board.
+
+            switch(awsType) {
+            case "AWS::S3::Bucket":
+
+                // S3 Bucket resources must be granted permissions on the bucket AND the keys
+                return new object[] {
+                    arnReference,
+                    AModelProcessor.FnJoin("", new List<object> { arnReference, "/*" })
+                };
+            case "AWS::DynamoDB::Table":
+
+                // DynamoDB resources must be granted permissions on the table AND the stream
+                return new object[] {
+                    arnReference,
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream", "*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index", "*" })
+                };
+            default:
+                return arnReference;
+            }
+        }
+
+        public object GetArnReference(string awsType, string logicalId) {
+            if(awsType == null) {
+
+                // use !Ref for non-resource type references
+                return AModelProcessor.FnRef(logicalId);
+            }
             var type = GetHumidifierType(awsType);
             if(type == null) {
-                resourceArnFn = null;
-                resourceParamFn = null;
-                resourceTemplate = null;
-                return false;
-            }
-            if(properties == null) {
-                resourceTemplate = (Humidifier.Resource)Activator.CreateInstance(type);
-            } else {
-                if(properties is IDictionary<string, object> dictionary) {
 
-                    // NOTE (2018-09-05, bjorg): Humidifier appends a '_' to property names
-                    //  that conflict with the typename. This mimics the behavior by doing the
-                    // thing before we attempt to deserialize into the target type.
-                    var typeName = type.Name;
-                    if(dictionary.TryGetValue(typeName, out object value)) {
-                        dictionary.Remove(typeName);
-                        dictionary[typeName + "_"] = value;
-                    }
-                }
-                resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties), type);
+                // don't reference custom types
+                return AModelProcessor.FnRef("AWS::NoValue");
             }
-
-            // determine how we can get the ARN for the resource, which is used when we grant IAM permissions
             switch(awsType) {
             case "AWS::ApplicationAutoScaling::ScalingPolicy":
             case "AWS::AutoScaling::ScalingPolicy":
@@ -114,33 +119,67 @@ namespace MindTouch.LambdaSharp.Tool.Model {
             case "AWS::StepFunctions::StateMachine":
 
                 // these AWS resources return their ARN using `!Ref`
-                resourceArnFn = Fn.Ref(logicalId);
-                resourceParamFn = Fn.Ref(logicalId);
-                break;
-            case "AWS::S3::Bucket":
-
-                // S3 Bucket resources must be granted permissions on the bucket AND the keys
-                resourceArnFn = new object[] {
-                    Fn.GetAtt(logicalId, "Arn"),
-                    Fn.Join("", Fn.GetAtt(logicalId, "Arn"), "/*")
-                };
-                resourceParamFn = Fn.Ref(logicalId);
-                break;
-            case "AWS::DynamoDB::Table":
-
-                // DynamoDB resources must be granted permissions on the table AND the stream
-                resourceArnFn = new object[] {
-                    Fn.GetAtt(logicalId, "Arn"),
-                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "stream", "*"),
-                    Fn.Join("/", Fn.GetAtt(logicalId, "Arn"), "index", "*")
-                };
-                resourceParamFn = Fn.Ref(logicalId);
-                break;
+                return AModelProcessor.FnRef(logicalId);
             default:
 
                 // most AWS resources expose an `Arn` attribute that we need to use
-                resourceArnFn = Fn.GetAtt(logicalId, "Arn");
-                resourceParamFn = Fn.Ref(logicalId);
+                return AModelProcessor.FnGetAtt(logicalId, "Arn");
+            }
+        }
+
+        public bool TryParseResourceProperties(
+            string awsType,
+            object arnReference,
+            object properties,
+            out object resourceAsStatementFn,
+            out Humidifier.Resource resourceTemplate
+        ) {
+            var type = GetHumidifierType(awsType);
+            if(type == null) {
+                resourceAsStatementFn = null;
+                resourceTemplate = null;
+                return false;
+            }
+            if(properties == null) {
+                resourceTemplate = (Humidifier.Resource)Activator.CreateInstance(type);
+            } else {
+                if(properties is IDictionary<string, object> dictionary) {
+
+                    // NOTE (2018-09-05, bjorg): Humidifier appends a '_' to property names
+                    //  that conflict with the typename. This mimics the behavior by doing the
+                    // thing before we attempt to deserialize into the target type.
+                    var typeName = type.Name;
+                    if(dictionary.TryGetValue(typeName, out object value)) {
+                        dictionary.Remove(typeName);
+                        dictionary[typeName + "_"] = value;
+                    }
+                }
+                resourceTemplate = (Humidifier.Resource)JsonConvert.DeserializeObject(JsonConvert.SerializeObject(properties), type);
+            }
+
+            // determine how we can get the ARN for the resource, which is used when we grant IAM permissions
+            switch(awsType) {
+            case "AWS::S3::Bucket":
+
+                // S3 Bucket resources must be granted permissions on the bucket AND the keys
+                resourceAsStatementFn = new object[] {
+                    arnReference,
+                    AModelProcessor.FnJoin("", new List<object> { arnReference, "/*" })
+                };
+                break;
+            case "AWS::DynamoDB::Table":
+
+                // DynamoDB resources must be granted permissions on the table AND the stream AND the index
+                resourceAsStatementFn = new object[] {
+                    arnReference,
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "stream/*" }),
+                    AModelProcessor.FnJoin("/", new List<object> { arnReference, "index/*" })
+                };
+                break;
+            default:
+
+                // most AWS resources just require the ARN reference
+                resourceAsStatementFn = arnReference;
                 break;
             }
             return true;

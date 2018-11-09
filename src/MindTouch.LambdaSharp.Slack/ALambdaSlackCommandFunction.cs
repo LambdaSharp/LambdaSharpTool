@@ -45,23 +45,19 @@ namespace MindTouch.LambdaSharp.Slack {
         public static HttpClient HttpClient = new HttpClient();
 
         //--- Fields ---
-        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
-        private string _slackVerificationTokenName;
         private string _slackVerificationToken;
 
         //--- Abstract Methods ---
         protected abstract Task HandleSlackRequestAsync(SlackRequest request);
 
         //--- Methods ---
-        public override Task InitializeAsync(LambdaConfig config) {
+        public override async Task InitializeAsync(LambdaConfig config) {
 
             // check if an alternative name for the slack token was given
-            if(_slackVerificationTokenName != null) {
-                _slackVerificationToken = config.ReadText(_slackVerificationTokenName);
-            } else {
-                _slackVerificationToken = config.ReadText("SlackToken", null);
+            _slackVerificationToken = config.ReadText("SlackToken", defaultValue: null);
+            if(_slackVerificationToken == "") {
+                _slackVerificationToken = null;
             }
-            return Task.CompletedTask;
         }
 
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
@@ -70,7 +66,7 @@ namespace MindTouch.LambdaSharp.Slack {
             LogInfo("reading message stream");
             SlackRequest request;
             try {
-                request = JsonSerializer.Deserialize<SlackRequest>(stream);
+                request = DeserializeJson<SlackRequest>(stream);
             } catch(Exception e) {
                 LogError(e, "failed during Slack request deserialization");
                 return $"ERROR: {e.Message}";
@@ -88,14 +84,14 @@ namespace MindTouch.LambdaSharp.Slack {
                     Console.SetError(consoleErrorWriter);
 
                     // validate the slack token (assuming one was configured)
-                    if(!(_slackVerificationTokenName?.Equals(request.Token) ?? true)) {
+                    if(!(_slackVerificationToken?.Equals(request.Token) ?? true)) {
                         throw new SlackVerificationTokenMismatchException();
                     }
 
                     // handle slack request
                     await HandleSlackRequestAsync(request);
                 } catch(Exception e) {
-                    LogError(e, e.Message);
+                    LogError(e);
                     Console.Error.WriteLine(e);
                 } finally {
                     Console.SetOut(consoleOutOriginal);
@@ -117,13 +113,6 @@ namespace MindTouch.LambdaSharp.Slack {
             return "Ok";
         }
 
-        protected override async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
-            await base.InitializeAsync(envSource, context);
-
-            // retrieve the optional parameter name for the slack token
-            _slackVerificationTokenName = envSource.Read("SLACKTOKENNAME");
-        }
-
         protected Task<bool> RespondInChannel(SlackRequest request, string text, params SlackResponseAttachment[] attachments)
             => Respond(request, SlackResponse.InChannel(text, attachments));
 
@@ -131,16 +120,12 @@ namespace MindTouch.LambdaSharp.Slack {
             => Respond(request, SlackResponse.Ephemeral(text, attachments));
 
         protected async Task<bool> Respond(SlackRequest request, SlackResponse response) {
-            using(var stream = new MemoryStream()) {
-                JsonSerializer.Serialize(response, stream);
-                stream.Position = 0;
-                var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
-                    RequestUri = new Uri(request.ResponseUrl),
-                    Method = HttpMethod.Post,
-                    Content = new StreamContent(stream)
-                });
-                return httpResponse.StatusCode == HttpStatusCode.OK;
-            }
+            var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
+                RequestUri = new Uri(request.ResponseUrl),
+                Method = HttpMethod.Post,
+                Content = new StringContent(SerializeJson(response))
+            });
+            return httpResponse.StatusCode == HttpStatusCode.OK;
         }
     }
 }

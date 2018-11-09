@@ -1,16 +1,23 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Inputs:
 
-  - Name: Sqs1
+  - Parameter: InputSqs
+    Description: Description for SQS input resource
+    Resource:
+      Type: AWS::SQS::Queue
+      Allow: Receive
+
+Variables:
+
+  - Var: Sqs1
     Description: Description for SQS resource
     Resource:
       Type: AWS::SQS::Queue
       Allow: Receive
 
-  - Name: Sqs2
+  - Var: Sqs2
     Description: Description for SQS resource
     Resource:
       Type: AWS::SQS::Queue
@@ -18,7 +25,7 @@ Parameters:
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30
@@ -26,3 +33,4 @@ Functions:
       - Sqs: Sqs1
       - Sqs: Sqs2
         BatchSize: 1
+      - Sqs: InputSqs

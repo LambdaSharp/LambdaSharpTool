@@ -20,17 +20,22 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class ModuleNode {
 
         //--- Properties ---
-        public string Name { get; set; }
+        public string Module { get; set; }
         public string Version { get; set; }
         public string Description { get; set; }
+        public IList<object> Pragmas { get; set; }
         public IList<string> Secrets { get; set; }
-        public IList<ParameterNode> Parameters { get; set; }
+        public IList<InputNode> Inputs { get; set; }
+        public IList<OutputNode> Outputs { get; set; }
+        public IList<ParameterNode> Variables { get; set; }
         public IList<FunctionNode> Functions { get; set; }
     }
 }

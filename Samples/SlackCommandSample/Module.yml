@@ -1,9 +1,16 @@
-Name: SlackCommandSample
-
+Module: SlackCommandSample
 Description: A sample module integrating with Slack
 
+Inputs:
+
+  - Parameter: SlackToken
+    Description: Slack verification token
+    Scope: MyFunction
+    Default: ""
+
 Functions:
-  - Name: MyFunction
+
+  - Function: MyFunction
     Description: This function is invoked by a Slack command
     Memory: 128
     Timeout: 30

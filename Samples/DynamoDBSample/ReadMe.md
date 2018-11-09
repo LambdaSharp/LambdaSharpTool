@@ -2,22 +2,21 @@
 
 # LambdaSharp DynamoDB Stream Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
+Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
 
 Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 
 ```yaml
-Name: DynamoDBSample
-
+Module: DynamoDBSample
 Description: A sample module using Kinesis streams
 
-Parameters:
+Variables:
 
-  - Name: Table
+  - Var: Table
     Description: Description for DynamoDB table
     Resource:
       Type: AWS::DynamoDB::Table
@@ -35,7 +34,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a DynamoDB stream
     Memory: 128
     Timeout: 15

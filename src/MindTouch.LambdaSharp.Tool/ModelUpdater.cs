@@ -27,77 +27,76 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
-using Amazon.S3;
-using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using Humidifier;
 using MindTouch.LambdaSharp.Tool.Model;
+using MindTouch.LambdaSharp.Tool.Internal;
 using Newtonsoft.Json;
+using Amazon.S3.Model;
 
 namespace MindTouch.LambdaSharp.Tool {
-    using Stack = Amazon.CloudFormation.Model.Stack;
+    using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
+    using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class ModelUpdater : AModelProcessor {
 
-        //--- Class Fields ---
-        private static HashSet<string> _finalStates = new HashSet<string> {
-            "CREATE_COMPLETE",
-            "CREATE_FAILED",
-            "DELETE_COMPLETE",
-            "DELETE_FAILED",
-            "ROLLBACK_COMPLETE",
-            "ROLLBACK_FAILED",
-            "UPDATE_COMPLETE",
-            "UPDATE_ROLLBACK_COMPLETE",
-            "UPDATE_ROLLBACK_FAILED"
-        };
-
-        private static bool IsFinalStackEvent(StackEvent evt)
-            => (evt.ResourceType == "AWS::CloudFormation::Stack") && _finalStates.Contains(evt.ResourceStatus);
-
-        private static bool IsSuccessfulFinalStackEvent(StackEvent evt)
-            => (evt.ResourceType == "AWS::CloudFormation::Stack")
-                && ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"));
-
         //--- Constructors ---
-        public ModelUpdater(Settings settings) : base(settings) { }
+        public ModelUpdater(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public async Task<bool> Deploy(Module module, string templateFile, bool allowDataLoss, bool protectStack) {
-            var stackName = $"{Settings.Tier}-{module.Name}";
-            Console.WriteLine($"Deploying stack: {stackName}");
+        public async Task<bool> DeployAsync(
+            ModuleManifest manifest,
+            string altModuleName,
+            bool allowDataLoss,
+            bool protectStack,
+            Dictionary<string, string> inputs,
+            bool forceDeploy
+        ) {
+            var stackName = $"{Settings.Tier}-{altModuleName ?? manifest.ModuleName}";
 
-            // check if cloudformation stack already exists
-            string mostRecentStackEventId = null;
-            try {
-                var response = await Settings.CfClient.DescribeStackEventsAsync(new DescribeStackEventsRequest {
-                    StackName = stackName
-                });
-                var mostRecentStackEvent = response.StackEvents.First();
+            // check if cloudformation stack already exists and is in a final state
+            var mostRecentStackEventId = await Settings.CfClient.GetMostRecentStackEventIdAsync(stackName);
 
-                // make sure the stack is not already in an update operation
-                if(!IsFinalStackEvent(mostRecentStackEvent)) {
-                    Settings.AddError("stack appears to be undergoing an update operation");
-                    return false;
+            // check version of previously deployed module
+            if(!forceDeploy) {
+                try {
+                    var describe = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = stackName
+                    });
+                    var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                    if(deployedOutputs != null) {
+                        var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                        var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                        if(deployedName == null) {
+                            AddError("unable to determine the deployed module name; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(deployedName != manifest.ModuleName) {
+                            AddError($"deployed module name ({deployedName}) does not match {manifest.ModuleName}; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(
+                            (deployedVersionText == null)
+                            || !VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                        ) {
+                            AddError("unable to determine the deployed module version; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                        if(deployedVersion > VersionInfo.Parse(manifest.ModuleVersion)) {
+                            AddError($"deployed module version (v{deployedVersionText}) is newer than v{manifest.ModuleVersion}; use --force-deploy to proceed anyway");
+                            return false;
+                        }
+                    }
+                } catch(AmazonCloudFormationException) {
+
+                    // stack doesn't exist
                 }
-                mostRecentStackEventId = mostRecentStackEvent.EventId;
-            } catch(AmazonCloudFormationException) { }
+            }
+            Console.WriteLine($"Deploying stack: {stackName} [{manifest.ModuleName}]");
 
             // set optional notification topics for cloudformation operations
             var notificationArns =  new List<string>();
-            if(Settings.NotificationTopicArn != null) {
-                notificationArns.Add(Settings.NotificationTopicArn);
-            }
-
-            // upload cloudformation template
-            string templateUrl = null;
-            if(Settings.DeploymentBucketName != null) {
-                var templateSuffix = Settings.GitSha ?? ("UTC" + DateTime.UtcNow.ToString("yyyyMMddhhmmss"));
-                var templateS3Key = $"{module.Name}/cloudformation-{templateSuffix}.json";
-                templateUrl = $"https://s3.amazonaws.com/{Settings.DeploymentBucketName}/{templateS3Key}";
-                Console.WriteLine($"=> Uploading CloudFormation template: s3://{Settings.DeploymentBucketName}/{templateS3Key}");
-                var transferUtility = new TransferUtility(Settings.S3Client);
-                await transferUtility.UploadAsync(templateFile, Settings.DeploymentBucketName, templateS3Key);
+            if(Settings.DeploymentNotificationsTopicArn != null) {
+                notificationArns.Add(Settings.DeploymentNotificationsTopicArn);
             }
 
             // default stack policy denies all updates
@@ -146,25 +145,47 @@ namespace MindTouch.LambdaSharp.Tool {
         ""Resource"": ""*""
     }]
 }";
+            // initialize template parameters
+            var parameters = new List<CloudFormationParameter> {
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentPrefix",
+                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier + "-"
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentPrefixLowercase",
+                    ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : Settings.Tier.ToLowerInvariant() + "-"
+                },
+                new CloudFormationParameter {
+                    ParameterKey = "DeploymentBucketName",
+                    ParameterValue = Settings.DeploymentBucketName ?? ""
+                }
+            };
+            foreach(var input in inputs) {
+                parameters.Add(new CloudFormationParameter {
+                    ParameterKey = input.Key,
+                    ParameterValue = input.Value
+                });
+            }
 
             // create/update cloudformation stack
             var success = false;
+            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{manifest.Template}";
             if(mostRecentStackEventId != null) {
                 try {
-                    Console.WriteLine($"=> Stack update initiated");
+                    Console.WriteLine($"=> Stack update initiated for {stackName}");
                     var request = new UpdateStackRequest {
                         StackName = stackName,
                         Capabilities = new List<string> {
                             "CAPABILITY_NAMED_IAM"
                         },
                         NotificationARNs = notificationArns,
+                        Parameters = parameters,
                         StackPolicyBody = stackPolicyBody,
                         StackPolicyDuringUpdateBody = allowDataLoss ? stackDuringUpdatePolicyBody : null,
-                        TemplateURL = templateUrl,
-                        TemplateBody = (templateUrl == null) ? File.ReadAllText(templateFile) : null
+                        TemplateURL = templateUrl
                     };
                     var response = await Settings.CfClient.UpdateStackAsync(request);
-                    var outcome = await TrackStackUpdate(module, response.StackId, mostRecentStackEventId);
+                    var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                     if(outcome.Success) {
                         Console.WriteLine($"=> Stack update finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                         ShowStackResult(outcome.Stack);
@@ -179,7 +200,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     success = true;
                 }
             } else {
-                Console.WriteLine($"=> Stack creation initiated");
+                Console.WriteLine($"=> Stack creation initiated for {stackName}");
                 var request = new CreateStackRequest {
                     StackName = stackName,
                     Capabilities = new List<string> {
@@ -187,13 +208,13 @@ namespace MindTouch.LambdaSharp.Tool {
                     },
                     OnFailure = OnFailure.DELETE,
                     NotificationARNs = notificationArns,
+                    Parameters = parameters,
                     StackPolicyBody = stackPolicyBody,
                     EnableTerminationProtection = protectStack,
-                    TemplateURL = templateUrl,
-                    TemplateBody = (templateUrl == null) ? File.ReadAllText(templateFile) : null
+                    TemplateURL = templateUrl
                 };
                 var response = await Settings.CfClient.CreateStackAsync(request);
-                var outcome = await TrackStackUpdate(module, response.StackId, mostRecentStackEventId);
+                var outcome = await Settings.CfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack creation finished (finished: {DateTime.Now:yyyy-MM-dd HH:mm:ss})");
                     ShowStackResult(outcome.Stack);
@@ -205,73 +226,15 @@ namespace MindTouch.LambdaSharp.Tool {
             return success;
 
             // local function
-            void ShowStackResult(Stack stack) {
+            void ShowStackResult(CloudFormationStack stack) {
                 var outputs = stack.Outputs;
                 if(outputs.Any()) {
                     Console.WriteLine("Stack output values:");
-                    foreach(var output in outputs) {
-                        Console.WriteLine($"=> {output.Description}: {output.OutputValue}");
+                    foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
+                        Console.WriteLine($"=> {output.Description ?? output.OutputKey}: {output.OutputValue}");
                     }
                 }
             }
-        }
-
-        private async Task<(Stack Stack, bool Success)> TrackStackUpdate(Module module, string stackId, string mostRecentStackEventId) {
-            var seenEventIds = new HashSet<string>();
-            var foundMostRecentStackEvent = (mostRecentStackEventId == null);
-            var request = new DescribeStackEventsRequest {
-                StackName = stackId
-            };
-
-            // iterate as long as the stack is being created/updated
-            var active = true;
-            var success = false;
-            while(active) {
-                await Task.Delay(TimeSpan.FromSeconds(3));
-
-                // fetch as many events as possible for the current stack
-                var events = new List<StackEvent>();
-                var response = await Settings.CfClient.DescribeStackEventsAsync(request);
-                events.AddRange(response.StackEvents);
-                events.Reverse();
-
-                // skip any events that preceded the most recent event before the stack update operation
-                while(!foundMostRecentStackEvent && events.Any()) {
-                    var evt = events.First();
-                    if(evt.EventId == mostRecentStackEventId) {
-                        foundMostRecentStackEvent = true;
-                    }
-                    seenEventIds.Add(evt.EventId);
-                    events.RemoveAt(0);
-                }
-                if(!foundMostRecentStackEvent) {
-                    Settings.AddError("unable to find starting event");
-                    return (Stack: null, Success: false);
-                }
-
-                // report only on new events
-                foreach(var evt in events.Where(evt => !seenEventIds.Contains(evt.EventId))) {
-                    Console.WriteLine($"{evt.ResourceStatus,-35} {evt.ResourceType,-55} {evt.LogicalResourceId}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
-                    if(!seenEventIds.Add(evt.EventId)) {
-
-                        // we found an event we already saw in the past, no point in looking at more events
-                        break;
-                    }
-                    if(IsFinalStackEvent(evt)) {
-
-                        // event signals stack creation/update completion; time to stop
-                        active = false;
-                        success = IsSuccessfulFinalStackEvent(evt);
-                        break;
-                    }
-                }
-            }
-
-            // describe stack and report any output values
-            var description = await Settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
-                StackName = stackId
-            });
-            return (Stack: description.Stacks.FirstOrDefault(), Success: success);
         }
     }
 }

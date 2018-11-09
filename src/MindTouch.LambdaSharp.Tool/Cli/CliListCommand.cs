@@ -35,38 +35,22 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("list", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "List LambdaSharp modules";
+                cmd.Description = "List deployed LambdaSharp modules";
 
                 // command options
-                var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-                var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
-
-                    // initialize deployment tier value
-                    var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if(tier == null) {
-                        AddError("missing deployment tier name");
+                    var settings = await initSettingsCallback();
+                    if(settings == null) {
                         return;
                     }
-                    if(tier == "Default") {
-                        AddError("deployment tier cannot be 'Default' because it is a reserved name");
-                        return;
-                    }
-
-                    // initialize AWS account Id and region
-                    var awsAccount = await InitializeAwsProfile(
-                        awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE")
-                    );
-                    if(awsAccount == null) {
-                        return;
-                    }
-                    await List(tier);
+                    await List(settings);
                 });
             });
         }
 
-        private async Task List(string tier) {
+        public async Task List(Settings settings) {
             var cfClient = new AmazonCloudFormationClient();
             var request = new ListStacksRequest {
                 StackStatusFilter = new List<string> {
@@ -91,7 +75,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             };
 
             // fetch all stacks
-            var prefix = $"{tier}-";
+            var prefix = $"{settings.Tier}-";
             var stacks = new List<StackSummary>();
             do {
                 var response = await cfClient.ListStacksAsync(request);
@@ -113,10 +97,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                     Console.WriteLine($"{summary.ModuleName.PadRight(moduleNameWidth)}{("[" + summary.StackStatus + "]").PadRight(statusWidth)}{summary.Date:yyyy-MM-dd HH:mm:ss}");
                 }
                 Console.WriteLine();
-                Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{tier}'");
+                Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.Tier}'");
             } else {
                 Console.WriteLine();
-                Console.WriteLine($"Found no modules for deployment tier '{tier}'");
+                Console.WriteLine($"Found no modules for deployment tier '{settings.Tier}'");
             }
         }
     }

@@ -1,10 +1,17 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Inputs:
 
-  - Name: Topic
+  - Parameter: InputTopic
+    Description: Description for Input Topic
+    Resource:
+      Type: AWS::SNS::Topic
+      Allow: Subscribe
+
+Variables:
+
+  - Var: Topic
     Description: Description for Topic resource
     Resource:
       Type: AWS::SNS::Topic
@@ -12,9 +19,10 @@ Parameters:
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30
     Sources:
       - Topic: Topic
+      - Topic: InputTopic

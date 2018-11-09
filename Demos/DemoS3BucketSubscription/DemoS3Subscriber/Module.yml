@@ -1,0 +1,16 @@
+Module: DemoS3Subscriber
+
+Inputs:
+
+  - Import: DemoS3Bucket::Bucket
+    Resource:
+      Type: AWS::S3::Bucket
+      Allow: Read
+
+Functions:
+
+  - Function: Subscriber
+    Memory: 128
+    Timeout: 15
+    Sources:
+      - S3: DemoS3Bucket::Bucket
