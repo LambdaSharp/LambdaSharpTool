@@ -2,27 +2,32 @@
 
 # LambdaSharp Alexa Skill Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
 
-## Module File
+## Module Definition
 
 Creating a function that is invoked by an [Alexa Skill](https://developer.amazon.com/alexa-skills-kit) requires two steps. First, an Alexa Skill must be created with an [Amazon Developer account](https://developer.amazon.com/). Second, the function must have the `Alexa` attribute in its `Sources` section.
 
 Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invocation to a specific Alexa Skill.
 
 ```yaml
-Name: AlexaSample
-
+Module: AlexaSample
 Description: A sample module using an Alexa skill
+
+Inputs:
+
+  - Parameter: AlexaSkillID
+    Description: Alexa Skill ID
+    Default: "*"
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an Alexa Skill
     Memory: 128
     Timeout: 30
     Sources:
-      - Alexa: "*"
+      - Alexa: !Ref AlexaSkillID
 ```
 
 ## Function Code

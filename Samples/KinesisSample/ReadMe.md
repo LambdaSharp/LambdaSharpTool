@@ -2,22 +2,22 @@
 
 # LambdaSharp Kinesis Stream Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
+Creating a function that is invoked by a Kinesis stream requires two steps. First, the Kinesis stream must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Kinesis` attribute.
 
 Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
 
 ```yaml
-Name: KinesisSample
+Module: KinesisSample
 
 Description: A sample module using Kinesis streams
 
-Parameters:
+Variables:
 
-  - Name: Stream
+  - Var: Stream
     Description: Description for Kinesis stream
     Resource:
       Type: AWS::Kinesis::Stream
@@ -26,7 +26,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by a Kinesis stream
     Memory: 128
     Timeout: 15

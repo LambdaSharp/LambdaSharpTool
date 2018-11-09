@@ -27,31 +27,7 @@ using Amazon.Lambda.Serialization.Json;
 
 namespace MindTouch.LambdaSharp {
 
-    [Obsolete("This class is obsolete. Use ALambdaFunction<TRequest, TResponse> instead.")]
-    public abstract class ALambdaFunction<TRequest> : ALambdaFunction {
-
-        //--- Fields ---
-        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
-
-        //--- Constructors ---
-        protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
-
-        protected ALambdaFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
-
-        //--- Abstract Methods ---
-        public abstract Task<object> ProcessMessageAsync(TRequest message, ILambdaContext context);
-
-        //--- Methods ---
-        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            var message = JsonSerializer.Deserialize<TRequest>(stream);
-            return await ProcessMessageAsync(message, context);
-        }
-    }
-
     public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction {
-
-        //--- Fields ---
-        protected readonly JsonSerializer JsonSerializer = new JsonSerializer();
 
         //--- Constructors ---
         protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -63,7 +39,8 @@ namespace MindTouch.LambdaSharp {
 
         //--- Methods ---
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            var message = JsonSerializer.Deserialize<TRequest>(stream);
+            var message = DeserializeJson<TRequest>(stream);
+            LogInfo($"deserialized stream as {typeof(TRequest)}");
             return await ProcessMessageAsync(message, context);
         }
     }

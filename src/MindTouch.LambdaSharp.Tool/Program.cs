@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Amazon.CloudFormation.Model;
 using Amazon.S3.Transfer;
@@ -36,7 +37,11 @@ namespace MindTouch.LambdaSharp.Tool {
     }
 
     public enum DryRunLevel {
+
+        // compile module, build assets, publish module
         Everything,
+
+        // compile module
         CloudFormation
     }
 
@@ -45,38 +50,51 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Class Methods ---
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
-                Name = "MindTouch.LambdaSharp.Tool",
-                FullName = $"MindTouch LambdaSharp Tool (v{VersionPrefixAndSuffix})",
+                Name = Settings.Lash,
+                FullName = $"MindTouch LambdaSharp CLI (v{Version})",
                 Description = "Project Home: https://github.com/LambdaSharp/LambdaSharpTool"
             };
             app.HelpOption();
 
             // register commands
+            new CliConfigCommand().Register(app);
+            new CliInitCommand().Register(app);
             new CliInfoCommand().Register(app);
-            new CliDeployCommand().Register(app);
-            new CliNewCommand().Register(app);
             new CliListCommand().Register(app);
+            new CliNewCommand().Register(app);
+            new CliBuildPublishDeployCommand().Register(app);
+            new CliEncryptCommand().Register(app);
 
-            // new command
+            // no command
+            var showHelp = false;
             app.OnExecute(() => {
+                showHelp = true;
                 Console.WriteLine(app.GetHelpText());
             });
 
             // execute command line options and report any errors
+            var stopwatch = Stopwatch.StartNew();
             try {
-                app.Execute(args);
-            } catch(Exception e) {
-                Console.WriteLine(e);
-                AddError(e);
+                try {
+                    app.Execute(args);
+                } catch(CommandParsingException e) {
+                    AddError(e.Message);
+                } catch(Exception e) {
+                    AddError(e);
+                }
+                if(Settings.HasErrors) {
+                    Console.WriteLine();
+                    Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                    Settings.ShowErrors();
+                    return -1;
+                }
+                return 0;
+            } finally {
+                if(!showHelp) {
+                    Console.WriteLine();
+                    Console.WriteLine($"Done (duration: {stopwatch.Elapsed:c})");
+                }
             }
-            if(ErrorCount > 0) {
-                Console.WriteLine();
-                Console.WriteLine($"FAILED: {ErrorCount:N0} errors encountered");
-                ShowErrors();
-                return -1;
-            }
-            return 0;
         }
-
     }
 }

@@ -55,7 +55,7 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public int? BatchSize { get; set; }
 
         // Alexa Source
-        public string Alexa { get; set; }
+        public object Alexa { get; set; }
 
         // DynamoDB Source
         public string DynamoDB { get; set; }
@@ -66,8 +66,5 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
         public string Kinesis { get; set; }
         // int? BatchSize { get; set; }
         // string StartingPosition { get; set; }
-
-        // Macro Source
-        public string Macro { get; set; }
    }
 }

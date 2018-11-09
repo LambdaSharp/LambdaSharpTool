@@ -1,0 +1,11 @@
+Module: DemoS3Bucket
+
+Outputs:
+
+  - Export: Bucket
+
+Variables:
+
+  - Var: Bucket
+    Resource:
+      Type: AWS::S3::Bucket

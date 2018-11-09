@@ -74,7 +74,7 @@ namespace MindTouch.LambdaSharp.Tool.Model {
     public class AlexaSource : AFunctionSource {
 
         //--- Properties ---
-        public string EventSourceToken { get; set; }
+        public object EventSourceToken { get; set; }
     }
 
     public class DynamoDBSource : AFunctionSource {
@@ -91,11 +91,5 @@ namespace MindTouch.LambdaSharp.Tool.Model {
         public string Kinesis { get; set; }
         public int BatchSize { get; set; }
         public string StartingPosition { get; set; }
-    }
-
-    public class MacroSource : AFunctionSource {
-
-        //--- Properties ---
-        public string MacroName { get; set; }
     }
 }

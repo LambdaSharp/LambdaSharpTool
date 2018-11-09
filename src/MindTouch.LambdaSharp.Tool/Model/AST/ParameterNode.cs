@@ -26,45 +26,28 @@ namespace MindTouch.LambdaSharp.Tool.Model.AST {
 
     public class ParameterNode {
 
-        //--- Constructors ---
-        public ParameterNode() { }
-
-        public ParameterNode(ParameterNode parameter) {
-            Name = parameter.Name;
-            Description = parameter.Description;
-            Resource = parameter.Resource;
-            Secret = parameter.Secret;
-            EncryptionContext = parameter.EncryptionContext;
-            Values = parameter.Values;
-            Value = parameter.Value;
-            Import = parameter.Import;
-            Package = parameter.Package;
-            Export = parameter.Export;
-            Parameters = parameter.Parameters;
-        }
-
         //--- Properties ---
-        public string Name { get; set; }
+
+        // common
         public string Description { get; set; }
+        public object Scope { get; set; }
+        public IList<ParameterNode> Variables { get; set; }
+
+        // value
+        public string Var { get; set; }
+        public object Value { get; set; }
         public ResourceNode Resource { get; set; }
+
+        // secret
+        // public string Var { get; set; }
         public string Secret { get; set; }
         public IDictionary<string, string> EncryptionContext { get; set; }
-        public IList<string> Values { get; set; }
-        public object Value { get; set; }
-        public string Import { get; set; }
-        public PackageNode Package { get; set; }
-        public string Export { get; set; }
-        public IList<ParameterNode> Parameters { get; set; }
-    }
 
-    public class PackageNode {
-
-        //--- Properties ---
+        // package
+        public string Package { get; set; }
         public string Files { get; set; }
         public string Bucket { get; set; }
         public string Prefix { get; set; }
-
-        [YamlIgnore]
         public string PackagePath { get; set; }
     }
 }

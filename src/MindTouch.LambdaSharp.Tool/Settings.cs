@@ -21,6 +21,8 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Amazon.CloudFormation;
 using Amazon.KeyManagementService;
 using Amazon.S3;
@@ -40,60 +42,78 @@ namespace MindTouch.LambdaSharp.Tool {
         }
     }
 
+    public class LambdaSharpToolConfigException : Exception {
+
+        //--- Fields ---
+        public readonly string Profile;
+
+        //--- Constructors ---
+        public LambdaSharpToolConfigException(string profile) : base() {
+            Profile = profile ?? throw new ArgumentNullException(nameof(profile));
+        }
+    }
+
     public class Settings {
 
+        //--- Constants ---
+#if DEBUG
+        public const string Lash = "lash";
+#else
+        public const string Lash = "dotnet lash";
+#endif
+
+        //--- Class Fields ---
+        public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
+        private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
+
+        //--- Class Properties ---
+        public static int ErrorCount => _errors.Count;
+        public static bool HasErrors => _errors.Count > 0;
+
+        //--- Class Methods ---
+        public static void ShowErrors() {
+            foreach(var error in _errors) {
+                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                    Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
+                } else {
+                    Console.WriteLine("ERROR: " + error.Message);
+                }
+            }
+            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
+            if(configException != null) {
+                Console.WriteLine();
+                Console.WriteLine($"IMPORTANT: run '{Lash} config' to configure LambdaSharp CLI for profile '{configException.Profile}'");
+                return;
+            }
+            var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
+            if(setupException != null) {
+                Console.WriteLine();
+                Console.WriteLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.Tier}'");
+                return;
+            }
+        }
+
+        public static void AddError(string message, Exception exception = null)
+            => _errors.Add((Message: message, Exception: exception));
+
+        public static void AddError(Exception exception)
+            => AddError($"internal error: {exception.Message}", exception);
+
         //--- Properties ---
-        public Version ToolVersion { get; set; }
-        public Version EnvironmentVersion { get; set; }
+        public VersionInfo ToolVersion { get; set; }
+        public string ToolProfile { get; set; }
+        public bool ToolProfileExplicitlyProvided { get; set; }
+        public VersionInfo RuntimeVersion { get; set; }
         public string Tier { get; set; }
-        public string GitSha { get; set; }
-        public string BuildConfiguration { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeadLetterQueueUrl { get; set; }
-        public string LoggingTopicArn { get; set; }
-        public string NotificationTopicArn { get; set; }
-        public string RollbarCustomResourceTopicArn { get; set; }
-        public string S3PackageLoaderCustomResourceTopicArn { get; set; }
-        public string S3SubscriberCustomResourceTopicArn { get; set; }
-        public ResourceMapping ResourceMapping { get; set; }
+        public string DeploymentNotificationsTopicArn { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
-        public Action<string, Exception> ErrorCallback { get; set; }
-        public bool HasErrors { get; set; }
-        public VerboseLevel VerboseLevel { get; set; }
-        public string ModuleSource { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
-
-        public string DeadLetterQueueArn {
-            get {
-                if(DeadLetterQueueUrl == null) {
-                    return null;
-                }
-                var queueName = DeadLetterQueueUrl.Substring(DeadLetterQueueUrl.LastIndexOf('/') + 1);
-                return $"arn:aws:sqs:{AwsRegion}:{AwsAccountId}:{queueName}";
-             }
-        }
-
-        //--- Methods ---
-        public void AddError(string message, Exception exception = null) {
-            HasErrors = true;
-            ErrorCallback(message, exception);
-        }
-
-        public void Reset() {
-            EnvironmentVersion = null;
-            DeploymentBucketName = null;
-            DeadLetterQueueUrl = null;
-            LoggingTopicArn = null;
-            NotificationTopicArn = null;
-            RollbarCustomResourceTopicArn = null;
-            S3PackageLoaderCustomResourceTopicArn = null;
-            S3SubscriberCustomResourceTopicArn = null;
-        }
     }
 }

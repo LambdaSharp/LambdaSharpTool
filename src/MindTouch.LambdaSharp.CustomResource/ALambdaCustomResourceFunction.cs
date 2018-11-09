@@ -88,7 +88,8 @@ namespace MindTouch.LambdaSharp.CustomResource {
                     Reason = e.Message,
                     StackId = rawRequest.StackId,
                     RequestId = rawRequest.RequestId,
-                    LogicalResourceId = rawRequest.LogicalResourceId
+                    LogicalResourceId = rawRequest.LogicalResourceId,
+                    PhysicalResourceId = rawRequest.PhysicalResourceId ?? "no-physical-id"
                 };
             }
 

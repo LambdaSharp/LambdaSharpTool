@@ -27,6 +27,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.KeyManagementService;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -40,6 +41,10 @@ using MindTouch.LambdaSharp.Tool.Model;
 namespace MindTouch.LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
+
+        //--- Class Methods ---
+        public static CommandOption AddTierOption(CommandLineApplication cmd)
+            => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
 
         //--- Methods ---
         protected async Task<(string AccountId, string Region)?> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null) {
@@ -73,171 +78,117 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return (AccountId: awsAccountId, Region: awsRegion);
         }
 
-        protected Func<Task<IEnumerable<Settings>>> CreateSettingsInitializer(CommandLineApplication cmd) {
-            var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-            var buildConfigurationOption = cmd.Option("-c|--configuration <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
-            var awsProfileOption = cmd.Option("--profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file (default: LAMBDASHARP_PROFILE environment variable)", CommandOptionType.SingleValue);
+        protected Func<Task<Settings>> CreateSettingsInitializer(
+            CommandLineApplication cmd,
+            bool requireAwsProfile = true,
+            bool requireDeploymentTier = true
+        ) {
+            CommandOption tierOption = null;
+            CommandOption awsProfileOption = null;
+
+            // add misc options
+            if(requireDeploymentTier) {
+                tierOption = AddTierOption(cmd);
+            }
+            var toolProfileOption = cmd.Option("--cli-profile|-CLI <NAME>", "(optional) Use a specific LambdaSharp CLI profile (default: Default)", CommandOptionType.SingleValue);
+            if(requireAwsProfile) {
+                awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+            }
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
-            var gitShaOption = cmd.Option("--gitsha <VALUE>", "(optional) GitSha of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+
+            // add hidden testing options
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
-            var deploymentVersionOption = cmd.Option("--deployment-version <VERSION>", "(test only) LambdaSharp environment version for deployment tier (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket used to deploying assets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentDeadletterQueueUrlOption = cmd.Option("--deployment-deadletter-queue-url <URL>", "(test only) SQS Deadletter queue used by function (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentLoggingTopicArnOption = cmd.Option("--deployment-logging-topic-arn <ARN>", "(test only) SNS topic used by LambdaSharp functions to log warnings and errors (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notification-topic-arn <ARN>", "(test only) SNS Topic used by CloudFormation deploymetions (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentRollbarCustomResourceTopicArnOption = cmd.Option("--deployment-rollbar-customresource-topic-arn <ARN>", "(test only) SNS Topic for creating Rollbar projects (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentS3PackageLoaderCustomResourceTopicArnOption = cmd.Option("--deployment-s3packageloader-customresource-topic-arn <ARN>", "(test only) SNS Topic for deploying packages to S3 buckets (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var deploymentS3SubscriberCustomResourceTopicArnOption = cmd.Option("--deployment-s3subscriber-customeresource-topic-arn <ARN>", "(test only) SNS Topic for subscribing Lambda functions to S3 notifications (default: read from LambdaSharp configuration)", CommandOptionType.SingleValue);
-            var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module file (default: Module.yml)", CommandOptionType.SingleValue);
-            inputFileOption.ShowInHelpText = false;
-            var outputDirectoryOption = cmd.Option("-o|--output <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
-            var cmdArgument = cmd.Argument("<FILE>", "(optional) File path to YAML module file (default: Module.yml)", multipleValues: true);
+            var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
+            var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
+            var deploymentNotificationTopicArnOption = cmd.Option("--deployment-notifications-topic-arn <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
+            var runtimeVersionOption = cmd.Option("--runtime-version <VERSION>", "(test only) LambdaSharp runtime version (default: read from deployment tier)", CommandOptionType.SingleValue);
+            awsAccountIdOption.ShowInHelpText = false;
+            awsRegionOption.ShowInHelpText = false;
+            toolVersionOption.ShowInHelpText = false;
+            deploymentBucketNameOption.ShowInHelpText = false;
+            deploymentNotificationTopicArnOption.ShowInHelpText = false;
+            runtimeVersionOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
-                if(verboseLevelOption.HasValue()) {
-                    if(!TryParseEnumOption(verboseLevelOption, VerboseLevel.Detailed, out _verboseLevel)) {
+                if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
 
-                        // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
-                        return null;
+                    // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
+                    return null;
+                }
+
+                // initialize CLI profile
+                var toolProfile = toolProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE") ?? "Default";
+
+                // initialize deployment tier
+                string tier = null;
+                if(requireDeploymentTier) {
+                    tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
+                    if(string.IsNullOrEmpty(tier)) {
+                        AddError("missing deployment tier name");
+                    } else if(tier == "Default") {
+                        AddError("deployment tier cannot be 'Default' because it is a reserved name");
                     }
-                }
-
-                // initialize deployment tier value
-                var tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                if(tier == null) {
-                    AddError("missing deployment tier name");
-                    return null;
-                }
-                if(tier == "Default") {
-                    AddError("deployment tier cannot be 'Default' because it is a reserved name");
-                    return null;
                 }
 
                 // initialize AWS profile
-                var awsAccount = await InitializeAwsProfile(
-                    awsProfileOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_PROFILE"),
-                    awsAccountIdOption.Value(),
-                    awsRegionOption.Value()
-                );
-                if(awsAccount == null) {
+                try {
+                    (string AccountId, string Region)? awsAccount = null;
+                    IAmazonSimpleSystemsManagement ssmClient = null;
+                    IAmazonCloudFormation cfClient = null;
+                    IAmazonKeyManagementService kmsClient = null;
+                    IAmazonS3 s3Client = null;
+                    if(requireAwsProfile) {
+                        awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsAccountIdOption.Value(),
+                            awsRegionOption.Value()
+                        );
 
-                    // NOTE (2018-08-15, bjorg): no need to add an error message since it's already added by `InitializeAwsProfile`
-                    return null;
-                }
-
-                // check if a module file was specified using both the obsolete option and as argument
-                if(cmdArgument.Values.Any() && inputFileOption.HasValue()) {
-                    AddError("cannot specify --input and an argument at the same time");
-                    return null;
-                }
-                var moduleSources = new List<string>();
-                if(inputFileOption.HasValue()) {
-                    moduleSources.Add(inputFileOption.Value());
-                } else if(cmdArgument.Values.Any()) {
-                    moduleSources.AddRange(cmdArgument.Values);
-                } else {
-
-                    // add default entry so we can generate at least one settings instance
-                    moduleSources.Add(null);
-                }
-
-                // create AWS clients
-                var ssmClient = new AmazonSimpleSystemsManagementClient();
-                var cfClient = new AmazonCloudFormationClient();
-                var kmsClient = new AmazonKeyManagementServiceClient();
-                var s3Client = new AmazonS3Client();
-
-                // initialize LambdaSharp deployment values
-                var deploymentVersion = deploymentVersionOption.Value();
-                var deploymentBucketName = deploymentBucketNameOption.Value();
-                var deploymentDeadletterQueueUrl = deploymentDeadletterQueueUrlOption.Value();
-                var deploymentLoggingTopicArn = deploymentLoggingTopicArnOption.Value();
-                var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
-                var deploymentRollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArnOption.Value();
-                var deploymentS3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArnOption.Value();
-                var deploymentS3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArnOption.Value();
-
-                // create a settings entry for each module filename
-                var result = new List<Settings>();
-                foreach(var moduleSource in moduleSources) {
-                    var source = moduleSource;
-                    string workingDirectory;
-                    string outputDirectory;
-                    if(moduleSource == null) {
-
-                        // default to local module file name
-                        workingDirectory = Directory.GetCurrentDirectory();
-                        outputDirectory = Path.Combine(workingDirectory, "bin");
-                        source = Path.Combine(workingDirectory, "Module.yml");
-                    } else {
-
-                        // module file is local
-                        source = Path.GetFullPath(moduleSource);
-                        workingDirectory = Path.GetDirectoryName(source);
-                        outputDirectory = Path.Combine(workingDirectory, "bin");
+                        // create AWS clients
+                        ssmClient = new AmazonSimpleSystemsManagementClient();
+                        cfClient = new AmazonCloudFormationClient();
+                        kmsClient = new AmazonKeyManagementServiceClient();
+                        s3Client = new AmazonS3Client();
                     }
-                    if(outputDirectoryOption.HasValue()) {
-                        outputDirectory = outputDirectoryOption.Value();
+                    if(HasErrors) {
+                        return null;
                     }
 
-                    // initialize gitSha value
-                    var gitSha = gitShaOption.Value();
-                    if(gitSha == null) {
+                    // initialize LambdaSharp deployment values
+                    var runtimeVersion = runtimeVersionOption.Value();
+                    var deploymentBucketName = deploymentBucketNameOption.Value();
+                    var deploymentNotificationTopicArn = deploymentNotificationTopicArnOption.Value();
 
-                        // read the gitSha using `git` directly
-                        var process = new Process {
-                            StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
-                                RedirectStandardOutput = true,
-                                UseShellExecute = false,
-                                WorkingDirectory = workingDirectory
-                            }
-                        };
-                        try {
-                            process.Start();
-                            gitSha = process.StandardOutput.ReadToEnd().Trim();
-                            process.WaitForExit();
-                            if(process.ExitCode != 0) {
-                                Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
-                                gitSha = null;
-                            }
-                        } catch {
-                            Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
-                        }
-                    }
-                    result.Add(new Settings {
+                    // create a settings entry for each module filename
+                    return new Settings {
                         ToolVersion = Version,
-                        EnvironmentVersion = (deploymentVersion != null) ? new Version(deploymentVersion) : null,
+                        ToolProfile = toolProfile,
+                        ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
+                        RuntimeVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
                         Tier = tier,
-                        BuildConfiguration = buildConfigurationOption.Value() ?? "Release",
-                        GitSha = gitSha,
-                        AwsRegion = awsAccount.Value.Region,
-                        AwsAccountId = awsAccount.Value.AccountId,
+                        AwsRegion = awsAccount.GetValueOrDefault().Region,
+                        AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
                         DeploymentBucketName = deploymentBucketName,
-                        DeadLetterQueueUrl = deploymentDeadletterQueueUrl,
-                        LoggingTopicArn = deploymentLoggingTopicArn,
-                        NotificationTopicArn = deploymentNotificationTopicArn,
-                        RollbarCustomResourceTopicArn = deploymentRollbarCustomResourceTopicArn,
-                        S3PackageLoaderCustomResourceTopicArn = deploymentS3PackageLoaderCustomResourceTopicArn,
-                        S3SubscriberCustomResourceTopicArn = deploymentS3SubscriberCustomResourceTopicArn,
-                        ModuleSource = source,
-                        WorkingDirectory = workingDirectory,
-                        OutputDirectory = outputDirectory,
-                        ResourceMapping = new ResourceMapping(),
+                        DeploymentNotificationsTopicArn = deploymentNotificationTopicArn,
                         SsmClient = ssmClient,
                         CfClient = cfClient,
                         KmsClient = kmsClient,
-                        S3Client = s3Client,
-                        ErrorCallback = AddError,
-                        VerboseLevel = _verboseLevel
-                    });
+                        S3Client = s3Client
+                    };
+                } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
+                    AddError("AWS profile configuration is missing a region specifier");
+                    return null;
                 }
-                return result;
             };
         }
 
-        protected bool TryParseEnumOption<T>(CommandOption option, T defaultvalue, out T result) where T : struct {
+        protected bool TryParseEnumOption<T>(CommandOption option, T missingValue, T defaultvalue, out T result) where T : struct {
+            if(!option.HasValue()) {
+                result = missingValue;
+                return true;
+            }
             if(option.Value() == null) {
                 result = defaultvalue;
                 return true;
@@ -260,38 +211,91 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             return false;
         }
 
-        protected async Task PopulateEnvironmentSettingsAsync(Settings settings) {
+        protected async Task PopulateToolSettingsAsync(Settings settings) {
             if(
-                (settings.EnvironmentVersion == null)
-                || (settings.DeploymentBucketName == null)
-                || (settings.DeadLetterQueueUrl == null)
-                || (settings.LoggingTopicArn == null)
-                || (settings.NotificationTopicArn == null)
-                || (settings.RollbarCustomResourceTopicArn == null)
-                || (settings.S3PackageLoaderCustomResourceTopicArn == null)
-                || (settings.S3SubscriberCustomResourceTopicArn == null)
+                (settings.DeploymentBucketName == null)
+                || (settings.DeploymentNotificationsTopicArn == null)
             ) {
 
-                // import LambdaSharp settings
-                var lambdaSharpPath = $"/{settings.Tier}/LambdaSharp/";
-                var lambdaSharpSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpPath);
+                // import LambdaSharp CLI settings
+                if(settings.ToolProfile != null) {
+                    var lambdaSharpToolPath = $"/LambdaSharpTool/{settings.ToolProfile}/";
+                    var lambdaSharpToolSettings = await settings.SsmClient.GetAllParametersByPathAsync(lambdaSharpToolPath);
+                    if(!VersionInfo.TryParse(GetLambdaSharpToolSetting("Version"), out VersionInfo lambdaSharpToolVersion)) {
+                        AddError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        return;
+                    }
+                    if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion)) {
+                        AddError($"LambdaSharp CLI configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        return;
+                    }
+                    settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
+                    settings.DeploymentNotificationsTopicArn = settings.DeploymentNotificationsTopicArn ?? GetLambdaSharpToolSetting("DeploymentNotificationTopicArn");
 
-                // resolved values that are not yet set
-                settings.EnvironmentVersion = settings.EnvironmentVersion ?? new Version(GetLambdaSharpSetting("Version"));
-                settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpSetting("DeploymentBucket");
-                settings.DeadLetterQueueUrl = settings.DeadLetterQueueUrl ?? GetLambdaSharpSetting("DeadLetterQueue");
-                settings.LoggingTopicArn = settings.LoggingTopicArn ?? GetLambdaSharpSetting("LoggingTopic");
-                settings.NotificationTopicArn = settings.NotificationTopicArn ?? GetLambdaSharpSetting("DeploymentNotificationTopic");
-                settings.RollbarCustomResourceTopicArn = settings.RollbarCustomResourceTopicArn ?? GetLambdaSharpSetting("RollbarCustomResourceTopic");
-                settings.S3PackageLoaderCustomResourceTopicArn = settings.S3PackageLoaderCustomResourceTopicArn ?? GetLambdaSharpSetting("S3PackageLoaderCustomResourceTopic");
-                settings.S3SubscriberCustomResourceTopicArn = settings.S3SubscriberCustomResourceTopicArn ?? GetLambdaSharpSetting("S3SubscriberCustomResourceTopic");
-
-                // local functions
-                string GetLambdaSharpSetting(string name) {
-                    lambdaSharpSettings.TryGetValue(lambdaSharpPath + name, out KeyValuePair<string, string> kv);
-                    return kv.Value;
+                    // local functions
+                    string GetLambdaSharpToolSetting(string name) {
+                        lambdaSharpToolSettings.TryGetValue(lambdaSharpToolPath + name, out KeyValuePair<string, string> kv);
+                        return kv.Value;
+                    }
                 }
             }
+        }
+
+        protected async Task PopulateRuntimeSettingsAsync(Settings settings) {
+            if((settings.RuntimeVersion == null) && (settings.Tier != null)) {
+                try {
+
+                    // check version of base LambadSharp module
+                    var describe = await settings.CfClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = $"{settings.Tier}-LambdaSharp"
+                    });
+                    var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
+                    if(deployedOutputs != null) {
+                        var deployedName = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleName")?.OutputValue;
+                        var deployedVersionText = deployedOutputs.FirstOrDefault(output => output.OutputKey == "ModuleVersion")?.OutputValue;
+                        if(
+                            (deployedName == "LambdaSharp")
+                            && VersionInfo.TryParse(deployedVersionText, out VersionInfo deployedVersion)
+                        ) {
+                            settings.RuntimeVersion = deployedVersion;
+                            return;
+                        }
+                    }
+                } catch(AmazonCloudFormationException) {
+
+                    // stack doesn't exist
+                }
+            }
+        }
+
+        protected string GetGitShaValue(string workingDirectory, bool showWarningOnFailure = true) {
+
+            // read the gitSha using `git` directly
+            var process = new Process {
+                StartInfo = new ProcessStartInfo("git", ArgumentEscaper.EscapeAndConcatenate(new[] { "rev-parse", "HEAD" })) {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = workingDirectory
+                }
+            };
+            string gitsha = null;
+            try {
+                process.Start();
+                gitsha = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    if(showWarningOnFailure) {
+                        Console.WriteLine($"WARNING: unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                    }
+                    gitsha = null;
+                }
+            } catch {
+                if(showWarningOnFailure) {
+                    Console.WriteLine("WARNING: git is not installed; skipping git-sha fingerprint file");
+                }
+            }
+            return gitsha;
         }
     }
 }

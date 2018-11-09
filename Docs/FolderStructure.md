@@ -28,7 +28,7 @@ Furthermore, the project file should contain the `<RootNamespace>` element to de
 
 Furthermore, the function handler should be in a class called `Function` and the method should be called `FunctionHandler`. When different, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
 
-In order for the λ# tool to work properly the .NET Core project file must contain a reference to `Amazon.Lambda.Tools`.
+In order for the λ# CLI to work properly the .NET Core project file must contain a reference to `Amazon.Lambda.Tools`.
 
 ```csharp
 namespace GettingStarted.SlackCommand {

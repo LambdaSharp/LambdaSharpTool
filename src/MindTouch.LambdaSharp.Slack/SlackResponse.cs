@@ -35,7 +35,7 @@ namespace MindTouch.LambdaSharp.Slack {
         }
 
         public static SlackResponse Ephemeral(string text, params SlackResponseAttachment[] attachments) {
-            return new SlackResponse("ephemeral ", text, attachments);
+            return new SlackResponse("ephemeral", text, attachments);
         }
 
         //--- Fields ---
@@ -47,7 +47,10 @@ namespace MindTouch.LambdaSharp.Slack {
 
         [JsonProperty("attachments")]
         public readonly SlackResponseAttachment[] Attachments;
-
+        
+        [JsonProperty("channel", NullValueHandling = NullValueHandling.Ignore)]
+        public string Channel;
+        
         //--- Constructors ---
         private SlackResponse(string responseType, string text, SlackResponseAttachment[] attachments) {
             if(string.IsNullOrWhiteSpace(responseType)) {

@@ -19,10 +19,10 @@
  * limitations under the License.
  */
 
-using MindTouch.Rollbar;
+using MindTouch.LambdaSharp.Reports;
 
 namespace MindTouch.LambdaSharp.CustomResource {
-    public class CustomResourceException : ARollbarException {
+    public class CustomResourceException : ALambdaException {
 
         //--- Constructors ---
         public CustomResourceException(string format, params object[] args) : base(format, args) { }

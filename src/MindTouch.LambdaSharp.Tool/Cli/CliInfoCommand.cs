@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.SimpleSystemsManagement;
@@ -35,37 +37,119 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("info", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Show LambdaSharp settings";
+                cmd.Description = "Show LambdaSharp information";
 
-                // command options
-                var initSettingsCallback = CreateSettingsInitializer(cmd);
+                // info options
+                var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
+                var tierOption = AddTierOption(cmd);
+                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;
                     }
-                    await Info(settings.First());
+
+                    // NOTE: `--tier` is optional for the `info` command; so we replicate it here without the error reporting
+                    settings.Tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
+                    await Info(
+                        settings,
+                        GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
+                        showSensitiveInformationOption.HasValue()
+                    );
                 });
             });
         }
 
-        private async Task Info(Settings settings) {
-            await PopulateEnvironmentSettingsAsync(settings);
+        public async Task Info(
+            Settings settings,
+            string gitsha,
+            bool showSensitive
+        ) {
+            await PopulateToolSettingsAsync(settings);
+            await PopulateRuntimeSettingsAsync(settings);
 
             // show LambdaSharp settings
-            Console.WriteLine($"Deployment tier: {settings.Tier ?? "<NOT SET>"}");
-            Console.WriteLine($"Git SHA: {settings.GitSha ?? "<NOT SET>"}");
-            Console.WriteLine($"AWS Region: {settings.AwsRegion ?? "<NOT SET>"}");
-            Console.WriteLine($"AWS Account Id: {settings.AwsAccountId ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp Environment Version: {settings.EnvironmentVersion?.ToString() ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp Dead-Letter Queue: {settings.DeadLetterQueueUrl ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp Logging Topic: {settings.LoggingTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp CloudFormation Notification Topic: {settings.NotificationTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp Rollbar Project Topic: {settings.RollbarCustomResourceTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp S3 Package Loader Topic: {settings.S3PackageLoaderCustomResourceTopicArn ?? "<NOT SET>"}");
-            Console.WriteLine($"LambdaSharp S3 Subscriber Topic: {settings.S3SubscriberCustomResourceTopicArn ?? "<NOT SET>"}");
+            Console.WriteLine($"LambdaSharp CLI");
+            Console.WriteLine($"    Profile: {settings.ToolProfile ?? "<NOT SET>"}");
+            Console.WriteLine($"    Version: {settings.ToolVersion}");
+            Console.WriteLine($"    Module Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
+            Console.WriteLine($"    Module Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopicArn ?? "<NOT SET>")}");
+            Console.WriteLine($"LambdaSharp Deployment Tier");
+            Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Runtime Version: {settings.RuntimeVersion?.ToString() ?? "<NOT SET>"}");
+            Console.WriteLine($"Git SHA: {gitsha ?? "<NOT SET>"}");
+            Console.WriteLine($"AWS");
+            Console.WriteLine($"    Region: {settings.AwsRegion ?? "<NOT SET>"}");
+            Console.WriteLine($"    Account Id: {ConcealAwsAccountId(settings.AwsAccountId ?? "<NOT SET>")}");
+            Console.WriteLine($"Tools");
+            Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
+
+            string ConcealAwsAccountId(string text) {
+                if(showSensitive || (settings.AwsAccountId == null)) {
+                    return text;
+                }
+                return text.Replace(settings.AwsAccountId, new string('*', settings.AwsAccountId.Length));
+            }
+        }
+
+        private string GetDotNetVersion() {
+            var dotNetExe = ProcessLauncher.DotNetExe;
+            if(string.IsNullOrEmpty(dotNetExe)) {
+                return null;
+            }
+
+            // read the dotnet version
+            var process = new Process {
+                StartInfo = new ProcessStartInfo(dotNetExe, "--version") {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = Directory.GetCurrentDirectory()
+                }
+            };
+            try {
+                process.Start();
+                var dotnetVersion = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    return null;
+                }
+                return dotnetVersion;
+            } catch {
+                return null;
+            }
+        }
+
+        private string GetGitVersion() {
+
+            // constants
+            const string GIT_VERSION_PREFIX = "git version ";
+
+            // read the gitSha using `git` directly
+            var process = new Process {
+                StartInfo = new ProcessStartInfo("git", "--version") {
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    WorkingDirectory = Directory.GetCurrentDirectory()
+                }
+            };
+            try {
+                process.Start();
+                var gitVersion = process.StandardOutput.ReadToEnd().Trim();
+                process.WaitForExit();
+                if(process.ExitCode != 0) {
+                    return null;
+                }
+                if(gitVersion.StartsWith(GIT_VERSION_PREFIX, StringComparison.Ordinal)) {
+                    gitVersion = gitVersion.Substring(GIT_VERSION_PREFIX.Length);
+                }
+                return gitVersion;
+            } catch {
+                return null;
+            }
         }
     }
 }

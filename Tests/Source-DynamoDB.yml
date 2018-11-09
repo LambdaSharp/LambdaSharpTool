@@ -1,11 +1,20 @@
-Name: TestModule
-
+Module: TestModule
 Description: LambdaSharp CloudFormation Test
 
-Parameters:
+Inputs:
 
-  - Name: Table
+  - Parameter: InputTable
+    Description: Description for DynamoDB input table
+    Scope: "*"
+    Resource:
+      Type: AWS::DynamoDB::Table
+      Allow: Subscribe
+
+Variables:
+
+  - Var: Table
     Description: Description for DynamoDB table
+    Scope: "*"
     Resource:
       Type: AWS::DynamoDB::Table
       Allow: Subscribe
@@ -22,9 +31,10 @@ Parameters:
 
 Functions:
 
-  - Name: Function
+  - Function: Function
     Description: My function
     Memory: 128
     Timeout: 30
     Sources:
       - DynamoDB: Table
+      - DynamoDB: InputTable

@@ -2,22 +2,21 @@
 
 # LambdaSharp SNS Function
 
-Before you begin, make sure to [setup your λ# environment](../../Bootstrap/).
+Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
 
-## Module File
+## Module Definition
 
-Creating a function that is invoked by an SNS topics requires two steps. First, the SNS topic must either be created or referenced in the `Parameters` section. Second, the function must reference the parameter name in its `Sources` section using the `Topic` attribute.
+Creating a function that is invoked by an SNS topics requires two steps. First, the SNS topic must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Topic` attribute.
 
 Lambda functions require the `sns:Subscribe` permission on the SNS topic. Either request it explicitly or use a [resource permission shorthand](../src/MindTouch.LambdaSharp.Tool/Resources/IAM-Mappings.yml) instead.
 
 ```yaml
-Name: SnsSample
-
+Module: SnsSample
 Description: A sample module using an SNS topic
 
-Parameters:
+Variables:
 
-  - Name: MyTopic
+  - Var: MyTopic
     Description: An SNS topic used to invoke the function.
     Resource:
       Type: AWS::SNS::Topic
@@ -25,7 +24,7 @@ Parameters:
 
 Functions:
 
-  - Name: MyFunction
+  - Function: MyFunction
     Description: This function is invoked by an SNS topic
     Memory: 128
     Timeout: 30
@@ -59,7 +58,7 @@ public class Function : ALambdaEventFunction<MyMessage> {
 
 ## Reference
 
-The λ# tool automatically creates the required permissions to allow the subscribed SNS topic to invoke the Lambda function.
+The λ# CLI automatically creates the required permissions to allow the subscribed SNS topic to invoke the Lambda function.
 
 Thw following YAML shows the permission granted to the AWS SNS service.
 

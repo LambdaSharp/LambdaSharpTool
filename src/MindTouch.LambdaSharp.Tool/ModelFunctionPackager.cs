@@ -38,47 +38,118 @@ namespace MindTouch.LambdaSharp.Tool {
         //--- Constants ---
         private const string GITSHAFILE = "gitsha.txt";
 
-        //--- Class Methods ---
-        private static bool VersionMatch(string expected, string actual) {
-            if(!actual.StartsWith(expected, StringComparison.Ordinal)) {
-                return false;
-            }
-            var suffix = actual.Substring(expected.Length);
-            return (suffix == "")
-                || suffix.StartsWith(".", StringComparison.Ordinal)
-                || suffix.StartsWith("-", StringComparison.Ordinal);
-        }
-
         //--- Constructors ---
-        public ModelFunctionPackager(Settings settings) : base(settings) { }
+        public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
-        public void Process(ModuleNode module, Version version, bool skipCompile, bool skipAssemblyValidation) {
-            var index = 0;
-            foreach(var function in module.Functions.Where(f => f.PackagePath == null)) {
-                ++index;
-                AtLocation(function.Name ?? $"[{index}]", () => {
-                    Validate(function.Name != null, "missing Name field");
-                    Process(module, function, version, skipCompile, skipAssemblyValidation);
+        public void Process(
+            ModuleNode module,
+            VersionInfo version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration
+        ) {
+            foreach(var function in module.Functions) {
+                AtLocation(function.Function, () => {
+                    Process(
+                        module,
+                        function,
+                        version,
+                        skipCompile,
+                        skipAssemblyValidation,
+                        gitsha,
+                        buildConfiguration
+                    );
                 });
             }
         }
 
-        private void Process(ModuleNode module, FunctionNode function, Version version, bool skipCompile, bool skipAssemblyValidation) {
+        private void Process(
+            ModuleNode module,
+            FunctionNode function,
+            VersionInfo version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration
+        ) {
+
+            // identify folder for function
+            var folderName = new[] {
+                function.Function,
+                $"{module.Module}.{function.Function}"
+            }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
+            if(folderName == null) {
+                AddError($"could not locate function directory");
+                return;
+            }
+
+            // delete old packages
+            if(Directory.Exists(Settings.OutputDirectory)) {
+                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"function_{function.Function}*.zip")) {
+                    try {
+                        File.Delete(file);
+                    } catch { }
+                }
+            }
+
+            // determine the function project
+            var projectPath = function.Project ?? new [] {
+                Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
+                Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
+            }.FirstOrDefault(path => File.Exists(path));
+            if(projectPath == null) {
+                AddError("could not locate the function project");
+                return;
+            }
+            switch(Path.GetExtension(projectPath).ToLowerInvariant()) {
+            case ".csproj":
+                ProcessDotNet(
+                    module,
+                    function,
+                    version,
+                    skipCompile,
+                    skipAssemblyValidation,
+                    gitsha,
+                    buildConfiguration,
+                    projectPath
+                );
+                break;
+            case ".js":
+                ProcessJavascript(
+                    module,
+                    function,
+                    version,
+                    skipCompile,
+                    skipAssemblyValidation,
+                    gitsha,
+                    buildConfiguration,
+                    projectPath
+                );
+                break;
+            default:
+                AddError("could not determine the function language");
+                return;
+            }
+        }
+
+        private void ProcessDotNet(
+            ModuleNode module,
+            FunctionNode function,
+            VersionInfo version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration,
+            string project
+        ) {
+            function.Language = "csharp";
 
             // compile function project
-            string projectName = null;
-            string targetFramework = null;
+            var projectName = Path.GetFileNameWithoutExtension(project);
             XDocument csproj = null;
             XElement mainPropertyGroup = null;
             if(!AtLocation("Project", () => {
-                projectName = function.Project ?? $"{module.Name}.{function.Name}";
-                var project = Path.Combine(Settings.WorkingDirectory, projectName, projectName + ".csproj");
-
-                // check if csproj file exists in project folder
-                if(!File.Exists(project)) {
-                    AddError($"could not find function project: {project}");
-                    return false;
-                }
 
                 // check if the handler/runtime were provided or if they need to be extracted from the project file
                 csproj = XDocument.Load(project);
@@ -110,7 +181,7 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // check if we need to parse the <TargetFramework> element to determine the lambda runtime
-            targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+            var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
             if(function.Runtime == null) {
                 AtLocation("Runtime", () => {
                     switch(targetFramework) {
@@ -137,12 +208,16 @@ namespace MindTouch.LambdaSharp.Tool {
                     .Elements("PackageReference")
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("MindTouch.LambdaSharp", StringComparison.Ordinal) ?? false);
                 if(includes != null) {
-                    var expectedVersion = $"{version.Major}.{version.Minor}";
                     foreach(var include in includes) {
-                        var libraryVersion = include.Attribute("Version")?.Value ?? "missing";
-                        if(!VersionMatch(expectedVersion, libraryVersion)) {
-                            var library = include.Attribute("Include").Value;
-                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersion}')");
+                        var expectedVersion = VersionInfo.Parse($"{version.Major}.{version.Minor}{version.Suffix}");
+                        var library = include.Attribute("Include").Value;
+                        var libraryVersionText = include.Attribute("Version")?.Value;
+                        if(libraryVersionText == null) {
+                            AddError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
+                        } if(!VersionInfo.TryParse(libraryVersionText, out VersionInfo libraryVersion)) {
+                            AddError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                        } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
+                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                     if(Settings.HasErrors) {
@@ -150,34 +225,23 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
             }
-
             if(skipCompile) {
-                function.PackagePath = $"{projectName}-NOCOMPILE.zip";
+                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
                 return;
             }
 
             // dotnet tools have to be run from the project folder; otherwise specialized tooling is not picked up from the .csproj file
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
-            if(Directory.Exists(Settings.OutputDirectory)) {
-                foreach(var file in Directory.GetFiles(Settings.OutputDirectory, $"{projectName}-*.zip")) {
-                    try {
-                        File.Delete(file);
-                    } catch { }
-                }
-            }
-            var buildConfiguration = Settings.BuildConfiguration;
-            Console.WriteLine($"Building function {projectName} [{targetFramework}, {buildConfiguration}]");
+            Console.WriteLine($"=> Building function {function.Function} [{targetFramework}, {buildConfiguration}]");
 
             // restore project dependencies
-            Console.WriteLine("=> Restoring project dependencies");
             if(!DotNetRestore(projectDirectory)) {
                 AddError("`dotnet restore` command failed");
                 return;
             }
 
             // compile project
-            Console.WriteLine("=> Building AWS Lambda package");
-            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, projectName + ".zip");
+            var dotnetOutputPackage = Path.Combine(Settings.OutputDirectory, function.Function + ".zip");
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, dotnetOutputPackage, projectDirectory)) {
                 AddError("`dotnet lambda package` command failed");
                 return;
@@ -190,12 +254,10 @@ namespace MindTouch.LambdaSharp.Tool {
             }
 
             // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
-            string package;
             var tempDirectory = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
             try {
 
                 // extract existing package into temp folder
-                Console.WriteLine("=> Decompressing AWS Lambda package");
                 if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
                     ZipFile.ExtractToDirectory(dotnetOutputPackage, tempDirectory);
                     File.Delete(dotnetOutputPackage);
@@ -206,59 +268,7 @@ namespace MindTouch.LambdaSharp.Tool {
                         return;
                     }
                 }
-
-                // add `gitsha.txt` if GitSha is supplied
-                if(Settings.GitSha != null) {
-                    File.WriteAllText(Path.Combine(tempDirectory, GITSHAFILE), Settings.GitSha);
-                }
-
-                // compress temp folder into new package
-                var zipTempPackage = Path.GetTempFileName() + ".zip";
-                if(File.Exists(zipTempPackage)) {
-                    File.Delete(zipTempPackage);
-                }
-
-                // compute MD5 hash for lambda function
-                var files = new List<string>();
-                using(var md5 = MD5.Create()) {
-                    var bytes = new List<byte>();
-                    files.AddRange(Directory.GetFiles(tempDirectory, "*", SearchOption.AllDirectories));
-                    files.Sort();
-                    foreach(var file in files) {
-                        var relativeFilePath = Path.GetRelativePath(tempDirectory, file);
-                        var filename = Path.GetFileName(file);
-
-                        // don't include the `gitsha.txt` since it changes with every build
-                        if(filename != GITSHAFILE) {
-                            using(var stream = File.OpenRead(file)) {
-                                bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
-                                var fileHash = md5.ComputeHash(stream);
-                                bytes.AddRange(fileHash);
-                                if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                    Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
-                                }
-                            }
-                        }
-                    }
-                    package = Path.Combine(Settings.OutputDirectory, $"{projectName}-{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
-                }
-
-                // compress folder contents
-                Console.WriteLine("=> Finalizing AWS Lambda package");
-                if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                    using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
-                        foreach(var file in files) {
-                            var filename = Path.GetRelativePath(tempDirectory, file);
-                            zipArchive.CreateEntryFromFile(file, filename);
-                        }
-                    }
-                } else {
-                    if(!ZipWithTool(zipTempPackage, tempDirectory)) {
-                        AddError("`zip` command failed");
-                        return;
-                    }
-                }
-                File.Move(zipTempPackage, package);
+                function.PackagePath = CreatePackage(function.Function, gitsha, tempDirectory);
             } finally {
                 if(Directory.Exists(tempDirectory)) {
                     try {
@@ -268,7 +278,6 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
                 }
             }
-            function.PackagePath = package;
         }
 
         private bool DotNetRestore(string projectDirectory) {
@@ -325,6 +334,100 @@ namespace MindTouch.LambdaSharp.Tool {
                 Directory.GetCurrentDirectory(),
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
+        }
+
+        private void ProcessJavascript(
+            ModuleNode module,
+            FunctionNode function,
+            VersionInfo version,
+            bool skipCompile,
+            bool skipAssemblyValidation,
+            string gitsha,
+            string buildConfiguration,
+            string project
+        ) {
+            function.Language = "javascript";
+
+            // check if we need to set a default handler
+            if(function.Handler == null) {
+                function.Handler = "index.handler";
+            }
+
+            // check if we need to set a default runtime
+            if(function.Runtime == null) {
+                function.Runtime = "nodejs8.10";
+            }
+            if(skipCompile) {
+                function.PackagePath = $"{function.Function}-NOCOMPILE.zip";
+                return;
+            }
+            Console.WriteLine($"=> Building function {function.Function} [{function.Runtime}]");
+            function.PackagePath = CreatePackage(function.Function, gitsha, Path.GetDirectoryName(project));
+        }
+
+        private string CreatePackage(string functionName, string gitsha, string folder) {
+            string package;
+
+            // add `gitsha.txt` if GitSha is supplied
+            if(gitsha != null) {
+                File.WriteAllText(Path.Combine(folder, GITSHAFILE), gitsha);
+            }
+
+            // compress temp folder into new package
+            var zipTempPackage = Path.GetTempFileName() + ".zip";
+            if(File.Exists(zipTempPackage)) {
+                File.Delete(zipTempPackage);
+            }
+
+            // compute MD5 hash for lambda function
+            var files = new List<string>();
+            using(var md5 = MD5.Create()) {
+                var bytes = new List<byte>();
+                files.AddRange(Directory.GetFiles(folder, "*", SearchOption.AllDirectories));
+                files.Sort();
+                foreach(var file in files) {
+                    var relativeFilePath = Path.GetRelativePath(folder, file);
+                    var filename = Path.GetFileName(file);
+
+                    // don't include the `gitsha.txt` since it changes with every build
+                    if(filename != GITSHAFILE) {
+                        using(var stream = File.OpenRead(file)) {
+                            bytes.AddRange(Encoding.UTF8.GetBytes(relativeFilePath));
+                            var fileHash = md5.ComputeHash(stream);
+                            bytes.AddRange(fileHash);
+                            if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                                Console.WriteLine($"... computing md5: {relativeFilePath} => {fileHash.ToHexString()}");
+                            }
+                        }
+                    }
+                }
+                package = Path.Combine(Settings.OutputDirectory, $"function_{functionName}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
+            }
+
+            // compress folder contents
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                using(var zipArchive = ZipFile.Open(zipTempPackage, ZipArchiveMode.Create)) {
+                    foreach(var file in files) {
+                        var filename = Path.GetRelativePath(folder, file);
+                        zipArchive.CreateEntryFromFile(file, filename);
+                    }
+                }
+            } else {
+                if(!ZipWithTool(zipTempPackage, folder)) {
+                    AddError("`zip` command failed");
+                    return null;
+                }
+            }
+            if(gitsha != null) {
+                try {
+                    File.Delete(Path.Combine(folder, GITSHAFILE));
+                } catch { }
+            }
+            if(!Directory.Exists(Settings.OutputDirectory)) {
+                Directory.CreateDirectory(Settings.OutputDirectory);
+            }
+            File.Move(zipTempPackage, package);
+            return package;
         }
     }
 }

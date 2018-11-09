@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using YamlDotNet.Serialization;
 
 namespace MindTouch.LambdaSharp.Tool.Model {
 
@@ -28,10 +30,60 @@ namespace MindTouch.LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Name { get; set; }
-        public string Version { get; set; }
+        public VersionInfo Version { get; set; }
         public string Description { get; set; }
-        public IList<string> Secrets { get; set; }
+        public IList<object> Pragmas { get; set; }
+        public IList<object> Secrets { get; set; }
         public IList<AParameter> Parameters { get; set; }
         public IList<Function> Functions { get; set; }
-    }
+        public IList<AOutput> Outputs { get; set; }
+        public bool HasModuleRegistration => !HasPragma("no-module-registration");
+
+        //--- Methods ---
+        public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
+
+        public AParameter GetParameter(string parameterName) {
+
+            // drill down into the parameters collection
+            var parts = parameterName.Split("::");
+            AParameter current = null;
+            var parameters = Parameters;
+            foreach(var part in parts) {
+                current = parameters?.FirstOrDefault(p => p.Name == part);
+                if(current == null) {
+                    break;
+                }
+                parameters = current.Parameters;
+            }
+            return current ?? throw new KeyNotFoundException(parameterName);
+        }
+
+        public IEnumerable<AParameter> GetAllParameters() {
+            var stack = new Stack<IEnumerator<AParameter>>();
+            stack.Push(Parameters.GetEnumerator());
+            try {
+                while(stack.Any()) {
+                    var top = stack.Peek();
+                    if(top.MoveNext()) {
+                        yield return top.Current;
+                        if(top.Current.Parameters?.Any() == true) {
+                            stack.Push(top.Current.Parameters.GetEnumerator());
+                        }
+                    } else {
+                        stack.Pop();
+                        try {
+                            top.Dispose();
+                        } catch { }
+                    }
+                }
+            } finally {
+                while(stack.Any()) {
+                    var top = stack.Pop();
+                    try {
+                        top.Dispose();
+                    } catch { }
+                }
+            }
+        }
+     }
 }

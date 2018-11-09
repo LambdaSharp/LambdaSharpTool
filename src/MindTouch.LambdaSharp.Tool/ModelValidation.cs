@@ -34,9 +34,10 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Fields ---
         private ModuleNode _module;
+        private HashSet<string> _names;
 
         //--- Constructors ---
-        public ModelValidation(Settings settings) : base(settings) { }
+        public ModelValidation(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public void Process(ModuleNode module) {
@@ -45,31 +46,31 @@ namespace MindTouch.LambdaSharp.Tool {
 
         private void Validate(ModuleNode module) {
             _module = module;
-            Validate(module.Name != null, "missing module name");
+            _names = new HashSet<string>();
+            Validate(module.Module != null, "missing module name");
 
             // ensure collections are present
-            if(module.Secrets == null) {
-                module.Secrets = new List<string>();
-            }
-            if(module.Parameters == null) {
-                module.Parameters = new List<ParameterNode>();
-            }
-            if(module.Functions == null) {
-                module.Functions = new List<FunctionNode>();
-            }
+            module.Pragmas = module.Pragmas ?? new List<object>();
+            module.Secrets = module.Secrets ?? new List<string>();
+            module.Inputs = module.Inputs ?? new List<InputNode>();
+            module.Variables = module.Variables ?? new List<ParameterNode>();
+            module.Functions = module.Functions ?? new List<FunctionNode>();
+            module.Outputs = module.Outputs ?? new List<OutputNode>();
 
             // ensure version is present
             if(module.Version == null) {
                 module.Version = "1.0";
-            } else if(!Version.TryParse(module.Version, out System.Version version)) {
+            } else if(!VersionInfo.TryParse(module.Version, out VersionInfo version)) {
                 AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
                 module.Version = "0.0";
             }
 
             // process data structures
             AtLocation("Secrets", () => ValidateSecrets(module.Secrets));
-            AtLocation("Parameters", () => ValidateParameters(module.Parameters));
+            AtLocation("Inputs", () => ValidateInputs(module.Inputs));
+            AtLocation("Variables", () => ValidateParameters(module.Variables));
             AtLocation("Functions", () => ValidateFunctions(module.Functions));
+            AtLocation("Outputs", () => ValidateOutputs(module.Outputs));
         }
 
         private void ValidateSecrets(IEnumerable<string> secrets) {
@@ -92,83 +93,55 @@ namespace MindTouch.LambdaSharp.Tool {
             }
         }
 
-        private void ValidateParameters(IEnumerable<ParameterNode> parameters, int depth = 0) {
+        private void ValidateParameters(IEnumerable<ParameterNode> parameters, string prefix = "") {
             var index = 0;
             foreach(var parameter in parameters) {
                 ++index;
-                AtLocation(parameter.Name ?? $"[{index}]", () => {
-                    Validate(parameter.Name != null, "missing parameter name");
-                    Validate(Regex.IsMatch(parameter.Name, CLOUDFORMATION_ID_PATTERN), "parameter name is not valid");
+                AtLocation(parameter.Var ?? parameter.Package ?? $"[{index}]", () => {
+                    ValidateScope(parameter.Scope);
                     if(parameter.Secret != null) {
+                        ValidateResourceName(parameter.Var, prefix);
                         ValidateNotBothStatements("Secret", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Secret", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Secret", "Value", parameter.Value == null);
                         ValidateNotBothStatements("Secret", "Package", parameter.Package == null);
-
-                        // ensure parameter is not exported
-                        if(parameter.Export != null) {
-                            AddError("exporting Secret is not supported");
-                        }
-                    } else if(parameter.Values != null) {
-                        ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
-                        ValidateNotBothStatements("Values", "EncryptionContext", parameter.EncryptionContext == null);
-                        ValidateNotBothStatements("Values", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Values", "Package", parameter.Package == null);
-
-                        // NOTE (2018-08-20, bjorg): special validation because of current `Values` expansion for resources
-                        if((parameter.Resource != null) && (parameter.Parameters != null)) {
-                            AddError("multiple values with a resource cannot have nested parameters");
-                        }
+                    } else if(parameter.Value != null) {
+                        ValidateResourceName(parameter.Var, prefix);
+                        ValidateNotBothStatements("Value", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Value", "EncryptionContext", parameter.EncryptionContext == null);
+                        ValidateNotBothStatements("Value", "Package", parameter.Package == null);
                     } else if(parameter.Package != null) {
+                        ValidateResourceName(parameter.Package, prefix);
                         ValidateNotBothStatements("Package", "Resource", parameter.Resource == null);
-                        ValidateNotBothStatements("Package", "Values", parameter.Values == null);
                         ValidateNotBothStatements("Package", "Value", parameter.Value == null);
-                        ValidateNotBothStatements("Package", "Export", parameter.Export == null);
-                        ValidateNotBothStatements("Values", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Package", "Secret", parameter.Secret == null);
                         ValidateNotBothStatements("Package", "EncryptionContext", parameter.EncryptionContext == null);
 
-                        // ensure parameter is not exported
-                        Validate(parameter.Export == null, "exporting Package is not supported");
-
                         // check if required attributes are present
-                        Validate(parameter.Package.Files != null, "missing 'Files' attribute");
-                        Validate(parameter.Package.Bucket != null, "missing 'Bucket' attribute");
-                        if(parameter.Package.Bucket != null) {
+                        Validate(parameter.Files != null, "missing 'Files' attribute");
+                        Validate(parameter.Bucket != null, "missing 'Bucket' attribute");
+                        if(parameter.Bucket != null) {
 
                             // verify that target bucket is defined as parameter with correct type
-                            var param = _module.Parameters.FirstOrDefault(p => p.Name == parameter.Package.Bucket);
-                            if(param == null) {
-                                AddError($"could not find parameter for S3 bucket: '{parameter.Package.Bucket}'");
-                            } else if(param?.Resource?.Type != "AWS::S3::Bucket") {
-                                AddError($"parameter for function source must be an S3 bucket resource: '{parameter.Package.Bucket}'");
-                            }
-                        }
-                        if(parameter.Package.Files != null) {
-
-                            // check if a deployment bucket exists
-                            if(Settings.DeploymentBucketName == null) {
-                                AddError("deploying packages requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                            }
-
-                            // check if S3 package loader topic arn exists
-                            if(Settings.S3PackageLoaderCustomResourceTopicArn == null) {
-                                AddError("parameter package requires S3PackageLoader custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                            }
+                            ValidateSourceParameter(parameter.Bucket, "AWS::S3::Bucket", "Kinesis S3 bucket resource");
                         }
 
                         // check if package is nested
-                        if(depth > 0) {
+                        if(prefix != "") {
                             AddError("parameter package cannot be nested");
                         }
+                    } else if(parameter.Resource != null) {
+                        ValidateResourceName(parameter.Var, prefix);
+                        ValidateNotBothStatements("Resource", "Secret", parameter.Secret == null);
+                        ValidateNotBothStatements("Resource", "EncryptionContext", parameter.EncryptionContext == null);
+                        ValidateNotBothStatements("Resource", "Package", parameter.Package == null);
+                    } else if(parameter.Variables == null) {
+                        AddError("unknown variable type");
                     }
-                    if(parameter.Parameters != null) {
-                        AtLocation("Parameters", () => {
-
-                            // ensure parameter is not exported
-                            Validate(parameter.Export == null, "exporting Parameters is not supported");
+                    if(parameter.Variables != null) {
+                        AtLocation("Variables", () => {
 
                             // recursively validate nested parameters
-                            ValidateParameters(parameter.Parameters, depth + 1);
+                            ValidateParameters(parameter.Variables, prefix + "::" + parameter.Var);
                         });
                     }
                     if(parameter.Resource != null) {
@@ -184,45 +157,44 @@ namespace MindTouch.LambdaSharp.Tool {
                 ValidateNotBothStatements("Value", "Properties", resource.Properties == null);
                 if(parameter.Value is string text) {
                     ValidateARN(text);
-                } else {
-                    AddError("resource reference must be a literal value");
-                }
-            } else if(parameter.Values != null) {
-                resource.Type = resource.Type ?? "AWS";
-                ValidateNotBothStatements("Values", "Properties", resource.Properties == null);
-                foreach(var value in parameter.Values) {
-                    ValidateARN(value);
+                } else if(parameter.Value is IList<object> values) {
+                    foreach(var value in values) {
+                        ValidateARN(value);
+                    }
                 }
             } else if(resource.Type == null) {
-                AddError("missing Type field");
+                AddError("missing Type attribute");
             } else if(
-                resource.Type.StartsWith("AWS::")
-                && !Settings.ResourceMapping.IsResourceTypeSupported(resource.Type)
+                resource.Type.StartsWith("AWS::", StringComparison.Ordinal)
+                && !ResourceMapping.IsResourceTypeSupported(resource.Type)
             ) {
                 AddError($"unsupported resource type: {resource.Type}");
+            } else if(!resource.Type.StartsWith("AWS::", StringComparison.Ordinal)) {
+                Validate(resource.Allow == null, "'Allow' attribute is not valid for custom resources");
             }
-            
+
             // validate dependencies
             if(resource.DependsOn == null) {
                 resource.DependsOn = new List<string>();
             } else {
                 AtLocation("DependsOn", () => {
-                    foreach(var dependency in resource.DependsOn) {
-                        var dependentParameter = _module.Parameters.FirstOrDefault(p => p.Name == dependency);
+                    var dependencies = ConvertToStringList(resource.DependsOn);
+                    foreach(var dependency in dependencies) {
+                        var dependentParameter = _module.Variables.FirstOrDefault(p => p.Var == dependency);
                         if(dependentParameter == null) {
-                            AddError($"could not find dependency '{dependency}'");                            
+                            AddError($"could not find dependency '{dependency}'");
                         } else if(dependentParameter.Resource == null) {
                             AddError($"cannot depend on literal parameter '{dependency}'");
-                        } else if(parameter.Name == dependency) {
+                        } else if(parameter.Var == dependency) {
                             AddError($"dependency cannot be on itself '{dependency}'");
                         }
-                    }                   
+                    }
                 });
             }
 
             // local functions
-            void ValidateARN(string resourceArn) {
-                if(!resourceArn.StartsWith("arn:") && (resourceArn != "*")) {
+            void ValidateARN(object resourceArn) {
+                if((resourceArn is string text) && !text.StartsWith("arn:") && (text != "*")) {
                     AddError($"resource name must be a valid ARN or wildcard: {resourceArn}");
                 }
             }
@@ -233,36 +205,24 @@ namespace MindTouch.LambdaSharp.Tool {
                 return;
             }
 
-            // check if a dead-letter queue was specified
-            if(Settings.DeadLetterQueueUrl == null) {
-                AddError("deploying functions requires a dead-letter queue", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
-            // check if a logging topic was set
-            if(Settings.LoggingTopicArn == null) {
-                AddError("deploying functions requires a logging topic", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
-            // check if a deployment bucket was specified
-            if(Settings.DeploymentBucketName == null) {
-                AddError("deploying functions requires a deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-            }
-
             // validate functions
             var index = 0;
             foreach(var function in functions) {
                 ++index;
-                AtLocation(function.Name ?? $"[{index}]", () => {
-                    Validate(function.Name != null, "missing function name");
-                    Validate(function.Memory != null, "missing Memory field");
+                AtLocation(function.Function ?? $"[{index}]", () => {
+                    ValidateResourceName(function.Function, "");
+                    Validate(function.Memory != null, "missing Memory attribute");
                     Validate(int.TryParse(function.Memory, out _), "invalid Memory value");
-                    Validate(function.Timeout != null, "missing Name field");
+                    Validate(function.Timeout != null, "missing Name attribute");
                     Validate(int.TryParse(function.Timeout, out _), "invalid Timeout value");
                     Validate(function.PackagePath == null, "'PackagePath' is reserved for internal use");
-                    if(function.Sources == null) {
-                        function.Sources = new List<FunctionSourceNode>();
-                    }
+                    function.Sources = function.Sources ?? new List<FunctionSourceNode>();
+                    function.Environment = function.Environment ?? new Dictionary<string, object>();
+                    function.VPC = function.VPC ?? new Dictionary<string, object>();
                     ValidateFunctionSource(function.Sources);
+                    if(function.Pragmas == null) {
+                        function.Pragmas = new List<object>();
+                    }
                 });
             }
         }
@@ -287,7 +247,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Api", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Api", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Api", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Api", "Macro", source.Macro == null);
                     } else if(source.Schedule != null) {
                         ValidateNotBothStatements("Schedule", "Api", source.Api == null);
                         ValidateNotBothStatements("Schedule", "OperationName", source.OperationName == null);
@@ -305,7 +264,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Schedule", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Schedule", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Schedule", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Schedule", "Macro", source.Macro == null);
 
                         // TODO (2018-06-27, bjorg): add cron/rate expression validation
                     } else if(source.S3 != null) {
@@ -323,12 +281,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("S3", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("S3", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("S3", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("S3", "Macro", source.Macro == null);
-
-                        // check if S3 subscriber topic arn exists
-                        if(Settings.S3SubscriberCustomResourceTopicArn == null) {
-                            AddError("S3 source requires S3Subscriber custom resource handler to be deployed", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                        }
 
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
 
@@ -351,7 +303,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("SlackCommand", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("SlackCommand", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("SlackCommand", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("SlackCommand", "Macro", source.Macro == null);
                     } else if(source.Topic != null) {
                         ValidateNotBothStatements("Topic", "Api", source.Api == null);
                         ValidateNotBothStatements("Topic", "Integration", source.Integration == null);
@@ -370,7 +321,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Topic", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Topic", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Topic", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Topic", "Macro", source.Macro == null);
 
                         // verify source exists
                         ValidateSourceParameter(source.Topic, "AWS::SNS::Topic", "SNS topic");
@@ -391,7 +341,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Sqs", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Sqs", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Sqs", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Sqs", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -420,7 +369,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Alexa", "DynamoDB", source.DynamoDB == null);
                         ValidateNotBothStatements("Alexa", "StartingPosition", source.StartingPosition == null);
                         ValidateNotBothStatements("Alexa", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("Alexa", "Macro", source.Macro == null);
                     } else if(source.DynamoDB != null) {
                         ValidateNotBothStatements("DynamoDB", "Api", source.Api == null);
                         ValidateNotBothStatements("DynamoDB", "Integration", source.Integration == null);
@@ -437,7 +385,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("DynamoDB", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("DynamoDB", "Alexa", source.Alexa == null);
                         ValidateNotBothStatements("DynamoDB", "Kinesis", source.Kinesis == null);
-                        ValidateNotBothStatements("DynamoDB", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -475,7 +422,6 @@ namespace MindTouch.LambdaSharp.Tool {
                         ValidateNotBothStatements("Kinesis", "Sqs", source.Sqs == null);
                         ValidateNotBothStatements("Kinesis", "Alexa", source.Alexa == null);
                         ValidateNotBothStatements("Kinesis", "DynamoDB", source.DynamoDB == null);
-                        ValidateNotBothStatements("Kinesis", "Macro", source.Macro == null);
 
                         // validate settings
                         AtLocation("BatchSize", () => {
@@ -497,25 +443,8 @@ namespace MindTouch.LambdaSharp.Tool {
 
                         // verify source exists
                         ValidateSourceParameter(source.Kinesis, "AWS::Kinesis::Stream", "Kinesis stream");
-                    } else if(source.Macro != null) {
-                        ValidateNotBothStatements("Macro", "Api", source.Api == null);
-                        ValidateNotBothStatements("Macro", "Integration", source.Integration == null);
-                        ValidateNotBothStatements("Macro", "OperationName", source.OperationName == null);
-                        ValidateNotBothStatements("Macro", "APiKeyRequired", source.ApiKeyRequired == null);
-                        ValidateNotBothStatements("Macro", "Schedule", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "Name", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "S3", source.S3 == null);
-                        ValidateNotBothStatements("Macro", "Events", source.Events == null);
-                        ValidateNotBothStatements("Macro", "Prefix", source.Prefix == null);
-                        ValidateNotBothStatements("Macro", "Suffix", source.Suffix == null);
-                        ValidateNotBothStatements("Macro", "SlackCommand", source.SlackCommand == null);
-                        ValidateNotBothStatements("Macro", "Topic", source.Topic == null);
-                        ValidateNotBothStatements("Macro", "Sqs", source.Sqs == null);
-                        ValidateNotBothStatements("Macro", "Alexa", source.Alexa == null);
-                        ValidateNotBothStatements("Macro", "DynamoDB", source.DynamoDB == null);
-                        ValidateNotBothStatements("Macro", "Kinesis", source.Kinesis == null);
                     } else {
-                        AddError("unknown source");
+                        AddError("unknown source type");
                     }
                 });
             }
@@ -529,11 +458,158 @@ namespace MindTouch.LambdaSharp.Tool {
         }
 
         private void ValidateSourceParameter(string name, string awsType, string typeDescription) {
-            var parameter = _module.Parameters.FirstOrDefault(p => p.Name == name);
-            if(parameter == null) {
-                AddError($"could not find parameter for {typeDescription}: '{name}'");
-            } else if(parameter?.Resource?.Type != awsType) {
-                AddError($"parameter for function source must be an {typeDescription} resource: '{name}'");
+            var input = _module.Inputs.FirstOrDefault(i => i.Parameter == name);
+            var import = _module.Inputs.FirstOrDefault(i => i.Import == name);
+            var parameter = _module.Variables.FirstOrDefault(p => p.Var == name);
+            if(input != null) {
+                if(input.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else if(import != null) {
+                if(import.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else if(parameter != null) {
+                if(parameter.Resource?.Type != awsType) {
+                    AddError($"function source must be an {typeDescription} resource: '{name}'");
+                }
+            } else {
+                AddError($"could not find function source: '{name}'");
+            }
+        }
+
+        private void ValidateInputs(IList<InputNode> inputs) {
+            var index = 0;
+            foreach(var input in inputs) {
+                ++index;
+                AtLocation(input.Parameter ?? $"[{index}]", () => {
+                    if(input.Type == null) {
+                        input.Type = "String";
+                    }
+                    ValidateScope(input.Scope);
+                    if(input.Import != null) {
+                        Validate(input.Import.Split("::").Length == 2, "incorrect format for `Import` attribute");
+                        ValidateNotBothStatements("Import", "Parameter", input.Parameter == null);
+                        ValidateNotBothStatements("Import", "Default", input.Default == null);
+                        ValidateNotBothStatements("Import", "ConstraintDescription", input.ConstraintDescription == null);
+                        ValidateNotBothStatements("Import", "AllowedPattern", input.AllowedPattern == null);
+                        ValidateNotBothStatements("Import", "AllowedValues", input.AllowedValues == null);
+                        ValidateNotBothStatements("Import", "MaxLength", input.MaxLength == null);
+                        ValidateNotBothStatements("Import", "MaxValue", input.MaxValue == null);
+                        ValidateNotBothStatements("Import", "MinLength", input.MinLength == null);
+                        ValidateNotBothStatements("Import", "MinValue", input.MinValue == null);
+                        ValidateNotBothStatements("Import", "NoEcho", input.NoEcho == null);
+                        if(input.Resource != null) {
+                            Validate(input.Type == "String", "input 'Type' must be string");
+                            AtLocation("Resource", () => {
+                                Validate(input.Resource.Type != null, "'Type' attribute is required");
+                                Validate(input.Resource.Allow != null, "'Allow' attribute is required");
+                                ValidateNotBothStatements("Import", "Properties", input.Resource.Properties == null);
+                                Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                            });
+                        }
+                    } else {
+                        ValidateResourceName(input.Parameter, "");
+                        if(input.Resource != null) {
+                            Validate(input.Type == "String", "input 'Type' must be string");
+                            AtLocation("Resource", () => {
+                                Validate(ConvertToStringList(input.Resource.DependsOn).Any() != true, "'DependsOn' cannot be used on an input");
+                                if(input.Default == null) {
+                                    Validate(input.Resource.Properties == null, "'Properties' section cannot be used with `Input` attribute unless the 'Default' is set to a blank string");
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        }
+
+        private void ValidateOutputs(IList<OutputNode> outputs) {
+            var index = 0;
+            foreach(var output in outputs) {
+                ++index;
+                AtLocation(output.Export ?? output.CustomResource ?? $"[{index}]", () => {
+                    if(output.Export != null) {
+
+                        // TODO (2018-09-20, bjorg): add name validation
+                        if(
+                            (output.Value == null)
+                            && (_module.Variables.FirstOrDefault(p => p?.Var == output.Export) == null)
+                            && (_module.Inputs.FirstOrDefault(i => i?.Parameter == output.Export) == null)
+                        ) {
+                            AddError("output must either have a Value attribute or match the name of an existing variable/parameter");
+                        }
+                        ValidateNotBothStatements("Output", "CustomResource", output.CustomResource == null);
+                        ValidateNotBothStatements("Output", "Handler", output.Handler == null);
+                        ValidateNotBothStatements("Output", "Macro", output.Macro == null);
+                    } else if(output.CustomResource != null) {
+
+                        // TODO (2018-09-20, bjorg): add custom resource name validation
+
+                        Validate(output.Handler != null, "missing Handler attribute");
+
+                        // TODO (2018-09-20, bjorg): confirm that `Handler` is set to an SNS topic or lambda function
+
+                        ValidateNotBothStatements("CustomResource", "Output", output.Export == null);
+                        ValidateNotBothStatements("CustomResource", "Value", output.Value == null);
+                        ValidateNotBothStatements("CustomResource", "Macro", output.Macro == null);
+                    } else if(output.Macro != null) {
+                        ValidateNotBothStatements("Macro", "Output", output.Export == null);
+                        ValidateNotBothStatements("Macro", "CustomResource", output.CustomResource == null);
+
+                        // TODO (2018-10-30, bjorg): confirm that `Handler` is set to a lambda function
+
+                    } else {
+                        AddError("unknown output type");
+                    }
+                });
+            }
+        }
+
+        private void ValidateResourceName(string name, string prefix) {
+            var fullname = prefix + name;
+            if(name == null) {
+                AddError("missing name");
+            } else if(fullname == "Module") {
+                AddError($"'{fullname}' is a reserved name");
+            } else if(!_names.Add(fullname)) {
+                AddError($"duplicate name '{fullname}'");
+            } else {
+                Validate(Regex.IsMatch(name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
+            }
+        }
+
+        private void ValidateScope(object scope) {
+            AtLocation("Scope", () => {
+                if(scope == null) {
+                    return;
+                }
+                var names = new List<string>();
+                if(scope is string text) {
+                    names.AddRange(text.Split(",").Select(v => v.Trim()).Where(v => v.Length > 0));
+                }
+                if(scope is IList<object> list) {
+                    foreach(var entry in list) {
+                        if(entry is string value) {
+                            names.AddRange(value.Split(",").Select(v => v.Trim()).Where(v => v.Length > 0));
+                        } else {
+                            AddError("invalid function name");
+                        }
+                    }
+                }
+                foreach(var name in names) {
+                    ValidateFunctionName(name);
+                }
+            });
+
+            // local function
+            void ValidateFunctionName(string function) {
+                if(function == "*") {
+                    return;
+                }
+                if(!_module.Functions.Any(f => f.Function == function)) {
+                    AddError($"could not find function named: {function}");
+                }
             }
         }
     }
