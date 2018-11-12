@@ -82,7 +82,7 @@
           "Ref": "DeploymentBucketName"
         },
         "SourcePackageKey": {
-          "Fn::Sub": "Modules/TestModule/Assets/package__60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
+          "Fn::Sub": "Modules/TestModule/Assets/package_MyPackage_60BC4F4B0D9DC088E061E7C1EEBAF6D1.zip"
         }
       }
     },

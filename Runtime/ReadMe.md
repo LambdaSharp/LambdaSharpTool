@@ -8,7 +8,7 @@ As of v0.4, the λ# CLI can be installed as a global `dotnet` tool. Simply run t
 
 __Using PowerShell/Bash:__
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
 ```
 
 Alternatively, for λ# contributors, the CLI can be setup using the [GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool). See the λ# contributor installation instructions below.

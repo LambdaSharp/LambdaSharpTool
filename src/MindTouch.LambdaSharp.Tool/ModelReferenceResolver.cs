@@ -46,6 +46,7 @@ namespace MindTouch.LambdaSharp.Tool {
 
         //--- Methods ---
         public void Resolve(Module module) {
+            var functionNames = new HashSet<string>(module.Functions.Select(function => function.Name));
             var freeParameters = new Dictionary<string, AParameter>();
             var boundParameters = new Dictionary<string, AParameter>();
 
@@ -395,6 +396,14 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                     return true;
                 default:
                     break;
+                }
+
+                // check if key is referring to a function
+                if(functionNames.Contains(key)) {
+                    found = (attribute != null)
+                        ? FnGetAtt(key, attribute)
+                        : FnRef(key);
+                    return true;
                 }
 
                 // see if the requested key can be resolved using a free parameter
