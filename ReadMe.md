@@ -1,6 +1,6 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp CLI & Framework (v0.4)
+# LambdaSharp CLI & Framework (v0.4.0.1)
 
 **[Read what's new in the 0.4 "Damo" release.](Docs/ReleaseNotes-Damo.md)**
 
@@ -18,7 +18,7 @@ The objective of λ# is to accelerate the innovation velocity of serverless solu
 The λ# CLI is installed as a [.NET Global Tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools).
 
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
 ```
 
 Once installed, the λ# CLI needs to be configured.

@@ -13,6 +13,9 @@ Outputs:
   - Export: OutputExpressionValue
     Value: !Sub "${SimpleValue} with extra stuff"
 
+  - Export: MyFunction
+    Value: !Ref Function
+
   # Custom Resources
   - CustomResource: TestModule::MyCustomSnsResource
     Description: A custom resource handler

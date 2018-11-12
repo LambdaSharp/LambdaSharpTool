@@ -586,6 +586,22 @@
       },
       "Condition": "ModuleIsNotNested"
     },
+    "MyFunction": {
+      "Value": {
+        "Ref": "Function"
+      }
+    },
+    "MyFunctionExport": {
+      "Value": {
+        "Ref": "Function"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::MyFunction"
+        }
+      },
+      "Condition": "ModuleIsNotNested"
+    },
     "TestModuleMyCustomSnsResourceHandler": {
       "Value": {
         "Ref": "ResourceValue"

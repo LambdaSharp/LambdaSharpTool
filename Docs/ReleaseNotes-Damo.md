@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4) - 2018-11-09
+# λ# - Damo (v0.4.0.1) - 2018-11-12
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -57,7 +57,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 The λ# CLI is now a global dotnet tool, which makes it trivial to install. No more need to check-out the [LambdaSharpTool GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool) for creating modules unless to contribute to it.
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4
+dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
 ```
 
 As part of the λ# CLI setup procedure, the CLI must be configured for the AWS account. The configuration step creates a profile and resources required to deploy λ# modules. The profile information is stored in the AWS Parameter Store so that it can be shared with team members. Multiple CLI profiles can be configured when needed.
@@ -475,3 +475,9 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 
 * The `${Tier}-` expression has been replaced with `${DeploymentPrefix}` in CloudFormation templates.
 * Lambda CloudWatch Logs are now configured to self-delete log stream entries after seven (7) days. In addition, the log group is now deleted when the function is deleted during module tear-down.
+
+## Fixes
+
+### (v0.4.0.1) - 2018-11-12
+* [Fixed an issue where file packages did not get the correct name.](https://github.com/LambdaSharp/LambdaSharpTool/issues/57)
+* [Fixed an issue where function could not be referenced by CloudFormation expressions (e.g. `!Ref`).](https://github.com/LambdaSharp/LambdaSharpTool/issues/58)
