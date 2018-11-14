@@ -163,7 +163,7 @@ Variables:
           DeploymentPrefix: !Ref DeploymentPrefix
           DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
           DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpRegistrar/Versions/${Module::Version}/cloudformation.json"
+        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpRegistrar/Versions/${Module::Version}/cloudformation.json"
         TimeoutInMinutes: 5
 
   - Var: S3Subscriber
@@ -182,7 +182,7 @@ Variables:
           DeploymentPrefix: !Ref DeploymentPrefix
           DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
           DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3Subscriber/Versions/${Module::Version}/cloudformation.json"
+        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3Subscriber/Versions/${Module::Version}/cloudformation.json"
         TimeoutInMinutes: 5
 
   - Var: S3PackageLoader
@@ -201,5 +201,5 @@ Variables:
           DeploymentPrefix: !Ref DeploymentPrefix
           DeploymentPrefixLowercase: !Ref DeploymentPrefixLowercase
           DeploymentParent: !Ref AWS::StackName
-        TemplateURL: !Sub "http://${DeploymentBucketName}.s3-${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3PackageLoader/Versions/${Module::Version}/cloudformation.json"
+        TemplateURL: !Sub "https://${DeploymentBucketName}.s3.${AWS::Region}.amazonaws.com/Modules/LambdaSharpS3PackageLoader/Versions/${Module::Version}/cloudformation.json"
         TimeoutInMinutes: 5

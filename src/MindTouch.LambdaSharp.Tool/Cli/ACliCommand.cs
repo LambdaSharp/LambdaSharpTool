@@ -54,6 +54,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
 
                 // select an alternate AWS profile by setting the AWS_PROFILE environment variable
                 Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
+                Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
             }
 
             // determine default AWS region
