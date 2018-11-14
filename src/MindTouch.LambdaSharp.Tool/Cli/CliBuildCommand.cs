@@ -574,37 +574,37 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
             // * MODULENAME:VERSION
             // * s3://bucket-name/Modules/{ModuleName}/{Version}/
 
-            string manifestPath;
-            if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
-                var uri = new Uri(moduleKey);
-                settings.DeploymentBucketName = uri.Host;
+            var originalDeploymentBucketName = settings.DeploymentBucketName;
+            try {
+                string manifestPath;
+                if(moduleKey.StartsWith("s3://", StringComparison.Ordinal)) {
+                    var uri = new Uri(moduleKey);
+                    settings.DeploymentBucketName = uri.Host;
 
-                // absolute path always starts with '/', which needs to be removed
-                var path = uri.AbsolutePath.Substring(1);
-                if(!path.EndsWith("/manifest.json", StringComparison.Ordinal)) {
-                    manifestPath = path.TrimEnd('/') + "/manifest.json";
-                } else {
-                    manifestPath = path;
-                }
-            } else {
-                VersionInfo requestedVersion = null;
-                string moduleName;
-
-                // check if a version suffix is specified
-                // NOTE: avoid matching on "C:/" strings!
-                if(moduleKey.IndexOf(':', StringComparison.Ordinal) > 1) {
-                    var parts = moduleKey.Split(':', 2);
-                    moduleName = parts[0];
-                    if(parts[1] != "*") {
-                        requestedVersion = VersionInfo.Parse(parts[1]);
+                    // absolute path always starts with '/', which needs to be removed
+                    var path = uri.AbsolutePath.Substring(1);
+                    if(!path.EndsWith("/manifest.json", StringComparison.Ordinal)) {
+                        manifestPath = path.TrimEnd('/') + "/manifest.json";
+                    } else {
+                        manifestPath = path;
                     }
                 } else {
-                    moduleName = moduleKey;
-                }
+                    VersionInfo requestedVersion = null;
+                    string moduleName;
 
-                // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-                var originalDeploymentBucketName = settings.DeploymentBucketName;
-                try {
+                    // check if a version suffix is specified
+                    // NOTE: avoid matching on "C:/" strings!
+                    if(moduleKey.IndexOf(':', StringComparison.Ordinal) > 1) {
+                        var parts = moduleKey.Split(':', 2);
+                        moduleName = parts[0];
+                        if(parts[1] != "*") {
+                            requestedVersion = VersionInfo.Parse(parts[1]);
+                        }
+                    } else {
+                        moduleName = moduleKey;
+                    }
+
+                    // attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
                     manifestPath = null;
                     foreach(var bucket in new[] {
                         settings.DeploymentBucketName,
@@ -624,52 +624,51 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         AddError($"could not find module: {moduleName} (v{requestedVersion})");
                         return false;
                     }
-                } finally {
-                    settings.DeploymentBucketName = originalDeploymentBucketName;
                 }
-            }
 
-            // download manifest
-            var manifestText = await GetS3ObjectContents(settings, manifestPath);
-            if(manifestText == null) {
-                AddError($"could not load manifest from s3://{settings.DeploymentBucketName}/{manifestPath}");
-                return false;
-            }
-            var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
-
-            // check that the LambdaSharp runtime & CLI versions match
-            if(settings.RuntimeVersion == null) {
-
-                // runtime module doesn't expect a deployment tier to exist
-                if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
-                    AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                // download manifest
+                var manifestText = await GetS3ObjectContents(settings, manifestPath);
+                if(manifestText == null) {
+                    AddError($"could not load manifest from s3://{settings.DeploymentBucketName}/{manifestPath}");
                     return false;
                 }
-            } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
-                if(!forceDeploy) {
-                    AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
-                    return false;
-                }
-            }
+                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
+                // check that the LambdaSharp runtime & CLI versions match
+                if(settings.RuntimeVersion == null) {
 
-            // deploy module
-            if(dryRun == null) {
-                try {
-                    return await new ModelUpdater(settings, sourceFilename: null).DeployAsync(
-                        manifest,
-                        instanceName,
-                        allowDataLoos,
-                        protectStack,
-                        inputs,
-                        forceDeploy
-                    );
-                } catch(Exception e) {
-                    AddError(e);
-                    return false;
+                    // runtime module doesn't expect a deployment tier to exist
+                    if(!forceDeploy && !manifest.HasPragma("no-runtime-version-check")) {
+                        AddError("could not determine the LambdaSharp runtime version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        return false;
+                    }
+                } else if(!settings.ToolVersion.IsCompatibleWith(settings.RuntimeVersion)) {
+                    if(!forceDeploy) {
+                        AddError($"LambdaSharp CLI (v{settings.ToolVersion}) and runtime (v{settings.RuntimeVersion}) versions do not match; use --force-deploy to proceed anyway");
+                        return false;
+                    }
                 }
+
+                // deploy module
+                if(dryRun == null) {
+                    try {
+                        return await new ModelUpdater(settings, sourceFilename: null).DeployAsync(
+                            manifest,
+                            instanceName,
+                            allowDataLoos,
+                            protectStack,
+                            inputs,
+                            forceDeploy
+                        );
+                    } catch(Exception e) {
+                        AddError(e);
+                        return false;
+                    }
+                }
+                return true;
+            } finally {
+                settings.DeploymentBucketName = originalDeploymentBucketName;
             }
-            return true;
         }
 
         private async Task<VersionInfo> FindNewestVersion(Settings settings, string moduleName, VersionInfo requestedVersion) {

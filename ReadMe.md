@@ -1,6 +1,6 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp CLI & Framework (v0.4.0.1)
+# LambdaSharp CLI & Framework (v0.4.0.2)
 
 **[Read what's new in the 0.4 "Damo" release.](Docs/ReleaseNotes-Damo.md)**
 

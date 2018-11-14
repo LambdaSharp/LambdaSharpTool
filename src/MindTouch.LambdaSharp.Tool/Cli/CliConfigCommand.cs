@@ -105,7 +105,7 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                 if(settings.ToolProfileExplicitlyProvided) {
                     Console.WriteLine($"Creating CLI profile: {settings.ToolProfile}");
                 } else {
-                    settings.ToolProfile = Prompt.GetString("CLI profile name:", "Default");
+                    settings.ToolProfile = Prompt.GetString("CLI profile name:", settings.ToolProfile);
                 }
                 if(moduleS3BucketName == "") {
                     Console.WriteLine($"Creating new S3 bucket");
