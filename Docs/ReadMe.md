@@ -2,7 +2,7 @@
 
 λ# releases are named after [Greek philosophers](https://en.wikipedia.org/wiki/List_of_ancient_Greek_philosophers).
 
-1. [Damo (v0.4.0.2) - 2010-11-13](ReleaseNotes-Damo.md)
+1. [Damo (v0.4.0.3) - 2010-12-16](ReleaseNotes-Damo.md)
 1. [Cebes (v0.3) - 2018-09-19](ReleaseNotes-Cebes.md)
 1. [Brontinus (v0.2) - 2018-08-13](ReleaseNotes-Brontinus.md)
 1. [Acrion (v0.1) - 2018-07-17](ReleaseNotes-Acrion.md)

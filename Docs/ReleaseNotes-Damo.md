@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4.0.2) - 2018-11-13
+# λ# - Damo (v0.4.0.3) - 2018-12-16
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -477,6 +477,13 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 * Lambda CloudWatch Logs are now configured to self-delete log stream entries after seven (7) days. In addition, the log group is now deleted when the function is deleted during module tear-down.
 
 ## Fixes
+
+### (v0.4.0.3) - 2018-12-16
+
+* [Fixed when Fn::Join always used "," to join items, no matter what separator was given](https://github.com/LambdaSharp/LambdaSharpTool/issues/77)
+* [Fixed VersionInfo `operator !=` (not equal) returned `false` when the references were not equal](https://github.com/LambdaSharp/LambdaSharpTool/issues/78)
+* [Fixed reference resolver sometimes failing to recognize legal expressions](https://github.com/LambdaSharp/LambdaSharpTool/issues/79)
+* [Fixed invalid wildcard assembly reference in generated .csproj file](https://github.com/LambdaSharp/LambdaSharpTool/issues/80)
 
 ### (v0.4.0.2) - 2018-11-13
 * [Fixed issue where λ# bucket discovery incorrectly defaulted back to the original bucket during deployment.](https://github.com/LambdaSharp/LambdaSharpTool/issues/60)

@@ -127,7 +127,7 @@ fi
 
 dotnet tool uninstall \
     --global \
-    MindTouch.LambdaSharp.Tool \
+    MindTouch.LambdaSharp.Tool
 
 dotnet tool install \
     --global \
