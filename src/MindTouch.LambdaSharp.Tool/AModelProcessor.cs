@@ -64,7 +64,7 @@ namespace MindTouch.LambdaSharp.Tool {
                 return parameters.First();
             }
             if(parameters.All(value => value is string)) {
-                return string.Join(",", parameters);
+                return string.Join(separator, parameters);
             }
             return new Dictionary<string, object> {
                 ["Fn::Join"] = new List<object> {

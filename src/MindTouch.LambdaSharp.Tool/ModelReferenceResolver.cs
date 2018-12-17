@@ -427,8 +427,9 @@ DebugWriteLine($"FINAL => {value} [{value.GetType()}]");
                             : freeParameter.Reference;
                         break;
                     }
+                    return true;
                 }
-                return found != null;
+                return false;
             }
         }
     }
