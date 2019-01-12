@@ -3,7 +3,7 @@
 # - allow LAMBDASHARP_SUFFIX to be passed in
 
 # Set version SUFFIX
-LAMBDASHARP_PREFIX=0.4.0.3
+LAMBDASHARP_PREFIX=0.4.0.4
 LAMBDASHARP_SUFFIX=
 
 update() {

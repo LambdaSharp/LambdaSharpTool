@@ -597,7 +597,7 @@ namespace MindTouch.LambdaSharp.Tool {
                     }
 
                     // convert type name to a custom AWS resource type
-                    resource.Type = "Custom::" + customResourceName;
+                    resource.Type = "Custom::" + customResourceName.Replace("::", "");
                 }
             });
             return new Resource {

@@ -85,7 +85,7 @@ The <code>Handler</code> attribute specifies the name of an SNS topic parameter,
   Memory: 128
   Timeout: 30
   Sources:
-    - SNS: AccountReportGeneratorTopic
+    - Topic: AccountReportGeneratorTopic
 ```
 
 ### Custom Resource using a Lambda function
@@ -101,7 +101,7 @@ The <code>Handler</code> attribute specifies the name of an SNS topic parameter,
   Memory: 128
   Timeout: 30
   Sources:
-    - SNS: AccountReportGeneratorTopic
+    - Topic: AccountReportGeneratorTopic
 ```
 
 ## Notes
