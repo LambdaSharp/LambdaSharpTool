@@ -615,10 +615,10 @@ namespace MindTouch.LambdaSharp.Tool.Cli {
                         if(HasErrors) {
                             return false;
                         }
-                        if(foundVersion == null) {
-                            continue;
+                        if(foundVersion != null) {
+                            manifestPath = $"Modules/{moduleName}/Versions/{foundVersion}/manifest.json";
+                            break;
                         }
-                        manifestPath = $"Modules/{moduleName}/Versions/{foundVersion}/manifest.json";
                     }
                     if(manifestPath == null) {
                         AddError($"could not find module: {moduleName} (v{requestedVersion})");

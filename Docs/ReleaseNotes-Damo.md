@@ -1,4 +1,4 @@
-# λ# - Damo (v0.4.0.3) - 2018-12-16
+# λ# - Damo (v0.4.0.4) - 2019-01-11
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -401,7 +401,7 @@ Custom resource definitions create new types of resources that can be used by ot
   Memory: 128
   Timeout: 30
   Sources:
-    - SNS: AccountReportGeneratorTopic
+    - Topic: AccountReportGeneratorTopic
 ```
 See [custom resource documentation](Module-CustomResource.md) for more details.
 
@@ -477,6 +477,13 @@ This method serializes an object into a JSON string using the built-in AWS Lambd
 * Lambda CloudWatch Logs are now configured to self-delete log stream entries after seven (7) days. In addition, the log group is now deleted when the function is deleted during module tear-down.
 
 ## Fixes
+
+### (v0.4.0.4) - 2019-01-11
+
+* [Fixed LambdaSharp modules are always installed from public lambdasharp bucket](https://github.com/LambdaSharp/LambdaSharpTool/issues/82)
+* [Fixed documentation error that showed wrong keyword for subscribing a function to a topic](https://github.com/LambdaSharp/LambdaSharpTool/issues/83)
+* [Fixed cannot unzip package from deployment bucket when S3PackageLoader is installed from the global lambdasharp bucket](https://github.com/LambdaSharp/LambdaSharpTool/issues/84)
+* [Fixed error when creating a resource with custom resource type](https://github.com/LambdaSharp/LambdaSharpTool/issues/85)
 
 ### (v0.4.0.3) - 2018-12-16
 

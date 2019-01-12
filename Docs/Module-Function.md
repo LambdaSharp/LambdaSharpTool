@@ -143,5 +143,5 @@ The <code>Sources</code> section specifies zero or more source definitions the L
   Memory: 128
   Timeout: 15
   Sources:
-    - SNS: MySnsTopic
+    - Topic: MySnsTopic
 ```

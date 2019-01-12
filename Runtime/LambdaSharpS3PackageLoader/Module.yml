@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharpS3PackageLoader
-Version: 0.4
+Version: 0.4.0.1
 Description: LambdaSharp S3 Package Loader
 
 Outputs:
@@ -41,8 +41,8 @@ Variables:
   - Var: S3DeploymentBucketPermissions
     Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
     Value:
-      - !Sub "arn:aws:s3:::${DeploymentBucketName}"
-      - !Sub "arn:aws:s3:::${DeploymentBucketName}/*"
+      - !Sub "arn:aws:s3:::*"
+      - !Sub "arn:aws:s3:::*/*"
     Resource:
       Type: AWS::S3::Bucket
       Allow: ReadOnly
