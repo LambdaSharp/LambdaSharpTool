@@ -1,3 +1,5 @@
+![λ#](LambdaSharp_v2_small.png)
+
 # λ# - Damo (v0.4.0.4) - 2019-01-11
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
@@ -11,7 +13,7 @@ In addition, λ# 0.4 _Damo_ introduces a new module composition model that makes
 Finally, λ# 0.4 _Damo_ introduces a new core service--the `λ# Registrar`--that is responsible for registering modules and processing the CloudWatch Logs of their deployed Lambda functions. By monitoring the logs, `λ# Registrar` can automatically detect and report out-of-memory and timeout failures. As an extra bonus, `λ# Registrar` can optionally be integrated with [Rollbar](http://rollbar.com) to create projects per module to track their warnings and errors.
 
 __Topics__
-1. [Break Changes](#breaking-changes)
+1. [Breaking Changes](#breaking-changes)
 1. [New λ# CLI Features](#new-λ-cli-features)
 1. [New λ# Module Features](#new-λ-module-features)
 1. [New λ# Runtime Features](#new-λ-runtime-features)
@@ -57,7 +59,7 @@ With the addition of new sections to the module definition, and with an eye towa
 
 The λ# CLI is now a global dotnet tool, which makes it trivial to install. No more need to check-out the [LambdaSharpTool GitHub repository](https://github.com/LambdaSharp/LambdaSharpTool) for creating modules unless to contribute to it.
 ```bash
-dotnet tool install -g MindTouch.LambdaSharp.Tool --version 0.4.*
+dotnet tool install -g LambdaSharp.Tool --version 0.4.*
 ```
 
 As part of the λ# CLI setup procedure, the CLI must be configured for the AWS account. The configuration step creates a profile and resources required to deploy λ# modules. The profile information is stored in the AWS Parameter Store so that it can be shared with team members. Multiple CLI profiles can be configured when needed.
@@ -70,7 +72,7 @@ Initializing a deployment tier has been streamlined into a single command, which
 dotnet lash init --tier Sandbox
 ```
 
-For complete instructions and options, check out the updated [setup documentation](../Runtime/).
+For complete instructions and options, check out the updated [setup documentation](../Docs/).
 
 ### Build, Publish, and Deploy
 
@@ -173,19 +175,19 @@ The pre-deployment check can be skipped with the `--force-deploy` option.
 
 The `info` command was enhanced to show information about other installed tools that λ# CLI depends on, such as `dotnet` and `git`. In addition, sensitive information--like the AWS account ID--are hidden unless `--show-sensitive` option is used.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-Info.md) for more details.
 
 #### Encrypt Command
 
 The `encrypt` command was added to make it easier to encrypt sensitive information. The command can either use a specific KMS key or use the default KMS key for the deployment tier.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md) for more details.
 
 ### New Function Command
 
 The `new function` command now allows specifying the target language when adding a function.
 
-See the [updated documentation](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
+See the [updated documentation](../src/LambdaSharp.Tool/Docs/Tool-NewFunction.md) for more details.
 
 
 ## New λ# Module Features
@@ -197,7 +199,7 @@ The `Variables` section defines literal values and resources. Variables can eith
 To scope a variable to all functions, use the wildcard value (`*`):
 ```yaml
 - Var: My Variable
-  Scope: "*"
+  Scope: all
   Value: Best variable ever
 ```
 
@@ -324,7 +326,7 @@ This concept is taken one step further with conditional resources, which are onl
 
 #### Module Secret Parameters
 
-In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../src/MindTouch.LambdaSharp.Tool/Docs/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
+In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../src/LambdaSharp.Tool/Docs/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
 
 ```yaml
 - Parameter: MyApiKey
@@ -339,7 +341,7 @@ The λ# implementation of cross-module references enables CloudFormation to reso
 
 ```yaml
 - Import: MyOtherModule::Topic
-  Scope: "*"
+  Scope: all
   Description: Topic ARN for notifying users
 
 # ...
@@ -452,7 +454,7 @@ The newest runtime module is the `Registrar`, which is responsible for registeri
 
 The `Registrar` can optionally be configured to integrate with [Rollbar](https://rollbar.com/mindtouch/nexus-indexer/) to create tracking projects on module deployment.
 
-See the [λ# CLI & Runtime documentation](../Runtime/) for more details.
+See the [λ# CLI & Runtime documentation](../Docs/) for more details.
 
 ## New λ# Assembly Features
 

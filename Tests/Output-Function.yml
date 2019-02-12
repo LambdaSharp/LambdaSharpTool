@@ -1,0 +1,9 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Function: Function
+    Description: My function
+    Scope: public
+    Memory: 128
+    Timeout: 30

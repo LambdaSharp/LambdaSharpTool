@@ -12,7 +12,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-Sqs: String
+Sqs: String|Expression
 BatchSize: Int
 ```
 
@@ -35,7 +35,7 @@ The <code>Sqs</code> attribute specifies the name of a resource parameter of typ
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 </dl>

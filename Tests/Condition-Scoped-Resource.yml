@@ -1,0 +1,14 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Parameter: MyParameter
+
+  - Resource: MyResource
+    If: !Equals [ !Ref MyParameter, "value" ]
+    Scope: all
+    Type: AWS::SNS::Topic
+
+  - Function: Function
+    Memory: 128
+    Timeout: 30

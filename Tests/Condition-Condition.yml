@@ -1,0 +1,18 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Parameter: MyParameter
+
+  - Condition: MyFirstCondition
+    Value: !Equals [ !Ref MyParameter, "first" ]
+
+  - Condition: MySecondCondition
+    Value: !Equals [ !Ref MyParameter, "second" ]
+
+  - Condition: CompositeCondition
+    Value: !Or [ !Condition MyFirstCondition, !Condition MySecondCondition ]
+
+  - Resource: MyResource
+    If: CompositeCondition
+    Type: AWS::SNS::Topic

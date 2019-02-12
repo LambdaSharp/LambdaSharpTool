@@ -3,7 +3,7 @@
 # - allow LAMBDASHARP_SUFFIX to be passed in
 
 # Set version SUFFIX
-LAMBDASHARP_PREFIX=0.4.0.4
+LAMBDASHARP_PREFIX=0.5
 LAMBDASHARP_SUFFIX=
 
 update() {
@@ -21,17 +21,12 @@ update() {
         `ls bin/Release/*.nupkg`
 }
 
-# Update MindTouch.LambdaSharp
-cd MindTouch.LambdaSharp
+# Update LambdaSharp
+cd LambdaSharp
 update
 cd ..
 
-# Update MindTouch.LambdaSharp.CustomResource
-cd MindTouch.LambdaSharp.CustomResource
-update
-cd ..
-
-# Update MindTouch.LambdaSharp.Slack
-cd MindTouch.LambdaSharp.Slack
+# Update LambdaSharp.Slack
+cd LambdaSharp.Slack
 update
 cd ..

@@ -13,7 +13,7 @@
     <PackageReference Include="Amazon.Lambda.DynamoDBEvents" Version="1.0.1"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>

@@ -1,0 +1,121 @@
+![λ#](LambdaSharp_v2_small.png)
+
+# Module: LambdaSharp.Twitter.Query
+_Version:_ 0.5
+
+## Overview
+
+The `LambdaSharp.Twitter.Query` module conducts a Twitter search at regular intervals and publishes found tweets to a dedicated SNS topic.
+
+This module requires a Twitter developer account. See the [Twitter Developer Documentation](https://developer.twitter.com/en/docs/basics/getting-started) for more information.
+
+__Topics__
+* [Resource Types](#resource-types)
+* [Parameters](#parameters)
+* [Outputs](#outputs)
+
+## Resource Types
+
+This module defines no resource types.
+
+## Parameters
+
+<dl>
+
+<dt><code>Secrets</code></dt>
+<dd>
+The <code>Secrets</code> parameter lists the KMS key ARNs for which the module is granted decryption access.
+
+<i>Required:</i> No
+
+<i>Type:</i> Comma-delimited list of String (see [Secrets Section](Module-Secrets.md))
+</dd>
+
+<dt><code>TwitterApiKey</code></dt>
+<dd>
+The <code>TwitterApiKey</code> parameter sets the API key for accessing Twitter.
+
+<i>Required</i>: Yes
+
+<i>Type:</i> Secret
+</dd>
+
+<dt><code>TwitterApiSecretKey</code></dt>
+<dd>
+The <code>TwitterApiSecretKey</code> parameter sets the secret API key for accessing Twitter. This parameter must either be encrypted with the default deployment tier KMS key, or the corresponding KMS key must be passed in via  the <code>Secrets</code> parameter.
+
+<i>Required</i>: Yes
+
+<i>Type:</i> Secret
+</dd>
+
+<dt><code>TwitterLanguageFilter</code></dt>
+<dd>
+The <code>TwitterLanguageFilter</code> parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter). This parameter must either be encrypted with the default deployment tier KMS key, or the corresponding KMS key must be passed in via  the <code>Secrets</code> parameter.
+
+<i>Required</i>: No (Default: en)
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>TwitterQuery</code></dt>
+<dd>
+The <code>TwitterQuery</code> parameter sets the query expression for finding tweets.
+
+<i>Required</i>: Yes
+
+<i>Type:</i> String
+</dd>
+
+<dt><code>TwitterQueryInterval</code></dt>
+<dd>
+The <code>TwitterQueryInterval</code> parameter sets the interval between queries (in minutes).
+
+<i>Required</i>: No (Default: 60)
+
+<i>Type:</i> Number (between 2 and 1,440)
+</dd>
+
+<dt><code>TwitterSentimentFilter</code></dt>
+<dd>
+The <code>TwitterSentimentFilter</code> parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL).
+
+<b>NOTE:</b> Analyzing tweets for sentiment incurs additional costs. Please check pricing for the [AWS Comprehend Sentiment Analysis API](https://aws.amazon.com/comprehend/pricing/).
+
+<i>Required</i>: No (Default: SKIP)
+
+<i>Type:</i> String
+
+The <code>TwitterSentimentFilter</code> must have one of the following values:
+<dl>
+<dt>ALL</dt>
+<dd>Analyze and publish all tweets.</dd>
+<dt>MIXED</dt>
+<dd>Only publish tweets with mixed sentiment.</dd>
+<dt>NEGATIVE</dt>
+<dd>Only publish tweets with negative sentiment.</dd>
+<dt>NEUTRAL</dt>
+<dd>Only publish tweets with neutral sentiment.</dd>
+<dt>POSITIVE</dt>
+<dd>Only publish tweets with positive sentiment.</dd>
+<dt>SKIP</dt>
+<dd>Publish all tweets without analyzing them.</dd>
+</dl>
+
+</dd>
+
+</dl>
+
+## Output Values
+
+<dl>
+
+<dt><code>TweetTopic</code></dt>
+<dd>
+The <code>TweetTopic</code> output contains the ARN of the SNS topic to which tweets that match the <code>TwitterQuery</code> are published to.
+
+<i>Type:</i> AWS::SNS::Topic
+</dd>
+
+</dl>
+

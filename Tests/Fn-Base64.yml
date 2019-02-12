@@ -1,0 +1,10 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+
+Items:
+
+  - Resource: MyResource
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Result: !Base64 "hello world"

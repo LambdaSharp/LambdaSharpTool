@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <RootNamespace>LambdaSharp.Slack</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+
+    <PackageId>LambdaSharp.Slack</PackageId>
+    <VersionPrefix>0.5</VersionPrefix>
+    <Title>MindTouch λ# Slack</Title>
+    <Description>A serverless framework for rapid application development of Slack integrations</Description>
+    <Company>MindTouch, Inc.</Company>
+    <Copyright>Copyright (C) 2018-2019 MindTouch, Inc.</Copyright>
+    <Authors>Bjorg;DerekRobbins;MindTouch</Authors>
+
+    <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
+    <PackageTags>AWS;Lambda;LambdaSharp;MindTouch;Serverless;Slack</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LambdaSharp\LambdaSharp.csproj"/>
+  </ItemGroup>
+</Project>

@@ -12,7 +12,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-Alexa: String
+Alexa: String|Expression
 ```
 
 ## Properties
@@ -25,7 +25,7 @@ The <code>Alexa</code> attribute can either specify an Alexa Skill ID or the wil
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String Expression
+<i>Type</i>: String or Expression
 </dd>
 
 </dl>

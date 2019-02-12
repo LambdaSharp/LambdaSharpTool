@@ -1,6 +1,6 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Secrets Section
+# LambdaSharp Module - Secrets
 
 The `Secrets` section, in the [λ# Module](Module.md), lists which KMS keys can be used to decrypt parameter values. The module IAM role will get the `mks:Decrypt` permission to use these keys.
 

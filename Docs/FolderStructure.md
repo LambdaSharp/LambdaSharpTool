@@ -2,12 +2,12 @@
 
 # LambdaSharp Folder Structure
 
-λ# modules must follow a consistent folder organization. The root folder must contain the `Module.yml` file. Each function listed in the `Module.yml` must have a corresponding folder the naming convention `{AppName}.{FunctionName}`. The .NET Core projects file (`.csproj`) for each function should be contained within said sub-folder and be named with the same naming convention. (e.g. `{AppName}.{FunctionName}.csproj`).
+λ# modules must follow a consistent folder organization. The root folder must contain the `Module.yml` file. Each function listed in the `Module.yml` must have a corresponding folder the naming convention `{FunctionName}`. The .NET Core projects file (`.csproj`) for each function must be contained within the sub-folder and be named with the same naming convention. (e.g. `{FunctionName}.csproj`).
 
 * `GettingStarted`
   * `Module.yml`
-  * `GettingStarted.SlackCommand`
-    * `GettingStarted.SlackCommand.csproj`
+  * `SlackCommand`
+    * `SlackCommand.csproj`
 
 Furthermore, the project file should contain the `<RootNamespace>` element to define the root namespace of the project. When missing, the function configuration will need to explicitly list the name of the function handler using the `Handler` setting.
 

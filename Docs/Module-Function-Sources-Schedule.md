@@ -12,7 +12,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-Schedule: String
+Schedule: String|Expression
 Name: String
 ```
 
@@ -35,7 +35,7 @@ The <code>Schedule</code> attribute specifies a <code>cron</code> or <code>rate<
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 </dl>

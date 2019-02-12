@@ -4,14 +4,25 @@
 
 Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md) to properly organize your code when working with these samples.
 
-1. [Alexa Skill Example](AlexaSample/)
-1. [API Gateway Example](ApiSample/)
-1. [CloudFormation Custom Resource Example](CustomResourceSample/)
-1. [CloudFormation Macro Example](MacroSample/)
-1. [CloudWatch Schedule Event Example](ScheduleSample/)
-1. [DynamoDB Stream Example](DynamoDBSample/)
-1. [Kinesis Stream Example](KinesisSample/)
-1. [S3 Bucket Notifications Example](S3Sample/)
-1. [Slack Command Example](SlackCommandSample/)
-1. [SNS Topic Example](SnsSample/)
-1. [SQS Queue Example](SqsSample/)
+## Extension Module Examples
+1. [LambdaSharp.S3.IO Example](S3IOSample/)
+
+## Module Capability Examples
+1. [Custom Resource Type Definition Example](CustomResourceTypeSample/)
+1. [Macro Definition Example](MacroSample/)
+1. [Module Finalizer Example](FinalizerSample/)
+
+## Function Source Examples
+1. [Alexa Skill Source Example](AlexaSample/)
+1. [API Gateway Source Example](ApiSample/)
+1. [CloudWatch Scheduled Event Source Example](ScheduleSample/)
+1. [DynamoDB Stream Source Example](DynamoDBSample/)
+1. [Kinesis Stream Source Example](KinesisSample/)
+1. [S3 Bucket Events Source Example](S3SubscriptionSample/)
+1. [Slack Command Source Example](SlackCommandSample/)
+1. [SNS Topic Source Example](SnsSample/)
+1. [SQS Queue Source Example](SqsSample/)
+
+## Miscellaneous Examples
+1. [Lambda Function in VPC](VpcFunction/)
+1. [Lambda Function with Lambda Layer](LambdaLayerSample/)

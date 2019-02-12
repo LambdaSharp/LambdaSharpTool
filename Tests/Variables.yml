@@ -1,145 +1,135 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
+Items:
 
-Variables:
-
-  - Var: SourceValueParameter
+  - Variable: SourceValueParameter
     Description: Literal value
-    Scope: "*"
+    Scope: all
     Value: This is a literal value
 
-  - Var: SourceExpressionParameter
+  - Variable: SourceExpressionParameter
     Description: CloudFormation !Ref expression
-    Scope: "*"
+    Scope: all
     Value: !Ref SourceValueParameter
 
-  - Var: SourceResourceParameter
+  - Resource: SourceResourceParameter
     Description: CloudFormation Resource
-    Scope: "*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
+    Scope: all
+    Type: AWS::SNS::Topic
+    Allow: Publish
 
-  - Var: SourceValueListParameter
+  - Variable: SourceValueListParameter
     Description: List of literal values
-    Scope: "*"
+    Scope: all
     Value:
       - first
       - second
       - third
 
-  - Var: SourceExpressionListParameter
+  - Variable: SourceExpressionListParameter
     Description: List of literal values
-    Scope: "*"
+    Scope: all
     Value:
       - !Ref SourceValueParameter
       - !Ref SourceExpressionParameter
       - !Ref SourceResourceParameter
       - literal value
 
-  - Var: SourceParameterCollection
+  - Namespace: SourceParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Variables:
+    Items:
 
-      - Var: FirstSourceValueParameter
+      - Variable: FirstSourceValueParameter
         Description: Nested parameter with a literal value
-        Scope: "*"
+        Scope: all
         Value: A nested literal source value
 
-      - Var: SecondSourceResourceParameter
+      - Resource: SecondSourceResourceParameter
         Description: CloudFormation Resource
-        Scope: "*"
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Publish
-          Properties:
-            DisplayName: !Ref SourceValueParameter
+        Scope: all
+        Type: AWS::SNS::Topic
+        Allow: Publish
+        Properties:
+          DisplayName: !Ref SourceValueParameter
 
-  - Var: SampleParameterCollection
+  - Namespace: SampleParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Variables:
+    Items:
 
-      - Var: FirstNestedParameter
+      - Variable: FirstNestedParameter
         Description: First nested parameter
-        Scope: "*"
+        Scope: all
         Value: A literal value
 
-      - Var: SecondNestedParameter
+      - Variable: SecondNestedParameter
         Description: Second nested parameter
-        Scope: "*"
+        Scope: all
         Value:
           - one
           - two
           - three
 
-      - Var: ThirdNestedParameter
+      - Resource: ThirdNestedParameter
         Description: Third nested parameter
-        Scope: "*"
+        Scope: all
+        Type: AWS::SNS::Topic
+        Allow: Publish
         Value: arn:aws:sns:us-east-1:123456789012:SampleTopic
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Publish
 
-      - Var: FourthNestedParameter
+      - Resource: FourthNestedParameter
         Description: Fourth nested parameter
-        Scope: "*"
-        Resource:
-          Type: AWS::SNS::Topic
-          Allow: Subscribe
+        Scope: all
+        Type: AWS::SNS::Topic
+        Allow: Subscribe
 
-      - Var: FifthNestedParameter
+      - Variable: FifthNestedParameter
         Description: Fifth nested parameter
-        Scope: "*"
-        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        Type: Secret
+        Scope: all
+        Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
 
-      - Var: SixthNestedParameter
+      - Variable: SixthNestedParameter
         Description: Sixth nested parameter
-        Scope: "*"
-        Secret: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
+        Type: Secret
+        Scope: all
+        Value: AQICAHjeGw7GlEczkZKnuQaQHVYq...+CXNRhA/rkOSNUThq4ikMnVU2g==
         EncryptionContext:
           Purpose: Security
-          "Spe|cial": "Char|acter"
 
-      - Var: SeventhParameter
+      - Variable: SeventhParameter
         Description: Seventh nested parameter
-        Scope: "*"
-        Value: !Ref SingleResourceParameter
+        Scope: all
+        Value: !Ref SingleResourceVariable
 
-  - Var: OtherParameterCollection
+  - Namespace: OtherParameterCollection
     Description: Description for collection parameter
-    Scope: "*"
-    Value: This collection has a value
-    Variables:
+    Items:
 
-      - Var: FirstNestedParameter
+      - Variable: FirstNestedParameter
         Description: Same name as first nested parameter in sample parameter collection
-        Scope: "*"
+        Scope: all
         Value: Another literal value
 
-  - Var: SingleResourceParameter
+  - Resource: SingleResourceVariable
     Description: Second nested parameter
+    Scope: all
+    Type: AWS::SNS::Topic
+    Allow: Publish
     Value: "arn:aws:sns:*:*:*"
-    Scope: "*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
 
-  - Var: MultiResourceParameter
+  - Resource: MultiResourceVariable
     Description: Second nested parameter
-    Scope: "*"
+    Scope: all
+    Type: AWS::SNS::Topic
+    Allow: Publish
     Value:
       - "arn:aws:sns:*:*:*"
       - "arn:aws:sns:*:*:*:*"
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Publish
 
   # !Ref reference use-cases
-  - Var: SourceSubExpressions
+  - Variable: SourceSubExpressions
     Description: CloudFormation !Sub expressions
-    Scope: "*"
+    Scope: all
     Value:
       - !Sub "${SourceValueParameter}"
       - !Sub "${SourceExpressionParameter}"
@@ -151,29 +141,26 @@ Variables:
       - !Sub "${SourceParameterCollection::SecondSourceResourceParameter.TopicName}"
 
   # !Ref module variables
-  - Var: MyModuleName
-    Scope: "*"
+  - Variable: MyModuleName
+    Scope: all
     Value: !Ref Module::Name
 
-  - Var: MyModuleId
-    Scope: "*"
+  - Variable: MyModuleId
+    Scope: all
     Value: !Ref Module::Id
 
-  - Var: MyModuleVersion
-    Scope: "*"
+  - Variable: MyModuleVersion
+    Scope: all
     Value: !Ref Module::Version
 
-  # Grant permissiont to resource-less AWS services
-  - Var: RekognitionService
+  # Grant permission to resource-less AWS services
+  - Resource: RekognitionService
     Description: Permissions required for using AWS Rekognition
     Value: "*"
-    Resource:
-      Allow:
-          - "rekognition:DetectFaces"
-          - "rekognition:IndexFaces"
-          - "rekognition:SearchFacesByImage"
-
-Functions:
+    Allow:
+        - "rekognition:DetectFaces"
+        - "rekognition:IndexFaces"
+        - "rekognition:SearchFacesByImage"
 
   - Function: Function
     Description: My function

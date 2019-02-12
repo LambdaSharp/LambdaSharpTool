@@ -1,0 +1,49 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # Custom Resources
+  - ResourceType: TestModule::MyCustomSnsResource
+    Description: A custom resource handler using an SNS topic
+    Handler: ResourceValue
+    Properties:
+
+      - Name: Foo
+        Description: Foo request parameter
+        Type: String
+        Required: true
+
+      - Name: Zoo
+        Description: Zoo request parameter
+        Type: String
+        Required: false
+
+    Attributes:
+
+      - Name: Bar
+        Description: Bar response value
+        Type: String
+
+  - ResourceType: TestModule::MyCustomLambdaResource
+    Description: A custom resource handler using a Lambda Function
+    Handler: Function
+    Properties:
+
+      - Name: Foo
+        Type: String
+
+    Attributes:
+
+      - Name: Bar
+        Type: String
+
+  - Resource: ResourceValue
+    Description: ResourceValue description
+    Type: AWS::SNS::Topic
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Topic: ResourceValue

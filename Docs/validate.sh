@@ -5,6 +5,10 @@ cd $LAMBDASHARP
 # Run CloudFormation Generation Tests
 # > running these tests should have no impact of any generated files
 
+echo "*****************"
+echo "*** Run Tests ***"
+echo "*****************"
+
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
     git diff-index --name-only HEAD -- Tests/
@@ -12,8 +16,8 @@ if ! git diff-index --quiet HEAD -- Tests/; then
     exit 1
 fi
 
-cd tests
-rm *-CF.json
+cd Tests
+rm Results/*.json
 ./runtests.sh
 cd ..
 
@@ -24,10 +28,15 @@ if ! git diff-index --quiet HEAD -- Tests/; then
     exit 1
 fi
 
+
+echo "************************"
+echo "*** Init LambdaSharp ***"
+echo "*************************"
+
 # Setup λ# in Contributor Mode
 
 lash() {
-    dotnet run -p $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/MindTouch.LambdaSharp.Tool.csproj -- $*
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
 }
 
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
@@ -39,46 +48,75 @@ if [ $? -ne 0 ]; then
 fi
 
 # Deploy the λ# Demos
+echo "********************"
+echo "*** Deploy Demos ***"
+echo "********************"
 
 lash deploy \
-    Demos/Demo \
-    Demos/BadModule
+    Demos/StaticWebsite \
+    Demos/SlackTodo
 if [ $? -ne 0 ]; then
     exit $?
 fi
 
 # Deploy all λ# Sample Modules
+echo "*********************"
+echo "*** Build Samples ***"
+echo "*********************"
 
 lash build \
     Samples/AlexaSample \
     Samples/ApiSample \
-    Samples/CustomResourceSample \
+    Samples/CustomResourceTypeSample \
     Samples/DynamoDBSample \
+    Samples/FinalizerSample \
     Samples/KinesisSample \
+    Samples/LambdaLayerSample \
     Samples/MacroSample \
-    Samples/S3Sample \
+    Samples/S3IOSample \
+    Samples/S3SubscriptionSample \
     Samples/ScheduleSample \
     Samples/SlackCommandSample \
     Samples/SnsSample \
-    Samples/SqsSample
+    Samples/SqsSample \
+    Samples/VpcFunctionSample
+
 if [ $? -ne 0 ]; then
     exit $?
 fi
 
+echo "**********************"
+echo "*** Deploy Samples ***"
+echo "**********************"
+
 lash deploy \
-    Samples/AlexaSample/bin/manifest.json \
-    Samples/ApiSample/bin/manifest.json \
-    Samples/CustomResourceSample/manifest.json \
-    Samples/DynamoDBSample/bin/manifest.json \
-    Samples/KinesisSample/bin/manifest.json \
-    Samples/MacroSample/bin/manifest.json \
-    Samples/S3Sample/bin/manifest.json \
-    Samples/ScheduleSample/bin/manifest.json \
-    Samples/SlackCommandSample/bin/manifest.json \
-    Samples/SnsSample/bin/manifest.json \
-    Samples/SqsSample/bin/manifest.json
+    Samples/AlexaSample/bin/cloudformation.json \
+    Samples/ApiSample/bin/cloudformation.json \
+    Samples/CustomResourceTypeSample/bin/cloudformation.json \
+    Samples/DynamoDBSample/bin/cloudformation.json \
+    Samples/FinalizerSample/bin/cloudformation.json \
+    Samples/KinesisSample/bin/cloudformation.json \
+    Samples/LambdaLayerSample/bin/cloudformation.json \
+    Samples/MacroSample/bin/cloudformation.json \
+    Samples/S3IOSample/bin/cloudformation.json \
+    Samples/S3SubscriptionSample/bin/cloudformation.json \
+    Samples/ScheduleSample/bin/cloudformation.json \
+    Samples/SlackCommandSample/bin/cloudformation.json \
+    Samples/SnsSample/bin/cloudformation.json \
+    Samples/SqsSample/bin/cloudformation.json
+
+    # skipping this sample since it requires a VPC
+    # Samples/VpcFunctionSample/bin/manifest.json
+
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 # Create a Default λ# Module and Deploy it
+
+echo "*****************************"
+echo "*** Deploy Default Module ***"
+echo "*****************************"
 
 # mkdir Test$SUFFIX
 mkdir Test$SUFFIX
@@ -101,75 +139,3 @@ if [ $? -ne 0 ]; then
 fi
 cd ..
 rm -rf Test$SUFFIX
-
-
-# Setup λ# in Nuget Mode
-cd src/MindTouch.LambdaSharp.Tool
-
-SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
-LAMBDASHARP_TIER=TestNuget$SUFFIX
-
-
-# Install λ# as a global tool
-rm *.nupkg
-dotnet publish \
-    --configuration Release
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet pack \
-    --configuration Release \
-    --output ./
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-dotnet tool uninstall \
-    --global \
-    MindTouch.LambdaSharp.Tool
-
-dotnet tool install \
-    --global \
-    --add-source $LAMBDASHARP/src/MindTouch.LambdaSharp.Tool/ \
-    MindTouch.LambdaSharp.Tool \
-    --version 0.4.*
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-cd ../..
-unset LAMBDASHARP
-
-dotnet lash init
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-# Create a Default λ# Module and Deploy it
-
-# mkdir Test$SUFFIX
-mkdir Test$SUFFIX
-cd Test$SUFFIX
-dotnet lash new module MyModule
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-dotnet lash new function MyFirstFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-dotnet lash new function --language javascript MySecondFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-dotnet lash deploy
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-cd ..
-rm -rf Test$SUFFIX
-
-dotnet tool uninstall \
-    --global \
-    MindTouch.LambdaSharp.Tool \

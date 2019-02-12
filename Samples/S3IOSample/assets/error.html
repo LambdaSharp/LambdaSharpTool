@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            display: flex;
+            display: -webkit-flex;
+            -webkit-align-items: center;
+            align-items: center;
+            -webkit-justify-content: center;
+            justify-content: center;
+            font-size: x-large;
+        }
+    </style>
+    <script>
+        window.fetch('config.json', { method: 'get' })
+            .then(response => response.json())
+            .then(config => {
+                document.title = config.title;
+                document.getElementById("message").innerText = config.message;
+            });
+    </script>
+</head>
+
+<body>
+    <div id="message"></div>
+</body>
+</html>

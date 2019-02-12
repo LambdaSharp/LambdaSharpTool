@@ -1,0 +1,19 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Namespace: Maps
+    Items:
+
+    - Mapping: RegionMap
+      Value:
+        us-east-1:
+          HVM64: first value
+        us-west-2:
+          HVM64: second value
+
+  - Resource: MyResource
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Result: !FindInMap [ "Maps::RegionMap", !Ref "AWS::Region", HVM64 ]

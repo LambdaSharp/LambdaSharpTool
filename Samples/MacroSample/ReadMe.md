@@ -1,27 +1,25 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp CloudFormation Macro Function
+# LambdaSharp CloudFormation Macro Definition
 
-Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
-Creating a function that is invoked by a CloudFormation macro is straightforward. Simple define a function that lists the CloudFormation Macros it expects to handle in its `Sources` section using the `Macro` attribute. Note that a single Lambda function can handle multiple CloudFormation macros.
+Creating a function that is invoked by a CloudFormation macro is straightforward. First, define the function in the `Items` section that will be invoked by the macro. Second, create the macro definition using the `Macro` attribute and specify the function as its handler. Note that a single Lambda function can handle multiple CloudFormation macros.
+
+**NOTE:** Support for CloudFormation Macros in λ# is still experimental.
 
 ```yaml
-Module: MacroSample
-
+Module: LambdaSharp.Sample.Macro
 Description: A sample module defining CloudFormation macros
-
-Outputs:
+Items:
 
   - Macro: StringToUpper
     Handler: MyFunction
 
   - Macro: StringToLower
     Handler: MyFunction
-
-Functions:
 
   - Function: MyFunction
     Description: This function is invoked by a CloudFormation macros
@@ -31,7 +29,7 @@ Functions:
 
 ## Function Code
 
-An SNS topic invocation can be easily handled by the `ALambdaEventFunction<T>` base class. In addition to deserializing the SNS message, the base class also deserializes the contained message body into an instance of the provided type.
+The macro invocation can be handled by the `ALambdaFunction<T>` base class.
 
 ```csharp
 public class Function : ALambdaFunction<MacroRequest, MacroResponse> {

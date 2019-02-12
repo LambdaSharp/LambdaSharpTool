@@ -1,0 +1,13 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Resource: MyResource
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Result: !Ref OtherResource
+
+  - Resource: OtherResource
+    Description: A CloudFormation dummy resource to reference
+    Type: AWS::SNS::Topic

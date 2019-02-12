@@ -1,0 +1,12 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Resource: MyTopic
+    Description: Sample resource that is created before finalizer is invoked
+    Type: AWS::SNS::Topic
+
+  - Function: Finalizer
+    Description: My finalizer function
+    Memory: 128
+    Timeout: 30

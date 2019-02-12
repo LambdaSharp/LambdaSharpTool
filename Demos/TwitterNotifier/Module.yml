@@ -1,0 +1,99 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.Demo.TwitterNotifier
+Description: Listen for specific tweets and publish to an email address via SNS topic
+Items:
+
+  # Parameters
+  - Parameter: TwitterApiKey
+    Description: This parameter sets the encrypted API key for accessing Twitter
+    Section: Twitter Settings
+    Label: API Key
+    Type: Secret
+
+  - Parameter: TwitterApiSecretKey
+    Description: This parameter sets the encrypted secret API key for accessing Twitter
+    Section: Twitter Settings
+    Label: API Secret Key
+    Type: Secret
+
+  - Parameter: TwitterQuery
+    Scope: NotifyFunction
+    Description: This parameter sets the search query for finding tweets
+    Section: Twitter Settings
+    Label: Search query
+    AllowedPattern: .+
+    ConstraintDescription: Search query must be a non-empty string
+
+  - Parameter: TwitterLanguageFilter
+    Scope: NotifyFunction
+    Description: This parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter)
+    Section: Twitter Settings
+    Label: ISO 639-1 Language filters
+    Default: en
+
+  - Parameter: TwitterSentimentFilter
+    Scope: NotifyFunction
+    Description: "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL)"
+    AllowedValues:
+      - SKIP
+      - POSITIVE
+      - NEUTRAL
+      - NEGATIVE
+      - MIXED
+      - ALL
+    Default: SKIP
+
+  - Parameter: NotificationEmail
+    Description: This parameter sets the notification email for found tweets
+    Section: Notification Settings
+    Label: Email address to NotifyFunction with found tweets
+    AllowedPattern: .+@.+
+    ConstraintDescription: Must be a valid email address
+
+  # Resources
+  - Nested: TwitterNotify
+    Module: LambdaSharp.Twitter.Query:0.5
+    Parameters:
+      TwitterApiKey: !Ref TwitterApiKey
+      TwitterApiSecretKey: !Ref TwitterApiSecretKey
+      TwitterQuery: !Ref TwitterQuery
+      TwitterLanguageFilter: !Ref TwitterLanguageFilter
+      TwitterSentimentFilter: !Ref TwitterSentimentFilter
+
+  - Resource: TwitterNotifyTopic
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
+    Value: !GetAtt TwitterNotify.Outputs.TweetTopic
+
+  - Resource: FoundTopic
+    Scope: NotifyFunction
+    Type: AWS::SNS::Topic
+    Allow: Publish
+    Properties:
+      Subscription:
+        - Protocol: email
+          Endpoint: !Ref NotificationEmail
+
+  - Function: NotifyFunction
+    Memory: 256
+    Timeout: 30
+    Sources:
+      - Topic: TwitterNotifyTopic

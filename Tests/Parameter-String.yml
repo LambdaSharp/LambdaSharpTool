@@ -1,0 +1,21 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # Plain Input Parameters
+  - Parameter: InputParameter
+    Section: Plain Input Parameters
+    Description: required input parameter
+    Scope: all
+
+  - Parameter: InputParameterWithDefault
+    Section: Plain Input Parameters
+    Description: input parameter with a default value
+    Scope: all
+    Default: a default value
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

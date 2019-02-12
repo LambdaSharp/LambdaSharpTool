@@ -1,39 +1,34 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp SQS Function
+# LambdaSharp SQS Queue Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
-Creating a function that is invoked by an SQS queue requires two steps. First, the SQS topic must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `Sqs` attribute.
+Creating a function that is invoked by an SQS queue requires two steps. First, the SQS topic must either be created or referenced in the `Items` section. Second, the function must reference the parameter name in its `Sources` section using the `Sqs` attribute.
 
 Optionally, the `Sqs` attribute can specify the maximum number of messages to read from SQS.
 
 Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 
 ```yaml
-Module: SqsSample
+Module: LambdaSharp.Sample.Sqs
 Description: A sample module using SQS queues
+Items:
 
-Variables:
-
-  - Var: MyFirstQueue
+  - Resource: MyFirstQueue
     Description: A sample SQS queue
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
-  - Var: MySecondQueue
+  - Resource: MySecondQueue
     Description: A sample SQS queue
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
-
-Functions:
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
   - Function: MyFunction
-    Description: This function is invoked by a SQS queue
+    Description: This function is invoked by an SQS queue
     Memory: 128
     Timeout: 15
     Sources:

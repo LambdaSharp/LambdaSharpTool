@@ -1,12 +1,9 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Items:
 
   - Parameter: AlexaSkillId
     Default: "*"
-
-Functions:
 
   - Function: Function
     Description: My function

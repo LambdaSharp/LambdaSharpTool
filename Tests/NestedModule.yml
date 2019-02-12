@@ -1,0 +1,10 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # Nested Module
+  - Nested: Test
+    Module: Test.OtherModule:1.0
+    Parameters:
+      Abc: 123
+
