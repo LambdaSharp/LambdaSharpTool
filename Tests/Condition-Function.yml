@@ -1,0 +1,13 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Parameter: MyParameter
+
+  - Condition: MyCondition
+    Value: !Equals [ !Ref MyParameter, "value" ]
+
+  - Function: Function
+    If: MyCondition
+    Memory: 128
+    Timeout: 30

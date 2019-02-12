@@ -1,18 +1,18 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp API Gateway Function
+# LambdaSharp API Gateway Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
 An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources and methods using for each function using `AWS_PROXY` as integration.
 
 ```yaml
-Module: ApiSample
+Module: LambdaSharp.Sample.ApiGateway
 Description: A sample module integrating with API Gateway
+Items:
 
-Functions:
   - Function: MyFunction
     Description: This function is invoked by API Gateway
     Memory: 128

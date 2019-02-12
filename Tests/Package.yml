@@ -1,19 +1,23 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
+Items:
 
-Variables:
+  - Resource: MyBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadOnly
 
-  - Var: MyBucket
-    Resource:
-      Type: AWS::S3::Bucket
-      Allow: ReadOnly
-
-  - Package: MyPackage
+  - Package: FilesPackage
     Files: TestFiles
-    Bucket: MyBucket
-    Prefix: Bucket/Folder/
 
-Functions:
+  - Resource: MyPackage
+    Type: LambdaSharp::S3::Unzip
+    Pragmas:
+      - no-type-validation
+    Properties:
+      DestinationBucket: !Ref MyBucket
+      DestinationKey: Bucket/Folder/
+      SourceBucketName: !Ref DeploymentBucketName
+      SourceKey: !Ref FilesPackage
 
   - Function: Function
     Description: My function

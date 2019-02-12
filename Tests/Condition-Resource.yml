@@ -1,0 +1,12 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Parameter: MyParameter
+
+  - Condition: MyCondition
+    Value: !Equals [ !Ref MyParameter, "value" ]
+
+  - Resource: MyResource
+    If: MyCondition
+    Type: AWS::SNS::Topic

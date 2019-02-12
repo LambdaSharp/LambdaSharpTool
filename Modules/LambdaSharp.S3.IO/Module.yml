@@ -1,0 +1,131 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.S3.IO
+Version: 0.5
+Description: LambdaSharp S3 Utility Module
+Items:
+
+  - ResourceType: LambdaSharp::S3::Unzip
+    Description: Resource type for deploying a zip package to an S3 bucket
+    Handler: S3WriterTopic
+    Properties:
+
+      - Name: DestinationBucket
+        Description: Destination S3 bucket ARN/name where to unzip the zip file to
+        Type: String
+        Required: true
+
+      - Name: DestinationKey
+        Description: Destination S3 key prefix for all unzipped files
+        Type: String
+        Required: true
+
+      - Name: SourceBucket
+        Description: Source S3 bucket ARN/name for the zip file
+        Type: String
+        Required: true
+
+      - Name: SourceKey
+        Description: Source S3 key for the zip file
+        Type: String
+        Required: true
+
+    Attributes:
+
+      - Name: Url
+        Description: S3 URL with destination bucket name and key-prefix path
+        Type: String
+
+  - ResourceType: LambdaSharp::S3::WriteJson
+    Description: Resource for writing a JSON file to an S3 bucket
+    Handler: S3WriterTopic
+    Properties:
+
+      - Name: Bucket
+        Description: S3 bucket ARN/name where to write the JSON file to
+        Type: String
+        Required: true
+
+      - Name: Key
+        Description: S3 key where to write the JSON file to
+        Type: String
+        Required: true
+
+      - Name: Contents
+        Description: JSON contents to be written
+        Type: Json
+        Required: true
+
+    Attributes:
+
+      - Name: Url
+        Description: S3 URL with destination bucket name and key path
+        Type: String
+
+  - ResourceType: LambdaSharp::S3::EmptyBucket
+    Description: Resource for emptying an S3 bucket on deletion
+    Handler: S3WriterTopic
+    Properties:
+
+      - Name: Bucket
+        Description: S3 bucket ARN/name to empty on deletion
+        Type: String
+        Required: true
+
+      - Name: Enabled
+        Description: Enable/disable the emptying behavior on deletion.
+        Type: Boolean
+        Required: false
+
+    Attributes:
+
+      - Name: BucketName
+        Description: S3 bucket name
+        Type: String
+
+  - Resource: DestinationBucketPermissions
+    Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+    Value: !Sub "arn:aws:s3:::${DeploymentPrefixLowercase}*"
+
+  - Resource: SourceBucketPermissions
+    Description: LambdaSharpS3PackageLoader requires read-write access to all S3 buckets
+    Type: AWS::S3::Bucket
+    Allow: ReadOnly
+    Value: !Sub "arn:aws:s3:::*"
+
+  - Resource: S3WriterTopic
+    Description: Topic for S3Writer
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
+
+  - Resource: ManifestBucket
+    Scope: all
+    Description: Bucket to store information about uploaded packages
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+
+  - Function: S3Writer
+    Description: LambdaSharp S3 Package Loader handler
+    Memory: 256
+    Timeout: 300
+    Sources:
+      - Topic: S3WriterTopic

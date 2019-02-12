@@ -1,0 +1,35 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+
+Items:
+
+  - Parameter: RootDomainName
+    Default: "example.org"
+
+  - Resource: MyQueue
+    Scope: all
+    Type: AWS::SQS::Queue
+
+  - Variable: ConstantValue
+    Value:
+      - Hello
+      - World
+
+  - Variable: DynamicValue
+    Value:
+      - Queue ARN
+      - !GetAtt MyQueue.Arn
+
+  - Resource: MyResource
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Result1: !Sub
+        - www.${Domain}
+        - Domain: !Ref RootDomainName
+      Result2: !Sub 'arn:aws:ec2:${AWS::Region}:${AWS::AccountId}'
+      Result3: !Sub '${MyQueue}/*'
+      Result4: !Sub '${MyQueue.Arn}/*'
+      Result5: !Sub 'Value: ${ConstantValue}'
+      Result6: !Sub 'Value: ${DynamicValue}'
+

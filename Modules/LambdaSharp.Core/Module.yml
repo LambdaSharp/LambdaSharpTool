@@ -1,0 +1,274 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.Core
+Version: 0.5
+Description: LambdaSharp Core Resources and Services
+Pragmas:
+  - no-core-version-check
+  - no-lambdasharp-dependencies
+  - no-module-registration
+  - Overrides:
+      Module::DeadLetterQueue: !Ref DeadLetterQueue
+      Module::LoggingStream: !Ref LoggingStream
+      Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
+      Module::DefaultSecretKey: !Ref DefaultSecretKey
+
+Items:
+
+  # Resource for LambdaSharp Tier
+  - Parameter: DeadLetterQueue
+    Scope: public
+    Section: LambdaSharp Tier Settings
+    Label: Dead letter queue for functions (leave blank to create a new queue)
+    Description: Dead Letter Queue (ARN)
+    Type: AWS::SQS::Queue
+    Default: ""
+
+  - Parameter: LoggingStream
+    Scope: public
+    Section: LambdaSharp Tier Settings
+    Label: Logging Kinesis stream for functions (leave blank to create a new stream)
+    Description: Logging Stream (ARN)
+    Type: AWS::Kinesis::Stream
+    Default: ""
+    Allow: Subscribe
+    Properties:
+      RetentionPeriodHours: !Ref LoggingStreamRetentionPeriodHours
+      ShardCount: !Ref LoggingStreamShardCount
+
+  - Parameter: LoggingStreamRetentionPeriodHours
+    Section: LambdaSharp Tier Settings
+    Label: Size of the Logging stream buffer (in hours)
+    Description: Retention period (hours)
+    Default: 24
+
+  - Parameter: LoggingStreamShardCount
+    Section: LambdaSharp Tier Settings
+    Label: Number of Kinesis shards for the logging streams
+    Description: Number of Kinesis shards
+    Default: 1
+
+  - Parameter: DefaultSecretKey
+    Scope: public
+    Section: LambdaSharp Tier Settings
+    Label: Default secret key for functions (leave blank to create a new encryption key)
+    Description: Default Secret Key (ARN)
+    Type: AWS::KMS::Key
+    Default: ""
+    Properties:
+      Description: Default encryption/decryption key for LambdaSharp modules
+      EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
+
+  - Resource: DefaultSecretKeyAlias
+    Description: Alias for default secrets key
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+      TargetKeyId: !Ref DefaultSecretKey
+
+  - Parameter: DefaultSecretKeyRotationEnabled
+    Section: LambdaSharp Tier Settings
+    Label: Enabled rotating KMS key automatically every 365 days
+    Description: Default key rotation enabled
+    Default: false
+
+  # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
+  - Resource: LoggingStreamRole
+    Scope: public
+    Description: Role for writing CloudWatch logs to the Kinesis stream
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CloudWatchLogsPrincipal
+            Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchLogsKinesisPermissions
+                Effect: Allow
+                Action: kinesis:PutRecord
+                Resource: !Ref LoggingStream
+
+  # Rollbar Settings
+  - Parameter: RollbarReadAccessToken
+    Section: Rollbar Settings
+    Label: Account-level token for read operations (keep blank to disable Rollbar integration)
+    Description: Read Access Token
+    Type: Secret
+    Scope: Registration
+    Default: ""
+
+  - Parameter: RollbarWriteAccessToken
+    Section: Rollbar Settings
+    Label: Account-level token for write operations (keep blank to disable Rollbar integration)
+    Description: Write Access Token
+    Type: Secret
+    Scope: Registration
+    Default: ""
+
+  - Parameter: RollbarProjectPrefix
+    Section: Rollbar Settings
+    Label: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
+    Description: Project Prefix
+    Scope: Registration
+    Default: ""
+
+  # CloudWatch Log Events Processing
+  - Function: ProcessLogEvents
+    Description: Process log events from all LambdaSharp module functions
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Kinesis: LoggingStream
+
+  # Module & Function Registrations
+  - Resource: RegistrationTopic
+    Description: Custom resource topic for registering LambdaSharp modules
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
+
+  - Resource: ErrorReportTopic
+    Scope: public
+    Description: SNS topic for LambdaSharp module errors
+    Scope: ProcessLogEvents
+    Type: AWS::SNS::Topic
+    Allow: Publish
+
+  - Resource: UsageReportTopic
+    Scope: public
+    Description: SNS topic for LambdaSharp function usage reports
+    Scope: ProcessLogEvents
+    Type: AWS::SNS::Topic
+    Allow: Publish
+
+  - Resource: RegistrationTable
+    Description: DynamoDb table for storing function registrations
+    Scope: all
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+
+  - Function: Registration
+    Description: Register LambdaSharp modules and functions
+    Memory: 128
+    Timeout: 30
+    Sources:
+      - Topic: RegistrationTopic
+
+  - ResourceType: LambdaSharp::Registration::Module
+    Description: Resource type for LambdaSharp module registrations
+    Handler: RegistrationTopic
+    Properties:
+
+      - Name: ModuleId
+        Description: Module CloudFormation stack name
+        Type: String
+        Required: true
+
+      - Name: Module
+        Description: Module full name and version
+        Type: String
+        Required: true
+
+    Attributes:
+
+      - Name: Registration
+        Description: Registration ID
+        Type: String
+
+  - ResourceType: LambdaSharp::Registration::Function
+    Description: Resource type for LambdaSharp function registrations
+    Handler: RegistrationTopic
+    Properties:
+
+      - Name: ModuleId
+        Description: Module CloudFormation stack name
+        Type: String
+        Required: true
+
+      - Name: FunctionId
+        Description: Module function ARN
+        Type: String
+        Required: true
+
+      - Name: FunctionName
+        Description: Module function name
+        Type: String
+        Required: true
+
+      - Name: FunctionLogGroupName
+        Description: Module function CloudWatch log group name
+        Type: String
+        Required: true
+
+      - Name: FunctionMaxMemory
+        Description: Max memory for module function
+        Type: String
+        Required: true
+
+      - Name: FunctionMaxDuration
+        Description: Max duration for module function
+        Type: String
+        Required: true
+
+      - Name: FunctionPlatform
+        Description: Module function execution platform
+        Type: String
+        Required: true
+
+      - Name: FunctionFramework
+        Description: Module function execution framework
+        Type: String
+        Required: true
+
+      - Name: FunctionLanguage
+        Description: Module function programming language
+        Type: String
+        Required: true
+
+    Attributes:
+
+      - Name: Registration
+        Description: Registration ID
+        Type: String

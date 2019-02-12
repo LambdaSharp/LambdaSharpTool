@@ -1,23 +1,16 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Items:
 
   - Parameter: InputTopic
     Description: Description for Input Topic
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
-Variables:
-
-  - Var: Topic
+  - Resource: Topic
     Description: Description for Topic resource
-    Resource:
-      Type: AWS::SNS::Topic
-      Allow: Subscribe
-
-Functions:
+    Type: AWS::SNS::Topic
+    Allow: Subscribe
 
   - Function: Function
     Description: My function
@@ -26,3 +19,15 @@ Functions:
     Sources:
       - Topic: Topic
       - Topic: InputTopic
+      - Topic: !Ref Topic
+        Filters:
+          store:
+            - "example_corp"
+          event:
+            - anything-but: order_cancelled
+          customer_interests:
+            - rugby
+            - football
+            - baseball
+          price_usd:
+            - numeric: [ ">=" , 100 ]

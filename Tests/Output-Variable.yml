@@ -1,0 +1,22 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Variable: SimpleValue
+    Scope: public
+    Description: SimpleValue description
+    Value: this is a value
+
+  - Variable: ManyValues
+    Scope: public
+    Description: ManyValues description
+    Value:
+      - first value
+      - second value
+
+  - Variable: OutputExpressionValue
+    Scope: public
+    Value: !Sub "${Value} with extra stuff"
+
+  - Variable: Value
+    Value: this is another value

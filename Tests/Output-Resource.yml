@@ -1,0 +1,9 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # Module Outputs
+  - Resource: ResourceValue
+    Scope: public
+    Description: ResourceValue description
+    Type: AWS::SNS::Topic

@@ -1,0 +1,94 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.Sample.S3.IO
+Description: Showcase how to write files to an S3 bucket
+Using:
+
+  - Module: LambdaSharp.S3.IO:0.5
+
+Items:
+
+  # Get site configuration settings
+  - Parameter: Title
+    Description: Website title
+    Section: Website Settings
+    Label: Website Title
+
+  - Parameter: Message
+    Description: Website message
+    Section: Website Settings
+    Label: Website Message
+
+  # Write the site configuration settings to a JSON file in the S3 bucket
+  - Resource: WriteWebsiteConfigJson
+    Type: LambdaSharp::S3::WriteJson
+    Properties:
+      Bucket: !Ref WebsiteBucket
+      Key: config.json
+      Contents:
+        title: !Ref Title
+        message: !Ref Message
+
+  # Create S3 bucket, make it publicly accessible, and register it for automatic emptying
+  - Resource: WebsiteBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+  - Resource: BucketPolicy
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: WebsiteBucket
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
+      Bucket: !Ref WebsiteBucket
+
+  - Resource: EmptyBucket
+    Type: LambdaSharp::S3::EmptyBucket
+    Properties:
+      Bucket: !Ref WebsiteBucket
+
+  # Upload the HTML assets and copy them to the bucket
+  - Package: WebsiteContents
+    Description: Package of web site files
+    Files: assets/
+
+  - Resource: UnzipWebsiteContents
+    Type: LambdaSharp::S3::Unzip
+    Properties:
+      SourceBucket: !Ref DeploymentBucketName
+      SourceKey: !Ref WebsiteContents
+      DestinationBucket: !Ref WebsiteBucket
+      DestinationKey: ""
+
+  - Variable: WebsiteUrl
+    Description: Website URL
+    Scope: public
+    Value: !GetAtt WebsiteBucket.WebsiteURL

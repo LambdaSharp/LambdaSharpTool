@@ -1,0 +1,1146 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp Core Resources and Services (v0.5)",
+  "Parameters": {
+    "DeadLetterQueue": {
+      "Type": "String",
+      "Description": "Dead Letter Queue (ARN)",
+      "Default": ""
+    },
+    "LoggingStream": {
+      "Type": "String",
+      "Description": "Logging Stream (ARN)",
+      "Default": ""
+    },
+    "LoggingStreamRetentionPeriodHours": {
+      "Type": "String",
+      "Description": "Retention period (hours)",
+      "Default": "24"
+    },
+    "LoggingStreamShardCount": {
+      "Type": "String",
+      "Description": "Number of Kinesis shards",
+      "Default": "1"
+    },
+    "DefaultSecretKey": {
+      "Type": "String",
+      "Description": "Default Secret Key (ARN)",
+      "Default": ""
+    },
+    "DefaultSecretKeyRotationEnabled": {
+      "Type": "String",
+      "Description": "Default key rotation enabled",
+      "Default": "false"
+    },
+    "RollbarReadAccessToken": {
+      "Type": "String",
+      "Description": "Read Access Token",
+      "Default": ""
+    },
+    "RollbarWriteAccessToken": {
+      "Type": "String",
+      "Description": "Write Access Token",
+      "Default": ""
+    },
+    "RollbarProjectPrefix": {
+      "Type": "String",
+      "Description": "Project Prefix",
+      "Default": ""
+    },
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "74F1F9C4E2336A88001533E97D7B8A9D"
+    }
+  },
+  "Resources": {
+    "DeadLetterQueueResource": {
+      "Type": "AWS::SQS::Queue",
+      "Condition": "DeadLetterQueueIsCreated",
+      "Properties": {}
+    },
+    "LoggingStreamResource": {
+      "Type": "AWS::Kinesis::Stream",
+      "Condition": "LoggingStreamIsCreated",
+      "Properties": {
+        "RetentionPeriodHours": {
+          "Ref": "LoggingStreamRetentionPeriodHours"
+        },
+        "ShardCount": {
+          "Ref": "LoggingStreamShardCount"
+        }
+      }
+    },
+    "DefaultSecretKeyResource": {
+      "Type": "AWS::KMS::Key",
+      "Condition": "DefaultSecretKeyIsCreated",
+      "Properties": {
+        "Description": "Default encryption/decryption key for LambdaSharp modules",
+        "EnableKeyRotation": {
+          "Ref": "DefaultSecretKeyRotationEnabled"
+        },
+        "KeyPolicy": {
+          "Version": "2012-10-17",
+          "Id": {
+            "Fn::Sub": "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+          },
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "AWS": {
+                  "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:root"
+                }
+              },
+              "Action": [
+                "kms:*"
+              ],
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    },
+    "DefaultSecretKeyAlias": {
+      "Type": "AWS::KMS::Alias",
+      "Properties": {
+        "AliasName": {
+          "Fn::Sub": "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
+        },
+        "TargetKeyId": {
+          "Fn::If": [
+            "DefaultSecretKeyIsCreated",
+            {
+              "Fn::GetAtt": [
+                "DefaultSecretKeyResource",
+                "Arn"
+              ]
+            },
+            {
+              "Ref": "DefaultSecretKey"
+            }
+          ]
+        }
+      }
+    },
+    "LoggingStreamRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "CloudWatchLogsPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": {
+                  "Fn::Sub": "logs.${AWS::Region}.amazonaws.com"
+                }
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Effect": "Allow",
+                  "Action": "kinesis:PutRecord",
+                  "Resource": {
+                    "Fn::If": [
+                      "LoggingStreamIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "LoggingStreamResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "LoggingStream"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "ProcessLogEvents": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "LambdaSharp/Modules/Core/Assets/ProcessLogEvents-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "DeadLetterQueueIsCreated",
+              {
+                "Fn::GetAtt": [
+                  "DeadLetterQueueResource",
+                  "Arn"
+                ]
+              },
+              {
+                "Ref": "DeadLetterQueue"
+              }
+            ]
+          }
+        },
+        "Description": "Process log events from all LambdaSharp module functions (v0.5)",
+        "Environment": {
+          "Variables": {
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.Core:0.5",
+            "LAMBDA_NAME": "ProcessLogEvents",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "STR_ERRORREPORTTOPIC": {
+              "Ref": "ErrorReportTopic"
+            },
+            "STR_USAGEREPORTTOPIC": {
+              "Ref": "UsageReportTopic"
+            },
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "ProcessLogEvents::LambdaSharp.Core.ProcessLogEvents.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
+      }
+    },
+    "ProcessLogEventsLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ProcessLogEvents}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "RegistrationTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "ErrorReportTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "UsageReportTopic": {
+      "Type": "AWS::SNS::Topic",
+      "Properties": {}
+    },
+    "RegistrationTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "Id",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "Id",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "Registration": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "LambdaSharp/Modules/Core/Assets/Registration-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "DeadLetterQueueIsCreated",
+              {
+                "Fn::GetAtt": [
+                  "DeadLetterQueueResource",
+                  "Arn"
+                ]
+              },
+              {
+                "Ref": "DeadLetterQueue"
+              }
+            ]
+          }
+        },
+        "Description": "Register LambdaSharp modules and functions (v0.5)",
+        "Environment": {
+          "Variables": {
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.Core:0.5",
+            "LAMBDA_NAME": "Registration",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "SEC_ROLLBARREADACCESSTOKEN": {
+              "Ref": "RollbarReadAccessToken"
+            },
+            "SEC_ROLLBARWRITEACCESSTOKEN": {
+              "Ref": "RollbarWriteAccessToken"
+            },
+            "STR_ROLLBARPROJECTPREFIX": {
+              "Ref": "RollbarProjectPrefix"
+            },
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "Registration::LambdaSharp.Core.Registration.Function::FunctionHandlerAsync",
+        "MemorySize": "128",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
+      }
+    },
+    "RegistrationLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Registration}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "LoggingStreamResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kinesis:DescribeStream",
+                    "kinesis:GetRecords",
+                    "kinesis:GetShardIterator"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "LoggingStreamIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "LoggingStreamResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "LoggingStream"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "RegistrationTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Subscribe"
+                  ],
+                  "Resource": {
+                    "Ref": "RegistrationTopic"
+                  }
+                },
+                {
+                  "Sid": "ErrorReportTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "ErrorReportTopic"
+                  }
+                },
+                {
+                  "Sid": "UsageReportTopic",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sns:Publish"
+                  ],
+                  "Resource": {
+                    "Ref": "UsageReportTopic"
+                  }
+                },
+                {
+                  "Sid": "RegistrationTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "RegistrationTable",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "RegistrationTable",
+                              "Arn"
+                            ]
+                          },
+                          "stream/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "RegistrationTable",
+                              "Arn"
+                            ]
+                          },
+                          "index/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "DeadLetterQueueIsCreated",
+                      {
+                        "Fn::GetAtt": [
+                          "DeadLetterQueueResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "DeadLetterQueue"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "SecretsIsEmpty",
+                          {
+                            "Fn::If": [
+                              "DefaultSecretKeyIsCreated",
+                              {
+                                "Fn::GetAtt": [
+                                  "DefaultSecretKeyResource",
+                                  "Arn"
+                                ]
+                              },
+                              {
+                                "Ref": "DefaultSecretKey"
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                {
+                                  "Fn::If": [
+                                    "DefaultSecretKeyIsCreated",
+                                    {
+                                      "Fn::GetAtt": [
+                                        "DefaultSecretKeyResource",
+                                        "Arn"
+                                      ]
+                                    },
+                                    {
+                                      "Ref": "DefaultSecretKey"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Ref": "Secrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "ModuleLogStreamAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "AWSXRayWriteAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ProcessLogEventsSource1EventMapping": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "Properties": {
+        "BatchSize": 100,
+        "Enabled": true,
+        "EventSourceArn": {
+          "Fn::If": [
+            "LoggingStreamIsCreated",
+            {
+              "Fn::GetAtt": [
+                "LoggingStreamResource",
+                "Arn"
+              ]
+            },
+            {
+              "Ref": "LoggingStream"
+            }
+          ]
+        },
+        "FunctionName": {
+          "Ref": "ProcessLogEvents"
+        },
+        "StartingPosition": "LATEST"
+      }
+    },
+    "RegistrationSource1Subscription": {
+      "Type": "AWS::SNS::Subscription",
+      "Properties": {
+        "Endpoint": {
+          "Fn::GetAtt": [
+            "Registration",
+            "Arn"
+          ]
+        },
+        "Protocol": "lambda",
+        "TopicArn": {
+          "Ref": "RegistrationTopic"
+        }
+      }
+    },
+    "RegistrationSource1Permission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "Registration",
+            "Arn"
+          ]
+        },
+        "Principal": "sns.amazonaws.com",
+        "SourceArn": {
+          "Ref": "RegistrationTopic"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Module": {
+      "Value": "LambdaSharp.Core:0.5"
+    },
+    "DeadLetterQueue": {
+      "Value": {
+        "Fn::If": [
+          "DeadLetterQueueIsCreated",
+          {
+            "Fn::GetAtt": [
+              "DeadLetterQueueResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "DeadLetterQueue"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DeadLetterQueue"
+        }
+      },
+      "Description": "Dead Letter Queue (ARN)"
+    },
+    "LoggingStream": {
+      "Value": {
+        "Fn::If": [
+          "LoggingStreamIsCreated",
+          {
+            "Fn::GetAtt": [
+              "LoggingStreamResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "LoggingStream"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LoggingStream"
+        }
+      },
+      "Description": "Logging Stream (ARN)"
+    },
+    "DefaultSecretKey": {
+      "Value": {
+        "Fn::If": [
+          "DefaultSecretKeyIsCreated",
+          {
+            "Fn::GetAtt": [
+              "DefaultSecretKeyResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "DefaultSecretKey"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DefaultSecretKey"
+        }
+      },
+      "Description": "Default Secret Key (ARN)"
+    },
+    "LoggingStreamRole": {
+      "Value": {
+        "Fn::GetAtt": [
+          "LoggingStreamRole",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LoggingStreamRole"
+        }
+      },
+      "Description": "Role for writing CloudWatch logs to the Kinesis stream"
+    },
+    "LambdaSharpRegistrationModule": {
+      "Value": {
+        "Ref": "RegistrationTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+        }
+      },
+      "Description": "Resource type for LambdaSharp module registrations"
+    },
+    "LambdaSharpRegistrationFunction": {
+      "Value": {
+        "Ref": "RegistrationTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+        }
+      },
+      "Description": "Resource type for LambdaSharp function registrations"
+    }
+  },
+  "Conditions": {
+    "DeadLetterQueueIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "DeadLetterQueue"
+        },
+        ""
+      ]
+    },
+    "LoggingStreamIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "LoggingStream"
+        },
+        ""
+      ]
+    },
+    "DefaultSecretKeyIsCreated": {
+      "Fn::Equals": [
+        {
+          "Ref": "DefaultSecretKey"
+        },
+        ""
+      ]
+    },
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "Secrets"
+        },
+        ""
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "DeadLetterQueue": {
+          "default": "Dead letter queue for functions (leave blank to create a new queue) [AWS::SQS::Queue]"
+        },
+        "LoggingStream": {
+          "default": "Logging Kinesis stream for functions (leave blank to create a new stream) [AWS::Kinesis::Stream]"
+        },
+        "LoggingStreamRetentionPeriodHours": {
+          "default": "Size of the Logging stream buffer (in hours) [String]"
+        },
+        "LoggingStreamShardCount": {
+          "default": "Number of Kinesis shards for the logging streams [String]"
+        },
+        "DefaultSecretKey": {
+          "default": "Default secret key for functions (leave blank to create a new encryption key) [AWS::KMS::Key]"
+        },
+        "DefaultSecretKeyRotationEnabled": {
+          "default": "Enabled rotating KMS key automatically every 365 days [String]"
+        },
+        "RollbarReadAccessToken": {
+          "default": "Account-level token for read operations (keep blank to disable Rollbar integration) [Secret]"
+        },
+        "RollbarWriteAccessToken": {
+          "default": "Account-level token for write operations (keep blank to disable Rollbar integration) [Secret]"
+        },
+        "RollbarProjectPrefix": {
+          "default": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\") [String]"
+        },
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Tier Settings"
+          },
+          "Parameters": [
+            "DeadLetterQueue",
+            "LoggingStream",
+            "LoggingStreamRetentionPeriodHours",
+            "LoggingStreamShardCount",
+            "DefaultSecretKey",
+            "DefaultSecretKeyRotationEnabled"
+          ]
+        },
+        {
+          "Label": {
+            "default": "Rollbar Settings"
+          },
+          "Parameters": [
+            "RollbarReadAccessToken",
+            "RollbarWriteAccessToken",
+            "RollbarProjectPrefix"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "XRayTracing"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-12-31",
+      "Module": "LambdaSharp.Core:0.5",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp Tier Settings",
+          "Parameters": [
+            {
+              "Name": "DeadLetterQueue",
+              "Type": "AWS::SQS::Queue",
+              "Label": "Dead letter queue for functions (leave blank to create a new queue)",
+              "Default": ""
+            },
+            {
+              "Name": "LoggingStream",
+              "Type": "AWS::Kinesis::Stream",
+              "Label": "Logging Kinesis stream for functions (leave blank to create a new stream)",
+              "Default": ""
+            },
+            {
+              "Name": "LoggingStreamRetentionPeriodHours",
+              "Type": "String",
+              "Label": "Size of the Logging stream buffer (in hours)",
+              "Default": "24"
+            },
+            {
+              "Name": "LoggingStreamShardCount",
+              "Type": "String",
+              "Label": "Number of Kinesis shards for the logging streams",
+              "Default": "1"
+            },
+            {
+              "Name": "DefaultSecretKey",
+              "Type": "AWS::KMS::Key",
+              "Label": "Default secret key for functions (leave blank to create a new encryption key)",
+              "Default": ""
+            },
+            {
+              "Name": "DefaultSecretKeyRotationEnabled",
+              "Type": "String",
+              "Label": "Enabled rotating KMS key automatically every 365 days",
+              "Default": "false"
+            }
+          ]
+        },
+        {
+          "Title": "Rollbar Settings",
+          "Parameters": [
+            {
+              "Name": "RollbarReadAccessToken",
+              "Type": "Secret",
+              "Label": "Account-level token for read operations (keep blank to disable Rollbar integration)",
+              "Default": ""
+            },
+            {
+              "Name": "RollbarWriteAccessToken",
+              "Type": "Secret",
+              "Label": "Account-level token for write operations (keep blank to disable Rollbar integration)",
+              "Default": ""
+            },
+            {
+              "Name": "RollbarProjectPrefix",
+              "Type": "String",
+              "Label": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\")",
+              "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
+            }
+          ]
+        }
+      ],
+      "RuntimeCheck": false,
+      "Hash": "74F1F9C4E2336A88001533E97D7B8A9D",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "ResourceTypes": [
+        {
+          "Type": "LambdaSharp::Registration::Function",
+          "Description": "Resource type for LambdaSharp function registrations",
+          "Properties": [
+            {
+              "Name": "ModuleId",
+              "Description": "Module CloudFormation stack name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionId",
+              "Description": "Module function ARN",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionName",
+              "Description": "Module function name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionLogGroupName",
+              "Description": "Module function CloudWatch log group name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionMaxMemory",
+              "Description": "Max memory for module function",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionMaxDuration",
+              "Description": "Max duration for module function",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionPlatform",
+              "Description": "Module function execution platform",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionFramework",
+              "Description": "Module function execution framework",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "FunctionLanguage",
+              "Description": "Module function programming language",
+              "Type": "String",
+              "Required": true
+            }
+          ],
+          "Attributes": [
+            {
+              "Name": "Registration",
+              "Description": "Registration ID",
+              "Type": "String",
+              "Required": true
+            }
+          ]
+        },
+        {
+          "Type": "LambdaSharp::Registration::Module",
+          "Description": "Resource type for LambdaSharp module registrations",
+          "Properties": [
+            {
+              "Name": "ModuleId",
+              "Description": "Module CloudFormation stack name",
+              "Type": "String",
+              "Required": true
+            },
+            {
+              "Name": "Module",
+              "Description": "Module full name and version",
+              "Type": "String",
+              "Required": true
+            }
+          ],
+          "Attributes": [
+            {
+              "Name": "Registration",
+              "Description": "Registration ID",
+              "Type": "String",
+              "Required": true
+            }
+          ]
+        }
+      ],
+      "Outputs": [
+        {
+          "Name": "DeadLetterQueue",
+          "Description": "Dead Letter Queue (ARN)",
+          "Type": "AWS::SQS::Queue"
+        },
+        {
+          "Name": "DefaultSecretKey",
+          "Description": "Default Secret Key (ARN)",
+          "Type": "AWS::KMS::Key"
+        },
+        {
+          "Name": "LoggingStream",
+          "Description": "Logging Stream (ARN)",
+          "Type": "AWS::Kinesis::Stream"
+        },
+        {
+          "Name": "LoggingStreamRole",
+          "Description": "Role for writing CloudWatch logs to the Kinesis stream",
+          "Type": "AWS::IAM::Role"
+        }
+      ],
+      "ResourceNameMappings": {
+        "DeadLetterQueueResource": "DeadLetterQueue::Resource",
+        "LoggingStreamResource": "LoggingStream::Resource",
+        "DefaultSecretKeyResource": "DefaultSecretKey::Resource",
+        "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
+        "RegistrationLogGroup": "Registration::LogGroup",
+        "ModuleRole": "Module::Role",
+        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
+        "RegistrationSource1Subscription": "Registration::Source1Subscription",
+        "RegistrationSource1Permission": "Registration::Source1Permission"
+      }
+    }
+  }
+}

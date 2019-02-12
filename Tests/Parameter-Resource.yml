@@ -1,0 +1,15 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Parameter: ResourceInputParameter
+    Section: Resource Input Parameters
+    Scope: all
+    Type: AWS::S3::Bucket
+    Allow: ReadOnly
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

@@ -1,0 +1,310 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "Showcase how to write files to an S3 bucket (v1.0-DEV)",
+  "Parameters": {
+    "Title": {
+      "Type": "String",
+      "Description": "Website title"
+    },
+    "Message": {
+      "Type": "String",
+      "Description": "Website message"
+    },
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "B3DAB8076CD0DAF7817AC05D17F0CF86"
+    }
+  },
+  "Resources": {
+    "WriteWebsiteConfigJson": {
+      "Type": "Custom::LambdaSharpS3WriteJson",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::WriteJson",
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        },
+        "Key": "config.json",
+        "Contents": {
+          "title": {
+            "Ref": "Title"
+          },
+          "message": {
+            "Ref": "Message"
+          }
+        }
+      }
+    },
+    "WebsiteBucket": {
+      "Type": "AWS::S3::Bucket",
+      "Properties": {
+        "AccessControl": "PublicRead",
+        "WebsiteConfiguration": {
+          "IndexDocument": "index.html",
+          "ErrorDocument": "error.html"
+        }
+      }
+    },
+    "BucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Properties": {
+        "PolicyDocument": {
+          "Id": "WebsiteBucket",
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "PublicReadForGetBucketObjects",
+              "Effect": "Allow",
+              "Principal": "*",
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "arn:aws:s3:::${WebsiteBucket}/*"
+              }
+            }
+          ]
+        },
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        }
+      }
+    },
+    "EmptyBucket": {
+      "Type": "Custom::LambdaSharpS3EmptyBucket",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::EmptyBucket"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::EmptyBucket",
+        "Bucket": {
+          "Ref": "WebsiteBucket"
+        }
+      }
+    },
+    "UnzipWebsiteContents": {
+      "Type": "Custom::LambdaSharpS3Unzip",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Unzip"
+          }
+        },
+        "ResourceType": "LambdaSharp::S3::Unzip",
+        "SourceBucket": {
+          "Ref": "DeploymentBucketName"
+        },
+        "SourceKey": "LambdaSharp/Modules/Sample.S3.IO/Assets/WebsiteContents-DRYRUN.zip",
+        "DestinationBucket": {
+          "Ref": "WebsiteBucket"
+        },
+        "DestinationKey": ""
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Module": {
+      "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV"
+    },
+    "WebsiteUrl": {
+      "Value": {
+        "Fn::GetAtt": [
+          "WebsiteBucket",
+          "WebsiteURL"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::WebsiteUrl"
+        }
+      },
+      "Description": "Website URL"
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "Title": {
+          "default": "Website Title [String]"
+        },
+        "Message": {
+          "default": "Website Message [String]"
+        },
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "Website Settings"
+          },
+          "Parameters": [
+            "Title",
+            "Message"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "XRayTracing"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-12-31",
+      "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
+      "ParameterSections": [
+        {
+          "Title": "Website Settings",
+          "Parameters": [
+            {
+              "Name": "Title",
+              "Type": "String",
+              "Label": "Website Title"
+            },
+            {
+              "Name": "Message",
+              "Type": "String",
+              "Label": "Website Message"
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
+            }
+          ]
+        }
+      ],
+      "RuntimeCheck": true,
+      "Hash": "B3DAB8076CD0DAF7817AC05D17F0CF86",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Dependencies": [
+        {
+          "ModuleFullName": "LambdaSharp.Core",
+          "MinVersion": "0.5"
+        },
+        {
+          "ModuleFullName": "LambdaSharp.S3.IO",
+          "MinVersion": "0.5"
+        }
+      ],
+      "Outputs": [
+        {
+          "Name": "WebsiteUrl",
+          "Description": "Website URL",
+          "Type": "String"
+        }
+      ],
+      "ResourceNameMappings": {
+        "ModuleRegistration": "Module::Registration"
+      },
+      "TypeNameMappings": {
+        "Custom::LambdaSharpS3WriteJson": "LambdaSharp::S3::WriteJson",
+        "Custom::LambdaSharpS3EmptyBucket": "LambdaSharp::S3::EmptyBucket",
+        "Custom::LambdaSharpS3Unzip": "LambdaSharp::S3::Unzip",
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
+      }
+    }
+  }
+}

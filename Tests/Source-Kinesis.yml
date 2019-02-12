@@ -1,23 +1,16 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Items:
 
   - Parameter: InputStream
     Description: Description for Kinesis input stream
-    Resource:
-      Type: AWS::Kinesis::Stream
+    Type: AWS::Kinesis::Stream
 
-Variables:
-
-  - Var: Stream
+  - Resource: Stream
     Description: Description for Kinesis stream
-    Resource:
-      Type: AWS::Kinesis::Stream
-      Properties:
-        ShardCount: 1
-
-Functions:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      ShardCount: 1
 
   - Function: Function
     Description: My function

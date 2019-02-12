@@ -11,7 +11,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-DynamoDB: String
+DynamoDB: String|Expression
 BatchSize: Int
 StartingPosition: String
 ```
@@ -35,7 +35,7 @@ The <code>DynamoDB</code> attribute specifies the name of a resource parameter o
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 <dt><code>StartingPosition</code></dt>

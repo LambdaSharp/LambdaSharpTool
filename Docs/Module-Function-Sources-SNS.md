@@ -12,12 +12,22 @@ __Topics__
 ## Syntax
 
 ```yaml
-Topic: String
+Topic: String|Expression
+Filters: JSON
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>Filters</code></dt>
+<dd>
+The <code>Filters</code> section specifies the filter conditions when subscribing to an SNS topic. See <a href="https://docs.aws.amazon.com/sns/latest/dg/sns-message-filtering.html">Amazon SNS Filtering</a> for more details.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
 
 <dt><code>Topic</code></dt>
 <dd>
@@ -25,14 +35,26 @@ The <code>Topic</code> attribute specifies the name of a resource parameter of t
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 </dl>
 
 ## Examples
 
+### Receive all SNS notifications
+
 ```yaml
 Sources:
   - Topic: SnsTopic
+```
+
+### Receive only the SNS notification that meet the filter condition
+
+```yaml
+Sources:
+  - Topic: SnsTopic
+    Filters:
+      source:
+        - shopping-cart
 ```

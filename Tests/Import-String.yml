@@ -1,0 +1,14 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Import: ImportedValue
+    Module: Other.Module::Value
+    Scope: all
+    Type: String
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

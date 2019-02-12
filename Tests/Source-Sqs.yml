@@ -1,29 +1,21 @@
-Module: TestModule
+Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
-
-Inputs:
+Items:
 
   - Parameter: InputSqs
     Description: Description for SQS input resource
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
-Variables:
-
-  - Var: Sqs1
+  - Resource: Sqs1
     Description: Description for SQS resource
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
-  - Var: Sqs2
+  - Resource: Sqs2
     Description: Description for SQS resource
-    Resource:
-      Type: AWS::SQS::Queue
-      Allow: Receive
-
-Functions:
+    Type: AWS::SQS::Queue
+    Allow: Receive
 
   - Function: Function
     Description: My function

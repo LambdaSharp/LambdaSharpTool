@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Deterministic>true</Deterministic>
+    <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
+    <NoWarn>CS1998</NoWarn>
+    <RootNamespace>LambdaSharp.Demo.SlackTodo</RootNamespace>
+    <AWSProjectType>Lambda</AWSProjectType>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0"/>
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.17.5"/>
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Slack\LambdaSharp.Slack.csproj"/>
+  </ItemGroup>
+  <ItemGroup>
+    <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>
+  </ItemGroup>
+</Project>

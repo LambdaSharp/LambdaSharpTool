@@ -1,7 +1,6 @@
-Module: ScheduleSample
+Module: LambdaSharp.Sample.ScheduledEvent
 Description: A sample module using schedule events
-
-Functions:
+Items:
 
   - Function: MyFunction
     Description: This function is invoked by a scheduled event

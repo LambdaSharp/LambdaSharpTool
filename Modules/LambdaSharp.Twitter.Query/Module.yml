@@ -1,0 +1,108 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.Twitter.Query
+Version: 0.5
+Description: Search Twitter at regular intervals and publish new found tweets
+Items:
+
+  # Parameters
+  - Parameter: TwitterApiKey
+    Description: This parameter sets the API key for accessing Twitter
+    Scope: QueryFunction
+    Section: Twitter Settings
+    Label: API Key
+    Type: Secret
+
+  - Parameter: TwitterApiSecretKey
+    Description: This parameter sets the secret API key for accessing Twitter
+    Scope: QueryFunction
+    Section: Twitter Settings
+    Label: API Secret Key
+    Type: Secret
+
+  - Parameter: TwitterQuery
+    Description: This parameter sets the query expression for finding tweets
+    Scope: QueryFunction
+    Section: Twitter Settings
+    Label: Search query
+    AllowedPattern: .+
+    ConstraintDescription: Search query must be a non-empty string
+
+  - Parameter: TwitterQueryInterval
+    Description: This parameter sets the interval between queries (in minutes)
+    Type: Number
+    Section: Twitter Settings
+    Label: Query internal in minutes (from 2 to 1440)
+    Default: 60
+    MinValue: 2
+    MaxValue: 1440
+
+  - Parameter: TwitterLanguageFilter
+    Scope: QueryFunction
+    Description: This parameter is a comma-delimited list of ISO 639-1 language filters for tweets (empty value disables filter)
+    Section: Twitter Settings
+    Label: ISO 639-1 Language filters
+
+  - Parameter: TwitterSentimentFilter
+    Scope: QueryFunction
+    Description: "This parameter sets the sentiment filter (one of: SKIP, POSITIVE, NEUTRAL, NEGATIVE, MIXED, ALL)"
+    AllowedValues:
+      - SKIP
+      - POSITIVE
+      - NEUTRAL
+      - NEGATIVE
+      - MIXED
+      - ALL
+    Default: SKIP
+
+  # Resources
+  - Resource: TweetTopic
+    Description: This topic publishes tweets that match the query
+    Scope:
+      - public
+      - QueryFunction
+    Type: AWS::SNS::Topic
+    Allow: Publish
+
+  - Resource: Table
+    Description: This table stores the state of the most recent search
+    Scope: QueryFunction
+    Type: AWS::DynamoDB::Table
+    Allow: ReadWrite
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: Id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Id
+          KeyType: HASH
+
+  - Resource: AwsComprehendPermissions
+    Description: Grant access to AWS Comprehend
+    Allow: comprehend:BatchDetectSentiment
+    Value: "*"
+
+  - Function: QueryFunction
+    Description: This function runs on a scheduled interval to find the latest matching tweets
+    Memory: 256
+    Timeout: 30
+    Sources:
+      - Schedule: !Sub "rate(${TwitterQueryInterval} minutes)"

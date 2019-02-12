@@ -12,8 +12,8 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp\MindTouch.LambdaSharp.csproj"/>
-    <ProjectReference Include="..\..\..\src\MindTouch.LambdaSharp.Slack\MindTouch.LambdaSharp.Slack.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp.Slack\LambdaSharp.Slack.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>

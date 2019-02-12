@@ -12,7 +12,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-S3: String
+S3: String|Expression
 Events: [ String ]
 Prefix: String
 Suffix: String
@@ -46,7 +46,7 @@ The <code>S3</code> attribute specifies the name of a resource parameter of type
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 <dt><code>Suffix</code></dt>

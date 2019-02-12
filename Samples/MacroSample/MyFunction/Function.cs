@@ -1,6 +1,6 @@
 /*
  * MindTouch λ#
- * Copyright (C) 2018 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -26,7 +26,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.Json;
-using MindTouch.LambdaSharp;
+using LambdaSharp;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -36,25 +36,21 @@ namespace MacroSample.MyFunction {
     public class MacroRequest {
 
         //--- Properties ---
-
-        // TODO (2018-09-06, bjorg): use official AWS events definition once available
-        public string region;
-        public string accountId;
-        public IDictionary<string, object> fragment;
-        public string transformId;
-        public IDictionary<string, object> @params;
-        public string requestId;
-        public IDictionary<string, object> templateParameterValues;
+        public string Region;
+        public string AccountId;
+        public IDictionary<string, object> Fragment;
+        public string TransformId;
+        public IDictionary<string, object> Params;
+        public string RequestId;
+        public IDictionary<string, object> TemplateParameterValues;
     }
 
     public class MacroResponse {
 
         //--- Properties ---
-
-        // TODO (2018-09-06, bjorg): use official AWS events definition once available
-        public string requestId;
-        public string status;
-        public object fragment;
+        public string RequestId;
+        public string Status;
+        public object Fragment;
     }
 
     public class Function : ALambdaFunction<MacroRequest, MacroResponse> {
@@ -64,24 +60,24 @@ namespace MacroSample.MyFunction {
             => Task.CompletedTask;
 
         public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request, ILambdaContext context) {
-            LogInfo($"AwsRegion = {request.region}");
-            LogInfo($"AccountID = {request.accountId}");
-            LogInfo($"Fragment = {SerializeJson(request.fragment)}");
-            LogInfo($"TransformID = {request.transformId}");
-            LogInfo($"Params = {SerializeJson(request.@params)}");
-            LogInfo($"RequestID = {request.requestId}");
-            LogInfo($"TemplateParameterValues = {SerializeJson(request.templateParameterValues)}");
+            LogInfo($"AwsRegion = {request.Region}");
+            LogInfo($"AccountID = {request.AccountId}");
+            LogInfo($"Fragment = {SerializeJson(request.Fragment)}");
+            LogInfo($"TransformID = {request.TransformId}");
+            LogInfo($"Params = {SerializeJson(request.Params)}");
+            LogInfo($"RequestID = {request.RequestId}");
+            LogInfo($"TemplateParameterValues = {SerializeJson(request.TemplateParameterValues)}");
 
             // macro for string operations
             try {
-                if(!request.@params.TryGetValue("Value", out object value)) {
+                if(!request.Params.TryGetValue("Value", out var value)) {
                     throw new ArgumentException("missing parameter: 'Value");
                 }
                 if(!(value is string text)) {
                     throw new ArgumentException("parameter 'Value' must be a string");
                 }
                 string result;
-                switch(request.transformId) {
+                switch(request.TransformId) {
                 case "StringToUpper":
                     result = text.ToUpper();
                     break;
@@ -89,21 +85,21 @@ namespace MacroSample.MyFunction {
                     result = text.ToLower();
                     break;
                 default:
-                    throw new NotSupportedException($"requested operation is not supported: '{request.transformId}'");
+                    throw new NotSupportedException($"requested operation is not supported: '{request.TransformId}'");
                 }
 
                 // return successful response
                 return new MacroResponse {
-                    requestId = request.requestId,
-                    status = "SUCCESS",
-                    fragment = result
+                    RequestId = request.RequestId,
+                    Status = "SUCCESS",
+                    Fragment = result
                 };
             } catch(Exception e) {
 
                 // an error occurred
                 return new MacroResponse {
-                    requestId = request.requestId,
-                    status = $"ERROR: {e.Message}"
+                    RequestId = request.RequestId,
+                    Status = $"ERROR: {e.Message}"
                 };
             }
         }

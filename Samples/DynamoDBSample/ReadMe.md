@@ -1,38 +1,35 @@
 ![λ#](../../Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp DynamoDB Stream Function
+# LambdaSharp DynamoDB Stream Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Runtime/).
+Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
-Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Variables` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
+Creating a function that is invoked by a DynamoDB stream requires two steps. First, the DynamoDB table must either be created or referenced in the `Items` section. Second, the function must reference the parameter name in its `Sources` section using the `DynamoDB` attribute.
 
 Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 
 ```yaml
-Module: DynamoDBSample
+Module: LambdaSharp.Sample.DynamoDB
 Description: A sample module using Kinesis streams
+Items:
 
-Variables:
-
-  - Var: Table
+  - Resource: Table
+    Scope: all
     Description: Description for DynamoDB table
-    Resource:
-      Type: AWS::DynamoDB::Table
-      Allow: Subscribe
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: MessageId
-            AttributeType: S
-        KeySchema:
-          - AttributeName: MessageId
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-
-Functions:
+    Type: AWS::DynamoDB::Table
+    Allow: Subscribe
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: MessageId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: MessageId
+          KeyType: HASH
+      StreamSpecification:
+        StreamViewType: KEYS_ONLY
 
   - Function: MyFunction
     Description: This function is invoked by a DynamoDB stream
@@ -45,32 +42,30 @@ Functions:
 
 ## Function Code
 
-SQS events can be parsed into a `SQSEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.SQSEvents` nuget package.
+DynamoDB stream events can be parsed into a `DynamoDBEvent` message instance by using the `ALambdaFunction<T>` base class and including the `Amazon.Lambda.DynamoDBEvents` nuget package.
 
 ```csharp
-public class Function : ALambdaFunction<KinesisEvent, string> {
+public class Function : ALambdaFunction<DynamoDBEvent, string> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<string> ProcessMessageAsync(KinesisEvent evt, ILambdaContext context) {
+    public override async Task<string> ProcessMessageAsync(DynamoDBEvent evt, ILambdaContext context) {
         LogInfo($"# Kinesis Records = {evt.Records.Count}");
         for(var i = 0; i < evt.Records.Count; ++i) {
             var record = evt.Records[i];
             LogInfo($"Record #{i}");
             LogInfo($"AwsRegion = {record.AwsRegion}");
-            LogInfo($"EventId = {record.EventId}");
+            LogInfo($"DynamoDB.ApproximateCreationDateTime = {record.Dynamodb.ApproximateCreationDateTime}");
+            LogInfo($"DynamoDB.Keys.Count = {record.Dynamodb.Keys.Count}");
+            LogInfo($"DynamoDB.SequenceNumber = {record.Dynamodb.SequenceNumber}");
+            LogInfo($"DynamoDB.UserIdentity.PrincipalId = {record.UserIdentity?.PrincipalId}");
+            LogInfo($"EventID = {record.EventID}");
             LogInfo($"EventName = {record.EventName}");
             LogInfo($"EventSource = {record.EventSource}");
-            LogInfo($"EventSourceARN = {record.EventSourceARN}");
+            LogInfo($"EventSourceArn = {record.EventSourceArn}");
             LogInfo($"EventVersion = {record.EventVersion}");
-            LogInfo($"InvokeIdentityArn = {record.InvokeIdentityArn}");
-            LogInfo($"ApproximateArrivalTimestamp = {record.Kinesis.ApproximateArrivalTimestamp}");
-            LogInfo($"Data (length) = {record.Kinesis.Data.Length}");
-            LogInfo($"KinesisSchemaVersion = {record.Kinesis.KinesisSchemaVersion}");
-            LogInfo($"PartitionKey = {record.Kinesis.PartitionKey}");
-            LogInfo($"SequenceNumber = {record.Kinesis.SequenceNumber}");
         }
         return "Ok";
     }

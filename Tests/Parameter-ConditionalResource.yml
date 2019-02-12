@@ -1,0 +1,17 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  # Resource Input Parameters
+  - Parameter: ConditionalResourceInputParameterOrCreate
+    Section: Resource Input Parameters
+    Scope: all
+    Default: ""
+    Type: AWS::SNS::Topic
+    Allow: Publish
+
+  - Function: Function
+    Description: My function
+    Memory: 128
+    Timeout: 30
+

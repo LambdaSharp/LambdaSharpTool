@@ -11,7 +11,7 @@ __Topics__
 ## Syntax
 
 ```yaml
-Kinesis: String
+Kinesis: String|Expression
 BatchSize: Int
 StartingPosition: String
 ```
@@ -35,7 +35,7 @@ The <code>Kinesis</code> attribute specifies the name of a resource parameter of
 
 <i>Required</i>: Yes
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 </dd>
 
 <dt><code>StartingPosition</code></dt>

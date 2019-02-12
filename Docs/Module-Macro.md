@@ -1,8 +1,10 @@
 ![λ#](LambdaSharp_v2_small.png)
 
-# LambdaSharp Module - Macro Output
+# LambdaSharp Module - Macro
 
 The `Macro` definition registers a [CloudFormation Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html) for the deployment tier. The handler must be a Lambda function. Once deployed, the macro is available to all subsequent module deployments.
+
+**WARNING:** Due to a limitation in the `Fn::Transform` function, it is not possible to namespace macros to a deployment tier. Consequently, macros are defined globally for the entire account, across all deployment tiers.
 
 __Topics__
 * [Syntax](#syntax)
@@ -63,8 +65,6 @@ The <code>Macro</code> attribute specifies the name of the macro. Macros are glo
 - Macro: ToLower
   Description: CloudFormation macro for converting a string to uppercase
   Handler: StringOpFunction
-
-# ...
 
 - Function: StringOpFunction
   Memory: 128
