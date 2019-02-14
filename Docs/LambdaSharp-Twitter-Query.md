@@ -22,15 +22,6 @@ This module defines no resource types.
 
 <dl>
 
-<dt><code>Secrets</code></dt>
-<dd>
-The <code>Secrets</code> parameter lists the KMS key ARNs for which the module is granted decryption access.
-
-<i>Required:</i> No
-
-<i>Type:</i> Comma-delimited list of String (see [Secrets Section](Module-Secrets.md))
-</dd>
-
 <dt><code>TwitterApiKey</code></dt>
 <dd>
 The <code>TwitterApiKey</code> parameter sets the API key for accessing Twitter.
