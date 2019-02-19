@@ -1,6 +1,6 @@
 ﻿![λ#](Docs/LambdaSharp_v2_small.png)
 
-# LambdaSharp (v0.5) - Serverless .NET on AWS
+# LambdaSharp (v0.5.0.1) - Serverless .NET on AWS
 
 **[Read what's new in the 0.5 "Eurytus" release.](Docs/ReleaseNotes-Eurytus.md)**
 

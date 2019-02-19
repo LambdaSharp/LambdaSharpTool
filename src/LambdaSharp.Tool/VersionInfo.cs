@@ -171,6 +171,20 @@ namespace LambdaSharp.Tool {
             }
             return $"{Major}.{Minor}.*";
         }
+
+        public VersionInfo GetCompatibleBaseVersion() {
+            if(IsPreRelease) {
+
+                // NOTE (2019-02-19, bjorg): for pre-release version, the base version is this version
+                return this;
+            }
+            if((Major == 0) && (Version.Build > 0)) {
+
+                // when Major version is 0, the build number is relevant
+                return new VersionInfo(new Version(Major, Minor, Version.Build), suffix: "");
+            }
+            return new VersionInfo(new Version(Major, Minor), suffix: "");
+        }
     }
 
     public class VersionInfoConverter : JsonConverter {
