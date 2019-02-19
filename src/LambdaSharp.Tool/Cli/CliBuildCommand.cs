@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -123,12 +124,21 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // create final dictionary of input values
-                    var result = inputs.ToDictionary(
-                        kv => kv.Key.Replace("::", ""),
-                        kv => (kv.Value is string text)
-                            ? text
-                            : string.Join(",", (IList<object>)kv.Value)
-                    );
+                    var result = new Dictionary<string, string>();
+                    foreach(var input in inputs) {
+                        var key = input.Key.Replace("::", "");
+                        switch(input.Value) {
+                        case string text:
+                            result.Add(key, text);
+                            break;
+                        case IEnumerable values when values.Cast<object>().All(value => value is string):
+                            result.Add(key, string.Join(",", values.OfType<string>()));
+                            break;
+                        default:
+                            AddError($"parameter '{input.Key}' have an invalid value");
+                            break;
+                        }
+                    }
                     return result;
                 } catch(YamlDotNet.Core.YamlException e) {
                     AddError($"parsing error near {e.Message}");

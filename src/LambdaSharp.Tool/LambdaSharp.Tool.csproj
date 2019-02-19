@@ -4,7 +4,7 @@
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
     <PackageId>LambdaSharp.Tool</PackageId>
-    <VersionPrefix>0.5</VersionPrefix>
+    <VersionPrefix>0.5.0.1</VersionPrefix>
     <Title>MindTouch λ#</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
     <Company>MindTouch, Inc.</Company>
@@ -31,6 +31,9 @@
     <PackageReference Include="Mono.Cecil" Version="0.10.3"/>
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.7.16"/>
     <PackageReference Include="AWSSDK.Lambda" Version="3.3.19.16"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../redist/SharpZipLib/src/ICSharpCode.SharpZipLib/ICSharpCode.SharpZipLib.csproj"/>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\*"/>

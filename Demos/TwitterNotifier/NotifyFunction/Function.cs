@@ -78,9 +78,9 @@ namespace LambdaSharp.Demo.TwitterNotifier.NotifyFunction {
 
         private string FormatMessage(Tweet tweet)
             =>
-                $"----------------------------------------\n" +
+                $"---\n" +
                 $"{tweet.full_text}\n" +
-                $"----------------------------------------\n" +
+                $"---\n" +
                 $"\n" +
                 $"Link: https://twitter.com/{tweet.user.screen_name}/status/{tweet.id_str}\n" +
                 $"\n" +

@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.S3.IO
-Version: 0.5
+Version: 0.5.0.1
 Description: LambdaSharp S3 Utility Module
 Items:
 
@@ -125,7 +125,7 @@ Items:
 
   - Function: S3Writer
     Description: LambdaSharp S3 Package Loader handler
-    Memory: 256
-    Timeout: 300
+    Memory: 1024
+    Timeout: 900
     Sources:
       - Topic: S3WriterTopic
