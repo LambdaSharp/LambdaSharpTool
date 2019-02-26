@@ -88,7 +88,18 @@ namespace MySampleModule.MyFunction {
 ### Getting Started
 
 1. [Setup λ#](Docs/ReadMe.md)
-1. [λ# Samples](Samples/ReadMe.md)
+
+### Articles
+
+1. [λ# — A Compiler for CloudFormation](https://medium.com/mindtouch-engineering/%CE%BB-a-compiler-for-cloudformation-b35744e49d6c)
+1. [Constructors/Destructors for CloudFormation](https://medium.com/@wikinaut/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
+
+### Samples
+
+1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
+1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
+1. [Create a Web Chat with API Gateway Websockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
+1. [Misc. λ# Samples](Samples/ReadMe.md)
 
 ### References
 
