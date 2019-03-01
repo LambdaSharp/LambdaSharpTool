@@ -68,7 +68,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1DC3F430015E4F771DCF489EC93EEF52"
+      "Default": "13650F26A3A0F4F0BE0E5CD92C929A40"
     }
   },
   "Resources": {
@@ -510,7 +510,7 @@
     "FunctionSource1EventMapping": {
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
-        "BatchSize": 15,
+        "BatchSize": "15",
         "Enabled": true,
         "EventSourceArn": {
           "Fn::GetAtt": [
@@ -527,7 +527,7 @@
     "FunctionSource2EventMapping": {
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
-        "BatchSize": 15,
+        "BatchSize": "15",
         "Enabled": true,
         "EventSourceArn": {
           "Ref": "InputStream"
@@ -838,7 +838,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "1DC3F430015E4F771DCF489EC93EEF52",
+      "Hash": "13650F26A3A0F4F0BE0E5CD92C929A40",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

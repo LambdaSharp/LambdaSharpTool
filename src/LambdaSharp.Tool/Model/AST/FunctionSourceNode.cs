@@ -87,19 +87,19 @@ namespace LambdaSharp.Tool.Model.AST {
 
         // SQS Source
         public object Sqs { get; set; }
-        public int? BatchSize { get; set; }
+        public object BatchSize { get; set; }
 
         // Alexa Source
         public object Alexa { get; set; }
 
         // DynamoDB Source
         public object DynamoDB { get; set; }
-        // int? BatchSize { get; set; }
-        public string StartingPosition { get; set; }
+        // object BatchSize { get; set; }
+        public object StartingPosition { get; set; }
 
         // Kinesis Source
         public object Kinesis { get; set; }
-        // int? BatchSize { get; set; }
-        // string StartingPosition { get; set; }
+        // object BatchSize { get; set; }
+        // object StartingPosition { get; set; }
    }
 }

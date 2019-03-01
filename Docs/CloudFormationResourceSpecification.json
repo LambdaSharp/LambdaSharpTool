@@ -2584,6 +2584,68 @@
         }
       }
     },
+    "AWS::CloudWatch::Alarm.Metric": {
+      "Properties": {
+        "Dimensions": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Dimension",
+          "Required": false,
+          "Type": "List"
+        },
+        "MetricName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Namespace": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::CloudWatch::Alarm.MetricDataQuery": {
+      "Properties": {
+        "Expression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Label": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MetricStat": {
+          "Required": false,
+          "Type": "MetricStat"
+        },
+        "ReturnData": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        }
+      }
+    },
+    "AWS::CloudWatch::Alarm.MetricStat": {
+      "Properties": {
+        "Metric": {
+          "Required": true,
+          "Type": "Metric"
+        },
+        "Period": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "Stat": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Unit": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::CodeBuild::Project.Artifacts": {
       "Properties": {
         "ArtifactIdentifier": {
@@ -2715,6 +2777,11 @@
         "Location": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Modes": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
         },
         "Type": {
           "PrimitiveType": "String",
@@ -7897,6 +7964,66 @@
         }
       }
     },
+    "AWS::FSx::FileSystem.LustreConfiguration": {
+      "Properties": {
+        "ExportPath": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ImportedFileChunkSize": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ImportPath": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "WeeklyMaintenanceStartTime": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::FSx::FileSystem.TagEntry": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::FSx::FileSystem.WindowsConfiguration": {
+      "Properties": {
+        "ActiveDirectoryId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AutomaticBackupRetentionDays": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "CopyTagsToBackups": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "DailyAutomaticBackupStartTime": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ThroughputCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "WeeklyMaintenanceStartTime": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::GameLift::Alias.RoutingStrategy": {
       "Properties": {
         "FleetId": {
@@ -9721,6 +9848,498 @@
         }
       }
     },
+    "AWS::KinesisAnalyticsV2::Application.ApplicationCodeConfiguration": {
+      "Properties": {
+        "CodeContent": {
+          "Required": true,
+          "Type": "CodeContent"
+        },
+        "CodeContentType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.ApplicationConfiguration": {
+      "Properties": {
+        "ApplicationCodeConfiguration": {
+          "Required": false,
+          "Type": "ApplicationCodeConfiguration"
+        },
+        "ApplicationSnapshotConfiguration": {
+          "Required": false,
+          "Type": "ApplicationSnapshotConfiguration"
+        },
+        "EnvironmentProperties": {
+          "Required": false,
+          "Type": "EnvironmentProperties"
+        },
+        "FlinkApplicationConfiguration": {
+          "Required": false,
+          "Type": "FlinkApplicationConfiguration"
+        },
+        "SqlApplicationConfiguration": {
+          "Required": false,
+          "Type": "SqlApplicationConfiguration"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.ApplicationSnapshotConfiguration": {
+      "Properties": {
+        "SnapshotsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.CheckpointConfiguration": {
+      "Properties": {
+        "CheckpointingEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "CheckpointInterval": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ConfigurationType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MinPauseBetweenCheckpoints": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.CodeContent": {
+      "Properties": {
+        "S3ContentLocation": {
+          "Required": false,
+          "Type": "S3ContentLocation"
+        },
+        "TextContent": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ZipFileContent": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.CSVMappingParameters": {
+      "Properties": {
+        "RecordColumnDelimiter": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RecordRowDelimiter": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.EnvironmentProperties": {
+      "Properties": {
+        "PropertyGroups": {
+          "ItemType": "PropertyGroup",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.FlinkApplicationConfiguration": {
+      "Properties": {
+        "CheckpointConfiguration": {
+          "Required": false,
+          "Type": "CheckpointConfiguration"
+        },
+        "MonitoringConfiguration": {
+          "Required": false,
+          "Type": "MonitoringConfiguration"
+        },
+        "ParallelismConfiguration": {
+          "Required": false,
+          "Type": "ParallelismConfiguration"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.Input": {
+      "Properties": {
+        "InputParallelism": {
+          "Required": false,
+          "Type": "InputParallelism"
+        },
+        "InputProcessingConfiguration": {
+          "Required": false,
+          "Type": "InputProcessingConfiguration"
+        },
+        "InputSchema": {
+          "Required": true,
+          "Type": "InputSchema"
+        },
+        "KinesisFirehoseInput": {
+          "Required": false,
+          "Type": "KinesisFirehoseInput"
+        },
+        "KinesisStreamsInput": {
+          "Required": false,
+          "Type": "KinesisStreamsInput"
+        },
+        "NamePrefix": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.InputLambdaProcessor": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.InputParallelism": {
+      "Properties": {
+        "Count": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.InputProcessingConfiguration": {
+      "Properties": {
+        "InputLambdaProcessor": {
+          "Required": false,
+          "Type": "InputLambdaProcessor"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.InputSchema": {
+      "Properties": {
+        "RecordColumns": {
+          "ItemType": "RecordColumn",
+          "Required": true,
+          "Type": "List"
+        },
+        "RecordEncoding": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RecordFormat": {
+          "Required": true,
+          "Type": "RecordFormat"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.JSONMappingParameters": {
+      "Properties": {
+        "RecordRowPath": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.KinesisFirehoseInput": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.KinesisStreamsInput": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.MappingParameters": {
+      "Properties": {
+        "CSVMappingParameters": {
+          "Required": false,
+          "Type": "CSVMappingParameters"
+        },
+        "JSONMappingParameters": {
+          "Required": false,
+          "Type": "JSONMappingParameters"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.MonitoringConfiguration": {
+      "Properties": {
+        "ConfigurationType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "LogLevel": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MetricsLevel": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.ParallelismConfiguration": {
+      "Properties": {
+        "AutoScalingEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ConfigurationType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Parallelism": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ParallelismPerKPU": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.PropertyGroup": {
+      "Properties": {
+        "PropertyGroupId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PropertyMap": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.RecordColumn": {
+      "Properties": {
+        "Mapping": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SqlType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.RecordFormat": {
+      "Properties": {
+        "MappingParameters": {
+          "Required": false,
+          "Type": "MappingParameters"
+        },
+        "RecordFormatType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.S3ContentLocation": {
+      "Properties": {
+        "BucketARN": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "FileKey": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ObjectVersion": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application.SqlApplicationConfiguration": {
+      "Properties": {
+        "Inputs": {
+          "ItemType": "Input",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationCloudWatchLoggingOption.CloudWatchLoggingOption": {
+      "Properties": {
+        "LogStreamARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput.DestinationSchema": {
+      "Properties": {
+        "RecordFormatType": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput.KinesisFirehoseOutput": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput.KinesisStreamsOutput": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput.LambdaOutput": {
+      "Properties": {
+        "ResourceARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput.Output": {
+      "Properties": {
+        "DestinationSchema": {
+          "Required": true,
+          "Type": "DestinationSchema"
+        },
+        "KinesisFirehoseOutput": {
+          "Required": false,
+          "Type": "KinesisFirehoseOutput"
+        },
+        "KinesisStreamsOutput": {
+          "Required": false,
+          "Type": "KinesisStreamsOutput"
+        },
+        "LambdaOutput": {
+          "Required": false,
+          "Type": "LambdaOutput"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.CSVMappingParameters": {
+      "Properties": {
+        "RecordColumnDelimiter": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RecordRowDelimiter": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.JSONMappingParameters": {
+      "Properties": {
+        "RecordRowPath": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.MappingParameters": {
+      "Properties": {
+        "CSVMappingParameters": {
+          "Required": false,
+          "Type": "CSVMappingParameters"
+        },
+        "JSONMappingParameters": {
+          "Required": false,
+          "Type": "JSONMappingParameters"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.RecordColumn": {
+      "Properties": {
+        "Mapping": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SqlType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.RecordFormat": {
+      "Properties": {
+        "MappingParameters": {
+          "Required": false,
+          "Type": "MappingParameters"
+        },
+        "RecordFormatType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.ReferenceDataSource": {
+      "Properties": {
+        "ReferenceSchema": {
+          "Required": true,
+          "Type": "ReferenceSchema"
+        },
+        "S3ReferenceDataSource": {
+          "Required": false,
+          "Type": "S3ReferenceDataSource"
+        },
+        "TableName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.ReferenceSchema": {
+      "Properties": {
+        "RecordColumns": {
+          "ItemType": "RecordColumn",
+          "Required": true,
+          "Type": "List"
+        },
+        "RecordEncoding": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RecordFormat": {
+          "Required": true,
+          "Type": "RecordFormat"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource.S3ReferenceDataSource": {
+      "Properties": {
+        "BucketARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "FileKey": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::KinesisFirehose::DeliveryStream.BufferingHints": {
       "Properties": {
         "IntervalInSeconds": {
@@ -10690,6 +11309,86 @@
           "Required": true
         },
         "ParameterValue": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::RobotApplication.RobotSoftwareSuite": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::RobotApplication.SourceConfig": {
+      "Properties": {
+        "Architecture": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "S3Bucket": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "S3Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplication.RenderingEngine": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplication.RobotSoftwareSuite": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplication.SimulationSoftwareSuite": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplication.SourceConfig": {
+      "Properties": {
+        "Architecture": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "S3Bucket": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "S3Key": {
           "PrimitiveType": "String",
           "Required": true
         }
@@ -12728,16 +13427,16 @@
       "Properties": {
         "Key": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         },
         "Value": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     }
   },
-  "ResourceSpecificationVersion": "2.22.0",
+  "ResourceSpecificationVersion": "2.25.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Properties": {
@@ -12990,7 +13689,7 @@
         },
         "Type": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     },
@@ -15071,6 +15770,12 @@
         "MetricName": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Metrics": {
+          "DuplicatesAllowed": false,
+          "ItemType": "MetricDataQuery",
+          "Required": false,
+          "Type": "List"
         },
         "Namespace": {
           "PrimitiveType": "String",
@@ -17779,7 +18484,7 @@
           "Required": false,
           "Type": "List"
         },
-        "VPCEndpointType": {
+        "VpcEndpointType": {
           "PrimitiveType": "String",
           "Required": false
         },
@@ -17976,12 +18681,6 @@
         "ClusterName": {
           "PrimitiveType": "String",
           "Required": false
-        },
-        "Tags": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Tag",
-          "Required": false,
-          "Type": "List"
         }
       }
     },
@@ -18056,12 +18755,6 @@
           "Required": false,
           "Type": "List"
         },
-        "Tags": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Tag",
-          "Required": false,
-          "Type": "List"
-        },
         "TaskDefinition": {
           "PrimitiveType": "String",
           "Required": true
@@ -18105,12 +18798,6 @@
         "RequiresCompatibilities": {
           "DuplicatesAllowed": false,
           "PrimitiveItemType": "String",
-          "Required": false,
-          "Type": "List"
-        },
-        "Tags": {
-          "DuplicatesAllowed": true,
-          "ItemType": "Tag",
           "Required": false,
           "Type": "List"
         },
@@ -18919,6 +19606,10 @@
         }
       },
       "Properties": {
+        "HealthCheckEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "HealthCheckIntervalSeconds": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -18953,11 +19644,11 @@
         },
         "Port": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "Protocol": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "Tags": {
           "DuplicatesAllowed": true,
@@ -18987,7 +19678,7 @@
         },
         "VpcId": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         }
       }
     },
@@ -19317,6 +20008,49 @@
           "ItemType": "Target",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::FSx::FileSystem": {
+      "Properties": {
+        "BackupId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "FileSystemType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "KmsKeyId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "LustreConfiguration": {
+          "Required": false,
+          "Type": "LustreConfiguration"
+        },
+        "SecurityGroupIds": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "StorageCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SubnetIds": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "Tags": {
+          "ItemType": "TagEntry",
+          "Required": false,
+          "Type": "List"
+        },
+        "WindowsConfiguration": {
+          "Required": false,
+          "Type": "WindowsConfiguration"
         }
       }
     },
@@ -20422,6 +21156,66 @@
       }
     },
     "AWS::KinesisAnalytics::ApplicationReferenceDataSource": {
+      "Properties": {
+        "ApplicationName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ReferenceDataSource": {
+          "Required": true,
+          "Type": "ReferenceDataSource"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::Application": {
+      "Properties": {
+        "ApplicationConfiguration": {
+          "Required": false,
+          "Type": "ApplicationConfiguration"
+        },
+        "ApplicationDescription": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ApplicationName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RuntimeEnvironment": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ServiceExecutionRole": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationCloudWatchLoggingOption": {
+      "Properties": {
+        "ApplicationName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CloudWatchLoggingOption": {
+          "Required": true,
+          "Type": "CloudWatchLoggingOption"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationOutput": {
+      "Properties": {
+        "ApplicationName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Output": {
+          "Required": true,
+          "Type": "Output"
+        }
+      }
+    },
+    "AWS::KinesisAnalyticsV2::ApplicationReferenceDataSource": {
       "Properties": {
         "ApplicationName": {
           "PrimitiveType": "String",
@@ -21559,6 +22353,38 @@
         }
       }
     },
+    "AWS::RAM::ResourceShare": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "AllowExternalPrincipals": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Principals": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "ResourceArns": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::RDS::DBCluster": {
       "Attributes": {
         "Endpoint.Address": {
@@ -22289,6 +23115,145 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::RoboMaker::Fleet": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::RoboMaker::Robot": {
+      "Properties": {
+        "Architecture": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Fleet": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GreengrassGroupId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::RoboMaker::RobotApplication": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "CurrentRevisionId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "CurrentRevisionId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RobotSoftwareSuite": {
+          "Required": true,
+          "Type": "RobotSoftwareSuite"
+        },
+        "Sources": {
+          "ItemType": "SourceConfig",
+          "Required": true,
+          "Type": "List"
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::RoboMaker::RobotApplicationVersion": {
+      "Properties": {
+        "Application": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CurrentRevisionId": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplication": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "CurrentRevisionId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "CurrentRevisionId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RenderingEngine": {
+          "Required": true,
+          "Type": "RenderingEngine"
+        },
+        "RobotSoftwareSuite": {
+          "Required": true,
+          "Type": "RobotSoftwareSuite"
+        },
+        "SimulationSoftwareSuite": {
+          "Required": true,
+          "Type": "SimulationSoftwareSuite"
+        },
+        "Sources": {
+          "ItemType": "SourceConfig",
+          "Required": true,
+          "Type": "List"
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::RoboMaker::SimulationApplicationVersion": {
+      "Properties": {
+        "Application": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CurrentRevisionId": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -23405,7 +24370,7 @@
         },
         "Protocol": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         },
         "RawMessageDelivery": {
           "PrimitiveType": "Boolean",
@@ -23417,7 +24382,7 @@
         },
         "TopicArn": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     },
@@ -23633,6 +24598,11 @@
         "StartDate": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },

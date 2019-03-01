@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -152,6 +153,34 @@ namespace LambdaSharp.Tool.Internal {
             string GetMatchValue(string groupName) {
                 var group = match.Groups[groupName];
                 return group.Success ? group.Value : null;
+            }
+        }
+
+        public static string ComputeHashForFiles(
+            this IEnumerable<string> files,
+            Func<string, string> normalizeFilePath = null,
+            Predicate<string> skipFile = null
+        ) {
+
+            // hash file paths and file contents
+            using(var md5 = MD5.Create())
+            using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
+                foreach(var file in files
+                    .Where(file => skipFile?.Invoke(file) != true)
+                    .OrderBy(file => file)
+                ) {
+
+                    // hash file path
+                    var filePathBytes = Encoding.UTF8.GetBytes(normalizeFilePath?.Invoke(file) ?? file);
+                    hashStream.Write(filePathBytes, 0, filePathBytes.Length);
+
+                    // hash file contents
+                    using(var stream = File.OpenRead(file)) {
+                        stream.CopyTo(hashStream);
+                    }
+                }
+                hashStream.FlushFinalBlock();
+                return md5.Hash.ToHexString();
             }
         }
     }

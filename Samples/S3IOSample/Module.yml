@@ -30,11 +30,13 @@ Items:
     Description: Website title
     Section: Website Settings
     Label: Website Title
+    Default: My New Website
 
   - Parameter: Message
     Description: Website message
     Section: Website Settings
     Label: Website Message
+    Default: Welcome to my new website!
 
   # Write the site configuration settings to a JSON file in the S3 bucket
   - Resource: WriteWebsiteConfigJson

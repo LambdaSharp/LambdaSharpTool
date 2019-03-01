@@ -12,7 +12,4 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0"/>
     <PackageReference Include="LambdaSharp" Version="%%LAMBDASHARP_VERSION%%"/>
   </ItemGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>
-  </ItemGroup>
 </Project>

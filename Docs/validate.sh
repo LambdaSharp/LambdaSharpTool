@@ -2,6 +2,27 @@
 
 cd $LAMBDASHARP
 
+# Setup λ# in Contributor Mode
+
+lash() {
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
+}
+
+echo "*******************************************"
+echo "*** Update CloudFormation Specification ***"
+echo "*******************************************"
+
+lash util download-cloudformation-spec
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
+UNCOMMITTED=$(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)
+if [ $UNCOMMITTED -ne "0" ]; then
+    echo "ERROR: found $UNCOMMITTED uncommitted files"
+    exit 1
+fi
+
 # Run CloudFormation Generation Tests
 # > running these tests should have no impact of any generated files
 
@@ -33,28 +54,17 @@ echo "************************"
 echo "*** Init LambdaSharp ***"
 echo "*************************"
 
-# Setup λ# in Contributor Mode
-
-lash() {
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
-}
-
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=TestContrib$SUFFIX
+LAMBDASHARP_PROFILE=TestProfile$SUFFIX
+
+lash config \
+    --cli-profile $LAMBDASHARP_PROFILE \
+    --existing-s3-bucket-name="" \
+    --requested-s3-bucket-name="" \
+    --cloudformation-notifications-topic=""
 
 lash init
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-# Deploy the λ# Demos
-echo "********************"
-echo "*** Deploy Demos ***"
-echo "********************"
-
-lash deploy \
-    Demos/StaticWebsite \
-    Demos/SlackTodo
 if [ $? -ne 0 ]; then
     exit $?
 fi

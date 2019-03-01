@@ -35,8 +35,8 @@ namespace LambdaSharp.Tool.Cli.Build {
     public class ModelFilesPackager : AModelProcessor {
 
         //--- Constants ---
-        private const int READ_ONLY_PERMISSIONS = 0b1_000_000_110_100_100 << 16;
-        private const int READ_AND_EXECUTE_PERMISSIONS = 0b1_000_000_111_101_101 << 16;
+        private const int READ_AND_WRITE_PERMISSIONS = 0b1_000_000_110_110_110 << 16;
+        private const int READ_AND_EXECUTE_PERMISSIONS = 0b1_000_000_101_101_101 << 16;
         private const int ZIP_HOST_OS = 3; // Linux
         private const int ZIP_VERSION = 30; // 3.0
         private static byte[] ELF_HEADER = new byte[] { 0x7F, 0x45, 0x4C, 0x46 };
@@ -103,7 +103,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 });
             }
 
-            // delete remaining packages
+            // delete remaining packages, they are out-of-date
             foreach(var leftoverPackage in _existingPackages) {
                 try {
                     File.Delete(leftoverPackage);
@@ -116,26 +116,22 @@ namespace LambdaSharp.Tool.Cli.Build {
                 var containsElfExecutable = false;
 
                 // compute MD5 hash for package
-                string package;
-                using(var md5 = MD5.Create()) {
-                    var bytes = new List<byte>();
-                    foreach(var file in parameter.Files) {
-                        using(var stream = File.OpenRead(file.Value)) {
+                var bytes = new List<byte>();
+                foreach(var file in parameter.Files) {
 
-                            // check if one of the files in the package is an ELF executable
-                            containsElfExecutable = containsElfExecutable || IsElfExecutable(stream);
-
-                            // compute MD5 of filename and file contents
-                            bytes.AddRange(Encoding.UTF8.GetBytes(file.Key));
-                            var fileHash = md5.ComputeHash(stream);
-                            bytes.AddRange(fileHash);
-                            if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
-                                Console.WriteLine($"... computing md5: {file.Key} => {fileHash.ToHexString()}");
-                            }
+                    // check if one of the files in the package is an ELF executable
+                    using(var stream = File.OpenRead(file.Value)) {
+                        if(IsElfExecutable(stream)) {
+                            containsElfExecutable = true;
+                            break;
                         }
                     }
-                    package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{md5.ComputeHash(bytes.ToArray()).ToHexString()}.zip");
                 }
+
+                // compute hash for all files
+                var fileValueToFileKey = parameter.Files.ToDictionary(kv => kv.Value, kv => kv.Key);
+                var hash = parameter.Files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
+                var package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{hash}.zip");
 
                 // only build package if it doesn't exist
                 if(!_existingPackages.Remove(package)) {
@@ -157,7 +153,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     // set execution permission for ELF executable
                                     entry.ExternalFileAttributes = IsElfExecutable(entryStream)
                                         ? READ_AND_EXECUTE_PERMISSIONS
-                                        : READ_ONLY_PERMISSIONS;
+                                        : READ_AND_WRITE_PERMISSIONS;
 
                                     // add entry to zip archive
                                     outputZip.PutNextEntry(entry);

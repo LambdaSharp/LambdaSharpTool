@@ -95,12 +95,15 @@ namespace LambdaSharp.Tool.Model {
 
        //--- Properties ---
         public object Queue { get; set; }
-        public int BatchSize { get; set; }
+        public object BatchSize { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
             if(Queue != null) {
                 Queue = visitor(item, Queue);
+            }
+            if(BatchSize != null) {
+                BatchSize = visitor(item, BatchSize);
             }
         }
     }
@@ -122,13 +125,19 @@ namespace LambdaSharp.Tool.Model {
 
        //--- Properties ---
         public object DynamoDB { get; set; }
-        public int BatchSize { get; set; }
-        public string StartingPosition { get; set; }
+        public object BatchSize { get; set; }
+        public object StartingPosition { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
             if(DynamoDB != null) {
                 DynamoDB = visitor(item, DynamoDB);
+            }
+            if(BatchSize != null) {
+                BatchSize = visitor(item, BatchSize);
+            }
+            if(StartingPosition != null) {
+                StartingPosition = visitor(item, StartingPosition);
             }
         }
     }
@@ -137,14 +146,20 @@ namespace LambdaSharp.Tool.Model {
 
        //--- Properties ---
         public object Kinesis { get; set; }
-        public int BatchSize { get; set; }
-        public string StartingPosition { get; set; }
+        public object BatchSize { get; set; }
+        public object StartingPosition { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
             if(Kinesis != null) {
                 Kinesis = visitor(item, Kinesis);
             }
-        }
+            if(BatchSize != null) {
+                BatchSize = visitor(item, BatchSize);
+            }
+            if(StartingPosition != null) {
+                StartingPosition = visitor(item, StartingPosition);
+            }
+       }
     }
 }

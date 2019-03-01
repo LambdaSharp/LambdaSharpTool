@@ -1,1 +1,0 @@
-packages\OpenCover.4.6.519\tools\OpenCover.Console.exe -register:user -filter:+[ICSharpCode.SharpZipLib]* -target:Build\run-nunit3-tests-release.cmd -output:Documentation\opencover-results-release.xml

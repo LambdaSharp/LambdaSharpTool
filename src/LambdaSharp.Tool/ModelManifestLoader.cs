@@ -61,12 +61,14 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleManifest> LoadFromS3Async(string bucketName, string templatePath) {
+        public async Task<ModuleManifest> LoadFromS3Async(string bucketName, string templatePath, bool errorIfMissing = true) {
 
             // download cloudformation template
             var cloudformationText = await GetS3ObjectContents(bucketName, templatePath);
             if(cloudformationText == null) {
-                AddError($"could not load CloudFormation template from s3://{bucketName}/{templatePath}");
+                if(errorIfMissing) {
+                    AddError($"could not load CloudFormation template from s3://{bucketName}/{templatePath}");
+                }
                 return null;
             }
 
@@ -129,7 +131,7 @@ namespace LambdaSharp.Tool {
             // attempt to find a matching version
             VersionInfo foundVersion = null;
             string foundBucketName = null;
-            foreach(var bucket in searchBucketNames) {
+            foreach(var bucket in searchBucketNames ?? Enumerable.Empty<string>()) {
                 foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
                 if(foundVersion != null) {
                     foundBucketName = bucket;
