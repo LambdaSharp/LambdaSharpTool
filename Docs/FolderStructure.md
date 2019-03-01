@@ -19,10 +19,6 @@ Furthermore, the project file should contain the `<RootNamespace>` element to de
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>GettingStarted.SlackCommand</RootNamespace>
   </PropertyGroup>
-  ...
-  <ItemGroup>
-    <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.1.3"/>
-  </ItemGroup>
 </Project>
 ```
 

@@ -118,7 +118,7 @@ namespace LambdaSharp.Tool.Cli {
             json = OrderFields(json);
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
-            File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented).Replace("\r\n", "\n"));
+            File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented));
 
             // save compressed file
             using(var fileStream = File.OpenWrite(destinationZipLocation)) {

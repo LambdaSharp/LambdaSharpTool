@@ -105,7 +105,6 @@ if [ -z "$1" ]; then
         ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
         ../Demos/SlackTodo \
-        ../Demos/StaticWebsite \
         ../Demos/TwitterNotifier \
 
 else

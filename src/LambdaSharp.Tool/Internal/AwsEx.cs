@@ -103,8 +103,14 @@ namespace LambdaSharp.Tool.Internal {
 
                 // fetch as many events as possible for the current stack
                 var events = new List<StackEvent>();
-                var response = await cfClient.DescribeStackEventsAsync(request);
-                events.AddRange(response.StackEvents);
+                try {
+                    var response = await cfClient.DescribeStackEventsAsync(request);
+                    events.AddRange(response.StackEvents);
+                } catch(System.Net.Http.HttpRequestException e) when((e.InnerException is System.Net.Sockets.SocketException) && (e.InnerException.Message == "No such host is known")) {
+
+                    // ignore network issues and just try again
+                    continue;
+                }
                 events.Reverse();
 
                 // skip any events that preceded the most recent event before the stack update operation

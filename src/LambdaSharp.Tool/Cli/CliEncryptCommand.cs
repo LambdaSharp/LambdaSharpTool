@@ -41,7 +41,7 @@ namespace LambdaSharp.Tool.Cli {
             app.Command("encrypt", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Encrypt Value";
-                var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
+                var keyOption = cmd.Option("--key <KEY-ID>", "(optional) Specify encryption key ID or alias to use (default: use default deployment tier key)", CommandOptionType.SingleValue);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options

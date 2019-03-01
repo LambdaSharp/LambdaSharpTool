@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
@@ -72,9 +73,21 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 throw new ApplicationException("invalid module info");
             }
             var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
-            if(!moduleVersion.IsPreRelease && !forcePublish && await DoesS3ObjectExistsAsync(destinationKey)) {
-                AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
-                return null;
+
+            // check if a manifest already exists for this version
+            var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(Settings.DeploymentBucketName, destinationKey, errorIfMissing: false);
+            if(existingManifest != null) {
+                if(existingManifest.Hash == manifest.Hash) {
+
+                    // manifest matches, nothing further to do
+                    Console.WriteLine($"=> No changes found to publish");
+                    return $"s3://{Settings.DeploymentBucketName}/{destinationKey}";
+                } else if(!moduleVersion.IsPreRelease && !forcePublish) {
+
+                    // don't allow publishing over an existing, stable version
+                    AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
+                    return null;
+                }
             }
 
             // upload assets
@@ -94,9 +107,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 ContentType = "application/json"
             });
             if(!_changesDetected) {
-                Console.WriteLine($"=> No changes found to publish");
+
+                // NOTE: this message should never appear since we already do a similar check earlier
+                Console.WriteLine($"=> No changes found to upload");
             }
-            return $"s3://{Settings.DeploymentBucketName}/{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
+            return $"s3://{Settings.DeploymentBucketName}/{destinationKey}";
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {

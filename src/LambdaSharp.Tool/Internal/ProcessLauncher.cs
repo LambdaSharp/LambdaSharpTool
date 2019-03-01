@@ -66,6 +66,29 @@ namespace LambdaSharp.Tool.Internal {
             }
         }
 
+        public static string ExecuteWithOutputCapture(string application, IEnumerable<string> arguments, string workingFolder) {
+            using(var process = new Process()) {
+                process.StartInfo = new ProcessStartInfo {
+                    FileName = application,
+                    Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
+                    WorkingDirectory = workingFolder,
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                process.Start();
+                process.EnableRaisingEvents = true;
+                Task<string> output = null;
+                Task<string> error = null;
+                output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
+                error = Task.Run(() => process.StandardError.ReadToEndAsync());
+                process.WaitForExit();
+                return (process.ExitCode == 0)
+                    ? output.Result
+                    : null;
+            }
+        }
+
         public static string FindExecutableInPath(string command) {
             if(File.Exists(command)) {
                 return Path.GetFullPath(command);

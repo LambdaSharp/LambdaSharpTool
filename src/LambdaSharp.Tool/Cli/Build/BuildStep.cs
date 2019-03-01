@@ -119,7 +119,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
             File.WriteAllText(outputCloudFormationFilePath, template);
-            Console.WriteLine($"=> Module compilation done: {outputCloudFormationFilePath}");
+            Console.WriteLine($"=> Module compilation done: {Path.GetRelativePath(Settings.WorkingDirectory, outputCloudFormationFilePath)}");
             return true;
         }
     }

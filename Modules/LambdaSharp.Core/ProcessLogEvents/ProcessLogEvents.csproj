@@ -18,7 +18,4 @@
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
     <ProjectReference Include="..\CommonLib\CommonLib.csproj"/>
   </ItemGroup>
-  <ItemGroup>
-    <DotNetCliToolReference Include="Amazon.Lambda.Tools" Version="2.2.0"/>
-  </ItemGroup>
 </Project>

@@ -13,7 +13,7 @@ __Topics__
 
 ```yaml
 Sqs: String|Expression
-BatchSize: Int
+BatchSize: Int|Expression
 ```
 
 ## Properties
@@ -26,7 +26,7 @@ The <code>BatchSize</code> attribute specifies the maximum number of messages to
 
 <i>Required</i>: No
 
-<i>Type</i>: Int
+<i>Type</i>: Int or Expression
 </dd>
 
 <dt><code>Sqs</code></dt>

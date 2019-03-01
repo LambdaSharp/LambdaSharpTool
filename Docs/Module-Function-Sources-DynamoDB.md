@@ -12,8 +12,8 @@ __Topics__
 
 ```yaml
 DynamoDB: String|Expression
-BatchSize: Int
-StartingPosition: String
+BatchSize: Int|Expression
+StartingPosition: String|Expression
 ```
 
 ## Properties
@@ -26,7 +26,7 @@ The <code>BatchSize</code> attribute specifies the maximum number of messages to
 
 <i>Required</i>: No
 
-<i>Type</i>: Int
+<i>Type</i>: Int or Expression
 </dd>
 
 <dt><code>DynamoDB</code></dt>
@@ -44,7 +44,7 @@ The <code>StartingPosition</code> attribute specifies the position in the Dynamo
 
 <i>Required</i>: No
 
-<i>Type</i>: String
+<i>Type</i>: String or Expression
 
 <i>Valid Values</i>: <code>TRIM_HORIZON</code> | <code>LATEST</code>
 </dd>

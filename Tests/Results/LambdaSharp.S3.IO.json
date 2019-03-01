@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp S3 Utility Module (v0.5)",
+  "Description": "LambdaSharp S3 Utility Module (v0.5.0.1)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -64,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "BA454693A60D4C0469C5587C66B7E9F2"
+      "Default": "91872F09A4FE310CD63FF5D586B31CBB"
     }
   },
   "Resources": {
@@ -117,13 +117,13 @@
             ]
           }
         },
-        "Description": "LambdaSharp S3 Package Loader handler (v0.5)",
+        "Description": "LambdaSharp S3 Package Loader handler (v0.5.0.1)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.S3.IO:0.5",
+            "MODULE_INFO": "LambdaSharp.S3.IO:0.5.0.1",
             "LAMBDA_NAME": "S3Writer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
@@ -195,7 +195,7 @@
           }
         },
         "Handler": "S3Writer::LambdaSharp.S3.IO.S3Writer.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
+        "MemorySize": "1024",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -203,7 +203,7 @@
           ]
         },
         "Runtime": "dotnetcore2.1",
-        "Timeout": "300",
+        "Timeout": "900",
         "TracingConfig": {
           "Mode": {
             "Ref": "XRayTracing"
@@ -541,7 +541,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.S3.IO:0.5",
+        "Module": "LambdaSharp.S3.IO:0.5.0.1",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -569,8 +569,8 @@
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore2.1",
         "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "256",
-        "FunctionMaxDuration": "300"
+        "FunctionMaxMemory": "1024",
+        "FunctionMaxDuration": "900"
       },
       "DependsOn": [
         "ModuleRegistration"
@@ -679,7 +679,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.S3.IO:0.5"
+      "Value": "LambdaSharp.S3.IO:0.5.0.1"
     },
     "LambdaSharpS3Unzip": {
       "Value": {
@@ -935,7 +935,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharp.S3.IO:0.5",
+      "Module": "LambdaSharp.S3.IO:0.5.0.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -989,7 +989,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "BA454693A60D4C0469C5587C66B7E9F2",
+      "Hash": "91872F09A4FE310CD63FF5D586B31CBB",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
