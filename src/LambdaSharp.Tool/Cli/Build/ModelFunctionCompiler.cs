@@ -247,7 +247,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     apiMethod = CreateSlackRequestApiMethod(method);
                     break;
                 default:
-                    AddError($"api integration {method.Integration} is not supported");
+                    LogError($"api integration {method.Integration} is not supported");
                     continue;
                 }
 
@@ -685,7 +685,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void Enumerate(object value, Action<string, object> action, Func<AResourceItem, object> getReference = null) {
             if(value is string fullName) {
                 if(!_builder.TryGetItem(fullName, out var item)) {
-                    AddError($"could not find function source: '{fullName}'");
+                    LogError($"could not find function source: '{fullName}'");
                     return;
                 }
                 if(item is AResourceItem resource) {

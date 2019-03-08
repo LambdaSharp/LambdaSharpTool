@@ -72,7 +72,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             // determine location of cloudformation template from module key
             var location = await _loader.LocateAsync(moduleReference);
             if(location == null) {
-                AddError($"unable to resolve: {moduleReference}");
+                LogError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
@@ -83,16 +83,16 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // check that the LambdaSharp Core & CLI versions match
-            if(Settings.CoreVersion == null) {
+            if(Settings.TierVersion == null) {
 
                 // core module doesn't expect a deployment tier to exist
                 if(!forceDeploy && manifest.RuntimeCheck) {
-                    AddError("could not determine the LambdaSharp Core version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                    LogError("could not determine the LambdaSharp tier version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
                     return false;
                 }
-            } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.CoreVersion)) {
+            } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.TierVersion)) {
                 if(!forceDeploy) {
-                    AddError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Core (v{Settings.CoreVersion}) versions do not match; use --force-deploy to proceed anyway");
+                    LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Core (v{Settings.TierVersion}) versions do not match; use --force-deploy to proceed anyway");
                     return false;
                 }
             }
@@ -194,7 +194,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     // we're good to go
                     break;
                 default:
-                    AddError($"deployed module is not in a valid state; module deployment must be complete and successful (Status: {existing?.StackStatus})");
+                    LogError($"deployed module is not in a valid state; module deployment must be complete and successful (Status: {existing?.StackStatus})");
                     return (false, existing);
                 }
 
@@ -207,16 +207,16 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     out VersionInfo deployedVersion,
                     out string _
                 )) {
-                    AddError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
+                    LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 var deployedFullName = $"{deployedOwner}.{deployedName}";
                 if(deployedFullName != manifest.GetFullName()) {
-                    AddError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                    LogError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 if(deployedVersion > manifest.GetVersion()) {
-                    AddError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                    LogError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 return (true, existing);
@@ -254,7 +254,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     } else if(inProgress.Any(d => d.Manifest.GetFullName() == dependency.ModuleFullName)) {
 
                         // circular dependency detected
-                        AddError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
+                        LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
                         return;
                     } else {
                         dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
@@ -305,10 +305,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployed.Location.ModuleVersion;
             if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                AddError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                AddError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
+                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
         }
@@ -326,30 +326,25 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     out VersionInfo deployedVersion,
                     out string deployedBucketName
                 );
-                var deployed = new ModuleLocation {
-                    ModuleFullName = $"{deployedOwner}.{deployedName}",
-                    ModuleVersion = deployedVersion,
-                    ModuleBucketName = deployedBucketName,
-                    TemplatePath = null
-                };
+                var deployed = new ModuleLocation(deployedOwner, deployedName, deployedVersion, deployedBucketName);
                 if(!success) {
-                    AddError($"unable to retrieve information of the deployed dependent module");
+                    LogError($"unable to retrieve information of the deployed dependent module");
                     return deployed;
                 }
 
                 // confirm that the module name matches
                 if(deployed.ModuleFullName != dependency.ModuleFullName) {
-                    AddError($"deployed dependent module name ({deployed.ModuleFullName}) does not match {dependency.ModuleFullName}");
+                    LogError($"deployed dependent module name ({deployed.ModuleFullName}) does not match {dependency.ModuleFullName}");
                     return deployed;
                 }
 
                 // confirm that the module version is in a valid range
                 if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                    AddError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
+                    LogError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
                     return deployed;
                 }
                 if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                    AddError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
+                    LogError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
                     return deployed;
                 }
                 return deployed;
@@ -432,7 +427,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
                 if(promptsAsErrors) {
-                    AddError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
+                    LogError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
                     return false;
                 }
                 return true;

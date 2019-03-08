@@ -6,7 +6,7 @@ if [ -z "$1" ]; then
         --tier Test \
         --aws-account-id 123456789012 \
         --aws-region us-east-1 \
-        --core-version 0.5 \
+        --tier-version 0.5 \
         --cli-version 0.5 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
@@ -26,7 +26,7 @@ if [ -z "$1" ]; then
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --core-version 0.5 \
+        --tier-version 0.5 \
         --cli-version 0.5 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
@@ -121,7 +121,7 @@ else
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --core-version 0.5 \
+        --tier-version 0.5 \
         --cli-version 0.5 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \

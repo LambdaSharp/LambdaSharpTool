@@ -1,4 +1,4 @@
-![λ#](LambdaSharp_v2_small.png)
+![λ#](LambdaSharpLogo.png)
 
 # LambdaSharp Module - Secrets
 

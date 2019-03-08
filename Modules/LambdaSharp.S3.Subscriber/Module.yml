@@ -45,7 +45,7 @@ Items:
     Attributes:
 
       - Name: Result
-        Description: S3 bucker URL
+        Description: S3 bucket URL
         Type: String
 
   - Resource: S3BucketPermissions

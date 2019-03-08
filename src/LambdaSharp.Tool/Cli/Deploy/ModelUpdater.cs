@@ -88,7 +88,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     TemplateURL = templateUrl
                 });
             } catch(AmazonCloudFormationException e) {
-                AddError(e.Message);
+                LogError(e.Message);
                 return false;
             }
 
@@ -151,7 +151,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!allowDataLoss) {
                     var lossyChanges = DetectLossyChanges(changes);
                     if(lossyChanges.Any()) {
-                        AddError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
+                        LogError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
                         Console.WriteLine("=> WARNING: detected potential replacement and data-loss in the following resources");
                         foreach(var lossy in lossyChanges) {
                             Console.WriteLine($"{(lossy.ResourceChange.Replacement == Replacement.True ? "ALWAYS" : "CONDITIONAL"),-12} {lossy.ResourceChange.ResourceType,-55} {TranslateLogicalIdToFullName(lossy.ResourceChange.LogicalResourceId)}");
@@ -257,10 +257,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     if(changeSetResponse.StatusReason.StartsWith("The submitted information didn't contain changes.", StringComparison.Ordinal)) {
                         return new List<Change>();
                     }
-                    AddError($"change-set failed: {changeSetResponse.StatusReason}");
+                    LogError($"change-set failed: {changeSetResponse.StatusReason}");
                     return null;
                 }
-                AddError($"unexpected change-set status: {changeSetResponse.ExecutionStatus}");
+                LogError($"unexpected change-set status: {changeSetResponse.ExecutionStatus}");
                 return null;
             }
         }

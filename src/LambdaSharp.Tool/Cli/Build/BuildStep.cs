@@ -41,7 +41,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             string selector
         ) {
             if(!File.Exists(SourceFilename)) {
-                AddError($"could not find '{SourceFilename}'");
+                LogError($"could not find '{SourceFilename}'");
                 return false;
             }
 

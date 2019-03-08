@@ -64,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C0C6FA5036F3796967D4D8832CCA2C4B"
+      "Default": "1466982E06A9C9FBD1F23E1F559652D3"
     }
   },
   "Resources": {
@@ -858,7 +858,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C0C6FA5036F3796967D4D8832CCA2C4B",
+      "Hash": "1466982E06A9C9FBD1F23E1F559652D3",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -896,7 +896,7 @@
           "Attributes": [
             {
               "Name": "Result",
-              "Description": "S3 bucker URL",
+              "Description": "S3 bucket URL",
               "Type": "String",
               "Required": true
             }

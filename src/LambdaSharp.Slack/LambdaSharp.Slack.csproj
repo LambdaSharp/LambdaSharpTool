@@ -14,7 +14,7 @@
 
     <PackageLicenseUrl>http://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharp_v2_small.png</PackageIconUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/LambdaSharp/master/Docs/LambdaSharpLogo.png</PackageIconUrl>
     <PackageTags>AWS;Lambda;LambdaSharp;MindTouch;Serverless;Slack</PackageTags>
   </PropertyGroup>
   <ItemGroup>

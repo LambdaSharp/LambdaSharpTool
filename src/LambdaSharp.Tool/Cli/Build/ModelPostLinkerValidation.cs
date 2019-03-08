@@ -103,13 +103,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             } else if(TryGetFnRef(value, out var refKey)) {
                 ValidateSourceParameter(refKey);
             } else {
-                AddError("invalid expression");
+                LogError("invalid expression");
             }
 
             // local functions
             void ValidateSourceParameter(string fullName) {
                 if(!_builder.TryGetItem(fullName, out var item)) {
-                    AddError($"could not find function source {fullName}");
+                    LogError($"could not find function source {fullName}");
                     return;
                 }
                 switch(item) {
@@ -119,17 +119,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 case ResourceItem _:
                 case FunctionItem _:
                     if(awsType != item.Type) {
-                        AddError($"function source '{fullName}' must be {awsType}, but was {item.Type}");
+                        LogError($"function source '{fullName}' must be {awsType}, but was {item.Type}");
                     }
                     break;
                 case ConditionItem _:
-                    AddError($"function source '{fullName}' cannot be a condition '{item.FullName}'");
+                    LogError($"function source '{fullName}' cannot be a condition '{item.FullName}'");
                     break;
                 case MappingItem _:
-                    AddError($"function source '{fullName}' cannot be a mapping '{item.FullName}'");
+                    LogError($"function source '{fullName}' cannot be a mapping '{item.FullName}'");
                     break;
                 case ResourceTypeItem _:
-                    AddError($"function source '{fullName}' cannot be a custom resource '{item.FullName}'");
+                    LogError($"function source '{fullName}' cannot be a custom resource '{item.FullName}'");
                     break;
                 default:
                     throw new ApplicationException($"unexpected item type: {item.GetType()}");
@@ -139,11 +139,11 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ValidateHandler(object handler) {
             if(!(handler is string fullName) && !TryGetFnRef(handler, out fullName)) {
-                AddError("invalid expression");
+                LogError("invalid expression");
                 return;
             }
             if(!_builder.TryGetItem(fullName, out var item)) {
-                AddError($"could not find handler item {fullName}");
+                LogError($"could not find handler item {fullName}");
                 return;
             }
             switch(item) {
@@ -153,17 +153,17 @@ namespace LambdaSharp.Tool.Cli.Build {
             case ResourceItem _:
             case FunctionItem _:
                 if((item.Type != "AWS::Lambda::Function") && (item.Type != "AWS::SNS::Topic")) {
-                    AddError($"handler reference '{fullName}' must be either be AWS::SNS::Topic or AWS::Lambda::Function, but was {item.Type}");
+                    LogError($"handler reference '{fullName}' must be either be AWS::SNS::Topic or AWS::Lambda::Function, but was {item.Type}");
                 }
                 break;
             case ConditionItem _:
-                AddError($"handler reference '{fullName}' cannot be a condition '{item.FullName}'");
+                LogError($"handler reference '{fullName}' cannot be a condition '{item.FullName}'");
                 break;
             case MappingItem _:
-                AddError($"handler reference '{fullName}' cannot be a mapping '{item.FullName}'");
+                LogError($"handler reference '{fullName}' cannot be a mapping '{item.FullName}'");
                 break;
             case ResourceTypeItem _:
-                AddError($"handler reference '{fullName}' cannot be a custom resource '{item.FullName}'");
+                LogError($"handler reference '{fullName}' cannot be a custom resource '{item.FullName}'");
                 break;
             default:
                 throw new ApplicationException($"unexpected item type: {item.GetType()}");
@@ -172,11 +172,11 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ValidateFunction(object functionName) {
             if(!(functionName is string fullName) && !TryGetFnRef(functionName, out fullName)) {
-                AddError("invalid expression");
+                LogError("invalid expression");
                 return;
             }
             if(!_builder.TryGetItem(fullName, out var item)) {
-                AddError($"could not find function item {fullName}");
+                LogError($"could not find function item {fullName}");
                 return;
             }
             switch(item) {
@@ -186,17 +186,17 @@ namespace LambdaSharp.Tool.Cli.Build {
             case ResourceItem _:
             case FunctionItem _:
                 if(item.Type != "AWS::Lambda::Function") {
-                    AddError($"function reference '{fullName}' must be be AWS::Lambda::Function, but was {item.Type}");
+                    LogError($"function reference '{fullName}' must be be AWS::Lambda::Function, but was {item.Type}");
                 }
                 break;
             case ConditionItem _:
-                AddError($"function reference '{fullName}' cannot be a condition '{item.FullName}'");
+                LogError($"function reference '{fullName}' cannot be a condition '{item.FullName}'");
                 break;
             case MappingItem _:
-                AddError($"function reference '{fullName}' cannot be a mapping '{item.FullName}'");
+                LogError($"function reference '{fullName}' cannot be a mapping '{item.FullName}'");
                 break;
             case ResourceTypeItem _:
-                AddError($"function reference '{fullName}' cannot be a custom resource '{item.FullName}'");
+                LogError($"function reference '{fullName}' cannot be a custom resource '{item.FullName}'");
                 break;
             default:
                 throw new ApplicationException($"unexpected item type: {item.GetType()}");

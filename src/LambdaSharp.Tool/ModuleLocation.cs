@@ -27,19 +27,20 @@ namespace LambdaSharp.Tool {
     public class ModuleLocation {
 
         //--- Constructors ---
-        public ModuleLocation() { }
-
         public ModuleLocation(string owner, string name, VersionInfo version, string bucketName) {
             ModuleFullName = $"{owner}.{name}";
             ModuleVersion = version;
             ModuleBucketName = bucketName;
+            if((owner != null) && (name != null) && (version != null)) {
+                TemplatePath = $"{owner}/Modules/{name}/Versions/{version}/cloudformation.json";
+            }
         }
 
         //--- Properties ---
         public string ModuleFullName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
         public string ModuleBucketName { get; set; }
-        public string TemplatePath { get; set; }
+        public string TemplatePath { get; private set; }
 
         //--- Methods ---
         public override string ToString() {

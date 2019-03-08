@@ -1,4 +1,4 @@
-![λ#](../../../Docs/LambdaSharp_v2_small.png)
+![λ#](../../../Docs/LambdaSharpLogo.png)
 
 # LambdaSharp CLI - Info Command
 
@@ -47,7 +47,7 @@ LambdaSharp CLI
         - lambdasharp-us-east-1
 LambdaSharp Deployment Tier
     Name: Sandbox
-    Core Version: 0.5
+    Version: 0.5
 Git
     Branch: Docs
     SHA: ae537bc2214710eed89f5c3b5819d809c065856f

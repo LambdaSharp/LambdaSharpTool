@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             foreach(var file in manifest.Assets) {
                 var filepath = Path.Combine(Settings.OutputDirectory, file);
                 if(!File.Exists(filepath)) {
-                    AddError($"could not find: '{filepath}'");
+                    LogError($"could not find: '{filepath}'");
                 }
             }
             if(Settings.HasErrors) {
@@ -85,7 +85,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 } else if(!moduleVersion.IsPreRelease && !forcePublish) {
 
                     // don't allow publishing over an existing, stable version
-                    AddError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
+                    LogError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
                     return null;
                 }
             }

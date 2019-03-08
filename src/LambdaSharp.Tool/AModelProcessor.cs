@@ -88,11 +88,11 @@ namespace LambdaSharp.Tool {
 
         protected void Validate(bool condition, string message) {
             if(!condition) {
-                AddError(message);
+                LogError(message);
             }
         }
 
-        protected void AddWarning(string message) {
+        protected void LogWarn(string message) {
             var text = new StringBuilder();
             text.Append(message);
             if(_locations.Any()) {
@@ -101,10 +101,10 @@ namespace LambdaSharp.Tool {
             if(_sourceFilename != null) {
                 text.Append($" [{_sourceFilename}]");
             }
-            Settings.AddWarning(text.ToString());
+            Settings.LogWarn(text.ToString());
         }
 
-        protected void AddError(string message, Exception exception = null) {
+        protected void LogError(string message, Exception exception = null) {
             var text = new StringBuilder();
             text.Append(message);
             if(_locations.Any()) {
@@ -113,11 +113,11 @@ namespace LambdaSharp.Tool {
             if(_sourceFilename != null) {
                 text.Append($" [{_sourceFilename}]");
             }
-            Settings.AddError(text.ToString(), exception);
+            Settings.LogError(text.ToString(), exception);
         }
 
-        protected void AddError(Exception exception)
-            => Settings.AddError(exception);
+        protected void LogError(Exception exception)
+            => Settings.LogError(exception);
 
         protected List<string> ConvertToStringList(object value) {
             var result = new List<string>();
@@ -130,7 +130,7 @@ namespace LambdaSharp.Tool {
             } else if(value is IList<object> objectList) {
                 result = objectList.Cast<string>().ToList();
             } else if(value != null) {
-                AddError("invalid value");
+                LogError("invalid value");
             }
             return result;
         }

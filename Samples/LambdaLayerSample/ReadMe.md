@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharp_v2_small.png)
+![λ#](../../Docs/LambdaSharpLogo.png)
 
 # LambdaSharp Lambda Function with Lambda Layer
 

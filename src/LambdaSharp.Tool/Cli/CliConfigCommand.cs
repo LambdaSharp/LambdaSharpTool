@@ -137,7 +137,7 @@ namespace LambdaSharp.Tool.Cli {
                 // check if exiting profile needs to be upgraded
                 if(!forceUpdate) {
                     if(!VersionInfo.TryParse(GetToolSetting("Version"), out var existingVersion)) {
-                        AddError("unable to parse existing version; use --force-update to proceed anyway");
+                        LogError("unable to parse existing version; use --force-update to proceed anyway");
                         return;
                     }
                     if(existingVersion < Version) {
@@ -147,7 +147,7 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                     } else if(!existingVersion.IsCompatibleWith(Version)) {
-                        AddError($"LambdaSharp CLI is not compatible with v{existingVersion}; use --force-update to proceed anyway");
+                        LogError($"LambdaSharp CLI is not compatible with v{existingVersion}; use --force-update to proceed anyway");
                         return;
                     }
                 }
@@ -202,7 +202,7 @@ namespace LambdaSharp.Tool.Cli {
                     TemplateBody = templateBody
                 });
             } catch(AmazonCloudFormationException e) {
-                AddError(e.Message);
+                LogError(e.Message);
                 return null;
             }
 
@@ -256,7 +256,7 @@ namespace LambdaSharp.Tool.Cli {
             // report any parameters that were provided, but are not needed
             foreach(var providedParameter in providedParameters) {
                 if(!templateSummary.Parameters.Any(expectedParam => expectedParam.ParameterKey == providedParameter.Key)) {
-                    AddError($"unexpected module parameter '{providedParameter.Key}'");
+                    LogError($"unexpected module parameter '{providedParameter.Key}'");
                 }
             }
             if(HasErrors) {

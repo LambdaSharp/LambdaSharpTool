@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 outputStream.AppendTo(parsingEvents);
                 yamlParser = new YamlParsingEventsParser(parsingEvents);
             } catch(Exception e) {
-                AddError(e);
+                LogError(e);
                 return null;
             }
 
@@ -73,9 +73,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Build()
                     .Deserialize<ModuleNode>(yamlParser);
             } catch(YamlDotNet.Core.YamlException e) {
-                AddError($"parsing error near {e.Message}");
+                LogError($"parsing error near {e.Message}");
             } catch(Exception e) {
-                AddError(e);
+                LogError(e);
             }
             return null;
         }
@@ -91,9 +91,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Build()
                     .Deserialize<ModuleNode>(source);
             } catch(YamlDotNet.Core.YamlException e) {
-                AddError($"parsing error near {e.Message}");
+                LogError($"parsing error near {e.Message}");
             } catch(Exception e) {
-                AddError($"parse error: {e.Message}", e);
+                LogError($"parse error: {e.Message}", e);
             }
             return null;
         }
@@ -177,7 +177,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     outputMap.Entries.Add(choiceEntry);
                                 }
                             } else {
-                                AddError("choice value is not a map");
+                                LogError("choice value is not a map");
                             }
                         });
                     }
@@ -192,7 +192,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     End = inputSequence.End
                 };
             default:
-                AddError($"unrecognized YAML value ({inputValue?.GetType().Name ?? "<null>"})");
+                LogError($"unrecognized YAML value ({inputValue?.GetType().Name ?? "<null>"})");
                 return inputValue;
             }
         }

@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "LambdaSharp Core Resources and Services (v0.5)",
+  "Description": "LambdaSharp Core Resources and Services (v0.5.0.1)",
   "Parameters": {
     "DeadLetterQueue": {
       "Type": "String",
@@ -13,14 +13,16 @@
       "Default": ""
     },
     "LoggingStreamRetentionPeriodHours": {
-      "Type": "String",
+      "Type": "Number",
       "Description": "Retention period (hours)",
-      "Default": "24"
+      "Default": "24",
+      "MinValue": 1
     },
     "LoggingStreamShardCount": {
-      "Type": "String",
+      "Type": "Number",
       "Description": "Number of Kinesis shards",
-      "Default": "1"
+      "Default": "1",
+      "MinValue": 1
     },
     "DefaultSecretKey": {
       "Type": "String",
@@ -30,6 +32,10 @@
     "DefaultSecretKeyRotationEnabled": {
       "Type": "String",
       "Description": "Default key rotation enabled",
+      "AllowedValues": [
+        "true",
+        "false"
+      ],
       "Default": "false"
     },
     "RollbarReadAccessToken": {
@@ -81,7 +87,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "74F1F9C4E2336A88001533E97D7B8A9D"
+      "Default": "14E7C69F304E9CD09F96FAED7A1F4AC0"
     }
   },
   "Resources": {
@@ -230,15 +236,43 @@
             ]
           }
         },
-        "Description": "Process log events from all LambdaSharp module functions (v0.5)",
+        "Description": "Process log events from all LambdaSharp module functions (v0.5.0.1)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Core:0.5",
+            "MODULE_INFO": "LambdaSharp.Core:0.5.0.1",
             "LAMBDA_NAME": "ProcessLogEvents",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "DeadLetterQueueIsCreated",
+                {
+                  "Fn::GetAtt": [
+                    "DeadLetterQueueResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "DeadLetterQueue"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "DefaultSecretKeyIsCreated",
+                {
+                  "Fn::GetAtt": [
+                    "DefaultSecretKeyResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "DefaultSecretKey"
+                }
+              ]
+            },
             "STR_ERRORREPORTTOPIC": {
               "Ref": "ErrorReportTopic"
             },
@@ -334,15 +368,43 @@
             ]
           }
         },
-        "Description": "Register LambdaSharp modules and functions (v0.5)",
+        "Description": "Register LambdaSharp modules and functions (v0.5.0.1)",
         "Environment": {
           "Variables": {
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Core:0.5",
+            "MODULE_INFO": "LambdaSharp.Core:0.5.0.1",
             "LAMBDA_NAME": "Registration",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "DeadLetterQueueIsCreated",
+                {
+                  "Fn::GetAtt": [
+                    "DeadLetterQueueResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "DeadLetterQueue"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "DefaultSecretKeyIsCreated",
+                {
+                  "Fn::GetAtt": [
+                    "DefaultSecretKeyResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "DefaultSecretKey"
+                }
+              ]
+            },
             "SEC_ROLLBARREADACCESSTOKEN": {
               "Ref": "RollbarReadAccessToken"
             },
@@ -682,7 +744,7 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Core:0.5"
+      "Value": "LambdaSharp.Core:0.5.0.1"
     },
     "DeadLetterQueue": {
       "Value": {
@@ -762,7 +824,7 @@
           "Fn::Sub": "${AWS::StackName}::LoggingStreamRole"
         }
       },
-      "Description": "Role for writing CloudWatch logs to the Kinesis stream"
+      "Description": "Role used by CloudWatch logs to write to the Kinesis stream"
     },
     "LambdaSharpRegistrationModule": {
       "Value": {
@@ -831,10 +893,10 @@
           "default": "Logging Kinesis stream for functions (leave blank to create a new stream) [AWS::Kinesis::Stream]"
         },
         "LoggingStreamRetentionPeriodHours": {
-          "default": "Size of the Logging stream buffer (in hours) [String]"
+          "default": "Size of the Logging stream buffer (in hours) [Number]"
         },
         "LoggingStreamShardCount": {
-          "default": "Number of Kinesis shards for the logging streams [String]"
+          "default": "Number of Kinesis shards for the logging streams [Number]"
         },
         "DefaultSecretKey": {
           "default": "Default secret key for functions (leave blank to create a new encryption key) [AWS::KMS::Key]"
@@ -922,7 +984,7 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2018-12-31",
-      "Module": "LambdaSharp.Core:0.5",
+      "Module": "LambdaSharp.Core:0.5.0.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -941,13 +1003,13 @@
             },
             {
               "Name": "LoggingStreamRetentionPeriodHours",
-              "Type": "String",
+              "Type": "Number",
               "Label": "Size of the Logging stream buffer (in hours)",
               "Default": "24"
             },
             {
               "Name": "LoggingStreamShardCount",
-              "Type": "String",
+              "Type": "Number",
               "Label": "Number of Kinesis shards for the logging streams",
               "Default": "1"
             },
@@ -1007,7 +1069,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "74F1F9C4E2336A88001533E97D7B8A9D",
+      "Hash": "14E7C69F304E9CD09F96FAED7A1F4AC0",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1044,13 +1106,13 @@
             {
               "Name": "FunctionMaxMemory",
               "Description": "Max memory for module function",
-              "Type": "String",
+              "Type": "Number",
               "Required": true
             },
             {
               "Name": "FunctionMaxDuration",
               "Description": "Max duration for module function",
-              "Type": "String",
+              "Type": "Number",
               "Required": true
             },
             {
@@ -1126,7 +1188,7 @@
         },
         {
           "Name": "LoggingStreamRole",
-          "Description": "Role for writing CloudWatch logs to the Kinesis stream",
+          "Description": "Role used by CloudWatch logs to write to the Kinesis stream",
           "Type": "AWS::IAM::Role"
         }
       ],

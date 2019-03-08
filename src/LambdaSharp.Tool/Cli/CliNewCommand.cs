@@ -61,12 +61,12 @@ namespace LambdaSharp.Tool.Cli {
                         // validate project vs. nuget reference options
                         bool useProjectReference;
                         if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
-                            AddError("cannot use --use-project-reference and --use-nuget-reference at the same time");
+                            LogError("cannot use --use-project-reference and --use-nuget-reference at the same time");
                             return;
                         }
                         if(useProjectReferenceOption.HasValue()) {
                             if(lambdasharpDirectory == null) {
-                                AddError("missing LAMBDASHARP environment variable");
+                                LogError("missing LAMBDASHARP environment variable");
                                 return;
                             }
                             useProjectReference = true;
@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Cli {
                         if(nameArgument.Values.Any()) {
                             functionName = nameArgument.Value;
                         } else {
-                            AddError("missing function name argument");
+                            LogError("missing function name argument");
                             return;
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
@@ -119,7 +119,7 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         if(nameArgument.Values.Any() && nameOption.HasValue()) {
-                            AddError("cannot specify --name and an argument at the same time");
+                            LogError("cannot specify --name and an argument at the same time");
                             return;
                         }
                         string moduleName;
@@ -128,7 +128,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(nameArgument.Values.Any()) {
                             moduleName = nameArgument.Value;
                         } else {
-                            AddError("missing module name argument");
+                            LogError("missing module name argument");
                             return;
                         }
 
@@ -154,11 +154,11 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
                         if(!nameArgument.Values.Any()) {
-                            AddError("missing resource name");
+                            LogError("missing resource name");
                             return;
                         }
                         if(!typeArgument.Values.Any()) {
-                            AddError("missing resource type");
+                            LogError("missing resource type");
                             return;
                         }
                         NewResource(
@@ -180,12 +180,12 @@ namespace LambdaSharp.Tool.Cli {
             try {
                 Directory.CreateDirectory(moduleDirectory);
             } catch(Exception e) {
-                AddError($"unable to create directory '{moduleDirectory}'", e);
+                LogError($"unable to create directory '{moduleDirectory}'", e);
                 return;
             }
             var moduleFile = Path.Combine(moduleDirectory, "Module.yml");
             if(File.Exists(moduleFile)) {
-                AddError($"module definition '{moduleFile}' already exists");
+                LogError($"module definition '{moduleFile}' already exists");
                 return;
             }
             try {
@@ -195,7 +195,7 @@ namespace LambdaSharp.Tool.Cli {
                 File.WriteAllText(moduleFile, module);
                 Console.WriteLine($"Created module definition: {Path.GetRelativePath(Directory.GetCurrentDirectory(), moduleFile)}");
             } catch(Exception e) {
-                AddError($"unable to create module definition '{moduleFile}'", e);
+                LogError($"unable to create module definition '{moduleFile}'", e);
             }
         }
 
@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // parse yaml module definition
             if(!File.Exists(moduleFile)) {
-                AddError($"could not find module '{moduleFile}'");
+                LogError($"could not find module '{moduleFile}'");
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
@@ -231,13 +231,13 @@ namespace LambdaSharp.Tool.Cli {
             // create directory for function project
             var projectDirectory = Path.Combine(workingDirectory, functionName);
             if(Directory.Exists(projectDirectory)) {
-                AddError($"project directory '{projectDirectory}' already exists");
+                LogError($"project directory '{projectDirectory}' already exists");
                 return;
             }
             try {
                 Directory.CreateDirectory(projectDirectory);
             } catch(Exception e) {
-                AddError($"unable to create directory '{projectDirectory}'", e);
+                LogError($"unable to create directory '{projectDirectory}'", e);
                 return;
             }
 
@@ -315,7 +315,7 @@ namespace LambdaSharp.Tool.Cli {
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
-                AddError($"unable to create project file '{projectFile}'", e);
+                LogError($"unable to create project file '{projectFile}'", e);
                 return;
             }
 
@@ -326,7 +326,7 @@ namespace LambdaSharp.Tool.Cli {
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
             } catch(Exception e) {
-                AddError($"unable to create function file '{functionFile}'", e);
+                LogError($"unable to create function file '{functionFile}'", e);
                 return;
             }
         }
@@ -351,14 +351,14 @@ namespace LambdaSharp.Tool.Cli {
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
             } catch(Exception e) {
-                AddError($"unable to create function file '{functionFile}'", e);
+                LogError($"unable to create function file '{functionFile}'", e);
                 return;
             }
         }
 
         public void NewResource(string moduleFile, string resourceName, string resourceTypeName) {
             if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(resourceTypeName, out var resourceType)) {
-                AddError($"unknown resource type '{resourceTypeName}'");
+                LogError($"unknown resource type '{resourceTypeName}'");
                 return;
             }
 
@@ -404,7 +404,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(TryGetType(property.ItemType, out var nestedListType)) {
                             WriteResourceProperties(property.ItemType, nestedListType, indentation + 1, startList: true);
                         } else {
-                            AddError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                            LogError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
                         }
                         break;
                     case "Map":
@@ -414,14 +414,14 @@ namespace LambdaSharp.Tool.Cli {
                             AddLine($"String:");
                             WriteResourceProperties(property.ItemType, nestedMapType, indentation + 2, startList: true);
                         } else {
-                            AddError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
+                            LogError($"could not find property type '{resourceTypeName}.{property.ItemType}'");
                         }
                         break;
                     default:
                         if(TryGetType(property.Type, out var nestedType)) {
                             WriteResourceProperties(property.Type, nestedType, indentation, startList: false);
                         } else {
-                            AddError($"could not find property type '{resourceTypeName}.{property.Type}'");
+                            LogError($"could not find property type '{resourceTypeName}.{property.Type}'");
                         }
                         break;
                     }
@@ -451,7 +451,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // parse yaml module definition
             if(!File.Exists(moduleFile)) {
-                AddError($"could not find module '{moduleFile}'");
+                LogError($"could not find module '{moduleFile}'");
                 return;
             }
 

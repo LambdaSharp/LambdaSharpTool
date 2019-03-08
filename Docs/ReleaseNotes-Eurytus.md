@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5.0.2) - 2019-03-01
+# λ# - Eurytus (v0.5.0.3) - 2019-03-08
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -484,6 +484,16 @@ There wre some additional internal changes listed here for sake of completeness:
 * The `ModuleName` and `ModuleVersion` module output values have been combined into a single `Module` output value.
 
 ## Fixes
+
+### (v0.5.0.3) - 2019-03-08
+
+* [Added support for `!GetConfig`, `!GetParam`, and `!GetEnv` in module parameters file](https://github.com/LambdaSharp/LambdaSharpTool/issues/96)
+* [Fixed issue where the `DefaultSecretsKey` was not properly set for the functions in `LambdaSharp.Core`](https://github.com/LambdaSharp/LambdaSharpTool/issues/105)
+* [Fixed error in `LambdaSharp.Core` log processor](https://github.com/LambdaSharp/LambdaSharpTool/issues/106)
+* [Use ANSI colors for CloudFormation updates](https://github.com/LambdaSharp/LambdaSharpTool/issues/107)
+* [Apply CFN-spec corrections from `aws-cloudformation/cfn-python-lint`](https://github.com/LambdaSharp/LambdaSharpTool/issues/108)
+* [Added `LambdaSharp.Core` module documentation](https://github.com/LambdaSharp/LambdaSharpTool/issues/109)
+* [Added `LambdaSharp.S3.Subscriber` module documentation](https://github.com/LambdaSharp/LambdaSharpTool/issues/110)
 
 ### (v0.5.0.2) - 2019-03-01
 

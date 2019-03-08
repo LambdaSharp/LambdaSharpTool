@@ -1,4 +1,4 @@
-![λ#](LambdaSharp_v2_small.png)
+![λ#](LambdaSharpLogo.png)
 
 # λ# - Cebes (v0.3) - 2018-09-19
 

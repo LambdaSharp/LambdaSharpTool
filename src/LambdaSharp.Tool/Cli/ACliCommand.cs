@@ -47,6 +47,9 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
 
+        public static CommandOption AddNoAnsiOption(CommandLineApplication cmd)
+            => cmd.Option("--no-ansi", "Disable ANSI terminal output", CommandOptionType.NoValue);
+
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             string result;
             var assembly = typeof(ACliCommand).Assembly;
@@ -83,7 +86,7 @@ namespace LambdaSharp.Tool.Cli {
                     awsAccountId = awsAccountId ?? response.Account;
                     awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
                 } catch(Exception e) {
-                    AddError("unable to determine the AWS Account Id and Region", e);
+                    LogError("unable to determine the AWS Account Id and Region", e);
                     return null;
                 }
             }
@@ -120,14 +123,14 @@ namespace LambdaSharp.Tool.Cli {
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var moduleBucketNamesOption = cmd.Option("--module-bucket-names <NAMES>", "(test only) Comma-separated list of S3 Bucket names used to find modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var runtimeVersionOption = cmd.Option("--core-version <VERSION>", "(test only) LambdaSharp Core version (default: read from deployment tier)", CommandOptionType.SingleValue);
+            var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
             deploymentNotificationTopicOption.ShowInHelpText = false;
             moduleBucketNamesOption.ShowInHelpText = false;
-            runtimeVersionOption.ShowInHelpText = false;
+            tierVersionOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
@@ -145,9 +148,9 @@ namespace LambdaSharp.Tool.Cli {
                 if(requireDeploymentTier) {
                     tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     if(string.IsNullOrEmpty(tier)) {
-                        AddError("missing deployment tier name");
+                        LogError("missing deployment tier name");
                     } else if(tier == "Default") {
-                        AddError("deployment tier cannot be 'Default' because it is a reserved name");
+                        LogError("deployment tier cannot be 'Default' because it is a reserved name");
                     }
                 }
 
@@ -176,7 +179,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // initialize LambdaSharp deployment values
-                    var runtimeVersion = runtimeVersionOption.Value();
+                    var tierVersion = tierVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
                     var moduleBucketNames = moduleBucketNamesOption.Value()?.Split(',');
@@ -186,7 +189,7 @@ namespace LambdaSharp.Tool.Cli {
                         ToolVersion = Version,
                         ToolProfile = toolProfile,
                         ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
-                        CoreVersion = (runtimeVersion != null) ? VersionInfo.Parse(runtimeVersion) : null,
+                        TierVersion = (tierVersion != null) ? VersionInfo.Parse(tierVersion) : null,
                         Tier = tier,
                         AwsRegion = awsAccount.GetValueOrDefault().Region,
                         AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
@@ -199,7 +202,7 @@ namespace LambdaSharp.Tool.Cli {
                         S3Client = s3Client
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
-                    AddError("AWS profile configuration is missing a region specifier");
+                    LogError("AWS profile configuration is missing a region specifier");
                     return null;
                 }
             };
@@ -227,7 +230,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         failed:
             var pairs = Enum.GetValues(typeof(T)).Cast<int>().Zip(Enum.GetNames(typeof(T)).Cast<string>(), (value, name) => $"{value}={name.ToLowerInvariant()}");
-            AddError($"value for {option.LongName} must be one of {string.Join(", ", pairs)}");
+            LogError($"value for {option.LongName} must be one of {string.Join(", ", pairs)}");
             result = defaultvalue;
             return false;
         }
@@ -248,11 +251,11 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
                     if(!VersionInfo.TryParse(lambdaSharpToolVersionText, out var lambdaSharpToolVersion)) {
-                        AddError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        LogError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
                     if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion)) {
-                        AddError($"LambdaSharp CLI configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
+                        LogError($"LambdaSharp CLI configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
                     settings.DeploymentBucketName = settings.DeploymentBucketName ?? GetLambdaSharpToolSetting("DeploymentBucketName");
@@ -277,7 +280,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         protected async Task PopulateRuntimeSettingsAsync(Settings settings) {
-            if((settings.CoreVersion == null) && (settings.Tier != null)) {
+            if((settings.TierVersion == null) && (settings.Tier != null)) {
                 try {
 
                     // check version of base LambadSharp module
@@ -286,9 +289,11 @@ namespace LambdaSharp.Tool.Cli {
                     });
                     var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                     if(deployedOutputs != null) {
-                        var deployed = deployedOutputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+
+                        // read core module version
+                        var deployedModule = deployedOutputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
                         if(
-                            deployed.TryParseModuleDescriptor(
+                            deployedModule.TryParseModuleDescriptor(
                                 out string deployedOwner,
                                 out string deployedName,
                                 out VersionInfo deployedVersion,
@@ -297,9 +302,11 @@ namespace LambdaSharp.Tool.Cli {
                             && (deployedOwner == "LambdaSharp")
                             && (deployedName == "Core")
                         ) {
-                            settings.CoreVersion = deployedVersion;
-                            return;
+                            settings.TierVersion = deployedVersion;
                         }
+
+                        // read core module default secret key
+                        settings.TierDefaultSecretKey = deployedOutputs.FirstOrDefault(output => output.OutputKey == "DefaultSecretKey")?.OutputValue;
                     }
                 } catch(AmazonCloudFormationException) {
 
@@ -326,13 +333,13 @@ namespace LambdaSharp.Tool.Cli {
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
                     if(showWarningOnFailure) {
-                        AddWarning($"unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
+                        LogWarn($"unable to get git-sha `git rev-parse HEAD` failed with exit code = {process.ExitCode}");
                     }
                     gitSha = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
-                    AddWarning("git is not installed; skipping git-sha detection");
+                    LogWarn("git is not installed; skipping git-sha detection");
                 }
             }
             return gitSha;
@@ -356,13 +363,13 @@ namespace LambdaSharp.Tool.Cli {
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
                     if(showWarningOnFailure) {
-                        AddWarning($"unable to get git branch `git rev-parse --abbrev-ref HEAD` failed with exit code = {process.ExitCode}");
+                        LogWarn($"unable to get git branch `git rev-parse --abbrev-ref HEAD` failed with exit code = {process.ExitCode}");
                     }
                     gitBranch = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
-                    AddWarning("git is not installed; skipping git branch detection");
+                    LogWarn("git is not installed; skipping git branch detection");
                 }
             }
             return gitBranch;

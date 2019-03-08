@@ -45,6 +45,33 @@ namespace LambdaSharp.Tool.Internal {
             "UPDATE_ROLLBACK_FAILED"
         };
 
+
+
+        private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
+            ["CREATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["CREATE_FAILED"] = AnsiTerminal.Red,
+            ["CREATE_COMPLETE"] = AnsiTerminal.Green,
+
+            ["ROLLBACK_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
+            ["ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
+            ["ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
+
+            ["DELETE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["DELETE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
+            ["DELETE_COMPLETE"] = AnsiTerminal.Green,
+
+            ["UPDATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_COMPLETE"] = AnsiTerminal.Green,
+
+            ["UPDATE_ROLLBACK_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
+            ["UPDATE_ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
+            ["UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
+            ["UPDATE_ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
+
+            ["REVIEW_IN_PROGRESS"] = ""
+        };
+
         //--- Extension Methods ---
         public async static Task<Dictionary<string, KeyValuePair<string, string>>> GetAllParametersByPathAsync(this IAmazonSimpleSystemsManagement client, string path) {
             var parametersRequest = new GetParametersByPathRequest {
@@ -94,6 +121,8 @@ namespace LambdaSharp.Tool.Internal {
             var request = new DescribeStackEventsRequest {
                 StackName = stackName
             };
+            var eventList = new List<StackEvent>();
+            var ansiLinesPrinted = 0;
 
             // iterate as long as the stack is being created/updated
             var active = true;
@@ -128,7 +157,7 @@ namespace LambdaSharp.Tool.Internal {
 
                 // report only on new events
                 foreach(var evt in events.Where(evt => !seenEventIds.Contains(evt.EventId))) {
-                    Console.WriteLine($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                    UpdateEvent(evt);
                     if(!seenEventIds.Add(evt.EventId)) {
 
                         // we found an event we already saw in the past, no point in looking at more events
@@ -142,6 +171,7 @@ namespace LambdaSharp.Tool.Internal {
                         break;
                     }
                 }
+                RenderEvents();
             }
 
             // describe stack and report any output values
@@ -161,6 +191,40 @@ namespace LambdaSharp.Tool.Internal {
                 var fullName = awsType;
                 typeNameMappings?.TryGetValue(awsType, out fullName);
                 return fullName ?? awsType;
+            }
+
+            void RenderEvents() {
+                if(Settings.UseAnsiConsole) {
+                    if(ansiLinesPrinted > 0) {
+                        Console.Write(AnsiTerminal.MoveUp(ansiLinesPrinted));
+                    }
+                    foreach(var evt in eventList) {
+                        if(_ansiStatusColorCodes.TryGetValue(evt.ResourceStatus, out var ansiColor)) {
+                            Console.Write(ansiColor);
+                            Console.Write($"{evt.ResourceStatus,-35}");
+                            Console.Write(AnsiTerminal.Reset);
+                            Console.Write($" {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                        } else {
+                            Console.Write($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                        }
+                        Console.Write(AnsiTerminal.ClearEndOfLine);
+                        Console.WriteLine();
+                    }
+                    ansiLinesPrinted = eventList.Count;
+                }
+            }
+
+            void UpdateEvent(StackEvent evt) {
+                if(Settings.UseAnsiConsole) {
+                    var index = eventList.FindIndex(e => e.LogicalResourceId == evt.LogicalResourceId);
+                    if(index < 0) {
+                        eventList.Add(evt);
+                    } else {
+                        eventList[index] = evt;
+                    }
+                } else {
+                    Console.WriteLine($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                }
             }
         }
 

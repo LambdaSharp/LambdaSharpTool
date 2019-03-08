@@ -42,13 +42,13 @@ namespace LambdaSharp.Tool.Cli {
         protected static bool HasErrors => Settings.HasErrors;
 
         //--- Class Methods ---
-        protected static void AddWarning(string message)
-            => Settings.AddWarning(message);
+        protected static void LogWarn(string message)
+            => Settings.LogWarn(message);
 
-        protected static void AddError(string message, Exception exception = null)
-            => Settings.AddError(message, exception);
+        protected static void LogError(string message, Exception exception = null)
+            => Settings.LogError(message, exception);
 
-        protected static void AddError(Exception exception)
-            => Settings.AddError(exception);
+        protected static void LogError(Exception exception)
+            => Settings.LogError(exception);
     }
 }
