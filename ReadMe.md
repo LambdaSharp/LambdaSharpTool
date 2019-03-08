@@ -1,12 +1,14 @@
-﻿![λ#](Docs/LambdaSharp_v2_small.png)
+﻿![λ#](Docs/LambdaSharpLogo.png)
 
-# LambdaSharp (v0.5.0.2) - Serverless .NET on AWS
+# LambdaSharp (v0.5.0.3) - Serverless .NET on AWS
 
 **[Read what's new in the 0.5 "Eurytus" release.](Docs/ReleaseNotes-Eurytus.md)**
 
-λ# is a CLI and a framework for rapid serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
+λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
-The objective of λ# is to accelerate the innovation velocity of serverless solutions. It allows developers to focus on solving business problems while deploying scalable, observable solutions that follow DevOps best practices.
+The objective of λ# is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
+
+![λ# CLI](Docs/LashAnsiColor-WIP.gif)
 
 ## Install λ# CLI
 
@@ -95,6 +97,7 @@ namespace MySampleModule.MyFunction {
 1. [λ# — v0.5 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-news-0-5-rc1-released-906bdfc059a)
 1. [λ# — v0.5.0.1 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-1-release-notes-f07966ace1c5)
 1. [λ# — v0.5.0.2 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-2-release-notes-69458b35bddd)
+1. [λ# — v0.5.0.3 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-3-release-notes-9d27082609c5)
 1. [λ# — Constructors/Destructors for CloudFormation](https://medium.com/@wikinaut/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
 
 ### Samples
@@ -111,12 +114,15 @@ namespace MySampleModule.MyFunction {
 1. [λ# Module Global Variables](Docs/Module-Global-Variables.md)
 1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 1. Modules
-    1. [LambdaSharp.S3.IO](Docs/LambdaSharp-S3-IO.md)
-    1. [LambdaSharp.Twitter.Query](Docs/LambdaSharp-Twitter-Query.md)
+    1. [LambdaSharp.Core](Modules/LambdaSharp.Core/ReadMe.md)
+    1. [LambdaSharp.S3.IO](Modules/LambdaSharp.S3.IO/ReadMe.md)
+    1. [LambdaSharp.S3.Subscriber](Modules/LambdaSharp.S3.Subscriber/ReadMe.md)
+    1. [LambdaSharp.Twitter.Query](Modules/LambdaSharp.Twitter.Query/ReadMe.md)
 1. Resource Types
-    1. [LambdaSharp::S3::EmptyBucket](Docs/LambdaSharp-S3-EmptyBucket.md)
-    1. [LambdaSharp::S3::Unzip](Docs/LambdaSharp-S3-Unzip.md)
-    1. [LambdaSharp::S3::WriteJson](Docs/LambdaSharp-S3-WriteJson.md)
+    1. [LambdaSharp::S3::EmptyBucket](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-EmptyBucket.md)
+    1. [LambdaSharp::S3::Subscription](Modules/LambdaSharp.S3.Subscriber/Docs/LambdaSharp-S3-Subscription.md)
+    1. [LambdaSharp::S3::Unzip](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-Unzip.md)
+    1. [LambdaSharp::S3::WriteJson](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-WriteJson.md)
 
 ### Reference
 

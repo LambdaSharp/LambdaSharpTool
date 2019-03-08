@@ -1,4 +1,4 @@
-![λ#](../../../Docs/LambdaSharp_v2_small.png)
+![λ#](../../../Docs/LambdaSharpLogo.png)
 
 # LambdaSharp CLI - Deploy Command
 
@@ -84,6 +84,9 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
 
+<dt><code>--no-ansi</code></dt>
+<dd>Disable ANSI terminal output</dd>
+
 </dl>
 
 ## Examples
@@ -135,7 +138,7 @@ Done (finished: 1/17/2019 4:12:13 PM; duration: 00:02:23.5535481)
 
 __Using PowerShell/Bash:__
 ```bash
-lash deploy Demo/bin/manifest.json
+lash deploy Demo/bin/cloudformation.json
 ```
 
 Output:
@@ -187,5 +190,82 @@ Secrets:
 
 __Using PowerShell/Bash:__
 ```bash
-lash deploy --inputs inputs.yml Demo
+lash deploy --parameters params.yml Demo
+```
+
+### Use lookup functions in parameter file
+
+The following functions can be used in parameter files to dynamically resolve values during the `deploy` phase.
+
+#### !GetConfig
+
+The `!GetConfig` function takes two arguments: the location of a JSON file and a JSON-path expression. The CLI loads the JSON file and finds the value at the JSON-path expression. The `!GetConfig` is recommended when there is a central configuration file that is used for deploying multiple modules.
+
+##### Syntax
+```yaml
+!GetConfig [ json-file-path, json-path-expression ]
+```
+
+##### Parameters
+<dl>
+
+<dt><code>json-file-path</code></dt>
+<dd>
+The path to the JSON file, relative to the location of the parameter files.
+</dd>
+
+<dt><code>json-path-expression</code></dt>
+<dd>
+A JSON-path expression to locate to desired value in the JSON file. A good description of the syntax and operators can be found in <a href="https://github.com/json-path/JsonPath#jayway-jsonpath">this repository</a>.
+</dd>
+
+</dl>
+
+#### !GetEnv
+
+The `!GetEnv` function is similar, but reads a value from the system environment variables instead.
+
+##### Syntax
+```yaml
+!GetEnv environment-variable
+```
+
+##### Parameters
+<dl>
+
+<dt><code>environment-variable</code></dt>
+<dd>
+The name of an environment variable.
+</dd>
+
+</dl>
+
+#### !GetParam
+
+The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html).
+
+
+##### Syntax
+```yaml
+!GetParam parameter-store-path
+```
+
+##### Parameters
+<dl>
+
+<dt><code>parameter-store-path</code></dt>
+<dd>
+The path to a value in the <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html">AWS Parameter Store</a>.
+
+If the value is stored as a SecureString, it is automatically decrypted when retrieved and re-encrypted with the <code>DefaultSecretsKey</code> for the deployment tier.
+</dd>
+
+</dl>
+
+#### Examples
+
+```yaml
+ApiKey: !GetConfig [ '../global.json', Services.SomeApi.ApiKey ]
+ReplyEmail: !GetParam /Company/EmailAddress
+Language: !GetEnv LANG
 ```

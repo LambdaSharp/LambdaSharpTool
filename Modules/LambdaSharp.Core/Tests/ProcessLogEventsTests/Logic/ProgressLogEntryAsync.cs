@@ -61,8 +61,8 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
                 return Task.CompletedTask;
             }
 
-            public void WriteLine(string message) {
-                _output.WriteLine(message);
+            public void LogProcessingError(Exception exception) {
+                _output.WriteLine(exception.ToString());
             }
         }
 

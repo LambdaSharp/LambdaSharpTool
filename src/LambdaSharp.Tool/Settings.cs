@@ -60,6 +60,7 @@ namespace LambdaSharp.Tool {
 
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
+        public static bool UseAnsiConsole = true;
         private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
 
         //--- Class Properties ---
@@ -89,21 +90,22 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        public static void AddWarning(string message)
+        public static void LogWarn(string message)
             => Console.WriteLine("WARNING: " + message);
 
-        public static void AddError(string message, Exception exception = null)
+        public static void LogError(string message, Exception exception = null)
             => _errors.Add((Message: message, Exception: exception));
 
-        public static void AddError(Exception exception)
-            => AddError($"internal error: {exception.Message}", exception);
+        public static void LogError(Exception exception)
+            => LogError($"internal error: {exception.Message}", exception);
 
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
         public string ToolProfile { get; set; }
         public bool ToolProfileExplicitlyProvided { get; set; }
-        public VersionInfo CoreVersion { get; set; }
         public string Tier { get; set; }
+        public VersionInfo TierVersion { get; set; }
+        public string TierDefaultSecretKey { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string DeploymentBucketName { get; set; }

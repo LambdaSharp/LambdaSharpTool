@@ -1,4 +1,4 @@
-![λ#](LambdaSharp_v2_small.png)
+![λ#](LambdaSharpLogo.png)
 
 # λ# - Brontinus (v0.2) - 2018-08-13
 

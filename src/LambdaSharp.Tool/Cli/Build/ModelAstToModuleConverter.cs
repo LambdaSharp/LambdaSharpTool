@@ -58,13 +58,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(module.Version == null) {
                     version = VersionInfo.Parse("1.0-DEV");
                 } else if(!VersionInfo.TryParse(module.Version, out version)) {
-                    AddError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
+                    LogError("`Version` expected to have format: Major.Minor[.Build[.Revision]]");
                     version = VersionInfo.Parse("0.0");
                 }
 
                 // ensure owner is present
                 if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
-                    AddError("'Module' attribute must have format 'Owner.Name'");
+                    LogError("'Module' attribute must have format 'Owner.Name'");
                 }
 
                 // initialize module
@@ -82,7 +82,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 ForEach("Items", module.Items, ConvertItem);
                 return _builder;
             } catch(Exception e) {
-                AddError(e);
+                LogError(e);
                 return null;
             }
         }
@@ -94,15 +94,15 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void ConvertSecret(int index, string secret) {
             AtLocation($"{index}", () => {
                 if(string.IsNullOrEmpty(secret)) {
-                    AddError($"secret has no value");
+                    LogError($"secret has no value");
                 } else if(secret.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
-                    AddError($"cannot grant permission to decrypt with aws/ssm");
+                    LogError($"cannot grant permission to decrypt with aws/ssm");
                 } else if(secret.StartsWith("arn:")) {
                     if(!Regex.IsMatch(secret, $"arn:aws:kms:{Settings.AwsRegion}:{Settings.AwsAccountId}:key/[a-fA-F0-9\\-]+")) {
-                        AddError("secret key must be a valid ARN for the current region and account ID");
+                        LogError("secret key must be a valid ARN for the current region and account ID");
                     }
                 } else if(!Regex.IsMatch(secret, SECRET_ALIAS_PATTERN)) {
-                    AddError("secret key must be a valid alias");
+                    LogError("secret key must be a valid alias");
                 }
                 _builder.AddSecret(secret);
             });
@@ -111,7 +111,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void ConvertDependency(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
                 if(!dependency.Module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
-                    AddError("invalid module reference format");
+                    LogError("invalid module reference format");
                     return;
                 }
                 _builder.AddDependency(
@@ -143,7 +143,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var api = source.Api.Trim();
                     var pathSeparatorIndex = api.IndexOfAny(new[] { ':', ' ' });
                     if(pathSeparatorIndex < 0) {
-                        AddError("invalid api format");
+                        LogError("invalid api format");
                         return new ApiGatewaySource {
                             Method = "ANY",
                             Path = new string[0],
@@ -389,14 +389,14 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // validation
                     if(node.Module == null) {
-                        AddError("missing 'Module' attribute");
+                        LogError("missing 'Module' attribute");
                     } else if(!node.Module.TryParseModuleDescriptor(
                         out string moduleOwner,
                         out string moduleName,
                         out VersionInfo moduleVersion,
                         out string moduleBucketName
                     )) {
-                        AddError("invalid value for 'Module' attribute");
+                        LogError("invalid value for 'Module' attribute");
                     } else {
 
                         // create nested module item
@@ -444,10 +444,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                             }
                             files = files.OrderBy(file => file.Key).ToList();
                         } else {
-                            AddError($"cannot find folder '{Path.GetRelativePath(Settings.WorkingDirectory, folder)}'");
+                            LogError($"cannot find folder '{Path.GetRelativePath(Settings.WorkingDirectory, folder)}'");
                         }
                     } else {
-                        AddError("missing 'Files' attribute");
+                        LogError("missing 'Files' attribute");
                     }
 
                     // create package resource item
@@ -540,20 +540,20 @@ namespace LambdaSharp.Tool.Cli.Build {
                                                 if(secondLevel.Value is string secondLevelValue) {
                                                     secondLevelResults[(string)secondLevel.Key] = secondLevelValue;
                                                 } else {
-                                                    AddError("invalid value");
+                                                    LogError("invalid value");
                                                 }
                                             });
                                         }
                                     } else {
-                                        AddError("invalid value");
+                                        LogError("invalid value");
                                     }
                                 });
                             }
                         });
                     } else if(node.Value != null) {
-                        AddError("invalid value for 'Value' attribute");
+                        LogError("invalid value for 'Value' attribute");
                     } else {
-                        AddError("missing 'Value' attribute");
+                        LogError("missing 'Value' attribute");
                     }
                     _builder.AddMapping(
                         parent: parent,
@@ -577,7 +577,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Validate((properties?.Count() ?? 0) > 0, "empty or invalid 'Properties' section");
                         });
                     } else {
-                        AddError("missing 'Properties' section");
+                        LogError("missing 'Properties' section");
                     }
 
                     // read attributes
@@ -590,7 +590,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Validate((attributes?.Count() ?? 0) > 0, "empty or invalid 'Attributes' section");
                         });
                     } else {
-                        AddError("missing 'Attributes' section");
+                        LogError("missing 'Attributes' section");
                     }
 
                     // create resource type
@@ -616,7 +616,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             void ValidateARN(object arn) {
                 if((arn is string text) && !text.StartsWith("arn:") && (text != "*")) {
-                    AddError($"resource name must be a valid ARN or wildcard: {arn}");
+                    LogError($"resource name must be a valid ARN or wildcard: {arn}");
                 }
             }
         }
@@ -647,7 +647,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         AtLocation("BatchSize", () => {
                             if(source.BatchSize is string batchSizeText) {
                                 if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 10)) {
-                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                    LogError($"invalid BatchSize value: {source.BatchSize}");
                                 }
                             }
                         });
@@ -660,7 +660,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         AtLocation("BatchSize", () => {
                             if(source.BatchSize is string batchSizeText) {
                                 if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 100)) {
-                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                    LogError($"invalid BatchSize value: {source.BatchSize}");
                                 }
                             }
                         });
@@ -672,7 +672,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 case null:
                                     break;
                                 default:
-                                    AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                    LogError($"invalid StartingPosition value: {source.StartingPosition}");
                                     break;
                                 }
                             }
@@ -683,7 +683,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         AtLocation("BatchSize", () => {
                             if(source.BatchSize is string batchSizeText) {
                                 if(!int.TryParse(batchSizeText, out var batchSize) || (batchSize < 1) || (batchSize > 100)) {
-                                    AddError($"invalid BatchSize value: {source.BatchSize}");
+                                    LogError($"invalid BatchSize value: {source.BatchSize}");
                                 }
                             }
                         });
@@ -695,13 +695,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 case null:
                                     break;
                                 default:
-                                    AddError($"invalid StartingPosition value: {source.StartingPosition}");
+                                    LogError($"invalid StartingPosition value: {source.StartingPosition}");
                                     break;
                                 }
                             }
                         });
                     } else {
-                        AddError("unknown source type");
+                        LogError("unknown source type");
                     }
                 });
             }
@@ -728,14 +728,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .ToArray();
                 switch(matches.Length) {
                 case 0:
-                    AddError($"unknown {itemName} type");
+                    LogError($"unknown {itemName} type");
                     return null;
                 case 1:
 
                     // good to go
                     break;
                 default:
-                    AddError($"ambiguous {itemName} type: {string.Join(", ", matches.Select(kv => kv.ItemType))}");
+                    LogError($"ambiguous {itemName} type: {string.Join(", ", matches.Select(kv => kv.ItemType))}");
                     return null;
                 }
 
@@ -755,12 +755,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .OrderBy(field => field)
                     .ToArray();
                 if(invalidFields.Any()) {
-                    AddError($"'{string.Join(", ", invalidFields)}' cannot be used with '{match.ItemType}'");
+                    LogError($"'{string.Join(", ", invalidFields)}' cannot be used with '{match.ItemType}'");
                 }
 
                 // check if the matched item was expected
                 if(!expectedTypes.Contains(match.ItemType)) {
-                    AddError($"unexpected node type: {match.ItemType}");
+                    LogError($"unexpected node type: {match.ItemType}");
                     return null;
                 }
                 return match.ItemType;
@@ -786,7 +786,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     $"{_builder.Name}.{functionName}"
                 }.FirstOrDefault(name => Directory.Exists(Path.Combine(Settings.WorkingDirectory, name)));
                 if(folderName == null) {
-                    AddError($"could not locate function directory");
+                    LogError($"could not locate function directory");
                     return;
                 }
 
@@ -808,7 +808,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }.FirstOrDefault(path => File.Exists(path));
             }
             if((project == null) || !File.Exists(project)) {
-                AddError("could not locate the function project");
+                LogError("could not locate the function project");
                 return;
             }
             switch(Path.GetExtension((string)project).ToLowerInvariant()) {
@@ -819,7 +819,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 DetermineJavascriptFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
                 break;
             default:
-                AddError("could not determine the function language");
+                LogError("could not determine the function language");
                 return;
             }
         }
@@ -854,7 +854,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     runtime = "dotnetcore2.1";
                     break;
                 default:
-                    AddError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
+                    LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
                     break;
                 }
             }
@@ -865,7 +865,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(rootNamespace != null) {
                     handler = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync";
                 } else {
-                    AddError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
+                    LogError("could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
                 }
             }
         }
@@ -915,7 +915,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             result.Add((string)entry.Key, entry.Value);
                         }
                     } else {
-                        AddError("invalid map");
+                        LogError("invalid map");
                     }
                 });
             }

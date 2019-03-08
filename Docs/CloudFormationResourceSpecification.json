@@ -2276,7 +2276,7 @@
           "Type": "List"
         },
         "DefaultCacheBehavior": {
-          "Required": false,
+          "Required": true,
           "Type": "DefaultCacheBehavior"
         },
         "DefaultRootObject": {
@@ -2301,7 +2301,7 @@
         },
         "Origins": {
           "ItemType": "Origin",
-          "Required": false,
+          "Required": true,
           "Type": "List"
         },
         "PriceClass": {
@@ -2587,7 +2587,6 @@
     "AWS::CloudWatch::Alarm.Metric": {
       "Properties": {
         "Dimensions": {
-          "DuplicatesAllowed": true,
           "ItemType": "Dimension",
           "Required": false,
           "Type": "List"
@@ -3698,7 +3697,7 @@
       "Properties": {
         "ExternalId": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         },
         "SnsCallerArn": {
           "PrimitiveType": "String",
@@ -4649,14 +4648,11 @@
         }
       }
     },
-    "AWS::EC2::LaunchTemplate.CapacityReservationPreference": {
-      "PrimitiveType": "String"
-    },
     "AWS::EC2::LaunchTemplate.CapacityReservationSpecification": {
       "Properties": {
         "CapacityReservationPreference": {
-          "Required": false,
-          "Type": "CapacityReservationPreference"
+          "PrimitiveType": "String",
+          "Required": false
         },
         "CapacityReservationTarget": {
           "Required": false,
@@ -13063,6 +13059,30 @@
         }
       }
     },
+    "AWS::StepFunctions::Activity.TagsEntry": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::StepFunctions::StateMachine.TagsEntry": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::WAF::ByteMatchSet.ByteMatchTuple": {
       "Properties": {
         "FieldToMatch": {
@@ -13427,16 +13447,16 @@
       "Properties": {
         "Key": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "Value": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         }
       }
     }
   },
-  "ResourceSpecificationVersion": "2.25.0",
+  "ResourceSpecificationVersion": "2.26.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Properties": {
@@ -16058,7 +16078,7 @@
         },
         "Version": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     },
@@ -17743,7 +17763,7 @@
       "Properties": {
         "CidrBlock": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "Egress": {
           "PrimitiveType": "Boolean",
@@ -24198,8 +24218,9 @@
     "AWS::ServiceDiscovery::Instance": {
       "Properties": {
         "InstanceAttributes": {
-          "PrimitiveType": "Map",
-          "Required": true
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "Map"
         },
         "InstanceId": {
           "PrimitiveType": "String",
@@ -24606,6 +24627,36 @@
         }
       }
     },
+    "AWS::SSM::MaintenanceWindowTarget": {
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "OwnerInformation": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResourceType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Targets": {
+          "ItemType": "Target",
+          "PrimitiveType": "String",
+          "Required": true,
+          "Type": "List"
+        },
+        "WindowId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::SSM::MaintenanceWindowTask": {
       "Properties": {
         "Description": {
@@ -24748,6 +24799,11 @@
           "ItemType": "PatchSource",
           "Required": false,
           "Type": "List"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -24789,6 +24845,11 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "ItemType": "TagsEntry",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -24810,6 +24871,11 @@
         "StateMachineName": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Tags": {
+          "ItemType": "TagsEntry",
+          "Required": false,
+          "Type": "List"
         }
       }
     },

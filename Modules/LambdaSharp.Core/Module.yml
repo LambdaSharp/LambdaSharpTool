@@ -18,7 +18,7 @@
 # limitations under the License.
 
 Module: LambdaSharp.Core
-Version: 0.5
+Version: 0.5.0.1
 Description: LambdaSharp Core Resources and Services
 Pragmas:
   - no-core-version-check
@@ -57,13 +57,17 @@ Items:
     Section: LambdaSharp Tier Settings
     Label: Size of the Logging stream buffer (in hours)
     Description: Retention period (hours)
+    Type: Number
     Default: 24
+    MinValue: 1
 
   - Parameter: LoggingStreamShardCount
     Section: LambdaSharp Tier Settings
     Label: Number of Kinesis shards for the logging streams
     Description: Number of Kinesis shards
+    Type: Number
     Default: 1
+    MinValue: 1
 
   - Parameter: DefaultSecretKey
     Scope: public
@@ -98,11 +102,14 @@ Items:
     Label: Enabled rotating KMS key automatically every 365 days
     Description: Default key rotation enabled
     Default: false
+    AllowedValues:
+      - true
+      - false
 
   # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
   - Resource: LoggingStreamRole
     Scope: public
-    Description: Role for writing CloudWatch logs to the Kinesis stream
+    Description: Role used by CloudWatch logs to write to the Kinesis stream
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -244,12 +251,12 @@ Items:
 
       - Name: FunctionMaxMemory
         Description: Max memory for module function
-        Type: String
+        Type: Number
         Required: true
 
       - Name: FunctionMaxDuration
         Description: Max duration for module function
-        Type: String
+        Type: Number
         Required: true
 
       - Name: FunctionPlatform

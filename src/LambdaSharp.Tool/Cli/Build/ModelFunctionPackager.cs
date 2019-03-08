@@ -175,7 +175,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
                 break;
             default:
-                AddError("could not determine the function language");
+                LogError("could not determine the function language");
                 return;
             }
         }
@@ -215,7 +215,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 )
                 .ToList();
             if(obsoleteNodes.Any()) {
-                AddWarning($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Settings.WorkingDirectory, function.Project)}");
+                LogWarn($"removing obsolete AWS Lambda Tools extension from {Path.GetRelativePath(Settings.WorkingDirectory, function.Project)}");
                 foreach(var obsoleteNode in obsoleteNodes) {
                     var parent = obsoleteNode.Parent;
 
@@ -242,17 +242,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                         var library = include.Attribute("Include").Value;
                         var libraryVersionText = include.Attribute("Version")?.Value;
                         if(libraryVersionText == null) {
-                            AddError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
+                            LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
                         } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
                             if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
-                                AddError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
-                                AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
                         } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
-                            AddError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                            LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
-                            AddError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                            LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                     if(Settings.HasErrors) {
@@ -266,7 +266,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // build project with AWS dotnet CLI lambda tool
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory)) {
-                AddError("`dotnet lambda package` command failed");
+                LogError("`dotnet lambda package` command failed");
                 return;
             }
 
@@ -322,7 +322,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
-                AddError("failed to find the \"dotnet\" executable in path.");
+                LogError("failed to find the \"dotnet\" executable in path.");
                 return false;
             }
             return ProcessLauncher.Execute(
@@ -344,7 +344,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // check if dotnet executable can be found
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
-                AddError("failed to find the \"dotnet\" executable in path.");
+                LogError("failed to find the \"dotnet\" executable in path.");
                 return false;
             }
 
@@ -363,7 +363,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     workingFolder: null,
                     showOutput: false
                 )) {
-                    AddError("`dotnet tool install -g Amazon.Lambda.Tools` command failed");
+                    LogError("`dotnet tool install -g Amazon.Lambda.Tools` command failed");
                     return false;
                 }
 
@@ -375,7 +375,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // check version of installed AWS Lambda Tools extension
             var match = Regex.Match(result, @"\((?<Version>.*)\)");
             if(!match.Success || !VersionInfo.TryParse(match.Groups["Version"].Value, out var version)) {
-                AddWarning("proceeding compilation with unknown version of 'Amazon.Lambda.Tools'; please ensure latest version is installed");
+                LogWarn("proceeding compilation with unknown version of 'Amazon.Lambda.Tools'; please ensure latest version is installed");
                 _dotnetLambdaToolVersionValid = true;
                 return true;
             }
@@ -388,7 +388,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     workingFolder: null,
                     showOutput: false
                 )) {
-                    AddError("`dotnet tool update -g Amazon.Lambda.Tools` command failed");
+                    LogError("`dotnet tool update -g Amazon.Lambda.Tools` command failed");
                     return false;
                 }
             }
@@ -399,7 +399,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private bool ZipWithTool(string zipArchivePath, string zipFolder) {
             var zipTool = ProcessLauncher.ZipExe;
             if(string.IsNullOrEmpty(zipTool)) {
-                AddError("failed to find the \"zip\" utility program in path. This program is required to maintain Linux file permissions in the zip archive.");
+                LogError("failed to find the \"zip\" utility program in path. This program is required to maintain Linux file permissions in the zip archive.");
                 return false;
             }
             return ProcessLauncher.Execute(
@@ -459,7 +459,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             } else {
                 if(!ZipWithTool(zipTempPackage, folder)) {
-                    AddError("`zip` command failed");
+                    LogError("`zip` command failed");
                     return;
                 }
             }
@@ -477,7 +477,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void ValidateEntryPoint(string directory, string handler) {
             var parts = handler.Split("::");
             if(parts.Length != 3) {
-                AddError("'Handler' attribute has invalid value");
+                LogError("'Handler' attribute has invalid value");
                 return;
             }
             try {
@@ -489,19 +489,19 @@ namespace LambdaSharp.Tool.Cli.Build {
                     AssemblyResolver = resolver
                 })) {
                     if(functionAssembly == null) {
-                        AddError("could not load assembly");
+                        LogError("could not load assembly");
                         return;
                     }
                     var functionClassType = functionAssembly.MainModule.GetType(functionClassName);
                     if(functionClassType == null) {
-                        AddError($"could not find type '{functionClassName}' in assembly");
+                        LogError($"could not find type '{functionClassName}' in assembly");
                         return;
                     }
                 again:
                     var functionMethod = functionClassType.Methods.FirstOrDefault(method => method.Name == functionMethodName);
                     if(functionMethod == null) {
                         if(functionClassType.BaseType == null) {
-                            AddError($"could not find method '{functionMethodName}' in type '{functionClassName}'");
+                            LogError($"could not find method '{functionMethodName}' in type '{functionClassName}'");
                             return;
                         }
                         functionClassType = functionClassType.BaseType.Resolve();
@@ -510,9 +510,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             } catch(Exception e) {
                 if(Settings.VerboseLevel >= VerboseLevel.Exceptions) {
-                    AddError(e);
+                    LogError(e);
                 } else {
-                    AddWarning("unable to validate function entry-point due to an internal error");
+                    LogWarn("unable to validate function entry-point due to an internal error");
                 }
             }
         }

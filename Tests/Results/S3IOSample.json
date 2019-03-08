@@ -4,11 +4,13 @@
   "Parameters": {
     "Title": {
       "Type": "String",
-      "Description": "Website title"
+      "Description": "Website title",
+      "Default": "My New Website"
     },
     "Message": {
       "Type": "String",
-      "Description": "Website message"
+      "Description": "Website message",
+      "Default": "Welcome to my new website!"
     },
     "Secrets": {
       "Type": "String",
@@ -44,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B3DAB8076CD0DAF7817AC05D17F0CF86"
+      "Default": "089B78EF2BD15DFABD198143FA93E27C"
     }
   },
   "Resources": {
@@ -246,12 +248,14 @@
             {
               "Name": "Title",
               "Type": "String",
-              "Label": "Website Title"
+              "Label": "Website Title",
+              "Default": "My New Website"
             },
             {
               "Name": "Message",
               "Type": "String",
-              "Label": "Website Message"
+              "Label": "Website Message",
+              "Default": "Welcome to my new website!"
             }
           ]
         },
@@ -274,7 +278,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "B3DAB8076CD0DAF7817AC05D17F0CF86",
+      "Hash": "089B78EF2BD15DFABD198143FA93E27C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

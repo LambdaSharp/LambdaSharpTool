@@ -49,13 +49,13 @@ namespace LambdaSharp.Tool {
             // extract manifest
             var manifest = GetManifest(cloudformation);
             if(manifest == null) {
-                AddError("CloudFormation file does not contain a LambdaSharp manifest");
+                LogError("CloudFormation file does not contain a LambdaSharp manifest");
                 return null;
             }
 
             // validate manifest
             if(manifest.Version != ModuleManifest.CurrentVersion) {
-                AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
                 return null;
             }
             return manifest;
@@ -67,7 +67,7 @@ namespace LambdaSharp.Tool {
             var cloudformationText = await GetS3ObjectContents(bucketName, templatePath);
             if(cloudformationText == null) {
                 if(errorIfMissing) {
-                    AddError($"could not load CloudFormation template from s3://{bucketName}/{templatePath}");
+                    LogError($"could not load CloudFormation template from s3://{bucketName}/{templatePath}");
                 }
                 return null;
             }
@@ -76,13 +76,13 @@ namespace LambdaSharp.Tool {
             var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
             var manifest = GetManifest(cloudformation);
             if(manifest == null) {
-                AddError("CloudFormation file does not contain a LambdaSharp manifest");
+                LogError("CloudFormation file does not contain a LambdaSharp manifest");
                 return null;
             }
 
             // validate manifest
             if(manifest.Version != ModuleManifest.CurrentVersion) {
-                AddError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
                 return null;
             }
             return manifest;
@@ -113,12 +113,7 @@ namespace LambdaSharp.Tool {
                 // find compatible module version
                 return await LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName);
             }
-            return new ModuleLocation {
-                ModuleFullName = $"{moduleOwner}.{moduleName}",
-                ModuleVersion = moduleVersion,
-                ModuleBucketName = moduleBucketName,
-                TemplatePath = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json"
-            };
+            return new ModuleLocation(moduleOwner, moduleName, moduleVersion, moduleBucketName);
         }
 
         public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
@@ -151,12 +146,10 @@ namespace LambdaSharp.Tool {
                 } else if(maxVersion != null) {
                     versionConstraint = $"v{maxVersion} or earlier";
                 }
-                AddError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
+                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
                 return null;
             }
-            return new ModuleLocation(moduleOwner, moduleName, foundVersion, foundBucketName) {
-                TemplatePath = $"{moduleOwner}/Modules/{moduleName}/Versions/{foundVersion}/cloudformation.json"
-            };
+            return new ModuleLocation(moduleOwner, moduleName, foundVersion, foundBucketName);
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {

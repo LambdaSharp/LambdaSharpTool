@@ -275,7 +275,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report)
             => await _snsClient.PublishAsync(_usageTopic, SerializeJson(report));
 
-        void ILogicDependencyProvider.WriteLine(string message)
-            => LogInfo(message);
+        void ILogicDependencyProvider.LogProcessingError(Exception exception)
+            => LogError(exception);
     }
 }

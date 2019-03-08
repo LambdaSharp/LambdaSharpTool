@@ -250,7 +250,7 @@ namespace LambdaSharp.Tool.Model {
                     if(dependency.BucketName == null) {
                         dependency.BucketName = bucketName;
                     } else if(dependency.BucketName != bucketName) {
-                        AddError($"module {moduleFullName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
+                        LogError($"module {moduleFullName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
                     }
                 }
             } else {
@@ -264,12 +264,12 @@ namespace LambdaSharp.Tool.Model {
 
             // validate dependency
             if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && (dependency.MinVersion > dependency.MaxVersion)) {
-                AddError($"module {moduleFullName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
+                LogError($"module {moduleFullName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
                 return;
             }
             if(!Settings.NoDependencyValidation) {
                 if(!moduleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
-                    AddError("invalid module reference");
+                    LogError("invalid module reference");
                     return;
                 }
                 var loader = new ModelManifestLoader(Settings, moduleFullName);
@@ -307,7 +307,7 @@ namespace LambdaSharp.Tool.Model {
                     _secrets.Add(response.KeyMetadata.Arn);
                     return true;
                 } catch(Exception e) {
-                    AddError($"failed to resolve key alias: {textSecret}", e);
+                    LogError($"failed to resolve key alias: {textSecret}", e);
                     return false;
                 }
             } else {
@@ -445,15 +445,15 @@ namespace LambdaSharp.Tool.Model {
 
             // validate module name
             if(!module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
-                AddError("invalid 'Module' attribute");
+                LogError("invalid 'Module' attribute");
             } else {
                 module = $"{moduleOwner}.{moduleName}";
             }
             if(moduleVersion != null) {
-                AddError("'Module' attribute cannot have a version");
+                LogError("'Module' attribute cannot have a version");
             }
             if(moduleBucketName != null) {
-                AddError("'Module' attribute cannot have a source bucket name");
+                LogError("'Module' attribute cannot have a source bucket name");
             }
 
             // create input parameter item
@@ -486,7 +486,7 @@ namespace LambdaSharp.Tool.Model {
             var found = _items.FirstOrDefault(item => item.FullName == import.FullName);
             if(found is ParameterItem existing) {
                 if(existing.Parameter.Default != parameter.Default) {
-                    AddError($"import parameter '{import.FullName}' is already defined with a different binding");
+                    LogError($"import parameter '{import.FullName}' is already defined with a different binding");
                 }
                 import = existing;
             } else {
@@ -538,7 +538,7 @@ namespace LambdaSharp.Tool.Model {
 
             // TODO (2018-09-20, bjorg): add custom resource name validation
             if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
-                AddError($"Resource type '{resourceType}' is already defined.");
+                LogError($"Resource type '{resourceType}' is already defined.");
             }
 
             // add resource type definition
@@ -807,12 +807,12 @@ namespace LambdaSharp.Tool.Model {
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
                         foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
-                            AddError($"missing module parameter '{formalParameter.Name}'");
+                            LogError($"missing module parameter '{formalParameter.Name}'");
                         }
 
                         // validate that all supplied parameters exist
                         foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
-                            AddError($"unknown module parameter '{moduleParameter.Key}'");
+                            LogError($"unknown module parameter '{moduleParameter.Key}'");
                         }
 
                         // inherit dependencies from nested module
@@ -842,7 +842,7 @@ namespace LambdaSharp.Tool.Model {
                         // nothing to do; 'LocateAsync' already reported the error
                     }
                 } else {
-                    AddWarning("unable to validate module parameters");
+                    LogWarn("unable to validate module parameters");
                 }
 
                 // add expected parameters
@@ -858,7 +858,7 @@ namespace LambdaSharp.Tool.Model {
                 if(!moduleParameters.ContainsKey(key)) {
                     moduleParameters.Add(key, value);
                 } else {
-                    AddError($"'{key}' is a reserved attribute and cannot be specified");
+                    LogError($"'{key}' is a reserved attribute and cannot be specified");
                 }
             }
         }
@@ -1152,7 +1152,7 @@ namespace LambdaSharp.Tool.Model {
                 } else if((awsType != null) && ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out var allowedList)) {
                     allowStatements.AddRange(allowedList);
                 } else {
-                    AddError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{awsType ?? "<omitted>"}'");
+                    LogError($"could not find IAM mapping for short-hand '{allowStatement}' on AWS type '{awsType ?? "<omitted>"}'");
                 }
             }
             if(!allowStatements.Any()) {
@@ -1243,7 +1243,7 @@ namespace LambdaSharp.Tool.Model {
             if(_itemsByFullName.TryAdd(item.FullName, item)) {
                 _items.Add(item);
             } else {
-                AddError($"duplicate name '{item.FullName}'");
+                LogError($"duplicate name '{item.FullName}'");
             }
             return item;
         }
@@ -1260,9 +1260,9 @@ namespace LambdaSharp.Tool.Model {
                     if(_dependencies.Values.Any(d => d.Manifest == null)) {
 
                         // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
-                        AddWarning($"unable to validate properties for {awsType}");
+                        LogWarn($"unable to validate properties for {awsType}");
                     } else {
-                        AddError($"unrecognized resource type {awsType}");
+                        LogError($"unrecognized resource type {awsType}");
                     }
                 } else if(properties != null) {
                     var definition = dependency.Manifest.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
@@ -1273,7 +1273,7 @@ namespace LambdaSharp.Tool.Model {
                                 (stringKey != "ServiceToken")
                                 && (stringKey != "ResourceType")
                                 && !definition.Properties.Any(field => field.Name == stringKey)) {
-                                AddError($"unrecognized attribute '{key}' on type {awsType}");
+                                LogError($"unrecognized attribute '{key}' on type {awsType}");
                             }
                         }
                     }
@@ -1289,7 +1289,7 @@ namespace LambdaSharp.Tool.Model {
                     // check that all required properties are defined
                     foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
                         if(currentProperties[property.Key] == null) {
-                            AddError($"missing property '{prefix + property.Key}");
+                            LogError($"missing property '{prefix + property.Key}");
                         }
                     }
                 }
@@ -1297,7 +1297,7 @@ namespace LambdaSharp.Tool.Model {
                 // check that all defined properties exist
                 foreach(DictionaryEntry property in currentProperties) {
                     if(!currentResource.Properties.TryGetValue((string)property.Key, out var propertyType)) {
-                        AddError($"unrecognized property '{prefix + property.Key}'");
+                        LogError($"unrecognized property '{prefix + property.Key}'");
                     } else {
                         switch(propertyType.Type) {
                         case "List": {
@@ -1312,7 +1312,7 @@ namespace LambdaSharp.Tool.Model {
 
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a list
                                 } else if(!(property.Value is IList nestedList)) {
-                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
+                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
                                     ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
@@ -1332,7 +1332,7 @@ namespace LambdaSharp.Tool.Model {
 
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a map
                                 } else if(!(property.Value is IDictionary nestedProperties1)) {
-                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else if(propertyType.ItemType != null) {
                                     ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
                                     ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
@@ -1356,7 +1356,7 @@ namespace LambdaSharp.Tool.Model {
 
                                     // TODO (2019-01-25, bjorg): validate the return type of the function is a map
                                 } else if(!(property.Value is IDictionary nestedProperties2)) {
-                                    AddError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
+                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
                                 } else {
                                     ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out var nestedResource);
                                     ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
@@ -1371,7 +1371,7 @@ namespace LambdaSharp.Tool.Model {
             void ValidateList(string prefix, ResourceType currentResource, IEnumerable<KeyValuePair<string, object>> items) {
                 foreach(var item in items) {
                     if(!(item.Value is IDictionary nestedProperties)) {
-                        AddError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");
+                        LogError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");
                     } else {
                         ValidateProperties(prefix + item.Key + ".", currentResource, nestedProperties);
                     }
@@ -1422,7 +1422,7 @@ namespace LambdaSharp.Tool.Model {
                 resourceType = matches[0];
                 return true;
             default:
-                AddWarning($"ambiguous resource type '{resourceTypeName}'");
+                LogWarn($"ambiguous resource type '{resourceTypeName}'");
                 resourceType = matches[0];
                 return true;
             }

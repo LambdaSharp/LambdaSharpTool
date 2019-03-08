@@ -56,18 +56,6 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
 
-                    // reading module inputs
-                    var inputs = new Dictionary<string, string>();
-                    if(parametersFileOption.HasValue()) {
-                        inputs = CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFileOption.Value());
-                        if(HasErrors) {
-                            return;
-                        }
-                    }
-                    if(HasErrors) {
-                        return;
-                    }
-
                     // determine if we want to install modules from a local check-out
                     await Init(
                         settings,
@@ -78,7 +66,7 @@ namespace LambdaSharp.Tool.Cli {
                         usePublishedOption.HasValue()
                             ? null
                             : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
-                        inputs,
+                        parametersFileOption.Value(),
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
                         promptsAsErrorsOption.HasValue()
@@ -94,7 +82,7 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             VersionInfo version,
             string lambdaSharpPath,
-            Dictionary<string, string> inputs,
+            string parametersFilename,
             bool forcePublish,
             bool promptAllParameters,
             bool promptsAsErrors
@@ -144,7 +132,7 @@ namespace LambdaSharp.Tool.Cli {
                 instanceName: null,
                 allowDataLoos: allowDataLoos,
                 protectStack: protectStack,
-                inputs: inputs,
+                parametersFilename: parametersFilename,
                 forceDeploy: forceDeploy,
                 promptAllParameters: promptAllParameters,
                 promptsAsErrors: promptsAsErrors,

@@ -1,4 +1,4 @@
-![λ#](../../../Docs/LambdaSharp_v2_small.png)
+![λ#](../../../Docs/LambdaSharpLogo.png)
 
 # LambdaSharp CLI - Build Command
 
@@ -51,6 +51,9 @@ lash build
 
 <dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
 <dd>(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)</dd>
+
+<dt><code>--no-ansi</code></dt>
+<dd>Disable ANSI terminal output</dd>
 
 </dl>
 

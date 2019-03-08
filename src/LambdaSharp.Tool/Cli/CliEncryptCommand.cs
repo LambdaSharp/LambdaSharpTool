@@ -57,7 +57,7 @@ namespace LambdaSharp.Tool.Cli {
                     var keyId = keyOption.Value();
                     if(keyId == null) {
                         if(settings.Tier == null) {
-                            AddError("must provide a key id with --key");
+                            LogError("must provide a key id with --key");
                             return;
                         }
                         keyId = $"alias/{settings.Tier}-LambdaSharpDefaultSecretKey";

@@ -1,4 +1,4 @@
-![λ#](LambdaSharp_v2_small.png)
+![λ#](LambdaSharpLogo.png)
 
 # λ# - Damo (v0.4.0.4) - 2019-01-11
 

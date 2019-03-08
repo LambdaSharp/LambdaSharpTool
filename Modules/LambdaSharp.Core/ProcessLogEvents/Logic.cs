@@ -39,7 +39,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         Task SendErrorReportAsync(OwnerMetaData owner, ErrorReport report);
         Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
         ErrorReport DeserializeErrorReport(string jsonReport);
-        void WriteLine(string message);
+        void LogProcessingError(Exception exception);
     }
 
     public class Logic {
@@ -129,9 +129,14 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                     // have handler fill in the rest from the matched error line
                     try {
                         await mapping.HandlerAsync(owner, report, match);
-                    } catch {
-                        report.Message = "Processing log entry failed";
+                    } catch(Exception e) {
+
+                        // set a generic message; it will look ugly, but all the information will be sent in the 'Raw' property
+                        report.Message = $"(unable to parse log message)";
                         await _provider.SendErrorReportAsync(owner, report);
+
+                        // log the processing error separately
+                        _provider.LogProcessingError(e);
                     }
                     return true;
                 }
@@ -147,10 +152,8 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
             report = _provider.DeserializeErrorReport(match.ToString());
-            if((report.Version == "2018-09-27") && (report.Source == "LambdaError")) {
+            if(report.Source == "LambdaError") {
                 await _provider.SendErrorReportAsync(owner, report);
-            } else {
-                throw new Exception();
             }
         }
 

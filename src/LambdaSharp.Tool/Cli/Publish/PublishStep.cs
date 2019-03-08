@@ -40,13 +40,13 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // make sure there is a deployment bucket
             if(Settings.DeploymentBucketName == null) {
-                AddError("missing deployment bucket", new LambdaSharpToolConfigException(Settings.ToolProfile));
+                LogError("missing deployment bucket", new LambdaSharpToolConfigException(Settings.ToolProfile));
                 return null;
             }
 
             // load cloudformation template
             if(!File.Exists(cloudformationFile)) {
-                AddError("folder does not contain a CloudFormation file for publishing");
+                LogError("folder does not contain a CloudFormation file for publishing");
                 return null;
             }
 

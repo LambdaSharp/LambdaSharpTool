@@ -31,6 +31,7 @@ using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
+using JsonDiffPatch;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -38,6 +39,9 @@ using Newtonsoft.Json.Linq;
 namespace LambdaSharp.Tool.Cli {
 
     public class CliUtilCommand : ACliCommand {
+
+        //--- Class Fields ---
+        private static HttpClient _httpClient = new HttpClient();
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
@@ -68,7 +72,7 @@ namespace LambdaSharp.Tool.Cli {
                         // determine destination folder
                         var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
                         if(lambdaSharpFolder == null) {
-                            AddError("LAMBDASHARP environment variable is not defined");
+                            LogError("LAMBDASHARP environment variable is not defined");
                             return;
                         }
                         var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
@@ -106,10 +110,43 @@ namespace LambdaSharp.Tool.Cli {
                 await decompressionStream.CopyToAsync(decompressedMemoryStream);
                 text = Encoding.UTF8.GetString(decompressedMemoryStream.ToArray());
             }
+            var json = JObject.Parse(text);
+
+            // apply patches
+            var jsonPatchesUris = new[] {
+                "https://raw.githubusercontent.com/aws-cloudformation/cfn-python-lint/master/src/cfnlint/data/ExtendedSpecs/all/01_spec_patch.json",
+//                "https://raw.githubusercontent.com/aws-cloudformation/cfn-python-lint/master/src/cfnlint/data/ExtendedSpecs/all/02_parameter_types.json",
+//                "https://raw.githubusercontent.com/aws-cloudformation/cfn-python-lint/master/src/cfnlint/data/ExtendedSpecs/all/03_value_types.json",
+//                "https://raw.githubusercontent.com/aws-cloudformation/cfn-python-lint/master/src/cfnlint/data/ExtendedSpecs/all/04_property_values.json",
+            };
+            foreach(var jsonPatchUri in jsonPatchesUris) {
+
+                // fetch patch document from URI
+                var httpResponse = await _httpClient.SendAsync(new HttpRequestMessage {
+                    RequestUri = new Uri(jsonPatchUri),
+                    Method = HttpMethod.Get
+                });
+                if(!httpResponse.IsSuccessStatusCode) {
+                    LogError($"unable to fetch '{jsonPatchUri}'");
+                    continue;
+                }
+                var patch = PatchDocument.Parse(await httpResponse.Content.ReadAsStringAsync());
+
+                // apply each patch operation individually
+                JToken token = json;
+                var patcher = new JsonPatcher();
+                foreach(var patchOperation in patch.Operations) {
+                    try {
+                        token = patcher.ApplyOperation(patchOperation, token);
+                    } catch {
+                        LogWarn($"unable to apply patch operation to '{patchOperation.Path}'");
+                    }
+                }
+                json = (JObject)token;
+            }
 
             // strip all "Documentation" fields to reduce document size
             Console.WriteLine($"Original size: {text.Length:N0}");
-            var json = JObject.Parse(text);
             json.Descendants()
                 .OfType<JProperty>()
                 .Where(attr => (attr.Name == "Documentation") || (attr.Name == "UpdateType"))
@@ -186,7 +223,7 @@ namespace LambdaSharp.Tool.Cli {
                                 Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
                                 ++deletedLogGroups;
                             } catch {
-                                AddError($"could not delete '{logGroup.LogGroupName}'");
+                                LogError($"could not delete '{logGroup.LogGroupName}'");
                             }
                         }
                     } else {

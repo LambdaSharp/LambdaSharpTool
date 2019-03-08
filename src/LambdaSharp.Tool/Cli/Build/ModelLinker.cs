@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // verify that all defined scope values are valid
                         foreach(var unknownScope in item.Scope.Where(scope => (scope != "public") && !functionNames.Contains(scope))) {
-                            AddError($"unknown referenced function '{unknownScope}' in scope definition");
+                            LogError($"unknown referenced function '{unknownScope}' in scope definition");
                         }
                     });
                 }
@@ -103,10 +103,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         environment["MODULE_INFO"] = builder.Info;
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
-                        if(builder.HasLambdaSharpDependencies) {
-                            if(function.HasDeadLetterQueue) {
-                                environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
-                            }
+                        if(function.HasDeadLetterQueue && _builder.TryGetItem("Module::DeadLetterQueue", out var _))  {
+                            environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
+                        }
+                        if(_builder.TryGetItem("Module::DefaultSecretKey", out var _)) {
                             environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKey");
                         }
 
@@ -263,9 +263,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             void ReportMissingReference(string missingName) {
                 if(_boundItems.ContainsKey(missingName)) {
-                    AddError($"circular !Ref dependency on '{missingName}'");
+                    LogError($"circular !Ref dependency on '{missingName}'");
                 } else {
-                    AddError($"could not find '{missingName}'");
+                    LogError($"could not find '{missingName}'");
                 }
             }
         }
@@ -332,7 +332,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                     if(_freeItems.TryGetValue(condition, out var freeItem)) {
                         if(!(freeItem is ConditionItem)) {
-                            AddError($"item '{freeItem.FullName}' must be a condition");
+                            LogError($"item '{freeItem.FullName}' must be a condition");
                         }
                         return FnIf(freeItem.ResourceName, ifTrue, ifFalse);
                     }
@@ -347,7 +347,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                     if(_freeItems.TryGetValue(condition, out var freeItem)) {
                         if(!(freeItem is ConditionItem)) {
-                            AddError($"item '{freeItem.FullName}' must be a condition");
+                            LogError($"item '{freeItem.FullName}' must be a condition");
                         }
                         return FnCondition(freeItem.ResourceName);
                     }
@@ -362,7 +362,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                     if(_freeItems.TryGetValue(mapName, out AModuleItem freeItem)) {
                         if(!(freeItem is MappingItem)) {
-                            AddError($"item '{freeItem.FullName}' must be a mapping");
+                            LogError($"item '{freeItem.FullName}' must be a mapping");
                         }
                         return FnFindInMap(freeItem.ResourceName, topLevelKey, secondLevelKey);
                     }
@@ -393,13 +393,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                     case ConditionItem _:
                     case MappingItem _:
                     case ResourceTypeItem _:
-                        AddError($"item '{freeItem.FullName}' must be a resource, parameter, or variable");
+                        LogError($"item '{freeItem.FullName}' must be a resource, parameter, or variable");
                         break;
                     case ParameterItem _:
                     case VariableItem _:
                     case PackageItem _:
                         if(attribute != null) {
-                            AddError($"item '{freeItem.FullName}' does not have attributes");
+                            LogError($"item '{freeItem.FullName}' does not have attributes");
                         }
                         found = freeItem.Reference;
                         break;
@@ -408,7 +408,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         // attributes can be used with managed resources/functions
                         if(attribute != null) {
                             if(freeItem.HasTypeValidation && !_builder.HasAttribute(freeItem, attribute)) {
-                                AddError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attribute}'");
+                                LogError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attribute}'");
                             }
                             found = FnGetAtt(freeItem.ResourceName, attribute);
                         } else {
@@ -426,10 +426,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         if(resourceItem.Condition == null) {
 
                             // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
-                            AddWarning($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
+                            LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
                         } else if(resourceItem.Condition != freeItemConditionName) {
                              _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
-                            AddWarning($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
+                            LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
                         }
                     }
                     return true;
@@ -498,7 +498,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             }
             foreach(var item in unused.Values.OrderBy(e => e.FullName)) {
-                AddWarning($"'{item.FullName}' is defined but never used");
+                LogWarn($"'{item.FullName}' is defined but never used");
             }
 
             // local functions
@@ -642,7 +642,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return visitor(value);
                 }
             case null:
-                AddError("null value is not allowed");
+                LogError("null value is not allowed");
                 return value;
             default:
                 if(SkipType(value.GetType())) {
