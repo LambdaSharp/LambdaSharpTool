@@ -43,8 +43,13 @@ namespace LambdaSharp.Internal {
         private static Func<APIGatewayProxyRequest, object> CreateParameterResolver(ParameterInfo parameter) {
             Func<APIGatewayProxyRequest, object> resolver;
 
-            // check if parameter represents the body of the request
-            if(parameter.Name == "request") {
+            if(parameter.ParameterType == typeof(APIGatewayProxyRequest)) {
+
+                // parameter is the proxy request itself
+                resolver = request => request;
+            } else if(parameter.Name == "request") {
+
+                // parameter represents the body of the request
                 resolver = request => DeserializeJson(request.Body, parameter.ParameterType);
             } else {
 
@@ -84,16 +89,16 @@ namespace LambdaSharp.Internal {
             Dispatcher methodAdapter;
             if(method.ReturnType == typeof(Task<APIGatewayProxyResponse>)) {
                 methodAdapter = (object target, APIGatewayProxyRequest request) => {
-                    return (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(fill => fill(request)).ToArray());
+                    return (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
                 };
             } else if(method.ReturnType == typeof(APIGatewayProxyResponse)) {
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(fill => fill(request)).ToArray());
+                    return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
                 };
             } else if(method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) {
                 var resolveReturnValue = method.ReturnType.GetProperty("Result");
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    var task = (Task)method.Invoke(target, resolvers.Select(fill => fill(request)).ToArray());
+                    var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
                     await task;
                     var result = resolveReturnValue.GetValue(task);
                     return new APIGatewayProxyResponse {
@@ -107,7 +112,7 @@ namespace LambdaSharp.Internal {
                 throw new NotSupportedException("void return type is not supported");
             } else {
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    var result = method.Invoke(target, resolvers.Select(fill => fill(request)).ToArray());
+                    var result = method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
                     return new APIGatewayProxyResponse {
                         StatusCode = 200,
                         Body = SerializeJson(result)

@@ -211,6 +211,22 @@ namespace Tests.LambdaSharp.Internal {
         }
 
         [Fact]
+        public void InvokeMethodAPIGatewayProxyRequest() {
+            Test(
+                nameof(MethodAPIGatewayProxyRequest),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse(DefaultRequest.Body)),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodAPIGatewayProxyRequest(APIGatewayProxyRequest request) {
+            return CreateSimpleResponse(request.Body);
+        }
+
+        [Fact]
         public void InvokeMethodKitchenSink() {
             Test(
                 nameof(MethodKitchenSink),
