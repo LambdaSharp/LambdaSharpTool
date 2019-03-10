@@ -20,6 +20,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using FluentAssertions;
@@ -46,88 +47,186 @@ namespace Tests.LambdaSharp.Internal {
         }
 
         //--- Class Fields ---
-        private static SimpleResponse DefaultResponse = new SimpleResponse {
+        private static APIGatewayProxyRequest DefaultRequest = new APIGatewayProxyRequest {
+            QueryStringParameters = new Dictionary<string, string> {
+                ["query"] = "text"
+            },
+            PathParameters = new Dictionary<string, string> {
+                ["id"] = "123"
+            },
+            StageVariables = new Dictionary<string, string> {
+                ["stage"] = "test"
+            },
+            Body = SerializeJson(new SimpleRequest {
+                Text = "hello"
+            })
+        };
+
+        private static SimpleResponse DefaultSimpleResponse = new SimpleResponse {
             Message = "I was here!"
         };
 
         //--- Class Methods ---
         private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
 
-        private static SimpleResponse CreateResponse(object value) => new SimpleResponse {
-            Message = $"Value: {value}"
+        private static SimpleResponse CreateSimpleResponse(params object[] values) => new SimpleResponse {
+            Message = $"Value: ({string.Join(",", values)})"
         };
 
         //--- Methods ---
         [Fact]
         public void InvokeMethodNoParametersWithSimpleResponseSync() {
             Test(
-                nameof(MethodNoParametersWithSimpleResponseSync),
-                new APIGatewayProxyRequest(),
+                nameof(MethodNoParametersWithSimpleResponse),
+                DefaultRequest,
                 new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultResponse),
+                    Body = SerializeJson(DefaultSimpleResponse),
                     StatusCode = 200
                 }
-            ).Wait();
+            );
+        }
+
+        public SimpleResponse MethodNoParametersWithSimpleResponse() {
+            return DefaultSimpleResponse;
         }
 
         [Fact]
         public void InvokeMethodNoParametersWithAPIGatewayProxyResponseSync() {
             Test(
-                nameof(MethodNoParametersWithAPIGatewayProxyResponseSync),
-                new APIGatewayProxyRequest(),
+                nameof(MethodNoParametersWithAPIGatewayProxyResponse),
+                DefaultRequest,
                 new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultResponse),
+                    Body = SerializeJson(DefaultSimpleResponse),
                     StatusCode = 200
                 }
-            ).Wait();
+            );
+        }
+
+        public APIGatewayProxyResponse MethodNoParametersWithAPIGatewayProxyResponse() {
+            return new APIGatewayProxyResponse {
+                Body = SerializeJson(DefaultSimpleResponse),
+                StatusCode = 200
+            };
         }
 
         [Fact]
         public void InvokeMethodNoParametersWithSimpleResponseAsync() {
             Test(
                 nameof(MethodNoParametersWithSimpleResponseAsync),
-                new APIGatewayProxyRequest(),
+                DefaultRequest,
                 new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultResponse),
+                    Body = SerializeJson(DefaultSimpleResponse),
                     StatusCode = 200
                 }
-            ).Wait();
+            );
+        }
+
+        public async Task<SimpleResponse> MethodNoParametersWithSimpleResponseAsync() {
+            await Task.Delay(TimeSpan.FromMilliseconds(1));
+            return DefaultSimpleResponse;
         }
 
         [Fact]
         public void InvokeMethodNoParametersWithAPIGatewayProxyResponseAsync() {
             Test(
                 nameof(MethodNoParametersWithAPIGatewayProxyResponseAsync),
-                new APIGatewayProxyRequest(),
+                DefaultRequest,
                 new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultResponse),
+                    Body = SerializeJson(DefaultSimpleResponse),
                     StatusCode = 200
                 }
-            ).Wait();
-        }
-
-        public SimpleResponse MethodNoParametersWithSimpleResponseSync() => DefaultResponse;
-
-        public APIGatewayProxyResponse MethodNoParametersWithAPIGatewayProxyResponseSync()
-            => new APIGatewayProxyResponse {
-                Body = SerializeJson(DefaultResponse),
-                StatusCode = 200
-            };
-
-        public async Task<SimpleResponse> MethodNoParametersWithSimpleResponseAsync() {
-            await Task.Delay(TimeSpan.FromMilliseconds(1));
-            return DefaultResponse;
+            );
         }
 
         public async Task<APIGatewayProxyResponse> MethodNoParametersWithAPIGatewayProxyResponseAsync() {
             await Task.Delay(TimeSpan.FromMilliseconds(1));
             return new APIGatewayProxyResponse {
-                Body = SerializeJson(DefaultResponse),
+                Body = SerializeJson(DefaultSimpleResponse),
                 StatusCode = 200
             };
         }
 
-        private async Task Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
+        [Fact]
+        public void InvokeMethodStageParameter() {
+            Test(
+                nameof(MethodStageParameter),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse("test")),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodStageParameter(string stage) {
+            return CreateSimpleResponse(stage);
+        }
+
+        [Fact]
+        public void InvokeMethodPathParameter() {
+            Test(
+                nameof(MethodPathParameter),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse(123)),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodPathParameter(int id) {
+            return CreateSimpleResponse(id);
+        }
+
+        [Fact]
+        public void InvokeMethodQueryStringParameter() {
+            Test(
+                nameof(MethodQueryStringParameter),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse("text")),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodQueryStringParameter(string query) {
+            return CreateSimpleResponse(query);
+        }
+
+        [Fact]
+        public void InvokeMethodRequestBody() {
+            Test(
+                nameof(MethodRequestBody),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse("hello")),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodRequestBody(SimpleRequest request) {
+            return CreateSimpleResponse(request.Text);
+        }
+
+        [Fact]
+        public void InvokeMethodKitchenSink() {
+            Test(
+                nameof(MethodKitchenSink),
+                DefaultRequest,
+                new APIGatewayProxyResponse {
+                    Body = SerializeJson(CreateSimpleResponse("test", 123, "text", "hello")),
+                    StatusCode = 200
+                }
+            );
+        }
+
+        public SimpleResponse MethodKitchenSink(string stage, int id, string query, SimpleRequest request) {
+            return CreateSimpleResponse(stage, id, query, request.Text);
+        }
+
+        private void Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
 
             // Arrange
             var dispatchTable = new APIGatewayDispatchTable(GetType());
@@ -140,7 +239,7 @@ namespace Tests.LambdaSharp.Internal {
             found.Should().Be(true);
 
             // Act
-            var response = await dispatcher(this, request);
+            var response = dispatcher(this, request).Result;
 
             // Assert
             response.Should().BeEquivalentTo(expectedResponse);
