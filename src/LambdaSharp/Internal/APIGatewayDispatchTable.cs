@@ -53,11 +53,11 @@ namespace LambdaSharp.Internal {
                 resolver = request => DeserializeJson(request.Body, parameter.ParameterType);
             } else {
 
-                // TODO (2019-03-09, bjorg): respect default argument value when defined
-
                 // create function for getting default parameter value
                 Func<object> getDefaultValue;
-                if(parameter.ParameterType.IsValueType) {
+                if(parameter.IsOptional) {
+                    getDefaultValue = () => parameter.DefaultValue;
+                } else if(parameter.ParameterType.IsValueType) {
                     getDefaultValue = () => Activator.CreateInstance(parameter.ParameterType);
                 } else {
                     getDefaultValue = () => null;
@@ -66,7 +66,7 @@ namespace LambdaSharp.Internal {
                 // create function to resolve parameter
                 resolver = request => {
 
-                    // attempt to resolve the parameter from stage variables, path parameters, and query parameters
+                    // attempt to resolve the parameter from stage variables, path parameters, and query string parameters
                     var success = request.StageVariables.TryGetValue(parameter.Name, out var value)
                         || request.PathParameters.TryGetValue(parameter.Name, out value)
                         || request.QueryStringParameters.TryGetValue(parameter.Name, out value);
@@ -103,7 +103,10 @@ namespace LambdaSharp.Internal {
                     var result = resolveReturnValue.GetValue(task);
                     return new APIGatewayProxyResponse {
                         StatusCode = 200,
-                        Body = SerializeJson(result)
+                        Body = SerializeJson(result),
+                        Headers = new Dictionary<string, string> {
+                            ["ContentType"] = "application/json"
+                        }
                     };
                 };
             } else if((method.ReturnType == typeof(Task)) || (method.ReturnType == typeof(void))) {
@@ -115,7 +118,10 @@ namespace LambdaSharp.Internal {
                     var result = method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
                     return new APIGatewayProxyResponse {
                         StatusCode = 200,
-                        Body = SerializeJson(result)
+                        Body = SerializeJson(result),
+                        Headers = new Dictionary<string, string> {
+                            ["ContentType"] = "application/json"
+                        }
                     };
                 };
             }

@@ -69,9 +69,19 @@ namespace Tests.LambdaSharp.Internal {
         //--- Class Methods ---
         private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
 
-        private static SimpleResponse CreateSimpleResponse(params object[] values) => new SimpleResponse {
-            Message = $"Value: ({string.Join(",", values)})"
-        };
+        private static SimpleResponse CreateSimpleResponse(params object[] values)
+            => new SimpleResponse {
+                Message = $"Value: ({string.Join(",", values)})"
+            };
+
+        private static APIGatewayProxyResponse CreateResponse(object value)
+            => new APIGatewayProxyResponse {
+                Body = SerializeJson(value),
+                Headers = new Dictionary<string, string> {
+                    ["ContentType"] = "application/json"
+                },
+                StatusCode = 200
+            };
 
         //--- Methods ---
         [Fact]
@@ -79,10 +89,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodNoParametersWithSimpleResponse),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultSimpleResponse),
-                    StatusCode = 200
-                }
+                CreateResponse(DefaultSimpleResponse)
             );
         }
 
@@ -95,16 +102,16 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodNoParametersWithAPIGatewayProxyResponse),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultSimpleResponse),
-                    StatusCode = 200
-                }
+                CreateResponse(DefaultSimpleResponse)
             );
         }
 
         public APIGatewayProxyResponse MethodNoParametersWithAPIGatewayProxyResponse() {
             return new APIGatewayProxyResponse {
                 Body = SerializeJson(DefaultSimpleResponse),
+                Headers = new Dictionary<string, string> {
+                    ["ContentType"] = "application/json"
+                },
                 StatusCode = 200
             };
         }
@@ -114,10 +121,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodNoParametersWithSimpleResponseAsync),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultSimpleResponse),
-                    StatusCode = 200
-                }
+                CreateResponse(DefaultSimpleResponse)
             );
         }
 
@@ -131,10 +135,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodNoParametersWithAPIGatewayProxyResponseAsync),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(DefaultSimpleResponse),
-                    StatusCode = 200
-                }
+                CreateResponse(DefaultSimpleResponse)
             );
         }
 
@@ -142,6 +143,9 @@ namespace Tests.LambdaSharp.Internal {
             await Task.Delay(TimeSpan.FromMilliseconds(1));
             return new APIGatewayProxyResponse {
                 Body = SerializeJson(DefaultSimpleResponse),
+                Headers = new Dictionary<string, string> {
+                    ["ContentType"] = "application/json"
+                },
                 StatusCode = 200
             };
         }
@@ -151,10 +155,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodStageParameter),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse("test")),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse("test"))
             );
         }
 
@@ -167,10 +168,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodPathParameter),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse(123)),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse(123))
             );
         }
 
@@ -183,10 +181,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodQueryStringParameter),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse("text")),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse("text"))
             );
         }
 
@@ -199,10 +194,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodRequestBody),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse("hello")),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse("hello"))
             );
         }
 
@@ -215,10 +207,7 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodAPIGatewayProxyRequest),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse(DefaultRequest.Body)),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse(DefaultRequest.Body))
             );
         }
 
@@ -231,15 +220,90 @@ namespace Tests.LambdaSharp.Internal {
             Test(
                 nameof(MethodKitchenSink),
                 DefaultRequest,
-                new APIGatewayProxyResponse {
-                    Body = SerializeJson(CreateSimpleResponse("test", 123, "text", "hello")),
-                    StatusCode = 200
-                }
+                CreateResponse(CreateSimpleResponse("test", 123, "text", "hello"))
             );
         }
 
         public SimpleResponse MethodKitchenSink(string stage, int id, string query, SimpleRequest request) {
             return CreateSimpleResponse(stage, id, query, request.Text);
+        }
+
+        [Fact]
+        public void InvokeMethodDefaultValueType() {
+            Test(
+                nameof(MethodDefaultValueType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse(0))
+            );
+        }
+
+        public SimpleResponse MethodDefaultValueType(int unknown) {
+            return CreateSimpleResponse(unknown);
+        }
+
+        [Fact]
+        public void InvokeMethodDefaultStringType() {
+            Test(
+                nameof(MethodDefaultStringType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse(new object[] { null }))
+            );
+        }
+
+        public SimpleResponse MethodDefaultStringType(string unknown) {
+            return CreateSimpleResponse(unknown);
+        }
+
+        [Fact]
+        public void InvokeMethodOptionalValueType() {
+            Test(
+                nameof(MethodOptionalValueType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse(123))
+            );
+        }
+
+        public SimpleResponse MethodOptionalValueType(int optional = 123) {
+            return CreateSimpleResponse(optional);
+        }
+
+        [Fact]
+        public void InvokeMethodOptionalStringType() {
+            Test(
+                nameof(MethodOptionalStringType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse("default"))
+            );
+        }
+
+        public SimpleResponse MethodOptionalStringType(string optional = "default") {
+            return CreateSimpleResponse(optional);
+        }
+
+        [Fact]
+        public void InvokeMethodNullableValueType() {
+            Test(
+                nameof(MethodNullableValueType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse(new object[] { null }))
+            );
+        }
+
+        public SimpleResponse MethodNullableValueType(int? optional) {
+            return CreateSimpleResponse(optional);
+        }
+
+        [Fact]
+        public void InvokeMethodNullableOptionalValueType() {
+            Test(
+                nameof(MethodNullableOptionalValueType),
+                DefaultRequest,
+                CreateResponse(CreateSimpleResponse(456))
+            );
+        }
+
+        public SimpleResponse MethodNullableOptionalValueType(int? optional = 456) {
+            return CreateSimpleResponse(optional);
         }
 
         private void Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
