@@ -53,7 +53,7 @@ namespace LambdaSharp {
         private static int Invocations;
 
         //--- Methods ---
-        protected static T DeserializeJson<T>(Stream stream) =>  JsonSerializer.Deserialize<T>(stream);
+        protected static T DeserializeJson<T>(Stream stream) => JsonSerializer.Deserialize<T>(stream);
 
         protected static T DeserializeJson<T>(string json) {
             using(var stream = new MemoryStream(Encoding.UTF8.GetBytes(json))) {
