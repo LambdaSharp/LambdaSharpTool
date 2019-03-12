@@ -65,11 +65,12 @@ namespace LambdaSharp.Tool.Model {
     public class ApiGatewaySource : AFunctionSource {
 
        //--- Properties ---
-        public string Method { get; set; }
+        public string HttpMethod { get; set; }
         public string[] Path { get; set; }
         public ApiGatewaySourceIntegration Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string DispatchMethod { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }

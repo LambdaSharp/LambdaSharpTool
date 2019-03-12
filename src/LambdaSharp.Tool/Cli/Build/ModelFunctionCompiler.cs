@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private class ApiRoute {
 
             //--- Properties ---
-            public string Method { get; set; }
+            public string HttpMethod { get; set; }
             public string[] Path { get; set; }
             public ApiGatewaySourceIntegration Integration { get; set; }
             public FunctionItem Function { get; set; }
@@ -254,7 +254,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // add API method item
                 var methodItem = _builder.AddResource(
                     parent: parent,
-                    name: method.Method,
+                    name: method.HttpMethod,
                     description: null,
                     scope: null,
                     resource: apiMethod,
@@ -276,7 +276,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Action = "lambda:InvokeFunction",
                         FunctionName = FnGetAtt(method.Function.FullName, "Arn"),
                         Principal = "apigateway.amazonaws.com",
-                        SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.Method}/{string.Join("/", method.Path)}")
+                        SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{method.HttpMethod}/{string.Join("/", method.Path)}")
                     },
                     resourceExportAttribute: null,
                     dependsOn: null,
@@ -318,7 +318,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(ApiRoute method) {
                 return new Humidifier.ApiGateway.Method {
                     AuthorizationType = "NONE",
-                    HttpMethod = method.Method,
+                    HttpMethod = method.HttpMethod,
                     OperationName = method.OperationName,
                     ApiKeyRequired = method.ApiKeyRequired,
                     ResourceId = parentId,
@@ -338,7 +338,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // a callback later and the integration works well all the time.
                 return new Humidifier.ApiGateway.Method {
                     AuthorizationType = "NONE",
-                    HttpMethod = method.Method,
+                    HttpMethod = method.HttpMethod,
                     OperationName = method.OperationName,
                     ApiKeyRequired = method.ApiKeyRequired,
                     ResourceId = parentId,
@@ -503,7 +503,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     break;
                 case ApiGatewaySource apiGatewaySource:
                     _apiGatewayRoutes.Add(new ApiRoute {
-                        Method = apiGatewaySource.Method,
+                        HttpMethod = apiGatewaySource.HttpMethod,
                         Path = apiGatewaySource.Path,
                         Integration = apiGatewaySource.Integration,
                         Function = function,

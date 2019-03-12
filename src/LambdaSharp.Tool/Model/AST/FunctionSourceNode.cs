@@ -32,7 +32,8 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Api"] = new[] {
                 "Integration",
                 "OperationName",
-                "ApiKeyRequired"
+                "ApiKeyRequired",
+                "Method"
             },
             ["Schedule"] = new[] {
                 "Name"
@@ -67,6 +68,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string Method { get; set; }
 
         // CloudWatch Schedule Event Source
         public object Schedule { get; set; }

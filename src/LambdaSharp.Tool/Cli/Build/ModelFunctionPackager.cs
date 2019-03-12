@@ -41,6 +41,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
+        private const string API_MAPPINGS = "api-gateway-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.1";
 
         //--- Types ---
@@ -74,6 +75,19 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                 }
             }
+        }
+
+        private class APIGatewayDispatchMappings {
+
+            //--- Properties ---
+            public List<APIGatewayDispatchMapping> Mappings = new List<APIGatewayDispatchMapping>();
+        }
+
+        private class APIGatewayDispatchMapping {
+
+            //--- Properties ---
+            public string Signature;
+            public string Method;
         }
 
         //--- Fields ---
@@ -270,10 +284,40 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
 
+            // collect dispatch methods
+            var apiDispatchMappings = function.Sources
+                .OfType<ApiGatewaySource>()
+                .Where(source => source.DispatchMethod != null)
+                .ToArray();
+
             // verify the function handler can be found in the compiled assembly
             if(function.HasHandlerValidation) {
                 if(function.Function.Handler is string handler) {
-                    ValidateEntryPoint(Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"), handler);
+                    ValidateEntryPoint(
+                        Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"),
+                        handler,
+                        apiDispatchMappings.Select(source => source.DispatchMethod).Distinct().ToArray()
+                    );
+                }
+            }
+
+            // add api-gateway-mappings.json file
+            if(apiDispatchMappings.Any()) {
+                using(var zipArchive = ZipFile.Open(temporaryPackage, ZipArchiveMode.Update)) {
+                    var entry = zipArchive.CreateEntry(API_MAPPINGS);
+
+                    // Set RW-R--R-- permissions attributes on non-Windows operating system
+                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                    }
+                    using(var stream = entry.Open()) {
+                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
+                            Mappings = apiDispatchMappings.Select(source => new APIGatewayDispatchMapping {
+                                Signature = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
+                                Method = source.DispatchMethod
+                            }).ToList()
+                        }).ToString(Formatting.None)));
+                    }
                 }
             }
 
@@ -481,38 +525,46 @@ namespace LambdaSharp.Tool.Cli.Build {
             File.Move(zipTempPackage, package);
         }
 
-        private void ValidateEntryPoint(string directory, string handler) {
+        private void ValidateEntryPoint(string directory, string handler, IEnumerable<string> methods) {
             var parts = handler.Split("::");
             if(parts.Length != 3) {
                 LogError("'Handler' attribute has invalid value");
                 return;
             }
             try {
-                var functionAssemblyName = parts[0];
-                var functionClassName = parts[1];
-                var functionMethodName = parts[2];
+                var lambdaFunctionAssemblyName = parts[0];
+                var lambdaFunctionClassName = parts[1];
+                var lambdaFunctionEntryPointName = parts[2];
                 using(var resolver = new CustomAssemblyResolver(directory))
-                using(var functionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{functionAssemblyName}.dll"), new ReaderParameters {
+                using(var lambdaFunctionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{lambdaFunctionAssemblyName}.dll"), new ReaderParameters {
                     AssemblyResolver = resolver
                 })) {
-                    if(functionAssembly == null) {
+                    if(lambdaFunctionAssembly == null) {
                         LogError("could not load assembly");
                         return;
                     }
-                    var functionClassType = functionAssembly.MainModule.GetType(functionClassName);
+                    var functionClassType = lambdaFunctionAssembly.MainModule.GetType(lambdaFunctionClassName);
                     if(functionClassType == null) {
-                        LogError($"could not find type '{functionClassName}' in assembly");
+                        LogError($"could not find type '{lambdaFunctionClassName}' in assembly");
                         return;
                     }
-                again:
-                    var functionMethod = functionClassType.Methods.FirstOrDefault(method => method.Name == functionMethodName);
-                    if(functionMethod == null) {
-                        if(functionClassType.BaseType == null) {
-                            LogError($"could not find method '{functionMethodName}' in type '{functionClassName}'");
-                            return;
-                        }
-                        functionClassType = functionClassType.BaseType.Resolve();
-                        goto again;
+                    FindMethod(functionClassType, lambdaFunctionEntryPointName);
+                    foreach(var method in methods) {
+                        FindMethod(functionClassType, method);
+                    }
+
+                    // local functions
+                    void FindMethod(TypeDefinition methodClassType, string methodName) {
+                        again:
+                            var functionMethod = methodClassType.Methods.FirstOrDefault(method => method.Name == methodName);
+                            if(functionMethod == null) {
+                                if((methodClassType.BaseType == null) || (methodClassType.BaseType.FullName == "System.Object")) {
+                                    LogError($"could not find method '{methodName}' in class '{lambdaFunctionClassName}'");
+                                    return;
+                                }
+                                methodClassType = methodClassType.BaseType.Resolve();
+                                goto again;
+                            }
                     }
                 }
             } catch(Exception e) {

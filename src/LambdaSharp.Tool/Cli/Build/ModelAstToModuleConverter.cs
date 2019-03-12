@@ -145,7 +145,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     if(pathSeparatorIndex < 0) {
                         LogError("invalid api format");
                         return new ApiGatewaySource {
-                            Method = "ANY",
+                            HttpMethod = "ANY",
                             Path = new string[0],
                             Integration = ApiGatewaySourceIntegration.RequestResponse
                         };
@@ -159,11 +159,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // parse integration into a valid enum
                     var integration = AtLocation("Integration", () => Enum.Parse<ApiGatewaySourceIntegration>(source.Integration ?? "RequestResponse", ignoreCase: true));
                     return new ApiGatewaySource {
-                        Method = method,
+                        HttpMethod = method,
                         Path = path,
                         Integration = integration,
                         OperationName = source.OperationName,
-                        ApiKeyRequired = source.ApiKeyRequired
+                        ApiKeyRequired = source.ApiKeyRequired,
+                        DispatchMethod = source.Method
                     };
                 });
             case "Schedule":
@@ -184,7 +185,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 });
             case "SlackCommand":
                 return AtLocation("SlackCommand", () => new ApiGatewaySource {
-                    Method = "POST",
+                    HttpMethod = "POST",
                     Path = source.SlackCommand.Split('/', StringSplitOptions.RemoveEmptyEntries),
                     Integration = ApiGatewaySourceIntegration.SlackCommand,
                     OperationName = source.OperationName
