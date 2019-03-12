@@ -22,6 +22,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
@@ -67,32 +68,65 @@ namespace ApiDispatchSample.MyFunction {
             public string Value { get; set; }
         }
 
-        public class DeleteItemResponse { }
+        public class DeleteItemResponse {
+
+            //--- Properties ---
+            public bool Deleted;
+        }
+
+        //--- Fields ---
+        private List<Item> _items = new List<Item>();
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
         public AddItemResponse AddItem(AddItemRequest request) {
-            return new AddItemResponse {
 
+            // add new item to list
+            var item = new Item {
+                Id = Guid.NewGuid().ToString("N"),
+                Value = request.Value
+            };
+            _items.Add(item);
+
+            // respond with new item ID
+            return new AddItemResponse {
+                Id = item.Id
             };
         }
 
         public GetItemsResponse GetItems() {
-            return new GetItemsResponse {
 
+            // response with list of all items
+            return new GetItemsResponse {
+                Items = new List<Item>(_items)
             };
         }
 
         public GetItemResponse GetItem(string id) {
-            return new GetItemResponse {
 
+            // find matching item
+            var found = _items.FirstOrDefault(item => item.Id == id);
+
+            // TODO (2019-03-12, bjorg): this would be better with a 404 response
+
+            // respond with found item
+            return new GetItemResponse {
+                Id = found?.Id,
+                Value = found?.Value
             };
         }
 
         public DeleteItemResponse DeleteItem(string id) {
-            return new DeleteItemResponse();
+
+            // remove item matching ID
+            var count = _items.RemoveAll(item => item.Id == id);
+
+            // respond with deletion result
+            return new DeleteItemResponse {
+                Deleted = (count > 0)
+            };
         }
     }
 }

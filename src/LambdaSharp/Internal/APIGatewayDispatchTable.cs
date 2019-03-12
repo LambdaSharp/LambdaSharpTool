@@ -65,11 +65,12 @@ namespace LambdaSharp.Internal {
 
                 // create function to resolve parameter
                 resolver = request => {
+                    string value = null;
 
                     // attempt to resolve the parameter from stage variables, path parameters, and query string parameters
-                    var success = request.StageVariables.TryGetValue(parameter.Name, out var value)
-                        || request.PathParameters.TryGetValue(parameter.Name, out value)
-                        || request.QueryStringParameters.TryGetValue(parameter.Name, out value);
+                    var success = (request.StageVariables?.TryGetValue(parameter.Name, out value) ?? false)
+                        || (request.PathParameters?.TryGetValue(parameter.Name, out value) ?? false)
+                        || (request.QueryStringParameters?.TryGetValue(parameter.Name, out value) ?? false);
 
                     // if resolved, return the converted value; otherwise the default value
                     return success

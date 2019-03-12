@@ -1,15 +1,15 @@
 ![λ#](../../Docs/LambdaSharpLogo.png)
 
-# LambdaSharp API Gateway Source
+# LambdaSharp API Gateway Source with Dispatch
 
 Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
-An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources and methods using for each function using `AWS_PROXY` as integration.
+An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. In addition, the `Method` attribute specifies the method to invoke in the Lambda function for this resource. The λ# CLI creates all required resources and methods using for each function using `AWS_PROXY` as integration.
 
 ```yaml
-Module: LambdaSharp.Sample.ApiGateway
+Module: LambdaSharp.Sample.ApiGatewayDispatch
 Description: A sample module integrating with API Gateway
 Items:
 
@@ -18,51 +18,37 @@ Items:
     Memory: 128
     Timeout: 30
     Sources:
+
       - Api: GET:/items
+        Method: GetItems
+
       - Api: POST:/items
+        Method: AddItem
+
       - Api: GET:/items/{id}
+        Method: GetItem
+
       - Api: DELETE:/items/{id}
+        Method: DeleteItem
 ```
 
 ## Function Code
 
-An API Gateway request can be handled using the `ALambdaApiGatewayFunction` base class.
+API Gateway requests with direct dispatching can be handled using the `ALambdaRestApiFunction` base class.
 
 ```csharp
-public class Function : ALambdaApiGatewayFunction {
+public class Function : ALambdaRestApiFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<APIGatewayProxyResponse> HandleRequestAsync(APIGatewayProxyRequest request, ILambdaContext context) {
-        LogInfo($"Body = {request.Body}");
-        LogDictionary("Headers", request.Headers);
-        LogInfo($"HttpMethod = {request.HttpMethod}");
-        LogInfo($"IsBase64Encoded = {request.IsBase64Encoded}");
-        LogInfo($"Path = {request.Path}");
-        LogDictionary("PathParameters", request.PathParameters);
-        LogDictionary("QueryStringParameters", request.QueryStringParameters);
-        LogInfo($"RequestContext.ResourcePath = {request.RequestContext.ResourcePath}");
-        LogInfo($"RequestContext.Stage = {request.RequestContext.Stage}");
-        LogInfo($"Resource = {request.Resource}");
-        LogDictionary("StageVariables", request.StageVariables);
-        return new APIGatewayProxyResponse {
-            Body = "Ok",
-            Headers = new Dictionary<string, string> {
-                ["Content-Type"] = "text/plain"
-            },
-            StatusCode = 200
-        };
+    public AddItemResponse AddItem(AddItemRequest request) { ... }
 
-        // local function
-        void LogDictionary(string prefix, IDictionary<string, string> keyValues) {
-            if(keyValues != null) {
-                foreach(var keyValue in keyValues) {
-                    LogInfo($"{prefix}.{keyValue.Key} = {keyValue.Value}");
-                }
-            }
-        }
-    }
+    public GetItemsResponse GetItems() { ... }
+
+    public GetItemResponse GetItem(string id) { ... }
+
+    public DeleteItemResponse DeleteItem(string id) { ... }
 }
 ```
