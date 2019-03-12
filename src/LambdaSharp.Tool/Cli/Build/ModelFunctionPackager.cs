@@ -270,6 +270,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
 
+            // verify the function handler can be found in the compiled assembly
+            if(function.HasHandlerValidation) {
+                if(function.Function.Handler is string handler) {
+                    ValidateEntryPoint(Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"), handler);
+                }
+            }
+
             // compute hash for zip contents
             string hash;
             using(var zipArchive = ZipFile.OpenRead(temporaryPackage)) {
