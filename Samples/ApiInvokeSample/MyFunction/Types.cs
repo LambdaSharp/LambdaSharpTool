@@ -22,7 +22,7 @@
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
 
-namespace ApiDispatchSample.MyFunction {
+namespace ApiInvokeSample.MyFunction {
 
     public class Item {
 

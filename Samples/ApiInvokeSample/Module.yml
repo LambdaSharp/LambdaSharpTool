@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Sample.ApiGatewayDispatch
+Module: LambdaSharp.Sample.ApiGatewayInvoke
 Description: A sample module integrating with API Gateway
 Items:
 
@@ -28,16 +28,16 @@ Items:
     Sources:
 
       - Api: GET:/items
-        Method: GetItems
+        Invoke: GetItems
 
       - Api: POST:/items
-        Method: AddItem
+        Invoke: AddItem
 
       - Api: GET:/items/{id}
-        Method: GetItem
+        Invoke: GetItem
 
       - Api: DELETE:/items/{id}
-        Method: DeleteItem
+        Invoke: DeleteItem
 
   - Variable: ApiUrl
     Description: API Gateway URL
