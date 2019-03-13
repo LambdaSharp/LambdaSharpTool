@@ -38,3 +38,8 @@ Items:
 
       - Api: DELETE:/items/{id}
         Method: DeleteItem
+
+  - Variable: ApiUrl
+    Description: API Gateway URL
+    Scope: public
+    Value: !Ref Module::RestApi::Url

@@ -33,46 +33,9 @@ using LambdaSharp;
 
 namespace ApiDispatchSample.MyFunction {
 
-    public class Item {
-
-        //--- Properties ---
-        public string Id { get; set; }
-        public string Value { get; set; }
-    }
-
     public class Function : ALambdaRestApiFunction {
 
         //--- Types ---
-        public class AddItemRequest {
-
-            //--- Properties ---
-            public string Value { get; set; }
-        }
-
-        public class AddItemResponse {
-
-            //--- Properties ---
-            public string Id { get; set; }
-        }
-
-        public class GetItemsResponse {
-
-            //--- Properties ---
-            public List<Item> Items = new List<Item>();
-        }
-
-        public class GetItemResponse {
-
-            //--- Properties ---
-            public string Id { get; set; }
-            public string Value { get; set; }
-        }
-
-        public class DeleteItemResponse {
-
-            //--- Properties ---
-            public bool Deleted;
-        }
 
         //--- Fields ---
         private List<Item> _items = new List<Item>();
@@ -109,12 +72,15 @@ namespace ApiDispatchSample.MyFunction {
             // find matching item
             var found = _items.FirstOrDefault(item => item.Id == id);
 
-            // TODO (2019-03-12, bjorg): this would be better with a 404 response
+            // abort if no item was found
+            if(found == null) {
+                throw AbortNotFound($"Item {id} does not exist");
+            }
 
             // respond with found item
             return new GetItemResponse {
-                Id = found?.Id,
-                Value = found?.Value
+                Id = found.Id,
+                Value = found.Value
             };
         }
 

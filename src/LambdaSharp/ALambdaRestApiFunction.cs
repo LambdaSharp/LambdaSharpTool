@@ -22,6 +22,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
@@ -33,6 +35,17 @@ namespace LambdaSharp {
     public abstract class ALambdaRestApiFunction : ALambdaFunction<APIGatewayProxyRequest, APIGatewayProxyResponse> {
 
         //--- Types ---
+        private class ALambdaRestApiAbortException : Exception {
+
+            //--- Fields ---
+            public readonly APIGatewayProxyResponse Response;
+
+            //--- Constructors ---
+            public ALambdaRestApiAbortException(APIGatewayProxyResponse response) : base("Abort message request") {
+                Response = response ?? throw new ArgumentNullException(nameof(response));
+            }
+        }
+
         private class APIGatewayDispatchMappings {
 
             //--- Properties ---
@@ -80,6 +93,7 @@ namespace LambdaSharp {
             _currentRequest = request;
             try {
                 var signature = $"{request.HttpMethod}:{request.Resource}";
+                APIGatewayProxyResponse response;
 
                 // determine if resource signature has an associated dispatcher
                 APIGatewayDispatchTable.Dispatcher dispatcher;
@@ -87,40 +101,65 @@ namespace LambdaSharp {
                     !_dispatchTable.TryGetDispatcher(signature, out dispatcher)
                     && !_dispatchTable.TryGetDispatcher($"ANY:{request.Resource}", out dispatcher)
                 ) {
-                    LogInfo($"{signature} not found");
-                    return CreateNotFoundResponse(request);
-                }
+                    response = CreateRouteNotFoundResponse(request);
+                    LogInfo($"route {signature} not found");
+                } else {
 
-                // invoke dispatcher
-                try {
-                    return await dispatcher(this, request);
-                } catch(Exception e) {
-                    LogError(e, $"{signature} threw {e.GetType()}");
-                    return CreateErrorResponse(request, e);
+                    // invoke dispatcher
+                    try {
+                        LogInfo($"dispatching route {signature}");
+                        try {
+                            response = await dispatcher(this, request);
+                        } catch(TargetInvocationException e) {
+
+                            // rethrow inner exception caused by reflection invocation
+                            ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                            throw new Exception("should never happen");
+                        }
+                        LogInfo($"finished with status code {response.StatusCode}");
+                    } catch(ALambdaRestApiAbortException e) {
+                        response = e.Response;
+                        LogInfo($"aborted with status code {response.StatusCode}");
+                    } catch(Exception e) {
+                        LogError(e, $"route {signature} threw {e.GetType()}");
+                        response = CreateExceptionResponse(request, e);
+                    }
                 }
+                return response;
             } finally {
                 _currentRequest = null;
             }
         }
 
-        protected virtual APIGatewayProxyResponse CreateErrorResponse(APIGatewayProxyRequest request, Exception exception) {
-            return new APIGatewayProxyResponse {
-                StatusCode = 500,
-                Body = $"Internal Error (see logs for details)",
-                Headers = new Dictionary<string, string> {
-                    ["ContentType"] = "text/plain"
-                }
-            };
-        }
+        protected virtual APIGatewayProxyResponse CreateExceptionResponse(APIGatewayProxyRequest request, Exception exception)
+            => CreateAbortResponse(500, "Internal Error (see logs for details)");
 
-        protected virtual APIGatewayProxyResponse CreateNotFoundResponse(APIGatewayProxyRequest request) {
-            return new APIGatewayProxyResponse {
-                StatusCode = 404,
-                Body = $"Not found: {request.HttpMethod}:{request.Resource}",
+        protected virtual APIGatewayProxyResponse CreateRouteNotFoundResponse(APIGatewayProxyRequest request)
+            => CreateAbortResponse(404, $"Route {request.HttpMethod}:{request.Resource} not found");
+
+        protected virtual Exception Abort(APIGatewayProxyResponse response)
+            => throw new ALambdaRestApiAbortException(response);
+
+        protected virtual Exception AbortBadRequest(string message)
+            => Abort(CreateAbortResponse(400, message));
+
+        protected virtual Exception AbortForbidden(string message)
+            => Abort(CreateAbortResponse(403, message));
+
+        protected virtual Exception AbortNotFound(string message)
+            => Abort(CreateAbortResponse(404, message));
+
+        protected virtual APIGatewayProxyResponse CreateAbortResponse(int statusCode, string message)
+            => new APIGatewayProxyResponse {
+                StatusCode = statusCode,
+                Body = SerializeJson(new {
+                    StatusCode = statusCode,
+                    Summary = message,
+                    RequestId = CurrentRequest.RequestContext.RequestId
+                }),
                 Headers = new Dictionary<string, string> {
-                    ["ContentType"] = "text/plain"
+                    ["ContentType"] = "application/json"
                 }
             };
-        }
     }
 }
