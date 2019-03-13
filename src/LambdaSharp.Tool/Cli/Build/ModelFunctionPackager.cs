@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private class APIGatewayDispatchMapping {
 
             //--- Properties ---
-            public string Signature;
+            public string Route;
             public string Method;
         }
 
@@ -287,7 +287,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // collect dispatch methods
             var apiDispatchMappings = function.Sources
                 .OfType<ApiGatewaySource>()
-                .Where(source => source.DispatchMethod != null)
+                .Where(source => source.InvokeMethod != null)
                 .ToArray();
 
             // verify the function handler can be found in the compiled assembly
@@ -296,7 +296,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ValidateEntryPoint(
                         Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"),
                         handler,
-                        apiDispatchMappings.Select(source => source.DispatchMethod).Distinct().ToArray()
+                        apiDispatchMappings.Select(source => source.InvokeMethod).Distinct().ToArray()
                     );
                 }
             }
@@ -313,8 +313,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     using(var stream = entry.Open()) {
                         stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
                             Mappings = apiDispatchMappings.Select(source => new APIGatewayDispatchMapping {
-                                Signature = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
-                                Method = source.DispatchMethod
+                                Route = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
+                                Method = source.InvokeMethod
                             }).ToList()
                         }).ToString(Formatting.None)));
                     }

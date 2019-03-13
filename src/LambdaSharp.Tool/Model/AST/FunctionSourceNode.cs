@@ -68,7 +68,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
-        public string Method { get; set; }
+        public string Invoke { get; set; }
 
         // CloudWatch Schedule Event Source
         public object Schedule { get; set; }

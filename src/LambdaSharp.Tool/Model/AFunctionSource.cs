@@ -70,7 +70,7 @@ namespace LambdaSharp.Tool.Model {
         public ApiGatewaySourceIntegration Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
-        public string DispatchMethod { get; set; }
+        public string InvokeMethod { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }

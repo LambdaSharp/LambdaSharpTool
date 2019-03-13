@@ -164,7 +164,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Integration = integration,
                         OperationName = source.OperationName,
                         ApiKeyRequired = source.ApiKeyRequired,
-                        DispatchMethod = source.Method
+                        InvokeMethod = source.Invoke
                     };
                 });
             case "Schedule":

@@ -55,7 +55,7 @@ namespace LambdaSharp {
         private class APIGatewayDispatchMapping {
 
             //--- Properties ---
-            public string Signature;
+            public string Route;
             public string Method;
         }
 
@@ -83,8 +83,8 @@ namespace LambdaSharp {
             if(File.Exists("api-gateway-mappings.json")) {
                 var mappings = DeserializeJson<APIGatewayDispatchMappings>(File.ReadAllText("api-gateway-mappings.json"));
                 foreach(var mapping in mappings.Mappings) {
-                    LogInfo($"Mapping {mapping.Signature} to {mapping.Method}");
-                    _dispatchTable.Add(mapping.Signature, mapping.Method);
+                    LogInfo($"Mapping {mapping.Route} to {mapping.Method}");
+                    _dispatchTable.Add(mapping.Route, mapping.Method);
                 }
             }
         }
