@@ -77,6 +77,11 @@ namespace LambdaSharp.Tool.Internal {
         public static string ToIdentifier(this string text)
             => new string(text.Where(char.IsLetterOrDigit).ToArray());
 
+        public static string ToPascalIdentifier(this string text) {
+            var identifier = text.ToIdentifier();
+            return char.ToUpperInvariant(identifier[0]) + ((identifier.Length > 1) ? identifier.Substring(1) : "");
+        }
+
         public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
             moduleOwner = "<BAD>";
             moduleName = "<BAD>";

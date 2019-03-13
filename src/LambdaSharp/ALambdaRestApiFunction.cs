@@ -80,8 +80,8 @@ namespace LambdaSharp {
             await base.InitializeAsync(envSource, context);
 
             // read optional api-gateway-mappings file
-            if(File.Exists("api-gateway-mappings.json")) {
-                var mappings = DeserializeJson<APIGatewayDispatchMappings>(File.ReadAllText("api-gateway-mappings.json"));
+            if(File.Exists("rest-api-mappings.json")) {
+                var mappings = DeserializeJson<APIGatewayDispatchMappings>(File.ReadAllText("rest-api-mappings.json"));
                 foreach(var mapping in mappings.Mappings) {
                     LogInfo($"Mapping {mapping.Route} to {mapping.Method}");
                     _dispatchTable.Add(mapping.Route, mapping.Method);

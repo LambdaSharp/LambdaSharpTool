@@ -134,6 +134,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 "Alexa",
                 "DynamoDB",
                 "Kinesis",
+                "WebSocket"
             });
             switch(type) {
             case "Api":
@@ -144,7 +145,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var pathSeparatorIndex = api.IndexOfAny(new[] { ':', ' ' });
                     if(pathSeparatorIndex < 0) {
                         LogError("invalid api format");
-                        return new ApiGatewaySource {
+                        return new RestApiSource {
                             HttpMethod = "ANY",
                             Path = new string[0],
                             Integration = ApiGatewaySourceIntegration.RequestResponse
@@ -158,7 +159,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // parse integration into a valid enum
                     var integration = AtLocation("Integration", () => Enum.Parse<ApiGatewaySourceIntegration>(source.Integration ?? "RequestResponse", ignoreCase: true));
-                    return new ApiGatewaySource {
+                    return new RestApiSource {
                         HttpMethod = method,
                         Path = path,
                         Integration = integration,
@@ -184,7 +185,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Suffix = source.Suffix
                 });
             case "SlackCommand":
-                return AtLocation("SlackCommand", () => new ApiGatewaySource {
+                return AtLocation("SlackCommand", () => new RestApiSource {
                     HttpMethod = "POST",
                     Path = source.SlackCommand.Split('/', StringSplitOptions.RemoveEmptyEntries),
                     Integration = ApiGatewaySourceIntegration.SlackCommand,
@@ -215,6 +216,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Kinesis = source.Kinesis,
                     BatchSize = source.BatchSize ?? 100,
                     StartingPosition = source.StartingPosition ?? "LATEST"
+                });
+            case "WebSocket":
+                return AtLocation("WebSocket", () => new WebSocketSource {
+                    RouteKey = source.WebSocket.Trim(),
+                    OperationName = source.OperationName,
+                    ApiKeyRequired = source.ApiKeyRequired,
+                    InvokeMethod = source.Invoke
                 });
             }
             return null;
@@ -629,7 +637,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AtLocation($"{index}", () => {
                     if(source.Api != null) {
 
-                        // TODO (2018-11-10, bjorg): validate API expression
+                        // TODO (2018-11-10, bjorg): validate REST API expression
                     } else if(source.Schedule != null) {
 
                         // TODO (2018-06-27, bjorg): add cron/rate expression validation
@@ -638,7 +646,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         // TODO (2018-06-27, bjorg): add events, prefix, suffix validation
                     } else if(source.SlackCommand != null) {
 
-                        // TODO (2018-11-10, bjorg): validate API expression
+                        // TODO (2018-11-10, bjorg): validate REST API expression
                     } else if(source.Topic != null) {
 
                         // nothing to validate
@@ -701,6 +709,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 }
                             }
                         });
+                    } else if(source.WebSocket != null) {
+
+                        // TODO (2019-03-13, bjorg): validate WebSocket route expression
                     } else {
                         LogError("unknown source type");
                     }

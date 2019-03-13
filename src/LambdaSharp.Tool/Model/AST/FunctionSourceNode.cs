@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Integration",
                 "OperationName",
                 "ApiKeyRequired",
-                "Method"
+                "Invoke"
             },
             ["Schedule"] = new[] {
                 "Name"
@@ -58,6 +58,11 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Kinesis"] = new[] {
                 "BatchSize",
                 "StartingPosition"
+            },
+            ["WebSocket"] = new[] {
+                "OperationName",
+                "ApiKeyRequired",
+                "Invoke"
             }
         };
 
@@ -103,5 +108,11 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Kinesis { get; set; }
         // object BatchSize { get; set; }
         // object StartingPosition { get; set; }
+
+        // WebSocket Source
+        public string WebSocket { get; set; }
+        // public string OperationName { get; set; }
+        // public bool? ApiKeyRequired { get; set; }
+        // public string Invoke { get; set; }
    }
 }

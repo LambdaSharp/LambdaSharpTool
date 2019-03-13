@@ -41,7 +41,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
-        private const string API_MAPPINGS = "api-gateway-mappings.json";
+        private const string REST_API_MAPPINGS = "rest-api-mappings.json";
+        private const string WEBSOCKET_MAPPINGS = "websocket-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.1";
 
         //--- Types ---
@@ -284,9 +285,15 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
 
-            // collect dispatch methods
-            var apiDispatchMappings = function.Sources
-                .OfType<ApiGatewaySource>()
+            // collect REST API invoke methods
+            var restApiMappings = function.Sources
+                .OfType<RestApiSource>()
+                .Where(source => source.InvokeMethod != null)
+                .ToArray();
+
+            // collect WebSocket invoke methods
+            var webSocketMappings = function.Sources
+                .OfType<WebSocketSource>()
                 .Where(source => source.InvokeMethod != null)
                 .ToArray();
 
@@ -296,27 +303,49 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ValidateEntryPoint(
                         Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"),
                         handler,
-                        apiDispatchMappings.Select(source => source.InvokeMethod).Distinct().ToArray()
+                        restApiMappings
+                            .Select(source => source.InvokeMethod)
+                            .Union(webSocketMappings.Select(source => source.InvokeMethod))
+                            .Distinct()
+                            .ToArray()
                     );
                 }
             }
 
-            // add api-gateway-mappings.json file
-            if(apiDispatchMappings.Any()) {
+            // add mappings JSON file(s)
+            if(restApiMappings.Any() || webSocketMappings.Any()) {
                 using(var zipArchive = ZipFile.Open(temporaryPackage, ZipArchiveMode.Update)) {
-                    var entry = zipArchive.CreateEntry(API_MAPPINGS);
+                    if(restApiMappings.Any()) {
+                        var entry = zipArchive.CreateEntry(REST_API_MAPPINGS);
 
-                    // Set RW-R--R-- permissions attributes on non-Windows operating system
-                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                        // Set RW-R--R-- permissions attributes on non-Windows operating system
+                        if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                            entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                        }
+                        using(var stream = entry.Open()) {
+                            stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
+                                Mappings = restApiMappings.Select(source => new APIGatewayDispatchMapping {
+                                    Route = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
+                                    Method = source.InvokeMethod
+                                }).ToList()
+                            }).ToString(Formatting.None)));
+                        }
                     }
-                    using(var stream = entry.Open()) {
-                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
-                            Mappings = apiDispatchMappings.Select(source => new APIGatewayDispatchMapping {
-                                Route = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
-                                Method = source.InvokeMethod
-                            }).ToList()
-                        }).ToString(Formatting.None)));
+                    if(webSocketMappings.Any()) {
+                        var entry = zipArchive.CreateEntry(WEBSOCKET_MAPPINGS);
+
+                        // Set RW-R--R-- permissions attributes on non-Windows operating system
+                        if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                            entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                        }
+                        using(var stream = entry.Open()) {
+                            stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
+                                Mappings = webSocketMappings.Select(source => new APIGatewayDispatchMapping {
+                                    Route = source.RouteKey,
+                                    Method = source.InvokeMethod
+                                }).ToList()
+                            }).ToString(Formatting.None)));
+                        }
                     }
                 }
             }
