@@ -21,6 +21,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using FluentAssertions;
@@ -306,6 +308,99 @@ namespace Tests.LambdaSharp.Internal {
             return CreateSimpleResponse(optional);
         }
 
+        [Fact]
+        public void InvokeMethodBadRequestBody() {
+            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+                Test(
+                    nameof(MethodRequestBody),
+                    new APIGatewayProxyRequest {
+                        Body = "This is not json"
+                    },
+                    CreateResponse(CreateSimpleResponse(456))
+                );
+            });
+            exception.ParameterName.Should().Be("request");
+            exception.Message.Should().Be("invalid JSON document");
+        }
+
+        [Fact]
+        public void InvokeMethodBadRequestBodyAsync() {
+            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+                Test(
+                    nameof(MethodRequestBodyAsync),
+                    new APIGatewayProxyRequest {
+                        Body = "This is not json"
+                    },
+                    CreateResponse(CreateSimpleResponse(456))
+                );
+            });
+            exception.ParameterName.Should().Be("request");
+            exception.Message.Should().Be("invalid JSON document");
+        }
+
+        public async Task<SimpleResponse> MethodRequestBodyAsync(SimpleRequest request) {
+            await Task.Delay(TimeSpan.FromMilliseconds(1));
+            return CreateSimpleResponse(request.Text);
+        }
+
+        [Fact]
+        public void InvokeMethodNullRequestBody() {
+            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+                Test(
+                    nameof(MethodRequestBody),
+                    new APIGatewayProxyRequest(),
+                    CreateResponse(CreateSimpleResponse(456))
+                );
+            });
+            exception.ParameterName.Should().Be("request");
+            exception.Message.Should().Be("invalid JSON document");
+        }
+
+        [Fact]
+        public void InvokeMethodBadParameter() {
+            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+                Test(
+                    nameof(MethodPathParameter),
+                    new APIGatewayProxyRequest {
+                        PathParameters = new Dictionary<string, string> {
+                            ["id"] = "not-a-number"
+                        },
+                        Body = SerializeJson(new SimpleRequest {
+                            Text = "hello"
+                        })
+                    },
+                    CreateResponse(CreateSimpleResponse(456))
+                );
+            });
+            exception.ParameterName.Should().Be("id");
+            exception.Message.Should().Be("invalid parameter format");
+        }
+
+        [Fact]
+        public void InvokeMethodBadParameterAsync() {
+            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+                Test(
+                    nameof(MethodPathParameterAsync),
+                    new APIGatewayProxyRequest {
+                        PathParameters = new Dictionary<string, string> {
+                            ["id"] = "not-a-number"
+                        },
+                        Body = SerializeJson(new SimpleRequest {
+                            Text = "hello"
+                        })
+                    },
+                    CreateResponse(CreateSimpleResponse(456))
+                );
+            });
+            exception.ParameterName.Should().Be("id");
+            exception.Message.Should().Be("invalid parameter format");
+        }
+
+        public async Task<SimpleResponse> MethodPathParameterAsync(int id) {
+            await Task.Delay(TimeSpan.FromMilliseconds(1));
+            return CreateSimpleResponse(id);
+        }
+
         private void Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
 
             // Arrange
@@ -319,7 +414,7 @@ namespace Tests.LambdaSharp.Internal {
             found.Should().Be(true);
 
             // Act
-            var response = dispatcher(this, request).Result;
+            var response = dispatcher(this, request).GetAwaiter().GetResult();
 
             // Assert
             response.Should().BeEquivalentTo(expectedResponse);

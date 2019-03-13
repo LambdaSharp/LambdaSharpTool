@@ -23,11 +23,23 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Newtonsoft.Json;
 
 namespace LambdaSharp.Internal {
+
+    public class APIGatewayDispatchBadParameterException : Exception {
+
+        //--- Fields ---
+        public readonly string ParameterName;
+
+        //--- Constructors ---
+        public APIGatewayDispatchBadParameterException(string message, string parameterName) : base(message) {
+            ParameterName = parameterName;
+        }
+    }
 
     public class APIGatewayDispatchTable {
 
@@ -50,7 +62,13 @@ namespace LambdaSharp.Internal {
             } else if(parameter.Name == "request") {
 
                 // parameter represents the body of the request
-                resolver = request => DeserializeJson(request.Body, parameter.ParameterType);
+                resolver = request => {
+                    try {
+                        return DeserializeJson(request.Body, parameter.ParameterType);
+                    } catch {
+                        throw new APIGatewayDispatchBadParameterException("invalid JSON document", "request");
+                    }
+                };
             } else {
 
                 // create function for getting default parameter value
@@ -58,6 +76,8 @@ namespace LambdaSharp.Internal {
                 if(parameter.IsOptional) {
                     getDefaultValue = () => parameter.DefaultValue;
                 } else if(parameter.ParameterType.IsValueType) {
+
+                    // TODO (2019-03-13, bjorg): or we could throw an exception when missing
                     getDefaultValue = () => Activator.CreateInstance(parameter.ParameterType);
                 } else {
                     getDefaultValue = () => null;
@@ -73,9 +93,14 @@ namespace LambdaSharp.Internal {
                         || (request.QueryStringParameters?.TryGetValue(parameter.Name, out value) ?? false);
 
                     // if resolved, return the converted value; otherwise the default value
-                    return success
-                        ? Convert.ChangeType(value, Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType)
-                        : getDefaultValue();
+                    if(success) {
+                        try {
+                            return Convert.ChangeType(value, Nullable.GetUnderlyingType(parameter.ParameterType) ?? parameter.ParameterType);
+                        } catch(FormatException) {
+                            throw new APIGatewayDispatchBadParameterException("invalid parameter format", parameter.Name);
+                        }
+                    }
+                    return getDefaultValue();
                 };
             }
             return resolver;
@@ -89,26 +114,47 @@ namespace LambdaSharp.Internal {
             // create adapter to invoke custom method
             Dispatcher methodAdapter;
             if(method.ReturnType == typeof(Task<APIGatewayProxyResponse>)) {
-                methodAdapter = (object target, APIGatewayProxyRequest request) => {
-                    return (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                methodAdapter = async (object target, APIGatewayProxyRequest request) => {
+                    try {
+                        return await (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                    } catch(TargetInvocationException e) {
+
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
                 };
             } else if(method.ReturnType == typeof(APIGatewayProxyResponse)) {
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                    try {
+                        return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                    } catch(TargetInvocationException e) {
+
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
                 };
             } else if(method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) {
                 var resolveReturnValue = method.ReturnType.GetProperty("Result");
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
-                    await task;
-                    var result = resolveReturnValue.GetValue(task);
-                    return new APIGatewayProxyResponse {
-                        StatusCode = 200,
-                        Body = SerializeJson(result),
-                        Headers = new Dictionary<string, string> {
-                            ["ContentType"] = "application/json"
-                        }
-                    };
+                    try {
+                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        await task;
+                        var result = resolveReturnValue.GetValue(task);
+                        return new APIGatewayProxyResponse {
+                            StatusCode = 200,
+                            Body = SerializeJson(result),
+                            Headers = new Dictionary<string, string> {
+                                ["ContentType"] = "application/json"
+                            }
+                        };
+                    } catch(TargetInvocationException e) {
+
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
                 };
             } else if((method.ReturnType == typeof(Task)) || (method.ReturnType == typeof(void))) {
 
@@ -116,14 +162,21 @@ namespace LambdaSharp.Internal {
                 throw new NotSupportedException("void return type is not supported");
             } else {
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
-                    var result = method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
-                    return new APIGatewayProxyResponse {
-                        StatusCode = 200,
-                        Body = SerializeJson(result),
-                        Headers = new Dictionary<string, string> {
-                            ["ContentType"] = "application/json"
-                        }
-                    };
+                    try {
+                        var result = method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        return new APIGatewayProxyResponse {
+                            StatusCode = 200,
+                            Body = SerializeJson(result),
+                            Headers = new Dictionary<string, string> {
+                                ["ContentType"] = "application/json"
+                            }
+                        };
+                    } catch(TargetInvocationException e) {
+
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
                 };
             }
             return methodAdapter;

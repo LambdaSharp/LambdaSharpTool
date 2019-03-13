@@ -49,14 +49,14 @@ namespace LambdaSharp {
         private class APIGatewayDispatchMappings {
 
             //--- Properties ---
-            public List<APIGatewayDispatchMapping> Mappings = new List<APIGatewayDispatchMapping>();
+            public List<APIGatewayDispatchMapping> Mappings { get; set; }
         }
 
         private class APIGatewayDispatchMapping {
 
             //--- Properties ---
-            public string Route;
-            public string Method;
+            public string Route { get; set; }
+            public string Method { get; set; }
         }
 
         //--- Fields ---
@@ -108,21 +108,17 @@ namespace LambdaSharp {
                     // invoke dispatcher
                     try {
                         LogInfo($"dispatching route {signature}");
-                        try {
-                            response = await dispatcher(this, request);
-                        } catch(TargetInvocationException e) {
-
-                            // rethrow inner exception caused by reflection invocation
-                            ExceptionDispatchInfo.Capture(e.InnerException).Throw();
-                            throw new Exception("should never happen");
-                        }
+                        response = await dispatcher(this, request);
                         LogInfo($"finished with status code {response.StatusCode}");
+                    } catch(APIGatewayDispatchBadParameterException e) {
+                        response = CreateBadParameterResponse(request, e.ParameterName, e.Message);
+                        LogInfo($"bad parameter '{e.ParameterName}'");
                     } catch(ALambdaRestApiAbortException e) {
                         response = e.Response;
                         LogInfo($"aborted with status code {response.StatusCode}");
                     } catch(Exception e) {
                         LogError(e, $"route {signature} threw {e.GetType()}");
-                        response = CreateExceptionResponse(request, e);
+                        response = CreateInvocationExceptionResponse(request, e);
                     }
                 }
                 return response;
@@ -131,11 +127,16 @@ namespace LambdaSharp {
             }
         }
 
-        protected virtual APIGatewayProxyResponse CreateExceptionResponse(APIGatewayProxyRequest request, Exception exception)
-            => CreateAbortResponse(500, "Internal Error (see logs for details)");
-
         protected virtual APIGatewayProxyResponse CreateRouteNotFoundResponse(APIGatewayProxyRequest request)
             => CreateAbortResponse(404, $"Route {request.HttpMethod}:{request.Resource} not found");
+
+        protected virtual APIGatewayProxyResponse CreateBadParameterResponse(APIGatewayProxyRequest request, string parameterName, string message)
+            => (parameterName == "request")
+                ? CreateAbortResponse(400, $"Bad request body: {message}")
+                : CreateAbortResponse(400, $"Bad request parameter '{parameterName}': {message}");
+
+        protected virtual APIGatewayProxyResponse CreateInvocationExceptionResponse(APIGatewayProxyRequest request, Exception exception)
+            => CreateAbortResponse(500, "Internal Error (see logs for details)");
 
         protected virtual Exception Abort(APIGatewayProxyResponse response)
             => throw new ALambdaRestApiAbortException(response);
