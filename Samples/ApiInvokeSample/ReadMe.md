@@ -34,7 +34,7 @@ Items:
 
 ## Function Code
 
-API Gateway requests with direct dispatching can be handled using the `ALambdaApiGatewayFunction` base class.
+API Gateway requests with direct method invocations are handled by the `ALambdaApiGatewayFunction` base class.
 
 ```csharp
 public class Function : ALambdaApiGatewayFunction {
