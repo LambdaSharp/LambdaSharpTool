@@ -156,10 +156,35 @@ namespace LambdaSharp.Internal {
                         throw new Exception("should never happen");
                     }
                 };
-            } else if((method.ReturnType == typeof(Task)) || (method.ReturnType == typeof(void))) {
+            } else if(method.ReturnType == typeof(Task)) {
+                methodAdapter = async (object target, APIGatewayProxyRequest request) => {
+                    try {
+                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        await task;
+                        return new APIGatewayProxyResponse {
+                            StatusCode = 200
+                        };
+                    } catch(TargetInvocationException e) {
 
-                // TODO (2019-03-09, bjorg): something to consider for the future
-                throw new NotSupportedException("void return type is not supported");
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
+                };
+            } else if(method.ReturnType == typeof(void)) {
+                methodAdapter = async (object target, APIGatewayProxyRequest request) => {
+                    try {
+                        method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        return new APIGatewayProxyResponse {
+                            StatusCode = 200
+                        };
+                    } catch(TargetInvocationException e) {
+
+                        // rethrow inner exception caused by reflection invocation
+                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        throw new Exception("should never happen");
+                    }
+                };
             } else {
                 methodAdapter = async (object target, APIGatewayProxyRequest request) => {
                     try {

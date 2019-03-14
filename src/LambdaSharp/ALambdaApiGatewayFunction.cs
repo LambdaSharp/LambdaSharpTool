@@ -66,7 +66,6 @@ namespace LambdaSharp {
         //--- Fields ---
         private APIGatewayDispatchTable _dispatchTable;
         private APIGatewayProxyRequest _currentRequest;
-        private IAmazonApiGatewayManagementApi _webSocketClient;
 
         //--- Constructors ---
         protected ALambdaApiGatewayFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -75,6 +74,7 @@ namespace LambdaSharp {
 
         //--- Properties ---
         protected APIGatewayProxyRequest CurrentRequest => _currentRequest;
+        protected IAmazonApiGatewayManagementApi WebSocketClient { get; private set; }
 
         //--- Methods ---
         protected override async Task InitializeAsync(ILambdaConfigSource envSource, ILambdaContext context) {
@@ -100,7 +100,7 @@ namespace LambdaSharp {
             // initialize WebSocket client if environment variable is set for it
             var webSocketUrl = envSource.Read("WEBSOCKET_URL");
             if(webSocketUrl != null) {
-                _webSocketClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig {
+                WebSocketClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig {
                     ServiceURL = webSocketUrl
                 });
             }
@@ -167,19 +167,6 @@ LogInfo($"request:\n{SerializeJson(request)}");
             var signature = request.RequestContext.RouteKey ?? $"{request.RequestContext.HttpMethod}:{request.RequestContext.ResourcePath}";
             LogInfo($"route '{signature}' not found");
             return Task.FromResult(CreateRouteNotFoundResponse(request, signature));
-        }
-
-        protected Task PostToConnectionAsync(string connectionId, object message)
-            => PostToConnectionAsync(connectionId, Encoding.UTF8.GetBytes(SerializeJson(message)));
-
-        protected Task PostToConnectionAsync(string connectionId, byte[] bytes) {
-            if(_webSocketClient == null) {
-                throw new ApplicationException("WebSocket client is not configured for this function");
-            }
-            return _webSocketClient.PostToConnectionAsync(new PostToConnectionRequest {
-                ConnectionId = connectionId,
-                Data = new MemoryStream(bytes)
-            });
         }
 
         protected virtual APIGatewayProxyResponse CreateRouteNotFoundResponse(APIGatewayProxyRequest request, string signature)

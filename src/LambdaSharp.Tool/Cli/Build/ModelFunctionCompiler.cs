@@ -300,6 +300,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["RouteKey"] = webSocketRoute.Source.RouteKey,
                     ["AuthorizationType"] = "NONE",
                     ["OperationName"] = webSocketRoute.Source.OperationName,
+                    ["RouteResponseSelectionExpression"] = "$default",
                     ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                 };
                 var route = _builder.AddResource(
@@ -315,7 +316,26 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
                 webSocketResources.Add(new KeyValuePair<string, object>(route.FullName, routeResource));
 
-                // add lambda invocation permission
+                // add route response resource
+                var routeResponseResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::RouteResponse") {
+                    ["ApiId"] = FnRef(webSocketItem.FullName),
+                    ["RouteId"] = FnRef(route.FullName),
+                    ["RouteResponseKey"] = "$default"
+                };
+                var routeResponse = _builder.AddResource(
+                    parent: webSocketRoute.Function,
+                    name: routeName + "RouteResponse",
+                    description: $"WebSocket Route Response for `{webSocketRoute.Source.RouteKey}`",
+                    scope: null,
+                    resource: routeResponseResource,
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: webSocketRoute.Function.Condition,
+                    pragmas: null
+                );
+                webSocketResources.Add(new KeyValuePair<string, object>(routeResponse.FullName, routeResponseResource));
+
+                // add lambda invocation permission resource
                 _builder.AddResource(
                     parent: webSocketRoute.Function,
                     name: routeName + "Permission",
