@@ -33,7 +33,7 @@ using LambdaSharp;
 
 namespace ApiInvokeSample.MyFunction {
 
-    public class Function : ALambdaRestApiFunction {
+    public class Function : ALambdaApiGatewayFunction {
 
         //--- Types ---
 

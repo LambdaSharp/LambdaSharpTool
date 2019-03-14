@@ -34,10 +34,10 @@ Items:
 
 ## Function Code
 
-API Gateway requests with direct dispatching can be handled using the `ALambdaRestApiFunction` base class.
+API Gateway requests with direct dispatching can be handled using the `ALambdaApiGatewayFunction` base class.
 
 ```csharp
-public class Function : ALambdaRestApiFunction {
+public class Function : ALambdaApiGatewayFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)
