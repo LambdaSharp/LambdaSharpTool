@@ -24,7 +24,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
+using System.Text;
 using System.Threading.Tasks;
+using Amazon.ApiGatewayManagementApi;
+using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using LambdaSharp.ConfigSource;
@@ -63,6 +66,7 @@ namespace LambdaSharp {
         //--- Fields ---
         private APIGatewayDispatchTable _dispatchTable;
         private APIGatewayProxyRequest _currentRequest;
+        private IAmazonApiGatewayManagementApi _webSocketClient;
 
         //--- Constructors ---
         protected ALambdaApiGatewayFunction() : this(LambdaFunctionConfiguration.Instance) { }
@@ -91,6 +95,14 @@ namespace LambdaSharp {
                         throw new InvalidDataException("");
                     }
                 }
+            }
+
+            // initialize WebSocket client if environment variable is set for it
+            var webSocketUrl = envSource.Read("WEBSOCKET_URL");
+            if(webSocketUrl != null) {
+                _webSocketClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig {
+                    ServiceURL = webSocketUrl
+                });
             }
         }
 
@@ -157,30 +169,43 @@ LogInfo($"request:\n{SerializeJson(request)}");
             return Task.FromResult(CreateRouteNotFoundResponse(request, signature));
         }
 
+        protected Task PostToConnectionAsync(string connectionId, object message)
+            => PostToConnectionAsync(connectionId, Encoding.UTF8.GetBytes(SerializeJson(message)));
+
+        protected Task PostToConnectionAsync(string connectionId, byte[] bytes) {
+            if(_webSocketClient == null) {
+                throw new ApplicationException("WebSocket client is not configured for this function");
+            }
+            return _webSocketClient.PostToConnectionAsync(new PostToConnectionRequest {
+                ConnectionId = connectionId,
+                Data = new MemoryStream(bytes)
+            });
+        }
+
         protected virtual APIGatewayProxyResponse CreateRouteNotFoundResponse(APIGatewayProxyRequest request, string signature)
-            => CreateAbortResponse(404, $"Route '{signature}' not found");
+            => CreateStatusResponse(404, $"Route '{signature}' not found");
 
         protected virtual APIGatewayProxyResponse CreateBadParameterResponse(APIGatewayProxyRequest request, string parameterName, string message)
             => (parameterName == "request")
-                ? CreateAbortResponse(400, $"Bad request body: {message}")
-                : CreateAbortResponse(400, $"Bad request parameter '{parameterName}': {message}");
+                ? CreateStatusResponse(400, $"Bad request body: {message}")
+                : CreateStatusResponse(400, $"Bad request parameter '{parameterName}': {message}");
 
         protected virtual APIGatewayProxyResponse CreateInvocationExceptionResponse(APIGatewayProxyRequest request, Exception exception)
-            => CreateAbortResponse(500, "Internal Error (see logs for details)");
+            => CreateStatusResponse(500, "Internal Error (see logs for details)");
 
         protected virtual Exception Abort(APIGatewayProxyResponse response)
             => throw new ALambdaRestApiAbortException(response);
 
         protected virtual Exception AbortBadRequest(string message)
-            => Abort(CreateAbortResponse(400, message));
+            => Abort(CreateStatusResponse(400, message));
 
         protected virtual Exception AbortForbidden(string message)
-            => Abort(CreateAbortResponse(403, message));
+            => Abort(CreateStatusResponse(403, message));
 
         protected virtual Exception AbortNotFound(string message)
-            => Abort(CreateAbortResponse(404, message));
+            => Abort(CreateStatusResponse(404, message));
 
-        protected virtual APIGatewayProxyResponse CreateAbortResponse(int statusCode, string message)
+        protected virtual APIGatewayProxyResponse CreateStatusResponse(int statusCode, string message)
             => new APIGatewayProxyResponse {
                 StatusCode = statusCode,
                 Body = SerializeJson(new {

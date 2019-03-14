@@ -49,22 +49,22 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add functions
                 foreach(var function in functions) {
-                    AddFunction(function);
+                    AddFunctionSources(function);
                 }
 
                 // check if a REST API gateway needs to be created
                 if(_restApiRoutes.Any()) {
-                    AddRestApiResources();
+                    AddRestApiResources(functions);
                 }
 
                 // check if a WebSocket API gateway needs to be created
                 if(_webSocketRoutes.Any()) {
-                    AddWebSocketResources();
+                    AddWebSocketResources(functions);
                 }
             }
         }
 
-        private void AddRestApiResources() {
+        private void AddRestApiResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
             // create a REST API
@@ -229,7 +229,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
         }
 
-        private void AddWebSocketResources() {
+        private void AddWebSocketResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
             // give permission to the Lambda functions to communicate back over the websocket
@@ -241,6 +241,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "execute-api:ManageConnections"
                 }
             );
+
+            // add websocket URL to all function environments
+            foreach(var function in functions) {
+                function.Function.Environment.Variables["WEBSOCKET_URL"] = FnSub("https://${Module::WebSocket}.execute-api.${AWS::Region}.amazonaws.com/LATEST");
+            }
 
             // create a WebSocket API
             var webSocketItem = _builder.AddResource(
@@ -548,7 +553,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private void AddFunction(FunctionItem function) {
+        private void AddFunctionSources(FunctionItem function) {
 
             // add function sources
             for(var sourceIndex = 0; sourceIndex < function.Sources.Count; ++sourceIndex) {
