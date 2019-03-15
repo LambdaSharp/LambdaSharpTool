@@ -382,6 +382,7 @@ A small, aesthetic win is that the λ# CLI uses the manifest to translate the re
 Last, but not least, all in resources in λ# module are not automatically tagged, when possible, with the following information:
 |Tag Name|Description|Example|
 |--------|-----------|-------|
+`LambdaSharp:DeployedBy`|The IAM identity used to deploy the CloudFormation stack.|`user/bob`|
 `LambdaSharp:Module`|The full module name without version or source bucket specification.|`My.Module`|
 `LambdaSharp:RootStack`|The name of the root CloudFormation stack under which the resource are created. This is the same as `aws:cloudformation:stack-name` for non-nested modules. Otherwise, it is the stack name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
 `LambdaSharp:Tier`|The name of the deployment tier.|`Sandbox`|
