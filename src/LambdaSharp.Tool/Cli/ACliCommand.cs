@@ -41,6 +41,14 @@ using System.Text;
 
 namespace LambdaSharp.Tool.Cli {
 
+    public class AwsAccountInfo {
+
+        //--- Properties ---
+        public string Region { get; set; }
+        public string AccountId { get; set; }
+        public string UserArn { get; set; }
+    }
+
     public abstract class ACliCommand : CliBase {
 
         //--- Class Methods ---
@@ -66,7 +74,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         //--- Methods ---
-        protected async Task<(string AccountId, string Region)?> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null) {
+        protected async Task<AwsAccountInfo> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null, string awsUserArn = null) {
 
             // initialize AWS profile
             if(awsProfile != null) {
@@ -77,14 +85,15 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // determine default AWS region
-            if((awsAccountId == null) || (awsRegion == null)) {
+            if((awsAccountId == null) || (awsRegion == null) || (awsUserArn == null)) {
 
                 // determine AWS region and account
                 try {
                     var stsClient = new AmazonSecurityTokenServiceClient();
                     var response = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
-                    awsAccountId = awsAccountId ?? response.Account;
                     awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
+                    awsAccountId = awsAccountId ?? response.Account;
+                    awsUserArn = awsUserArn ?? response.Arn;
                 } catch(Exception e) {
                     LogError("unable to determine the AWS Account Id and Region", e);
                     return null;
@@ -95,7 +104,11 @@ namespace LambdaSharp.Tool.Cli {
             AWSConfigs.AWSRegion = awsRegion;
             Environment.SetEnvironmentVariable("AWS_REGION", awsRegion);
             Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", awsRegion);
-            return (AccountId: awsAccountId, Region: awsRegion);
+            return new AwsAccountInfo {
+                Region = awsRegion,
+                AccountId = awsAccountId,
+                UserArn = awsUserArn
+            };
         }
 
         protected Func<Task<Settings>> CreateSettingsInitializer(
@@ -117,8 +130,9 @@ namespace LambdaSharp.Tool.Cli {
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
 
             // add hidden testing options
-            var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+            var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
+            var awsUserArnOption = cmd.Option("--aws-user-arn <ARN>", "(test only) Override AWS user ARN (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
@@ -156,7 +170,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // initialize AWS profile
                 try {
-                    (string AccountId, string Region)? awsAccount = null;
+                    AwsAccountInfo awsAccount = null;
                     IAmazonSimpleSystemsManagement ssmClient = null;
                     IAmazonCloudFormation cfClient = null;
                     IAmazonKeyManagementService kmsClient = null;
@@ -165,7 +179,8 @@ namespace LambdaSharp.Tool.Cli {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
                             awsAccountIdOption.Value(),
-                            awsRegionOption.Value()
+                            awsRegionOption.Value(),
+                            awsUserArnOption.Value()
                         );
 
                         // create AWS clients
@@ -191,8 +206,9 @@ namespace LambdaSharp.Tool.Cli {
                         ToolProfileExplicitlyProvided = toolProfileOption.HasValue(),
                         TierVersion = (tierVersion != null) ? VersionInfo.Parse(tierVersion) : null,
                         Tier = tier,
-                        AwsRegion = awsAccount.GetValueOrDefault().Region,
-                        AwsAccountId = awsAccount.GetValueOrDefault().AccountId,
+                        AwsRegion = awsAccount?.Region,
+                        AwsAccountId = awsAccount?.AccountId,
+                        AwsUserArn = awsAccount?.UserArn,
                         DeploymentBucketName = deploymentBucketName,
                         DeploymentNotificationsTopic = deploymentNotificationTopic,
                         ModuleBucketNames = moduleBucketNames,

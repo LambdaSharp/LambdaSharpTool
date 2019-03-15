@@ -4,8 +4,9 @@ if [ -z "$1" ]; then
     dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- info \
         --verbose:exceptions \
         --tier Test \
-        --aws-account-id 123456789012 \
         --aws-region us-east-1 \
+        --aws-account-id 123456789012 \
+        --aws-user-arn arn:aws:iam::123456789012:user/test-user \
         --tier-version 0.5 \
         --cli-version 0.5 \
         --deployment-bucket-name lambdasharp-bucket-name \
@@ -22,8 +23,9 @@ if [ -z "$1" ]; then
         --tier Test \
         --cfn-output Results/ \
         --dryrun:cloudformation \
-        --aws-account-id 123456789012 \
         --aws-region us-east-1 \
+        --aws-account-id 123456789012 \
+        --aws-user-arn arn:aws:iam::123456789012:user/test-user \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
         --tier-version 0.5 \

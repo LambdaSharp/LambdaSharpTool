@@ -134,6 +134,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     new Tag {
                         Key = "LambdaSharp:RootStack",
                         Value = stackName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = Settings.AwsUserArn.Split(':').Last()
                     }
                 }
             });
