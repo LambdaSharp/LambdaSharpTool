@@ -2759,6 +2759,14 @@
       "Required": false,
       "Type": "List"
     },
+    "AWS::CodeBuild::Project.GitSubmodulesConfig": {
+      "Properties": {
+        "FetchSubmodules": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
     "AWS::CodeBuild::Project.LogsConfig": {
       "Properties": {
         "CloudWatchLogs": {
@@ -2815,6 +2823,10 @@
     },
     "AWS::CodeBuild::Project.S3LogsConfig": {
       "Properties": {
+        "EncryptionDisabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "Location": {
           "PrimitiveType": "String",
           "Required": false
@@ -2838,6 +2850,10 @@
         "GitCloneDepth": {
           "PrimitiveType": "Integer",
           "Required": false
+        },
+        "GitSubmodulesConfig": {
+          "Required": false,
+          "Type": "GitSubmodulesConfig"
         },
         "InsecureSsl": {
           "PrimitiveType": "Boolean",
@@ -8616,6 +8632,639 @@
         }
       }
     },
+    "AWS::Greengrass::ConnectorDefinition.Connector": {
+      "Properties": {
+        "ConnectorArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Parameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::ConnectorDefinition.ConnectorDefinitionVersion": {
+      "Properties": {
+        "Connectors": {
+          "ItemType": "Connector",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::ConnectorDefinitionVersion.Connector": {
+      "Properties": {
+        "ConnectorArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Parameters": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::CoreDefinition.Core": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SyncShadow": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ThingArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::CoreDefinition.CoreDefinitionVersion": {
+      "Properties": {
+        "Cores": {
+          "ItemType": "Core",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::CoreDefinitionVersion.Core": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SyncShadow": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ThingArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::DeviceDefinition.Device": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SyncShadow": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ThingArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::DeviceDefinition.DeviceDefinitionVersion": {
+      "Properties": {
+        "Devices": {
+          "ItemType": "Device",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::DeviceDefinitionVersion.Device": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SyncShadow": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ThingArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.DefaultConfig": {
+      "Properties": {
+        "Execution": {
+          "Required": true,
+          "Type": "Execution"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.Environment": {
+      "Properties": {
+        "AccessSysfs": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Execution": {
+          "Required": false,
+          "Type": "Execution"
+        },
+        "ResourceAccessPolicies": {
+          "ItemType": "ResourceAccessPolicy",
+          "Required": false,
+          "Type": "List"
+        },
+        "Variables": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.Execution": {
+      "Properties": {
+        "IsolationMode": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RunAs": {
+          "Required": false,
+          "Type": "RunAs"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.Function": {
+      "Properties": {
+        "FunctionArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "FunctionConfiguration": {
+          "Required": true,
+          "Type": "FunctionConfiguration"
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.FunctionConfiguration": {
+      "Properties": {
+        "EncodingType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Environment": {
+          "Required": false,
+          "Type": "Environment"
+        },
+        "ExecArgs": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Executable": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MemorySize": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "Pinned": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Timeout": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.FunctionDefinitionVersion": {
+      "Properties": {
+        "DefaultConfig": {
+          "Required": false,
+          "Type": "DefaultConfig"
+        },
+        "Functions": {
+          "ItemType": "Function",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.ResourceAccessPolicy": {
+      "Properties": {
+        "Permission": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResourceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition.RunAs": {
+      "Properties": {
+        "Gid": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Uid": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.DefaultConfig": {
+      "Properties": {
+        "Execution": {
+          "Required": true,
+          "Type": "Execution"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.Environment": {
+      "Properties": {
+        "AccessSysfs": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Execution": {
+          "Required": false,
+          "Type": "Execution"
+        },
+        "ResourceAccessPolicies": {
+          "ItemType": "ResourceAccessPolicy",
+          "Required": false,
+          "Type": "List"
+        },
+        "Variables": {
+          "PrimitiveType": "Json",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.Execution": {
+      "Properties": {
+        "IsolationMode": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RunAs": {
+          "Required": false,
+          "Type": "RunAs"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.Function": {
+      "Properties": {
+        "FunctionArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "FunctionConfiguration": {
+          "Required": true,
+          "Type": "FunctionConfiguration"
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.FunctionConfiguration": {
+      "Properties": {
+        "EncodingType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Environment": {
+          "Required": false,
+          "Type": "Environment"
+        },
+        "ExecArgs": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Executable": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MemorySize": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "Pinned": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Timeout": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.ResourceAccessPolicy": {
+      "Properties": {
+        "Permission": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResourceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion.RunAs": {
+      "Properties": {
+        "Gid": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Uid": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::Group.GroupVersion": {
+      "Properties": {
+        "ConnectorDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "CoreDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DeviceDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "FunctionDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "LoggerDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResourceDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SubscriptionDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::LoggerDefinition.Logger": {
+      "Properties": {
+        "Component": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Level": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Space": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::LoggerDefinition.LoggerDefinitionVersion": {
+      "Properties": {
+        "Loggers": {
+          "ItemType": "Logger",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::LoggerDefinitionVersion.Logger": {
+      "Properties": {
+        "Component": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Level": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Space": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.GroupOwnerSetting": {
+      "Properties": {
+        "AutoAddGroupOwner": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        },
+        "GroupOwner": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.LocalDeviceResourceData": {
+      "Properties": {
+        "GroupOwnerSetting": {
+          "Required": false,
+          "Type": "GroupOwnerSetting"
+        },
+        "SourcePath": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.LocalVolumeResourceData": {
+      "Properties": {
+        "DestinationPath": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "GroupOwnerSetting": {
+          "Required": false,
+          "Type": "GroupOwnerSetting"
+        },
+        "SourcePath": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.ResourceDataContainer": {
+      "Properties": {
+        "LocalDeviceResourceData": {
+          "Required": false,
+          "Type": "LocalDeviceResourceData"
+        },
+        "LocalVolumeResourceData": {
+          "Required": false,
+          "Type": "LocalVolumeResourceData"
+        },
+        "S3MachineLearningModelResourceData": {
+          "Required": false,
+          "Type": "S3MachineLearningModelResourceData"
+        },
+        "SageMakerMachineLearningModelResourceData": {
+          "Required": false,
+          "Type": "SageMakerMachineLearningModelResourceData"
+        },
+        "SecretsManagerSecretResourceData": {
+          "Required": false,
+          "Type": "SecretsManagerSecretResourceData"
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.ResourceInstance": {
+      "Properties": {
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ResourceDataContainer": {
+          "Required": true,
+          "Type": "ResourceDataContainer"
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.S3MachineLearningModelResourceData": {
+      "Properties": {
+        "DestinationPath": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "S3Uri": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.SageMakerMachineLearningModelResourceData": {
+      "Properties": {
+        "DestinationPath": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SageMakerJobArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion.SecretsManagerSecretResourceData": {
+      "Properties": {
+        "AdditionalStagingLabelsToDownload": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "ARN": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::SubscriptionDefinition.Subscription": {
+      "Properties": {
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Source": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Subject": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Target": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::SubscriptionDefinition.SubscriptionDefinitionVersion": {
+      "Properties": {
+        "Subscriptions": {
+          "ItemType": "Subscription",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::SubscriptionDefinitionVersion.Subscription": {
+      "Properties": {
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Source": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Subject": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Target": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::GuardDuty::Filter.Condition": {
       "Properties": {
         "Eq": {
@@ -13456,7 +14105,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "2.26.0",
+  "ResourceSpecificationVersion": "2.28.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Properties": {
@@ -14624,6 +15273,11 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
         "VpcConfig": {
           "Required": false,
           "Type": "VpcConfig"
@@ -14673,6 +15327,11 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
         "VpcConfig": {
           "Required": false,
           "Type": "VpcConfig"
@@ -14716,6 +15375,11 @@
         },
         "StorageConnectors": {
           "ItemType": "StorageConnector",
+          "Required": false,
+          "Type": "List"
+        },
+        "Tags": {
+          "ItemType": "Tag",
           "Required": false,
           "Type": "List"
         },
@@ -20389,6 +21053,329 @@
         }
       }
     },
+    "AWS::Greengrass::ConnectorDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "ConnectorDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::ConnectorDefinitionVersion": {
+      "Properties": {
+        "ConnectorDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Connectors": {
+          "ItemType": "Connector",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::CoreDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "CoreDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::CoreDefinitionVersion": {
+      "Properties": {
+        "CoreDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Cores": {
+          "ItemType": "Core",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::DeviceDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "DeviceDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::DeviceDefinitionVersion": {
+      "Properties": {
+        "DeviceDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Devices": {
+          "ItemType": "Device",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "FunctionDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::FunctionDefinitionVersion": {
+      "Properties": {
+        "DefaultConfig": {
+          "Required": false,
+          "Type": "DefaultConfig"
+        },
+        "FunctionDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Functions": {
+          "ItemType": "Function",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::Group": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        },
+        "RoleArn": {
+          "PrimitiveType": "String"
+        },
+        "RoleAttachedAt": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "GroupVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::GroupVersion": {
+      "Properties": {
+        "ConnectorDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "CoreDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DeviceDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "FunctionDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GroupId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "LoggerDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ResourceDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SubscriptionDefinitionVersionArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Greengrass::LoggerDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "LoggerDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::LoggerDefinitionVersion": {
+      "Properties": {
+        "LoggerDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Loggers": {
+          "ItemType": "Logger",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::ResourceDefinitionVersion": {
+      "Properties": {
+        "ResourceDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Resources": {
+          "ItemType": "ResourceInstance",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Greengrass::SubscriptionDefinition": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        },
+        "LatestVersionArn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Properties": {
+        "InitialVersion": {
+          "Required": false,
+          "Type": "SubscriptionDefinitionVersion"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Greengrass::SubscriptionDefinitionVersion": {
+      "Properties": {
+        "SubscriptionDefinitionId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Subscriptions": {
+          "ItemType": "Subscription",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::GuardDuty::Detector": {
       "Properties": {
         "Enable": {
@@ -23759,6 +24746,10 @@
         "RoleArn": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "RootAccess": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "SecurityGroupIds": {
           "PrimitiveItemType": "String",
