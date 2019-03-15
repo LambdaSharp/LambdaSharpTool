@@ -14,3 +14,4 @@ __Definitions__
 * [Slack Command Source](Module-Function-Sources-SlackCommand.md)
 * [SNS Topic Source](Module-Function-Sources-SNS.md)
 * [SQS Queue Source](Module-Function-Sources-SQS.md)
+* [WebSocket Source](Module-Function-Sources-WebSocket.md)

@@ -163,7 +163,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         HttpMethod = method,
                         Path = path,
                         Integration = integration,
-                        OperationName = source.OperationName,
+                        OperationName = source.OperationName ?? source.Invoke,
                         ApiKeyRequired = source.ApiKeyRequired,
                         InvokeMethod = source.Invoke
                     };
@@ -220,7 +220,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             case "WebSocket":
                 return AtLocation("WebSocket", () => new WebSocketSource {
                     RouteKey = source.WebSocket.Trim(),
-                    OperationName = source.OperationName,
+                    OperationName = source.OperationName ?? source.Invoke,
                     ApiKeyRequired = source.ApiKeyRequired,
                     InvokeMethod = source.Invoke
                 });
