@@ -51,5 +51,6 @@ namespace LambdaSharp.Tool.Model {
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
         public bool HasRuntimeCheck => !HasPragma("no-core-version-check");
+        public bool HasSamTransform => HasPragma("sam-transform");
     }
 }
