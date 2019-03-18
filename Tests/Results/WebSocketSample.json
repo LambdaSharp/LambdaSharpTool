@@ -1,0 +1,1438 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
+    "LambdaSharpCoreDeadLetterQueue": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::DeadLetterQueue",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::DeadLetterQueue"
+    },
+    "LambdaSharpCoreLoggingStream": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStream",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStream"
+    },
+    "LambdaSharpCoreLoggingStreamRole": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::LoggingStreamRole",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::LoggingStreamRole"
+    },
+    "LambdaSharpCoreDefaultSecretKey": {
+      "Type": "String",
+      "Description": "Cross-module reference for LambdaSharp.Core::DefaultSecretKey",
+      "AllowedPattern": "^.+$",
+      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
+      "Default": "$LambdaSharp-Core::DefaultSecretKey"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "51830FC75F936BAF86B11A9246FC44F0"
+    }
+  },
+  "Resources": {
+    "ConnectionsTable": {
+      "Type": "AWS::DynamoDB::Table",
+      "Properties": {
+        "BillingMode": "PAY_PER_REQUEST",
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "ConnectionId",
+            "AttributeType": "S"
+          }
+        ],
+        "KeySchema": [
+          {
+            "AttributeName": "ConnectionId",
+            "KeyType": "HASH"
+          }
+        ]
+      }
+    },
+    "ConnectionFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "LambdaSharp/Modules/Sample.WebSockets/Assets/ConnectionFunction-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "LambdaSharpCoreDeadLetterQueueIsImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpCoreDeadLetterQueue"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpCoreDeadLetterQueue"
+              }
+            ]
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "WEBSOCKET_URL": {
+              "Fn::Sub": "https://${ModuleWebSocket}.execute-api.${AWS::Region}.amazonaws.com/LATEST"
+            },
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+            "LAMBDA_NAME": "ConnectionFunction",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpCoreDeadLetterQueueIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpCoreDefaultSecretKeyIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                }
+              ]
+            },
+            "STR_CONNECTIONSTABLE": {
+              "Fn::GetAtt": [
+                "ConnectionsTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "ConnectionFunction::WebSocketsSample.ConnectionFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
+      }
+    },
+    "ConnectionFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ConnectionFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "MessageFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "LambdaSharp/Modules/Sample.WebSockets/Assets/MessageFunction-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "LambdaSharpCoreDeadLetterQueueIsImported",
+              {
+                "Fn::ImportValue": {
+                  "Fn::Sub": [
+                    "${DeploymentPrefix}${Import}",
+                    {
+                      "Import": {
+                        "Fn::Select": [
+                          "1",
+                          {
+                            "Fn::Split": [
+                              "$",
+                              {
+                                "Ref": "LambdaSharpCoreDeadLetterQueue"
+                              }
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "Ref": "LambdaSharpCoreDeadLetterQueue"
+              }
+            ]
+          }
+        },
+        "Environment": {
+          "Variables": {
+            "WEBSOCKET_URL": {
+              "Fn::Sub": "https://${ModuleWebSocket}.execute-api.${AWS::Region}.amazonaws.com/LATEST"
+            },
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+            "LAMBDA_NAME": "MessageFunction",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "LambdaSharpCoreDeadLetterQueueIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                }
+              ]
+            },
+            "DEFAULTSECRETKEY": {
+              "Fn::If": [
+                "LambdaSharpCoreDefaultSecretKeyIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                }
+              ]
+            },
+            "STR_CONNECTIONSTABLE": {
+              "Fn::GetAtt": [
+                "ConnectionsTable",
+                "Arn"
+              ]
+            }
+          }
+        },
+        "Handler": "MessageFunction::WebSocketsSample.MessageFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Ref": "XRayTracing"
+          }
+        }
+      }
+    },
+    "MessageFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${MessageFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "ModuleRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "ModuleLambdaPrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Sid": "ConnectionsTable",
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:BatchGetItem",
+                    "dynamodb:BatchWriteItem",
+                    "dynamodb:DeleteItem",
+                    "dynamodb:DescribeStream",
+                    "dynamodb:DescribeTable",
+                    "dynamodb:GetItem",
+                    "dynamodb:GetRecords",
+                    "dynamodb:GetShardIterator",
+                    "dynamodb:PutItem",
+                    "dynamodb:Query",
+                    "dynamodb:Scan",
+                    "dynamodb:UpdateItem"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "ConnectionsTable",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "ConnectionsTable",
+                              "Arn"
+                            ]
+                          },
+                          "stream/*"
+                        ]
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "/",
+                        [
+                          {
+                            "Fn::GetAtt": [
+                              "ConnectionsTable",
+                              "Arn"
+                            ]
+                          },
+                          "index/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:SendMessage"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "LambdaSharpCoreDeadLetterQueueIsImported",
+                      {
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                      }
+                                    ]
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "LambdaSharpCoreDeadLetterQueue"
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "SecretsDecryption",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt",
+                    "kms:GenerateDataKey",
+                    "kms:GenerateDataKeyWithoutPlaintext"
+                  ],
+                  "Resource": {
+                    "Fn::Split": [
+                      ",",
+                      {
+                        "Fn::If": [
+                          "SecretsIsEmpty",
+                          {
+                            "Fn::If": [
+                              "LambdaSharpCoreDefaultSecretKeyIsImported",
+                              {
+                                "Fn::ImportValue": {
+                                  "Fn::Sub": [
+                                    "${DeploymentPrefix}${Import}",
+                                    {
+                                      "Import": {
+                                        "Fn::Select": [
+                                          "1",
+                                          {
+                                            "Fn::Split": [
+                                              "$",
+                                              {
+                                                "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                              }
+                                            ]
+                                          }
+                                        ]
+                                      }
+                                    }
+                                  ]
+                                }
+                              },
+                              {
+                                "Ref": "LambdaSharpCoreDefaultSecretKey"
+                              }
+                            ]
+                          },
+                          {
+                            "Fn::Join": [
+                              ",",
+                              [
+                                {
+                                  "Fn::If": [
+                                    "LambdaSharpCoreDefaultSecretKeyIsImported",
+                                    {
+                                      "Fn::ImportValue": {
+                                        "Fn::Sub": [
+                                          "${DeploymentPrefix}${Import}",
+                                          {
+                                            "Import": {
+                                              "Fn::Select": [
+                                                "1",
+                                                {
+                                                  "Fn::Split": [
+                                                    "$",
+                                                    {
+                                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                                    }
+                                                  ]
+                                                }
+                                              ]
+                                            }
+                                          }
+                                        ]
+                                      }
+                                    },
+                                    {
+                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "Ref": "Secrets"
+                                }
+                              ]
+                            ]
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Sid": "ModuleLogStreamAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                  ],
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "AWSXRayWriteAccess",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
+                },
+                {
+                  "Sid": "ModuleWebSocketConnections",
+                  "Effect": "Allow",
+                  "Action": [
+                    "execute-api:ManageConnections"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/POST/@connections/*"
+                  }
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    },
+    "ConnectionFunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "ConnectionFunction"
+        },
+        "FunctionName": "ConnectionFunction",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ConnectionFunction}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "256",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "ConnectionFunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStream"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStream"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "ConnectionFunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamRoleIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStreamRole"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStreamRole"
+            }
+          ]
+        }
+      }
+    },
+    "MessageFunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        },
+        "FunctionId": {
+          "Ref": "MessageFunction"
+        },
+        "FunctionName": "MessageFunction",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${MessageFunction}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore2.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "256",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "MessageFunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStream"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStream"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "MessageFunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "LambdaSharpCoreLoggingStreamRoleIsImported",
+            {
+              "Fn::ImportValue": {
+                "Fn::Sub": [
+                  "${DeploymentPrefix}${Import}",
+                  {
+                    "Import": {
+                      "Fn::Select": [
+                        "1",
+                        {
+                          "Fn::Split": [
+                            "$",
+                            {
+                              "Ref": "LambdaSharpCoreLoggingStreamRole"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "Ref": "LambdaSharpCoreLoggingStreamRole"
+            }
+          ]
+        }
+      }
+    },
+    "ModuleWebSocket": {
+      "Type": "AWS::ApiGatewayV2::Api",
+      "Properties": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName} Module WebSocket"
+        },
+        "ProtocolType": "WEBSOCKET",
+        "Description": "${Module::FullName} WebSocket (v${Module::Version})",
+        "RouteSelectionExpression": "$request.body.action"
+      }
+    },
+    "ConnectionFunctionConnectIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "Description": "WebSocket Integration for `$connect`",
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectionFunction.Arn}/invocations"
+        }
+      }
+    },
+    "ConnectionFunctionConnectRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteKey": "$connect",
+        "AuthorizationType": "NONE",
+        "OperationName": "OpenConnectionAsync",
+        "RouteResponseSelectionExpression": "$default",
+        "Target": {
+          "Fn::Sub": "integrations/${ConnectionFunctionConnectIntegration}"
+        }
+      }
+    },
+    "ConnectionFunctionConnectRouteResponse": {
+      "Type": "AWS::ApiGatewayV2::RouteResponse",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteId": {
+          "Ref": "ConnectionFunctionConnectRoute"
+        },
+        "RouteResponseKey": "$default"
+      }
+    },
+    "ConnectionFunctionConnectPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ConnectionFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$connect"
+        }
+      }
+    },
+    "ConnectionFunctionDisconnectIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "Description": "WebSocket Integration for `$disconnect`",
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${ConnectionFunction.Arn}/invocations"
+        }
+      }
+    },
+    "ConnectionFunctionDisconnectRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteKey": "$disconnect",
+        "AuthorizationType": "NONE",
+        "OperationName": "CloseConnectionAsync",
+        "RouteResponseSelectionExpression": "$default",
+        "Target": {
+          "Fn::Sub": "integrations/${ConnectionFunctionDisconnectIntegration}"
+        }
+      }
+    },
+    "ConnectionFunctionDisconnectRouteResponse": {
+      "Type": "AWS::ApiGatewayV2::RouteResponse",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteId": {
+          "Ref": "ConnectionFunctionDisconnectRoute"
+        },
+        "RouteResponseKey": "$default"
+      }
+    },
+    "ConnectionFunctionDisconnectPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "ConnectionFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$disconnect"
+        }
+      }
+    },
+    "MessageFunctionSendIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "Description": "WebSocket Integration for `send`",
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MessageFunction.Arn}/invocations"
+        }
+      }
+    },
+    "MessageFunctionSendRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteKey": "send",
+        "AuthorizationType": "NONE",
+        "OperationName": "SendMessageAsync",
+        "RouteResponseSelectionExpression": "$default",
+        "Target": {
+          "Fn::Sub": "integrations/${MessageFunctionSendIntegration}"
+        }
+      }
+    },
+    "MessageFunctionSendRouteResponse": {
+      "Type": "AWS::ApiGatewayV2::RouteResponse",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteId": {
+          "Ref": "MessageFunctionSendRoute"
+        },
+        "RouteResponseKey": "$default"
+      }
+    },
+    "MessageFunctionSendPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "MessageFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/send"
+        }
+      }
+    },
+    "MessageFunctionDefaultIntegration": {
+      "Type": "AWS::ApiGatewayV2::Integration",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "Description": "WebSocket Integration for `$default`",
+        "IntegrationType": "AWS_PROXY",
+        "IntegrationUri": {
+          "Fn::Sub": "arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${MessageFunction.Arn}/invocations"
+        }
+      }
+    },
+    "MessageFunctionDefaultRoute": {
+      "Type": "AWS::ApiGatewayV2::Route",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteKey": "$default",
+        "AuthorizationType": "NONE",
+        "OperationName": "UnrecognizedRequest",
+        "RouteResponseSelectionExpression": "$default",
+        "Target": {
+          "Fn::Sub": "integrations/${MessageFunctionDefaultIntegration}"
+        }
+      }
+    },
+    "MessageFunctionDefaultRouteResponse": {
+      "Type": "AWS::ApiGatewayV2::RouteResponse",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "RouteId": {
+          "Ref": "MessageFunctionDefaultRoute"
+        },
+        "RouteResponseKey": "$default"
+      }
+    },
+    "MessageFunctionDefaultPermission": {
+      "Type": "AWS::Lambda::Permission",
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Ref": "MessageFunction"
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$default"
+        }
+      }
+    },
+    "ModuleWebSocketDeployment3B1BFA2CF20193F9B1420CF68109E633": {
+      "Type": "AWS::ApiGatewayV2::Deployment",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "Description": {
+          "Fn::Sub": "${AWS::StackName} WebSocket [3B1BFA2CF20193F9B1420CF68109E633]"
+        }
+      },
+      "DependsOn": [
+        "ConnectionFunctionConnectIntegration",
+        "ConnectionFunctionConnectRoute",
+        "ConnectionFunctionConnectRouteResponse",
+        "ConnectionFunctionDisconnectIntegration",
+        "ConnectionFunctionDisconnectRoute",
+        "ConnectionFunctionDisconnectRouteResponse",
+        "MessageFunctionSendIntegration",
+        "MessageFunctionSendRoute",
+        "MessageFunctionSendRouteResponse",
+        "MessageFunctionDefaultIntegration",
+        "MessageFunctionDefaultRoute",
+        "MessageFunctionDefaultRouteResponse"
+      ]
+    },
+    "ModuleWebSocketStage": {
+      "Type": "AWS::ApiGatewayV2::Stage",
+      "Properties": {
+        "ApiId": {
+          "Ref": "ModuleWebSocket"
+        },
+        "StageName": "LATEST",
+        "Description": "Module WebSocket LATEST Stage",
+        "DeploymentId": {
+          "Ref": "ModuleWebSocketDeployment3B1BFA2CF20193F9B1420CF68109E633"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Module": {
+      "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV"
+    },
+    "WebSocketUrl": {
+      "Value": {
+        "Fn::Sub": "wss://${ModuleWebSocket}.execute-api.${AWS::Region}.amazonaws.com/${ModuleWebSocketStage}"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::WebSocketUrl"
+        }
+      },
+      "Description": "WebSocket URL"
+    }
+  },
+  "Conditions": {
+    "SecretsIsEmpty": {
+      "Fn::Equals": [
+        {
+          "Ref": "Secrets"
+        },
+        ""
+      ]
+    },
+    "LambdaSharpCoreDeadLetterQueueIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreDeadLetterQueue"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpCoreLoggingStreamIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStream"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpCoreLoggingStreamRoleIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreLoggingStreamRole"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    },
+    "LambdaSharpCoreDefaultSecretKeyIsImported": {
+      "Fn::And": [
+        {
+          "Fn::Not": [
+            {
+              "Fn::Equals": [
+                {
+                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                },
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "Fn::Equals": [
+            {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "$",
+                    {
+                      "Ref": "LambdaSharpCoreDefaultSecretKey"
+                    }
+                  ]
+                }
+              ]
+            },
+            ""
+          ]
+        }
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
+        },
+        "LambdaSharpCoreDeadLetterQueue": {
+          "default": "DeadLetterQueue [String]"
+        },
+        "LambdaSharpCoreLoggingStream": {
+          "default": "LoggingStream [String]"
+        },
+        "LambdaSharpCoreLoggingStreamRole": {
+          "default": "LoggingStreamRole [String]"
+        },
+        "LambdaSharpCoreDefaultSecretKey": {
+          "default": "DefaultSecretKey [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "XRayTracing"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp.Core Imports"
+          },
+          "Parameters": [
+            "LambdaSharpCoreDeadLetterQueue",
+            "LambdaSharpCoreLoggingStream",
+            "LambdaSharpCoreLoggingStreamRole",
+            "LambdaSharpCoreDefaultSecretKey"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-12-31",
+      "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp.Core Imports",
+          "Parameters": [
+            {
+              "Name": "LambdaSharpCoreDeadLetterQueue",
+              "Type": "String",
+              "Label": "DeadLetterQueue",
+              "Default": "$LambdaSharp-Core::DeadLetterQueue",
+              "Import": "LambdaSharp.Core::DeadLetterQueue"
+            },
+            {
+              "Name": "LambdaSharpCoreLoggingStream",
+              "Type": "String",
+              "Label": "LoggingStream",
+              "Default": "$LambdaSharp-Core::LoggingStream",
+              "Import": "LambdaSharp.Core::LoggingStream"
+            },
+            {
+              "Name": "LambdaSharpCoreLoggingStreamRole",
+              "Type": "String",
+              "Label": "LoggingStreamRole",
+              "Default": "$LambdaSharp-Core::LoggingStreamRole",
+              "Import": "LambdaSharp.Core::LoggingStreamRole"
+            },
+            {
+              "Name": "LambdaSharpCoreDefaultSecretKey",
+              "Type": "String",
+              "Label": "DefaultSecretKey",
+              "Default": "$LambdaSharp-Core::DefaultSecretKey",
+              "Import": "LambdaSharp.Core::DefaultSecretKey"
+            }
+          ]
+        }
+      ],
+      "RuntimeCheck": true,
+      "Hash": "51830FC75F936BAF86B11A9246FC44F0",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Dependencies": [
+        {
+          "ModuleFullName": "LambdaSharp.Core",
+          "MinVersion": "0.5"
+        }
+      ],
+      "Outputs": [
+        {
+          "Name": "WebSocketUrl",
+          "Description": "WebSocket URL",
+          "Type": "String"
+        }
+      ],
+      "ResourceNameMappings": {
+        "ConnectionFunctionLogGroup": "ConnectionFunction::LogGroup",
+        "MessageFunctionLogGroup": "MessageFunction::LogGroup",
+        "ModuleRole": "Module::Role",
+        "ModuleRegistration": "Module::Registration",
+        "ConnectionFunctionRegistration": "ConnectionFunction::Registration",
+        "ConnectionFunctionLogGroupSubscription": "ConnectionFunction::LogGroupSubscription",
+        "MessageFunctionRegistration": "MessageFunction::Registration",
+        "MessageFunctionLogGroupSubscription": "MessageFunction::LogGroupSubscription",
+        "ModuleWebSocket": "Module::WebSocket",
+        "ConnectionFunctionConnectIntegration": "ConnectionFunction::ConnectIntegration",
+        "ConnectionFunctionConnectRoute": "ConnectionFunction::ConnectRoute",
+        "ConnectionFunctionConnectRouteResponse": "ConnectionFunction::ConnectRouteResponse",
+        "ConnectionFunctionConnectPermission": "ConnectionFunction::ConnectPermission",
+        "ConnectionFunctionDisconnectIntegration": "ConnectionFunction::DisconnectIntegration",
+        "ConnectionFunctionDisconnectRoute": "ConnectionFunction::DisconnectRoute",
+        "ConnectionFunctionDisconnectRouteResponse": "ConnectionFunction::DisconnectRouteResponse",
+        "ConnectionFunctionDisconnectPermission": "ConnectionFunction::DisconnectPermission",
+        "MessageFunctionSendIntegration": "MessageFunction::SendIntegration",
+        "MessageFunctionSendRoute": "MessageFunction::SendRoute",
+        "MessageFunctionSendRouteResponse": "MessageFunction::SendRouteResponse",
+        "MessageFunctionSendPermission": "MessageFunction::SendPermission",
+        "MessageFunctionDefaultIntegration": "MessageFunction::DefaultIntegration",
+        "MessageFunctionDefaultRoute": "MessageFunction::DefaultRoute",
+        "MessageFunctionDefaultRouteResponse": "MessageFunction::DefaultRouteResponse",
+        "MessageFunctionDefaultPermission": "MessageFunction::DefaultPermission",
+        "ModuleWebSocketDeployment3B1BFA2CF20193F9B1420CF68109E633": "Module::WebSocket::Deployment3B1BFA2CF20193F9B1420CF68109E633",
+        "ModuleWebSocketStage": "Module::WebSocket::Stage"
+      },
+      "TypeNameMappings": {
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
+        "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
+      }
+    }
+  }
+}

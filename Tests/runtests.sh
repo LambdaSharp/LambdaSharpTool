@@ -104,6 +104,7 @@ if [ -z "$1" ]; then
         ../Samples/SnsSample \
         ../Samples/SqsSample \
         ../Samples/VpcFunctionSample \
+        ../Samples/WebSocketSample \
         ../Demos/DemoS3BucketSubscription/DemoS3Bucket \
         ../Demos/DemoS3BucketSubscription/DemoS3Subscriber \
         ../Demos/SlackTodo \
