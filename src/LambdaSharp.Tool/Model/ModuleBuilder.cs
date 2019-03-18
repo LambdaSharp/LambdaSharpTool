@@ -181,6 +181,21 @@ namespace LambdaSharp.Tool.Model {
             return false;
         }
 
+        public bool TryGetOverride(string key, out object expression) {
+            if(
+                TryGetLabeledPragma("Overrides", out var value)
+                && (value is IDictionary dictionary)
+            ) {
+                var entry = dictionary[key];
+                if(entry != null) {
+                    expression = entry;
+                    return true;
+                }
+            }
+            expression = null;
+            return false;
+        }
+
         //--- Methods ---
         public AModuleItem GetItem(string fullNameOrResourceName) {
             if(fullNameOrResourceName.StartsWith("@", StringComparison.Ordinal)) {

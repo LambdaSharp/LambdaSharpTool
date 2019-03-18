@@ -650,15 +650,8 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private bool TryGetModuleVariable(string name, out object variable) {
-            if(
-                _builder.TryGetLabeledPragma("Overrides", out var value)
-                && (value is IDictionary dictionary)
-            ) {
-                var entry = dictionary[$"Module::{name}"];
-                if(entry != null) {
-                    variable = entry;
-                    return true;
-                }
+            if(_builder.TryGetOverride($"Module::{name}", out variable)) {
+                return true;
             }
             if(_builder.HasLambdaSharpDependencies) {
                 variable = FnRef($"LambdaSharp::{name}");

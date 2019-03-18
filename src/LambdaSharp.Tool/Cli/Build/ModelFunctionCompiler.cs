@@ -247,6 +247,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 function.Function.Environment.Variables["WEBSOCKET_URL"] = FnSub("https://${Module::WebSocket}.execute-api.${AWS::Region}.amazonaws.com/LATEST");
             }
 
+            // read websocket configuration
+            if(!_builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression)) {
+                routeSelectionExpression = "$request.body.action";
+            }
+
             // create a WebSocket API
             var webSocketItem = _builder.AddResource(
                 parent: moduleItem,
@@ -257,9 +262,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
                     ["ProtocolType"] = "WEBSOCKET",
                     ["Description"] = "${Module::FullName} WebSocket (v${Module::Version})",
-
-                    // TODO (2019-03-13, bjorg): allow configuration of the route selection expression
-                    ["RouteSelectionExpression"] = "$request.body.action"
+                    ["RouteSelectionExpression"] = routeSelectionExpression
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
