@@ -147,11 +147,9 @@ namespace LambdaSharp.Tool.Cli {
 
             // strip all "Documentation" fields to reduce document size
             Console.WriteLine($"Original size: {text.Length:N0}");
-            json.Descendants()
-                .OfType<JProperty>()
-                .Where(attr => (attr.Name == "Documentation") || (attr.Name == "UpdateType"))
-                .ToList()
-                .ForEach(attr => attr.Remove());
+            json.SelectTokens("$..UpdateType").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent.Remove());
             json = OrderFields(json);
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");

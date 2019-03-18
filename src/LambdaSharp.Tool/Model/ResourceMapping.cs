@@ -47,6 +47,7 @@ namespace LambdaSharp.Tool.Model {
     public class ResourceType {
 
         //--- Properties ---
+        public string Documentation { get; set; }
         public IDictionary<string, AttributeType> Attributes { get; set; }
         public IDictionary<string, PropertyType> Properties { get; set; }
     }
