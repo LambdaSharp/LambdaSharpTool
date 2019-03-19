@@ -317,7 +317,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(outputFile != null) {
                     File.WriteAllText(outputFile, output);
                 } else {
-                    Console.WriteLine(outputFile);
+                    Console.WriteLine(output);
                 }
             } catch(Exception e) {
                 LogError("unable to write schema", e);
