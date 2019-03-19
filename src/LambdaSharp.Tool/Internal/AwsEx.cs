@@ -45,8 +45,6 @@ namespace LambdaSharp.Tool.Internal {
             "UPDATE_ROLLBACK_FAILED"
         };
 
-
-
         private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
             ["CREATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
             ["CREATE_FAILED"] = AnsiTerminal.Red,
