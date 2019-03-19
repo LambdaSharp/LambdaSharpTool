@@ -21,44 +21,55 @@
 
 using System.Collections.Generic;
 using Amazon.Lambda.Core;
+using Newtonsoft.Json;
 
 namespace ApiInvokeSample.MyFunction {
 
     public class Item {
 
         //--- Properties ---
+        [JsonRequired]
         public string Id { get; set; }
+
+        [JsonRequired]
         public string Value { get; set; }
     }
 
     public class AddItemRequest {
 
         //--- Properties ---
+        [JsonRequired]
         public string Value { get; set; }
     }
 
     public class AddItemResponse {
 
         //--- Properties ---
+        [JsonRequired]
         public string Id { get; set; }
     }
 
     public class GetItemsResponse {
 
         //--- Properties ---
+        [JsonRequired]
         public List<Item> Items = new List<Item>();
     }
 
     public class GetItemResponse {
 
         //--- Properties ---
+        [JsonRequired]
         public string Id { get; set; }
+
+        [JsonRequired]
         public string Value { get; set; }
     }
 
     public class DeleteItemResponse {
 
         //--- Properties ---
+        [JsonRequired]
         public bool Deleted;
     }
 }
