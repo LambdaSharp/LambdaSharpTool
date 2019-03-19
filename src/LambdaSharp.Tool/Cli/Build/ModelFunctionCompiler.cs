@@ -68,7 +68,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             var moduleItem = _builder.GetItem("Module");
 
             // create a REST API
-            var restApiItem = _builder.AddResource(
+            var restApi = _builder.AddResource(
                 parent: moduleItem,
                 name: "RestApi",
                 description: "Module REST API",
@@ -86,7 +86,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // recursively create resources as needed
             var apiMethods = new List<KeyValuePair<string, object>>();
-            AddRestApiResource(restApiItem, FnRef(restApiItem.FullName), FnGetAtt(restApiItem.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethods);
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethods);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
             var methodSignature = string.Join("\n", apiMethods
@@ -97,7 +97,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add RestApi url
             _builder.AddVariable(
-                parent: restApiItem,
+                parent: restApi,
                 name: "Url",
                 description: "Module REST API URL",
                 type: "String",
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // create a RestApi role that can write logs
             _builder.AddResource(
-                parent: restApiItem,
+                parent: restApi,
                 name: "Role",
                 description: "Module REST API Role",
                 scope: null,
@@ -158,14 +158,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
 
-            // create a RestApi account which uses the RestApi role
-            _builder.AddResource(
-                parent: restApiItem,
-                name: "Account",
-                description: "Module REST API Account",
+            var restLogGroup = _builder.AddResource(
+                parent: restApi,
+                name: "LogGroup",
+                description: null,
                 scope: null,
-                resource: new Humidifier.ApiGateway.Account {
-                    CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
+                resource: new Humidifier.Logs.LogGroup {
+                    LogGroupName = FnSub($"API-Gateway-Execution-Logs_${{{restApi.FullName}}}/LATEST"),
+
+                    // TODO (2019-03-18, bjorg): make retention configurable
+                    //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
+                    RetentionInDays = 30
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -173,10 +176,25 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
 
+            // create a RestApi account which uses the RestApi role
+            var restAccount = _builder.AddResource(
+                parent: restApi,
+                name: "Account",
+                description: "Module REST API Account",
+                scope: null,
+                resource: new Humidifier.ApiGateway.Account {
+                    CloudWatchRoleArn = FnGetAtt("Module::RestApi::Role", "Arn")
+                },
+                resourceExportAttribute: null,
+                dependsOn: new[] { restLogGroup.FullName },
+                condition: null,
+                pragmas: null
+            );
+
             // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
             //  a new name is used for the deployment to force the stage to be updated
             var deploymentWithHash = _builder.AddResource(
-                parent: restApiItem,
+                parent: restApi,
                 name: "Deployment" + methodsHash,
                 description: "Module REST API Deployment",
                 scope: null,
@@ -190,7 +208,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             var deployment = _builder.AddVariable(
-                parent: restApiItem,
+                parent: restApi,
                 name: "Deployment",
                 description: "Module REST API Deployment",
                 type: "String",
@@ -200,12 +218,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-
             // RestApi stage depends on API gateway deployment and API gateway account
             // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
             //  the necessary permissions for logging
             _builder.AddResource(
-                parent: restApiItem,
+                parent: restApi,
                 name: "Stage",
                 description: "Module REST API Stage",
                 scope: null,
@@ -223,7 +240,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }.ToList()
                 },
                 resourceExportAttribute: null,
-                dependsOn: new[] { "Module::RestApi::Account" },
+                dependsOn: new[] { restAccount.FullName },
                 condition: null,
                 pragmas: null
             );
