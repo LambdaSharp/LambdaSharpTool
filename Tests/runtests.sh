@@ -92,6 +92,7 @@ if [ -z "$1" ]; then
         ../Modules/LambdaSharp.Twitter.Query \
         ../Samples/AlexaSample \
         ../Samples/ApiSample \
+        ../Samples/ApiInvokeSample \
         ../Samples/CustomResourceTypeSample \
         ../Samples/DynamoDBSample \
         ../Samples/FinalizerSample \

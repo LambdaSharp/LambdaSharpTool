@@ -32,8 +32,9 @@ namespace LambdaSharp.Tool.Internal {
 
         //--- Class Properties ---
         public static string DotNetExe { get => McMaster.Extensions.CommandLineUtils.DotNetExe.FullPathOrDefault(); }
-        public static string ZipExe { get => FindExecutableInPath("zip"); }
-        public static string UnzipExe { get => FindExecutableInPath("unzip"); }
+        public static string ZipExe => FindExecutableInPath("zip");
+        public static string UnzipExe => FindExecutableInPath("unzip");
+        public static string Lash => FindExecutableInPath("lash") ?? FindExecutableInPath("lash.exe");
 
         //--- Class methods ---
         public static bool Execute(string application, IEnumerable<string> arguments, string workingFolder, bool showOutput) {

@@ -85,15 +85,14 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // recursively create resources as needed
-            var apiMethods = new List<KeyValuePair<string, object>>();
-            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethods);
+            var apiMethodDeclarations = new Dictionary<string, object>();
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethodDeclarations);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
-            var methodSignature = string.Join("\n", apiMethods
+            string apiMethodDeclarationsHash = string.Join("\n", apiMethodDeclarations
                 .OrderBy(kv => kv.Key)
                 .Select(kv => JsonConvert.SerializeObject(kv.Value))
-            );
-            string methodsHash = methodSignature.ToMD5Hash();
+            ).ToMD5Hash();
 
             // add RestApi url
             _builder.AddVariable(
@@ -106,6 +105,32 @@ namespace LambdaSharp.Tool.Cli.Build {
                 allow: null,
                 encryptionContext: null
             );
+
+            // optionally, add request validation resource if there is a request schema
+            var allSources = functions.SelectMany(f => f.Sources).ToList();
+            if(
+                allSources.OfType<RestApiSource>().Any(source => source.RequestSchema != null)
+                || allSources.OfType<WebSocketSource>().Any(source => source.RequestSchema != null)
+            ) {
+
+                    // create request validator
+                    _builder.AddResource(
+                        parent: restApi,
+                        name: "RequestValidator",
+                        description: null,
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.RequestValidator {
+                            RestApiId = FnRef(restApi.FullName),
+                            ValidateRequestBody = true
+
+                            // TODO (2019-03-19, bjorg): add support for validatiting path/query parameters and request headers
+                        },
+                        resourceExportAttribute: null,
+                        dependsOn: null,
+                        condition: null,
+                        pragmas: null
+                    ).DiscardIfNotReachable = true;
+            }
 
             // create a RestApi role that can write logs
             _builder.AddResource(
@@ -158,6 +183,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
 
+            // create log-group for API
             var restLogGroup = _builder.AddResource(
                 parent: restApi,
                 name: "LogGroup",
@@ -195,15 +221,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             //  a new name is used for the deployment to force the stage to be updated
             var deploymentWithHash = _builder.AddResource(
                 parent: restApi,
-                name: "Deployment" + methodsHash,
+                name: "Deployment" + apiMethodDeclarationsHash,
                 description: "Module REST API Deployment",
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{methodsHash}]")
+                    Description = FnSub($"${{AWS::StackName}} API [{apiMethodDeclarationsHash}]")
                 },
                 resourceExportAttribute: null,
-                dependsOn: apiMethods.Select(kv => kv.Key).ToArray(),
+                dependsOn: apiMethodDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
                 condition: null,
                 pragmas: null
             );
@@ -439,7 +465,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
         }
 
-        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, List<KeyValuePair<string, object>> apiMethods) {
+        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiMethodDeclarations) {
 
             // create methods at this route level to parent id
             foreach(var route in routes.Where(route => route.Source.Path.Length == level)) {
@@ -457,7 +483,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // add API method item
-                var methodItem = _builder.AddResource(
+                var method = _builder.AddResource(
                     parent: parent,
                     name: route.Source.HttpMethod,
                     description: null,
@@ -465,15 +491,79 @@ namespace LambdaSharp.Tool.Cli.Build {
                     resource: apiMethod,
                     resourceExportAttribute: null,
                     dependsOn: null,
-
-                    // TODO (2018-12-28, bjorg): handle conditional function
-                    condition: null,
+                    condition: route.Function.Condition,
                     pragmas: null
                 );
+                apiMethodDeclarations.Add(method.FullName, apiMethod);
+
+                // check if method has a request schema
+                if(route.Source.RequestSchema != null) {
+
+                    // create request model
+                    var model = _builder.AddResource(
+                        parent: method,
+                        name: "RequestModel",
+                        description: null,
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.Model {
+                            ContentType = "application/json",
+                            Name = $"{route.Source.InvokeMethod}Request",
+                            RestApiId = restApiId,
+                            Schema = route.Source.RequestSchema
+                        },
+                        resourceExportAttribute: null,
+                        dependsOn: null,
+                        condition: route.Function.Condition,
+                        pragmas: null
+                    );
+                    apiMethodDeclarations.Add(model.FullName, route.Source.ResponseSchema);
+
+                    // update the API method to require request validation
+                    apiMethod.Integration.PassthroughBehavior = "NEVER";
+                    apiMethod.RequestValidatorId = FnRef("Module::RestApi::RequestValidator");
+                    if(apiMethod.RequestModels == null) {
+                        apiMethod.RequestModels = new Dictionary<string, dynamic>();
+                    }
+                    apiMethod.RequestModels.Add("application/json", FnRef(model.FullName));
+                }
+
+                // check if method has a response schema
+                if(route.Source.ResponseSchema != null)  {
+
+                    // create request model
+                    var model = _builder.AddResource(
+                        parent: method,
+                        name: "ResponseModel",
+                        description: null,
+                        scope: null,
+                        resource: new Humidifier.ApiGateway.Model {
+                            ContentType = "application/json",
+                            Name = $"{route.Source.InvokeMethod}Response",
+                            RestApiId = restApiId,
+                            Schema = route.Source.ResponseSchema
+                        },
+                        resourceExportAttribute: null,
+                        dependsOn: null,
+                        condition: route.Function.Condition,
+                        pragmas: null
+                    );
+                    apiMethodDeclarations.Add(model.FullName, route.Source.ResponseSchema);
+
+                    // update the API method with the response schema
+                    if(apiMethod.MethodResponses == null) {
+                        apiMethod.MethodResponses = new List<Humidifier.ApiGateway.MethodTypes.MethodResponse>();
+                    }
+                    apiMethod.MethodResponses.Add(new Humidifier.ApiGateway.MethodTypes.MethodResponse {
+                        StatusCode = 200,
+                        ResponseModels = new Dictionary<string, dynamic> {
+                            ["application/json"] = FnRef(model.FullName)
+                        }
+                    });
+                }
 
                 // add permission to API method to invoke lambda
                 _builder.AddResource(
-                    parent: methodItem,
+                    parent: method,
                     name: "Permission",
                     description: null,
                     scope: null,
@@ -488,7 +578,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: route.Function.Condition,
                     pragmas: null
                 );
-                apiMethods.Add(new KeyValuePair<string, object>(methodItem.FullName, apiMethod));
             }
 
             // find sub-routes and group common sub-route prefix
@@ -516,7 +605,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: null,
                     pragmas: null
                 );
-                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethods);
+                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethodDeclarations);
             }
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(FunctionItem function, RestApiSource source) {

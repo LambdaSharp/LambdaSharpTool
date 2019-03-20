@@ -49,13 +49,13 @@ namespace LambdaSharp {
             }
         }
 
-        private class APIGatewayDispatchMappings {
+        private class APIGatewayInvokeMethodMappings {
 
             //--- Properties ---
-            public List<APIGatewayDispatchMapping> Mappings { get; set; }
+            public List<APIGatewayInvokeMethodMapping> Mappings { get; set; }
         }
 
-        private class APIGatewayDispatchMapping {
+        private class APIGatewayInvokeMethodMapping {
 
             //--- Properties ---
             public string RestApi;
@@ -83,7 +83,7 @@ namespace LambdaSharp {
             // read optional api-gateway-mappings file
             _dispatchTable = new APIGatewayDispatchTable(GetType());
             if(File.Exists("api-mappings.json")) {
-                var mappings = DeserializeJson<APIGatewayDispatchMappings>(File.ReadAllText("api-mappings.json"));
+                var mappings = DeserializeJson<APIGatewayInvokeMethodMappings>(File.ReadAllText("api-mappings.json"));
                 foreach(var mapping in mappings.Mappings) {
                     if(mapping.RestApi != null) {
                         LogInfo($"Mapping REST API '{mapping.RestApi}' to {mapping.Method}");
@@ -108,10 +108,6 @@ namespace LambdaSharp {
 
         public override async Task<APIGatewayProxyResponse> ProcessMessageAsync(APIGatewayProxyRequest request, ILambdaContext context) {
             _currentRequest = request;
-
-// TODO: remove
-LogInfo($"request:\n{SerializeJson(request)}");
-
             APIGatewayProxyResponse response;
             var signature = "<null>";
             try {
@@ -146,7 +142,7 @@ LogInfo($"request:\n{SerializeJson(request)}");
                     response = await HandleRequestAsync(request, context);
                 }
                 LogInfo($"finished with status code {response.StatusCode}");
-            } catch(APIGatewayDispatchBadParameterException e) {
+            } catch(APIGatewayInvokeMethodBadParameterException e) {
                 LogInfo($"bad parameter '{e.ParameterName}': {e.Message}");
                 response = CreateBadParameterResponse(request, e.ParameterName, e.Message);
             } catch(ALambdaRestApiAbortException e) {

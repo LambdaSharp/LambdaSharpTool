@@ -310,7 +310,7 @@ namespace Tests.LambdaSharp.Internal {
 
         [Fact]
         public void InvokeMethodBadRequestBody() {
-            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+            var exception = Assert.Throws<APIGatewayInvokeMethodBadParameterException>(() => {
                 Test(
                     nameof(MethodRequestBody),
                     new APIGatewayProxyRequest {
@@ -325,7 +325,7 @@ namespace Tests.LambdaSharp.Internal {
 
         [Fact]
         public void InvokeMethodBadRequestBodyAsync() {
-            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+            var exception = Assert.Throws<APIGatewayInvokeMethodBadParameterException>(() => {
                 Test(
                     nameof(MethodRequestBodyAsync),
                     new APIGatewayProxyRequest {
@@ -345,7 +345,7 @@ namespace Tests.LambdaSharp.Internal {
 
         [Fact]
         public void InvokeMethodNullRequestBody() {
-            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+            var exception = Assert.Throws<APIGatewayInvokeMethodBadParameterException>(() => {
                 Test(
                     nameof(MethodRequestBody),
                     new APIGatewayProxyRequest(),
@@ -358,7 +358,7 @@ namespace Tests.LambdaSharp.Internal {
 
         [Fact]
         public void InvokeMethodBadParameter() {
-            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+            var exception = Assert.Throws<APIGatewayInvokeMethodBadParameterException>(() => {
                 Test(
                     nameof(MethodPathParameter),
                     new APIGatewayProxyRequest {
@@ -378,7 +378,7 @@ namespace Tests.LambdaSharp.Internal {
 
         [Fact]
         public void InvokeMethodBadParameterAsync() {
-            var exception = Assert.Throws<APIGatewayDispatchBadParameterException>(() => {
+            var exception = Assert.Throws<APIGatewayInvokeMethodBadParameterException>(() => {
                 Test(
                     nameof(MethodPathParameterAsync),
                     new APIGatewayProxyRequest {

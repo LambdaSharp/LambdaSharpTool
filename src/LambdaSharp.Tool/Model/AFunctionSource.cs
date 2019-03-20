@@ -71,6 +71,8 @@ namespace LambdaSharp.Tool.Model {
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
         public string InvokeMethod { get; set; }
+        public object RequestSchema { get; set; }
+        public object ResponseSchema { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
@@ -83,6 +85,8 @@ namespace LambdaSharp.Tool.Model {
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
         public string InvokeMethod { get; set; }
+        public object RequestSchema { get; set; }
+        public object ResponseSchema { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }

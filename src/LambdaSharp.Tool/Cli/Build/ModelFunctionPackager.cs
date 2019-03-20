@@ -77,18 +77,20 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private class APIGatewayDispatchMappings {
+        private class APIGatewayInvokeMethodMappings {
 
             //--- Properties ---
-            public List<APIGatewayDispatchMapping> Mappings = new List<APIGatewayDispatchMapping>();
+            public List<APIGatewayInvokeMethodMapping> Mappings = new List<APIGatewayInvokeMethodMapping>();
         }
 
-        private class APIGatewayDispatchMapping {
+        private class APIGatewayInvokeMethodMapping {
 
             //--- Properties ---
             public string RestApi;
             public string WebSocket;
             public string Method;
+            public RestApiSource RestApiSource;
+            public WebSocketSource WebSocketSource;
         }
 
         //--- Fields ---
@@ -285,35 +287,44 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
 
-            // collect sources wit invoke methods
-            var mappings = Enumerable.Empty<APIGatewayDispatchMapping>()
+            // collect sources with invoke methods
+            var mappings = Enumerable.Empty<APIGatewayInvokeMethodMapping>()
                 .Union(function.Sources
                     .OfType<RestApiSource>()
                     .Where(source => source.InvokeMethod != null)
-                    .Select(source => new APIGatewayDispatchMapping {
+                    .Select(source => new APIGatewayInvokeMethodMapping {
                         RestApi = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
-                        Method = source.InvokeMethod
+                        Method = source.InvokeMethod,
+                        RestApiSource = source
                     })
                 )
                 .Union(function.Sources
                     .OfType<WebSocketSource>()
                     .Where(source => source.InvokeMethod != null)
-                    .Select(source => new APIGatewayDispatchMapping {
+                    .Select(source => new APIGatewayInvokeMethodMapping {
                         WebSocket = source.RouteKey,
-                        Method = source.InvokeMethod
+                        Method = source.InvokeMethod,
+                        WebSocketSource = source
                     })
                 )
                 .ToList();
 
             // verify the function handler can be found in the compiled assembly
+            var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
             if(function.HasHandlerValidation) {
                 if(function.Function.Handler is string handler) {
                     ValidateEntryPoint(
-                        Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish"),
+                        buildFolder,
                         handler,
                         mappings.Select(mapping => mapping.Method).ToArray()
                     );
                 }
+            }
+
+            // create request/response schemas for invocation methods
+            if(!LambdaSharpCreateInvokeMethodSchemas(buildFolder, function.Function.Handler as string, mappings)) {
+                LogError("`lash util create-invoke-methods-schema` command failed");
+                return;
             }
 
             // add api mappings JSON file(s)
@@ -326,7 +337,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
                     }
                     using(var stream = entry.Open()) {
-                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayDispatchMappings {
+                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new APIGatewayInvokeMethodMappings {
                             Mappings = mappings
                         }).ToString(Formatting.None)));
                     }
@@ -586,6 +597,107 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogWarn("unable to validate function entry-point due to an internal error");
                 }
             }
+        }
+
+        private bool LambdaSharpCreateInvokeMethodSchemas(
+            string directory,
+            string handler,
+            IEnumerable<APIGatewayInvokeMethodMapping> mappings
+        ) {
+
+            // check if there is anything to do
+            if(!mappings.Any()) {
+                return true;
+            }
+
+            // check if we have enough information to resolve the invocation methods
+            if(handler == null) {
+                LogError("'Handler' attribute must be a literal value");
+                return false;
+            }
+
+            // extract the assembly and class name from the handler
+            var parts = handler.Split("::");
+            if(parts.Length != 3) {
+                LogError("'Handler' attribute has invalid value");
+                return false;
+            }
+            var lambdaFunctionAssemblyName = parts[0];
+            var lambdaFunctionClassName = parts[1];
+            var lambdaFunctionEntryPointName = parts[2];
+            string tmpFile = Path.GetTempFileName();
+            string assemblyName = Path.Combine(directory, $"{lambdaFunctionAssemblyName}.dll");
+            string className = lambdaFunctionClassName;
+
+            // check if lambdasharp is installed or if we need to run it using dotnet
+            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
+            if(lambdaSharpFolder == null) {
+
+                // check if lash executable exists (it should since we're running)
+                var lash = ProcessLauncher.Lash;
+                if(string.IsNullOrEmpty(lash)) {
+                    LogError("failed to find the \"lash\" executable in path.");
+                    return false;
+                }
+                var arguments = new[] {
+                    "util", "create-invoke-methods-schema", assemblyName, className,
+                    "-o", tmpFile
+                }
+                    .Union(mappings.Select(mapping => mapping.Method))
+                    .ToList();
+                var success = ProcessLauncher.Execute(
+                    lash,
+                    arguments,
+                    Settings.WorkingDirectory,
+                    Settings.VerboseLevel >= VerboseLevel.Detailed
+                );
+            } else {
+
+                // check if dotnet executable exists
+                var dotNetExe = ProcessLauncher.DotNetExe;
+                if(string.IsNullOrEmpty(dotNetExe)) {
+                    LogError("failed to find the \"dotnet\" executable in path.");
+                    return false;
+                }
+                var arguments = new[] {
+                    "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--",
+                    "util", "create-invoke-methods-schema", assemblyName, className,
+                    "-o", tmpFile
+                }
+                    .Union(mappings.Select(mapping => mapping.Method))
+                    .ToList();
+                var success = ProcessLauncher.Execute(
+                    dotNetExe,
+                    arguments,
+                    Settings.WorkingDirectory,
+                    Settings.VerboseLevel >= VerboseLevel.Detailed
+                );
+            }
+            try {
+                try {
+                    var schemas = JObject.Parse(File.ReadAllText(tmpFile));
+                    foreach(var mapping in mappings) {
+                        if(mapping.RestApiSource != null) {
+                            mapping.RestApiSource.RequestSchema = schemas.SelectToken($"{mapping.Method}.Request").ConvertJTokenToNative();
+                            mapping.RestApiSource.ResponseSchema = schemas.SelectToken($"{mapping.Method}.Response").ConvertJTokenToNative();
+                        }
+                        if(mapping.WebSocketSource != null) {
+                            mapping.WebSocketSource.RequestSchema = schemas.SelectToken($"{mapping.Method}.Request").ConvertJTokenToNative();
+                            mapping.WebSocketSource.ResponseSchema = schemas.SelectToken($"{mapping.Method}.Response").ConvertJTokenToNative();
+                        }
+                    }
+                } catch(Exception e) {
+                    LogError("unable to read create-invoke-methods-schema output", e);
+                    return false;
+                }
+            } finally {
+                try {
+                    File.Delete(tmpFile);
+                } catch {
+                    LogWarn($"unable to delete temporary file: {tmpFile}");
+                }
+            }
+            return true;
         }
     }
 }
