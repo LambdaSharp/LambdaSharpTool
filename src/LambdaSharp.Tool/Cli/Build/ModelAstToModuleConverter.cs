@@ -813,7 +813,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             } else if(Path.GetExtension(project) == ".js") {
                 project = Path.Combine(Settings.WorkingDirectory, project);
             } else if (Path.GetExtension(project) == ".sbt") {
-                Path.Combine(Settings.WorkingDirectory, project);
+                project = Path.Combine(Settings.WorkingDirectory, project);
             } else if(Directory.Exists(Path.Combine(Settings.WorkingDirectory, project))) {
 
                 // determine the function project

@@ -115,7 +115,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // delete old packages
             if(noCompile) {
                 if(Directory.Exists(Settings.OutputDirectory)) {
-                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, "function*.zip")) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, "function*.*")) {
                         try {
                             File.Delete(file);
                         } catch { }
@@ -134,7 +134,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(!Directory.Exists(Settings.OutputDirectory)) {
                 Directory.CreateDirectory(Settings.OutputDirectory);
             }
-            _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "function*.zip"));
+            _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "function*.*"));
 
             // build each function
             foreach(var function in functions) {
@@ -526,16 +526,58 @@ namespace LambdaSharp.Tool.Cli.Build {
         ) {
             var showOutput = Settings.VerboseLevel >= VerboseLevel.Detailed;
             var scalaOutputJar = BuildScala.Process(function, skipCompile, noAssemblyValidation, gitSha, gitBranch, buildConfiguration, showOutput);
+            
+            // compute hash for zip contents
+            string hash;
+            using(var zipArchive = ZipFile.OpenRead(scalaOutputJar)) {
+                using(var md5 = MD5.Create())
+                using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
+                    foreach(var entry in zipArchive.Entries.OrderBy(e => e.FullName)) {
+
+                        // hash file path
+                        var filePathBytes = Encoding.UTF8.GetBytes(entry.FullName.Replace('\\', '/'));
+                        hashStream.Write(filePathBytes, 0, filePathBytes.Length);
+
+                        // hash file contents
+                        using(var stream = entry.Open()) {
+                            stream.CopyTo(hashStream);
+                        }
+                    }
+                    hashStream.FlushFinalBlock();
+                    hash = md5.Hash.ToHexString();
+                }
+            }
+            
+            // rename function package with hash
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.jar");
+            if(!_existingPackages.Remove(package)) {
+                File.Move(scalaOutputJar, package);
+
+                // add git-info.json file
+                using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Update)) {
+                    var entry = zipArchive.CreateEntry(GIT_INFO_FILE);
+
+                    // Set RW-R--R-- permissions attributes on non-Windows operating system
+                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                    }
+                    using(var stream = entry.Open()) {
+                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ModuleManifestGitInfo {
+                            SHA = gitSha,
+                            Branch = gitBranch
+                        }).ToString(Formatting.None)));
+                    }
+                }
+            } else {
+                File.Delete(scalaOutputJar);
+            }
 
             // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
-            var package = CreatePackage(function.Name, gitSha, gitBranch, scalaOutputJar);
             _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
 
-        private string CreatePackage(string functionName, string gitSha, string gitBranch, string location) {
-            string package;
-            var isFolder = File.GetAttributes(location).HasFlag(FileAttributes.Directory);
-            
+        private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {
+
             // add `git-info.json` if git sha or git branch is supplied
             var gitInfoFileCreated = false;
             if((gitSha != null) || (gitBranch != null)) {
