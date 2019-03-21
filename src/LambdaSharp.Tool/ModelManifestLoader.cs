@@ -126,7 +126,7 @@ namespace LambdaSharp.Tool {
             // attempt to find a matching version
             VersionInfo foundVersion = null;
             string foundBucketName = null;
-            foreach(var bucket in searchBucketNames ?? Enumerable.Empty<string>()) {
+            foreach(var bucket in searchBucketNames ?? new []{$"lambdasharp-{Settings.AwsRegion}"}) {
                 foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
                 if(foundVersion != null) {
                     foundBucketName = bucket;
