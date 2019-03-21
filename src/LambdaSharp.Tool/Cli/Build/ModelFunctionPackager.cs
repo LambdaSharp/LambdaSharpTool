@@ -191,6 +191,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                     buildConfiguration
                 );
                 break;
+            case ".sbt":
+                ProcessSbt(
+                    function,
+                    noCompile,
+                    noAssemblyValidation,
+                    gitSha,
+                    gitBranch,
+                    buildConfiguration
+                );
+                break;
+                
             default:
                 LogError("could not determine the function language");
                 return;
@@ -504,9 +515,27 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             _builder.AddAsset($"{function.FullName}::PackageName", package);
         }
+        
+        private void ProcessSbt(
+            FunctionItem function,
+            bool skipCompile,
+            bool noAssemblyValidation,
+            string gitSha,
+            string gitBranch,
+            string buildConfiguration
+        ) {
+            var showOutput = Settings.VerboseLevel >= VerboseLevel.Detailed;
+            var scalaOutputJar = BuildScala.Process(function, skipCompile, noAssemblyValidation, gitSha, gitBranch, buildConfiguration, showOutput);
 
-        private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {
+            // decompress project zip into temporary folder so we can add the `GITSHAFILE` files
+            var package = CreatePackage(function.Name, gitSha, gitBranch, scalaOutputJar);
+            _builder.AddAsset($"{function.FullName}::PackageName", package);
+        }
 
+        private string CreatePackage(string functionName, string gitSha, string gitBranch, string location) {
+            string package;
+            var isFolder = File.GetAttributes(location).HasFlag(FileAttributes.Directory);
+            
             // add `git-info.json` if git sha or git branch is supplied
             var gitInfoFileCreated = false;
             if((gitSha != null) || (gitBranch != null)) {

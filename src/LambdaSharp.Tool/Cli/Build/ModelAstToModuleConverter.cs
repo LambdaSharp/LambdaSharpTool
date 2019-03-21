@@ -805,18 +805,22 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // determine the function project
                 project = project ?? new [] {
                     Path.Combine(Settings.WorkingDirectory, folderName, $"{folderName}.csproj"),
-                    Path.Combine(Settings.WorkingDirectory, folderName, "index.js")
+                    Path.Combine(Settings.WorkingDirectory, folderName, "index.js"),
+                    Path.Combine(Settings.WorkingDirectory, folderName, "build.sbt")
                 }.FirstOrDefault(path => File.Exists(path));
             } else if(Path.GetExtension(project) == ".csproj") {
                 project = Path.Combine(Settings.WorkingDirectory, project);
             } else if(Path.GetExtension(project) == ".js") {
                 project = Path.Combine(Settings.WorkingDirectory, project);
+            } else if (Path.GetExtension(project) == ".sbt") {
+                Path.Combine(Settings.WorkingDirectory, project);
             } else if(Directory.Exists(Path.Combine(Settings.WorkingDirectory, project))) {
 
                 // determine the function project
                 project = new [] {
                     Path.Combine(Settings.WorkingDirectory, project, $"{project}.csproj"),
-                    Path.Combine(Settings.WorkingDirectory, project, "index.js")
+                    Path.Combine(Settings.WorkingDirectory, project, "index.js"),
+                    Path.Combine(Settings.WorkingDirectory, project, "build.sbt")
                 }.FirstOrDefault(path => File.Exists(path));
             }
             if((project == null) || !File.Exists(project)) {
@@ -829,6 +833,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 break;
             case ".js":
                 DetermineJavascriptFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
+                break;
+            case ".sbt":
+                BuildScala.DetermineFunctionProperties(functionName, project, ref language, ref runtime, ref handler);
                 break;
             default:
                 LogError("could not determine the function language");
