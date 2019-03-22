@@ -13,6 +13,6 @@ dotnet tool uninstall \
 
 dotnet tool install \
     --global \
-    --add-source $LAMBDASHARP/src/LambdaSharp.Tool/ \
+    --add-source ./ \
     LambdaSharp.Tool \
-    --version 0.5.0.3
+    --version 0.5.0.4

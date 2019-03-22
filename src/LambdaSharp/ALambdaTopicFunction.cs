@@ -25,7 +25,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SNSEvents;
-using Newtonsoft.Json;
 
 namespace LambdaSharp {
 
@@ -41,7 +40,7 @@ namespace LambdaSharp {
 
         //--- Methods ---
         public virtual TMessage Deserialize(string body)
-            => JsonConvert.DeserializeObject<TMessage>(body);
+            => DeserializeJson<TMessage>(body);
 
         public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
 
@@ -61,7 +60,7 @@ namespace LambdaSharp {
             LogInfo("deserializing SNS event");
             SNSEvent snsEvent;
             try {
-                snsEvent = JsonConvert.DeserializeObject<SNSEvent>(snsEventBody);
+                snsEvent = DeserializeJson<SNSEvent>(snsEventBody);
             } catch(Exception e) {
                 LogError(e);
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, snsEventBody, e);

@@ -1,4 +1,4 @@
-# λ# - Eurytus (v0.5.0.3) - 2019-03-08
+# λ# - Eurytus (v0.5.0.4) - TBD
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -382,6 +382,7 @@ A small, aesthetic win is that the λ# CLI uses the manifest to translate the re
 Last, but not least, all in resources in λ# module are not automatically tagged, when possible, with the following information:
 |Tag Name|Description|Example|
 |--------|-----------|-------|
+`LambdaSharp:DeployedBy`|The IAM identity used to deploy the CloudFormation stack.|`user/bob`|
 `LambdaSharp:Module`|The full module name without version or source bucket specification.|`My.Module`|
 `LambdaSharp:RootStack`|The name of the root CloudFormation stack under which the resource are created. This is the same as `aws:cloudformation:stack-name` for non-nested modules. Otherwise, it is the stack name of the topmost, non-nested module.|`Sandbox-My-Module-MyResource-1TOI83RQZQZE3`|
 `LambdaSharp:Tier`|The name of the deployment tier.|`Sandbox`|
@@ -484,6 +485,8 @@ There wre some additional internal changes listed here for sake of completeness:
 * The `ModuleName` and `ModuleVersion` module output values have been combined into a single `Module` output value.
 
 ## Fixes
+
+### (v0.5.0.4) - TBD
 
 ### (v0.5.0.3) - 2019-03-08
 

@@ -32,7 +32,8 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Api"] = new[] {
                 "Integration",
                 "OperationName",
-                "ApiKeyRequired"
+                "ApiKeyRequired",
+                "Invoke"
             },
             ["Schedule"] = new[] {
                 "Name"
@@ -57,6 +58,11 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Kinesis"] = new[] {
                 "BatchSize",
                 "StartingPosition"
+            },
+            ["WebSocket"] = new[] {
+                "OperationName",
+                "ApiKeyRequired",
+                "Invoke"
             }
         };
 
@@ -67,6 +73,7 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string Invoke { get; set; }
 
         // CloudWatch Schedule Event Source
         public object Schedule { get; set; }
@@ -101,5 +108,11 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Kinesis { get; set; }
         // object BatchSize { get; set; }
         // object StartingPosition { get; set; }
+
+        // WebSocket Source
+        public string WebSocket { get; set; }
+        // public string OperationName { get; set; }
+        // public bool? ApiKeyRequired { get; set; }
+        // public string Invoke { get; set; }
    }
 }

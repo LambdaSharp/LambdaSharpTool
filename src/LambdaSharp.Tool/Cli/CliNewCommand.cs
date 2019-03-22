@@ -367,10 +367,11 @@ namespace LambdaSharp.Tool.Cli {
             var lines = new List<string>();
             lines.Add($"  - Resource: {resourceName}");
             lines.Add($"    Description: TODO - update resource description");
-            lines.Add($"    # Scope: List of functions to be given the name of the resource");
             lines.Add($"    Type: {resourceTypeName}");
-            lines.Add($"    # Allow: Shorthand or allowed actions");
             lines.Add($"    Properties:");
+            if(resourceType.Documentation != null) {
+                lines.Add($"      # Documentation: {resourceType.Documentation}");
+            }
             WriteResourceProperties(resourceTypeName, resourceType, 3, startList: false);
             InsertModuleItemsLines(moduleFile, lines);
             Console.WriteLine($"Added resource '{resourceName}' [{resourceTypeName}]");

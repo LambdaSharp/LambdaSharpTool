@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudWatchLogs;
@@ -35,6 +36,8 @@ using JsonDiffPatch;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NJsonSchema;
+using NJsonSchema.Generation;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -58,7 +61,7 @@ namespace LambdaSharp.Tool.Cli {
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLambdaLogs(dryRunOption.HasValue());
+                        await DeleteOrphanLambdaLogsAsync(dryRunOption.HasValue());
                     });
                 });
 
@@ -79,11 +82,24 @@ namespace LambdaSharp.Tool.Cli {
                         var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "Docs/CloudFormationResourceSpecification.json");
 
                         // run command
-                        await RefreshCloudFormationSpec(
+                        await RefreshCloudFormationSpecAsync(
                             "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
                             destinationZipLocation,
                             destinationJsonLocation
                         );
+                    });
+                });
+
+                cmd.Command("create-invoke-methods-schema", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create JSON request/response schema for API Gateway invoke methods";
+                    var outputFileOption = subCmd.Option("--out|-o", "", CommandOptionType.SingleValue);
+                    var assemblyArgument = subCmd.Argument("assembly", "File-path to .NET assembly");
+                    var classArgument = subCmd.Argument("class", "Full class name");
+                    var methodsArgument = subCmd.Argument("method", "Invoke method name(s)", multipleValues: true);
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        await CreateInvokeMethodSchemasAsync(assemblyArgument.Value, classArgument.Value, methodsArgument.Values, outputFileOption.Value());
                     });
                 });
 
@@ -94,7 +110,7 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task RefreshCloudFormationSpec(
+        public async Task RefreshCloudFormationSpecAsync(
             string specifcationUrl,
             string destinationZipLocation,
             string destinationJsonLocation
@@ -147,11 +163,9 @@ namespace LambdaSharp.Tool.Cli {
 
             // strip all "Documentation" fields to reduce document size
             Console.WriteLine($"Original size: {text.Length:N0}");
-            json.Descendants()
-                .OfType<JProperty>()
-                .Where(attr => (attr.Name == "Documentation") || (attr.Name == "UpdateType"))
-                .ToList()
-                .ForEach(attr => attr.Remove());
+            json.SelectTokens("$..UpdateType").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent.Remove());
             json = OrderFields(json);
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
@@ -180,7 +194,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLambdaLogs(bool dryRun) {
+        public async Task DeleteOrphanLambdaLogsAsync(bool dryRun) {
             Console.WriteLine();
 
             // list all lambda functions
@@ -239,6 +253,91 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine();
             }
             Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
+        }
+
+        public async Task CreateInvokeMethodSchemasAsync(
+            string assemblyName,
+            string className,
+            IEnumerable<string> methodNames,
+            string outputFile
+        ) {
+            var schemas = new JObject();
+
+            // load assembly
+            Assembly assembly;
+            try {
+                assembly = Assembly.LoadFrom(assemblyName);
+            } catch(FileNotFoundException) {
+                LogError("could not find assembly");
+                return;
+            } catch(Exception e) {
+                LogError("error loading assembly", e);
+                return;
+            }
+
+            // find type in assembly
+            var type = assembly.GetType(className);
+            if(type == null) {
+                LogError("could not find type");
+                return;
+            }
+            Console.WriteLine($"Type: {type.FullName}");
+
+            // enumerate type methods
+            foreach(var method in methodNames.Select(methodName => type.GetMethod(methodName))) {
+                try {
+                    var schema = new JObject();
+                    schemas.Add(method.Name, schema);
+
+                    // process method request type
+                    var requestType = method.GetParameters()
+                        .FirstOrDefault(p => p.Name == "request")
+                        ?.ParameterType;
+                    var requestSchema = await AddSchema(requestType);
+                    schema.Add("Request", requestSchema);
+
+                    // process method response type
+                    var responseType = (method.ReturnType.IsGenericType) && (method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                        ? method.ReturnType.GetGenericArguments()[0]
+                        : method.ReturnType;
+                    var responseSchema = await AddSchema(responseType);
+                    schema.Add("Response", responseSchema);
+
+                    // write result
+                    Console.WriteLine($"=> {method.Name}: {((requestSchema != null) ? requestType.Name : "(none)")} -> {((responseSchema != null) ? responseType.Name : "(none)")}");
+                } catch(Exception e) {
+                    LogError($"error processing method '{method.Name}'", e);
+                    return;
+                }
+            }
+
+            // create json document
+            try {
+                var output = JsonConvert.SerializeObject(schemas, Formatting.Indented);
+                if(outputFile != null) {
+                    File.WriteAllText(outputFile, output);
+                } else {
+                    Console.WriteLine(output);
+                }
+            } catch(Exception e) {
+                LogError("unable to write schema", e);
+            }
+
+            // local functions
+            async Task<JObject> AddSchema(Type messageType) {
+                if(
+                    (messageType != null)
+                    && !messageType.IsValueType
+                    && (messageType != typeof(string))
+                    && (messageType != typeof(void))
+                    && (messageType != typeof(Task))
+                    && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest")
+                    && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                ) {
+                    return JObject.Parse((await JsonSchema4.FromTypeAsync(messageType)).ToJson());
+                }
+                return null;
+            }
         }
     }
 }

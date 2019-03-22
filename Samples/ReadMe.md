@@ -14,6 +14,7 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 
 ## Function Source Examples
 1. [Alexa Skill Source Example](AlexaSample/)
+1. [API Gateway Source Example with Direct Method Invocation](ApiInvokeSample/)
 1. [API Gateway Source Example](ApiSample/)
 1. [CloudWatch Scheduled Event Source Example](ScheduleSample/)
 1. [DynamoDB Stream Source Example](DynamoDBSample/)

@@ -36,80 +36,6 @@ namespace LambdaSharp.Tool.Model {
 
     public class ModuleBuilder : AModelProcessor {
 
-        //--- Class Methods ---
-        private static object ConvertJTokenToNative(object value) {
-
-            // NOTE (2019-01-25, bjorg): this method is needed because the Humidifier types use 'dynamic' as type;
-            //  and JsonConvert then generates JToken values instead of primitive types as it does for object.
-
-            switch(value) {
-            case JObject jObject: {
-                    var map = new Dictionary<string, object>();
-                    foreach(var property in jObject.Properties()) {
-                        map[property.Name] = ConvertJTokenToNative(property.Value);
-                    }
-                    return map;
-                }
-            case JArray jArray: {
-                    var list = new List<object>();
-                    foreach(var item in jArray) {
-                        list.Add(ConvertJTokenToNative(item));
-                    }
-                    return list;
-                }
-            case JValue jValue:
-                return jValue.Value;
-            case JToken _:
-                throw new ApplicationException($"unsupported type: {value.GetType()}");
-            case IDictionary dictionary:
-                foreach(string key in dictionary.Keys.OfType<string>().ToList()) {
-                    dictionary[key] = ConvertJTokenToNative(dictionary[key]);
-                }
-                return value;
-            case IList list:
-                for(var i = 0; i < list.Count; ++i) {
-                    list[i] = ConvertJTokenToNative(list[i]);
-                }
-                return value;
-            case null:
-                return value;
-            default:
-                if(SkipType(value.GetType())) {
-
-                    // nothing further to remove
-                    return value;
-                }
-                if(value.GetType().FullName.StartsWith("Humidifier.", StringComparison.Ordinal)) {
-
-                    // use reflection to substitute properties
-                    foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
-                        object propertyValue;
-                        try {
-                            propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
-                        } catch(Exception e) {
-                            throw new ApplicationException($"unable to get {value.GetType()}::{property.Name}", e);
-                        }
-                        if((propertyValue == null) || SkipType(propertyValue.GetType())) {
-
-                            // nothing to do
-                        } else {
-                            propertyValue = ConvertJTokenToNative(propertyValue);
-                            try {
-                                property.GetSetMethod()?.Invoke(value, new[] { propertyValue });
-                            } catch(Exception e) {
-                                throw new ApplicationException($"unable to set {value.GetType()}::{property.Name}", e);
-                            }
-                        }
-                    }
-                    return value;
-                }
-                throw new ApplicationException($"unsupported type: {value.GetType()}");
-            }
-
-            // local function
-            bool SkipType(Type type) => type.IsValueType || type == typeof(string);
-        }
-
         //--- Fields ---
         public readonly string _owner;
         private readonly string _name;
@@ -178,6 +104,21 @@ namespace LambdaSharp.Tool.Model {
                 }
             }
             value = null;
+            return false;
+        }
+
+        public bool TryGetOverride(string key, out object expression) {
+            if(
+                TryGetLabeledPragma("Overrides", out var value)
+                && (value is IDictionary dictionary)
+            ) {
+                var entry = dictionary[key];
+                if(entry != null) {
+                    expression = entry;
+                    return true;
+                }
+            }
+            expression = null;
             return false;
         }
 
@@ -961,7 +902,7 @@ namespace LambdaSharp.Tool.Model {
             AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));
 
             // initialize function resource from definition
-            var resource = (Humidifier.Lambda.Function)ConvertJTokenToNative(JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>());
+            var resource = (Humidifier.Lambda.Function)JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>().ConvertJTokenToNative();
 
             // create function item
             var function = new FunctionItem(
