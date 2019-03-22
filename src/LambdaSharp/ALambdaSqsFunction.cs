@@ -31,7 +31,11 @@ using Newtonsoft.Json;
  
 namespace LambdaSharp {
     public class SqsMessageRetriableException: ALambdaRetriableException {
-        public SqsMessageRetriableException(string message): base(message){}
+        
+        //--- Constructors ---
+        public SqsMessageRetriableException(string format, params object[] args): base(format, args){}
+
+        public SqsMessageRetriableException(Exception innerException, string format, params object[] args): base(innerException, format, args){}
     }
     
     public static class SqsExtensions {
@@ -65,12 +69,11 @@ namespace LambdaSharp {
         //--- Fields ---
         private readonly IAmazonSQS _sqs;
         
-        //--- Constructors ---
+        //--- Methods ---
         public ALambdaSqsFunction() {
             _sqs = new AmazonSQSClient();
         }
 
-        //--- Methods ---
         public override async Task<string> ProcessMessageAsync(SQSEvent sqsEvent, ILambdaContext context) {
             
             var exceptions = new List<Exception>();
@@ -89,7 +92,7 @@ namespace LambdaSharp {
                 } catch(Exception e) {
                 
                     // Send straight to the dead letter queue and prevent from re-trying
-                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, record.Body, e);
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, JsonConvert.SerializeObject(record), e);
                     messagesToAck.Add(record);
                 }
             }
