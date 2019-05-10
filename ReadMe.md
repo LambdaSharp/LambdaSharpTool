@@ -10,7 +10,7 @@ The objective of λ# is to accelerate the development pace of serverless solutio
 
 ## Give a Star! :star:
 
-If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](lambdasharp.github.io). Thanks!
+If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.github.io). Thanks!
 
 ![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
 
