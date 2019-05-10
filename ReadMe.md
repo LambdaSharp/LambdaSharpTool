@@ -1,14 +1,18 @@
-﻿![λ#](Docs/LambdaSharpLogo.png)
+﻿![λ#](src/DocFx/images/LambdaSharpLogo.png)
 
-# LambdaSharp (v0.5.0.3) - Serverless .NET on AWS
+# LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the 0.5 "Eurytus" release.](Docs/ReleaseNotes-Eurytus.md)**
+**[Read what's new in the 0.6 "Favorinus" release.](http://lambdasharp.github.io/articles/ReleaseNotes-Favorinus.html)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
 The objective of λ# is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
 
-![λ# CLI](Docs/LashAnsiColor-WIP.gif)
+## Give a Star! :star:
+
+If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](lambdasharp.github.io). Thanks!
+
+![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
 
 ## Install λ# CLI
 
@@ -75,7 +79,7 @@ namespace MySampleModule.MyFunction {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
 
             // add business logic
 
@@ -89,7 +93,7 @@ namespace MySampleModule.MyFunction {
 
 ### Getting Started
 
-1. [Setup λ#](Docs/ReadMe.md)
+1. [Setup λ#](http://lambdasharp.github.io/articles/Setup.html)
 
 ### Articles
 
@@ -98,7 +102,7 @@ namespace MySampleModule.MyFunction {
 1. [λ# — v0.5.0.1 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-1-release-notes-f07966ace1c5)
 1. [λ# — v0.5.0.2 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-2-release-notes-69458b35bddd)
 1. [λ# — v0.5.0.3 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-3-release-notes-9d27082609c5)
-1. [λ# — Constructors/Destructors for CloudFormation](https://medium.com/@wikinaut/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
+1. [λ# — Constructors/Destructors for CloudFormation](https://medium.com/mindtouch-engineering/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
 
 ### Samples
 
@@ -109,9 +113,9 @@ namespace MySampleModule.MyFunction {
 
 ### References
 
-1. [λ# CLI Reference](src/LambdaSharp.Tool/ReadMe.md)
-1. [λ# Module Notation](Docs/Module.md)
-1. [λ# Module Global Variables](Docs/Module-Global-Variables.md)
+1. [λ# CLI Reference](http://lambdasharp.github.io/cli/ReadMe.html)
+1. [λ# .NET SDK Reference](http://lambdasharp.github.io/sdk/index.html)
+1. [λ# Module Reference](http://lambdasharp.github.io/module/Module.html)
 1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 1. Modules
     1. [LambdaSharp.Core](Modules/LambdaSharp.Core/ReadMe.md)
@@ -123,11 +127,6 @@ namespace MySampleModule.MyFunction {
     1. [LambdaSharp::S3::Subscription](Modules/LambdaSharp.S3.Subscriber/Docs/LambdaSharp-S3-Subscription.md)
     1. [LambdaSharp::S3::Unzip](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-Unzip.md)
     1. [LambdaSharp::S3::WriteJson](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-WriteJson.md)
-
-### Reference
-
-1. [Folder Structure Reference](Docs/FolderStructure.md)
-1. [Release Notes](Docs/ReadMe.md)
 
 ## License
 

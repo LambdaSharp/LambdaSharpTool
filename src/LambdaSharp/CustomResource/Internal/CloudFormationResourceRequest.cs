@@ -21,7 +21,7 @@
 
 namespace LambdaSharp.CustomResource.Internal {
 
-    public class CloudFormationResourceRequest<TProperties> {
+    internal class CloudFormationResourceRequest<TProperties> {
 
         //--- Properties ---
 

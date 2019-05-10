@@ -28,7 +28,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
-using LambdaSharp.Reports;
+using LambdaSharp.ErrorReports;
 using Newtonsoft.Json;
 
 namespace LambdaSharp.Core.ProcessLogEvents {
@@ -36,16 +36,16 @@ namespace LambdaSharp.Core.ProcessLogEvents {
     public interface ILogicDependencyProvider {
 
         //--- Methods ---
-        Task SendErrorReportAsync(OwnerMetaData owner, ErrorReport report);
+        Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report);
         Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
-        ErrorReport DeserializeErrorReport(string jsonReport);
+        LambdaErrorReport DeserializeErrorReport(string jsonReport);
         void LogProcessingError(Exception exception);
     }
 
     public class Logic {
 
         //--- Types ---
-        private delegate Task MatchHandlerAsync(OwnerMetaData owner, ErrorReport report, Match match);
+        private delegate Task MatchHandlerAsync(OwnerMetaData owner, LambdaErrorReport report, Match match);
 
         private class JavascriptException {
 
@@ -112,7 +112,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                 if(match.Success) {
 
                     // fill-in error report with owner information
-                    var report = new ErrorReport {
+                    var report = new LambdaErrorReport {
                         Module = owner.Module,
                         ModuleId = owner.ModuleId,
                         FunctionId = owner.FunctionId,
@@ -144,38 +144,38 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             return false;
         }
 
-        private Task IgnoreEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task IgnoreEntryAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
 
             // nothing to do
             return Task.CompletedTask;
         }
 
-        private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report = _provider.DeserializeErrorReport(match.ToString());
             if(report.Source == "LambdaError") {
                 await _provider.SendErrorReportAsync(owner, report);
             }
         }
 
-        private Task MatchLambdaExceptionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchLambdaExceptionAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
 
-        private Task MatchTimeoutAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchTimeoutAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
 
-        private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
 
-        private Task MatchExecutionReportAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchExecutionReportAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             var requestId = match.Groups["RequestId"].Value;
             var usedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["UsedDuration"].Value));
             var billedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["BilledDuration"].Value));
@@ -219,20 +219,20 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             return Task.WhenAll(tasks);
         }
 
-        private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report.RequestId = match.Groups["RequestId"].Value;
             var error = JsonConvert.DeserializeObject<JavascriptException>(match.Groups["ErrorMessage"].Value);
             report.Message = error.ErrorMessage;
             if(error.StackTrace?.Any() == true) {
-                report.Traces = new List<ErrorReportStackTrace> {
-                    new ErrorReportStackTrace {
-                        Exception = new ErrorReportExceptionInfo {
+                report.Traces = new List<LambdaErrorReportStackTrace> {
+                    new LambdaErrorReportStackTrace {
+                        Exception = new LambdaErrorReportExceptionInfo {
                             Type = "Error",
                             Message = error.ErrorMessage
                         },
                         Frames = error.StackTrace.Select(trace => {
                             var traceMatch = _javascriptTrace.Match(trace);
-                            var frame = new ErrorReportStackFrame {
+                            var frame = new LambdaErrorReportStackFrame {
                                 MethodName = traceMatch.Groups["Function"].Value.Trim(),
                                 FileName = traceMatch.Groups["File"].Value
                             };
@@ -247,7 +247,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             return _provider.SendErrorReportAsync(owner, report);
         }
 
-        private Task MatchJavascriptSyntaxErrorAsync(OwnerMetaData owner, ErrorReport report, Match match) {
+        private Task MatchJavascriptSyntaxErrorAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);

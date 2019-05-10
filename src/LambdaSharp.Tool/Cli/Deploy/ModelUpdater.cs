@@ -134,6 +134,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     new Tag {
                         Key = "LambdaSharp:RootStack",
                         Value = stackName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = Settings.AwsUserArn.Split(':').Last()
                     }
                 }
             });
@@ -165,7 +169,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.TypeNameMappings);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.TypeNameMappings, logError: LogError);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);

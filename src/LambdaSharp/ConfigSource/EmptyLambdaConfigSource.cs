@@ -24,11 +24,21 @@ using System.Linq;
 
 namespace LambdaSharp.ConfigSource {
 
+    /// <summary>
+    /// The <see cref="EmptyLambdaConfigSource"/> class is an implementation of
+    /// <see cref="ILambdaConfigSource"/> interface that contains no values or nested sections.
+    /// </summary>
     public class EmptyLambdaConfigSource : ILambdaConfigSource {
 
         //--- Methods ---
-        public ILambdaConfigSource Open(string key) => this;
+
+        /// <inheritdoc/>
+        public ILambdaConfigSource Open(string name) => this;
+
+        /// <inheritdoc/>
         public string Read(string key) => null;
+
+        /// <inheritdoc/>
         public IEnumerable<string> ReadAllKeys() => Enumerable.Empty<string>();
-    }
+   }
 }

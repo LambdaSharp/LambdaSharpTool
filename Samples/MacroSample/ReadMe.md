@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp CloudFormation Macro Definition
 
@@ -38,7 +38,7 @@ public class Function : ALambdaFunction<MacroRequest, MacroResponse> {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request, ILambdaContext context) {
+    public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request) {
         LogInfo($"AwsRegion = {request.region}");
         LogInfo($"AccountID = {request.accountId}");
         LogInfo($"Fragment = {SerializeJson(request.fragment)}");

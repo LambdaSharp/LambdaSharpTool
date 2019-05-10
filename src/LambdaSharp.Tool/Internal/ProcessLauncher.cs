@@ -32,8 +32,9 @@ namespace LambdaSharp.Tool.Internal {
 
         //--- Class Properties ---
         public static string DotNetExe { get => McMaster.Extensions.CommandLineUtils.DotNetExe.FullPathOrDefault(); }
-        public static string ZipExe { get => FindExecutableInPath("zip"); }
-        public static string UnzipExe { get => FindExecutableInPath("unzip"); }
+        public static string ZipExe => FindExecutableInPath("zip");
+        public static string UnzipExe => FindExecutableInPath("unzip");
+        public static string Lash => FindExecutableInPath("lash");
 
         //--- Class methods ---
         public static bool Execute(string application, IEnumerable<string> arguments, string workingFolder, bool showOutput) {
@@ -100,7 +101,7 @@ namespace LambdaSharp.Tool.Internal {
                     if(File.Exists(fullPath)) {
                         return fullPath;
                     }
-                } catch(Exception) {
+                } catch {
 
                     // catch exceptions and continue if there are invalid characters in the user's path.
                 }
@@ -116,15 +117,32 @@ namespace LambdaSharp.Tool.Internal {
                     return "/usr/bin/unzip";
                 }
                 break;
+            case "lash":
+
+                // dotnet tools are installed under the user's home directory
+                if(Environment.OSVersion.Platform == PlatformID.Unix) {
+                    var homeDirectory = Environment.GetEnvironmentVariable("HOME");
+                    var lashPath = Path.Combine(homeDirectory, ".dotnet", "tools", "lash");
+                    if(File.Exists(lashPath)) {
+                        return lashPath;
+                    }
+                } else {
+                    var homeDirectory = Environment.GetEnvironmentVariable("USERPROFILE");
+                    var lashPath = Path.Combine(homeDirectory, ".dotnet", "tools", "lash.exe");
+                    if(File.Exists(lashPath)) {
+                        return lashPath;
+                    }
+                }
+                break;
             }
             return null;
 
             // local functions
             string RemoveQuotes(string text) {
-                if(text.StartsWith("\"")) {
+                if(text.StartsWith("\"", StringComparison.Ordinal)) {
                     text = text.Substring(1);
                 }
-                if(text.EndsWith("\"")) {
+                if(text.EndsWith("\"", StringComparison.Ordinal)) {
                     text = text.Substring(0, text.Length - 1);
                 }
                 return text;

@@ -22,6 +22,7 @@
 using System;
 
 namespace LambdaSharp.Core.Registrations {
+
     public class OwnerMetaData {
 
         //--- Properties ---

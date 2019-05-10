@@ -175,6 +175,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // TODO (2018-11-29, bjorg): we need to make sure that only other resources are referenced (no literal items, or itself, no loops either)
+            // TODO (2019-0509, bjorg): we need a mechanism to handle dependencies on conditional resources
             for(var i = 0; i < DependsOn.Count; ++i) {
                 var dependency = DependsOn[i];
                 TryGetFnRef(visitor(this, FnRef(dependency)), out var result);

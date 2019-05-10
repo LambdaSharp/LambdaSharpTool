@@ -13,14 +13,14 @@ namespace %%ROOTNAMESPACE%% {
 
         //--- Properties ---
 
-        // TODO: add request fields
+        // TO-DO: add request fields
     }
 
     public class FunctionResponse {
 
         //--- Properties ---
 
-        // TODO: add response fields
+        // TO-DO: add response fields
     }
 
     public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
@@ -28,9 +28,9 @@ namespace %%ROOTNAMESPACE%% {
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
 
-            // TODO: add business logic
+            // TO-DO: add business logic
 
             return new FunctionResponse();
         }

@@ -40,8 +40,8 @@ namespace BadModule.NearTimeout {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
-            await Task.Delay(context.RemainingTime.Subtract(TimeSpan.FromSeconds(1)));
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+            await Task.Delay(CurrentContext.RemainingTime.Subtract(TimeSpan.FromSeconds(1)));
             return new FunctionResponse();
         }
     }

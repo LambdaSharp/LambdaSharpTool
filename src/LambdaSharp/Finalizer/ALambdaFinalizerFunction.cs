@@ -25,40 +25,83 @@ using LambdaSharp.CustomResource;
 
 namespace LambdaSharp.Finalizer {
 
-    public class FinalizerRequestProperties {
+    /// <summary>
+    /// The <see cref="ALambdaFinalizerFunction"/> is the abstract base class for implementing a LambdaSharp module <i>Finalizer</i>.
+    /// The <i>Finalizer</i> is a CloudFormation custom resource that is created after all other resources in the LambdaSharp module
+    /// have been created. The <i>Finalizer</i> is used to perform custom logic when deploying, creating, or tearing down a
+    /// LambdaSharp module.
+    /// </summary>
+    public abstract class ALambdaFinalizerFunction : ALambdaCustomResourceFunction<FinalizerProperties, FinalizerAttributes> {
 
-        //--- Properties ---
-        public string DeploymentChecksum { get; set; }
-        public string ModuleVersion { get; set; }
-    }
+        //--- Constructors ---
 
-    public class FinalizerResponseProperties { }
+        /// <summary>
+        /// Initializes a new <see cref="ALambdaFinalizerFunction"/> instance using the default
+        /// implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
+        /// </summary>
+        protected ALambdaFinalizerFunction() : this(null) { }
 
-    public abstract class ALambdaFinalizerFunction : ALambdaCustomResourceFunction<FinalizerRequestProperties, FinalizerResponseProperties> {
+        /// <summary>
+        /// Initializes a new <see cref="ALambdaFinalizerFunction"/> instance using a
+        /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
+        /// </summary>
+        /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
+        protected ALambdaFinalizerFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        protected virtual async Task<string> CreateDeployment(FinalizerRequestProperties request) => request.DeploymentChecksum;
-        protected virtual async Task<string> UpdateDeployment(FinalizerRequestProperties current, FinalizerRequestProperties previous) => previous.DeploymentChecksum;
-        protected virtual async Task DeleteDeployment(FinalizerRequestProperties current) { }
 
-        protected override async Task<Response<FinalizerResponseProperties>> HandleCreateResourceAsync(Request<FinalizerRequestProperties> request) {
-            var id = await CreateDeployment(request.ResourceProperties);
-            return new Response<FinalizerResponseProperties> {
-                PhysicalResourceId = "Finalizer:" + id,
-                Properties = new FinalizerResponseProperties { }
+        /// <summary>
+        /// The <see cref="CreateDeployment(FinalizerProperties)"/> method is invoked when the LambdaSharp module is first created.
+        /// </summary>
+        /// <param name="request">The <see cref="FinalizerProperties"/> instance with the new deployment information.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public virtual async Task CreateDeployment(FinalizerProperties request) { }
+
+        /// <summary>
+        /// The <see cref="CreateDeployment(FinalizerProperties)"/> method is invoked when the LambdaSharp module is being updated.
+        /// </summary>
+        /// <param name="next">The <see cref="FinalizerProperties"/> instance with the next deployment information.</param>
+        /// <param name="previous">The <see cref="FinalizerProperties"/> instance with the previous deployment information.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public virtual async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) { }
+
+        /// <summary>
+        /// The <see cref="CreateDeployment(FinalizerProperties)"/> method is invoked when the LambdaSharp module is being torn down.
+        /// </summary>
+        /// <param name="current">The <see cref="FinalizerProperties"/> instance with the current deployment information.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public virtual async Task DeleteDeployment(FinalizerProperties current) { }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// This method cannot be overridden.
+        /// </remarks>
+        public override sealed async Task<Response<FinalizerAttributes>> ProcessCreateResourceAsync(Request<FinalizerProperties> request) {
+            await CreateDeployment(request.ResourceProperties);
+            return new Response<FinalizerAttributes> {
+                PhysicalResourceId = $"Finalizer:{request.ResourceProperties.DeploymentChecksum}",
+                Attributes = new FinalizerAttributes()
             };
         }
 
-        protected override async Task<Response<FinalizerResponseProperties>> HandleDeleteResourceAsync(Request<FinalizerRequestProperties> request) {
+        /// <inheritdoc/>
+        /// <remarks>
+        /// This method cannot be overridden.
+        /// </remarks>
+        public override sealed async Task<Response<FinalizerAttributes>> ProcessDeleteResourceAsync(Request<FinalizerProperties> request) {
             await DeleteDeployment(request.ResourceProperties);
-            return new Response<FinalizerResponseProperties>();
+            return new Response<FinalizerAttributes>();
         }
 
-        protected override async Task<Response<FinalizerResponseProperties>> HandleUpdateResourceAsync(Request<FinalizerRequestProperties> request) {
-            var id = await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
-            return new Response<FinalizerResponseProperties> {
-                PhysicalResourceId = "Finalizer:" + id,
-                Properties = new FinalizerResponseProperties { }
+        /// <inheritdoc/>
+        /// <remarks>
+        /// This method cannot be overridden.
+        /// </remarks>
+        public override sealed async Task<Response<FinalizerAttributes>> ProcessUpdateResourceAsync(Request<FinalizerProperties> request) {
+            await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
+            return new Response<FinalizerAttributes> {
+                PhysicalResourceId = $"Finalizer:{request.OldResourceProperties.DeploymentChecksum}",
+                Attributes = new FinalizerAttributes()
             };
         }
     }

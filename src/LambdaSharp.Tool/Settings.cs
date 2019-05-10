@@ -108,6 +108,7 @@ namespace LambdaSharp.Tool {
         public string TierDefaultSecretKey { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
+        public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
         public string DeploymentNotificationsTopic { get; set; }
         public IEnumerable<string> ModuleBucketNames { get; set; }

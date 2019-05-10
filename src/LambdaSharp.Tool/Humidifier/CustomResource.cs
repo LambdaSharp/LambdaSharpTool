@@ -57,7 +57,7 @@ namespace Humidifier {
                 _awsTypeName = typeName;
             }
             if(properties != null) {
-                foreach(var kv in properties) {
+                foreach(var kv in properties.Where(entry => entry.Value != null)) {
                     _properties.Add(kv.Key, kv.Value);
                 }
             }
@@ -70,7 +70,13 @@ namespace Humidifier {
         public string OriginalTypeName => _originalTypeName;
         public object this[string key] {
             get => _properties[key];
-            set => _properties[key] = value;
+            set {
+                if(value != null) {
+                    _properties[key] = value;
+                } else {
+                    _properties.Remove(key);
+                }
+            }
         }
         public ICollection<string> Keys => _properties.Keys;
         public ICollection<object> Values => _properties.Values;
@@ -78,8 +84,13 @@ namespace Humidifier {
         public bool IsReadOnly => _properties.IsReadOnly;
 
         //--- Methods ---
-        public void Add(string key, object value) => _properties.Add(key, value);
-        public void Add(KeyValuePair<string, object> item) => _properties.Add(item);
+        public void Add(string key, object value) {
+            if(value != null) {
+                _properties.Add(key, value);
+            }
+        }
+
+        public void Add(KeyValuePair<string, object> item) => Add(item.Key, item.Value);
         public void Clear() => _properties.Clear();
         public bool Contains(KeyValuePair<string, object> item) => _properties.Contains(item);
         public bool ContainsKey(string key) => _properties.ContainsKey(key);
@@ -107,7 +118,7 @@ namespace Humidifier {
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        void IDictionary.Add(object key, object value) => _properties.Add((string)key, value);
+        void IDictionary.Add(object key, object value) => Add((string)key, value);
         void IDictionary.Clear() => _properties.Clear();
         bool IDictionary.Contains(object key) => _properties.ContainsKey((string)key);
         IDictionaryEnumerator IDictionary.GetEnumerator()

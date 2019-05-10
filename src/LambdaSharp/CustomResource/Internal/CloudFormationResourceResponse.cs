@@ -25,12 +25,12 @@ using Newtonsoft.Json.Converters;
 namespace LambdaSharp.CustomResource.Internal {
 
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum CloudFormationResourceResponseStatus {
+    internal enum CloudFormationResourceResponseStatus {
         SUCCESS,
         FAILED
     }
 
-    public class CloudFormationResourceResponse<TProperties> {
+    internal class CloudFormationResourceResponse<TAttributes> {
 
         //--- Properties ---
 
@@ -72,6 +72,6 @@ namespace LambdaSharp.CustomResource.Internal {
         /// Optional. The custom resource provider-defined name-value pairs to
         /// send with the response. You can access the values provided here by
         /// name in the template with Fn::GetAtt.
-        public TProperties Data;
+        public TAttributes Data;
     }
 }

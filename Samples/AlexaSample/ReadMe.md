@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Alexa Skill Source
 
@@ -38,7 +38,7 @@ public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<SkillResponse> ProcessMessageAsync(SkillRequest skill, ILambdaContext context) {
+    public override async Task<SkillResponse> ProcessMessageAsync(SkillRequest skill) {
         switch(skill.Request) {
         case LaunchRequest launch:
             LogInfo("Launch");

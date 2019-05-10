@@ -34,6 +34,7 @@ using Mono.Cecil;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using System.Collections;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -41,6 +42,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
+        private const string API_MAPPINGS = "api-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.1";
 
         //--- Types ---
@@ -76,6 +78,22 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
+        private class ApiGatewayInvocationMappings {
+
+            //--- Properties ---
+            public List<ApiGatewayInvocationMapping> Mappings = new List<ApiGatewayInvocationMapping>();
+        }
+
+        private class ApiGatewayInvocationMapping {
+
+            //--- Properties ---
+            public string RestApi;
+            public string WebSocket;
+            public string Method;
+            public RestApiSource RestApiSource;
+            public WebSocketSource WebSocketSource;
+        }
+
         //--- Fields ---
         private ModuleBuilder _builder;
         private HashSet<string> _existingPackages;
@@ -98,7 +116,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // delete old packages
             if(noCompile) {
                 if(Directory.Exists(Settings.OutputDirectory)) {
-                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, "function*.zip")) {
+                    foreach(var file in Directory.GetFiles(Settings.OutputDirectory, "function*.*")) {
                         try {
                             File.Delete(file);
                         } catch { }
@@ -117,7 +135,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(!Directory.Exists(Settings.OutputDirectory)) {
                 Directory.CreateDirectory(Settings.OutputDirectory);
             }
-            _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "function*.zip"));
+            _existingPackages = new HashSet<string>(Directory.GetFiles(Settings.OutputDirectory, "function*.*"));
 
             // build each function
             foreach(var function in functions) {
@@ -174,6 +192,21 @@ namespace LambdaSharp.Tool.Cli.Build {
                     buildConfiguration
                 );
                 break;
+            case ".sbt":
+                ScalaPackager.ProcessScala(
+                    function,
+                    noCompile,
+                    noAssemblyValidation,
+                    gitSha,
+                    gitBranch,
+                    buildConfiguration,
+                    Settings.OutputDirectory,
+                    _existingPackages,
+                    GIT_INFO_FILE,
+                    _builder
+                );
+                break;
+
             default:
                 LogError("could not determine the function language");
                 return;
@@ -196,14 +229,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // read settings from project file
-            var projectName = Path.GetFileNameWithoutExtension(function.Project);
             var csproj = XDocument.Load(function.Project, LoadOptions.PreserveWhitespace);
             var mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
             var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+            var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+            var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(function.Project);
 
             // compile function project
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-            var projectDirectory = Path.Combine(Settings.WorkingDirectory, projectName);
+            var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_temporary.zip");
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
@@ -266,8 +300,69 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // build project with AWS dotnet CLI lambda tool
             if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory)) {
-                LogError("`dotnet lambda package` command failed");
+                LogError("'dotnet lambda package' command failed");
                 return;
+            }
+
+            // collect sources with invoke methods
+            var mappings = Enumerable.Empty<ApiGatewayInvocationMapping>()
+                .Union(function.Sources
+                    .OfType<RestApiSource>()
+                    .Where(source => source.Invoke != null)
+                    .Select(source => new ApiGatewayInvocationMapping {
+                        RestApi = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
+                        Method = source.Invoke,
+                        RestApiSource = source
+                    })
+                )
+                .Union(function.Sources
+                    .OfType<WebSocketSource>()
+                    .Where(source => source.Invoke != null)
+                    .Select(source => new ApiGatewayInvocationMapping {
+                        WebSocket = source.RouteKey,
+                        Method = source.Invoke,
+                        WebSocketSource = source
+                    })
+                )
+                .ToList();
+
+            // verify the function handler can be found in the compiled assembly
+            var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
+            if(function.HasHandlerValidation) {
+                if(function.Function.Handler is string handler) {
+                    ValidateEntryPoint(
+                        buildFolder,
+                        handler
+                    );
+                }
+            }
+
+            // create request/response schemas for invocation methods
+            if(!LambdaSharpCreateInvocationSchemas(
+                buildFolder,
+                rootNamespace,
+                function.Function.Handler as string,
+                mappings
+            )) {
+                LogError("'lash util create-invoke-methods-schema' command failed");
+                return;
+            }
+
+            // add api mappings JSON file(s)
+            if(mappings.Any()) {
+                using(var zipArchive = ZipFile.Open(temporaryPackage, ZipArchiveMode.Update)) {
+                    var entry = zipArchive.CreateEntry(API_MAPPINGS);
+
+                    // Set RW-R--R-- permissions attributes on non-Windows operating system
+                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
+                    }
+                    using(var stream = entry.Open()) {
+                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ApiGatewayInvocationMappings {
+                            Mappings = mappings
+                        }).ToString(Formatting.None)));
+                    }
+                }
             }
 
             // compute hash for zip contents
@@ -363,7 +458,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     workingFolder: null,
                     showOutput: false
                 )) {
-                    LogError("`dotnet tool install -g Amazon.Lambda.Tools` command failed");
+                    LogError("'dotnet tool install -g Amazon.Lambda.Tools' command failed");
                     return false;
                 }
 
@@ -388,7 +483,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     workingFolder: null,
                     showOutput: false
                 )) {
-                    LogError("`dotnet tool update -g Amazon.Lambda.Tools` command failed");
+                    LogError("'dotnet tool update -g Amazon.Lambda.Tools' command failed");
                     return false;
                 }
             }
@@ -433,7 +528,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {
 
-            // add `git-info.json` if git sha or git branch is supplied
+            // add 'git-info.json' if git sha or git branch is supplied
             var gitInfoFileCreated = false;
             if((gitSha != null) || (gitBranch != null)) {
                 gitInfoFileCreated = true;
@@ -459,7 +554,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             } else {
                 if(!ZipWithTool(zipTempPackage, folder)) {
-                    LogError("`zip` command failed");
+                    LogError("'zip' command failed");
                     return;
                 }
             }
@@ -481,31 +576,36 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return;
             }
             try {
-                var functionAssemblyName = parts[0];
-                var functionClassName = parts[1];
-                var functionMethodName = parts[2];
+                var lambdaFunctionAssemblyName = parts[0];
+                var lambdaFunctionClassName = parts[1];
+                var lambdaFunctionEntryPointName = parts[2];
                 using(var resolver = new CustomAssemblyResolver(directory))
-                using(var functionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{functionAssemblyName}.dll"), new ReaderParameters {
+                using(var lambdaFunctionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{lambdaFunctionAssemblyName}.dll"), new ReaderParameters {
                     AssemblyResolver = resolver
                 })) {
-                    if(functionAssembly == null) {
+                    if(lambdaFunctionAssembly == null) {
                         LogError("could not load assembly");
                         return;
                     }
-                    var functionClassType = functionAssembly.MainModule.GetType(functionClassName);
+                    var functionClassType = lambdaFunctionAssembly.MainModule.GetType(lambdaFunctionClassName);
                     if(functionClassType == null) {
-                        LogError($"could not find type '{functionClassName}' in assembly");
+                        LogError($"could not find type '{lambdaFunctionClassName}' in assembly");
                         return;
                     }
-                again:
-                    var functionMethod = functionClassType.Methods.FirstOrDefault(method => method.Name == functionMethodName);
-                    if(functionMethod == null) {
-                        if(functionClassType.BaseType == null) {
-                            LogError($"could not find method '{functionMethodName}' in type '{functionClassName}'");
-                            return;
-                        }
-                        functionClassType = functionClassType.BaseType.Resolve();
-                        goto again;
+                    FindMethod(functionClassType, lambdaFunctionEntryPointName);
+
+                    // local functions
+                    void FindMethod(TypeDefinition methodClassType, string methodName) {
+                        again:
+                            var functionMethod = methodClassType.Methods.FirstOrDefault(method => method.Name == methodName);
+                            if(functionMethod == null) {
+                                if((methodClassType.BaseType == null) || (methodClassType.BaseType.FullName == "System.Object")) {
+                                    LogError($"could not find method '{methodName}' in class '{lambdaFunctionClassName}'");
+                                    return;
+                                }
+                                methodClassType = methodClassType.BaseType.Resolve();
+                                goto again;
+                            }
                     }
                 }
             } catch(Exception e) {
@@ -515,6 +615,178 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogWarn("unable to validate function entry-point due to an internal error");
                 }
             }
+        }
+
+        private bool LambdaSharpCreateInvocationSchemas(
+            string buildFolder,
+            string rootNamespace,
+            string handler,
+            IEnumerable<ApiGatewayInvocationMapping> mappings
+        ) {
+
+            // check if there is anything to do
+            if(!mappings.Any()) {
+                return true;
+            }
+
+            // check if we have enough information to resolve the invocation methods
+            var incompleteMappings = mappings.Where(mapping =>
+                !StringEx.TryParseAssemblyClassMethodReference(
+                    mapping.Method,
+                    out var mappingAssemblyName,
+                    out var mappingClassName,
+                    out var mappingMethodName
+                )
+                || (mappingAssemblyName == null)
+                || (mappingClassName == null)
+            ).ToList();
+            if(incompleteMappings.Any()) {
+                if(handler == null) {
+                    LogError("either function 'Handler' attribute must be specified as a literal value or all invocation methods must be fully qualified");
+                    return false;
+                }
+
+                // extract the assembly and class name from the handler
+                if(!StringEx.TryParseAssemblyClassMethodReference(
+                    handler,
+                    out var lambdaFunctionAssemblyName,
+                    out var lambdaFunctionClassName,
+                    out var lambdaFunctionEntryPointName
+                )) {
+                    LogError("'Handler' attribute has invalid value");
+                    return false;
+                }
+
+                // set default qualifier to the class name of the function handler
+                foreach(var mapping in incompleteMappings) {
+                    if(!StringEx.TryParseAssemblyClassMethodReference(
+                        mapping.Method,
+                        out var mappingAssemblyName,
+                        out var mappingClassName,
+                        out var mappingMethodName
+                    )) {
+                        LogError("'Invoke' attribute has invalid value");
+                        return false;
+                    }
+                    mapping.Method = $"{mappingAssemblyName ?? lambdaFunctionAssemblyName}::{mappingClassName ?? lambdaFunctionClassName}::{mappingMethodName}";
+                }
+            }
+
+            // build invocation arguments
+            string tmpSchemaFile = Path.GetTempFileName();
+            var arguments = new[] {
+                "util", "create-invoke-methods-schema",
+                "--directory", buildFolder,
+                "--default-namespace", rootNamespace,
+                "--out", tmpSchemaFile,
+                "--quiet"
+            }
+                .Union(mappings.Select(mapping => $"--method={mapping.Method}"))
+                .ToList();
+
+            // check if lambdasharp is installed or if we need to run it using dotnet
+            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
+            if(lambdaSharpFolder == null) {
+
+                // check if lash executable exists (it should since we're running)
+                var lash = ProcessLauncher.Lash;
+                if(string.IsNullOrEmpty(lash)) {
+                    LogError("failed to find the \"lash\" executable in path.");
+                    return false;
+                }
+                var success = ProcessLauncher.Execute(
+                    lash,
+                    arguments,
+                    Settings.WorkingDirectory,
+                    Settings.VerboseLevel >= VerboseLevel.Detailed
+                );
+            } else {
+
+                // check if dotnet executable exists
+                var dotNetExe = ProcessLauncher.DotNetExe;
+                if(string.IsNullOrEmpty(dotNetExe)) {
+                    LogError("failed to find the \"dotnet\" executable in path.");
+                    return false;
+                }
+                var success = ProcessLauncher.Execute(
+                    dotNetExe,
+                    new[] {
+                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
+                    }.Union(arguments).ToList(),
+                    Settings.WorkingDirectory,
+                    Settings.VerboseLevel >= VerboseLevel.Detailed
+                );
+            }
+            try {
+                try {
+                    var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(tmpSchemaFile)).ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
+                    foreach(var mapping in mappings) {
+                        if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
+                            LogError($"failed to resolve method '{mapping.Method}'");
+                            continue;
+                        }
+                        if(invocationTarget.Error != null) {
+                            LogError(invocationTarget.Error);
+                            continue;
+                        }
+
+                        // update mapping information
+                        mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
+                        if(mapping.RestApiSource != null) {
+                            mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
+                            mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
+                            mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                            mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                            mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                            mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                            mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.Method;
+
+                            // determine which uri parameters come from the request path vs. the query-string
+                            var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                            foreach(var pathParameter in mapping.RestApiSource.Path
+                                .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
+                                .Select(segment => segment.ToIdentifier())
+                                .ToArray()
+                            ) {
+                                uriParameters.Remove(pathParameter);
+                            }
+
+                            // remaining uri parameters must be supplied as query parameters
+                            if(uriParameters.Any()) {
+                                if(mapping.RestApiSource.QueryStringParameters == null) {
+                                    mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
+                                }
+                                foreach(var uriParameter in uriParameters) {
+
+                                    // either record new query-string parameter or upgrade requirements for an existing one
+                                    if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
+                                        mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
+                                    }
+                                }
+                            }
+                        }
+                        if(mapping.WebSocketSource != null) {
+                            mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
+                            mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
+                            mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                            mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                            mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                            mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                            mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.Method;
+                        }
+                    }
+                } catch(Exception e) {
+                    LogError("unable to read create-invoke-methods-schema output", e);
+                    return false;
+                }
+            } finally {
+                try {
+                    File.Delete(tmpSchemaFile);
+                } catch {
+                    LogWarn($"unable to delete temporary file: {tmpSchemaFile}");
+                }
+            }
+            return true;
         }
     }
 }

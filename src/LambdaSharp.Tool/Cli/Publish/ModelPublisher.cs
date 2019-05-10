@@ -74,19 +74,23 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
 
-            // check if a manifest already exists for this version
-            var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(Settings.DeploymentBucketName, destinationKey, errorIfMissing: false);
-            if(existingManifest != null) {
-                if(existingManifest.Hash == manifest.Hash) {
+            // check if we want to always publish, regardless of version or detected changes
+            if(!forcePublish) {
 
-                    // manifest matches, nothing further to do
-                    Console.WriteLine($"=> No changes found to publish");
-                    return $"s3://{Settings.DeploymentBucketName}/{destinationKey}";
-                } else if(!moduleVersion.IsPreRelease && !forcePublish) {
+                // check if a manifest already exists for this version
+                var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(Settings.DeploymentBucketName, destinationKey, errorIfMissing: false);
+                if(existingManifest != null) {
+                    if(existingManifest.Hash == manifest.Hash) {
 
-                    // don't allow publishing over an existing, stable version
-                    LogError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
-                    return null;
+                        // manifest matches, nothing further to do
+                        Console.WriteLine($"=> No changes found to publish");
+                        return $"s3://{Settings.DeploymentBucketName}/{destinationKey}";
+                    } else if(!moduleVersion.IsPreRelease) {
+
+                        // don't allow publishing over an existing, stable version
+                        LogError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
+                        return null;
+                    }
                 }
             }
 

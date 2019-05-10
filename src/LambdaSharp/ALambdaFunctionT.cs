@@ -21,27 +21,62 @@
 
 using System;
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.Serialization.Json;
 
 namespace LambdaSharp {
 
+    /// <summary>
+    /// The <see cref="ALambdaFunction{TRequest, TResponse}"/> builds on the <see cref="ALambdaFunction"/>
+    /// by adding request and response types which are automatically deserialized and serialized, respectively.
+    /// </summary>
+    /// <typeparam name="TRequest">The request payload type.</typeparam>
+    /// <typeparam name="TResponse">The response payload type.</typeparam>
     public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction {
 
         //--- Constructors ---
-        protected ALambdaFunction() : this(LambdaFunctionConfiguration.Instance) { }
 
-        protected ALambdaFunction(LambdaFunctionConfiguration configuration) : base(configuration) { }
+        /// <summary>
+        /// Initializes a new <see cref="ALambdaFunction{TRequest, TResponse}"/> instance using the default
+        /// implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
+        /// </summary>
+        protected ALambdaFunction() : this(null) { }
+
+        /// <summary>
+        /// Initializes a new <see cref="ALambdaFunction{TRequest, TResponse}"/> instance using a
+        /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
+        /// </summary>
+        /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
+        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
 
         //--- Abstract Methods ---
-        public abstract Task<TResponse> ProcessMessageAsync(TRequest message, ILambdaContext context);
+
+        /// <summary>
+        /// The <see cref="ProcessMessageAsync(TRequest)"/> method is invoked for every deserialized request. It is
+        /// responsible for processing the request and returning a response.
+        /// </summary>
+        /// <param name="message">The deserialized request.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public abstract Task<TResponse> ProcessMessageAsync(TRequest message);
 
         //--- Methods ---
-        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
-            var message = DeserializeJson<TRequest>(stream);
+
+        /// <summary>
+        /// The <see cref="ProcessMessageStreamAsync(Stream)"/> deserializes the request stream into
+        /// a <typeparamref name="TRequest"/> instance and invokes the <see cref="ProcessMessageAsync(TRequest)"/> method.
+        /// </summary>
+        /// <remarks>
+        /// This method is <c>sealed</c> and cannot be overridden.
+        /// </remarks>
+        /// <param name="stream">The stream with the request payload.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
+            var request = DeserializeJson<TRequest>(stream);
             LogInfo($"deserialized stream as {typeof(TRequest)}");
-            return await ProcessMessageAsync(message, context);
+            var response = await ProcessMessageAsync(request);
+            return SerializeJson(response).ToStream();
         }
     }
 }

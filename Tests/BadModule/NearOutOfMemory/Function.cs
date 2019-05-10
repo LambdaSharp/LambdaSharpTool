@@ -40,8 +40,8 @@ namespace BadModule.NearOutOfMemory {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
-            var size = context.MemoryLimitInMB - 30;
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
+            var size = CurrentContext.MemoryLimitInMB - 30;
             var bytes = new byte[size * 1024 * 1024];
             var sum = 0L;
             for(var i = 0; i < bytes.Length; ++i) {

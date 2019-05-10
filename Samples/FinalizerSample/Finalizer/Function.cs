@@ -48,17 +48,15 @@ namespace FinalizerSample.Finalizer {
             _bucketName = config.ReadS3BucketName("MyBucket");
         }
 
-        protected override async Task<string> CreateDeployment(FinalizerRequestProperties current) {
+        public override async Task CreateDeployment(FinalizerProperties current) {
             LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
-            return current.DeploymentChecksum;
         }
 
-        protected override async Task<string> UpdateDeployment(FinalizerRequestProperties current, FinalizerRequestProperties previous) {
-            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {current.DeploymentChecksum}");
-            return previous.DeploymentChecksum;
+        public override async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) {
+            LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {next.DeploymentChecksum}");
         }
 
-        protected override async Task DeleteDeployment(FinalizerRequestProperties current) {
+        public override async Task DeleteDeployment(FinalizerProperties current) {
             LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
 
             // enumerate all S3 objects

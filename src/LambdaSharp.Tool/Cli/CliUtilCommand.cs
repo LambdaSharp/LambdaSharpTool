@@ -25,6 +25,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudWatchLogs;
@@ -32,13 +33,23 @@ using Amazon.CloudWatchLogs.Model;
 using Amazon.Lambda;
 using Amazon.Lambda.Model;
 using JsonDiffPatch;
+using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NJsonSchema;
+using NJsonSchema.Generation;
 
 namespace LambdaSharp.Tool.Cli {
 
     public class CliUtilCommand : ACliCommand {
+
+        //--- Types ---
+        private class ProcessTargetInvocationException : Exception {
+
+            //--- Constructors ---
+            public ProcessTargetInvocationException(string message) : base(message) { }
+        }
 
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
@@ -58,7 +69,7 @@ namespace LambdaSharp.Tool.Cli {
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLambdaLogs(dryRunOption.HasValue());
+                        await DeleteOrphanLambdaLogsAsync(dryRunOption.HasValue());
                     });
                 });
 
@@ -75,14 +86,46 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("LAMBDASHARP environment variable is not defined");
                             return;
                         }
-                        var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src/LambdaSharp.Tool/Resources/CloudFormationResourceSpecification.json.gz");
-                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "Docs/CloudFormationResourceSpecification.json");
+                        var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src", "LambdaSharp.Tool", "Resources", "CloudFormationResourceSpecification.json.gz");
+                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src", "CloudFormationResourceSpecification.json");
 
                         // run command
-                        await RefreshCloudFormationSpec(
+                        await RefreshCloudFormationSpecAsync(
                             "https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json",
                             destinationZipLocation,
                             destinationJsonLocation
+                        );
+                    });
+                });
+
+                cmd.Command("create-invoke-methods-schema", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create JSON schemas for API Gateway invoke methods";
+                    var directoryOption = subCmd.Option("--directory|-d", "Directory where .NET assemblies are located", CommandOptionType.SingleValue);
+                    var methodOption = subCmd.Option("--method|-m", "Name of a method to analyze", CommandOptionType.MultipleValue);
+                    var defaultNamespaceOption = subCmd.Option("--default-namespace|-ns", "(optional) Default namespace for resolving class names", CommandOptionType.SingleValue);
+                    var outputFileOption = subCmd.Option("--out|-o", "(optional) Output schema file location (default: console out)", CommandOptionType.SingleValue);
+                    var noBannerOption = subCmd.Option("--quiet", "Don't show banner or execution time", CommandOptionType.NoValue);
+                    subCmd.OnExecute(async () => {
+                        Program.Quiet = noBannerOption.HasValue();
+                        if(!Program.Quiet) {
+                            Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        }
+
+                        // validate options
+                        if(directoryOption.Value() == null) {
+                            LogError("missing --assembly option");
+                            return;
+                        }
+                        if(!methodOption.Values.Any()) {
+                            LogError("missing --method option(s)");
+                            return;
+                        }
+                        await CreateInvocationTargetSchemasAsync(
+                            directoryOption.Value(),
+                            defaultNamespaceOption.Value(),
+                            methodOption.Values,
+                            outputFileOption.Value()
                         );
                     });
                 });
@@ -94,7 +137,7 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task RefreshCloudFormationSpec(
+        public async Task RefreshCloudFormationSpecAsync(
             string specifcationUrl,
             string destinationZipLocation,
             string destinationJsonLocation
@@ -147,11 +190,9 @@ namespace LambdaSharp.Tool.Cli {
 
             // strip all "Documentation" fields to reduce document size
             Console.WriteLine($"Original size: {text.Length:N0}");
-            json.Descendants()
-                .OfType<JProperty>()
-                .Where(attr => (attr.Name == "Documentation") || (attr.Name == "UpdateType"))
-                .ToList()
-                .ForEach(attr => attr.Remove());
+            json.SelectTokens("$..UpdateType").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent.Remove());
+            json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent.Remove());
             json = OrderFields(json);
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
@@ -180,7 +221,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLambdaLogs(bool dryRun) {
+        public async Task DeleteOrphanLambdaLogsAsync(bool dryRun) {
             Console.WriteLine();
 
             // list all lambda functions
@@ -239,6 +280,244 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine();
             }
             Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
+        }
+
+        public async Task CreateInvocationTargetSchemasAsync(
+            string directory,
+            string rootNamespace,
+            IEnumerable<string> methodReferences,
+            string outputFile
+        ) {
+            var schemas = new Dictionary<string, InvocationTargetDefinition>();
+
+            // create a list of nested namespaces from the root namespace
+            var namespaces = new List<string>();
+            if(!string.IsNullOrEmpty(rootNamespace)) {
+                var parts = rootNamespace.Split(".");
+                for(var i = 0; i < parts.Length; ++i) {
+                    namespaces.Add(string.Join(".", parts.Take(i + 1)) + ".");
+                }
+            }
+            namespaces.Add("");
+            namespaces.Reverse();
+
+            // enumerate type methods
+            Console.WriteLine($"Inspecting method invocation targets in {directory}");
+            foreach(var methodReference in methodReferences.Distinct()) {
+                InvocationTargetDefinition entryPoint = null;
+                try {
+
+                    // extract class and method names from method reference
+                    if(!StringEx.TryParseAssemblyClassMethodReference(methodReference, out var assemblyName, out var typeName, out var methodName)) {
+                        throw new ProcessTargetInvocationException($"method reference '{methodReference}' is not well formed");
+                    }
+
+                    // load assembly
+                    Assembly assembly;
+                    var assemblyFilepath = Path.Combine(directory, assemblyName + ".dll");
+                    try {
+                        assembly = Assembly.LoadFrom(assemblyFilepath);
+                    } catch(FileNotFoundException) {
+                        throw new ProcessTargetInvocationException($"could not find assembly '{assemblyFilepath}'");
+                    } catch(Exception e) {
+                        throw new ProcessTargetInvocationException($"error loading assembly '{assemblyFilepath}': {e.Message}");
+                    }
+
+                    // find type in assembly
+                    var type = namespaces.Select(ns => assembly.GetType(ns + typeName)).Where(t => t != null).FirstOrDefault();
+                    if(type == null) {
+                        throw new ProcessTargetInvocationException($"could not find type for '{methodReference}' in assembly '{assembly.FullName}'");
+                    }
+
+                    // find method
+                    var method = type.GetMethod(methodName);
+                    if(method == null) {
+                        throw new ProcessTargetInvocationException($"could not find method '{methodName}' in type '{type.FullName}'");
+                    }
+                    var resolvedMethodReference = $"{assemblyName}::{type.FullName}::{method.Name}";
+
+                    // process method parameters
+                    ParameterInfo requestParameter = null;
+                    ParameterInfo proxyRequestParameter = null;
+                    var uriParameters = new List<KeyValuePair<string, bool>>();
+                    var parameters = method.GetParameters();
+                    foreach(var parameter in parameters) {
+
+                        // check if [FromUri] or [FromBody] attributes are present
+                        var customAttributes = parameter.GetCustomAttributes(true);
+                        var hasFromUriAttribute = customAttributes.Any(attribute => attribute.GetType().FullName == "LambdaSharp.ApiGateway.FromUriAttribute");
+                        var hasFromBodyAttribute = customAttributes.Any(attribute => attribute.GetType().FullName == "LambdaSharp.ApiGateway.FromBodyAttribute");
+                        if(hasFromUriAttribute && hasFromBodyAttribute) {
+                            throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameter '{parameter.Name}' cannot have both [FromUri] and [FromBody] attributes");
+                        }
+
+                        // check if parameter is a proxy request
+                        var isProxyRequest = parameter.ParameterType.FullName == "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest";
+                        if(isProxyRequest) {
+                            if(hasFromUriAttribute || hasFromBodyAttribute) {
+                                throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameter '{parameter.Name}' of type 'APIGatewayProxyRequest' cannot have [FromUri] or [FromBody] attribute");
+                            }
+                            if(proxyRequestParameter != null) {
+                                throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameters '{requestParameter.Name}' and '{parameter.Name}' conflict on proxy request");
+                            }
+                            proxyRequestParameter = parameter;
+                            continue;
+                        }
+
+                        // check if parameter needs to deserialized from URI or BODY
+                        var isSimpleType = parameter.ParameterType.IsValueType || (parameter.ParameterType == typeof(string));
+                        if((isSimpleType && !hasFromBodyAttribute) || hasFromUriAttribute) {
+
+                            // check if parameter is read from URI string directly or if its members are read from the URI string
+                            if(isSimpleType) {
+
+                                // parameter is required only if it does not have an optional value and is not nullable
+                                uriParameters.Add(new KeyValuePair<string, bool>(parameter.Name, !parameter.IsOptional && (Nullable.GetUnderlyingType(parameter.ParameterType) == null) && parameter.ParameterType.IsValueType));
+                            } else {
+                                var queryParameterType = parameter.ParameterType;
+
+                                // add complex-type properties
+                                foreach(var property in queryParameterType.GetProperties()) {
+                                    var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
+                                        ?? property.Name;
+                                    var required = ((Nullable.GetUnderlyingType(property.PropertyType) == null) && property.PropertyType.IsValueType)
+                                        || (property.GetCustomAttribute<JsonRequiredAttribute>() != null)
+                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
+                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                    uriParameters.Add(new KeyValuePair<string, bool>(name, required));
+                                }
+
+                                // add complex-type fields
+                                foreach(var field in queryParameterType.GetFields()) {
+                                    var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
+                                        ?? field.Name;
+                                    var required = ((Nullable.GetUnderlyingType(field.FieldType) == null) && field.FieldType.IsValueType)
+                                        || (field.GetCustomAttribute<JsonRequiredAttribute>() != null)
+                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
+                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                    uriParameters.Add(new KeyValuePair<string, bool>(name, required));
+                                }
+                            }
+                        } else {
+                            if(requestParameter != null) {
+                                throw new ProcessTargetInvocationException($"{resolvedMethodReference} parameters '{requestParameter.Name}' and '{parameter.Name}' conflict on request body");
+                            }
+                            requestParameter = parameter;
+                        }
+                    }
+
+                    // check if no specific request parameter was present, but the method also takes a proxy request
+                    if((requestParameter == null) && (proxyRequestParameter != null)) {
+                        requestParameter = proxyRequestParameter;
+                    }
+
+                    // process method request type
+                    var requestSchemaAndContentType = await AddSchema(methodReference, $"for parameter '{requestParameter?.Name}'", requestParameter?.ParameterType);
+
+                    // process method response type
+                    var responseType = (method.ReturnType.IsGenericType) && (method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>))
+                        ? method.ReturnType.GetGenericArguments()[0]
+                        : method.ReturnType;
+                    var responseSchemaAndContentType = await AddSchema(method.Name, "as return value", responseType);
+                    entryPoint = new InvocationTargetDefinition {
+                        Assembly = assembly.FullName,
+                        Type = type.FullName,
+                        Method = methodName,
+                        RequestContentType = requestSchemaAndContentType?.Item2,
+                        RequestSchema = requestSchemaAndContentType?.Item1,
+                        RequestSchemaName = requestParameter?.GetType().FullName,
+                        UriParameters  = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
+                        ResponseContentType = responseSchemaAndContentType?.Item2,
+                        ResponseSchema = responseSchemaAndContentType?.Item1,
+                        ResponseSchemaName = responseType?.GetType().FullName
+                    };
+
+                    // write result
+                    Console.WriteLine($"... {resolvedMethodReference}({string.Join(", ", uriParameters.Select(kv => kv.Key))}) {entryPoint.GetRequestSchemaName()} -> {entryPoint.GetResponseSchemaName()}");
+                } catch(ProcessTargetInvocationException e) {
+                    entryPoint = new InvocationTargetDefinition {
+                        Error = e.Message
+                    };
+                } catch(Exception e) {
+                    entryPoint = new InvocationTargetDefinition {
+                        Error = $"internal error: {e.Message}"
+                    };
+                }
+                if(entryPoint != null) {
+                    schemas.Add(methodReference, entryPoint);
+                } else {
+                    schemas.Add(methodReference, new InvocationTargetDefinition {
+                        Error = "internal error: missing target definition"
+                    });
+                }
+            }
+
+            // create json document
+            try {
+                var output = JsonConvert.SerializeObject(schemas, Formatting.Indented);
+                if(outputFile != null) {
+                    File.WriteAllText(outputFile, output);
+                } else {
+                    Console.WriteLine(output);
+                }
+            } catch(Exception e) {
+                LogError("unable to write schema", e);
+            }
+
+            // local functions
+            async Task<Tuple<JToken, string>> AddSchema(string methodReference, string parameterName, Type messageType) {
+
+                // check if there is no request type
+                if(messageType == null) {
+                    return Tuple.Create(JToken.FromObject("Void"), (string)null);
+                }
+
+                // check if there is no response type
+                if(
+                    (messageType == typeof(void))
+                    || (messageType == typeof(Task))
+                ) {
+                    return Tuple.Create(JToken.FromObject("Void"), (string)null);
+                }
+
+                // check if request/response type is not supported
+                if(
+                    (messageType == typeof(string))
+                    || messageType.IsValueType
+                ) {
+                    LogError($"{methodReference} has unsupported type {parameterName}");
+                    return null;
+                }
+
+                // check if request/response type is inside 'Task<T>'
+                if(messageType.IsGenericType && messageType.GetGenericTypeDefinition() == typeof(Task<>)) {
+                    messageType = messageType.GetGenericArguments()[0];
+                }
+
+                // check if request/response has an open-ended schema
+                if(
+                    (messageType == typeof(object))
+                    || (messageType == typeof(JObject))
+                ) {
+                    return Tuple.Create(JToken.FromObject("Object"), "application/json");
+                }
+
+                // check if request/response is not a proxy request/response
+                if(
+                    (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyRequest")
+                    && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
+                ) {
+                    var schema = await JsonSchema4.FromTypeAsync(messageType, new JsonSchemaGeneratorSettings {
+                        FlattenInheritanceHierarchy = true
+                    });
+
+                    // NOTE (2019-04-03, bjorg): we need to allow additional properties, because Swagger doesn't support: "additionalProperties": false
+                    schema.AllowAdditionalProperties = true;
+
+                    return Tuple.Create((JToken)JObject.Parse(schema.ToJson()), "application/json");
+                }
+                return Tuple.Create(JToken.FromObject("Proxy"), (string)null);
+            }
         }
     }
 }

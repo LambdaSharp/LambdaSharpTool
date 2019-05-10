@@ -41,14 +41,14 @@ namespace LambdaSharp.Demo.SlackTodo {
             _table = new TaskTable(config.ReadDynamoDBTableName("TaskTable"));
         }
 
-        protected async override Task HandleSlackRequestAsync(SlackRequest request) {
+        protected async override Task ProcessSlackRequestAsync(SlackRequest request) {
 
             // parse request into two strings and check if the first one is a recognized command
             var args = request.Text?.Split(' ', 2, StringSplitOptions.RemoveEmptyEntries) ?? new[] { "" };
             switch(args[0].ToLowerInvariant()) {
             case "add":
                 if((args.Length == 1) || string.IsNullOrWhiteSpace(args[1])) {
-                    Console.WriteLine("Missing task after the `add` command.");
+                    Console.WriteLine("Missing task after the 'add' command.");
                 } else {
                     await AddTask(request.UserId, args[1]);
                 }

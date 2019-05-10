@@ -19,15 +19,41 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 
 namespace LambdaSharp.ConfigSource {
 
+    /// <summary>
+    /// The <see cref="ILambdaConfigSource"/> interface provide the method
+    /// definitions for accessing configuration values and nested sections.
+    /// </summary>
     public interface ILambdaConfigSource {
 
         //--- Methods ---
-        ILambdaConfigSource Open(string key);
+
+        /// <summary>
+        /// The <see cref="Open(string)"/> method returns an interface to read
+        /// configuration values from the requested nested section. Section names
+        /// are not case-sensitive.
+        /// </summary>
+        /// <param name="name">The name of the nested section.</param>
+        /// <returns>The <see cref="ILambdaConfigSource"/> implementation of the nested section.</returns>
+        ILambdaConfigSource Open(string name);
+
+        /// <summary>
+        /// The <see cref="Read(string)"/> method returns the configuration value
+        /// of the specified key or <c>null</c> if the key does not exist. Configuration
+        /// keys are not case-sensitive.
+        /// </summary>
+        /// <param name="key">The configuration key.</param>
+        /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
         string Read(string key);
+
+        /// <summary>
+        /// The <see cref="ReadAllKeys()"/> method returns all defined configuration keys.
+        /// </summary>
+        /// <returns>Enumeration of defined configuration keys.</returns>
         IEnumerable<string> ReadAllKeys();
     }
 }

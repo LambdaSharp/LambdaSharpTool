@@ -59,7 +59,7 @@ namespace MacroSample.MyFunction {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request, ILambdaContext context) {
+        public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request) {
             LogInfo($"AwsRegion = {request.Region}");
             LogInfo($"AccountID = {request.AccountId}");
             LogInfo($"Fragment = {SerializeJson(request.Fragment)}");

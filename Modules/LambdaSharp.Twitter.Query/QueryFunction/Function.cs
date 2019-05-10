@@ -30,6 +30,7 @@ using Amazon.DynamoDBv2.DocumentModel;
 using Amazon.Lambda.Core;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using LambdaSharp.Schedule;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Tweetinvi;
@@ -42,7 +43,7 @@ using Tweetinvi.Parameters;
 namespace LambdaSharp.Twitter.QueryFunction {
     using TwitterSearch = Tweetinvi.Search;
 
-    public class Function : ALambdaFunction<LambdaScheduleEvent, string> {
+    public class Function : ALambdaScheduleFunction {
 
         //--- Fields ---
         private string _twitterSearchQuery;
@@ -79,7 +80,7 @@ namespace LambdaSharp.Twitter.QueryFunction {
             _notificationTopic = config.ReadText("TweetTopic");
         }
 
-        public override async Task<string> ProcessMessageAsync(LambdaScheduleEvent request, ILambdaContext context) {
+        public override async Task ProcessEventAsync(LambdaScheduleEvent request) {
             var lastId = 0L;
 
             // read last_id from table
@@ -197,7 +198,6 @@ namespace LambdaSharp.Twitter.QueryFunction {
                 await Task.WhenAll(tasks.ToArray());
                 LogInfo($"all done");
             }
-            return "Ok";
         }
     }
 }

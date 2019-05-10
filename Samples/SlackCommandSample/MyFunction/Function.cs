@@ -36,7 +36,7 @@ namespace SlackCommandSample.MyFunction {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        protected async override Task HandleSlackRequestAsync(SlackRequest request)
+        protected async override Task ProcessSlackRequestAsync(SlackRequest request)
             => Console.WriteLine("Hello world!");
     }
 }

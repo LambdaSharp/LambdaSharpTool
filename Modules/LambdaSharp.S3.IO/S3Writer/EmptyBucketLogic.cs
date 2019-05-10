@@ -25,41 +25,42 @@ using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;
+using LambdaSharp.Logger;
 
 namespace LambdaSharp.S3.IO.S3Writer {
 
     public class EmptyBucketLogic {
 
         //--- Fields ---
-        private readonly ILambdaLogger _logger;
+        private readonly ILambdaLogLevelLogger _logger;
         private readonly IAmazonS3 _s3Client;
 
         //--- Constructors ---
-        public EmptyBucketLogic(ILambdaLogger logger, IAmazonS3 s3Client) {
+        public EmptyBucketLogic(ILambdaLogLevelLogger logger, IAmazonS3 s3Client) {
             _logger = logger;
             _s3Client = s3Client;
         }
 
         //--- Methods ---
-        public async Task<Response<ResponseProperties>> Create(RequestProperties properties) {
+        public async Task<Response<S3WriterResourceAttribute>> Create(S3WriterResourceProperties properties) {
 
             // nothing to do on create
-            return new Response<ResponseProperties> {
+            return new Response<S3WriterResourceAttribute> {
                 PhysicalResourceId = $"s3emptybucket:{properties.BucketName}",
-                Properties = new ResponseProperties {
+                Attributes = new S3WriterResourceAttribute {
                     BucketName = properties.BucketName
                 }
             };
         }
 
-        public Task<Response<ResponseProperties>> Update(RequestProperties oldProperties, RequestProperties properties)
+        public Task<Response<S3WriterResourceAttribute>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties)
             => Create(properties);
 
-        public async Task<Response<ResponseProperties>> Delete(RequestProperties properties) {
+        public async Task<Response<S3WriterResourceAttribute>> Delete(S3WriterResourceProperties properties) {
             if(properties.Enabled == false) {
 
                 // don't do anything if disabled
-                return new Response<ResponseProperties>();
+                return new Response<S3WriterResourceAttribute>();
             }
             var bucketName = properties.BucketName;
             _logger.LogInfo($"emptying bucket: {bucketName}");
@@ -92,7 +93,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             // wait for all deletions to complete
             await Task.WhenAll(deletions);
             _logger.LogInfo($"deleted {counter:N0} objects");
-            return new Response<ResponseProperties>();
+            return new Response<S3WriterResourceAttribute>();
         }
     }
 }

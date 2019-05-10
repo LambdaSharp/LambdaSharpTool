@@ -56,10 +56,10 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--configuration|-c <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitShaOption(CommandLineApplication cmd)
-            => cmd.Option("--git-sha <VALUE>", "(optional) Git SHA of most recent git commit (default: invoke `git rev-parse HEAD` command)", CommandOptionType.SingleValue);
+            => cmd.Option("--git-sha <VALUE>", "(optional) Git SHA of most recent git commit (default: invoke 'git rev-parse HEAD' command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddGitBranchOption(CommandLineApplication cmd)
-            => cmd.Option("--git-branch <VALUE>", "(optional) Git branch name (default: invoke `git rev-parse --abbrev-ref HEAD` command)", CommandOptionType.SingleValue);
+            => cmd.Option("--git-branch <VALUE>", "(optional) Git branch name (default: invoke 'git rev-parse --abbrev-ref HEAD' command)", CommandOptionType.SingleValue);
 
         public static CommandOption AddOutputPathOption(CommandLineApplication cmd)
             => cmd.Option("--output|-o <DIRECTORY>", "(optional) Path to output directory (default: bin)", CommandOptionType.SingleValue);
@@ -75,6 +75,9 @@ namespace LambdaSharp.Tool.Cli {
 
         public static CommandOption AddForcePublishOption(CommandLineApplication cmd)
             => cmd.Option("--force-publish", "(optional) Publish modules and their assets even when no changes were detected", CommandOptionType.NoValue);
+
+        public static CommandOption AddModuleVersionOption(CommandLineApplication cmd)
+            => cmd.Option("--module-version", "(optional) Override the module version", CommandOptionType.SingleValue);
 
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
@@ -105,6 +108,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
+                var moduleVersionOption = AddModuleVersionOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -128,7 +132,7 @@ namespace LambdaSharp.Tool.Cli {
                         DryRunLevel value;
                         if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
+                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
                             return;
                         }
                         dryRun = value;
@@ -138,6 +142,15 @@ namespace LambdaSharp.Tool.Cli {
                     var arguments = modulesArgument.Values.Any()
                         ? modulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
+
+                    // check if a module version number is supplied
+                    VersionInfo moduleVersion = null;
+                    if(moduleVersionOption.HasValue()) {
+                        if(!VersionInfo.TryParse(moduleVersionOption.Value(), out moduleVersion)) {
+                            LogError("--module-version is not a valid version number");
+                            return;
+                        }
+                    }
 
                     // run build step
                     foreach(var argument in arguments) {
@@ -163,7 +176,8 @@ namespace LambdaSharp.Tool.Cli {
                             gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
-                            moduleSource
+                            moduleSource,
+                            moduleVersion
                         )) {
                             break;
                         }
@@ -189,6 +203,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
+                var moduleVersionOption = AddModuleVersionOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -212,7 +227,7 @@ namespace LambdaSharp.Tool.Cli {
                         DryRunLevel value;
                         if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
+                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
                             return;
                         }
                         dryRun = value;
@@ -222,6 +237,15 @@ namespace LambdaSharp.Tool.Cli {
                     var arguments = compiledModulesArgument.Values.Any()
                         ? compiledModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
+
+                    // check if a module version number is supplied
+                    VersionInfo moduleVersion = null;
+                    if(moduleVersionOption.HasValue()) {
+                        if(!VersionInfo.TryParse(moduleVersionOption.Value(), out moduleVersion)) {
+                            LogError("--module-version is not a valid version number");
+                            return;
+                        }
+                    }
 
                     // run build & publish steps
                     foreach(var argument in arguments) {
@@ -259,7 +283,8 @@ namespace LambdaSharp.Tool.Cli {
                                 gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
-                                moduleSource
+                                moduleSource,
+                                moduleVersion
                             )) {
                                 break;
                             }
@@ -300,6 +325,7 @@ namespace LambdaSharp.Tool.Cli {
                 var gitBranchOption = AddGitBranchOption(cmd);
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
+                var moduleVersionOption = AddModuleVersionOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -324,7 +350,7 @@ namespace LambdaSharp.Tool.Cli {
                         DryRunLevel value;
                         if(!TryParseEnumOption(dryRunOption, DryRunLevel.Everything, DryRunLevel.Everything, out value)) {
 
-                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by `TryParseEnumOption`
+                            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
                             return;
                         }
                         dryRun = value;
@@ -335,6 +361,17 @@ namespace LambdaSharp.Tool.Cli {
                         ? publishedModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
                     Console.WriteLine($"Readying module for deployment tier '{settings.Tier}'");
+
+                    // check if a module version number is supplied
+                    VersionInfo moduleVersion = null;
+                    if(moduleVersionOption.HasValue()) {
+                        if(!VersionInfo.TryParse(moduleVersionOption.Value(), out moduleVersion)) {
+                            LogError("--module-version is not a valid version number");
+                            return;
+                        }
+                    }
+
+                    // run build, publish, and deploy steps
                     foreach(var argument in arguments) {
                         string moduleReference = null;
                         string moduleSource = null;
@@ -373,7 +410,8 @@ namespace LambdaSharp.Tool.Cli {
                                 gitBranchOption.Value() ?? GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
-                                moduleSource
+                                moduleSource,
+                                moduleVersion
                             )) {
                                 break;
                             }
@@ -396,7 +434,8 @@ namespace LambdaSharp.Tool.Cli {
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 promptsAsErrorsOption.HasValue(),
-                                enableXRayTracingOption.HasValue()
+                                enableXRayTracingOption.HasValue(),
+                                deployOnlyIfExists: false
                             )) {
                                 break;
                             }
@@ -415,7 +454,8 @@ namespace LambdaSharp.Tool.Cli {
             string gitBranch,
             string buildConfiguration,
             string selector,
-            string moduleSource
+            string moduleSource,
+            VersionInfo moduleVersion
         ) {
             try {
                 await PopulateToolSettingsAsync(settings, optional: true);
@@ -429,7 +469,8 @@ namespace LambdaSharp.Tool.Cli {
                     gitSha,
                     gitBranch,
                     buildConfiguration,
-                    selector
+                    selector,
+                    moduleVersion
                 );
             } catch(Exception e) {
                 LogError(e);
@@ -457,7 +498,8 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             bool promptAllParameters,
             bool promptsAsErrors,
-            bool enableXRayTracing
+            bool enableXRayTracing,
+            bool deployOnlyIfExists
         ) {
             try {
                 await PopulateToolSettingsAsync(settings);
@@ -487,7 +529,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy,
                     promptAllParameters,
                     promptsAsErrors,
-                    enableXRayTracing
+                    enableXRayTracing,
+                    deployOnlyIfExists
                 );
             } catch(Exception e) {
                 LogError(e);

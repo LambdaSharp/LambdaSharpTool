@@ -153,7 +153,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // replace all references with their logical IDs
             builder.VisitAll(Finalize);
 
-            // NOTE (2018-12-17, bjorg): at this point, we have to use `LogicalId` for items
+            // NOTE (2018-12-17, bjorg): at this point, we have to use 'LogicalId' for items
 
             // check if module contains a finalizer invocation function
             if(

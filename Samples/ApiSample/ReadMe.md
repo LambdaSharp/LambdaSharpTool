@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp API Gateway Source
 
@@ -6,7 +6,7 @@ Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
 
 ## Module Definition
 
-An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources and methods using for each function using `AWS_PROXY` as integration.
+An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources for each function using the `AWS_PROXY` integration.
 
 ```yaml
 Module: LambdaSharp.Sample.ApiGateway
@@ -35,7 +35,7 @@ public class Function : ALambdaApiGatewayFunction {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<APIGatewayProxyResponse> HandleRequestAsync(APIGatewayProxyRequest request, ILambdaContext context) {
+    public override async Task<APIGatewayProxyResponse> ProcessProxyRequestAsync(APIGatewayProxyRequest request) {
         LogInfo($"Body = {request.Body}");
         LogDictionary("Headers", request.Headers);
         LogInfo($"HttpMethod = {request.HttpMethod}");

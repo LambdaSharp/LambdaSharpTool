@@ -8,14 +8,14 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.0.0"/>
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.4.0"/>
-    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="1.0.1"/>
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.17.5"/>
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.3.18"/>
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
+    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="1.1.0" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.4" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.3" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj"/>
-    <ProjectReference Include="..\CommonLib\CommonLib.csproj"/>
+    <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
+    <ProjectReference Include="..\CommonLib\CommonLib.csproj" />
   </ItemGroup>
 </Project>

@@ -26,6 +26,7 @@ using Amazon.Lambda.Core;
 using LambdaSharp;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
+using LambdaSharp.SimpleNotificationService;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -64,7 +65,7 @@ namespace LambdaSharp.Demo.TwitterNotifier.NotifyFunction {
             _notificationTopic = config.ReadText("FoundTopic");
         }
 
-        public override async Task ProcessMessageAsync(Tweet tweet, ILambdaContext context) {
+        public override async Task ProcessMessageAsync(Tweet tweet) {
             var subject = $"@{tweet.user.screen_name} tweeted";
             if(tweet.aws_sentiment != null) {
                 subject += $" [{tweet.aws_sentiment}]";

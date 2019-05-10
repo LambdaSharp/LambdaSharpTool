@@ -36,85 +36,10 @@ namespace LambdaSharp.Tool.Model {
 
     public class ModuleBuilder : AModelProcessor {
 
-        //--- Class Methods ---
-        private static object ConvertJTokenToNative(object value) {
-
-            // NOTE (2019-01-25, bjorg): this method is needed because the Humidifier types use 'dynamic' as type;
-            //  and JsonConvert then generates JToken values instead of primitive types as it does for object.
-
-            switch(value) {
-            case JObject jObject: {
-                    var map = new Dictionary<string, object>();
-                    foreach(var property in jObject.Properties()) {
-                        map[property.Name] = ConvertJTokenToNative(property.Value);
-                    }
-                    return map;
-                }
-            case JArray jArray: {
-                    var list = new List<object>();
-                    foreach(var item in jArray) {
-                        list.Add(ConvertJTokenToNative(item));
-                    }
-                    return list;
-                }
-            case JValue jValue:
-                return jValue.Value;
-            case JToken _:
-                throw new ApplicationException($"unsupported type: {value.GetType()}");
-            case IDictionary dictionary:
-                foreach(string key in dictionary.Keys.OfType<string>().ToList()) {
-                    dictionary[key] = ConvertJTokenToNative(dictionary[key]);
-                }
-                return value;
-            case IList list:
-                for(var i = 0; i < list.Count; ++i) {
-                    list[i] = ConvertJTokenToNative(list[i]);
-                }
-                return value;
-            case null:
-                return value;
-            default:
-                if(SkipType(value.GetType())) {
-
-                    // nothing further to remove
-                    return value;
-                }
-                if(value.GetType().FullName.StartsWith("Humidifier.", StringComparison.Ordinal)) {
-
-                    // use reflection to substitute properties
-                    foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
-                        object propertyValue;
-                        try {
-                            propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
-                        } catch(Exception e) {
-                            throw new ApplicationException($"unable to get {value.GetType()}::{property.Name}", e);
-                        }
-                        if((propertyValue == null) || SkipType(propertyValue.GetType())) {
-
-                            // nothing to do
-                        } else {
-                            propertyValue = ConvertJTokenToNative(propertyValue);
-                            try {
-                                property.GetSetMethod()?.Invoke(value, new[] { propertyValue });
-                            } catch(Exception e) {
-                                throw new ApplicationException($"unable to set {value.GetType()}::{property.Name}", e);
-                            }
-                        }
-                    }
-                    return value;
-                }
-                throw new ApplicationException($"unsupported type: {value.GetType()}");
-            }
-
-            // local function
-            bool SkipType(Type type) => type.IsValueType || type == typeof(string);
-        }
-
         //--- Fields ---
-        public readonly string _owner;
-        private readonly string _name;
-        private readonly VersionInfo _version;
-        private readonly string _description;
+        public string _owner;
+        private string _name;
+        private string _description;
         private IList<object> _pragmas;
         private IList<object> _secrets;
         private Dictionary<string, AModuleItem> _itemsByFullName;
@@ -130,7 +55,7 @@ namespace LambdaSharp.Tool.Model {
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
             _owner = module.Owner;
             _name = module.Name;
-            _version = module.Version;
+            Version = module.Version;
             _description = module.Description;
             _pragmas = new List<object>(module.Pragmas ?? new object[0]);
             _secrets = new List<object>(module.Secrets ?? new object[0]);
@@ -160,8 +85,9 @@ namespace LambdaSharp.Tool.Model {
         public string Owner => _owner;
         public string Name => _name;
         public string FullName => $"{_owner}.{_name}";
+
         public string Info => $"{FullName}:{Version}";
-        public VersionInfo Version => _version;
+        public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
@@ -178,6 +104,21 @@ namespace LambdaSharp.Tool.Model {
                 }
             }
             value = null;
+            return false;
+        }
+
+        public bool TryGetOverride(string key, out object expression) {
+            if(
+                TryGetLabeledPragma("Overrides", out var value)
+                && (value is IDictionary dictionary)
+            ) {
+                var entry = dictionary[key];
+                if(entry != null) {
+                    expression = entry;
+                    return true;
+                }
+            }
+            expression = null;
             return false;
         }
 
@@ -512,8 +453,8 @@ namespace LambdaSharp.Tool.Model {
                 );
             }
 
-            // TODO (2019-02-07, bjorg): since the variable is created for each import, it also duplicates the `::Plaintext` sub-resource
-            //  for imports of type `Secret`; while it's technically not wrong, it's not efficient if this happens multiple times.
+            // TODO (2019-02-07, bjorg): since the variable is created for each import, it also duplicates the '::Plaintext' sub-resource
+            //  for imports of type 'Secret'; while it's technically not wrong, it's not efficient if this happens multiple times.
 
             // register import parameter reference
             return AddVariable(
@@ -779,6 +720,9 @@ namespace LambdaSharp.Tool.Model {
                             Value = $"{moduleOwner}.{moduleName}"
                         }
                     },
+
+                    // TODO (2019-05-09, bjorg); path-style S3 bucket references will be deprecated in September 30th 2020
+                    //  see https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
                     TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleBucketName}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                         ["ModuleOwner"] = moduleOwner,
                         ["ModuleName"] = moduleName,
@@ -923,7 +867,7 @@ namespace LambdaSharp.Tool.Model {
             if(description != null) {
 
                 // append version number to function description
-                definition["Description"] = description.TrimEnd() + $" (v{_version})";
+                definition["Description"] = description.TrimEnd() + $" (v{Version})";
             }
             if(timeout != null) {
                 definition["Timeout"] = timeout;
@@ -961,7 +905,7 @@ namespace LambdaSharp.Tool.Model {
             AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));
 
             // initialize function resource from definition
-            var resource = (Humidifier.Lambda.Function)ConvertJTokenToNative(JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>());
+            var resource = (Humidifier.Lambda.Function)JObject.FromObject(definition).ToObject<Humidifier.Lambda.Function>().ConvertJTokenToNative();
 
             // create function item
             var function = new FunctionItem(
@@ -1027,7 +971,7 @@ namespace LambdaSharp.Tool.Model {
                     resource: RegisterCustomResourceNameMapping(new Humidifier.CustomResource("Module::Finalizer") {
                         ["ServiceToken"] = FnGetAtt(function.FullName, "Arn"),
                         ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
-                        ["ModuleVersion"] = _version.ToString()
+                        ["ModuleVersion"] = Version.ToString()
                     }),
                     resourceExportAttribute: null,
                     dependsOn: null,
@@ -1044,10 +988,7 @@ namespace LambdaSharp.Tool.Model {
                     scope: null,
                     resource: new Humidifier.Logs.LogGroup {
                         LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
-
-                        // TODO (2018-09-26, bjorg): make retention configurable
-                        //  see https://docs.aws.amazon.com/AmazonCloudWatchLogs/latest/APIReference/API_PutRetentionPolicy.html
-                        RetentionInDays = 30
+                        RetentionInDays = FnRef("Module::LogRetentionInDays")
                     },
                     resourceExportAttribute: null,
                     dependsOn: null,
@@ -1076,7 +1017,7 @@ namespace LambdaSharp.Tool.Model {
 
                 // append version number to function description
                 Description = (description != null)
-                    ? description.TrimEnd() + $" (v{_version})"
+                    ? description.TrimEnd() + $" (v{Version})"
                     : null,
                 Timeout = timeout,
                 Runtime = "nodejs8.10",
@@ -1147,7 +1088,7 @@ namespace LambdaSharp.Tool.Model {
                     // nothing to do
                 } else if(allowStatement.Contains(':')) {
 
-                    // AWS permission statements always contain a `:` (e.g `ssm:GetParameter`)
+                    // AWS permission statements always contain a ':' (e.g 'ssm:GetParameter')
                     allowStatements.Add(allowStatement);
                 } else if((awsType != null) && ResourceMapping.TryResolveAllowShorthand(awsType, allowStatement, out var allowedList)) {
                     allowStatements.AddRange(allowedList);
@@ -1161,7 +1102,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add role resource statement
             var statement = new Humidifier.Statement {
-                Sid = sid,
+                Sid = sid.ToIdentifier(),
                 Effect = "Allow",
                 Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
                 Action = allowStatements.Distinct().OrderBy(text => text).ToList()
@@ -1218,7 +1159,7 @@ namespace LambdaSharp.Tool.Model {
             return new Module {
                 Owner = _owner,
                 Name = _name,
-                Version = _version,
+                Version = Version,
                 Description = _description,
                 Pragmas = _pragmas,
                 Secrets = _secrets,

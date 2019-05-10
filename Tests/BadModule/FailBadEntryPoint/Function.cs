@@ -40,7 +40,7 @@ namespace BadModule.FailBadEntryPoint {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context)
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request)
             => new FunctionResponse();
     }
 }

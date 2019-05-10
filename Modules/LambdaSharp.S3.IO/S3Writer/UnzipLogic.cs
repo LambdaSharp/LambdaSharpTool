@@ -31,6 +31,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
 using LambdaSharp.CustomResource;
+using LambdaSharp.Logger;
 
 namespace LambdaSharp.S3.IO.S3Writer {
 
@@ -53,13 +54,13 @@ namespace LambdaSharp.S3.IO.S3Writer {
         private const int MAX_BATCH_DELETE_OBJECTS = 1000;
 
         //--- Fields ---
-        private readonly ILambdaLogger _logger;
+        private readonly ILambdaLogLevelLogger _logger;
         private readonly string _manifestBucket;
         private readonly IAmazonS3 _s3Client;
         private readonly TransferUtility _transferUtility;
 
         //--- Constructors ---
-        public UnzipLogic(ILambdaLogger logger, string manifestBucket, IAmazonS3 s3Client) {
+        public UnzipLogic(ILambdaLogLevelLogger logger, string manifestBucket, IAmazonS3 s3Client) {
             _logger = logger;
             _manifestBucket = manifestBucket;
             _s3Client = new AmazonS3Client();
@@ -67,7 +68,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
         }
 
         //--- Methods ---
-        public async Task<Response<ResponseProperties>> Create(RequestProperties properties) {
+        public async Task<Response<S3WriterResourceAttribute>> Create(S3WriterResourceProperties properties) {
             _logger.LogInfo($"copying package s3://{properties.SourceBucketName}/{properties.SourceKey} to S3 bucket {properties.DestinationBucketName}");
 
             // download package and copy all files to destination bucket
@@ -93,15 +94,15 @@ namespace LambdaSharp.S3.IO.S3Writer {
             // create package manifest for future deletion
             _logger.LogInfo($"uploaded {fileEntries.Count:N0} files");
             await WriteManifest(properties, fileEntries);
-            return new Response<ResponseProperties> {
+            return new Response<S3WriterResourceAttribute> {
                 PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}",
-                Properties = new ResponseProperties {
+                Attributes = new S3WriterResourceAttribute {
                     Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKey}"
                 }
             };
         }
 
-        public async Task<Response<ResponseProperties>> Update(RequestProperties oldProperties, RequestProperties properties) {
+        public async Task<Response<S3WriterResourceAttribute>> Update(S3WriterResourceProperties oldProperties, S3WriterResourceProperties properties) {
 
             // check if the unzip properties have changed
             if(
@@ -160,22 +161,22 @@ namespace LambdaSharp.S3.IO.S3Writer {
 
                 // delete files that are no longer needed
                 await BatchDeleteFiles(properties.DestinationBucketName, oldFileEntries.Where(kv => !newFileEntries.ContainsKey(kv.Key)).Select(kv => Path.Combine(properties.DestinationKey, kv.Key)).ToList());
-                return new Response<ResponseProperties> {
+                return new Response<S3WriterResourceAttribute> {
                     PhysicalResourceId = $"s3unzip:{properties.DestinationBucketName}:{properties.DestinationKey}",
-                    Properties = new ResponseProperties {
+                    Attributes = new S3WriterResourceAttribute {
                         Url = $"s3://{properties.DestinationBucketName}/{properties.DestinationKey}"
                     }
                 };
             }
         }
 
-        public async Task<Response<ResponseProperties>> Delete(RequestProperties properties) {
+        public async Task<Response<S3WriterResourceAttribute>> Delete(S3WriterResourceProperties properties) {
             _logger.LogInfo($"deleting package {properties.SourceKey} from S3 bucket {properties.DestinationBucketName}");
 
             // download package manifest
             var fileEntries = await ReadAndDeleteManifest(properties);
             if(fileEntries == null) {
-                return new Response<ResponseProperties>();
+                return new Response<S3WriterResourceAttribute>();
             }
 
             // delete all files from manifest
@@ -183,7 +184,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
                 properties.DestinationBucketName,
                 fileEntries.Select(kv => Path.Combine(properties.DestinationKey, kv.Key)).ToList()
             );
-            return new Response<ResponseProperties>();
+            return new Response<S3WriterResourceAttribute>();
         }
 
         private async Task<bool> ProcessZipFileItemsAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {
@@ -213,7 +214,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             return true;
         }
 
-        private async Task WriteManifest(RequestProperties properties, Dictionary<string, string> fileEntries) {
+        private async Task WriteManifest(S3WriterResourceProperties properties, Dictionary<string, string> fileEntries) {
             var manifestStream = new MemoryStream();
             using(var manifest = new ZipArchive(manifestStream, ZipArchiveMode.Create, leaveOpen: true))
             using(var manifestEntryStream = manifest.CreateEntry("manifest.txt").Open())
@@ -227,7 +228,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             );
        }
 
-        private async Task<Dictionary<string, string>> ReadAndDeleteManifest(RequestProperties properties) {
+        private async Task<Dictionary<string, string>> ReadAndDeleteManifest(S3WriterResourceProperties properties) {
 
             // download package manifest
             var fileEntries = new Dictionary<string, string>();

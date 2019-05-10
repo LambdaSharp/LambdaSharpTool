@@ -25,25 +25,39 @@ using System.Linq;
 
 namespace LambdaSharp.ConfigSource {
 
+    /// <summary>
+    /// The <see cref="LambdaDictionarySource"/> class is an implementation of
+    /// <see cref="ILambdaConfigSource"/> interface that reads configuration values from
+    /// system environment variables. Nested sections are represented by a '_' character
+    /// in the system environment variable name.
+    /// </summary>
     public sealed class LambdaSystemEnvironmentSource : ILambdaConfigSource {
 
         //--- Fields ---
         private readonly string _prefix;
 
         //--- Constructors ---
-        public LambdaSystemEnvironmentSource() {
-            _prefix = "";
-        }
 
-        public LambdaSystemEnvironmentSource(string prefix) {
+        /// <summary>
+        /// The <see cref="LambdaDictionarySource(IEnumerable{KeyValuePair{string,string}})"/> constructor creates
+        /// a new <see cref="LambdaDictionarySource"/> instance from a collection of key-value pairs. Nested sections
+        /// are represented by a '_' character in the system environment variable name.
+        /// </summary>
+        public LambdaSystemEnvironmentSource() : this("") { }
+
+        private LambdaSystemEnvironmentSource(string prefix) {
             _prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
         }
 
         //--- Methods ---
-        public ILambdaConfigSource Open(string key) => new LambdaSystemEnvironmentSource(CombinePrefixWithKey(key));
 
+        /// <inheritdoc/>
+        public ILambdaConfigSource Open(string name) => new LambdaSystemEnvironmentSource(CombinePrefixWithKey(name));
+
+        /// <inheritdoc/>
         public string Read(string key) => Environment.GetEnvironmentVariable(CombinePrefixWithKey(key));
 
+        /// <inheritdoc/>
         public IEnumerable<string> ReadAllKeys() {
             var subpath = CombinePrefixWithKey("");
             return Environment.GetEnvironmentVariables().Keys.Cast<string>()
@@ -71,6 +85,7 @@ namespace LambdaSharp.ConfigSource {
                 return subkey;
             }
         }
+
         private string CombinePrefixWithKey(string key) => ((_prefix.Length > 0) ? (_prefix + "_") : "") + key.ToUpperInvariant();
     }
 }

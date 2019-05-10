@@ -82,13 +82,10 @@ namespace LambdaSharp.Tool.Cli {
                         var functionMemory = 256;
                         var functionTimeout = 30;
 
-                        // determine function name
-                        string functionName;
-                        if(nameArgument.Values.Any()) {
-                            functionName = nameArgument.Value;
-                        } else {
-                            LogError("missing function name argument");
-                            return;
+                        // get function name
+                        var functionName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(functionName)) {
+                            functionName = Prompt.GetString("|=> Enter the function name:");
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
@@ -112,24 +109,15 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp module";
 
                     // sub-command options
-                    var nameOption = subCmd.Option("--name|-n <NAME>", "Name of new module (e.g. My.NewModule)", CommandOptionType.SingleValue);
-                    nameOption.ShowInHelpText = false;
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        if(nameArgument.Values.Any() && nameOption.HasValue()) {
-                            LogError("cannot specify --name and an argument at the same time");
-                            return;
-                        }
-                        string moduleName;
-                        if(nameOption.HasValue()) {
-                            moduleName = nameOption.Value();
-                        } else if(nameArgument.Values.Any()) {
-                            moduleName = nameArgument.Value;
-                        } else {
-                            LogError("missing module name argument");
-                            return;
+
+                        // get the module name
+                        var moduleName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(moduleName)) {
+                            moduleName = Prompt.GetString("|=> Enter the module name:");
                         }
 
                         // prepend default owner string
@@ -153,18 +141,22 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        if(!nameArgument.Values.Any()) {
-                            LogError("missing resource name");
-                            return;
+
+                        // get the resource name
+                        var name = nameArgument.Value;
+                        while(string.IsNullOrEmpty(name)) {
+                            name = Prompt.GetString("|=> Enter the resource name:");
                         }
-                        if(!typeArgument.Values.Any()) {
-                            LogError("missing resource type");
-                            return;
+
+                        // get the resource type
+                        var type = typeArgument.Value;
+                        while(string.IsNullOrEmpty(type)) {
+                            type = Prompt.GetString("|=> Enter the resource type:");
                         }
                         NewResource(
                             moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),
-                            resourceName: nameArgument.Value,
-                            resourceTypeName: typeArgument.Value
+                            resourceName: name,
+                            resourceTypeName: type
                         );
                     });
                 });
@@ -276,7 +268,7 @@ namespace LambdaSharp.Tool.Cli {
             // insert function definition
             InsertModuleItemsLines(moduleFile, new[] {
                 $"  - Function: {functionName}",
-                $"    Description: TODO - update function description",
+                $"    Description: TO-DO - update function description",
                 $"    Memory: {functionMemory}",
                 $"    Timeout: {functionTimeout}"
             });
@@ -357,20 +349,39 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewResource(string moduleFile, string resourceName, string resourceTypeName) {
-            if(!ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(resourceTypeName, out var resourceType)) {
-                LogError($"unknown resource type '{resourceTypeName}'");
+
+            // determine if we have a precise resource type match
+            var matches = ResourceMapping.CloudformationSpec.ResourceTypes
+                .Where(item => item.Key.ToLowerInvariant().Contains(resourceTypeName.ToLowerInvariant()))
+                .ToDictionary(kv => kv.Key, kv => kv.Value);
+
+            // check if we have an exact match
+            if(!matches.TryGetValue(resourceTypeName, out var resourceType)) {
+                if(matches.Count == 0) {
+                    LogError($"unable to find a match for '{resourceTypeName}'");
+                } else {
+                    Console.WriteLine();
+                    Console.WriteLine($"Found partial matches for '{resourceTypeName}'");
+                    foreach(var key in matches.OrderBy(item => item.Key)) {
+                        Console.WriteLine($"    {key}");
+                    }
+                    LogError($"unable to find exact match for '{resourceTypeName}'");
+                }
                 return;
+            } else {
+                resourceType = matches.First().Value;
             }
 
             // create resource definition
             var types = new HashSet<string>();
             var lines = new List<string>();
             lines.Add($"  - Resource: {resourceName}");
-            lines.Add($"    Description: TODO - update resource description");
-            lines.Add($"    # Scope: List of functions to be given the name of the resource");
+            lines.Add($"    Description: TO-DO - update resource description");
             lines.Add($"    Type: {resourceTypeName}");
-            lines.Add($"    # Allow: Shorthand or allowed actions");
             lines.Add($"    Properties:");
+            if(resourceType.Documentation != null) {
+                lines.Add($"      # Documentation: {resourceType.Documentation}");
+            }
             WriteResourceProperties(resourceTypeName, resourceType, 3, startList: false);
             InsertModuleItemsLines(moduleFile, lines);
             Console.WriteLine($"Added resource '{resourceName}' [{resourceTypeName}]");
@@ -458,7 +469,7 @@ namespace LambdaSharp.Tool.Cli {
             // update YAML module definition
             var moduleLines = File.ReadAllLines(moduleFile).ToList();
 
-            // check if `Items:` section needs to be added
+            // check if 'Items:' section needs to be added
             var functionIndex = moduleLines.FindIndex(line => line.StartsWith("Items:", StringComparison.Ordinal));
             if(functionIndex < 0) {
                 moduleLines.Add("Items:");

@@ -51,53 +51,39 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task List(Settings settings) {
-            var cfClient = new AmazonCloudFormationClient();
-            var request = new ListStacksRequest {
-                StackStatusFilter = new List<string> {
-                    "CREATE_IN_PROGRESS",
-                    "CREATE_FAILED",
-                    "CREATE_COMPLETE",
-                    "ROLLBACK_IN_PROGRESS",
-                    "ROLLBACK_FAILED",
-                    "ROLLBACK_COMPLETE",
-                    "DELETE_IN_PROGRESS",
-                    "DELETE_FAILED",
-                    // "DELETE_COMPLETE",
-                    "UPDATE_IN_PROGRESS",
-                    "UPDATE_COMPLETE_CLEANUP_IN_PROGRESS",
-                    "UPDATE_COMPLETE",
-                    "UPDATE_ROLLBACK_IN_PROGRESS",
-                    "UPDATE_ROLLBACK_FAILED",
-                    "UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS",
-                    "UPDATE_ROLLBACK_COMPLETE",
-                    "REVIEW_IN_PROGRESS"
-                }
-            };
 
             // fetch all stacks
             var prefix = $"{settings.Tier}-";
-            var stacks = new List<StackSummary>();
+            var stacks = new List<Stack>();
+            var request = new DescribeStacksRequest();
             do {
-                var response = await cfClient.ListStacksAsync(request);
-                stacks.AddRange(response.StackSummaries.Where(summary => summary.StackName.StartsWith(prefix, StringComparison.Ordinal)));
+                var response = await settings.CfnClient.DescribeStacksAsync(request);
+                stacks.AddRange(response.Stacks.Where(summary => summary.StackName.StartsWith(prefix, StringComparison.Ordinal)));
                 request.NextToken = response.NextToken;
             } while(request.NextToken != null);
 
             // sort and format output
             if(stacks.Any()) {
-                var moduleNameWidth = stacks.Max(stack => stack.StackName.Length) + 4 - prefix.Length;
-                var statusWidth = stacks.Max(stack => stack.StackStatus.ToString().Length) + 4;
-                Console.WriteLine();
-                Console.WriteLine($"{"MODULE".PadRight(moduleNameWidth)}{"STATUS".PadRight(statusWidth)}DATE");
-                foreach(var summary in stacks.Select(stack => new {
+
+                // gather summaries
+                var summaries = stacks.Select(stack => new {
                     ModuleName = stack.StackName.Substring(prefix.Length),
-                    StackStatus = stack.StackStatus,
-                    Date = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime
-                }).OrderBy(summary => summary.Date)) {
-                    Console.WriteLine($"{summary.ModuleName.PadRight(moduleNameWidth)}{("[" + summary.StackStatus + "]").PadRight(statusWidth)}{summary.Date:yyyy-MM-dd HH:mm:ss}");
-                }
+                    StackStatus = stack.StackStatus.ToString(),
+                    Date = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
+                    Description = stack.Description,
+                    ModuleReference = stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue
+                }).OrderBy(summary => summary.Date).ToList();
+
+                var moduleNameWidth = summaries.Max(stack => stack.ModuleName.Length) + 4;
+                var moduleReferenceWidth = summaries.Max(stack => stack.ModuleReference.Length + 4);
+                var statusWidth = summaries.Max(stack => stack.StackStatus.Length) + 4;
                 Console.WriteLine();
                 Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.Tier}'");
+                Console.WriteLine();
+                Console.WriteLine($"{"NAME".PadRight(moduleNameWidth)}{"MODULE".PadRight(moduleReferenceWidth)}{"STATUS".PadRight(statusWidth)}DATE");
+                foreach(var summary in summaries) {
+                    Console.WriteLine($"{summary.ModuleName.PadRight(moduleNameWidth)}{summary.ModuleReference.PadRight(moduleReferenceWidth)}{summary.StackStatus.PadRight(statusWidth)}{summary.Date:yyyy-MM-dd HH:mm:ss}");
+                }
             } else {
                 Console.WriteLine();
                 Console.WriteLine($"Found no modules for deployment tier '{settings.Tier}'");
