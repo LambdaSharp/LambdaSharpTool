@@ -38,7 +38,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             string gitSha,
             string gitBranch,
             string buildConfiguration,
-            string selector
+            string selector,
+            VersionInfo moduleVersion
         ) {
             if(!File.Exists(SourceFilename)) {
                 LogError($"could not find '{SourceFilename}'");
@@ -55,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Compiling module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
+            Console.WriteLine($"Reading module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
             var source = await File.ReadAllTextAsync(SourceFilename);
 
             // parse yaml to module AST
@@ -69,6 +70,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(HasErrors) {
                 return false;
             }
+
+            // override module version
+            if(moduleVersion != null) {
+                module.Version = moduleVersion;
+            }
+            Console.WriteLine($"Compiling: {module.FullName} (v{module.Version})");
 
             // augment module definitions
             new ModelModuleInitializer(Settings, SourceFilename).Initialize(module);

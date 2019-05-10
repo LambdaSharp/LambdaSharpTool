@@ -45,8 +45,6 @@ namespace LambdaSharp.Tool.Internal {
             "UPDATE_ROLLBACK_FAILED"
         };
 
-
-
         private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
             ["CREATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
             ["CREATE_FAILED"] = AnsiTerminal.Red,
@@ -61,6 +59,7 @@ namespace LambdaSharp.Tool.Internal {
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
 
             ["UPDATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.Yellow,
             ["UPDATE_COMPLETE"] = AnsiTerminal.Green,
 
@@ -114,7 +113,8 @@ namespace LambdaSharp.Tool.Internal {
             string stackName,
             string mostRecentStackEventId,
             IDictionary<string, string> resourceNameMappings = null,
-            IDictionary<string, string> typeNameMappings = null
+            IDictionary<string, string> typeNameMappings = null,
+            Action<string, Exception> logError = null
         ) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
@@ -196,16 +196,34 @@ namespace LambdaSharp.Tool.Internal {
             void RenderEvents() {
                 if(Settings.UseAnsiConsole) {
                     if(ansiLinesPrinted > 0) {
-                        Console.Write(AnsiTerminal.MoveUp(ansiLinesPrinted));
+                        Console.Write(AnsiTerminal.MoveLineUp(ansiLinesPrinted));
                     }
+                    var maxResourceStatusLength = eventList.Any() ? eventList.Max(evt => evt.ResourceStatus.ToString().Length) : 0;
+                    var maxResourceTypeNameLength = eventList.Any() ? eventList.Max(evt => TranslateResourceTypeToFullName(evt.ResourceType).Length) : 0;
                     foreach(var evt in eventList) {
+                        var resourceStatus = evt.ResourceStatus.ToString();
+                        var resourceType = TranslateResourceTypeToFullName(evt.ResourceType);
                         if(_ansiStatusColorCodes.TryGetValue(evt.ResourceStatus, out var ansiColor)) {
+
+                            // print resource status
                             Console.Write(ansiColor);
-                            Console.Write($"{evt.ResourceStatus,-35}");
+                            Console.Write(resourceStatus);
                             Console.Write(AnsiTerminal.Reset);
-                            Console.Write($" {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                            Console.Write("".PadRight(maxResourceStatusLength - resourceStatus.Length + 4));
+
+                            // print resource type
+                            Console.Write(resourceType);
+                            Console.Write("".PadRight(maxResourceTypeNameLength - resourceType.Length + 4));
+
+                            // print resource name
+                            Console.Write(TranslateLogicalIdToFullName(evt.LogicalResourceId));
+
+                            // print status reason
+                            if((logError == null) && (evt.ResourceStatusReason != null)) {
+                                Console.Write($" ({evt.ResourceStatusReason})");
+                            }
                         } else {
-                            Console.Write($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                            Console.Write($"{resourceStatus}    {resourceType}    {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
                         }
                         Console.Write(AnsiTerminal.ClearEndOfLine);
                         Console.WriteLine();
@@ -224,6 +242,19 @@ namespace LambdaSharp.Tool.Internal {
                     }
                 } else {
                     Console.WriteLine($"{evt.ResourceStatus,-35} {TranslateResourceTypeToFullName(evt.ResourceType),-55} {TranslateLogicalIdToFullName(evt.LogicalResourceId)}{(evt.ResourceStatusReason != null ? $" ({evt.ResourceStatusReason})" : "")}");
+                }
+
+                // capture failed operation as an error
+                switch(evt.ResourceStatus) {
+                case "CREATE_FAILED":
+                case "ROLLBACK_FAILED":
+                case "UPDATE_FAILED":
+                case "DELETE_FAILED":
+                case "UPDATE_ROLLBACK_FAILED":
+                    if(evt.ResourceStatusReason != "Resource creation cancelled") {
+                        logError?.Invoke($"{evt.ResourceStatus} {TranslateLogicalIdToFullName(evt.LogicalResourceId)} [{TranslateResourceTypeToFullName(evt.ResourceType)}]: {evt.ResourceStatusReason}", /*Exception*/ null);
+                    }
+                    break;
                 }
             }
         }

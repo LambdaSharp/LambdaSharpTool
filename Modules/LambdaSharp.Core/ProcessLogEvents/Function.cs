@@ -35,7 +35,8 @@ using Amazon.SimpleNotificationService;
 using LambdaSharp;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
-using LambdaSharp.Reports;
+using LambdaSharp.ErrorReports;
+using LambdaSharp.Logger;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
@@ -88,7 +89,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
         }
 
-        public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis, ILambdaContext context) {
+        public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis) {
 
             // NOTE (2018-12-11, bjorg): this function is responsible for error logs parsing; therefore, it CANNOT error out itself;
             //  instead, it must rely on aggressive exception handling and redirect those message where appropriate.
@@ -106,7 +107,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                         }
 
                         // skip events from own module
-                        if(message.LogGroup.Contains(FunctionName)) {
+                        if(message.LogGroup.Contains(Info.FunctionName)) {
                             LogInfo("skipping event from own event log");
                             continue;
                         }
@@ -165,28 +166,30 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
         private async Task SendErrorExceptionAsync(Exception exception, string format = null, params object[] args) {
             try {
-                var report = ErrorReporter.CreateReport(RequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
+                var report = ErrorReportGenerator.CreateReport(CurrentContext.AwsRequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
                 await PublishErrorReportAsync(null, report);
-            } catch(Exception) {
+            } catch {
 
                 // log the error; it's the best we can do
                 LogError(exception, format, args);
             }
         }
 
-        private Task PublishErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
+        private Task PublishErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
             try {
                 return Task.WhenAll(new[] {
                     PublishErrorReportToRollbarAsync(owner, report),
                     _snsClient.PublishAsync(_errorTopic, SerializeJson(report))
                 });
-            } catch(Exception) {
-                LambdaLogger.Log(SerializeJson(report) + "\n");
+            } catch {
+
+                // capture error report in log; it's the next best thing we can do
+                Provider.Log(SerializeJson(report) + "\n");
                 return Task.CompletedTask;
             }
         }
 
-        private async Task PublishErrorReportToRollbarAsync(OwnerMetaData owner, ErrorReport report) {
+        private async Task PublishErrorReportToRollbarAsync(OwnerMetaData owner, LambdaErrorReport report) {
             if(owner == null) {
                 throw new ArgumentNullException(nameof(owner));
             }
@@ -266,10 +269,10 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         }
 
         //--- ILogicDependencyProvider Members ---
-        ErrorReport ILogicDependencyProvider.DeserializeErrorReport(string jsonReport)
-            => DeserializeJson<ErrorReport>(jsonReport);
+        LambdaErrorReport ILogicDependencyProvider.DeserializeErrorReport(string jsonReport)
+            => DeserializeJson<LambdaErrorReport>(jsonReport);
 
-        Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, ErrorReport report)
+        Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report)
             => PublishErrorReportAsync(owner, report);
 
         async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report)

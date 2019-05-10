@@ -125,7 +125,7 @@ namespace LambdaSharp.Tool.Cli {
                     TemplateBody = template
                 };
                 var response = await cfClient.CreateStackAsync(request);
-                var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null);
+                var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
                 if(outcome.Success) {
                     Console.WriteLine("=> Stack creation finished");
                 } else {
@@ -168,7 +168,7 @@ namespace LambdaSharp.Tool.Cli {
                     };
                     var mostRecentStackEventId = await cfClient.GetMostRecentStackEventIdAsync(stackName);
                     var response = await cfClient.UpdateStackAsync(request);
-                    var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId);
+                    var outcome = await cfClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, logError: LogError);
                     if(outcome.Success) {
                         Console.WriteLine("=> Stack update finished");
                     } else {

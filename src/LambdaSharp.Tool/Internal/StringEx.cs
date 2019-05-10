@@ -77,6 +77,11 @@ namespace LambdaSharp.Tool.Internal {
         public static string ToIdentifier(this string text)
             => new string(text.Where(char.IsLetterOrDigit).ToArray());
 
+        public static string ToPascalIdentifier(this string text) {
+            var identifier = text.ToIdentifier();
+            return char.ToUpperInvariant(identifier[0]) + ((identifier.Length > 1) ? identifier.Substring(1) : "");
+        }
+
         public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
             moduleOwner = "<BAD>";
             moduleName = "<BAD>";
@@ -182,6 +187,20 @@ namespace LambdaSharp.Tool.Internal {
                 hashStream.FlushFinalBlock();
                 return md5.Hash.ToHexString();
             }
+        }
+
+        public static bool TryParseAssemblyClassMethodReference(string reference, out string assemblyName, out string className, out string methodName) {
+            var parts = reference.Split("::").Reverse().ToArray();
+            if(parts.Length > 3) {
+                assemblyName = null;
+                className = null;
+                methodName = null;
+                return false;
+            }
+            methodName = parts.FirstOrDefault();
+            className = parts.Skip(1).FirstOrDefault();
+            assemblyName = parts.Skip(2).FirstOrDefault();
+            return true;
         }
     }
 }

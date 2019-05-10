@@ -75,7 +75,7 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task Init(
+        public async Task<bool> Init(
             Settings settings,
             bool allowDataLoos,
             bool protectStack,
@@ -90,13 +90,23 @@ namespace LambdaSharp.Tool.Cli {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
 
+            // standard modules
+            var standardModules = new[] {
+                "LambdaSharp.Core",
+                "LambdaSharp.S3.IO",
+                "LambdaSharp.S3.Subscriber"
+            };
+
             // check if the module must be built and published first
             if(lambdaSharpPath != null) {
-                foreach(var module in new[] {
-                    "LambdaSharp.Core",
-                    "LambdaSharp.S3.IO",
-                    "LambdaSharp.S3.Subscriber"
-                }) {
+
+                // attempt to parse the tool version from environment variables
+                if(!VersionInfo.TryParse(Environment.GetEnvironmentVariable("LAMBDASHARP_VERSION"), out var moduleVersion)) {
+                    LogError("unable to parse module version from LAMBDASHARP_VERSION");
+                    return false;
+                }
+
+                foreach(var module in standardModules) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
                     settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
@@ -111,33 +121,40 @@ namespace LambdaSharp.Tool.Cli {
                         gitBranch: GetGitBranch(settings.WorkingDirectory, showWarningOnFailure: false),
                         buildConfiguration: "Release",
                         selector: null,
-                        moduleSource: moduleSource
+                        moduleSource: moduleSource,
+                        moduleVersion: moduleVersion
                     )) {
-                        break;
+                        return false;
                     }
 
                     // publish module
                     var moduleReference = await command.PublishStepAsync(settings, forcePublish);
                     if(moduleReference == null) {
-                        break;
+                        return false;
                     }
                 }
             }
 
             // deploy LambdaSharp module
-            await command.DeployStepAsync(
-                settings,
-                dryRun: null,
-                moduleReference: $"LambdaSharp.Core:{version}",
-                instanceName: null,
-                allowDataLoos: allowDataLoos,
-                protectStack: protectStack,
-                parametersFilename: parametersFilename,
-                forceDeploy: forceDeploy,
-                promptAllParameters: promptAllParameters,
-                promptsAsErrors: promptsAsErrors,
-                enableXRayTracing: false
-            );
+            foreach(var module in standardModules) {
+                if(!await command.DeployStepAsync(
+                    settings,
+                    dryRun: null,
+                    moduleReference: $"{module}:{version}",
+                    instanceName: null,
+                    allowDataLoos: allowDataLoos,
+                    protectStack: protectStack,
+                    parametersFilename: parametersFilename,
+                    forceDeploy: forceDeploy,
+                    promptAllParameters: promptAllParameters,
+                    promptsAsErrors: promptsAsErrors,
+                    enableXRayTracing: false,
+                    deployOnlyIfExists: (module != "LambdaSharp.Core")
+                )) {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

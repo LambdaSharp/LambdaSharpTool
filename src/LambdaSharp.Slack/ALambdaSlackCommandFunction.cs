@@ -48,7 +48,7 @@ namespace LambdaSharp.Slack {
         private string _slackVerificationToken;
 
         //--- Abstract Methods ---
-        protected abstract Task HandleSlackRequestAsync(SlackRequest request);
+        protected abstract Task ProcessSlackRequestAsync(SlackRequest request);
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
@@ -60,7 +60,7 @@ namespace LambdaSharp.Slack {
             }
         }
 
-        public override async Task<object> ProcessMessageStreamAsync(Stream stream, ILambdaContext context) {
+        public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
 
             // sns event deserialization
             LogInfo("reading message stream");
@@ -69,7 +69,7 @@ namespace LambdaSharp.Slack {
                 request = DeserializeJson<SlackRequest>(stream);
             } catch(Exception e) {
                 LogError(e, "failed during Slack request deserialization");
-                return $"ERROR: {e.Message}";
+                return $"ERROR: {e.Message}".ToStream();
             }
 
             // capture standard output and error output so we can send it to slack instead
@@ -89,7 +89,7 @@ namespace LambdaSharp.Slack {
                     }
 
                     // handle slack request
-                    await HandleSlackRequestAsync(request);
+                    await ProcessSlackRequestAsync(request);
                 } catch(Exception e) {
                     LogError(e);
                     Console.Error.WriteLine(e);
@@ -110,7 +110,7 @@ namespace LambdaSharp.Slack {
                     await RespondEphemeral(request, error);
                 }
             }
-            return "Ok";
+            return "Ok".ToStream();
         }
 
         protected Task<bool> RespondInChannel(SlackRequest request, string text, params SlackResponseAttachment[] attachments)

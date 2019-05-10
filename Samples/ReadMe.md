@@ -1,4 +1,4 @@
-![λ#](../Docs/LambdaSharpLogo.png)
+![λ#](../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Examples
 
@@ -14,6 +14,7 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 
 ## Function Source Examples
 1. [Alexa Skill Source Example](AlexaSample/)
+1. [API Gateway Source Example with Method Invocation](ApiInvokeSample/)
 1. [API Gateway Source Example](ApiSample/)
 1. [CloudWatch Scheduled Event Source Example](ScheduleSample/)
 1. [DynamoDB Stream Source Example](DynamoDBSample/)
@@ -22,6 +23,7 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 1. [Slack Command Source Example](SlackCommandSample/)
 1. [SNS Topic Source Example](SnsSample/)
 1. [SQS Queue Source Example](SqsSample/)
+1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/)
 
 ## Miscellaneous Examples
 1. [Lambda Function in VPC](VpcFunction/)

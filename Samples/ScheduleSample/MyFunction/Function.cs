@@ -23,27 +23,23 @@ using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp;
+using LambdaSharp.Schedule;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace ScheduleSample.MyFunction {
 
-    public class Function : ALambdaFunction<LambdaScheduleEvent, string> {
+    public class Function : ALambdaScheduleFunction {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(LambdaScheduleEvent schedule, ILambdaContext context) {
-            LogInfo($"Version = {schedule.Version}");
+        public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
             LogInfo($"Id = {schedule.Id}");
-            LogInfo($"Source = {schedule.Source}");
-            LogInfo($"Account = {schedule.Account}");
             LogInfo($"Time = {schedule.Time}");
-            LogInfo($"Region = {schedule.Region}");
             LogInfo($"Name = {schedule.Name}");
-            return "Ok";
         }
     }
 }

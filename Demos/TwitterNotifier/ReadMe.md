@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # Twitter Notifier
 _Version_: 1.0-DEV
@@ -18,6 +18,7 @@ This module runs a Twitter search query every hour and sends any found tweets to
 
 <dt><code>TwitterApiKey</code></dt>
 <dd>
+
 The <code>TwitterApiKey</code> parameter sets the encrypted Twitter API key.
 
 <i>Required</i>: Yes
@@ -27,6 +28,7 @@ The <code>TwitterApiKey</code> parameter sets the encrypted Twitter API key.
 
 <dt><code>TwitterApiSecretKey</code></dt>
 <dd>
+
 The <code>TwitterApiSecretKey</code> parameter sets the encrypted Twitter secret API key.
 
 <i>Required</i>: Yes
@@ -36,6 +38,7 @@ The <code>TwitterApiSecretKey</code> parameter sets the encrypted Twitter secret
 
 <dt><code>TwitterLanguageFilter</code></dt>
 <dd>
+
 The <code>TwitterLanguageFilter</code> parameter sets the language filter for tweets (empty value disables filter).
 
 <i>Required</i>: Yes
@@ -45,6 +48,7 @@ The <code>TwitterLanguageFilter</code> parameter sets the language filter for tw
 
 <dt><code>TwitterQuery</code></dt>
 <dd>
+
 The <code>TwitterQuery</code> parameter sets search query for finding tweets
 
 <i>Required</i>: Yes
@@ -54,6 +58,7 @@ The <code>TwitterQuery</code> parameter sets search query for finding tweets
 
 <dt><code>NotificationEmail</code></dt>
 <dd>
+
 The <code>NotificationEmail</code> parameter sets the notification email for found tweets.
 
 <i>Required</i>: Yes

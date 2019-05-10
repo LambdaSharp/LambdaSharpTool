@@ -121,12 +121,12 @@ namespace LambdaSharp.Tool {
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
             var searchBucketNames = (bucketName != null)
                 ? new List<string> { bucketName.Replace("${AWS::Region}", Settings.AwsRegion) }
-                : Settings.ModuleBucketNames;
+                : (Settings.ModuleBucketNames ?? new[] { $"lambdasharp-{Settings.AwsRegion}" });
 
             // attempt to find a matching version
             VersionInfo foundVersion = null;
             string foundBucketName = null;
-            foreach(var bucket in searchBucketNames ?? Enumerable.Empty<string>()) {
+            foreach(var bucket in searchBucketNames) {
                 foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
                 if(foundVersion != null) {
                     foundBucketName = bucket;

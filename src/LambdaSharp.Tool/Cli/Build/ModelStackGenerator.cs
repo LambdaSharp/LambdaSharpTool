@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             };
 
             // check if we need to add the SAM transform to the output template
-            if(module.HasPragma("sam-transform")) {
+            if(module.HasSamTransform) {
                 _stack.Transform = "AWS::Serverless-2016-10-31";
             }
 

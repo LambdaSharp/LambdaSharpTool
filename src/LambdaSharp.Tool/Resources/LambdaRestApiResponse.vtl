@@ -1,0 +1,13 @@
+#set($root = $input.path('$'))
+#set($context.responseOverride.status = $root.statusCode)
+#if($root.headers)
+#foreach($header in $root.headers.keySet())
+#set($context.responseOverride.header[$header] = $root.headers.get($header))
+#end
+#end
+#if($root.multiValueHeaders)
+#foreach($header in $root.multiValueHeaders.keySet())
+#set($context.responseOverride.header[$header] = $root.multiValueHeaders.get($header))
+#end
+#end
+$root.body

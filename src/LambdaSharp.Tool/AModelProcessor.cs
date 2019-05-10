@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool {
             var result = new List<string>();
             if(value is string inlineValue) {
 
-                // inline values can be separated by `,`
+                // inline values can be separated by ','
                 result.AddRange(inlineValue.Split(new[] { ',', ' ' }, StringSplitOptions.RemoveEmptyEntries));
             } else if(value is IList<string> stringList) {
                 result = stringList.ToList();

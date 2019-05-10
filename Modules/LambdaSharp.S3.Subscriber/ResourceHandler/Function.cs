@@ -39,7 +39,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
     using LambdaSubscription = Amazon.S3.Model.LambdaFunctionConfiguration;
     using LambdaFilter = Amazon.S3.Model.Filter;
 
-    public class RequestProperties {
+    public class S3SubscriptionProperties {
 
         //--- Properties ---
         public string Bucket { get; set; }
@@ -59,13 +59,13 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
         public string Suffix;
     }
 
-    public class ResponseProperties {
+    public class S3SubscriptionAttributes {
 
         //--- Properties ---
         public string Result { get; set; }
     }
 
-    public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
+    public class Function : ALambdaCustomResourceFunction<S3SubscriptionProperties, S3SubscriptionAttributes> {
 
         //--- Fields ---
         private IAmazonS3 _s3Client;
@@ -76,7 +76,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
             return Task.CompletedTask;
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessCreateResourceAsync(Request<S3SubscriptionProperties> request) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
@@ -91,15 +91,15 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
             });
-            return new Response<ResponseProperties> {
+            return new Response<S3SubscriptionAttributes> {
                 PhysicalResourceId = $"s3subscription:{bucketName}:{properties.Function}",
-                Properties = new ResponseProperties {
+                Attributes = new S3SubscriptionAttributes {
                     Result = $"s3://{bucketName}/"
                 }
             };
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessDeleteResourceAsync(Request<S3SubscriptionProperties> request) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
@@ -114,10 +114,10 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
             });
-            return new Response<ResponseProperties>();
+            return new Response<S3SubscriptionAttributes>();
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<S3SubscriptionAttributes>> ProcessUpdateResourceAsync(Request<S3SubscriptionProperties> request) {
             var properties = request.ResourceProperties;
 
             // extract bucket name from arn (arn:aws:s3:::bucket_name)
@@ -133,15 +133,15 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
                 QueueConfigurations = config.QueueConfigurations,
                 TopicConfigurations = config.TopicConfigurations
             });
-            return new Response<ResponseProperties> {
+            return new Response<S3SubscriptionAttributes> {
                 PhysicalResourceId = request.PhysicalResourceId,
-                Properties = new ResponseProperties {
+                Attributes = new S3SubscriptionAttributes {
                     Result = $"s3://{bucketName}/"
                 }
             };
         }
 
-        private void Add(List<LambdaSubscription> subscriptions, RequestProperties properties) {
+        private void Add(List<LambdaSubscription> subscriptions, S3SubscriptionProperties properties) {
             foreach(var filter in properties.Filters) {
                 var subscription = new LambdaSubscription {
                     FunctionArn = properties.Function,
@@ -173,7 +173,7 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
             }
         }
 
-        private void Remove(List<LambdaSubscription> subscriptions, RequestProperties properties) {
+        private void Remove(List<LambdaSubscription> subscriptions, S3SubscriptionProperties properties) {
             subscriptions.RemoveAll(subscription => subscription.FunctionArn == properties.Function);
         }
     }

@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Slack Command Source
 
@@ -39,7 +39,7 @@ public class Function : ALambdaSlackCommandFunction {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    protected async override Task HandleSlackRequestAsync(SlackRequest request)
+    protected async override Task ProcessSlackRequestAsync(SlackRequest request)
         => Console.WriteLine("Hello world!");
 }
 ```

@@ -30,63 +30,63 @@ using LambdaSharp.CustomResource;
 
 namespace CustomResourceSample.ResourceHandler {
 
-    public class RequestProperties {
+    public class ResourceProperties {
 
         //--- Properties ---
 
-        // TODO: add request resource properties
+        // TO-DO: add request resource properties
     }
 
-    public class ResponseProperties {
+    public class ResourceAttributes {
 
         //--- Properties ---
 
-        // TODO: add response resource properties
+        // TO-DO: add response resource attributes
     }
 
-    public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
+    public class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request) {
 
-            // TODO: create resource using configuration settings from request properties
+            // TO-DO: create resource using configuration settings from request properties
 
-            return new Response<ResponseProperties> {
+            return new Response<ResourceAttributes> {
 
                 // assign a physical resource ID to custom resource
                 PhysicalResourceId = "MyResource:123",
 
                 // set response properties
-                Properties = new ResponseProperties {
+                Attributes = new ResourceAttributes {
 
-                    // TODO: set response properties
+                    // TO-DO: set response attributes
                 }
             };
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request) {
 
-            // TODO: delete resource using information from request properties
+            // TO-DO: delete resource using information from request properties
 
-            return new Response<ResponseProperties>();
+            return new Response<ResourceAttributes>();
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request) {
 
-            // TODO: update resource using configuration settings from request properties
+            // TO-DO: update resource using configuration settings from request properties
 
-            return new Response<ResponseProperties> {
+            return new Response<ResourceAttributes> {
 
                 // optionally assign a new physical resource ID to custom resource
                 PhysicalResourceId = "MyResource:123",
 
                 // set updated response properties
-                Properties = new ResponseProperties {
+                Attributes = new ResourceAttributes {
 
-                    // TODO: set response properties
+                    // TO-DO: set response attributes
                 }
             };
         }

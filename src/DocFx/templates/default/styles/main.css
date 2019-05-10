@@ -1,0 +1,21 @@
+body {
+  color: #444444;
+}
+
+dl p {
+  display: block;
+  margin-block-start: 1em;
+  margin-block-end: 1em;
+  margin-inline-start: 0px;
+  margin-inline-end: 0px;
+}
+
+dd {
+  margin-left: 40px;
+}
+
+code {
+  color: #444444;
+  background-color: unset;
+  border-radius: unset;
+}

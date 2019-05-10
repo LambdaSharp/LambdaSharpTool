@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp S3 Bucket Events Source
 
@@ -54,7 +54,7 @@ public class Function : ALambdaFunction<S3Event> {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<object> ProcessMessageAsync(S3Event s3Event, ILambdaContext context) {
+    public override async Task<object> ProcessMessageAsync(S3Event s3Event) {
         LogInfo($"# S3 Records = {s3Event.Records.Count}");
         for(var i = 0; i < s3Event.Records.Count; ++i) {
             var record = s3Event.Records[i];

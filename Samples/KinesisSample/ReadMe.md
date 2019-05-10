@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Kinesis Stream Source
 
@@ -42,7 +42,7 @@ public class Function : ALambdaFunction<KinesisEvent, string> {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<string> ProcessMessageAsync(KinesisEvent evt, ILambdaContext context) {
+    public override async Task<string> ProcessMessageAsync(KinesisEvent evt) {
         LogInfo($"# Kinesis Records = {evt.Records.Count}");
         for(var i = 0; i < evt.Records.Count; ++i) {
             var record = evt.Records[i];

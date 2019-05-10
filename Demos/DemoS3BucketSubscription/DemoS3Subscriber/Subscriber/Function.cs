@@ -37,7 +37,7 @@ namespace DemoS3Subscriber.Subscriber {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(S3Event evt, ILambdaContext context) {
+        public override async Task<string> ProcessMessageAsync(S3Event evt) {
             LogInfo($"# S3 Records = {evt.Records.Count}");
             for(var i = 0; i < evt.Records.Count; ++i) {
                 var record = evt.Records[i];

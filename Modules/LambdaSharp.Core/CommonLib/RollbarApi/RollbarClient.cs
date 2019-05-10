@@ -202,7 +202,7 @@ namespace LambdaSharp.Core.RollbarApi {
                 projectName = projectName.Substring(0, 32);
             }
             var allProjects = await ListAllProjects();
-            return allProjects.FirstOrDefault(project => projectName.Equals(project.Name, StringComparison.InvariantCultureIgnoreCase));
+            return allProjects.FirstOrDefault(project => projectName.Equals(project.Name, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task<RollbarProject> GetProject(int projectId) {

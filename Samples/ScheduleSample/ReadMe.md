@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Scheduled Event Source
 
@@ -35,21 +35,16 @@ Items:
 The schedule event can be parsed into a `LambdaScheduleEvent` message instance by using the `ALambdaFunction<T>` base class.
 
 ```csharp
-public class Function : ALambdaFunction<LambdaScheduleEvent> {
+public class Function : ALambdaScheduleFunction {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override async Task<object> ProcessMessageAsync(LambdaScheduleEvent schedule, ILambdaContext context) {
-        LogInfo($"Version = {schedule.Version}");
+    public override async Task ProcessEventAsync(LambdaScheduleEvent schedule) {
         LogInfo($"Id = {schedule.Id}");
-        LogInfo($"Source = {schedule.Source}");
-        LogInfo($"Account = {schedule.Account}");
         LogInfo($"Time = {schedule.Time}");
-        LogInfo($"Region = {schedule.Region}");
         LogInfo($"Name = {schedule.Name}");
-        return "Ok";
     }
 }
 ```
@@ -62,12 +57,8 @@ The λ# CLI creates a CloudWatch Events rule for each schedule expression. The `
 public class LambdaScheduleEvent {
 
     //--- Properties ---
-    public string Version { get; set; }
     public string Id { get; set; }
-    public string Source { get; set; }
-    public string Account { get; set; }
     public DateTime Time { get; set; }
-    public string Region { get; set; }
     public string Name { get; set; }
 }
 ```

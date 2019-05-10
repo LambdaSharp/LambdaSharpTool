@@ -24,38 +24,40 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using Amazon.Lambda.SQSEvents;
 using LambdaSharp;
+using LambdaSharp.SimpleQueueService;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace SqsSample.MyFunction {
 
-    public class Function : ALambdaFunction<SQSEvent, string> {
+    public class MyMessage {
+
+        //--- Properties ---
+        public string Text { get; set; }
+    }
+
+    public class Function : ALambdaQueueFunction<MyMessage> {
 
         //--- Methods ---
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<string> ProcessMessageAsync(SQSEvent evt, ILambdaContext context) {
-            LogInfo($"# SQS Records = {evt.Records.Count}");
-            for(var i = 0; i < evt.Records.Count; ++i) {
-                var record = evt.Records[i];
-                LogInfo($"Record #{i}");
-                LogInfo($"Body = {record.Body}");
-                LogInfo($"EventSource = {record.EventSource}");
-                LogInfo($"EventSourceArn = {record.EventSourceArn}");
-                LogInfo($"Md5OfBody = {record.Md5OfBody}");
-                LogInfo($"Md5OfMessageAttributes = {record.Md5OfMessageAttributes}");
-                LogInfo($"MessageId = {record.MessageId}");
-                LogInfo($"ReceiptHandle = {record.ReceiptHandle}");
-                foreach(var attribute in record.Attributes) {
-                    LogInfo($"Attributes.{attribute.Key} = {attribute.Value}");
-                }
-                foreach(var attribute in record.MessageAttributes) {
-                    LogInfo($"MessageAttributes.{attribute.Key} = {attribute.Value}");
-                }
+        public override async Task ProcessMessageAsync(MyMessage message) {
+            LogInfo($"Message.Text = {message.Text}");
+            foreach(var attribute in CurrentRecord.Attributes) {
+                LogInfo($"CurrentRecord.Attributes.{attribute.Key} = {attribute.Value}");
             }
-            return "Ok";
+            LogInfo($"CurrentRecord.Body = {CurrentRecord.Body}");
+            LogInfo($"CurrentRecord.EventSource = {CurrentRecord.EventSource}");
+            LogInfo($"CurrentRecord.EventSourceArn = {CurrentRecord.EventSourceArn}");
+            LogInfo($"CurrentRecord.Md5OfBody = {CurrentRecord.Md5OfBody}");
+            LogInfo($"CurrentRecord.Md5OfMessageAttributes = {CurrentRecord.Md5OfMessageAttributes}");
+            foreach(var attribute in CurrentRecord.MessageAttributes) {
+                LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
+            }
+            LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
+            LogInfo($"CurrentRecord.ReceiptHandle = {CurrentRecord.ReceiptHandle}");
         }
     }
 }

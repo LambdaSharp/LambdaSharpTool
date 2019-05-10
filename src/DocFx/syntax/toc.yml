@@ -1,0 +1,105 @@
+- name: Module
+  href: Index.md
+  items:
+
+    - name: Global Variables
+      href: Module-Global-Variables.md
+
+    - name: Items
+      href: Module-Items.md
+      items:
+
+    - name: Pragmas
+      href: Module-Pragmas.md
+
+    - name: Secrets
+      href: Module-Secrets.md
+
+    - name: Using
+      href: Module-Requires.md
+
+- name: Condition
+  href: Module-Condition.md
+
+- name: Import
+  href: Module-Import.md
+
+- name: Function
+  href: Module-Function.md
+  items:
+  items:
+
+    - name: Pragmas
+      href: Module-Function-Pragmas.md
+
+    - name: Sources
+      href: Module-Function-Sources.md
+      items:
+
+        - name: Alexa
+          href: Module-Function-Sources-Alexa.md
+
+        - name: API
+          href: Module-Function-Sources-APIGateway.md
+
+        - name: DynamoDB
+          href: Module-Function-Sources-DynamoDB.md
+
+        - name: Kinesis Stream
+          href: Module-Function-Sources-Kinesis.md
+
+        - name: Route
+          href: Module-Function-Sources-WebSocket.md
+
+        - name: S3
+          href: Module-Function-Sources-S3.md
+
+        - name: Schedule
+          href: Module-Function-Sources-Schedule.md
+
+        - name: Slack
+          href: Module-Function-Sources-SlackCommand.md
+
+        - name: SNS
+          href: Module-Function-Sources-SNS.md
+
+        - name: SQS
+          href: Module-Function-Sources-SQS.md
+
+- name: Macro
+  href: Module-Macro.md
+
+- name: Mapping
+  href: Module-Mapping.md
+
+- name: Namespace
+  href: Module-Namespace.md
+
+- name: Nested
+  href: Module-Nested.md
+
+- name: Package
+  href: Module-Package.md
+
+- name: Parameter
+  href: Module-Parameter.md
+
+- name: Resource
+  href: Module-Resource.md
+  items:
+
+    - name: Pragmas
+      href: Module-Resource-Pragmas.md
+
+- name: ResourceType
+  href: Module-ResourceType.md
+  items:
+
+    - name: Attribute
+      href: Module-ResourceType-Attribute.md
+
+    - name: Property
+      href: Module-ResourceType-Property.md
+
+- name: Variable
+  href: Module-Variable.md

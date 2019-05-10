@@ -40,11 +40,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         //--- Class Constructor ---
         static ModelModuleInitializer() {
-            var assembly = typeof(ModelModuleInitializer).Assembly;
-            using(var resource = assembly.GetManifestResourceStream($"LambdaSharp.Tool.Resources.DecryptSecretFunction.js"))
-            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
-                DecryptSecretFunctionCode = reader.ReadToEnd().Replace("\r", "");
-            }
+            DecryptSecretFunctionCode = typeof(ModelModuleInitializer).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.DecryptSecretFunction.js");
         }
 
         //--- Fields ---
@@ -131,6 +127,21 @@ namespace LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 value: FnIf("Module::IsNested", FnRef("DeploymentRoot"), FnRef("Module::Id")),
+                allow: null,
+                encryptionContext: null
+            );
+
+            // add overridable logging retention variable
+            if(!_builder.TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
+                logRetentionInDays = 30;
+            }
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "LogRetentionInDays",
+                description: "Number days log entries are retained for",
+                type: "Number",
+                scope: null,
+                value: logRetentionInDays,
                 allow: null,
                 encryptionContext: null
             );
@@ -650,15 +661,8 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private bool TryGetModuleVariable(string name, out object variable) {
-            if(
-                _builder.TryGetLabeledPragma("Overrides", out var value)
-                && (value is IDictionary dictionary)
-            ) {
-                var entry = dictionary[$"Module::{name}"];
-                if(entry != null) {
-                    variable = entry;
-                    return true;
-                }
+            if(_builder.TryGetOverride($"Module::{name}", out variable)) {
+                return true;
             }
             if(_builder.HasLambdaSharpDependencies) {
                 variable = FnRef($"LambdaSharp::{name}");

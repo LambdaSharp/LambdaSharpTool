@@ -1,0 +1,163 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
+  "Parameters": {
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "XRayTracing": {
+      "Type": "String",
+      "Description": "AWS X-Ray Tracing Mode",
+      "AllowedValues": [
+        "Active",
+        "PassThrough"
+      ],
+      "Default": "PassThrough"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "57298D9765C93784404D4A3D25E60206"
+    }
+  },
+  "Resources": {
+    "MyResource": {
+      "Type": "Custom::Handler",
+      "Properties": {
+        "Result": {
+          "Fn::Base64": "hello world"
+        }
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "Test.TestModule:1.0-DEV",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV"
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "XRayTracing": {
+          "default": "AWS X-Ray tracing mode for module functions [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "XRayTracing"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2018-12-31",
+      "Module": "Test.TestModule:1.0-DEV",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "XRayTracing",
+              "Type": "String",
+              "Label": "AWS X-Ray tracing mode for module functions",
+              "Default": "PassThrough"
+            }
+          ]
+        }
+      ],
+      "RuntimeCheck": true,
+      "Hash": "57298D9765C93784404D4A3D25E60206",
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Dependencies": [
+        {
+          "ModuleFullName": "LambdaSharp.Core",
+          "MinVersion": "0.6"
+        }
+      ],
+      "ResourceNameMappings": {
+        "ModuleRegistration": "Module::Registration"
+      },
+      "TypeNameMappings": {
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
+      }
+    }
+  }
+}

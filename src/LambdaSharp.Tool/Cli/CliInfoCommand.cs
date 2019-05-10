@@ -50,7 +50,7 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
 
-                    // NOTE (2018-12-11, bjorg): `--tier` is optional for the `info` command; so we replicate it here without the error reporting
+                    // NOTE (2018-12-11, bjorg): '--tier' is optional for the 'info' command; so we replicate it here without the error reporting
                     settings.Tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     await Info(
                         settings,
@@ -141,7 +141,7 @@ namespace LambdaSharp.Tool.Cli {
             // constants
             const string GIT_VERSION_PREFIX = "git version ";
 
-            // read the gitSha using `git` directly
+            // read the gitSha using 'git' directly
             var process = new Process {
                 StartInfo = new ProcessStartInfo("git", "--version") {
                     RedirectStandardOutput = true,

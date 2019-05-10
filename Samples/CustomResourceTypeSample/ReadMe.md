@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Custom Resource Type Definition
 
@@ -60,46 +60,45 @@ Items:
 The `ALambdaCustomResourceFunction` base class provides handling of the CloudFormation Custom Resource protocol and ensures that failures are properly communicated to CloudFormation. Failure to do so can lead to stalled deployments or rollback until they timeout, which can take over 30 minutes.
 
 ```csharp
-public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
+public class Function : ALambdaCustomResourceFunction<MyResourceProperties, MyResourceAttributes> {
 
     //--- Methods ---
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
+    protected override async Task<Response<MyResourceAttributes>> HandleCreateResourceAsync(Request<MyResourceProperties> request) {
 
-        // TODO: create resource using configuration settings from request properties
+        // TO-DO: create resource using configuration settings from request properties
 
-        return new Response<ResponseProperties> {
+        return new Response<MyResourceAttributes> {
 
             // assign a physical resource ID to custom resource
             PhysicalResourceId = "MyResource:123",
 
-            // set response properties
-            Properties = new ResponseProperties { }
+            // set response attributes
+            Attributes = new MyResourceAttributes { }
         };
     }
 
-    protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
+    protected override async Task<Response<MyResourceAttributes>> HandleDeleteResourceAsync(Request<MyResourceProperties> request) {
 
-        // TODO: delete resource using information from request properties
+        // TO-DO: delete resource using information from request properties
 
-        return new Response<ResponseProperties>();
+        return new Response<MyResourceAttributes>();
     }
 
-    protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request) {
+    protected override async Task<Response<MyResourceAttributes>> HandleUpdateResourceAsync(Request<MyResourceProperties> request) {
 
-        // TODO: update resource using configuration settings from request properties
+        // TO-DO: update resource using configuration settings from request properties
 
-        return new Response<ResponseProperties> {
+        return new Response<MyResourceAttributes> {
 
             // optionally assign a new physical resource ID to custom resource
             PhysicalResourceId = "MyResource:123",
 
-            // set updated response properties
-            Properties = new ResponseProperties { }
+            // set updated response attributes
+            Attributes = new MyResourceAttributes { }
         };
     }
-}
 }
 ```

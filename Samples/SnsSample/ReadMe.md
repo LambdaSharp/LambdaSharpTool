@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp SNS Topic Source
 
@@ -48,9 +48,22 @@ public class Function : ALambdaTopicFunction<MyMessage> {
     public override Task InitializeAsync(LambdaConfig config)
         => Task.CompletedTask;
 
-    public override Task ProcessMessageAsync(MyMessage message, ILambdaContext context) {
-        LogInfo(message.Text);
-        return Task.CompletedTask;
+    public override async Task ProcessMessageAsync(MyMessage message) {
+        LogInfo($"Message.Text = {message.Text}");
+        LogInfo($"CurrentRecord.Message = {CurrentRecord.Message}");
+        LogInfo($"CurrentRecord.MessageAttributes = {CurrentRecord.MessageAttributes}");
+        foreach(var attribute in CurrentRecord.MessageAttributes) {
+            LogInfo($"CurrentRecord.MessageAttributes.{attribute.Key} = {attribute.Value}");
+        }
+        LogInfo($"CurrentRecord.MessageId = {CurrentRecord.MessageId}");
+        LogInfo($"CurrentRecord.Signature = {CurrentRecord.Signature}");
+        LogInfo($"CurrentRecord.SignatureVersion = {CurrentRecord.SignatureVersion}");
+        LogInfo($"CurrentRecord.SigningCertUrl = {CurrentRecord.SigningCertUrl}");
+        LogInfo($"CurrentRecord.Subject = {CurrentRecord.Subject}");
+        LogInfo($"CurrentRecord.Timestamp = {CurrentRecord.Timestamp}");
+        LogInfo($"CurrentRecord.TopicArn = {CurrentRecord.TopicArn}");
+        LogInfo($"CurrentRecord.Type = {CurrentRecord.Type}");
+        LogInfo($"CurrentRecord.UnsubscribeUrl = {CurrentRecord.UnsubscribeUrl}");
     }
 }
 ```

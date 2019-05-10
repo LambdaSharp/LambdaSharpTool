@@ -29,13 +29,14 @@ using LambdaSharp;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
+using LambdaSharp.Exceptions;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace LambdaSharp.Core.Registration {
 
-    public class RequestProperties {
+    public class RegistrationResourceProperties {
 
         //--- Properties ---
         public string ResourceType { get; set; }
@@ -63,7 +64,7 @@ namespace LambdaSharp.Core.Registration {
         }
     }
 
-    public class ResponseProperties {
+    public class RegistrationResourceAttributes {
 
         //--- Properties ---
         public string Registration { get; set; }
@@ -75,7 +76,7 @@ namespace LambdaSharp.Core.Registration {
         public RegistrarException(string format, params object[] args) : base(format, args) { }
     }
 
-    public class Function : ALambdaCustomResourceFunction<RequestProperties, ResponseProperties> {
+    public class Function : ALambdaCustomResourceFunction<RegistrationResourceProperties, RegistrationResourceAttributes> {
 
         //--- Fields ---
         private RegistrationTable _registrations;
@@ -94,7 +95,7 @@ namespace LambdaSharp.Core.Registration {
             _rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleCreateResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
             var properties = request.ResourceProperties;
 
             // determine the kind of registration that is requested
@@ -133,7 +134,7 @@ namespace LambdaSharp.Core.Registration {
             }
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleDeleteResourceAsync(Request<RequestProperties> request) {
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessDeleteResourceAsync(Request<RegistrationResourceProperties> request) {
             var properties = request.ResourceProperties;
             switch(request.ResourceProperties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
@@ -168,21 +169,21 @@ namespace LambdaSharp.Core.Registration {
                 // nothing to do since we didn't process this request successfully in the first place!
                 break;
             }
-            return new Response<ResponseProperties>();
+            return new Response<RegistrationResourceAttributes>();
         }
 
-        protected override async Task<Response<ResponseProperties>> HandleUpdateResourceAsync(Request<RequestProperties> request)
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessUpdateResourceAsync(Request<RegistrationResourceProperties> request)
             => Respond(request.PhysicalResourceId);
 
-        private Response<ResponseProperties> Respond(string registration)
-            => new Response<ResponseProperties> {
+        private Response<RegistrationResourceAttributes> Respond(string registration)
+            => new Response<RegistrationResourceAttributes> {
                 PhysicalResourceId = registration,
-                Properties = new ResponseProperties {
+                Attributes = new RegistrationResourceAttributes {
                     Registration = registration
                 }
             };
 
-        private OwnerMetaData PopulateOwnerMetaData(RequestProperties properties, OwnerMetaData owner = null) {
+        private OwnerMetaData PopulateOwnerMetaData(RegistrationResourceProperties properties, OwnerMetaData owner = null) {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }

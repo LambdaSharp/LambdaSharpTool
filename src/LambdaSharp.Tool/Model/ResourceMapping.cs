@@ -47,6 +47,7 @@ namespace LambdaSharp.Tool.Model {
     public class ResourceType {
 
         //--- Properties ---
+        public string Documentation { get; set; }
         public IDictionary<string, AttributeType> Attributes { get; set; }
         public IDictionary<string, PropertyType> Properties { get; set; }
     }
@@ -172,7 +173,7 @@ namespace LambdaSharp.Tool.Model {
 
         public static bool HasProperty(string awsType, string property) {
 
-            // for `Custom::`, allow any property
+            // for 'Custom::', allow any property
             if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 return true;
             }
@@ -189,7 +190,7 @@ namespace LambdaSharp.Tool.Model {
                 return true;
             }
 
-            // for `Custom::`, allow any attribute
+            // for 'Custom::', allow any attribute
             if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
                 return true;
             }

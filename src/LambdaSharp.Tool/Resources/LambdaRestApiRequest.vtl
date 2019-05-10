@@ -1,0 +1,75 @@
+#set($allParams = $input.params())
+#set($headers = $input.params().header)
+#set($queryStringParameters = $input.params().querystring)
+#set($pathParameters = $input.params().path)
+{
+"resource": "$context.resourcePath",
+"path": "$context.path",
+"httpMethod": "$context.httpMethod",
+"headers": {
+#foreach($key in $headers.keySet())
+"$key": "$util.escapeJavaScript($headers.get($key))"
+#if($foreach.hasNext),#end
+#end
+},
+#if($queryStringParameters.size() > 0)
+"queryStringParameters": {
+#foreach($key in $queryStringParameters.keySet())
+"$key": "$util.escapeJavaScript($queryStringParameters.get($key))"
+#if($foreach.hasNext),#end
+#end
+},
+#else
+"queryStringParameters": null,
+#end
+#if($pathParameters.size() > 0)
+"pathParameters": {
+#foreach($key in $pathParameters.keySet())
+"$key": "$util.escapeJavaScript($pathParameters.get($key))"
+#if($foreach.hasNext),#end
+#end
+},
+#else
+"pathParameters": null,
+#end
+#if($stageVariables.size() > 0)
+"stageVariables": {
+#foreach($key in $stageVariables.keySet())
+"$key": "$util.escapeJavaScript($stageVariables.get($key))"
+#if($foreach.hasNext),#end
+#end
+},
+#else
+"stageVariables": null,
+#end
+"requestContext": {
+"resourceId": "$context.resourceId",
+"resourcePath": "$context.resourcePath",
+"httpMethod": "$context.httpMethod",
+"extendedRequestId": "$context.extendedRequestId",
+"path": "$context.path",
+"accountId": "$context.accountId",
+"stage": "$context.stage",
+"domainPrefix": "$context.domainPrefix",
+"requestId": "$context.requestId",
+"identity": {
+"cognitoIdentityPoolId":#if($context.identity.cognitoIdentityPoolId.isEmpty()) null#else "$context.identity.cognitoIdentityPoolId"#end,
+"accountId":#if($context.identity.accountId.isEmpty()) null#else "$context.identity.accountId"#end,
+"cognitoIdentityId":#if($context.identity.cognitoIdentityId.isEmpty()) null#else "$context.identity.cognitoIdentityId"#end,
+"caller":#if($context.identity.caller.isEmpty()) null#else "$context.identity.caller"#end,
+"sourceIp":#if($context.identity.sourceIp.isEmpty()) null#else "$context.identity.sourceIp"#end,
+"accessKey":#if($context.identity.accessKey.isEmpty()) null#else "$context.identity.accessKey"#end,
+"cognitoAuthenticationType":#if($context.identity.cognitoAuthenticationType.isEmpty()) null#else "$context.identity.cognitoAuthenticationType"#end,
+"cognitoAuthenticationProvider":#if($context.identity.cognitoAuthenticationProvider.isEmpty()) null#else "$context.identity.cognitoAuthenticationProvider"#end,
+"userArn":#if($context.identity.userArn.isEmpty()) null#else "$context.identity.userArn"#end,
+"userAgent":#if($context.identity.userAgent.isEmpty()) null#else "$context.identity.userAgent"#end,
+"user":#if($context.identity.user.isEmpty()) null#else "$context.identity.user"#end,
+"apiKey":#if($context.identity.apiKey.isEmpty()) null#else "$context.identity.apiKey"#end,
+"apiKeyId":#if($context.identity.apiKeyId.isEmpty()) null#else "$context.identity.apiKeyId"#end
+},
+"domainName": "$context.domainName",
+"apiId": "$context.apiId"
+},
+"body": "$util.escapeJavaScript($input.body)",
+"isBase64Encoded": false
+}

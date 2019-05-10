@@ -47,6 +47,9 @@ namespace LambdaSharp.Tool {
 
     public class Program : CliBase {
 
+        //--- Class Fields ---
+        public static bool Quiet;
+
         //--- Class Methods ---
         public static int Main(string[] args) {
             var app = new CommandLineApplication(throwOnUnexpectedArg: false) {
@@ -92,7 +95,7 @@ namespace LambdaSharp.Tool {
                     }
                     return 0;
                 } finally {
-                    if(!showHelp) {
+                    if(!showHelp && !Quiet) {
                         Console.WriteLine();
                         Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {stopwatch.Elapsed:c})");
                     }

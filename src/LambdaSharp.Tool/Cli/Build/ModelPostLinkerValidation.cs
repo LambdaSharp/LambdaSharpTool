@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // no references to validate
                         break;
-                    case ApiGatewaySource apiGatewaySource:
+                    case RestApiSource apiGatewaySource:
 
                         // no references to validate
                         break;

@@ -1,0 +1,35 @@
+- name: Modules
+  href: Index.md
+
+- name: LambdaSharp.Core
+  href: LambdaSharp-Core.md
+  items:
+
+    - name: LambdaSharp::Registration::Function
+      href: LambdaSharp-Registration-Function.md
+
+    - name: LambdaSharp::Registration::Module
+      href: LambdaSharp-Registration-Module.md
+
+- name: LambdaSharp.S3.IO
+  href: LambdaSharp-S3-IO.md
+  items:
+
+    - name: LambdaSharp::S3::EmptyBucket
+      href: LambdaSharp-S3-EmptyBucket.md
+
+    - name: LambdaSharp::S3::Unzip
+      href: LambdaSharp-S3-Unzip.md
+
+    - name: LambdaSharp::S3::WriteJson
+      href: LambdaSharp-S3-WriteJson.md
+
+- name: LambdaSharp.S3.Subscriber
+  href: LambdaSharp-S3-Subscriber.md
+  items:
+
+    - name: LambdaSharp::Subscription
+      href: LambdaSharp-S3-Subscription.md
+
+- name: LambdaSharp.Twitter.Query
+  href: LambdaSharp-Twitter-Query.md

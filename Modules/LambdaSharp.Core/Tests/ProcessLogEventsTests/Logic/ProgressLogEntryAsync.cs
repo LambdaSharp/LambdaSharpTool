@@ -22,8 +22,8 @@
 using System;
 using System.Threading.Tasks;
 using FluentAssertions;
-using LambdaSharp.Reports;
 using LambdaSharp.Core.Registrations;
+using LambdaSharp.ErrorReports;
 using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
@@ -36,7 +36,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
         private class MockDependencyProvider : ILogicDependencyProvider {
 
             //--- Fields ---
-            public ErrorReport ErrorReport;
+            public LambdaErrorReport ErrorReport;
             public UsageReport UsageReport;
             private ITestOutputHelper _output;
 
@@ -46,10 +46,10 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             }
 
             //--- Methods ---
-            public ErrorReport DeserializeErrorReport(string jsonReport)
-                => JsonConvert.DeserializeObject<ErrorReport>(jsonReport);
+            public LambdaErrorReport DeserializeErrorReport(string jsonReport)
+                => JsonConvert.DeserializeObject<LambdaErrorReport>(jsonReport);
 
-            public Task SendErrorReportAsync(OwnerMetaData owner, ErrorReport report) {
+            public Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
                 ErrorReport.Should().BeNull();
                 ErrorReport = report;
                 return Task.CompletedTask;

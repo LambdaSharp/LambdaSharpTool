@@ -136,10 +136,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Tuple<string, AYamlValue> choice = null;
                     foreach(var inputEntry in inputMap.Entries) {
 
-                        // entries that start with `:` are considered a conditional based on the current selector
+                        // entries that start with ':' are considered a conditional based on the current selector
                         if(inputEntry.Key.Scalar.Value.StartsWith(":")) {
 
-                            // check if the key matches the selector or the key is `:Default` and no choice has been made yet
+                            // check if the key matches the selector or the key is ':Default' and no choice has been made yet
                             if(
                                 (inputEntry.Key.Scalar.Value == _selector)
                                 || (

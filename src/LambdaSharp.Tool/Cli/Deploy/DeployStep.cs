@@ -65,7 +65,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             bool forceDeploy,
             bool promptAllParameters,
             bool promptsAsErrors,
-            bool enableXRayTracing
+            bool enableXRayTracing,
+            bool deployOnlyIfExists
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -83,16 +84,37 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // check that the LambdaSharp Core & CLI versions match
-            if(Settings.TierVersion == null) {
+            if(!forceDeploy) {
+                if(Settings.TierVersion == null) {
 
-                // core module doesn't expect a deployment tier to exist
-                if(!forceDeploy && manifest.RuntimeCheck) {
-                    LogError("could not determine the LambdaSharp tier version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                    return false;
-                }
-            } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.TierVersion)) {
-                if(!forceDeploy) {
-                    LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Core (v{Settings.TierVersion}) versions do not match; use --force-deploy to proceed anyway");
+                    // core module doesn't expect a deployment tier to exist
+                    if(manifest.RuntimeCheck) {
+                        LogError("could not determine the LambdaSharp tier version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
+                        return false;
+                    }
+                } else if(manifest.GetFullName() == "LambdaSharp.Core") {
+
+                    // core module has special rules for updates
+                    if(Settings.ToolVersion < Settings.TierVersion) {
+
+                        // tool version is older than tier; most likely a user error
+                        LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) has older version than Tier (v{Settings.TierVersion}); use --force-deploy to proceed anyway");
+                        return false;
+                    } else if(Settings.ToolVersion > Settings.TierVersion) {
+
+                        // allow upgrading Tier when tool version is more recent
+                        Console.WriteLine($"LambdaSharp Tier appears to be out of date");
+                        var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                        if(!upgrade) {
+                            return false;
+                        }
+                    } else {
+
+                        // nothing to do
+                        return true;
+                    }
+                } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.TierVersion)) {
+                    LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Tier (v{Settings.TierVersion}) versions do not match; use --force-deploy to proceed anyway");
                     return false;
                 }
             }
@@ -104,10 +126,19 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // check version of previously deployed module
                 CloudFormationStack existing = null;
                 if(!forceDeploy) {
-                    Console.WriteLine($"=> Validating module for deployment tier");
+                    if(!deployOnlyIfExists) {
+                        Console.WriteLine($"=> Validating module for deployment tier");
+                    }
                     var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest);
                     if(!updateValidation.Success) {
                         return false;
+                    }
+
+                    // check if a previous deployment was found
+                    if(deployOnlyIfExists && (updateValidation.ExistingStack == null)) {
+
+                        // nothing to do
+                        return true;
                     }
                     existing = updateValidation.ExistingStack;
                 }

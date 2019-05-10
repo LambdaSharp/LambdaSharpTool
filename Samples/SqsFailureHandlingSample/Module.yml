@@ -1,0 +1,52 @@
+# MindTouch λ#
+# Copyright (C) 2018-2019 MindTouch, Inc.
+# www.mindtouch.com  oss@mindtouch.com
+#
+# For community documentation and downloads visit mindtouch.com;
+# please review the licensing section.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: LambdaSharp.Sample.SqsHandler
+Description: Module description
+Items:
+
+  - Resource: SqsQueue
+    Scope: all
+    Type: AWS::SQS::Queue
+    Allow: Receive,Send
+    Properties:
+      VisibilityTimeout: 60
+      RedrivePolicy:
+        # This is a sample DLQ to demonstrate how failed messages are
+        # processed differently depending on the exception type
+        # Use the LambdaSharp DLQ in your code !Ref Module::DeadLetterQueue
+        deadLetterTargetArn: !GetAtt SampleDLQ.Arn
+        maxReceiveCount: 3
+
+  - Resource: SampleDLQ
+    Type: AWS::SQS::Queue
+
+  - Function: SqsProducer
+    Description: This function produces numbers that are sent as messages to the SQS queue
+    Memory: 256
+    Timeout: 30
+
+  - Function: SqsConsumer
+    Description: Consumes messages form SQS queue
+    Memory: 256
+    Timeout: 10
+    Sources:
+
+      - Sqs: SqsQueue
+        BatchSize: 10

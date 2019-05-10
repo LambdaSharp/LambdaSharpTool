@@ -62,14 +62,40 @@ namespace LambdaSharp.Tool.Model {
         SlackCommand
     }
 
-    public class ApiGatewaySource : AFunctionSource {
+    public class RestApiSource : AFunctionSource {
 
        //--- Properties ---
-        public string Method { get; set; }
+        public string HttpMethod { get; set; }
         public string[] Path { get; set; }
         public ApiGatewaySourceIntegration Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string Invoke { get; set; }
+        public string RequestContentType { get; set; }
+        public object RequestSchema { get; set; }
+        public string RequestSchemaName { get; set; }
+        public Dictionary<string, bool> QueryStringParameters { get; set; }
+        public string ResponseContentType { get; set; }
+        public object ResponseSchema { get; set; }
+        public string ResponseSchemaName { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }
+    }
+
+    public class WebSocketSource : AFunctionSource {
+
+        //--- Properties ---
+        public string RouteKey { get; set; }
+        public string OperationName { get; set; }
+        public bool? ApiKeyRequired { get; set; }
+        public string Invoke { get; set; }
+        public string RequestContentType { get; set; }
+        public object RequestSchema { get; set; }
+        public string RequestSchemaName { get; set; }
+        public string ResponseContentType { get; set; }
+        public object ResponseSchema { get; set; }
+        public string ResponseSchemaName { get; set; }
 
         //--- Methods ---
         public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) { }

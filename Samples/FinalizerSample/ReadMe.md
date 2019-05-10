@@ -1,4 +1,4 @@
-![λ#](../../Docs/LambdaSharpLogo.png)
+![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
 # LambdaSharp Module Finalizer
 
@@ -48,41 +48,44 @@ public class Function : ALambdaFinalizerFunction {
         _bucketName = config.ReadS3BucketName("MyBucket");
     }
 
-    protected override async Task<string> CreateDeployment(string deploymentChecksum) {
-        LogInfo($"Creating Deployment: {deploymentChecksum}");
-        return deploymentChecksum;
+    public override async Task CreateDeployment(FinalizerProperties current) {
+        LogInfo($"Creating Deployment: {current.DeploymentChecksum}");
     }
 
-    protected override async Task<string> UpdateDeployment(string deploymentChecksum, string oldDeploymentChecksum) {
-        LogInfo($"Updating Deployment: {oldDeploymentChecksum} -> {deploymentChecksum}");
-        return deploymentChecksum;
+    public override async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) {
+        LogInfo($"Updating Deployment: {previous.DeploymentChecksum} -> {next.DeploymentChecksum}");
     }
 
-    protected override async Task DeleteDeployment(string deploymentChecksum) {
-        LogInfo($"Deleting Deployment: {deploymentChecksum}");
+    public override async Task DeleteDeployment(FinalizerProperties current) {
+        LogInfo($"Deleting Deployment: {current.DeploymentChecksum}");
 
         // enumerate all S3 objects
         var request = new ListObjectsV2Request {
             BucketName = _bucketName
         };
         var counter = 0;
+        var deletions = new List<Task>();
         do {
             var response = await _s3Client.ListObjectsV2Async(request);
 
             // delete any objects found
             if(response.S3Objects.Any()) {
-                await _s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
+                deletions.Add(_s3Client.DeleteObjectsAsync(new DeleteObjectsRequest {
                     BucketName = _bucketName,
                     Objects = response.S3Objects.Select(s3 => new KeyVersion {
                         Key = s3.Key
-                    }).ToList()
-                });
+                    }).ToList(),
+                    Quiet = true
+                }));
                 counter += response.S3Objects.Count;
             }
 
             // continue until no more objects can be fetched
             request.ContinuationToken = response.NextContinuationToken;
         } while(request.ContinuationToken != null);
+
+        // wait for all deletions to complete
+        await Task.WhenAll(deletions);
         LogInfo($"Deleted {counter:N0} objects");
     }
 }

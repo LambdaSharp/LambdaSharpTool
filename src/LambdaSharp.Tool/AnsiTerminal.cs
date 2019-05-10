@@ -64,15 +64,13 @@ namespace LambdaSharp.Tool {
         public const string BackgroundBrightWhite = "\u001b[47;1m";
         public const string Reset = "\u001b[0m";
         public const string ClearEndOfLine = "\u001b[0K";
-        private const int STD_OUTPUT_HANDLE = -11;
-        private const uint ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
-        private const uint DISABLE_NEWLINE_AUTO_RETURN = 0x0008;
+        private const int WINDOWS_STD_OUTPUT_HANDLE = -11;
+        private const uint WINDOWS_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
+        private const uint WINDOWS_DISABLE_NEWLINE_AUTO_RETURN = 0x0008;
 
         //--- Class Methods ---
-        public static string MoveUp(int count) => $"\u001b[{count}A";
-        public static string MoveDown(int count) => $"\u001b[{count}B";
-        public static string MoveRight(int count) => $"\u001b[{count}C";
-        public static string MoveLeft(int count) => $"\u001b[{count}D";
+        public static string MoveLineUp(int count) => $"\u001b[{count}F";
+        public static string MoveLineDown(int count) => $"\u001b[{count}E";
 
         [DllImport("kernel32.dll")]
         private static extern bool GetConsoleMode(IntPtr hConsoleHandle, out uint lpMode);
@@ -103,9 +101,14 @@ namespace LambdaSharp.Tool {
         }
 
         private void SwitchWindowsConsoleToAnsi() {
-            _consoleStandardOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            _consoleStandardOut = GetStdHandle(WINDOWS_STD_OUTPUT_HANDLE);
             _switchedToAnsi = GetConsoleMode(_consoleStandardOut, out _originaConsoleMode)
-                && SetConsoleMode(_consoleStandardOut, _originaConsoleMode | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN);
+                && SetConsoleMode(
+                    _consoleStandardOut,
+                    _originaConsoleMode
+                    | WINDOWS_ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                    | WINDOWS_DISABLE_NEWLINE_AUTO_RETURN
+                );
         }
 
         private void RestoreWindowsConsoleSettings() {

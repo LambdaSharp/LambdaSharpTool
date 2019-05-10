@@ -34,14 +34,14 @@ namespace LambdaSharp.Samples.VpcFunction.MyFunction {
 
         //--- Properties ---
 
-        // TODO: add request fields
+        // TO-DO: add request fields
     }
 
     public class FunctionResponse {
 
         //--- Properties ---
 
-        // TODO: add response fields
+        // TO-DO: add response fields
     }
 
     public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
@@ -50,9 +50,9 @@ namespace LambdaSharp.Samples.VpcFunction.MyFunction {
         public override Task InitializeAsync(LambdaConfig config)
             => Task.CompletedTask;
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request, ILambdaContext context) {
+        public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
 
-            // TODO: add business logic
+            // TO-DO: add business logic
 
             return new FunctionResponse();
         }
