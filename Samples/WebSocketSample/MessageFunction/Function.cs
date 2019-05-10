@@ -60,10 +60,14 @@ namespace WebSocketsSample.MessageFunction {
     public class Function : ALambdaApiGatewayFunction {
 
         //--- Fields ---
+        private IAmazonApiGatewayManagementApi _amaClient;
         private ConnectionsTable _connections;
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) {
+            _amaClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig {
+                ServiceURL = config.ReadText("Module::WebSocket::Url")
+            });
             _connections = new ConnectionsTable(
                 config.ReadDynamoDBTableName("ConnectionsTable"),
                 new AmazonDynamoDBClient()
@@ -84,16 +88,19 @@ namespace WebSocketsSample.MessageFunction {
             var outcomes = await Task.WhenAll(connections.Select(async (connectionId, index) => {
                 LogInfo($"Post to connection {index}: {connectionId}");
                 try {
-                    if(!await SendMessageToWebSocketConnectionAsync(connectionId, messageBytes)) {
-                        LogInfo($"Deleting gone connection: {connectionId}");
-                        await _connections.DeleteRowAsync(connectionId);
-                        return false;
-                    }
-                    return true;
+                    await _amaClient.PostToConnectionAsync(new PostToConnectionRequest {
+                        ConnectionId = connectionId,
+                        Data = new MemoryStream(messageBytes)
+                    });
+                } catch(AmazonServiceException e) when(e.StatusCode == System.Net.HttpStatusCode.Gone) {
+                    LogInfo($"Deleting gone connection: {connectionId}");
+                    await _connections.DeleteRowAsync(connectionId);
+                    return false;
                 } catch(Exception e) {
-                    LogErrorAsWarning(e, "SendMessageToWebSocketConnectionAsync() failed");
+                    LogErrorAsWarning(e, "PostToConnectionAsync() failed");
                     return false;
                 }
+                return true;
             }));
             LogInfo($"Data sent to {outcomes.Count(result => result)} connections");
         }
