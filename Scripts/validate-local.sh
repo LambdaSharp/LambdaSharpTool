@@ -31,9 +31,9 @@ if [ $UNCOMMITTED -ne "0" ]; then
 fi
 
 
-echo "********************************"
-echo "*** Run CloudFormation Tests ***"
-echo "********************************"
+echo "***********************************"
+echo "*** Run Module Generation Tests ***"
+echo "***********************************"
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
@@ -61,13 +61,34 @@ dotnet test
 if [ $? -ne 0 ]; then
     exit $?
 fi
-cd $LAMBDASHARP
 
+> TODO: core tests
+
+echo "*********************"
+echo "*** Build Samples ***"
+echo "*********************"
+
+cd $LAMBDASHARP/Samples
+find . -name "Module.yml" | xargs lash build
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
+echo "********************"
+echo "*** Build Demos ***"
+echo "********************"
+
+cd $LAMBDASHARP/Demos
+find . -name "Module.yml" | xargs lash build
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 echo "************************"
 echo "*** Init LambdaSharp ***"
 echo "*************************"
 
+cd $LAMBDASHARP
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=TestContrib$SUFFIX
 LAMBDASHARP_PROFILE=TestProfile$SUFFIX
