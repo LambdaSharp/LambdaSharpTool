@@ -28,6 +28,7 @@ using System.Threading.Tasks;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
+using System.Text.RegularExpressions;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -98,6 +99,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"Tools");
             Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Amazon.Lambda.Tools: {GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
 
             // local functions
             string ConcealAwsAccountId(string text) {
@@ -164,6 +166,32 @@ namespace LambdaSharp.Tool.Cli {
             } catch {
                 return null;
             }
+        }
+
+        private string GetAmazonLambdaToolVersion() {
+
+            // check if dotnet executable can be found
+            var dotNetExe = ProcessLauncher.DotNetExe;
+            if(string.IsNullOrEmpty(dotNetExe)) {
+                return null;
+            }
+
+            // check if Amazon Lambda Tools extension is installed
+            var result = ProcessLauncher.ExecuteWithOutputCapture(
+                dotNetExe,
+                new[] { "lambda", "tool", "help" },
+                workingFolder: null
+            );
+            if(result == null) {
+                return null;
+            }
+
+            // parse version from Amazon Lambda Tools
+            var match = Regex.Match(result, @"\((?<Version>.*)\)");
+            if(!match.Success) {
+                return null;
+            }
+            return match.Groups["Version"].Value;
         }
     }
 }
