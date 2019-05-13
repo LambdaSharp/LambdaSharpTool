@@ -265,7 +265,7 @@ namespace LambdaSharp.Tool.Cli {
                         LogError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
-                    if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion)) {
+                    if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion) && !optional) {
                         LogError($"LambdaSharp CLI configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
