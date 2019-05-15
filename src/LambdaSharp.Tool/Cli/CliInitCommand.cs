@@ -105,7 +105,6 @@ namespace LambdaSharp.Tool.Cli {
                     LogError("unable to parse module version from LAMBDASHARP_VERSION");
                     return false;
                 }
-
                 foreach(var module in standardModules) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
@@ -137,6 +136,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // deploy LambdaSharp module
             foreach(var module in standardModules) {
+                var isLambdaSharpCoreModule = (module == "LambdaSharp.Core");
                 if(!await command.DeployStepAsync(
                     settings,
                     dryRun: null,
@@ -149,9 +149,14 @@ namespace LambdaSharp.Tool.Cli {
                     promptAllParameters: promptAllParameters,
                     promptsAsErrors: promptsAsErrors,
                     enableXRayTracing: false,
-                    deployOnlyIfExists: (module != "LambdaSharp.Core")
+                    deployOnlyIfExists: !isLambdaSharpCoreModule
                 )) {
                     return false;
+                }
+
+                // reset tier version if core module was deployed
+                if(isLambdaSharpCoreModule) {
+                    settings.TierVersion = null;
                 }
             }
             return true;
