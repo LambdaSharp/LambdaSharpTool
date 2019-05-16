@@ -72,7 +72,7 @@ public class Function : ALambdaCustomResourceFunction<MyResourceProperties, MyRe
 
         return new Response<MyResourceAttributes> {
 
-            // assign a physical resource ID to custom resource
+            // assign a physical resource ID to custom the resource
             PhysicalResourceId = "MyResource:123",
 
             // set response attributes
@@ -93,7 +93,7 @@ public class Function : ALambdaCustomResourceFunction<MyResourceProperties, MyRe
 
         return new Response<MyResourceAttributes> {
 
-            // optionally assign a new physical resource ID to custom resource
+            // optionally assign a new physical resource ID to the custom resource
             PhysicalResourceId = "MyResource:123",
 
             // set updated response attributes

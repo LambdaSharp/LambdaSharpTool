@@ -56,7 +56,7 @@ namespace CustomResourceSample.ResourceHandler {
 
             return new Response<ResourceAttributes> {
 
-                // assign a physical resource ID to custom resource
+                // assign a physical resource ID to the custom resource
                 PhysicalResourceId = "MyResource:123",
 
                 // set response properties
@@ -80,7 +80,7 @@ namespace CustomResourceSample.ResourceHandler {
 
             return new Response<ResourceAttributes> {
 
-                // optionally assign a new physical resource ID to custom resource
+                // optionally assign a new physical resource ID to the custom resource
                 PhysicalResourceId = "MyResource:123",
 
                 // set updated response properties
