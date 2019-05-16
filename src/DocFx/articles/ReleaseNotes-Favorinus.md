@@ -6,7 +6,7 @@
 
 This release focuses on API Gateway, both for REST APIs and Web-Sockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
 
-In addition, there is a [new documentation site](https://lambdasharp.github.io) that covers all aspects of λ#, including the base classes, modules, and syntax.
+In addition, there is a [new documentation site](https://lambdasharp.net) that covers all aspects of λ#, including the base classes, modules, and syntax.
 
 
 ## BREAKING CHANGES
