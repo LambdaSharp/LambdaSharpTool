@@ -24,10 +24,12 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
 using LambdaSharp.ErrorReports;
 using LambdaSharp.Exceptions;
@@ -251,6 +253,12 @@ namespace LambdaSharp {
         /// <value>The <see cref="ILambdaContext"/> instance.</value>
         protected ILambdaContext CurrentContext { get; private set; }
 
+        /// <summary>
+        /// The <see cref="HttpClient"/> property holds a <c>HttpClient</c> instance that is initialized with X-Ray support.
+        /// </summary>
+        /// <value>The <see cref="HttpClient"/> instance.</value>
+        protected HttpClient HttpClient { get; set; }
+
         //--- Abstract Methods ---
 
         /// <summary>
@@ -341,6 +349,7 @@ namespace LambdaSharp {
 
             // register X-RAY for AWS SDK clients (function tracing must be enabled in CloudFormation)
             Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
+            HttpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
 
             // read configuration from environment variables
             _moduleId = envSource.Read("MODULE_ID");

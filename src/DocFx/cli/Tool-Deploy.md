@@ -43,7 +43,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--xray</code></dt>
 <dd>
 
-(optional) Enable service-call tracing with AWS X-Ray for all functions in module
+(optional) Enable service-call tracing with AWS X-Ray for all resources in module
 </dd>
 
 <dt><code>--force-deploy</code></dt>

@@ -176,18 +176,18 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: null,
                 value: FnEquals(FnRef("Secrets"), "")
             );
-            _builder.AddParameter(
-                name: "XRayTracing",
+            var enableXRayTracing = _builder.AddParameter(
+                name: "EnableXRayTracing",
                 section: section,
-                label: "AWS X-Ray tracing mode for module functions",
-                description: "AWS X-Ray Tracing Mode",
+                label: "Enable AWS X-Ray tracing mode for module resources",
+                description: "AWS X-Ray Tracing",
                 type: "String",
                 scope: null,
                 noEcho: null,
-                defaultValue: "PassThrough",
+                defaultValue: "No",
                 constraintDescription: null,
                 allowedPattern: null,
-                allowedValues: new[] { "Active", "PassThrough" },
+                allowedValues: new[] { "No", "ModuleOnly" },
                 maxLength: null,
                 maxValue: null,
                 minLength: null,
@@ -197,6 +197,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                 arnAttribute: null,
                 encryptionContext: null,
                 pragmas: null
+            );
+            _builder.AddCondition(
+                parent: null,
+                name: "XRayTracingIsEnabled",
+                description: null,
+                value: FnNot(FnEquals(FnRef("EnableXRayTracing"), "No"))
             );
 
             // import lambdasharp dependencies (unless requested otherwise)

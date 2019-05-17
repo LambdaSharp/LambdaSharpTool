@@ -207,7 +207,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             LoggingLevel = "INFO",
                             ResourcePath = "/*"
                         }
-                    }.ToList()
+                    }.ToList(),
+                    TracingEnabled = FnIf("XRayTracingIsEnabled", true, false)
                 },
                 resourceExportAttribute: null,
                 dependsOn: new[] { restLogGroup.FullName },

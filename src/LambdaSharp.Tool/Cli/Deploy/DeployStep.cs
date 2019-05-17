@@ -152,12 +152,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // check if module supports AWS X-Ray for tracing
                 if(
                     enableXRayTracing
-                    && manifest.GetAllParameters().Any(p => p.Name == "XRayTracing")
-                    && !deployParameters.Any(p => p.ParameterKey == "XRayTracing")
+                    && manifest.GetAllParameters().Any(p => p.Name == "EnableXRayTracing")
+                    && !deployParameters.Any(p => p.ParameterKey == "EnableXRayTracing")
                 ) {
                     deployParameters.Add(new CloudFormationParameter {
-                        ParameterKey = "XRayTracing",
-                        ParameterValue = "Active"
+                        ParameterKey = "EnableXRayTracing",
+
+                        // TODO (2019-05-11): support `ModuleAndNested` as well
+                        ParameterValue = "ModuleOnly"
                     });
                 }
 

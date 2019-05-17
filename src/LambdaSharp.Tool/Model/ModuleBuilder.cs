@@ -899,7 +899,7 @@ namespace LambdaSharp.Tool.Model {
             }
             if(!definition.ContainsKey("TracingConfig")) {
                 definition["TracingConfig"] = new Dictionary<string, object> {
-                    ["Mode"] = FnRef("XRayTracing")
+                    ["Mode"] = FnIf("XRayTracingIsEnabled", "Active", "PassThrough")
                 };
             }
             AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));

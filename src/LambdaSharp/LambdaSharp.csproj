@@ -29,5 +29,6 @@
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.14" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.5.1" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.6.1" />
+    <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.5.1" />
   </ItemGroup>
 </Project>
