@@ -69,13 +69,23 @@ namespace LambdaSharp.Tool {
 
         //--- Class Methods ---
         public static void ShowErrors() {
+            var suppressedStacktrace = false;
             foreach(var error in _errors) {
                 if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
                     Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
                 } else {
                     Console.WriteLine("ERROR: " + error.Message);
+                    suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
                 }
             }
+
+            // check if we omitted exception stacktraces
+            if(suppressedStacktrace) {
+                Console.WriteLine();
+                Console.WriteLine("NOTE: one ore more errors have stacktraces; use --verbose:exceptions to show them");
+            }
+
+            // check if the errors are due to missing configuration or initialization steps
             var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
             if(configException != null) {
                 Console.WriteLine();
