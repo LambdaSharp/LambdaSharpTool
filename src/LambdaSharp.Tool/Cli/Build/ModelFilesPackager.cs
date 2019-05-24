@@ -37,8 +37,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         //--- Constants ---
         private const int READ_AND_WRITE_PERMISSIONS = 0b1_000_000_110_110_110 << 16;
         private const int READ_AND_EXECUTE_PERMISSIONS = 0b1_000_000_101_101_101 << 16;
-        private const int ZIP_HOST_OS = 3; // Linux
-        private const int ZIP_VERSION = 30; // 3.0
+        private const int ZIP_LINUX_HOST_OS = 3; // Linux
         private static byte[] ELF_HEADER = new byte[] { 0x7F, 0x45, 0x4C, 0x46 };
 
         //--- Class Methods ---
@@ -148,9 +147,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                                     Console.WriteLine($"... zipping: {file.Key}");
                                 }
                                 using(var entryStream = File.OpenRead(file.Value)) {
-                                    var entry = new ZipEntry(file.Key.Replace('\\', '/'), 0, (ZIP_HOST_OS << 8) | ZIP_VERSION, CompressionMethod.Deflated);
+                                    var entry = new ZipEntry(file.Key.Replace('\\', '/'));
 
                                     // set execution permission for ELF executable
+                                    entry.HostSystem = ZIP_LINUX_HOST_OS;
                                     entry.ExternalFileAttributes = IsElfExecutable(entryStream)
                                         ? READ_AND_EXECUTE_PERMISSIONS
                                         : READ_AND_WRITE_PERMISSIONS;
