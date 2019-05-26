@@ -179,7 +179,7 @@ The next example shows how to set Lambda layers for a function:
 
 ### Nested Modules
 
-Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the λ# CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](~/syntax/Module-Nested.md).
+Nested modules are similar to nested CloudFormation stacks. The module reference is resolved at compile time to a CloudFormation template location. Furthermore, the λ# CLI seamlessly injects the deployment tier parameters required for deploying modules. [See `Nested` documentation](../syntax/Module-Nested.md).
 
 During the _build_ phase, the λ# CLI validates that all required parameters are supplied and that the supplied parameters exist.
 
@@ -299,9 +299,9 @@ The next example shows a definition of a `Mapping` item and its use:
 
 ### Build Command
 
-The λ# CLI now validates the properties of created resources and access to their attributes. This avoids common errors like missing a required property or having a simple typo in the definition. Similarly, when accessing an attribute with `!GetAtt`, the λ# CLI checks that the attribute exists on the resource. The validation for a resource can be suppressed with the `no-type-validation` [resource pragma](~/syntax/Module-Pragmas.md), which is useful when new resource types, properties, or attributes become available that are not yet supported by the λ# CLI.
+The λ# CLI now validates the properties of created resources and access to their attributes. This avoids common errors like missing a required property or having a simple typo in the definition. Similarly, when accessing an attribute with `!GetAtt`, the λ# CLI checks that the attribute exists on the resource. The validation for a resource can be suppressed with the `no-type-validation` [resource pragma](../syntax/Module-Pragmas.md), which is useful when new resource types, properties, or attributes become available that are not yet supported by the λ# CLI.
 
-The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the λ# CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](~/cli/Tool-Build.md). The list of S3 buckets that are scanned for modules is controlled by a parameter in the AWS Systems Manager parameter store. By default, it is the deployment bucket and the lambdasharp bucket.
+The manifests for modules referenced as dependencies or nested modules are now downloaded to validate their usage. Manifests contain information about module parameters, resource type definitions, and output values. This enables the λ# CLI to validate properties and attributes on custom resource types just like with built-in AWS types. This feature can be disabled with the `--no-dependency-validation` [CLI option](../cli/Tool-Build.md). The list of S3 buckets that are scanned for modules is controlled by a parameter in the AWS Systems Manager parameter store. By default, it is the deployment bucket and the lambdasharp bucket.
 
 The λ# CLI now also analyzes the usage of all parameters, resources, and variables. If a declared parameter is not used anywhere, the λ# CLI will issue a warning to draw attention to it. This situation commonly occurs because of a missing `Scope` attribute or when a parameter is no longer needed, but its definition lingers. Internally, the analysis is also used to _garbage collect_ optional resource definitions. For example, every module has an embedded IAM Role (i.e. `Module::Role`) and API Gateway (i.e. `Module::RestApi`). However, unless these are used, the λ# CLI will automatically remove them to optimize the produced CloudFormation template.
 
@@ -322,7 +322,7 @@ Another benefit of analyzing expressions during the _build_ phase is the ability
 
 The the introduction of `Condition` definitions also requires more careful validation of `!Ref` and `!GetAtt` expressions since these could refer to resources that may not exist during the _deploy_ phase. The λ# CLI now provides very basic support for validating conditional references. However, because the support is basic, it can lead to false negatives. Consequently, detected violations are shown as warnings instead of errors.
 
-Finally, the entry point for .NET Core Lambda functions is now validated after compilation of the assembly. This avoids deploying a Lambda function that immediately fails, because the Lambda runtime was unable to located the entry point. This error usually occurs after refactoring code and forgetting to update the project file with the new namespace information. Although not a common error, it is extremely time consuming, because it occurs so late in the development process. Entry point validation can be skipped by using the `--no-assembly-validation` [CLI option](~/cli/Tool-Build.md) or the `no-assembly-validation` [function pragma](~/syntax/Module-Pragmas.md).
+Finally, the entry point for .NET Core Lambda functions is now validated after compilation of the assembly. This avoids deploying a Lambda function that immediately fails, because the Lambda runtime was unable to located the entry point. This error usually occurs after refactoring code and forgetting to update the project file with the new namespace information. Although not a common error, it is extremely time consuming, because it occurs so late in the development process. Entry point validation can be skipped by using the `--no-assembly-validation` [CLI option](../cli/Tool-Build.md) or the `no-assembly-validation` [function pragma](../syntax/Module-Pragmas.md).
 
 ### Publish Command
 
@@ -387,7 +387,7 @@ Similar to the change the `deploy` command, the `config` command now prompts for
 
 ### New Command
 
-The λ# CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](~/cli/Tool-NewResource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
+The λ# CLI now allows to add a resource definition to a module, similar to the `new function` command. The new [`new resource` command](../cli/Tool-NewResource.md) take a resource name and resource type. It then appends the a skeleont definition to the `Module.yml` file where the property values indicate the type of the property and if it is required.
 
 ```bash
 lash new resource MyTopic AWS::SNS::Topic

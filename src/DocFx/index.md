@@ -1,8 +1,8 @@
-﻿![λ#](~/images/LambdaSharpLogo.png)
+![λ#](images/LambdaSharpLogo.png)
 
 # LambdaSharp (v[!include[LAMBDASHARP_VERSION](version.txt)]) - Serverless .NET on AWS
 
-**[Read what's new in the 0.6 "Favorinus" release.](~/articles/ReleaseNotes-Favorinus.md)**
+**[Read what's new in the 0.6 "Favorinus" release.](articles/ReleaseNotes-Favorinus.md)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 

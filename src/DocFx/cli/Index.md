@@ -1,4 +1,4 @@
-![λ#](~/images/CLI.png)
+![λ#](../images/CLI.png)
 
 # LambdaSharp Command Line
 

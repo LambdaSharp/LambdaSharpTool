@@ -1,4 +1,4 @@
-![λ#](~/images/Model.png)
+![λ#](../images/Model.png)
 
 # LambdaSharp Module Syntax
 

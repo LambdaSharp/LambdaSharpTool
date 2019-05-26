@@ -1,6 +1,6 @@
 # LambdaSharp::S3::Unzip
 
-The `LambdaSharp::S3::Unzip` type creates a resource that unzips a [`Package` item](~/syntax/Module-Package.md) and copies its contents to an S3 bucket.
+The `LambdaSharp::S3::Unzip` type creates a resource that unzips a [`Package` item](../syntax/Module-Package.md) and copies its contents to an S3 bucket.
 
 On creation, the contents of the source zip package are copied to the destination S3 bucket. On update, the resource checks which files in the zip package have been added, updated, or removed and only copies or deletes the affected files. On delete, the resource attempts to remove all files that were previously copied to the S3 bucket.
 

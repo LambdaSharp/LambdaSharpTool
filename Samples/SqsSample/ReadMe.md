@@ -2,7 +2,7 @@
 
 # LambdaSharp SQS Queue Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
+Before you begin, make sure to [setup your λ# CLI](../../src/DocFx/articles/Setup.md).
 
 ## Module Definition
 
