@@ -2,7 +2,7 @@
 
 # LambdaSharp Custom Resource Type Definition
 
-Before you begin, make sure to [setup your λ# CLI](../../src/DocFx/articles/Setup.md).
+Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
