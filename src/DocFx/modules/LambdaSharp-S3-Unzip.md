@@ -101,6 +101,6 @@ The <code>Url</code> attribute contains the S3 URL of the destination bucket and
   Properties:
     SourceBucket: !Ref DeploymentBucketName
     SourceKey: !Ref MyPackage
-    DestinationBucket: !RFef MyBucket
+    DestinationBucket: !Ref MyBucket
     DestinationKey: assets/
 ```
