@@ -382,11 +382,12 @@ namespace LambdaSharp.Tool.Cli {
                                     var required = (
                                             (Nullable.GetUnderlyingType(property.PropertyType) == null)
                                             && (property.PropertyType.IsValueType || (property.PropertyType == typeof(string)))
-                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.AllowNull)
+                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.Default)
+                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.DisallowNull)
                                         )
                                         || (property.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
-                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.AllowNull);
                                     uriParameters.Add(new KeyValuePair<string, bool>(name, required));
                                 }
 
@@ -396,11 +397,12 @@ namespace LambdaSharp.Tool.Cli {
                                     var required = (
                                             (Nullable.GetUnderlyingType(field.FieldType) == null)
                                             && (field.FieldType.IsValueType || (field.FieldType == typeof(string)))
-                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.AllowNull)
+                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.Default)
+                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.DisallowNull)
                                         )
                                         || (field.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
-                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.AllowNull);
                                     uriParameters.Add(new KeyValuePair<string, bool>(name, required));
                                 }
                             }
