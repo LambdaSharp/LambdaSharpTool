@@ -45,7 +45,7 @@ public class Logic {
     //--- Methods ---
     public AddItemResponse AddItem(AddItemRequest request) { ... }
 
-    public GetItemsResponse GetItems() { ... }
+    public GetItemsResponse GetItems(string contains = null, int offset = 0, int limit = 10) { ... }
 
     public GetItemResponse GetItem(string id) { ... }
 
