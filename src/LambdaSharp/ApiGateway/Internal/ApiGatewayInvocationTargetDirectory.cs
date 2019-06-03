@@ -71,7 +71,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     Func<object> getDefaultValue;
                     if(parameter.IsOptional) {
                         getDefaultValue = () => parameter.DefaultValue;
-                    } else if((Nullable.GetUnderlyingType(parameter.ParameterType) == null) && parameter.ParameterType.IsValueType) {
+                    } else if((Nullable.GetUnderlyingType(parameter.ParameterType) == null) && (parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string))) {
                         getDefaultValue = () => throw new ApiGatewayInvocationTargetParameterException("missing value", parameter.Name);
                     } else {
                         getDefaultValue = () => null;

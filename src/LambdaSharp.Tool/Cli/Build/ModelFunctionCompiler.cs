@@ -625,8 +625,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     break;
                 case "Void":
 
-                    // NOTE (2018-04-02): unfortunately, this does not enforce that the request has no payload
+                    // NOTE (2019-04-02, bjorg): unfortunately, this does not enforce that the request has no payload
                     apiMethodResource.RequestValidatorId = FnRef("Module::RestApi::RequestValidator");
+
+                    // TODO (2019-05-25, bjorg): check request verb; only GET and OPTIONS should be able to have no request body
+
                     break;
                 case IDictionary _:
 

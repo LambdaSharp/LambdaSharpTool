@@ -372,15 +372,18 @@ namespace LambdaSharp.Tool.Cli {
                             if(isSimpleType) {
 
                                 // parameter is required only if it does not have an optional value and is not nullable
-                                uriParameters.Add(new KeyValuePair<string, bool>(parameter.Name, !parameter.IsOptional && (Nullable.GetUnderlyingType(parameter.ParameterType) == null) && parameter.ParameterType.IsValueType));
+                                uriParameters.Add(new KeyValuePair<string, bool>(parameter.Name, !parameter.IsOptional && (Nullable.GetUnderlyingType(parameter.ParameterType) == null) && (parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string))));
                             } else {
                                 var queryParameterType = parameter.ParameterType;
 
                                 // add complex-type properties
                                 foreach(var property in queryParameterType.GetProperties()) {
-                                    var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
-                                        ?? property.Name;
-                                    var required = ((Nullable.GetUnderlyingType(property.PropertyType) == null) && property.PropertyType.IsValueType)
+                                    var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? property.Name;
+                                    var required = (
+                                            (Nullable.GetUnderlyingType(property.PropertyType) == null)
+                                            && (property.PropertyType.IsValueType || (property.PropertyType == typeof(string)))
+                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.AllowNull)
+                                        )
                                         || (property.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
                                         || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
@@ -389,9 +392,12 @@ namespace LambdaSharp.Tool.Cli {
 
                                 // add complex-type fields
                                 foreach(var field in queryParameterType.GetFields()) {
-                                    var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
-                                        ?? field.Name;
-                                    var required = ((Nullable.GetUnderlyingType(field.FieldType) == null) && field.FieldType.IsValueType)
+                                    var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? field.Name;
+                                    var required = (
+                                            (Nullable.GetUnderlyingType(field.FieldType) == null)
+                                            && (field.FieldType.IsValueType || (field.FieldType == typeof(string)))
+                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.AllowNull)
+                                        )
                                         || (field.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
                                         || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
@@ -425,11 +431,11 @@ namespace LambdaSharp.Tool.Cli {
                         Method = methodName,
                         RequestContentType = requestSchemaAndContentType?.Item2,
                         RequestSchema = requestSchemaAndContentType?.Item1,
-                        RequestSchemaName = requestParameter?.GetType().FullName,
+                        RequestSchemaName = requestParameter?.ParameterType.FullName,
                         UriParameters  = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
                         ResponseContentType = responseSchemaAndContentType?.Item2,
                         ResponseSchema = responseSchemaAndContentType?.Item1,
-                        ResponseSchemaName = responseType?.GetType().FullName
+                        ResponseSchemaName = responseType?.FullName
                     };
 
                     // write result
