@@ -24,11 +24,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using Amazon.SimpleSystemsManagement;
-using McMaster.Extensions.CommandLineUtils;
-using LambdaSharp.Tool.Internal;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Amazon.APIGateway;
+using Amazon.APIGateway.Model;
+using Amazon.IdentityManagement;
+using Amazon.IdentityManagement.Model;
+using Amazon.SimpleSystemsManagement;
+using LambdaSharp.Tool.Internal;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -71,6 +75,7 @@ namespace LambdaSharp.Tool.Cli {
         ) {
             await PopulateToolSettingsAsync(settings, optional: true);
             await PopulateRuntimeSettingsAsync(settings);
+            var apigatewayAccount = await DetermineMissingApiGatewayRolePermissions();
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp CLI");
@@ -78,7 +83,16 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Version: {settings.ToolVersion}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
-            // Console.WriteLine($"    Module S3 Buckets: {((settings.ModuleBucketNames != null) ? string.Join(", ", settings.ModuleBucketNames) : "<NOT SET>")}");
+            if(apigatewayAccount.Arn == null) {
+                Console.WriteLine($"    API Gateway Role: <NOT SET>");
+            } else if(!apigatewayAccount.MissingPermissions.Any()) {
+                Console.WriteLine($"    API Gateway Role: {apigatewayAccount.Arn}");
+            } else {
+                Console.WriteLine($"    API Gateway Role: <INCOMPLETE>");
+                LogWarn($"API Gateway Role is incomplete (missing: {string.Join(", ", apigatewayAccount.MissingPermissions)})");
+            }
+
+            // TODO (2019-06-03, bjorg): remove this once we no longer need multiple buckets registered
             if(settings.ModuleBucketNames != null) {
                 Console.WriteLine($"    Module S3 Buckets:");
                 foreach(var bucketName in settings.ModuleBucketNames) {
@@ -192,6 +206,47 @@ namespace LambdaSharp.Tool.Cli {
                 return null;
             }
             return match.Groups["Version"].Value;
+        }
+
+        private async Task<(string Arn, IEnumerable<string> MissingPermissions)> DetermineMissingApiGatewayRolePermissions() {
+
+            // determine API Gateway permissions
+            try {
+
+                // retrieve the CloudWatch/X-Ray role from the API Gateway account
+                var apigatewayClient = new AmazonAPIGatewayClient();
+                var account = await apigatewayClient.GetAccountAsync(new GetAccountRequest());
+                if(account.CloudwatchRoleArn != null) {
+
+                    // check permissions for the required actions on the API Gateway role
+                    var iamClient = new AmazonIdentityManagementServiceClient();
+                    var permissionCheck = await iamClient.SimulatePrincipalPolicyAsync(new SimulatePrincipalPolicyRequest {
+                        PolicySourceArn = account.CloudwatchRoleArn,
+                        ActionNames = new List<string> {
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:DescribeLogGroups",
+                            "logs:DescribeLogStreams",
+                            "logs:PutLogEvents",
+                            "logs:GetLogEvents",
+                            "logs:FilterLogEvents",
+                            "xray:PutTraceSegments",
+                            "xray:PutTelemetryRecords",
+                            "xray:GetSamplingRules",
+                            "xray:GetSamplingTargets",
+                            "xray:GetSamplingStatisticSummaries"
+                        }
+                    });
+                    var missingPermissions = permissionCheck.EvaluationResults.Where(result => result.EvalDecision != "allowed").ToArray();
+                    if(missingPermissions.Any()) {
+                        return (Arn: account.CloudwatchRoleArn, MissingPermissions: missingPermissions.Select(missing => missing.EvalActionName).ToArray());
+                    }
+                }
+                return (Arn: account.CloudwatchRoleArn, MissingPermissions: Enumerable.Empty<string>());
+            } catch(Exception e) {
+                LogError("unable to determine API Gateway settings", e);
+                return (Arn: null, Enumerable.Empty<string>());
+            }
         }
     }
 }

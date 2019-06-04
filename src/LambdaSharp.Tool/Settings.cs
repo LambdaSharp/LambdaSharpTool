@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Amazon.CloudFormation;
 using Amazon.KeyManagementService;
 using Amazon.S3;
@@ -61,22 +62,37 @@ namespace LambdaSharp.Tool {
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static bool UseAnsiConsole = true;
-        private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
+        private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
 
         //--- Class Properties ---
-        public static int ErrorCount => _errors.Count;
-        public static bool HasErrors => _errors.Count > 0;
+        public static int ErrorCount => _errors.Count(entry => entry.Error);
+        public static bool HasErrors => _errors.Any(entry => entry.Error);
+        public static int WarningCount => _errors.Count(entry => !entry.Error);
+        public static bool HasWarnings => _errors.Any(entry => !entry.Error);
 
         //--- Class Methods ---
         public static void ShowErrors() {
             var suppressedStacktrace = false;
             foreach(var error in _errors) {
-                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
-                    Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
+                var builder = new StringBuilder();
+                if(UseAnsiConsole) {
+                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.Yellow);
+                }
+                if(error.Error) {
+                    builder.Append("ERROR: " + error.Message);
                 } else {
-                    Console.WriteLine("ERROR: " + error.Message);
+                    builder.Append("WARNING: " + error.Message);
+                }
+                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                    builder.AppendLine();
+                    builder.Append(error.Exception.ToString());
+                } else {
                     suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
                 }
+                if(UseAnsiConsole) {
+                    builder.Append(AnsiTerminal.Reset);
+                }
+                Console.WriteLine(builder.ToString());
             }
 
             // check if we omitted exception stacktraces
@@ -101,10 +117,10 @@ namespace LambdaSharp.Tool {
         }
 
         public static void LogWarn(string message)
-            => Console.WriteLine("WARNING: " + message);
+            => _errors.Add((Error: false, Message: message, Exception: null));
 
         public static void LogError(string message, Exception exception = null)
-            => _errors.Add((Message: message, Exception: exception));
+            => _errors.Add((Error: true, Message: message, Exception: exception));
 
         public static void LogError(Exception exception)
             => LogError($"internal error: {exception.Message}", exception);

@@ -93,6 +93,10 @@ namespace LambdaSharp.Tool {
                         Settings.ShowErrors();
                         return -1;
                     }
+                    if(Settings.HasWarnings) {
+                        Console.WriteLine();
+                        Settings.ShowErrors();
+                    }
                     return 0;
                 } finally {
                     if(!showHelp && !Quiet) {

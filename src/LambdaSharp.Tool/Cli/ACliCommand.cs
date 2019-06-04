@@ -22,7 +22,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
@@ -34,10 +33,8 @@ using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
-using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using System.Text;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
 
