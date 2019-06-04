@@ -542,7 +542,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             );
 
-            // permissions needed for X-Ray daemon to upload tracing information
+            // permissions needed for X-Ray lambda daemon to upload tracing information
             _builder.AddGrant(
                 sid: "AWSXRayWriteAccess",
                 awsType: null,

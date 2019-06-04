@@ -30,6 +30,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
+using Amazon.APIGateway.Model;
+using Amazon.APIGateway;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -118,7 +120,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 var request = new CreateStackRequest {
                     StackName = stackName,
-                    Capabilities = new List<string> { },
+                    Capabilities = new List<string> { "CAPABILITY_IAM" },
                     OnFailure = OnFailure.DELETE,
                     Parameters = templateParameters,
                     EnableTerminationProtection = protectStack,
@@ -162,7 +164,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     var request = new UpdateStackRequest {
                         StackName = stackName,
-                        Capabilities = new List<string> { },
+                        Capabilities = new List<string> { "CAPABILITY_IAM" },
                         Parameters = templateParameters,
                         TemplateBody = template
                     };
@@ -179,6 +181,32 @@ namespace LambdaSharp.Tool.Cli {
                     // this error is thrown when no required updates where found
                     Console.WriteLine("=> No stack update required");
                 }
+            }
+
+            // refetch settings
+            await PopulateToolSettingsAsync(settings);
+
+            // check if API Gateway role needs to be set
+            Console.WriteLine("=> Checking API Gateway role");
+            var apiGatewayAccount = await DetermineMissingApiGatewayRolePermissions(settings);
+            if(apiGatewayAccount.Arn == null) {
+                Console.WriteLine($"=> Updating API Gateway role to {settings.ApiGatewayAccountRole}");
+                await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {
+                    PatchOperations = new List<PatchOperation> {
+                        new PatchOperation {
+                            Op = Op.Replace,
+                            Path = "/cloudwatchRoleArn",
+                            Value = settings.ApiGatewayAccountRole
+                        }
+                    }
+                });
+            } else if(apiGatewayAccount.MissingPermissions.Any()) {
+                Console.WriteLine("=> API Gateway role is incomplete");
+                LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPermissions)})");
+            } else if(apiGatewayAccount.Arn != settings.ApiGatewayAccountRole) {
+                Console.WriteLine("=> API Gateway role is compatible");
+            } else {
+                Console.WriteLine("=> API Gateway role is set");
             }
 
             // local functions

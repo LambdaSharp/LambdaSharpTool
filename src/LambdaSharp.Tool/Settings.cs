@@ -24,7 +24,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Amazon.APIGateway;
 using Amazon.CloudFormation;
+using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
@@ -137,11 +139,14 @@ namespace LambdaSharp.Tool {
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
         public string DeploymentNotificationsTopic { get; set; }
+        public string ApiGatewayAccountRole { get; set; }
         public IEnumerable<string> ModuleBucketNames { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
+        public IAmazonAPIGateway ApiGatewayClient { get; set; }
+        public IAmazonIdentityManagementService IamClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }

@@ -25,8 +25,12 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.APIGateway;
+using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using Amazon.IdentityManagement;
+using Amazon.IdentityManagement.Model;
 using Amazon.KeyManagementService;
 using Amazon.Runtime;
 using Amazon.S3;
@@ -167,6 +171,8 @@ namespace LambdaSharp.Tool.Cli {
                     IAmazonCloudFormation cfClient = null;
                     IAmazonKeyManagementService kmsClient = null;
                     IAmazonS3 s3Client = null;
+                    IAmazonAPIGateway apiGatewayClient = null;
+                    IAmazonIdentityManagementService iamClient = null;
                     if(requireAwsProfile) {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
@@ -180,6 +186,8 @@ namespace LambdaSharp.Tool.Cli {
                         cfClient = new AmazonCloudFormationClient();
                         kmsClient = new AmazonKeyManagementServiceClient();
                         s3Client = new AmazonS3Client();
+                        apiGatewayClient = new AmazonAPIGatewayClient();
+                        iamClient = new AmazonIdentityManagementServiceClient();
                     }
                     if(HasErrors) {
                         return null;
@@ -207,7 +215,9 @@ namespace LambdaSharp.Tool.Cli {
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
-                        S3Client = s3Client
+                        S3Client = s3Client,
+                        ApiGatewayClient = apiGatewayClient,
+                        IamClient = iamClient
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
                     LogError("AWS profile configuration is missing a region specifier");
@@ -248,6 +258,7 @@ namespace LambdaSharp.Tool.Cli {
                 (settings.DeploymentBucketName == null)
                 || (settings.DeploymentNotificationsTopic == null)
                 || (settings.ModuleBucketNames == null)
+                || (settings.ApiGatewayAccountRole == null)
             ) {
 
                 // import LambdaSharp CLI settings
@@ -277,6 +288,7 @@ namespace LambdaSharp.Tool.Cli {
                                 .ToArray();
                         }
                     }
+                    settings.ApiGatewayAccountRole = settings.ApiGatewayAccountRole ?? GetLambdaSharpToolSetting("ApiGatewayAccountRole");
 
                     // local functions
                     string GetLambdaSharpToolSetting(string name) {
@@ -414,6 +426,45 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return gitBranch;
+        }
+
+        protected async Task<(string Arn, IEnumerable<string> MissingPermissions)> DetermineMissingApiGatewayRolePermissions(Settings settings) {
+
+            // determine API Gateway permissions
+            try {
+
+                // retrieve the CloudWatch/X-Ray role from the API Gateway account
+                var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
+                if((account.CloudwatchRoleArn != null) && (account.CloudwatchRoleArn != settings.ApiGatewayAccountRole)) {
+
+                    // check permissions for the required actions on the API Gateway role
+                    var permissionCheck = await settings.IamClient.SimulatePrincipalPolicyAsync(new SimulatePrincipalPolicyRequest {
+                        PolicySourceArn = account.CloudwatchRoleArn,
+                        ActionNames = new List<string> {
+                            "logs:CreateLogGroup",
+                            "logs:CreateLogStream",
+                            "logs:DescribeLogGroups",
+                            "logs:DescribeLogStreams",
+                            "logs:PutLogEvents",
+                            "logs:GetLogEvents",
+                            "logs:FilterLogEvents",
+                            "xray:PutTraceSegments",
+                            "xray:PutTelemetryRecords",
+                            "xray:GetSamplingRules",
+                            "xray:GetSamplingTargets",
+                            "xray:GetSamplingStatisticSummaries"
+                        }
+                    });
+                    var missingPermissions = permissionCheck.EvaluationResults.Where(result => result.EvalDecision != "allowed").ToArray();
+                    if(missingPermissions.Any()) {
+                        return (Arn: account.CloudwatchRoleArn, MissingPermissions: missingPermissions.Select(missing => missing.EvalActionName).ToArray());
+                    }
+                }
+                return (Arn: account.CloudwatchRoleArn, MissingPermissions: Enumerable.Empty<string>());
+            } catch(Exception e) {
+                LogError("unable to determine API Gateway account settings", e);
+                return (Arn: null, Enumerable.Empty<string>());
+            }
         }
     }
 }

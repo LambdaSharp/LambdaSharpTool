@@ -152,3 +152,46 @@ Resources:
             - !Ref DeploymentBucket
             - !Ref DeploymentBucketName
           - lambdasharp-${AWS::Region}
+
+  # API Gateway CloudWatch Logs and X-Ray Role
+  ApiGatewayAccountRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ApiGatewayPrincipal
+            Effect: Allow
+            Principal:
+              Service: apigateway.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs
+        - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+
+  ApiGatewayAccountRoleSsmParameter:
+    Type: AWS::SSM::Parameter
+    Properties:
+      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/ApiGatewayAccountRole'
+      Description: API Gateway CloudWatch Logs and X-Ray Role
+      Type: String
+      Value: !GetAtt ApiGatewayAccountRole.Arn
+
+Outputs:
+  DeploymentBucketName:
+    Description: S3 bucket name to publish modules
+    Value: !If
+      - DeploymentBucketNameIsEmpty
+      - !Ref DeploymentBucket
+      - !Ref DeploymentBucketName
+
+  DeploymentNotificationTopic:
+    Description: SNS topic for CloudFormation notifications
+    Value: !If
+      - CreateDeploymentNotificationTopic
+      - !Ref DeploymentNotificationTopicResource
+      - !Ref DeploymentNotificationTopic
+
+  ApiGatewayAccountRole:
+    Description: API Gateway CloudWatch Logs and X-Ray Role
+    Value: !GetAtt ApiGatewayAccountRole.Arn
