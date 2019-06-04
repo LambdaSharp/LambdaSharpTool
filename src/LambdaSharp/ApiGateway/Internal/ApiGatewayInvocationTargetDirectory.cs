@@ -40,10 +40,16 @@ namespace LambdaSharp.ApiGateway.Internal {
         //--- Class Methods ---
         private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
 
-        // TODO (2019-03-09, bjorg): I would prefer to use the Lambda serializer, but there is no-non generic version available yet
+        internal class InvocationTargetState {
+
+            //--- Properties ---
+            public string PathQueryParametersJson { get; set; }
+        }
+
+        // TODO (2019-03-09, bjorg): I would prefer to use the Lambda serializer, but there is no-non generic version available (yet)
         private static object DeserializeJson(string json, Type type) => JsonConvert.DeserializeObject(json, type);
 
-        private static Func<APIGatewayProxyRequest, object> CreateParameterResolver(MethodInfo method, ParameterInfo parameter) {
+        private static Func<APIGatewayProxyRequest, InvocationTargetState, object> CreateParameterResolver(MethodInfo method, ParameterInfo parameter) {
 
             // check if [FromUri] or [FromBody] attributes are present
             var hasFromUriAttribute = parameter.GetCustomAttribute<FromUriAttribute>() != null;
@@ -57,7 +63,7 @@ namespace LambdaSharp.ApiGateway.Internal {
             if(isProxyRequest) {
 
                 // parameter is the proxy request itself
-                return request => request;
+                return (request, state) => request;
             }
 
             // check if parameter needs to deserialized from URI or BODY
@@ -78,7 +84,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     }
 
                     // create function to resolve parameter
-                    return request => {
+                    return (request, state) => {
                         string value = null;
 
                         // attempt to resolve the parameter from stage variables, path parameters, and query string parameters
@@ -99,12 +105,17 @@ namespace LambdaSharp.ApiGateway.Internal {
                     var queryParameterType = parameter.ParameterType;
 
                     // parameter represents the query-string key-value pairs
-                    return request => {
+                    return (request, state) => {
                         try {
-                            var pathParameters = request.PathParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                            var queryStringParameters = request.QueryStringParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                            var uriParameters = new Dictionary<string, string>(pathParameters.Union(queryStringParameters));
-                            return DeserializeJson(SerializeJson(uriParameters), parameter.ParameterType);
+
+                            // construct a unified JSON representation of the path and query-string parameters
+                            if(state.PathQueryParametersJson == null) {
+                                var pathParameters = request.PathParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
+                                var queryStringParameters = request.QueryStringParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
+                                var uriParameters = new Dictionary<string, string>(pathParameters.Union(queryStringParameters));
+                                state.PathQueryParametersJson = SerializeJson(uriParameters);
+                            }
+                            return DeserializeJson(state.PathQueryParametersJson, parameter.ParameterType);
                         } catch {
                             throw new ApiGatewayInvocationTargetParameterException("invalid path/query-string parameters", "query");
                         }
@@ -113,7 +124,7 @@ namespace LambdaSharp.ApiGateway.Internal {
             } else {
 
                 // parameter represents the body of the request
-                return request => {
+                return (request, state) => {
                     try {
                         return DeserializeJson(request.Body, parameter.ParameterType);
                     } catch {
@@ -174,7 +185,8 @@ namespace LambdaSharp.ApiGateway.Internal {
             if(method.ReturnType == typeof(Task<APIGatewayProxyResponse>)) {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        return await (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        return await (Task<APIGatewayProxyResponse>)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
@@ -185,7 +197,8 @@ namespace LambdaSharp.ApiGateway.Internal {
             } else if(method.ReturnType == typeof(APIGatewayProxyResponse)) {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        return (APIGatewayProxyResponse)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
@@ -197,7 +210,8 @@ namespace LambdaSharp.ApiGateway.Internal {
                 var resolveReturnValue = method.ReturnType.GetProperty("Result");
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                         await task;
                         var result = resolveReturnValue.GetValue(task);
                         return new APIGatewayProxyResponse {
@@ -217,7 +231,8 @@ namespace LambdaSharp.ApiGateway.Internal {
             } else if(method.ReturnType == typeof(Task)) {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                         await task;
                         return new APIGatewayProxyResponse {
                             StatusCode = 200
@@ -231,7 +246,8 @@ namespace LambdaSharp.ApiGateway.Internal {
             } else if(method.ReturnType == typeof(void)) {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                         return new APIGatewayProxyResponse {
                             StatusCode = 200
                         };
@@ -244,7 +260,8 @@ namespace LambdaSharp.ApiGateway.Internal {
             } else if(!method.ReturnType.IsValueType && (method.ReturnType != typeof(string))) {
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
-                        var result = method.Invoke(target, resolvers.Select(resolver => resolver(request)).ToArray());
+                        var state = new InvocationTargetState();
+                        var result = method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                         return new APIGatewayProxyResponse {
                             StatusCode = 200,
                             Body = SerializeJson(result),
