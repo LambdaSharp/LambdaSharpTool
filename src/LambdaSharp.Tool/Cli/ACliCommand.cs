@@ -134,6 +134,7 @@ namespace LambdaSharp.Tool.Cli {
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var moduleBucketNamesOption = cmd.Option("--module-bucket-names <NAMES>", "(test only) Comma-separated list of S3 Bucket names used to find modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
+            var apiGatewayAccountRoleOption = cmd.Option("--apigateway-account-role", "(test only) IAM role for API Gateway account (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
@@ -141,6 +142,7 @@ namespace LambdaSharp.Tool.Cli {
             deploymentNotificationTopicOption.ShowInHelpText = false;
             moduleBucketNamesOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;
+            apiGatewayAccountRoleOption.ShowInHelpText = false;
             return async () => {
 
                 // initialize logging level
@@ -198,6 +200,7 @@ namespace LambdaSharp.Tool.Cli {
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
                     var moduleBucketNames = moduleBucketNamesOption.Value()?.Split(',');
+                    var apiGatewayAccountRole = apiGatewayAccountRoleOption.Value();
 
                     // create a settings instance for each module filename
                     return new Settings {
@@ -212,6 +215,8 @@ namespace LambdaSharp.Tool.Cli {
                         DeploymentBucketName = deploymentBucketName,
                         DeploymentNotificationsTopic = deploymentNotificationTopic,
                         ModuleBucketNames = moduleBucketNames,
+                        ApiGatewayAccountRole = apiGatewayAccountRole,
+                        ActualApiGatewayAccountRole = apiGatewayAccountRole,
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
@@ -429,12 +434,19 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         protected async Task<(string Arn, IEnumerable<string> MissingPermissions)> DetermineMissingApiGatewayRolePermissions(Settings settings) {
+            if((settings.ApiGatewayClient == null) || (settings.IamClient == null)) {
+                return (Arn: null, Enumerable.Empty<string>());
+            }
+            if(settings.ActualApiGatewayAccountRole != null) {
+                return (Arn: settings.ActualApiGatewayAccountRole, Enumerable.Empty<string>());
+            }
 
             // determine API Gateway permissions
             try {
 
                 // retrieve the CloudWatch/X-Ray role from the API Gateway account
                 var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
+                settings.ActualApiGatewayAccountRole = account.CloudwatchRoleArn;
                 if((account.CloudwatchRoleArn != null) && (account.CloudwatchRoleArn != settings.ApiGatewayAccountRole)) {
 
                     // check permissions for the required actions on the API Gateway role
@@ -462,7 +474,6 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 return (Arn: account.CloudwatchRoleArn, MissingPermissions: Enumerable.Empty<string>());
             } catch(Exception e) {
-                LogError("unable to determine API Gateway account settings", e);
                 return (Arn: null, Enumerable.Empty<string>());
             }
         }

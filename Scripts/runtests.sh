@@ -17,7 +17,8 @@ if [ -z "$1" ]; then
         --cli-version 0.5 \
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name
+        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name \
+        --apigateway-account-role arn:aws:iam::123456789012:role/ApiGatewayAccountRole
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -39,6 +40,7 @@ if [ -z "$1" ]; then
         --deployment-bucket-name lambdasharp-bucket-name \
         --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --module-bucket-names registered-bucket-name,lambdasharp-bucket-name \
+        --apigateway-account-role arn:aws:iam::123456789012:role/ApiGatewayAccountRole \
         --no-dependency-validation \
         $LAMBDASHARP/Tests/Modules/Empty.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoLambdaSharpDependencies.yml \

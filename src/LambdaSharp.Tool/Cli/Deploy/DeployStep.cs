@@ -158,8 +158,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     deployParameters.Add(new CloudFormationParameter {
                         ParameterKey = "EnableXRayTracing",
 
-                        // TODO (2019-05-11): support `ModuleAndNested` as well
-                        ParameterValue = "ModuleOnly"
+                        // TODO (2019-05-11): support `EnableAllModules` as well
+                        ParameterValue = "EnableRootModuleOnly"
                     });
                 }
 
