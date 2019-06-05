@@ -187,7 +187,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 defaultValue: "Disable",
                 constraintDescription: null,
                 allowedPattern: null,
-                allowedValues: new[] { "Disable", "EnableRootModuleOnly", "EnableAllModules" },
+                allowedValues: new[] { "Disable", "EnableRootModule", "EnableAllModules" },
                 maxLength: null,
                 maxValue: null,
                 minLength: null,

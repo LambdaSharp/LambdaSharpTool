@@ -7,14 +7,15 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "XRayTracing": {
+    "EnableXRayTracing": {
       "Type": "String",
-      "Description": "AWS X-Ray Tracing Mode",
+      "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
-        "Active",
-        "PassThrough"
+        "Disable",
+        "EnableRootModule",
+        "EnableAllModules"
       ],
-      "Default": "PassThrough"
+      "Default": "Disable"
     },
     "DeploymentBucketName": {
       "Type": "String",
@@ -36,7 +37,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "67945E9A8AC1D57F026BA219470DF6AA"
+      "Default": "E8B7771ECD1BC7D90A5CCF67DE8A882E"
     }
   },
   "Resources": {
@@ -122,8 +123,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "XRayTracing": {
-          "default": "AWS X-Ray tracing mode for module functions [String]"
+        "EnableXRayTracing": {
+          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -148,7 +149,7 @@
           },
           "Parameters": [
             "Secrets",
-            "XRayTracing"
+            "EnableXRayTracing"
           ]
         },
         {
@@ -179,16 +180,16 @@
               "Default": ""
             },
             {
-              "Name": "XRayTracing",
+              "Name": "EnableXRayTracing",
               "Type": "String",
-              "Label": "AWS X-Ray tracing mode for module functions",
-              "Default": "PassThrough"
+              "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Default": "Disable"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "67945E9A8AC1D57F026BA219470DF6AA",
+      "Hash": "E8B7771ECD1BC7D90A5CCF67DE8A882E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -196,7 +197,7 @@
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6"
+          "MinVersion": "0.6.1-WIP"
         }
       ],
       "ResourceNameMappings": {

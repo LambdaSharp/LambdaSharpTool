@@ -159,7 +159,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         ParameterKey = "EnableXRayTracing",
 
                         // TODO (2019-05-11): support `EnableAllModules` as well
-                        ParameterValue = "EnableRootModuleOnly"
+                        ParameterValue = "EnableRootModule"
                     });
                 }
 
