@@ -1,4 +1,4 @@
-![λ#](../../../src/DocFx/images/LambdaSharpLogo.png)
+![λ#](~/images/LambdaSharpLogo.png)
 
 # Setup LambdaSharp
 
@@ -137,7 +137,7 @@ The λ# Core module analyzes the output of all deployed functions. When an issue
 
 The λ# Core module can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the λ# Core module needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 
-The λ# Core module expects the access tokens to be encrypted, which can easily be done with the [`lash encrypt`](../cli/Tool-Encrypt.md) command.
+The λ# Core module expects the access tokens to be encrypted, which can easily be done with the [`lash encrypt`](~/cli/Tool-Encrypt.md) command.
 
 |Parameter|Description|Default|
 |---|---|---|

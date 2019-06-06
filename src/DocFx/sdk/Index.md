@@ -1,4 +1,4 @@
-![λ#](../images/SDK.png)
+![λ#](~/images/SDK.png)
 
 # LambdaSharp SDK
 

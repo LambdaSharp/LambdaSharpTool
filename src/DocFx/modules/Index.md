@@ -1,4 +1,4 @@
-![λ#](../../../src/DocFx/images/LambdaSharpLogo.png)
+![λ#](~/images/LambdaSharpLogo.png)
 
 # LambdaSharp Modules
 

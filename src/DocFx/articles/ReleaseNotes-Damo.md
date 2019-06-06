@@ -62,7 +62,7 @@ Initializing a deployment tier has been streamlined into a single command, which
 dotnet lash init --tier Sandbox
 ```
 
-For complete instructions and options, check out the updated [setup documentation](../articles/Setup.md).
+For complete instructions and options, check out the updated [setup documentation](~/articles/Setup.md).
 
 ### Build, Publish, and Deploy
 
@@ -165,19 +165,19 @@ The pre-deployment check can be skipped with the `--force-deploy` option.
 
 The `info` command was enhanced to show information about other installed tools that λ# CLI depends on, such as `dotnet` and `git`. In addition, sensitive information--like the AWS account ID--are hidden unless `--show-sensitive` option is used.
 
-See the [updated documentation](../cli/Tool-Info.md) for more details.
+See the [updated documentation](~/cli/Tool-Info.md) for more details.
 
 #### Encrypt Command
 
 The `encrypt` command was added to make it easier to encrypt sensitive information. The command can either use a specific KMS key or use the default KMS key for the deployment tier.
 
-See the [updated documentation](../cli/Tool-Encrypt.md) for more details.
+See the [updated documentation](~/cli/Tool-Encrypt.md) for more details.
 
 ### New Function Command
 
 The `new function` command now allows specifying the target language when adding a function.
 
-See the [updated documentation](../cli/Tool-NewFunction.md) for more details.
+See the [updated documentation](~/cli/Tool-NewFunction.md) for more details.
 
 
 ## New λ# Module Features
@@ -286,11 +286,11 @@ The built-in variables can be accessed like other variables:
 
 ### Module Inputs
 
-λ# modules can now define parameters and imports (a.k.a. cross-module references) in the [`Inputs` section](../syntax/Module-Parameter.md).
+λ# modules can now define parameters and imports (a.k.a. cross-module references) in the [`Inputs` section](~/syntax/Module-Parameter.md).
 
 #### Module Parameters
 
-λ# module parameters are modelled after [CloudFormation parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html) and support all of their attributes. See the [parameters documentation](../syntax/Module-Parameter.md) for more details.
+λ# module parameters are modelled after [CloudFormation parameters](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html) and support all of their attributes. See the [parameters documentation](~/syntax/Module-Parameter.md) for more details.
 
 In addition, a λ# module parameter can associate IAM permission with its parameter value, similar to variables.
 ```yaml
@@ -316,7 +316,7 @@ This concept is taken one step further with conditional resources, which are onl
 
 #### Module Secret Parameters
 
-In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](../cli/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
+In addition to the default CloudFormation parameter types, λ# modules can have parameters of type `Secret`. A secret parameter is passed in as base64-encoded string of the encrypted data (see [CLI `encrypt` command](~/cli/Tool-Encrypt.md)). To be able to decrypt the data, the KMS key must either be listed in the `Secrets` section or be passed in the `Secrets` parameter. Encrypted parameter values remain encrypted through the deployment process and are only decrypted in memory by the functions when accessed during initialization.
 
 ```yaml
 - Parameter: MyApiKey
@@ -413,7 +413,7 @@ A macro definition creates a CloudFormation macro for the deployment tier. The h
   Memory: 128
   Timeout: 15
 ```
-See [macro documentation](../syntax/Module-Macro.md) for more details.
+See [macro documentation](~/syntax/Module-Macro.md) for more details.
 
 
 ### Misc

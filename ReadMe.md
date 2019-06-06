@@ -109,7 +109,7 @@ namespace MySampleModule.MyFunction {
 1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
 1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
 1. [Create a Web Chat with API Gateway Websockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
-1. [Misc. λ# Samples](Samples/ReadMe.md)
+1. [Misc. λ# Samples](Samples/)
 
 ### References
 

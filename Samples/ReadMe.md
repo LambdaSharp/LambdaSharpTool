@@ -2,29 +2,29 @@
 
 # LambdaSharp Examples
 
-Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md) to properly organize your code when working with these samples.
+Please refer to the [Folder Structure Documentation](https://lambdasharp.net/articles/FolderStructure.html) to properly organize your code when working with these samples.
 
 ## Extension Module Examples
-1. [LambdaSharp.S3.IO Example](S3IOSample/ReadMe.md)
+1. [LambdaSharp.S3.IO Example](S3IOSample/)
 
 ## Module Capability Examples
-1. [Custom Resource Type Definition Example](CustomResourceTypeSample/ReadMe.md)
-1. [Macro Definition Example](MacroSample/ReadMe.md)
-1. [Module Finalizer Example](FinalizerSample/ReadMe.md)
+1. [Custom Resource Type Definition Example](CustomResourceTypeSample/)
+1. [Macro Definition Example](MacroSample/)
+1. [Module Finalizer Example](FinalizerSample/)
 
 ## Function Source Examples
-1. [Alexa Skill Source Example](AlexaSample/ReadMe.md)
-1. [API Gateway Source Example with Method Invocation](ApiInvokeSample/ReadMe.md)
-1. [API Gateway Source Example](ApiSample/ReadMe.md)
-1. [CloudWatch Scheduled Event Source Example](ScheduleSample/ReadMe.md)
-1. [DynamoDB Stream Source Example](DynamoDBSample/ReadMe.md)
-1. [Kinesis Stream Source Example](KinesisSample/ReadMe.md)
-1. [S3 Bucket Events Source Example](S3SubscriptionSample/ReadMe.md)
-1. [Slack Command Source Example](SlackCommandSample/ReadMe.md)
-1. [SNS Topic Source Example](SnsSample/ReadMe.md)
-1. [SQS Queue Source Example](SqsSample/ReadMe.md)
-1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/ReadMe.md)
+1. [Alexa Skill Source Example](AlexaSample/)
+1. [API Gateway Source Example with Method Invocation](ApiInvokeSample/)
+1. [API Gateway Source Example](ApiSample/)
+1. [CloudWatch Scheduled Event Source Example](ScheduleSample/)
+1. [DynamoDB Stream Source Example](DynamoDBSample/)
+1. [Kinesis Stream Source Example](KinesisSample/)
+1. [S3 Bucket Events Source Example](S3SubscriptionSample/)
+1. [Slack Command Source Example](SlackCommandSample/)
+1. [SNS Topic Source Example](SnsSample/)
+1. [SQS Queue Source Example](SqsSample/)
+1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/)
 
 ## Miscellaneous Examples
-1. [Lambda Function in VPC](VpcFunctionSample/ReadMe.md)
-1. [Lambda Function with Lambda Layer](LambdaLayerSample/ReadMe.md)
+1. [Lambda Function in VPC](VpcFunctionSample/)
+1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
