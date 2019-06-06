@@ -2,7 +2,7 @@
 
 # LambdaSharp SQS Queue Source
 
-Before you begin, make sure to [setup your λ# CLI](../../Docs/ReadMe.md).
+Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 

@@ -2,7 +2,7 @@
 
 # LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the 0.6 "Favorinus" release.](http://lambdasharp.github.io/articles/ReleaseNotes-Favorinus.html)**
+**[Read what's new in the 0.6 "Favorinus" release.](https://lambdasharp.net/articles/ReleaseNotes-Favorinus.html)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
@@ -10,7 +10,7 @@ The objective of λ# is to accelerate the development pace of serverless solutio
 
 ## Give a Star! :star:
 
-If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.github.io). Thanks!
+If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.net/). Thanks!
 
 ![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
 
@@ -93,7 +93,7 @@ namespace MySampleModule.MyFunction {
 
 ### Getting Started
 
-1. [Setup λ#](http://lambdasharp.github.io/articles/Setup.html)
+1. [Setup λ#](https://lambdasharp.net/articles/Setup.html)
 
 ### Articles
 
@@ -109,24 +109,24 @@ namespace MySampleModule.MyFunction {
 1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
 1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
 1. [Create a Web Chat with API Gateway Websockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
-1. [Misc. λ# Samples](Samples/ReadMe.md)
+1. [Misc. λ# Samples](Samples/)
 
 ### References
 
-1. [λ# CLI Reference](http://lambdasharp.github.io/cli/ReadMe.html)
-1. [λ# .NET SDK Reference](http://lambdasharp.github.io/sdk/index.html)
-1. [λ# Module Reference](http://lambdasharp.github.io/module/Module.html)
+1. [λ# CLI Reference](https://lambdasharp.net/cli/Index.html)
+1. [λ# .NET SDK Reference](https://lambdasharp.net/sdk/Index.html)
+1. [λ# Syntax Reference](https://lambdasharp.net/syntax/Index.html)
 1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 1. Modules
-    1. [LambdaSharp.Core](Modules/LambdaSharp.Core/ReadMe.md)
-    1. [LambdaSharp.S3.IO](Modules/LambdaSharp.S3.IO/ReadMe.md)
-    1. [LambdaSharp.S3.Subscriber](Modules/LambdaSharp.S3.Subscriber/ReadMe.md)
-    1. [LambdaSharp.Twitter.Query](Modules/LambdaSharp.Twitter.Query/ReadMe.md)
+    1. [LambdaSharp.Core](https://lambdasharp.net/modules/LambdaSharp-Core.html)
+    1. [LambdaSharp.S3.IO](https://lambdasharp.net/modules/LambdaSharp-S3-IO.html)
+    1. [LambdaSharp.S3.Subscriber](https://lambdasharp.net/modules/LambdaSharp-S3-Subscriber.html)
+    1. [LambdaSharp.Twitter.Query](https://lambdasharp.net/modules/LambdaSharp-Twitter-Query.html)
 1. Resource Types
-    1. [LambdaSharp::S3::EmptyBucket](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-EmptyBucket.md)
-    1. [LambdaSharp::S3::Subscription](Modules/LambdaSharp.S3.Subscriber/Docs/LambdaSharp-S3-Subscription.md)
-    1. [LambdaSharp::S3::Unzip](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-Unzip.md)
-    1. [LambdaSharp::S3::WriteJson](Modules/LambdaSharp.S3.IO/Docs/LambdaSharp-S3-WriteJson.md)
+    1. [LambdaSharp::S3::EmptyBucket](https://lambdasharp.net/modules/LambdaSharp-S3-EmptyBucket.html)
+    1. [LambdaSharp::S3::Subscription](https://lambdasharp.net/modules/LambdaSharp-S3-Subscription.html)
+    1. [LambdaSharp::S3::Unzip](https://lambdasharp.net/modules/LambdaSharp-S3-Unzip.html)
+    1. [LambdaSharp::S3::WriteJson](https://lambdasharp.net/modules/LambdaSharp-S3-WriteJson.html)
 
 ## License
 

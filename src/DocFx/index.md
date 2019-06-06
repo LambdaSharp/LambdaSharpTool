@@ -1,4 +1,4 @@
-﻿![λ#](~/images/LambdaSharpLogo.png)
+![λ#](~/images/LambdaSharpLogo.png)
 
 # LambdaSharp (v[!include[LAMBDASHARP_VERSION](version.txt)]) - Serverless .NET on AWS
 
