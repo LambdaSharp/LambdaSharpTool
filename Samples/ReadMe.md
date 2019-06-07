@@ -2,7 +2,7 @@
 
 # LambdaSharp Examples
 
-Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md) to properly organize your code when working with these samples.
+Please refer to the [Folder Structure Documentation](https://lambdasharp.net/articles/FolderStructure.html) to properly organize your code when working with these samples.
 
 ## Extension Module Examples
 1. [LambdaSharp.S3.IO Example](S3IOSample/)
@@ -26,5 +26,5 @@ Please refer to the [Folder Structure Documentation](../Docs/FolderStructure.md)
 1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/)
 
 ## Miscellaneous Examples
-1. [Lambda Function in VPC](VpcFunction/)
+1. [Lambda Function in VPC](VpcFunctionSample/)
 1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
