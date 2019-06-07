@@ -56,9 +56,6 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
 
-        public static CommandOption AddNoAnsiOption(CommandLineApplication cmd)
-            => cmd.Option("--no-ansi", "Disable ANSI terminal output", CommandOptionType.NoValue);
-
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
             if(substitutions != null) {
@@ -124,6 +121,7 @@ namespace LambdaSharp.Tool.Cli {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
+            var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -144,6 +142,11 @@ namespace LambdaSharp.Tool.Cli {
             tierVersionOption.ShowInHelpText = false;
             apiGatewayAccountRoleOption.ShowInHelpText = false;
             return async () => {
+
+                // check if ANSI console output needs to be disabled
+                if(noAnsiOutputOption.HasValue()) {
+                    Settings.UseAnsiConsole = false;
+                }
 
                 // initialize logging level
                 if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
