@@ -1,5 +1,6 @@
 # API Gateway .NET
 
+
 > TODO
 > * how to wire an api endpoint/route to a method
 > * how request bodies are mapped
@@ -9,7 +10,7 @@
 
 ## Overview
 
-Requests to a REST API endpoint that do not supply the required parameters or supply the correct payload are automatically denied by API Gateway before the Lambda function is invoked. This approach avoids unnecessary Lambda compute time and comes at no additional financial cost. Furthermore, the complexity of coordinating the REST API endpoint validation with the implementation is automated by the λ# tool.
+API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the λ# tool.
 
 ## Reading Parameters from the Request URI
 

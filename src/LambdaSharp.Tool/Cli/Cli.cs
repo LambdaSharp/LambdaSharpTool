@@ -34,6 +34,8 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Class Constructor ---
         static CliBase() {
+
+            // initialize from assembly build version
             _version = VersionInfo.Parse(typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
         }
 
