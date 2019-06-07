@@ -1,6 +1,9 @@
 - name: Setup
   href: Setup.md
 
+- name: Video Tutorials
+  href: VideoTutorials.md
+
 - name: Samples
   href: Samples.md
   items:
