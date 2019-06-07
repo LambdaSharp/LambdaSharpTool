@@ -476,8 +476,82 @@ namespace LambdaSharp.Tool.Cli {
                     }
                 }
                 return (Arn: account.CloudwatchRoleArn, MissingPermissions: Enumerable.Empty<string>());
-            } catch(Exception e) {
+            } catch(Exception) {
                 return (Arn: null, Enumerable.Empty<string>());
+            }
+        }
+
+        protected async Task CheckApiGatewayRole(Settings settings) {
+
+            // retrieve the CloudWatch/X-Ray role from the API Gateway account
+            Console.WriteLine("=> Checking API Gateway role");
+            var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
+            var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? "LambdaSharp-ApiGatewayRole");
+
+            // check if the role has the expected managed policies; if not, attach them
+            var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
+                RoleName = "LambdaSharp-ApiGatewayRole"
+            })).AttachedPolicies;
+            await CheckOrAttachPolicy("arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs");
+            await CheckOrAttachPolicy("arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess");
+
+            // update API Gateway Account role if needed
+            if(account.CloudwatchRoleArn == null) {
+                Console.WriteLine($"=> Updating API Gateway role to {role.Arn}");
+            again:
+                try {
+                    await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {
+                        PatchOperations = new List<PatchOperation> {
+                            new PatchOperation {
+                                Op = Op.Replace,
+                                Path = "/cloudwatchRoleArn",
+                                Value = role.Arn
+                            }
+                        }
+                    });
+                } catch(BadRequestException) {
+                    Console.WriteLine($"=> Waiting for API Gateway role changes to settle, trying again in 5 seconds");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                } catch(TooManyRequestsException) {
+                    Console.WriteLine($"=> Update request was throttled, trying again in 2 seconds");
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    goto again;
+                }
+            }
+            settings.ApiGatewayAccountRole = role.Arn;
+
+            // local functions
+            async Task CheckOrAttachPolicy(string managedPolicyArn) {
+
+                // check if managed policy is already attached; it not, attach it
+                if(!attachedPolicies.Any(policy => policy.PolicyArn == managedPolicyArn)) {
+                    Console.WriteLine($"=> Attaching managed policy to API Gateway role: {managedPolicyArn}");
+                    await settings.IamClient.AttachRolePolicyAsync(new AttachRolePolicyRequest {
+                        PolicyArn = managedPolicyArn,
+                        RoleName = role.RoleName
+                    });
+                }
+            }
+
+            async Task<Role> GetOrCreateRole(string roleName) {
+                try {
+
+                    // attempt to resolve the given role by name
+                    return (await settings.IamClient.GetRoleAsync(new GetRoleRequest {
+                        RoleName = roleName
+                    })).Role;
+                } catch(NoSuchEntityException) {
+
+                    // IAM role not found, fallthrough to the next step
+                }
+
+                // only create the LambdaSharp API Gateway Role when the account has no role
+                Console.WriteLine("=> Creating API Gateway role");
+                return (await settings.IamClient.CreateRoleAsync(new CreateRoleRequest {
+                    RoleName = "LambdaSharp-ApiGatewayRole",
+                    Description = "API Gateway Role for CloudWatch Logs and X-Ray Tracing",
+                    AssumeRolePolicyDocument = @"{""Version"":""2012-10-17"",""Statement"":[{""Sid"": ""ApiGatewayPrincipal"",""Effect"":""Allow"",""Principal"":{""Service"":""apigateway.amazonaws.com""},""Action"":""sts:AssumeRole""}]}"
+                })).Role;
             }
         }
     }

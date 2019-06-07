@@ -187,27 +187,7 @@ namespace LambdaSharp.Tool.Cli {
             await PopulateToolSettingsAsync(settings);
 
             // check if API Gateway role needs to be set
-            Console.WriteLine("=> Checking API Gateway role");
-            var apiGatewayAccount = await DetermineMissingApiGatewayRolePermissions(settings);
-            if(apiGatewayAccount.Arn == null) {
-                Console.WriteLine($"=> Updating API Gateway role to {settings.ApiGatewayAccountRole}");
-                await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {
-                    PatchOperations = new List<PatchOperation> {
-                        new PatchOperation {
-                            Op = Op.Replace,
-                            Path = "/cloudwatchRoleArn",
-                            Value = settings.ApiGatewayAccountRole
-                        }
-                    }
-                });
-            } else if(apiGatewayAccount.MissingPermissions.Any()) {
-                Console.WriteLine("=> API Gateway role is incomplete");
-                LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPermissions)})");
-            } else if(apiGatewayAccount.Arn != settings.ApiGatewayAccountRole) {
-                Console.WriteLine("=> API Gateway role is compatible");
-            } else {
-                Console.WriteLine("=> API Gateway role is set");
-            }
+            await CheckApiGatewayRole(settings);
 
             // local functions
             string GetToolSetting(string name) {
