@@ -157,7 +157,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable ANSI terminal output
+Disable colored ANSI terminal output
 </dd>
 
 </dl>

@@ -36,6 +36,12 @@ The `info` command is used to show information about the current CLI profile, λ
 (optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)
 </dd>
 
+<dt><code>--no-ansi</code></dt>
+<dd>
+
+Disable colored ANSI terminal output
+</dd>
+
 </dl>
 
 ## Examples

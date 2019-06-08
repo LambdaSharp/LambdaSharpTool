@@ -91,7 +91,7 @@ lash new function MyNewFunction
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable ANSI terminal output
+Disable colored ANSI terminal output
 </dd>
 
 </dl>

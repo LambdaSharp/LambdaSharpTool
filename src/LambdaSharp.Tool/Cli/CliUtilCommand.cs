@@ -65,11 +65,12 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.HelpOption();
                     subCmd.Description = "Delete orphaned Lambda CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
+                    var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLambdaLogsAsync(dryRunOption.HasValue());
+                        await DeleteOrphanLambdaLogsAsync(dryRunOption.HasValue(), awsProfileOption.Value());
                     });
                 });
 
@@ -221,8 +222,11 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLambdaLogsAsync(bool dryRun) {
+        public async Task DeleteOrphanLambdaLogsAsync(bool dryRun, string awsProfile) {
             Console.WriteLine();
+
+            // initialize AWS profile
+            await InitializeAwsProfile(awsProfile);
 
             // list all lambda functions
             var lambdaClient = new AmazonLambdaClient();
