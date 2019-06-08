@@ -28,6 +28,12 @@ Parameters:
     AllowedPattern: '[a-z0-9\-]*'
     ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
 
+  RequestedBucketName:
+    Type: String
+    Description: (optional) Name of newly created S3 bucket (if blank, a unique name is generated)
+    AllowedPattern: '[a-z0-9\-]*'
+    ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
+
   DeploymentNotificationTopic:
     Type: String
     Description: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
@@ -53,6 +59,7 @@ Metadata:
           default: LambdaSharp Deployment Settings
         Parameters:
           - DeploymentBucketName
+          - RequestedBucketName
           - DeploymentNotificationTopic
       - Label:
           default: LambdaSharp Tool Settings
@@ -62,6 +69,8 @@ Metadata:
     ParameterLabels:
       DeploymentBucketName:
         default: Name of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+      RequestedBucketName:
+        default: (optional) Name of newly created S3 bucket (if blank, a unique name is generated)
       DeploymentNotificationTopic:
         default: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
       LambdaSharpToolVersion:
@@ -71,6 +80,7 @@ Metadata:
 
 Conditions:
   DeploymentBucketNameIsEmpty: !Equals [ !Ref DeploymentBucketName, "" ]
+  RequestedBucketNameIsEmpty: !Equals [ !Ref RequestedBucketName, "" ]
   CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopic, "" ]
 
 Resources:
@@ -96,6 +106,11 @@ Resources:
   DeploymentBucket:
     Type: AWS::S3::Bucket
     Condition: DeploymentBucketNameIsEmpty
+    Properties:
+      BucketName: !If
+        - RequestedBucketNameIsEmpty
+        - !Ref AWS::NoValue
+        - !Ref RequestedBucketName
 
   DeploymentBucketPolicy:
     Type: AWS::S3::BucketPolicy
