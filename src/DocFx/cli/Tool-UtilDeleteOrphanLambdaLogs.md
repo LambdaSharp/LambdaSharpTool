@@ -12,6 +12,12 @@ The `util delete-orphan-lambda-logs` command is used to delete CloudWatch log gr
 (optional) Show the result of the clean-up operation without deleting anything
 </dd>
 
+<dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS profile from the AWS credentials file
+</dd>
+
 </dl>
 
 ## Examples
