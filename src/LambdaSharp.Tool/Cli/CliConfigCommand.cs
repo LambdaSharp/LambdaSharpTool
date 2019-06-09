@@ -120,7 +120,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 var request = new CreateStackRequest {
                     StackName = stackName,
-                    Capabilities = new List<string> { "CAPABILITY_IAM" },
+                    Capabilities = new List<string> { },
                     OnFailure = OnFailure.DELETE,
                     Parameters = templateParameters,
                     EnableTerminationProtection = protectStack,
@@ -164,7 +164,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     var request = new UpdateStackRequest {
                         StackName = stackName,
-                        Capabilities = new List<string> { "CAPABILITY_IAM" },
+                        Capabilities = new List<string> { },
                         Parameters = templateParameters,
                         TemplateBody = template
                     };
