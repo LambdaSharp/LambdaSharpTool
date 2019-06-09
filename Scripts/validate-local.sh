@@ -68,7 +68,11 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-> TODO: core tests
+cd $LAMBDASHARP/Modules/LambdaSharp.Core/Tests
+dotnet test
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 
 echo "*********************"
 echo "*** Build Samples ***"
