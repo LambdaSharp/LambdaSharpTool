@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LAMBDASHARP_VERSION_PREFIX=0.6.1
+export LAMBDASHARP_VERSION_PREFIX=0.6.0.1
 export LAMBDASHARP_VERSION_SUFFIX=WIP
 
 # create full version text
