@@ -65,7 +65,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "195C65983AB7FEF7F13991E21DE2D00E"
+      "Default": "7BABC2BB5CD14BD6FAA54538E3A92F19"
     }
   },
   "Resources": {
@@ -562,7 +562,7 @@
             {
               "Ref": "EnableXRayTracing"
             },
-            "Disable"
+            "Disabled"
           ]
         }
       ]
@@ -832,7 +832,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "195C65983AB7FEF7F13991E21DE2D00E",
+      "Hash": "7BABC2BB5CD14BD6FAA54538E3A92F19",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
