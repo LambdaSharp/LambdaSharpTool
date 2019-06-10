@@ -184,10 +184,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 noEcho: null,
-                defaultValue: "Disable",
+                defaultValue: XRayTracingLevel.Disabled.ToString(),
                 constraintDescription: null,
                 allowedPattern: null,
-                allowedValues: new[] { "Disable", "EnableRootModule", "EnableAllModules" },
+                allowedValues: new[] {
+                    XRayTracingLevel.Disabled.ToString(),
+                    XRayTracingLevel.RootModule.ToString(),
+                    XRayTracingLevel.AllModules.ToString()
+                },
                 maxLength: null,
                 maxValue: null,
                 minLength: null,

@@ -45,6 +45,12 @@ namespace LambdaSharp.Tool {
         CloudFormation
     }
 
+    public enum XRayTracingLevel {
+        Disabled,
+        RootModule,
+        AllModules
+    }
+
     public class Program : CliBase {
 
         //--- Class Fields ---
