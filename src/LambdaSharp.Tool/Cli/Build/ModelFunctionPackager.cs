@@ -785,6 +785,24 @@ namespace LambdaSharp.Tool.Cli.Build {
                         mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
                         mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
                         mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.Method;
+
+                        // check if method defined any uri parameters
+                        var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                        if(uriParameters.Any()) {
+
+                            // uri parameters are only valid for $connect route
+                            if(mapping.WebSocketSource.RouteKey == "$connect") {
+
+                                // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
+                                foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
+                                    LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
+                                }
+                            } else {
+                                foreach(var uriParameter in uriParameters) {
+                                    LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
+                                }
+                            }
+                        }
                     }
                 }
             } catch(Exception e) {
