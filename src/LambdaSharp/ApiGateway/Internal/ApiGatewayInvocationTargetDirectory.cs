@@ -112,8 +112,11 @@ namespace LambdaSharp.ApiGateway.Internal {
                             if(state.PathQueryParametersJson == null) {
                                 var pathParameters = request.PathParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
                                 var queryStringParameters = request.QueryStringParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                                var uriParameters = new Dictionary<string, string>(pathParameters.Union(queryStringParameters));
-                                state.PathQueryParametersJson = SerializeJson(uriParameters);
+                                state.PathQueryParametersJson = SerializeJson(new Dictionary<string, string>(
+                                    pathParameters.Union(queryStringParameters)
+                                        .GroupBy(kv => kv.Key)
+                                        .Select(grouping => grouping.First())
+                                ));
                             }
                             return DeserializeJson(state.PathQueryParametersJson, parameter.ParameterType);
                         } catch {
