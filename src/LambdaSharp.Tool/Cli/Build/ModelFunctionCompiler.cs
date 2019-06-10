@@ -220,7 +220,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void AddWebSocketResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
-            // give permission to the Lambda functions to communicate back over the websocket
+            // give permission to the Lambda functions to communicate back over the WebSocket
             _builder.AddGrant(
                 sid: "ModuleWebSocketConnections",
                 awsType: null,
@@ -230,7 +230,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             );
 
-            // read websocket configuration
+            // read WebSocket configuration
             if(!_builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression)) {
                 routeSelectionExpression = "$request.body.action";
             }
@@ -524,7 +524,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // create log-group for Web-Socket
+            // create log-group for WebSocket
             var webSocketLogGroup = _builder.AddResource(
                 parent: webSocket,
                 name: "LogGroup",

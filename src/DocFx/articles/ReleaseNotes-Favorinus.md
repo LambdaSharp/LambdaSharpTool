@@ -4,7 +4,7 @@
 
 ## What's New
 
-This release focuses on API Gateway, both for REST APIs and Web-Sockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
+This release focuses on API Gateway, both for REST APIs and WebSockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
 
 In addition, there is a [new documentation site](https://lambdasharp.net) that covers all aspects of λ#, including the base classes, modules, and syntax.
 
@@ -89,7 +89,7 @@ A new `WebSocket` event-source is now supported. Similar to the `Api` event-sour
       Invoke: SendMessageAsync
 ```
 
-The target method can now be implemented in a straightforward way, without requiring deserializing or validation. The method uses the `WebSocketClient` property, which is inherited from the base class. The `WebSocketClient` returns the `IAmazonApiGatewayManagementApi` instance when `ALambdaApiGatewayFunction` was instantiated with a web-socket URL.
+The target method can now be implemented in a straightforward way, without requiring deserializing or validation. The method uses the `WebSocketClient` property, which is inherited from the base class. The `WebSocketClient` returns the `IAmazonApiGatewayManagementApi` instance when `ALambdaApiGatewayFunction` was instantiated with a WebSocket URL.
 
 ```csharp
 public Task SendMessageAsync(Message request) {
