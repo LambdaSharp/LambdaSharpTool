@@ -725,7 +725,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     integration.RequestParameters["integration.request.header.X-Amz-Invocation-Type"] = "'Event'";
                     integration.IntegrationResponses = new[] {
                         new Humidifier.ApiGateway.MethodTypes.IntegrationResponse {
-                            StatusCode = 200,
+                            StatusCode = 202,
                             ResponseTemplates = new Dictionary<string, object> {
                                 [defaultResponseContentType] = defaultResponsePayload
                             }
@@ -733,7 +733,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }.ToList();
                     apiMethodResource.MethodResponses = new[] {
                         new Humidifier.ApiGateway.MethodTypes.MethodResponse {
-                            StatusCode = 200,
+                            StatusCode = 202,
                             ResponseModels = new Dictionary<string, object> {
                                 [defaultResponseContentType] = "Empty"
                             }

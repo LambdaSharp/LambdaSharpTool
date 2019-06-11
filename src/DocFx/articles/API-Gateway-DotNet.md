@@ -152,13 +152,13 @@ Task<AddAlbumResponse> AddAlbum(
 ) { ... }
 ```
 
-Methods with a response schema always return HTTP status code 200 when successful or HTTP status code 500 if an exception occurs. In the latter case, the details of the exception are captured in the Lambda CloudWatch logs and not returned to the client.
+Methods with a response schema always return HTTP status code 200 (OK) when successful or HTTP status code 500 (Internal Server Error) if an exception occurs. In the latter case, the details of the exception are captured in the Lambda CloudWatch logs and not returned to the client.
 
 A custom status code can be returned either by using the [`APIGatewayProxyResponse`](https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.APIGatewayEvents/APIGatewayProxyResponse.cs) return type or by calling one of the `Abort()` methods from [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction):
 * [`Abort(APIGatewayProxyResponse response)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.Abort(Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse)): response with the HTTP status code, headers, and response body set in the `APIGatewayProxyResponse` instance.
-* [`AbortBadRequest(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortBadRequet(System.String)): responds with HTTP status code 400 and the provided message.
-* [`AbortForbidden(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortForbidden(System.String)): responds with HTTP status code 403 and the provided message.
-* [`Exception AbortNotFound(string message)`](LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortNotFound(System.String)): responds with HTTP status code 404 and the provided message.
+* [`AbortBadRequest(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortBadRequet(System.String)): responds with HTTP status code 400 (Bad Request) and the provided message.
+* [`AbortForbidden(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortForbidden(System.String)): responds with HTTP status code 403 (Forbidden) and the provided message.
+* [`Exception AbortNotFound(string message)`](LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortNotFound(System.String)): responds with HTTP status code 404 (Not Found) and the provided message.
 
 ### WebSocket Response
 
@@ -166,7 +166,7 @@ When a WebSocket route returns a response, that response is only sent to the cli
 
 ### Asynchronous Invocation by API Gateway
 
-A method can also use `void` or `Task` as return type, in which case the REST API endpoint or WebSocket route is configured to not wait for the Lambda function invocation to complete. Instead, the API Gateway response is always an empty JSON object (i.e. `{}`) with HTTP status code 202 for REST API endpoints and nothing for WebSocket routes. The benefit of using an asynchronous API Gateway invocation is that it never is impacted by a Lambda function cold start. In case the request fails to process, the entire request is captured into the dead-letter queue (DLQ) of the Lambda function, so that it can be retried in the future.
+A method can also use `void` or `Task` as return type, in which case the REST API endpoint or WebSocket route is configured to not wait for the Lambda function invocation to complete. Instead, the API Gateway response is always an empty JSON object (i.e. `{}`) with HTTP status code 202 (Accepted) for REST API endpoints and nothing for WebSocket routes. The benefit of using an asynchronous API Gateway invocation is that it never is impacted by a Lambda function cold start. In case the request fails to process, the entire request is captured into the dead-letter queue (DLQ) of the Lambda function, so that it can be retried in the future.
 
 A common use case for an asynchronous invocations are client-side events where a response is not expected or WebSocket routes that broadcast a response to multiple active connections.
 
