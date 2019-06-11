@@ -1,25 +1,16 @@
 # API Gateway .NET
 
-
-> TODO
-> * how to wire an api endpoint/route to a method
-> * how request bodies are mapped
-> * asynchronous methods
-> * when to use `APIGatewayProxyRequest` type
-> * when to use `APIGatewayProxyResponse` type
-
-
 ## Overview
 
 API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the λ# tool.
 
-## Reading Parameters from the Request URI
+## Reading the Request URI
 
 Method parameters can be read from the request URI by REST API endpoints and the WebSocket `$connect` route. Value types, such as `int` and `string`, are resolved by default from the request URI. First, the compiler attempts to find a matching path parameter in the REST API endpoint definition (e.g. `GET:/items/{id}`). If no matching path parameter is found, the compiler expects the parameter to be supplied by the request query string (.e.g `https://example.org/items?id=123`). Since WebSocket routes have no path parameters, all method parameters are expected to be supplied as query string parameters.
 
 REST API path parameters are always required and must occur in the method definition. However, query string parameters can be optional if their type is nullable or a default value is specified. The API Gateway instance will be configured to match the requirements of the method and the REST API endpoint definitions. For WebSockets, only the `$connect` route can use query string parameters during the initial connection attempt. Unfortunately, WebSocket routes cannot be configured to enforce the presence of query string parameters. Therefore, all query string parameters must be defined as optional.
 
-In the following example, the REST API endpoint declaration specifies a single `name` path parameter. Since this parameter is required for the request, it must also appear in the attached invocation method.
+In the following example, the REST API endpoint declaration specifies a single `name` path parameter. Since this parameter is required for the request, it must also appear in the attached invocation method. The name of the attached method must either be `GetItems` or `GetItemsAsync`, following the C# naming convention for asynchronous methods.
 
 ```yaml
 Sources:
@@ -71,11 +62,11 @@ public GetItemsResponse GetItems([FromUri] FilterOptions options) { ... }
 ```
 
 
-## Reading a Parameter from the Request Body
+## Reading the Request Body
 
 Only one method parameter can be resolved from the request body. The parameter must have a reference type, unless the `FromBody` attribute is used to force deserialization from the request body.
 
-The following method has two parameters: the `artist` parameter is a value type that is resolved from the request URI and the `album` parameter is a reference type that is resolved from the request body.
+The following REST API endpoint method has two parameters: the `artist` parameter is a value type that is resolved from the request URI and the `album` parameter is a reference type that is resolved from the request body.
 
 ```csharp
 AddAlbumResponse AddAlbum(
@@ -97,7 +88,9 @@ class AddAlbumRequest {
 }
 ```
 
-The λ# tool uses [NJsonSchema](https://github.com/RicoSuter/NJsonSchema) to create a JSON schema from the type definition. The JSON schema is then attached either to the REST API endpoint or WebSocket route, as appropriate. Note that the request body must always be a JSON value.
+The λ# tool uses [NJsonSchema](https://github.com/RicoSuter/NJsonSchema) to derive a JSON schema from the type definition. The JSON schema is then attached either to the REST API endpoint or WebSocket route to enforce it on the request body, which is always a JSON value.
+
+The `AddAlbumRequest` type produces the following JSON schema.
 
 ```json
 {
@@ -122,36 +115,61 @@ The λ# tool uses [NJsonSchema](https://github.com/RicoSuter/NJsonSchema) to cre
 }
 ```
 
+The validation of a WebSocket route is almost identical. For example, the following declaration attaches the `JoinRoom` method to the `join` route, which expects a `JoinRoomRequest` payload. The JSON schema derived from the `JoinRoomRequest` type is used to validate the payload before invoking the method.
+
+```yaml
+Sources:
+  - WebSocket: join
+    Invoke: JoinRoom
+```
+
+```csharp
+JoinRoomResponse JoinRoom(JoinRoomRequest request) { ... }
+```
 
 
-## Response Body
+## Reading the Proxy Request
 
-## Asynchronous Invocation
+The [`APIGatewayProxyRequest`](https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.APIGatewayEvents/APIGatewayProxyRequest.cs) type represents the entire request payload, including the request body, path parameters, query string parameters, headers, and more. A method can read the proxy request in addition to the request URI and request body. Methods attached to the `$connect`, `$disconnect`, and `$default` WebSocket routes must use the `APIGatewayProxyRequest` type since they don't have a predefined request body.
 
+The `APIGatewayProxyRequest` provides the most flexibility for accessing the parts of a request. However, it also provides no JSON schema to enforce. Thus, the REST API endpoint and WebSocket routes perform no validation and allow any payload to go through.
 
+For example, in the following method definition, no JSON schema information can be inferred for the request body.
 
-
-
-
-## Parameter Types
-
-### Using `APIGatewayProxyRequest`
-
-### Using No Parameters
-
-### Using a Complex Type
-
-### Using a Simple Type
+```csharp
+AddAlbumResponse AddAlbum(APIGatewayProxyRequest request) { ... }
+```
 
 
+## Returning a Response
 
+The method return type is used to determine the JSON schema of the response. If the return type uses the generic `Task<T>` type, then the response schema is based on the generic type parameter `T`. For example, the following method has response schema based on the `AddAlbumResponse` type.
 
-## Return Type
+```csharp
+Task<AddAlbumResponse> AddAlbum(
+    string artist,
+    AddAlbumRequest album
+) { ... }
+```
 
-### Using `APIGatewayProxyResponse`
+Methods with a response schema always return HTTP status code 200 when successful or HTTP status code 500 if an exception occurs. In the latter case, the details of the exception are captured in the Lambda CloudWatch logs and not returned to the client.
 
-### Using `void`
+A custom status code can be returned either by using the [`APIGatewayProxyResponse`](https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.APIGatewayEvents/APIGatewayProxyResponse.cs) return type or by calling one of the `Abort()` methods from [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction):
+* [`Abort(APIGatewayProxyResponse response)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.Abort(Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse)): response with the HTTP status code, headers, and response body set in the `APIGatewayProxyResponse` instance.
+* [`AbortBadRequest(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortBadRequet(System.String)): responds with HTTP status code 400 and the provided message.
+* [`AbortForbidden(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortForbidden(System.String)): responds with HTTP status code 403 and the provided message.
+* [`Exception AbortNotFound(string message)`](LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortNotFound(System.String)): responds with HTTP status code 404 and the provided message.
 
-### Using a Complex Type
+### WebSocket Response
 
-### Using a Simple Type
+When a WebSocket route returns a response, that response is only sent to the client connection from which the request came. To broadcast a message to all connections, use [`IAmazonApiGatewayManagementApi.PostToConnectionAsync(PostToConnectionRequest)`](https://docs.aws.amazon.com/sdkfornet/v3/apidocs/items/ApiGatewayManagementApi/MIApiGatewayManagementApiPostToConnectionPostToConnectionRequest.html) instead.
+
+### Asynchronous Invocation by API Gateway
+
+A method can also use `void` or `Task` as return type, in which case the REST API endpoint or WebSocket route is configured to not wait for the Lambda function invocation to complete. Instead, the API Gateway response is always an empty JSON object (i.e. `{}`) with HTTP status code 202 for REST API endpoints and nothing for WebSocket routes. The benefit of using an asynchronous API Gateway invocation is that it never is impacted by a Lambda function cold start. In case the request fails to process, the entire request is captured into the dead-letter queue (DLQ) of the Lambda function, so that it can be retried in the future.
+
+A common use case for an asynchronous invocations are client-side events where a response is not expected or WebSocket routes that broadcast a response to multiple active connections.
+
+```csharp
+Task CaptureEvent(APIGatewayProxyRequest request) { ... }
+```
