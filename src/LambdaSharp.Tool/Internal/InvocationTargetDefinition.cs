@@ -31,6 +31,7 @@ namespace LambdaSharp.Tool.Internal {
         public string Assembly { get; set; }
         public string Type { get; set; }
         public string Method { get; set; }
+        public string OperationName { get; set; }
         public string RequestContentType { get; set; }
         public object RequestSchema { get; set; }
         public string RequestSchemaName { get; set; }
