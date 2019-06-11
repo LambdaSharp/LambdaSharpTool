@@ -27,6 +27,7 @@ using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
@@ -548,7 +549,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
                     ["AccessLogSettings"] = new Dictionary<string, dynamic> {
                         ["DestinationArn"] = FnSub($"arn:aws:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
-                        ["Format"] = "{\"requestId\":\"$context.requestId\", \"ip\": \"$context.identity.sourceIp\", \"caller\":\"$context.identity.caller\", \"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\", \"eventType\":\"$context.eventType\",\"routeKey\":\"$context.routeKey\", \"status\":\"$context.status\",\"connectionId\":\"$context.connectionId\"}"
+                        ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
                     },
                     ["ApiId"] = FnRef("Module::WebSocket"),
                     ["StageName"] = "LATEST",
