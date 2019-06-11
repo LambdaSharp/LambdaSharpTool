@@ -39,7 +39,6 @@ namespace LambdaSharp.Tool.Model {
         public bool RuntimeCheck { get; set; }
         public string Hash { get; set; }
         public ModuleManifestGitInfo Git { get; set; }
-        public string GitBranch { get; set; }
         public IList<string> Assets { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
