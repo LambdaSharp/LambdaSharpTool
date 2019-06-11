@@ -297,7 +297,7 @@ namespace LambdaSharp.Tool.Cli {
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the deployed module", CommandOptionType.NoValue);
-                var enableXRayTracingOption = cmd.Option("--xray", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module", CommandOptionType.NoValue);
+                var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
@@ -336,6 +336,13 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         dryRun = value;
+                    }
+
+                    // check x-ray settings
+                    if(!TryParseEnumOption(enableXRayTracingOption, XRayTracingLevel.Disabled, XRayTracingLevel.RootModule, out var xRayTracingLevel)) {
+
+                        // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                        return;
                     }
 
                     // check if one or more arguments have been specified
@@ -416,7 +423,7 @@ namespace LambdaSharp.Tool.Cli {
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 promptsAsErrorsOption.HasValue(),
-                                enableXRayTracingOption.HasValue(),
+                                xRayTracingLevel,
                                 deployOnlyIfExists: false
                             )) {
                                 break;
@@ -480,7 +487,7 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             bool promptAllParameters,
             bool promptsAsErrors,
-            bool enableXRayTracing,
+            XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
             try {
@@ -511,7 +518,7 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy,
                     promptAllParameters,
                     promptsAsErrors,
-                    enableXRayTracing,
+                    xRayTracingLevel,
                     deployOnlyIfExists
                 );
             } catch(Exception e) {

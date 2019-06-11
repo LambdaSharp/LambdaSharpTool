@@ -17,7 +17,7 @@ Invoke: String
 <dt><code>Api</code></dt>
 <dd>
 
-The <code>WebSocket</code> attribute specifies the websocket route that is mapped to the Lambda function. The WebSocket instance and the WebSocket resources are automatically created for the module when an WebSocket source is used.
+The <code>WebSocket</code> attribute specifies the WebSocket route that is mapped to the Lambda function. The WebSocket instance and the WebSocket resources are automatically created for the module when an WebSocket source is used.
 
 <b>NOTE</b>: The WebSocket resource can be referenced by its name `Module::WebSocket`. Similarly, `Module::WebSocket::Stage` and `Module::WebSocket::Deployment` reference the WebSocket stage and deployment, respectively.
 

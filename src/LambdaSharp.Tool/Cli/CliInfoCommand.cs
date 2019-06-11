@@ -69,7 +69,7 @@ namespace LambdaSharp.Tool.Cli {
         ) {
             await PopulateToolSettingsAsync(settings, optional: true);
             await PopulateRuntimeSettingsAsync(settings);
-            var apiGatewayAccount = await DetermineMissingApiGatewayRolePermissions(settings);
+            var apiGatewayAccount = await DetermineMissingApiGatewayRolePolicies(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp CLI");
@@ -79,12 +79,11 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
             if(apiGatewayAccount.Arn == null) {
                 Console.WriteLine($"    API Gateway Role: <NOT SET>");
-            } else if(!apiGatewayAccount.MissingPermissions.Any()) {
-                var customRole = apiGatewayAccount.Arn != settings.ApiGatewayAccountRole;
-                Console.WriteLine($"    API Gateway Role: {(customRole ? "<CUSTOM> " : "")}{apiGatewayAccount.Arn}");
+            } else if(!apiGatewayAccount.MissingPolicies.Any()) {
+                Console.WriteLine($"    API Gateway Role: {ConcealAwsAccountId(apiGatewayAccount.Arn)}");
             } else {
-                Console.WriteLine($"    API Gateway Role: <INCOMPLETE>");
-                LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPermissions)})");
+                Console.WriteLine($"    API Gateway Role: <INCOMPLETE> {ConcealAwsAccountId(apiGatewayAccount.Arn)}");
+                LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPolicies)})");
             }
 
             // TODO (2019-06-03, bjorg): remove this once we no longer need multiple buckets registered

@@ -292,6 +292,7 @@ namespace LambdaSharp.Tool.Cli {
             IEnumerable<string> methodReferences,
             string outputFile
         ) {
+            const string ASYNC_SUFFIX = "Async";
             var schemas = new Dictionary<string, InvocationTargetDefinition>();
 
             // create a list of nested namespaces from the root namespace
@@ -333,12 +334,19 @@ namespace LambdaSharp.Tool.Cli {
                         throw new ProcessTargetInvocationException($"could not find type for '{methodReference}' in assembly '{assembly.FullName}'");
                     }
 
-                    // find method
+                    // find method, optionally with 'Async' suffix
                     var method = type.GetMethod(methodName);
+                    if((method == null) && !methodName.EndsWith(ASYNC_SUFFIX, StringComparison.Ordinal)) {
+                        methodName += ASYNC_SUFFIX;
+                        method = type.GetMethod(methodName);
+                    }
                     if(method == null) {
                         throw new ProcessTargetInvocationException($"could not find method '{methodName}' in type '{type.FullName}'");
                     }
                     var resolvedMethodReference = $"{assemblyName}::{type.FullName}::{method.Name}";
+                    var operationName = methodName.EndsWith(ASYNC_SUFFIX, StringComparison.Ordinal)
+                        ? methodName.Substring(0, methodName.Length - ASYNC_SUFFIX.Length)
+                        : methodName;
 
                     // process method parameters
                     ParameterInfo requestParameter = null;
@@ -435,6 +443,7 @@ namespace LambdaSharp.Tool.Cli {
                         Assembly = assembly.FullName,
                         Type = type.FullName,
                         Method = methodName,
+                        OperationName = operationName,
                         RequestContentType = requestSchemaAndContentType?.Item2,
                         RequestSchema = requestSchemaAndContentType?.Item1,
                         RequestSchemaName = requestParameter?.ParameterType.FullName,

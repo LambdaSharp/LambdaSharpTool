@@ -14,7 +14,7 @@
     - name: Create Animated GIFs from Videos with AWS Lambda
       href: https://github.com/LambdaSharp/GifMaker-Sample
 
-    - name: Create a Web Chat with API Gateway Websockets
+    - name: Create a Web Chat with API Gateway WebSockets
       href: https://github.com/LambdaSharp/WebSocketsChat-Sample
 
     - name: Misc. λ# Samples

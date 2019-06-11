@@ -38,7 +38,7 @@ namespace LambdaSharp.ApiGateway {
     /// <see cref="ALambdaApiGatewayFunction"/> is the abstract base class for API Gateway functions (both V1 and V2).
     /// </summary>
     /// <remarks>
-    /// If the Lambda function was configured for REST API or web-socket routes with method invocations, then the
+    /// If the Lambda function was configured for REST API or WebSocket routes with method invocations, then the
     /// Lambda function will act as a controller and route the incoming requests to the specified methods. Alternatively,
     /// a derived class can override <see cref="ALambdaApiGatewayFunction.ProcessProxyRequestAsync(APIGatewayProxyRequest)"/>
     /// to process requests.
@@ -216,10 +216,10 @@ namespace LambdaSharp.ApiGateway {
         /// <summary>
         /// The <see cref="CreateRouteNotFoundResponse(APIGatewayProxyRequest, string)"/> method creates the
         /// <see cref="APIGatewayProxyResponse"/> instance to report a <c>404 - Not Found</c> error for the requested
-        /// REST API or web-socket route.
+        /// REST API or WebSocket route.
         /// </summary>
         /// <param name="request">The <see cref="APIGatewayProxyRequest"/> instance.</param>
-        /// <param name="route">The REST API or web-socket route that could not be found.</param>
+        /// <param name="route">The REST API or WebSocket route that could not be found.</param>
         /// <returns>The <see cref="APIGatewayProxyResponse"/> instance.</returns>
         protected virtual APIGatewayProxyResponse CreateRouteNotFoundResponse(APIGatewayProxyRequest request, string route)
             => CreateResponse(404, $"Route '{route}' not found");
@@ -336,7 +336,7 @@ namespace LambdaSharp.ApiGateway {
         ///     "requestId": "123abc"
         /// }
         /// </code>
-        /// For a web-socket route, the response body contains in addition the connection ID.
+        /// For a WebSocket route, the response body contains in addition the connection ID.
         /// <code>
         /// {
         ///     "message": "item not found",

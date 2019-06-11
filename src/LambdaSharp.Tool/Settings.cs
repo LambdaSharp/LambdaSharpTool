@@ -139,8 +139,6 @@ namespace LambdaSharp.Tool {
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
         public string DeploymentNotificationsTopic { get; set; }
-        public string ApiGatewayAccountRole { get; set; }
-        public string ActualApiGatewayAccountRole { get; set; }
         public IEnumerable<string> ModuleBucketNames { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }

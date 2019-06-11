@@ -65,7 +65,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             bool forceDeploy,
             bool promptAllParameters,
             bool promptsAsErrors,
-            bool enableXRayTracing,
+            XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
@@ -151,15 +151,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // check if module supports AWS X-Ray for tracing
                 if(
-                    enableXRayTracing
-                    && manifest.GetAllParameters().Any(p => p.Name == "EnableXRayTracing")
+                    manifest.GetAllParameters().Any(p => p.Name == "EnableXRayTracing")
                     && !deployParameters.Any(p => p.ParameterKey == "EnableXRayTracing")
                 ) {
                     deployParameters.Add(new CloudFormationParameter {
                         ParameterKey = "EnableXRayTracing",
-
-                        // TODO (2019-05-11): support `EnableAllModules` as well
-                        ParameterValue = "EnableRootModule"
+                        ParameterValue = xRayTracingLevel.ToString()
                     });
                 }
 

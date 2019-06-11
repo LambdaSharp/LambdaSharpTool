@@ -10,7 +10,7 @@ API Gateway allows you to build a fully managed, serverless REST API. API endpoi
 
 ## Web Sockets using API Gateway V2
 
-API Gateway V2 allows you to build a fully managed, serverless Web Socket API. The web-socket routes are automatically validated by API Gateway V2 before invoking an attached Lambda function.
+API Gateway V2 allows you to build a fully managed, serverless Web Socket API. The WebSocket routes are automatically validated by API Gateway V2 before invoking an attached Lambda function.
 
 **Related**:
 * Base class: [LambdaSharp.ApiGateway.ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)

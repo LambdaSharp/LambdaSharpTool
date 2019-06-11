@@ -184,10 +184,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                 type: "String",
                 scope: null,
                 noEcho: null,
-                defaultValue: "Disable",
+                defaultValue: XRayTracingLevel.Disabled.ToString(),
                 constraintDescription: null,
                 allowedPattern: null,
-                allowedValues: new[] { "Disable", "EnableRootModule", "EnableAllModules" },
+                allowedValues: new[] {
+                    XRayTracingLevel.Disabled.ToString(),
+                    XRayTracingLevel.RootModule.ToString(),
+                    XRayTracingLevel.AllModules.ToString()
+                },
                 maxLength: null,
                 maxValue: null,
                 minLength: null,
@@ -202,13 +206,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 parent: null,
                 name: "XRayIsEnabled",
                 description: null,
-                value: FnNot(FnEquals(FnRef("EnableXRayTracing"), "Disable"))
+                value: FnNot(FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.Disabled.ToString()))
             );
             _builder.AddCondition(
                 parent: null,
                 name: "XRayNestedIsEnabled",
                 description: null,
-                value: FnEquals(FnRef("EnableXRayTracing"), "EnableAllModules")
+                value: FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.AllModules.ToString())
             );
 
             // import lambdasharp dependencies (unless requested otherwise)

@@ -120,7 +120,7 @@ namespace LambdaSharp.Tool.Cli {
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
-            var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
+            var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
             var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
@@ -132,7 +132,6 @@ namespace LambdaSharp.Tool.Cli {
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var moduleBucketNamesOption = cmd.Option("--module-bucket-names <NAMES>", "(test only) Comma-separated list of S3 Bucket names used to find modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
-            var apiGatewayAccountRoleOption = cmd.Option("--apigateway-account-role", "(test only) IAM role for API Gateway account (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
@@ -140,7 +139,6 @@ namespace LambdaSharp.Tool.Cli {
             deploymentNotificationTopicOption.ShowInHelpText = false;
             moduleBucketNamesOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;
-            apiGatewayAccountRoleOption.ShowInHelpText = false;
             return async () => {
 
                 // check if ANSI console output needs to be disabled
@@ -203,7 +201,6 @@ namespace LambdaSharp.Tool.Cli {
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
                     var moduleBucketNames = moduleBucketNamesOption.Value()?.Split(',');
-                    var apiGatewayAccountRole = apiGatewayAccountRoleOption.Value();
 
                     // create a settings instance for each module filename
                     return new Settings {
@@ -218,8 +215,6 @@ namespace LambdaSharp.Tool.Cli {
                         DeploymentBucketName = deploymentBucketName,
                         DeploymentNotificationsTopic = deploymentNotificationTopic,
                         ModuleBucketNames = moduleBucketNames,
-                        ApiGatewayAccountRole = apiGatewayAccountRole,
-                        ActualApiGatewayAccountRole = apiGatewayAccountRole,
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
@@ -266,7 +261,6 @@ namespace LambdaSharp.Tool.Cli {
                 (settings.DeploymentBucketName == null)
                 || (settings.DeploymentNotificationsTopic == null)
                 || (settings.ModuleBucketNames == null)
-                || (settings.ApiGatewayAccountRole == null)
             ) {
 
                 // import LambdaSharp CLI settings
@@ -296,7 +290,6 @@ namespace LambdaSharp.Tool.Cli {
                                 .ToArray();
                         }
                     }
-                    settings.ApiGatewayAccountRole = settings.ApiGatewayAccountRole ?? GetLambdaSharpToolSetting("ApiGatewayAccountRole");
 
                     // local functions
                     string GetLambdaSharpToolSetting(string name) {
@@ -436,46 +429,31 @@ namespace LambdaSharp.Tool.Cli {
             return gitBranch;
         }
 
-        protected async Task<(string Arn, IEnumerable<string> MissingPermissions)> DetermineMissingApiGatewayRolePermissions(Settings settings) {
+        protected async Task<(string Arn, IEnumerable<string> MissingPolicies)> DetermineMissingApiGatewayRolePolicies(Settings settings) {
             if((settings.ApiGatewayClient == null) || (settings.IamClient == null)) {
                 return (Arn: null, Enumerable.Empty<string>());
             }
-            if(settings.ActualApiGatewayAccountRole != null) {
-                return (Arn: settings.ActualApiGatewayAccountRole, Enumerable.Empty<string>());
-            }
 
-            // determine API Gateway permissions
+            // inspect API Gateway role
             try {
+                var missingPolicies = new List<string> {
+                    "AmazonAPIGatewayPushToCloudWatchLogs",
+                    "AWSXrayWriteOnlyAccess"
+                };
 
                 // retrieve the CloudWatch/X-Ray role from the API Gateway account
                 var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
-                settings.ActualApiGatewayAccountRole = account.CloudwatchRoleArn;
-                if((account.CloudwatchRoleArn != null) && (account.CloudwatchRoleArn != settings.ApiGatewayAccountRole)) {
+                if(account.CloudwatchRoleArn != null) {
 
-                    // check permissions for the required actions on the API Gateway role
-                    var permissionCheck = await settings.IamClient.SimulatePrincipalPolicyAsync(new SimulatePrincipalPolicyRequest {
-                        PolicySourceArn = account.CloudwatchRoleArn,
-                        ActionNames = new List<string> {
-                            "logs:CreateLogGroup",
-                            "logs:CreateLogStream",
-                            "logs:DescribeLogGroups",
-                            "logs:DescribeLogStreams",
-                            "logs:PutLogEvents",
-                            "logs:GetLogEvents",
-                            "logs:FilterLogEvents",
-                            "xray:PutTraceSegments",
-                            "xray:PutTelemetryRecords",
-                            "xray:GetSamplingRules",
-                            "xray:GetSamplingTargets",
-                            "xray:GetSamplingStatisticSummaries"
-                        }
-                    });
-                    var missingPermissions = permissionCheck.EvaluationResults.Where(result => result.EvalDecision != "allowed").ToArray();
-                    if(missingPermissions.Any()) {
-                        return (Arn: account.CloudwatchRoleArn, MissingPermissions: missingPermissions.Select(missing => missing.EvalActionName).ToArray());
+                    // check if the role has the expected managed policies
+                    var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
+                        RoleName = account.CloudwatchRoleArn.Split('/').Last()
+                    })).AttachedPolicies;
+                    foreach(var attachedPolicy in attachedPolicies) {
+                        missingPolicies.Remove(attachedPolicy.PolicyName);
                     }
                 }
-                return (Arn: account.CloudwatchRoleArn, MissingPermissions: Enumerable.Empty<string>());
+                return (Arn: account.CloudwatchRoleArn, MissingPolicies: Enumerable.Empty<string>());
             } catch(Exception) {
                 return (Arn: null, Enumerable.Empty<string>());
             }
@@ -490,7 +468,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // check if the role has the expected managed policies; if not, attach them
             var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
-                RoleName = "LambdaSharp-ApiGatewayRole"
+                RoleName = role.RoleName
             })).AttachedPolicies;
             await CheckOrAttachPolicy("arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs");
             await CheckOrAttachPolicy("arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess");
@@ -518,7 +496,6 @@ namespace LambdaSharp.Tool.Cli {
                     goto again;
                 }
             }
-            settings.ApiGatewayAccountRole = role.Arn;
 
             // local functions
             async Task CheckOrAttachPolicy(string managedPolicyArn) {

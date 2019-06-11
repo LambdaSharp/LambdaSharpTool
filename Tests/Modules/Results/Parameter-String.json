@@ -20,11 +20,11 @@
       "Type": "String",
       "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
-        "Disable",
-        "EnableRootModule",
-        "EnableAllModules"
+        "Disabled",
+        "RootModule",
+        "AllModules"
       ],
-      "Default": "Disable"
+      "Default": "Disabled"
     },
     "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DDF800A1BF66D8F59C8341131B45FE09"
+      "Default": "66ED154585D4AC328140E1EFF998F781"
     }
   },
   "Resources": {
@@ -539,7 +539,7 @@
             {
               "Ref": "EnableXRayTracing"
             },
-            "Disable"
+            "Disabled"
           ]
         }
       ]
@@ -799,7 +799,7 @@
               "Name": "EnableXRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disable"
+              "Default": "Disabled"
             }
           ]
         },
@@ -838,7 +838,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "DDF800A1BF66D8F59C8341131B45FE09",
+      "Hash": "66ED154585D4AC328140E1EFF998F781",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
