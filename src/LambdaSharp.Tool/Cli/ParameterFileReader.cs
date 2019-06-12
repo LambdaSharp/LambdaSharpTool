@@ -193,6 +193,12 @@ namespace LambdaSharp.Tool.Cli {
                         // check if retrieve parameter store value was encrypted
                         if(parameter.Type == ParameterType.SecureString) {
 
+                            // TODO: need to review this logic once DefaultSecretKey is optional
+                            if(Settings.TierDefaultSecretKey == null) {
+                                LogError("cannot use encrypted parameter store values before LambdaSharp tier is initialized");
+                                return new Dictionary<string, string>();
+                            }
+
                             // re-encrypt value using the tier's default secret key
                             var encryptedResult = Settings.KmsClient.EncryptAsync(new EncryptRequest {
                                 KeyId = Settings.TierDefaultSecretKey,

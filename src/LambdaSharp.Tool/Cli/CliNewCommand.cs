@@ -295,6 +295,8 @@ namespace LambdaSharp.Tool.Cli {
                 ["LAMBDASHARP_PROJECT"] = useProjectReference
                     ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "LambdaSharp", "LambdaSharp.csproj"))
                     : "(not used)",
+
+                // TODO: this should NOT be a wildcard
                 ["LAMBDASHARP_VERSION"] = Version.GetWildcardVersion()
             };
             try {

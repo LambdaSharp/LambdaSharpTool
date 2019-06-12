@@ -45,14 +45,14 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    public class LambdaSharpToolConfigException : Exception {
+    public class LambdaSharpToolOutOfDateException : Exception {
 
         //--- Fields ---
-        public readonly string Profile;
+        public readonly VersionInfo Version;
 
         //--- Constructors ---
-        public LambdaSharpToolConfigException(string profile) : base() {
-            Profile = profile ?? throw new ArgumentNullException(nameof(profile));
+        public LambdaSharpToolOutOfDateException(VersionInfo version) : base() {
+            Version = version ?? throw new ArgumentNullException(nameof(version));
         }
     }
 
@@ -104,10 +104,10 @@ namespace LambdaSharp.Tool {
             }
 
             // check if the errors are due to missing configuration or initialization steps
-            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
-            if(configException != null) {
+            var toolException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolOutOfDateException>().FirstOrDefault();
+            if(toolException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} config' to configure LambdaSharp CLI for profile '{configException.Profile}'");
+                Console.WriteLine($"IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command");
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
@@ -129,17 +129,21 @@ namespace LambdaSharp.Tool {
 
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
-        public string ToolProfile { get; set; }
-        public bool ToolProfileExplicitlyProvided { get; set; }
         public string Tier { get; set; }
+        public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
+        public string TierOperatingServices { get; set; }
+        public bool IsTierOperatingServicesBootstrapping => TierOperatingServices == "bootstrap";
         public VersionInfo TierVersion { get; set; }
         public string TierDefaultSecretKey { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeploymentNotificationsTopic { get; set; }
+
+        // TODO: need to get rid of this
         public IEnumerable<string> ModuleBucketNames { get; set; }
+
+        // TODO: check if we can remove this
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

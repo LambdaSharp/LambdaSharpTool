@@ -101,11 +101,16 @@ namespace LambdaSharp.Tool.Internal {
             return true;
         }
 
+        // TODO: rename to TryParseModuleInfo
         public static bool TryParseModuleDescriptor(
+
+            // TODO: rename to moduleInfo
             this string moduleReference,
             out string moduleOwner,
             out string moduleName,
             out VersionInfo moduleVersion,
+
+            // TODO: rename to moduleOrigin
             out string moduleBucketName
         ) {
             if(moduleReference == null) {

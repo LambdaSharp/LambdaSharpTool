@@ -176,12 +176,12 @@ namespace LambdaSharp.Tool.Model {
 
                 // keep the strongest version constraints
                 if(minVersion != null) {
-                    if((dependency.MinVersion == null) || (dependency.MinVersion < minVersion)) {
+                    if((dependency.MinVersion == null) || dependency.MinVersion.IsLessThanVersion(minVersion)) {
                         dependency.MinVersion = minVersion;
                     }
                 }
                 if(maxVersion != null) {
-                    if((dependency.MaxVersion == null) || (dependency.MaxVersion > maxVersion)) {
+                    if((dependency.MaxVersion == null) || dependency.MaxVersion.IsGreaterThanVersion(maxVersion)) {
                         dependency.MaxVersion = maxVersion;
                     }
                 }
@@ -204,7 +204,8 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // validate dependency
-            if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && (dependency.MinVersion > dependency.MaxVersion)) {
+            var minMaxVersionComparison = dependency.MinVersion?.CompareToVersion(dependency.MaxVersion);
+            if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && !(minMaxVersionComparison <= 0)) {
                 LogError($"module {moduleFullName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
                 return;
             }

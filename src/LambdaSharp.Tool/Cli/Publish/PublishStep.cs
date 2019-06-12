@@ -41,7 +41,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // make sure there is a deployment bucket
             if(Settings.DeploymentBucketName == null) {
-                LogError("missing deployment bucket", new LambdaSharpToolConfigException(Settings.ToolProfile));
+                LogError("missing deployment bucket", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
                 return null;
             }
 

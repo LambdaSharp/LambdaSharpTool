@@ -19,166 +19,70 @@
 # limitations under the License.
 #
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Tool (v%%VERSION%%)
+Description: LambdaSharp Bootstrap (v%%VERSION%%)
+
+##############
+# Parameters #
+##############
 Parameters:
 
-  DeploymentBucketName:
+  ExistingDeploymentBucket:
     Type: String
-    Description: Name of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
-    AllowedPattern: '[a-z0-9\-]*'
-    ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+    AllowedPattern: '(arn:aws:s3:.*)?'
+    ConstraintDescription: Must be a valid S3 ARN (all lowercase) or left blank
 
-  RequestedBucketName:
+  TierOperatingServices:
     Type: String
-    Description: (optional) Name of newly created S3 bucket (if blank, a unique name is generated)
-    AllowedPattern: '[a-z0-9\-]*'
-    ConstraintDescription: Must only contain lowercase alphanumeric characters or left blank
-
-  DeploymentNotificationTopic:
-    Type: String
-    Description: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
-    AllowedPattern: '(arn:aws:sns:.*)?'
-    ConstraintDescription: Must be an SNS topic ARN or left blank
-
-  LambdaSharpToolVersion:
-    Type: String
-    Description: LambdaSharpTool version
-    AllowedPattern: '\d+.\d+(.\d+(.\d+)?)?(-[\w]+)?'
-    ConstraintDescription: 'Version number must have format: Major.Minor[.Build[.Revision]]'
-
-  LambdaSharpToolProfile:
-    Type: String
-    Description: LambdaSharpTool profile
-    AllowedPattern: '[a-zA-Z][a-zA-Z0-9_\-]*'
-    ConstraintDescription: Must begin with a valid identifier
+    Description:
+    AllowedValues:
+      - enabled
+      - disabled
 
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
       - Label:
-          default: LambdaSharp Deployment Settings
-        Parameters:
-          - DeploymentBucketName
-          - RequestedBucketName
-          - DeploymentNotificationTopic
-      - Label:
           default: LambdaSharp Tool Settings
         Parameters:
-          - LambdaSharpToolProfile
-          - LambdaSharpToolVersion
+          - ExistingDeploymentBucket
+          - TierOperatingServices
     ParameterLabels:
-      DeploymentBucketName:
-        default: Name of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
-      RequestedBucketName:
-        default: (optional) Name of newly created S3 bucket (if blank, a unique name is generated)
-      DeploymentNotificationTopic:
-        default: ARN of existing SNS topic for CloudFormation notifications (if blank, an SNS topic is created)
-      LambdaSharpToolVersion:
-        default: LambdaSharpTool version
-      LambdaSharpToolProfile:
-        default: LambdaSharpTool profile
+      ExistingDeploymentBucket:
+        default: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+      TierOperatingServices:
+        default: Deploy Tier with LambdaSharp Operating Services
 
 Conditions:
-  DeploymentBucketNameIsEmpty: !Equals [ !Ref DeploymentBucketName, "" ]
-  RequestedBucketNameIsEmpty: !Equals [ !Ref RequestedBucketName, "" ]
-  CreateDeploymentNotificationTopic: !Equals [ !Ref DeploymentNotificationTopic, "" ]
+  CreateDeploymentBucket: !Equals [ !Ref ExistingDeploymentBucket, "" ]
+  EnableTierOperatingServices: !Equals [ !Ref TierOperatingServices, "enabled" ]
 
+##############
+# Conditions #
+##############
 Resources:
 
-  # LambdaSharpTool settings
-  VersionSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/Version'
-      Description: LambdaSharp module version
-      Type: String
-      Value: !Ref LambdaSharpToolVersion
-
-  StackNameSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/StackName'
-      Description: LambdaSharp CloudFormation stack name
-      Type: String
-      Value: !Ref AWS::StackName
-
-  # S3 Deployment Bucket & Path
-  DeploymentBucket:
+  DeploymentBucketResource:
     Type: AWS::S3::Bucket
-    Condition: DeploymentBucketNameIsEmpty
-    Properties:
-      BucketName: !If
-        - RequestedBucketNameIsEmpty
-        - !Ref AWS::NoValue
-        - !Ref RequestedBucketName
+    Condition: CreateDeploymentBucket
 
-  DeploymentBucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Condition: DeploymentBucketNameIsEmpty
-    Properties:
-      Bucket: !Ref DeploymentBucket
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: serverlessrepo.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub "arn:aws:s3:::${DeploymentBucket}/*"
-
-  DeploymentBucketNameSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentBucketName'
-      Description: S3 bucket name to publish modules
-      Type: String
-      Value: !If
-        - DeploymentBucketNameIsEmpty
-        - !Ref DeploymentBucket
-        - !Ref DeploymentBucketName
-
-  # SNS CloudFormation Notification Topic
-  DeploymentNotificationTopicResource:
-    Type: AWS::SNS::Topic
-    Condition: CreateDeploymentNotificationTopic
-
-  DeploymentNotificationTopicSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/DeploymentNotificationTopic'
-      Description: SNS topic for CloudFormation notifications
-      Type: String
-      Value: !If
-        - CreateDeploymentNotificationTopic
-        - !Ref DeploymentNotificationTopicResource
-        - !Ref DeploymentNotificationTopic
-
-  # S3 Module Buckets
-  ModuleBucketNamesSsmParameter:
-    Type: AWS::SSM::Parameter
-    Properties:
-      Name: !Sub '/LambdaSharpTool/${LambdaSharpToolProfile}/ModuleBucketNames'
-      Description: S3 bucket names to search for modules
-      Type: String
-      Value: !Join
-        - ","
-        - - !If
-            - DeploymentBucketNameIsEmpty
-            - !Ref DeploymentBucket
-            - !Ref DeploymentBucketName
-          - lambdasharp-${AWS::Region}
-
+###########
+# Outputs #
+###########
 Outputs:
-  DeploymentBucketName:
-    Description: S3 bucket name to publish modules
-    Value: !If
-      - DeploymentBucketNameIsEmpty
-      - !Ref DeploymentBucket
-      - !Ref DeploymentBucketName
 
-  DeploymentNotificationTopic:
-    Description: SNS topic for CloudFormation notifications
+  Module:
+    Value: !Sub "LambdaSharp.Core:%%VERSION%%"
+
+  DeploymentBucket:
+    Description: S3 bucket name for publishing modules
     Value: !If
-      - CreateDeploymentNotificationTopic
-      - !Ref DeploymentNotificationTopicResource
-      - !Ref DeploymentNotificationTopic
+      - CreateDeploymentBucket
+      - !GetAtt DeploymentBucketResource.Arn
+      - !Ref ExistingDeploymentBucket
+
+  TierOperatingServices:
+    Value: !If
+      - EnableTierOperatingServices
+      - bootstrap
+      - disabled

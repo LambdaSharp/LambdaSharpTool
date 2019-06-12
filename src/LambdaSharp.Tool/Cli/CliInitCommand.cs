@@ -25,6 +25,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.APIGateway.Model;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
+using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -97,6 +101,69 @@ namespace LambdaSharp.Tool.Cli {
             bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel
         ) {
+            Dictionary<string, string> parameters = null;
+            if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
+
+                // initialize stack with seed CloudFormation template
+                var template = ReadResource("LambdaSharpToolConfig.yml", new Dictionary<string, string> {
+                    ["VERSION"] = settings.ToolVersion.ToString()
+                });
+                Console.WriteLine($"Configuring a new LambdaSharp profile");
+
+                // prompt for profile name
+                if(settings.Tier == null) {
+                    if(promptsAsErrors) {
+                        LogError($"must provide profile name with --cli-profile option");
+                        return false;
+                    }
+
+                    // confirm that the implicit name is the desired name
+                    settings.Tier = Prompt.GetString("|=> LambdaSharp profile name:", "Default");
+                }
+
+                // create lambdasharp CLI resources stack
+                var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
+                parameters = (parametersFilename != null)
+                    ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
+                    : new Dictionary<string, string>();
+                if(HasErrors) {
+                    return false;
+                }
+                var templateParameters = await PromptMissingTemplateParameters(
+                    settings.CfnClient,
+                    promptsAsErrors,
+                    stackName,
+                    parameters,
+                    template
+                );
+                if(HasErrors) {
+                    return false;
+                }
+                Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                    StackName = stackName,
+                    Capabilities = new List<string> { "CAPABILITY_IAM" },
+                    OnFailure = OnFailure.DELETE,
+                    Parameters = templateParameters,
+                    EnableTerminationProtection = protectStack,
+                    TemplateBody = template
+                });
+                var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
+                if(created.Success) {
+                    Console.WriteLine("=> Stack creation finished");
+                } else {
+                    Console.WriteLine("=> Stack creation FAILED");
+                    return false;
+                }
+                if(!await PopulateRuntimeSettingsAsync(settings)) {
+                    return false;
+                }
+            }
+
+            // check if API Gateway role needs to be set
+            await CheckApiGatewayRole(settings);
+
+            // TODO: message is misleading; this could also run when upgrading
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
 
@@ -144,6 +211,16 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
 
+            // read parameters if they haven't been read yet
+            if(parameters == null) {
+                parameters = (parametersFilename != null)
+                    ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
+                    : new Dictionary<string, string>();
+                if(HasErrors) {
+                    return false;
+                }
+            }
+
             // deploy LambdaSharp module
             foreach(var module in standardModules) {
                 var isLambdaSharpCoreModule = (module == "LambdaSharp.Core");
@@ -154,7 +231,7 @@ namespace LambdaSharp.Tool.Cli {
                     instanceName: null,
                     allowDataLoos: allowDataLoos,
                     protectStack: protectStack,
-                    parametersFilename: parametersFilename,
+                    parameters: parameters,
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     promptsAsErrors: promptsAsErrors,
@@ -170,6 +247,84 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return true;
+        }
+
+        private async Task<List<Parameter>> PromptMissingTemplateParameters(
+            IAmazonCloudFormation cfnClient,
+            bool promptsAsErrors,
+            string stackName,
+            IDictionary<string, string> providedParameters,
+            string templateBody
+        ) {
+
+            // get summary of new template
+            GetTemplateSummaryResponse templateSummary;
+            try {
+                templateSummary = await cfnClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
+                    TemplateBody = templateBody
+                });
+            } catch(AmazonCloudFormationException e) {
+                LogError(e.Message);
+                return null;
+            }
+
+            // find configuration for existing stack
+            Stack existing = null;
+            if(stackName != null) {
+                try {
+                    existing = (await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = stackName
+                    })).Stacks.First();
+                } catch(AmazonCloudFormationException) { }
+            }
+            var result = new List<Parameter>();
+            var missingParameters = new List<ParameterDeclaration>();
+            foreach(var templateParameter in templateSummary.Parameters) {
+                if(providedParameters.TryGetValue(templateParameter.ParameterKey, out var providedValue)) {
+
+                    // use the provided parameter value
+                    result.Add(new Parameter {
+                        ParameterKey = templateParameter.ParameterKey,
+                        ParameterValue = providedValue
+                    });
+                } else if(existing?.Parameters.Any(existingParam => existingParam.ParameterKey == templateParameter.ParameterKey) == true) {
+
+                    // re-use the existing parameter value
+                    result.Add(new Parameter {
+                        ParameterKey = templateParameter.ParameterKey,
+                        UsePreviousValue = true
+                    });
+                } else {
+
+                    // add parameter to missing parameters
+                    missingParameters.Add(templateParameter);
+                }
+            }
+
+            // ask user for missing values
+            if(missingParameters.Any()) {
+                if(promptsAsErrors) {
+                    foreach(var missingParameter in missingParameters) {
+                        LogError($"template requires value for parameter '{missingParameter.ParameterKey}'");
+                    }
+                    return null;
+                }
+                Console.WriteLine();
+                Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
+                foreach(var missingParameter in missingParameters) {
+                    var enteredValue = Prompt.GetString($"|=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
+                    result.Add(new Parameter {
+                        ParameterKey = missingParameter.ParameterKey,
+                        ParameterValue = enteredValue
+                    });
+                }
+                Console.WriteLine();
+            }
+
+            // NOTE (2019-06-06, bjorg): extraneous parameters are ignored
+
+            // return the collected paramaters
+            return result;
         }
     }
 }

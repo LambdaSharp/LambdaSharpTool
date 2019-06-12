@@ -43,7 +43,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.1";
+        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.2.3";
 
         //--- Types ---
         private class CustomAssemblyResolver : BaseAssemblyResolver {
@@ -483,7 +483,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _dotnetLambdaToolVersionValid = true;
                 return true;
             }
-            if(version.CompareTo(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION)) < 0) {
+            if(version.IsLessThanVersion(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION))) {
 
                 // attempt to install the AWS Lambda Tools extension
                 if(!ProcessLauncher.Execute(

@@ -360,6 +360,15 @@ namespace LambdaSharp.Tool.Cli {
                         }
                     }
 
+                    // read optional parameters file
+                    var parameters = new Dictionary<string, string>();
+                    if(parametersFileOption.HasValue()) {
+                        parameters = ReadInputParametersFiles(settings, parametersFileOption.Value());
+                    }
+                    if(HasErrors) {
+                        return;
+                    }
+
                     // run build, publish, and deploy steps
                     foreach(var argument in arguments) {
                         string moduleReference = null;
@@ -419,7 +428,7 @@ namespace LambdaSharp.Tool.Cli {
                                 alternativeNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
-                                parametersFileOption.Value(),
+                                parameters,
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 promptsAsErrorsOption.HasValue(),
@@ -447,8 +456,9 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo moduleVersion
         ) {
             try {
-                await PopulateToolSettingsAsync(settings, optional: true);
-                if(HasErrors) {
+
+                // TODO: should be able to build without runtime settings!
+                if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(
@@ -468,8 +478,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task<string> PublishStepAsync(Settings settings, bool forcePublish) {
-            await PopulateToolSettingsAsync(settings);
-            if(HasErrors) {
+            if(!await PopulateRuntimeSettingsAsync(settings)) {
                 return null;
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
@@ -483,7 +492,7 @@ namespace LambdaSharp.Tool.Cli {
             string instanceName,
             bool allowDataLoos,
             bool protectStack,
-            string parametersFilename,
+            Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
             bool promptsAsErrors,
@@ -491,23 +500,14 @@ namespace LambdaSharp.Tool.Cli {
             bool deployOnlyIfExists
         ) {
             try {
-                await PopulateToolSettingsAsync(settings);
-                if(HasErrors) {
+                if(!await PopulateRuntimeSettingsAsync(settings)) {
                     return false;
                 }
-                await PopulateRuntimeSettingsAsync(settings);
                 if(HasErrors) {
                     return false;
                 }
 
                 // reading module parameters
-                var parameters = new Dictionary<string, string>();
-                if(parametersFilename != null) {
-                    parameters = ReadInputParametersFiles(settings, parametersFilename);
-                }
-                if(HasErrors) {
-                    return false;
-                }
                 return await new DeployStep(settings, moduleReference).DoAsync(
                     dryRun,
                     moduleReference,

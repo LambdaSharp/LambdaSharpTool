@@ -66,7 +66,6 @@ namespace LambdaSharp.Tool {
             app.HelpOption();
 
             // register commands
-            new CliConfigCommand().Register(app);
             new CliInitCommand().Register(app);
             new CliInfoCommand().Register(app);
             new CliListCommand().Register(app);

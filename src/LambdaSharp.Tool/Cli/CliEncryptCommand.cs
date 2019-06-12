@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("must provide a key id with --key");
                             return;
                         }
-                        keyId = $"alias/{settings.Tier}-LambdaSharpDefaultSecretKey";
+                        keyId = $"alias/{settings.TierPrefix}LambdaSharpDefaultSecretKey";
                     }
 
                     // if no argument is provided, read text from standard in

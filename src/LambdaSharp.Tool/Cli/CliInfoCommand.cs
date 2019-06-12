@@ -67,16 +67,14 @@ namespace LambdaSharp.Tool.Cli {
             string gitBranch,
             bool showSensitive
         ) {
-            await PopulateToolSettingsAsync(settings, optional: true);
-            await PopulateRuntimeSettingsAsync(settings);
+            await PopulateRuntimeSettingsAsync(settings, optional: true);
             var apiGatewayAccount = await DetermineMissingApiGatewayRolePolicies(settings);
 
             // show LambdaSharp settings
-            Console.WriteLine($"LambdaSharp CLI");
-            Console.WriteLine($"    Profile: {settings.ToolProfile ?? "<NOT SET>"}");
-            Console.WriteLine($"    Version: {settings.ToolVersion}");
+            Console.WriteLine($"LambdaSharp Deployment Tier");
+            Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Version: {settings.TierVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
-            Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
             if(apiGatewayAccount.Arn == null) {
                 Console.WriteLine($"    API Gateway Role: <NOT SET>");
             } else if(!apiGatewayAccount.MissingPolicies.Any()) {
@@ -95,9 +93,6 @@ namespace LambdaSharp.Tool.Cli {
             } else {
                 Console.WriteLine($"    Module S3 Buckets: <NOT SET>");
             }
-            Console.WriteLine($"LambdaSharp Deployment Tier");
-            Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
-            Console.WriteLine($"    Version: {settings.TierVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"Git");
             Console.WriteLine($"    Branch: {gitBranch ?? "<NOT SET>"}");
             Console.WriteLine($"    SHA: {gitSha ?? "<NOT SET>"}");

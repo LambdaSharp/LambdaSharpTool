@@ -206,16 +206,19 @@ namespace LambdaSharp.Tool {
 
             // local function
             bool IsVersionMatch(VersionInfo version) {
+
+                // if there are no min-max version constraints, accept any non pre-release version
                 if((minVersion == null) && (maxVersion == null)) {
                     return !version.IsPreRelease;
                 }
-                if(maxVersion == minVersion) {
-                    return version.IsCompatibleWith(minVersion);
-                }
-                if((minVersion != null) && (version < minVersion)) {
+
+                // ensure min-version constraint is met
+                if((minVersion != null) && version.IsLessThanVersion(minVersion)) {
                     return false;
                 }
-                if((maxVersion != null) && (version > maxVersion)) {
+
+                // ensure max-version constraint is met
+                if((maxVersion != null) && version.IsGreaterThanVersion(maxVersion)) {
                     return false;
                 }
                 return true;

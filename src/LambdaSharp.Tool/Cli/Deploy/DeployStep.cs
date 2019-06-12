@@ -84,38 +84,34 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // check that the LambdaSharp Core & CLI versions match
-            if(!forceDeploy) {
-                if(Settings.TierVersion == null) {
+            if(!forceDeploy && (manifest.GetFullName() == "LambdaSharp.Core")) {
+                var toolToTierVersionComparison = Settings.ToolVersion.CompareToVersion(Settings.TierVersion);
 
-                    // core module doesn't expect a deployment tier to exist
-                    if(manifest.RuntimeCheck) {
-                        LogError("could not determine the LambdaSharp tier version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                        return false;
-                    }
-                } else if(manifest.GetFullName() == "LambdaSharp.Core") {
+                // core module has special rules for updates
+                if(toolToTierVersionComparison == null) {
 
-                    // core module has special rules for updates
-                    if(Settings.ToolVersion < Settings.TierVersion) {
-
-                        // tool version is older than tier; most likely a user error
-                        LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) has older version than Tier (v{Settings.TierVersion}); use --force-deploy to proceed anyway");
-                        return false;
-                    } else if(Settings.ToolVersion > Settings.TierVersion) {
-
-                        // allow upgrading Tier when tool version is more recent
-                        Console.WriteLine($"LambdaSharp Tier appears to be out of date");
-                        var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
-                        if(!upgrade) {
-                            return false;
-                        }
-                    } else {
-
-                        // nothing to do
-                        return true;
-                    }
-                } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.TierVersion)) {
-                    LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Tier (v{Settings.TierVersion}) versions do not match; use --force-deploy to proceed anyway");
+                    // tool version and tier version cannot be compared
+                    LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
+                } else if(toolToTierVersionComparison < 0) {
+
+                    // TODO: this seems to be the opposite logic of `lash init`
+
+                    // tier version is more recent; inform user to upgrade tool
+                    LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion})", new LambdaSharpToolOutOfDateException(Settings.TierVersion));
+                    return false;
+                } else if(toolToTierVersionComparison > 0) {
+
+                    // tool version is more recent; check if user wants to upgrade tier
+                    Console.WriteLine($"LambdaSharp Tier is out of date");
+                    var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                    if(!upgrade) {
+                        return false;
+                    }
+                } else if(!Settings.ToolVersion.IsPreRelease && !Settings.IsTierOperatingServicesBootstrapping) {
+
+                    // unless tool version is a pre-release or LambdaSharp.Core is bootstrapping; there is nothing to do
+                    return true;
                 }
             }
 
@@ -224,7 +220,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     // we're good to go
                     break;
                 default:
-                    LogError($"deployed module is not in a valid state; module deployment must be complete and successful (Status: {existing?.StackStatus})");
+                    LogError($"deployed module is not in a valid state; module deployment must be complete and successful (status: {existing?.StackStatus})");
                     return (false, existing);
                 }
 
@@ -245,8 +241,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     LogError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                if(deployedVersion > manifest.GetVersion()) {
+                var versionComparison = deployedVersion.CompareToVersion(manifest.GetVersion());
+                if(versionComparison > 0) {
                     LogError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                    return (false, existing);
+                } else if(versionComparison == null) {
+                    LogError($"deployed module version (v{deployedVersion}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 return (true, existing);
@@ -334,10 +334,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployed.Location.ModuleVersion;
-            if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
+            if((dependency.MaxVersion != null) && !(deployedVersion.CompareToVersion(dependency.MaxVersion) <= 0)) {
                 LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
-            if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
+            if((dependency.MinVersion != null) && !(deployedVersion.CompareToVersion(dependency.MinVersion) >= 0)) {
                 LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
@@ -369,13 +369,25 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // confirm that the module version is in a valid range
-                if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                    LogError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
-                    return deployed;
+                if(dependency.MaxVersion != null) {
+                    var deployedToMinVersionComparison = deployedVersion.CompareToVersion(dependency.MaxVersion);
+                    if(deployedToMinVersionComparison > 0) {
+                        LogError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
+                        return deployed;
+                    } else if(deployedToMinVersionComparison == null) {
+                        LogError($"deployed dependent module version (v{deployedVersion}) is not compatible with max version constraint v{dependency.MaxVersion}");
+                        return deployed;
+                    }
                 }
-                if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                    LogError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
-                    return deployed;
+                if(dependency.MinVersion != null) {
+                    var deployedToMaxVersionComparison = deployedVersion.CompareToVersion(dependency.MinVersion);
+                    if(deployedToMaxVersionComparison < 0) {
+                        LogError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
+                        return deployed;
+                    } else if(deployedToMaxVersionComparison == null) {
+                        LogError($"deployed dependent module version (v{deployedVersion}) is not compatible with min version constraint v{dependency.MinVersion}");
+                        return deployed;
+                    }
                 }
                 return deployed;
             } catch(AmazonCloudFormationException) {
@@ -491,6 +503,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private string ToStackName(string moduleName, string instanceName = null)
-            => $"{Settings.Tier}-{instanceName ?? moduleName.Replace(".", "-")}";
+            => $"{Settings.TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
     }
 }

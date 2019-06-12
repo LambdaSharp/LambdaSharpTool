@@ -74,12 +74,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleFullName}:{location.ModuleVersion}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
-            // set optional notification topics for cloudformation operations
-            var notificationArns =  new List<string>();
-            if(Settings.DeploymentNotificationsTopic != null) {
-                notificationArns.Add(Settings.DeploymentNotificationsTopic);
-            }
-
             // validate template
             var templateUrl = $"https://{location.ModuleBucketName}.s3.amazonaws.com/{location.TemplatePath}";
             ValidateTemplateResponse validation;
@@ -105,15 +99,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
                 Description = $"Stack {updateOrCreate} {location.ModuleFullName} (v{location.ModuleVersion})",
-                NotificationARNs = notificationArns,
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier + "-")
+                        ParameterValue = Settings.TierPrefix
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefixLowercase",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier.ToLowerInvariant() + "-")
+                        ParameterValue = Settings.TierPrefix.ToLowerInvariant()
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",

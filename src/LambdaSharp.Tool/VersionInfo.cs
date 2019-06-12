@@ -26,7 +26,7 @@ using Newtonsoft.Json;
 namespace LambdaSharp.Tool {
 
     [JsonConverter(typeof(VersionInfoConverter))]
-    public class VersionInfo : IComparable<VersionInfo>, IEquatable<VersionInfo> {
+    public class VersionInfo {
 
         //--- Class Methods ---
         public static VersionInfo Parse(string text) {
@@ -39,45 +39,22 @@ namespace LambdaSharp.Tool {
         }
 
         public static bool TryParse(string text, out VersionInfo version) {
-            try {
-                version = Parse(text);
-                return true;
-            } catch {
+            var index = text.IndexOf('-');
+            string prefix;
+            string suffix;
+            if(index < 0) {
+                prefix = text;
+                suffix = "";
+            } else {
+                prefix = text.Substring(0, index);
+                suffix = text.Substring(index).TrimEnd('*');
+            }
+            if(!Version.TryParse(prefix, out var prefixVersion)) {
                 version = null;
                 return false;
             }
-        }
-
-        public static bool operator < (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) < 0;
-
-        public static bool operator > (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) > 0;
-
-        public static bool operator == (VersionInfo left, VersionInfo right) {
-            if(ReferenceEquals(left, right)) {
-                return true;
-            }
-            if(ReferenceEquals(left, null)) {
-                return false;
-            }
-            if(ReferenceEquals(right, null)) {
-                return false;
-            }
-            return left.CompareTo(right) == 0;
-        }
-
-        public static bool operator != (VersionInfo left, VersionInfo right) {
-            if(ReferenceEquals(left, right)) {
-                return false;
-            }
-            if(ReferenceEquals(left, null)) {
-                return true;
-            }
-            if(ReferenceEquals(right, null)) {
-                return true;
-            }
-            return left.CompareTo(right) != 0;
+            version = new VersionInfo(prefixVersion, suffix);
+            return true;
         }
 
         //--- Fields ---
@@ -97,51 +74,7 @@ namespace LambdaSharp.Tool {
 
         //--- Methods ---
         public override string ToString() => Version.ToString() + Suffix;
-
-        public bool Equals(VersionInfo other) {
-            if(ReferenceEquals(null, other)) {
-                return false;
-            }
-            if(ReferenceEquals(this, other)) {
-                return true;
-            }
-            return CompareTo(other) == 0;
-        }
-
-        public override bool Equals(object obj){
-            if(ReferenceEquals(null, obj)) {
-                return false;
-            }
-            if(ReferenceEquals(this, obj)) {
-                return true;
-            }
-            if(obj.GetType() != GetType()) {
-                return false;
-            }
-            return Equals(obj as VersionInfo);
-	    }
-
-        public override int GetHashCode()
-            => Version.GetHashCode() ^ Suffix.GetHashCode();
-
-        public int CompareTo(VersionInfo other) {
-            if(object.ReferenceEquals(other, null)) {
-                throw new ArgumentNullException(nameof(other));
-            }
-            var result = Version.CompareTo(other.Version);
-            if(result != 0) {
-                return result;
-            }
-
-            // a suffix indicates a pre-release version, but cannot be compared otherwise
-            if((Suffix == "") && (other.Suffix != "")) {
-                return 1;
-            }
-            if((Suffix != "") && (other.Suffix == "")) {
-                return -1;
-            }
-            return 0;
-        }
+        public override int GetHashCode() => Version.GetHashCode() ^ Suffix.GetHashCode();
 
         public bool IsCompatibleWith(VersionInfo other) {
             if(Suffix != other.Suffix) {
@@ -158,9 +91,11 @@ namespace LambdaSharp.Tool {
             return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
 
-        public int? CompareVersionTo(VersionInfo other) {
+        public int? CompareToVersion(VersionInfo other) {
             if(object.ReferenceEquals(other, null)) {
-                throw new ArgumentNullException(nameof(other));
+
+                // TODO: is this really how we want to make this behave?
+                return null;
             }
 
             // version number dominates other comparisions
@@ -201,6 +136,9 @@ namespace LambdaSharp.Tool {
             return null;
         }
 
+        public bool IsLessThanVersion(VersionInfo info) => CompareToVersion(info) < 0;
+        public bool IsGreaterThanVersion(VersionInfo info) => CompareToVersion(info) > 0;
+        public bool IsEqualToVersion(VersionInfo info) => CompareToVersion(info) == 0;
 
         public string GetWildcardVersion() {
             if(IsPreRelease) {

@@ -53,11 +53,13 @@ namespace LambdaSharp.Tool.Cli {
         public async Task List(Settings settings) {
 
             // fetch all stacks
-            var prefix = $"{settings.Tier}-";
+            var prefix = settings.TierPrefix;
             var stacks = new List<Stack>();
             var request = new DescribeStacksRequest();
             do {
                 var response = await settings.CfnClient.DescribeStacksAsync(request);
+
+                // TODO: BROKEN - `StartsWith(prefix)` is not good enough when the tier name is empty!
                 stacks.AddRange(response.Stacks.Where(summary => summary.StackName.StartsWith(prefix, StringComparison.Ordinal)));
                 request.NextToken = response.NextToken;
             } while(request.NextToken != null);
@@ -74,9 +76,12 @@ namespace LambdaSharp.Tool.Cli {
                     ModuleReference = stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue
                 }).OrderBy(summary => summary.Date).ToList();
 
+                // extract formatting information
                 var moduleNameWidth = summaries.Max(stack => stack.ModuleName.Length) + 4;
                 var moduleReferenceWidth = summaries.Max(stack => stack.ModuleReference.Length + 4);
                 var statusWidth = summaries.Max(stack => stack.StackStatus.Length) + 4;
+
+                // print results
                 Console.WriteLine();
                 Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.Tier}'");
                 Console.WriteLine();
