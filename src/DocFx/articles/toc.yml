@@ -4,6 +4,9 @@
 - name: Video Tutorials
   href: VideoTutorials.md
 
+- name: API Gateway for .NET
+  href: APIGateway.md
+
 - name: Samples
   href: Samples.md
   items:

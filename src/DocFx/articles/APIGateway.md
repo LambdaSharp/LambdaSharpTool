@@ -1,4 +1,4 @@
-# API Gateway .NET
+# API Gateway for .NET
 
 ## Overview
 
@@ -13,9 +13,12 @@ REST API path parameters are always required and must occur in the method defini
 In the following example, the REST API endpoint declaration specifies a single `name` path parameter. Since this parameter is required for the request, it must also appear in the attached invocation method. The name of the attached method must either be `GetItems` or `GetItemsAsync`, following the C# naming convention for asynchronous methods.
 
 ```yaml
-Sources:
-  - Api: GET:/artists/{artist}
-    Invoke: GetItems
+- Function: MyFunction
+  Memory: 128
+  Timeout: 30
+  Sources:
+    - Api: GET:/artists/{artist}
+      Invoke: GetItems
 ```
 
 In addition to the required `artist` parameter, the method specifies three optional query string parameters: `filter`, `offset` and `limit`. These additional parameters are optional, because they specify a default value. Alternatively, the `offset` and `limit` parameters could have been declared using a nullable type, such as `int?`.
@@ -118,9 +121,12 @@ The `AddAlbumRequest` type produces the following JSON schema.
 The validation of a WebSocket route is almost identical. For example, the following declaration attaches the `JoinRoom` method to the `join` route, which expects a `JoinRoomRequest` payload. The JSON schema derived from the `JoinRoomRequest` type is used to validate the payload before invoking the method.
 
 ```yaml
-Sources:
-  - WebSocket: join
-    Invoke: JoinRoom
+- Function: MyFunction
+  Memory: 128
+  Timeout: 30
+  Sources:
+    - WebSocket: join
+      Invoke: JoinRoom
 ```
 
 ```csharp
@@ -156,9 +162,9 @@ Methods with a response schema always return HTTP status code 200 (OK) when succ
 
 A custom status code can be returned either by using the [`APIGatewayProxyResponse`](https://github.com/aws/aws-lambda-dotnet/blob/master/Libraries/src/Amazon.Lambda.APIGatewayEvents/APIGatewayProxyResponse.cs) return type or by calling one of the `Abort()` methods from [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction):
 * [`Abort(APIGatewayProxyResponse response)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.Abort(Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse)): response with the HTTP status code, headers, and response body set in the `APIGatewayProxyResponse` instance.
-* [`AbortBadRequest(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortBadRequet(System.String)): responds with HTTP status code 400 (Bad Request) and the provided message.
+* [`AbortBadRequest(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortBadRequest(System.String)): responds with HTTP status code 400 (Bad Request) and the provided message.
 * [`AbortForbidden(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortForbidden(System.String)): responds with HTTP status code 403 (Forbidden) and the provided message.
-* [`Exception AbortNotFound(string message)`](LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortNotFound(System.String)): responds with HTTP status code 404 (Not Found) and the provided message.
+* [`AbortNotFound(string message)`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction.AbortNotFound(System.String)): responds with HTTP status code 404 (Not Found) and the provided message.
 
 ### WebSocket Response
 
