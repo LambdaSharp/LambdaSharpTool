@@ -196,9 +196,10 @@ The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayF
 * X-Ray Tracing now works for API Gateway V1 and Nested Modules.
 * Updated CloudFormation spec to 3.3.0.
 * Colorized warning and errors in console output.
-* Added `ALambdaFunction.RunTask()` and `ALambdaFunction.WaitForTask(Task)` to queue background operations that must complete before the Lambda invocation finishes.
+* Added `ALambdaFunction.RunTask()` and `ALambdaFunction.AddPendingTask(Task)` to queue background operations that must complete before the Lambda invocation finishes.
 * Added `HttpClient` with X-Ray tracing instrumentation to `ALambdaFunction` base class.
 * `ALambdaFunction` now unrolls `AggregateException` instances and reports errors individually.
+* `lash util delete-orphan-logs` replaces `delete-orphan-lambda-logs`, which now also delete orphaned API Gateway V1/V2 CloudWatch logs
 
 #### Fixes
 * Fixed an issue with setting the correct IAM role for the API Gateway account.
