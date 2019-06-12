@@ -1,4 +1,4 @@
-# λ# - Favorinus (v0.6) - 2019-05-09
+# λ# - Favorinus (v0.6.0.1) - 2019-06-11
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
@@ -184,3 +184,23 @@ This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueServic
 
 The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction) was also enhanced to provide support for target methods invocations.
 
+## Fixes
+
+### (v0.6.0.1) - 2019-06-11
+
+#### Updated Documentation
+* Added documentation for [API Gateway for .NET](~/articles/APIGateway.md).
+* Added [Video Tutorials](~/articles/VideoTutorials.md) section.
+
+#### New Features
+* X-Ray Tracing now works for API Gateway V1 and Nested Modules.
+* Updated CloudFormation spec to 3.3.0.
+* Colorized warning and errors in console output.
+* Added `ALambdaFunction.RunTask()` and `ALambdaFunction.WaitForTask(Task)` to queue background operations that must complete before the Lambda invocation finishes.
+* Added `HttpClient` with X-Ray tracing instrumentation to `ALambdaFunction` base class.
+* `ALambdaFunction` now unrolls `AggregateException` instances and reports errors individually.
+
+#### Fixes
+* Fixed an issue with setting the correct IAM role for the API Gateway account.
+* Various bug fixes to generating the proper JSON schema for API Gateway endpoints and routes.
+* `lash publish` now warns if version already exists instead of reporting an error.
