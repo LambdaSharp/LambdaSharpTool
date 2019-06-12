@@ -68,7 +68,7 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-cd $LAMBDASHARP/Modules/LambdaSharp.Core/Tests
+cd $LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
 dotnet test
 if [ $? -ne 0 ]; then
     exit $?
