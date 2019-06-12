@@ -1,4 +1,4 @@
-![λ#](~/images/LambdaSharpLogo.png)
+![λ#](~/images/Cloud.png)
 
 # LambdaSharp Modules
 

@@ -12,14 +12,15 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "XRayTracing": {
+    "EnableXRayTracing": {
       "Type": "String",
-      "Description": "AWS X-Ray Tracing Mode",
+      "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
-        "Active",
-        "PassThrough"
+        "Disabled",
+        "RootModule",
+        "AllModules"
       ],
-      "Default": "PassThrough"
+      "Default": "Disabled"
     },
     "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
@@ -69,7 +70,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6B1988999304227DFE6AAC5A97A93374"
+      "Default": "AD253CF208467698930DAC5EC35CD60D"
     }
   },
   "Resources": {
@@ -200,7 +201,11 @@
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
-            "Ref": "XRayTracing"
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
           }
         }
       }
@@ -629,7 +634,14 @@
         "RestApiId": {
           "Ref": "ModuleRestApi"
         },
-        "StageName": "LATEST"
+        "StageName": "LATEST",
+        "TracingEnabled": {
+          "Fn::If": [
+            "XRayIsEnabled",
+            true,
+            false
+          ]
+        }
       },
       "DependsOn": [
         "ModuleRestApiLogGroup"
@@ -648,6 +660,18 @@
           "Ref": "Secrets"
         },
         ""
+      ]
+    },
+    "XRayIsEnabled": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EnableXRayTracing"
+            },
+            "Disabled"
+          ]
+        }
       ]
     },
     "LambdaSharpCoreDeadLetterQueueIsImported": {
@@ -796,8 +820,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "XRayTracing": {
-          "default": "AWS X-Ray tracing mode for module functions [String]"
+        "EnableXRayTracing": {
+          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
@@ -842,7 +866,7 @@
           },
           "Parameters": [
             "Secrets",
-            "XRayTracing"
+            "EnableXRayTracing"
           ]
         },
         {
@@ -894,10 +918,10 @@
               "Default": ""
             },
             {
-              "Name": "XRayTracing",
+              "Name": "EnableXRayTracing",
               "Type": "String",
-              "Label": "AWS X-Ray tracing mode for module functions",
-              "Default": "PassThrough"
+              "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Default": "Disabled"
             }
           ]
         },
@@ -936,7 +960,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "6B1988999304227DFE6AAC5A97A93374",
+      "Hash": "AD253CF208467698930DAC5EC35CD60D",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

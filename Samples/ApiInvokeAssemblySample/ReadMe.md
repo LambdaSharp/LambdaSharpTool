@@ -45,7 +45,7 @@ public class Logic {
     //--- Methods ---
     public AddItemResponse AddItem(AddItemRequest request) { ... }
 
-    public GetItemsResponse GetItems() { ... }
+    public GetItemsResponse GetItems([FromUri] FilterOptions options) { ... }
 
     public GetItemResponse GetItem(string id) { ... }
 

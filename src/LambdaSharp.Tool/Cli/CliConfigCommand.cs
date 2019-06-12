@@ -1,6 +1,6 @@
 ﻿/*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -30,6 +30,8 @@ using Amazon.CloudFormation.Model;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
+using Amazon.APIGateway.Model;
+using Amazon.APIGateway;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -180,6 +182,12 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine("=> No stack update required");
                 }
             }
+
+            // refetch settings
+            await PopulateToolSettingsAsync(settings);
+
+            // check if API Gateway role needs to be set
+            await CheckApiGatewayRole(settings);
 
             // local functions
             string GetToolSetting(string name) {

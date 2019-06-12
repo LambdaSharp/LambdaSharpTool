@@ -1,6 +1,6 @@
 /*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -20,14 +20,13 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Amazon.SimpleSystemsManagement;
-using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -70,6 +69,7 @@ namespace LambdaSharp.Tool.Cli {
         ) {
             await PopulateToolSettingsAsync(settings, optional: true);
             await PopulateRuntimeSettingsAsync(settings);
+            var apiGatewayAccount = await DetermineMissingApiGatewayRolePolicies(settings);
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp CLI");
@@ -77,7 +77,16 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    Version: {settings.ToolVersion}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             Console.WriteLine($"    Deployment Notifications Topic: {ConcealAwsAccountId(settings.DeploymentNotificationsTopic ?? "<NOT SET>")}");
-            // Console.WriteLine($"    Module S3 Buckets: {((settings.ModuleBucketNames != null) ? string.Join(", ", settings.ModuleBucketNames) : "<NOT SET>")}");
+            if(apiGatewayAccount.Arn == null) {
+                Console.WriteLine($"    API Gateway Role: <NOT SET>");
+            } else if(!apiGatewayAccount.MissingPolicies.Any()) {
+                Console.WriteLine($"    API Gateway Role: {ConcealAwsAccountId(apiGatewayAccount.Arn)}");
+            } else {
+                Console.WriteLine($"    API Gateway Role: <INCOMPLETE> {ConcealAwsAccountId(apiGatewayAccount.Arn)}");
+                LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPolicies)})");
+            }
+
+            // TODO (2019-06-03, bjorg): remove this once we no longer need multiple buckets registered
             if(settings.ModuleBucketNames != null) {
                 Console.WriteLine($"    Module S3 Buckets:");
                 foreach(var bucketName in settings.ModuleBucketNames) {
@@ -98,6 +107,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"Tools");
             Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    Amazon.Lambda.Tools: {GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
 
             // local functions
             string ConcealAwsAccountId(string text) {
@@ -164,6 +174,32 @@ namespace LambdaSharp.Tool.Cli {
             } catch {
                 return null;
             }
+        }
+
+        private string GetAmazonLambdaToolVersion() {
+
+            // check if dotnet executable can be found
+            var dotNetExe = ProcessLauncher.DotNetExe;
+            if(string.IsNullOrEmpty(dotNetExe)) {
+                return null;
+            }
+
+            // check if Amazon Lambda Tools extension is installed
+            var result = ProcessLauncher.ExecuteWithOutputCapture(
+                dotNetExe,
+                new[] { "lambda", "tool", "help" },
+                workingFolder: null
+            );
+            if(result == null) {
+                return null;
+            }
+
+            // parse version from Amazon Lambda Tools
+            var match = Regex.Match(result, @"\((?<Version>.*)\)");
+            if(!match.Success) {
+                return null;
+            }
+            return match.Groups["Version"].Value;
         }
     }
 }

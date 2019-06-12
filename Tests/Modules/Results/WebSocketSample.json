@@ -6,14 +6,15 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "XRayTracing": {
+    "EnableXRayTracing": {
       "Type": "String",
-      "Description": "AWS X-Ray Tracing Mode",
+      "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
-        "Active",
-        "PassThrough"
+        "Disabled",
+        "RootModule",
+        "AllModules"
       ],
-      "Default": "PassThrough"
+      "Default": "Disabled"
     },
     "LambdaSharpCoreDeadLetterQueue": {
       "Type": "String",
@@ -63,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6A0C4550AEDFDC3E02B7BAB29699EDC1"
+      "Default": "C4B7266124C5CFC79F772DF6AC86DCC1"
     }
   },
   "Resources": {
@@ -217,7 +218,11 @@
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
-            "Ref": "XRayTracing"
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
           }
         }
       }
@@ -363,7 +368,11 @@
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
-            "Ref": "XRayTracing"
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
           }
         }
       }
@@ -1005,7 +1014,7 @@
           "DestinationArn": {
             "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
           },
-          "Format": "{\"requestId\":\"$context.requestId\", \"ip\": \"$context.identity.sourceIp\", \"caller\":\"$context.identity.caller\", \"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\", \"eventType\":\"$context.eventType\",\"routeKey\":\"$context.routeKey\", \"status\":\"$context.status\",\"connectionId\":\"$context.connectionId\"}"
+          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\",\"status\":\"$context.status\"}"
         },
         "ApiId": {
           "Ref": "ModuleWebSocket"
@@ -1044,6 +1053,18 @@
           "Ref": "Secrets"
         },
         ""
+      ]
+    },
+    "XRayIsEnabled": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "EnableXRayTracing"
+            },
+            "Disabled"
+          ]
+        }
       ]
     },
     "LambdaSharpCoreDeadLetterQueueIsImported": {
@@ -1189,8 +1210,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "XRayTracing": {
-          "default": "AWS X-Ray tracing mode for module functions [String]"
+        "EnableXRayTracing": {
+          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
@@ -1227,7 +1248,7 @@
           },
           "Parameters": [
             "Secrets",
-            "XRayTracing"
+            "EnableXRayTracing"
           ]
         },
         {
@@ -1269,10 +1290,10 @@
               "Default": ""
             },
             {
-              "Name": "XRayTracing",
+              "Name": "EnableXRayTracing",
               "Type": "String",
-              "Label": "AWS X-Ray tracing mode for module functions",
-              "Default": "PassThrough"
+              "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Default": "Disabled"
             }
           ]
         },
@@ -1311,7 +1332,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "6A0C4550AEDFDC3E02B7BAB29699EDC1",
+      "Hash": "C4B7266124C5CFC79F772DF6AC86DCC1",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

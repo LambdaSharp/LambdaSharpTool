@@ -1,6 +1,6 @@
 ﻿/*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -31,6 +31,7 @@ namespace LambdaSharp.Tool.Internal {
         public string Assembly { get; set; }
         public string Type { get; set; }
         public string Method { get; set; }
+        public string OperationName { get; set; }
         public string RequestContentType { get; set; }
         public object RequestSchema { get; set; }
         public string RequestSchemaName { get; set; }

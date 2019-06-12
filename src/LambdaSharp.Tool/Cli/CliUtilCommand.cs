@@ -1,6 +1,6 @@
 /*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -27,7 +27,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Amazon.APIGateway;
+using Amazon.APIGateway.Model;
+using Amazon.ApiGatewayV2;
+using Amazon.ApiGatewayV2.Model;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Lambda;
@@ -61,15 +66,16 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Miscellaneous AWS utilities";
 
                 // delete orphaned logs sub-command
-                cmd.Command("delete-orphan-lambda-logs", subCmd => {
+                cmd.Command("delete-orphan-logs", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Delete orphaned Lambda CloudWatch logs";
+                    subCmd.Description = "Delete orphaned Lambda and API Gateway V1/V2 CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
+                    var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLambdaLogsAsync(dryRunOption.HasValue());
+                        await DeleteOrphanLogsAsync(dryRunOption.HasValue(), awsProfileOption.Value());
                     });
                 });
 
@@ -221,65 +227,129 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLambdaLogsAsync(bool dryRun) {
+        public async Task DeleteOrphanLogsAsync(bool dryRun, string awsProfile) {
             Console.WriteLine();
 
-            // list all lambda functions
-            var lambdaClient = new AmazonLambdaClient();
-            var listFunctionsRequest = new ListFunctionsRequest { };
-            var lambdaLogGroupNames = new HashSet<string>();
-            do {
-                var listFunctionsResponse = await lambdaClient.ListFunctionsAsync(listFunctionsRequest);
-                foreach(var function in listFunctionsResponse.Functions) {
-                    lambdaLogGroupNames.Add($"/aws/lambda/{function.FunctionName}");
-                }
-                listFunctionsRequest.Marker = listFunctionsResponse.NextMarker;
-            } while(listFunctionsRequest.Marker != null);
-
-            // list all log groups for lambda functions
+            // initialize AWS profile
+            await InitializeAwsProfile(awsProfile);
             var logsClient = new AmazonCloudWatchLogsClient();
-            var describeLogGroupsRequest = new DescribeLogGroupsRequest {
-                LogGroupNamePrefix = "/aws/lambda/"
-            };
+
+            // delete orphaned logs
             var totalLogGroups = 0;
-            var deletedLogGroups = 0;
+            var activeLogGroups = 0;
+            var orphanedLogGroups = 0;
             var skippedLogGroups = 0;
-            do {
-                var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
-                totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
-                foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
-                    if(lambdaLogGroupNames.Contains(logGroup.LogGroupName)) {
-
-                        // nothing to do
-                    } else if(System.Text.RegularExpressions.Regex.IsMatch(logGroup.LogGroupName, @"^\/aws\/lambda\/[a-zA-Z0-9\-_]+$")) {
-
-                        // attempt to delete log group
-                        if(dryRun) {
-                            Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
-                        } else {
-                            try {
-                                await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
-                                    LogGroupName = logGroup.LogGroupName
-                                });
-                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
-                                ++deletedLogGroups;
-                            } catch {
-                                LogError($"could not delete '{logGroup.LogGroupName}'");
-                            }
-                        }
-                    } else {
-
-                        // log group has an invalid name structure; skip it
-                        Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
-                        ++skippedLogGroups;
-                    }
-                }
-                describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
-            } while(describeLogGroupsRequest.NextToken != null);
-            if((deletedLogGroups > 0) || (skippedLogGroups > 0)) {
+            await DeleteOrphanLambdaLogsAsync();
+            await DeleteOrphanApiGatewayLogs();
+            await DeleteOrphanApiGatewayV2Logs();
+            if((orphanedLogGroups > 0) || (skippedLogGroups > 0)) {
                 Console.WriteLine();
             }
-            Console.WriteLine($"Found {totalLogGroups:N0} log groups. Deleted {deletedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
+            Console.WriteLine($"Found {totalLogGroups:N0} log groups. Active {activeLogGroups:N0}. Orphaned {orphanedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
+
+            // local functions
+            async Task DeleteOrphanLambdaLogsAsync() {
+
+                // list all lambda functions
+                var lambdaClient = new AmazonLambdaClient();
+                var request = new ListFunctionsRequest { };
+                var lambdaLogGroupNames = new HashSet<string>();
+                do {
+                    var response = await lambdaClient.ListFunctionsAsync(request);
+                    foreach(var function in response.Functions) {
+                        lambdaLogGroupNames.Add($"/aws/lambda/{function.FunctionName}");
+                    }
+                    request.Marker = response.NextMarker;
+                } while(request.Marker != null);
+
+                // list all log groups for lambda functions
+                await DeleteOrphanCloudWatchLogs(
+                    "/aws/lambda/",
+                    logGroupName => lambdaLogGroupNames.Contains(logGroupName),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^\/aws\/lambda\/[a-zA-Z0-9\-_]+$")
+                );
+            }
+
+            async Task DeleteOrphanApiGatewayLogs() {
+
+                // list all API Gateway V1 instances
+                var apiGatewayClient = new AmazonAPIGatewayClient();
+                var request = new GetRestApisRequest { };
+                var apiGatewayGroupNames = new List<string>();
+                do {
+                    var response = await apiGatewayClient.GetRestApisAsync(request);
+                    apiGatewayGroupNames.AddRange(response.Items.Select(item => $"API-Gateway-Execution-Logs_{item.Id}/"));
+                    request.Position = response.Position;
+                } while(request.Position != null);
+
+                // list all log groups for API Gateway instances
+                await DeleteOrphanCloudWatchLogs(
+                    "API-Gateway-Execution-Logs_",
+                    logGroupName => apiGatewayGroupNames.Any(apiGatewayGroupName => logGroupName.StartsWith(apiGatewayGroupName, StringComparison.Ordinal)),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^API-Gateway-Execution-Logs_[a-zA-Z0-9]+/.+$")
+                );
+            }
+
+            async Task DeleteOrphanApiGatewayV2Logs() {
+
+                // list all API Gateway V2 instances
+                var apiGatewayV2Client = new AmazonApiGatewayV2Client();
+                var request = new GetApisRequest { };
+                var apiGatewayGroupNames = new List<string>();
+                do {
+                    var response = await apiGatewayV2Client.GetApisAsync(request);
+                    apiGatewayGroupNames.AddRange(response.Items.Select(item => $"/aws/apigateway/{item.ApiId}/"));
+                    request.NextToken = response.NextToken;
+                } while(request.NextToken != null);
+
+                // list all log groups for API Gateway instances
+                await DeleteOrphanCloudWatchLogs(
+                    "/aws/apigateway/",
+                    logGroupName => (logGroupName == "/aws/apigateway/welcome") || apiGatewayGroupNames.Any(apiGatewayGroupName => logGroupName.StartsWith(apiGatewayGroupName, StringComparison.Ordinal)),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^/aws/apigateway/[a-zA-Z0-9]+/.+$")
+                );
+            }
+
+            async Task DeleteOrphanCloudWatchLogs(string logGroupPrefix, Func<string, bool> isActiveLogGroup, Func<string, bool> isValidLogGroup) {
+                var describeLogGroupsRequest = new DescribeLogGroupsRequest {
+                    LogGroupNamePrefix = logGroupPrefix
+                };
+                do {
+                    var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
+                    totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
+                    foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
+                        if(isActiveLogGroup(logGroup.LogGroupName)) {
+
+                            // nothing to do
+                            ++activeLogGroups;
+                        } else if(isValidLogGroup(logGroup.LogGroupName)) {
+
+                            // attempt to delete log group
+                            if(dryRun) {
+                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
+                                ++orphanedLogGroups;
+                            } else {
+                                try {
+                                    await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
+                                        LogGroupName = logGroup.LogGroupName
+                                    });
+                                    Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
+                                    ++orphanedLogGroups;
+                                } catch {
+                                    LogError($"could not delete '{logGroup.LogGroupName}'");
+                                    ++skippedLogGroups;
+                                }
+                            }
+                        } else {
+
+                            // log group has an invalid name structure; skip it
+                            Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
+                            ++skippedLogGroups;
+                        }
+                    }
+                    describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
+                } while(describeLogGroupsRequest.NextToken != null);
+            }
         }
 
         public async Task CreateInvocationTargetSchemasAsync(
@@ -288,6 +358,7 @@ namespace LambdaSharp.Tool.Cli {
             IEnumerable<string> methodReferences,
             string outputFile
         ) {
+            const string ASYNC_SUFFIX = "Async";
             var schemas = new Dictionary<string, InvocationTargetDefinition>();
 
             // create a list of nested namespaces from the root namespace
@@ -329,12 +400,19 @@ namespace LambdaSharp.Tool.Cli {
                         throw new ProcessTargetInvocationException($"could not find type for '{methodReference}' in assembly '{assembly.FullName}'");
                     }
 
-                    // find method
+                    // find method, optionally with 'Async' suffix
                     var method = type.GetMethod(methodName);
+                    if((method == null) && !methodName.EndsWith(ASYNC_SUFFIX, StringComparison.Ordinal)) {
+                        methodName += ASYNC_SUFFIX;
+                        method = type.GetMethod(methodName);
+                    }
                     if(method == null) {
                         throw new ProcessTargetInvocationException($"could not find method '{methodName}' in type '{type.FullName}'");
                     }
                     var resolvedMethodReference = $"{assemblyName}::{type.FullName}::{method.Name}";
+                    var operationName = methodName.EndsWith(ASYNC_SUFFIX, StringComparison.Ordinal)
+                        ? methodName.Substring(0, methodName.Length - ASYNC_SUFFIX.Length)
+                        : methodName;
 
                     // process method parameters
                     ParameterInfo requestParameter = null;
@@ -372,29 +450,37 @@ namespace LambdaSharp.Tool.Cli {
                             if(isSimpleType) {
 
                                 // parameter is required only if it does not have an optional value and is not nullable
-                                uriParameters.Add(new KeyValuePair<string, bool>(parameter.Name, !parameter.IsOptional && (Nullable.GetUnderlyingType(parameter.ParameterType) == null) && parameter.ParameterType.IsValueType));
+                                uriParameters.Add(new KeyValuePair<string, bool>(parameter.Name, !parameter.IsOptional && (Nullable.GetUnderlyingType(parameter.ParameterType) == null) && (parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string))));
                             } else {
                                 var queryParameterType = parameter.ParameterType;
 
                                 // add complex-type properties
                                 foreach(var property in queryParameterType.GetProperties()) {
-                                    var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
-                                        ?? property.Name;
-                                    var required = ((Nullable.GetUnderlyingType(property.PropertyType) == null) && property.PropertyType.IsValueType)
+                                    var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? property.Name;
+                                    var required = (
+                                            (Nullable.GetUnderlyingType(property.PropertyType) == null)
+                                            && (property.PropertyType.IsValueType || (property.PropertyType == typeof(string)))
+                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.Default)
+                                            && (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.DisallowNull)
+                                        )
                                         || (property.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
-                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                        || (property.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.AllowNull);
                                     uriParameters.Add(new KeyValuePair<string, bool>(name, required));
                                 }
 
                                 // add complex-type fields
                                 foreach(var field in queryParameterType.GetFields()) {
-                                    var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName
-                                        ?? field.Name;
-                                    var required = ((Nullable.GetUnderlyingType(field.FieldType) == null) && field.FieldType.IsValueType)
+                                    var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? field.Name;
+                                    var required = (
+                                            (Nullable.GetUnderlyingType(field.FieldType) == null)
+                                            && (field.FieldType.IsValueType || (field.FieldType == typeof(string)))
+                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.Default)
+                                            && (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required != Required.DisallowNull)
+                                        )
                                         || (field.GetCustomAttribute<JsonRequiredAttribute>() != null)
                                         || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.Always)
-                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.DisallowNull);
+                                        || (field.GetCustomAttribute<JsonPropertyAttribute>()?.Required == Required.AllowNull);
                                     uriParameters.Add(new KeyValuePair<string, bool>(name, required));
                                 }
                             }
@@ -423,13 +509,14 @@ namespace LambdaSharp.Tool.Cli {
                         Assembly = assembly.FullName,
                         Type = type.FullName,
                         Method = methodName,
+                        OperationName = operationName,
                         RequestContentType = requestSchemaAndContentType?.Item2,
                         RequestSchema = requestSchemaAndContentType?.Item1,
-                        RequestSchemaName = requestParameter?.GetType().FullName,
+                        RequestSchemaName = requestParameter?.ParameterType.FullName,
                         UriParameters  = uriParameters.Any() ? new Dictionary<string, bool>(uriParameters) : null,
                         ResponseContentType = responseSchemaAndContentType?.Item2,
                         ResponseSchema = responseSchemaAndContentType?.Item1,
-                        ResponseSchemaName = responseType?.GetType().FullName
+                        ResponseSchemaName = responseType?.FullName
                     };
 
                     // write result

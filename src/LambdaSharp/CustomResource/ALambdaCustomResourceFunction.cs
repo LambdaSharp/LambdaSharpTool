@@ -52,14 +52,6 @@ namespace LambdaSharp.CustomResource {
         //--- Constants ---
         private const int MAX_SEND_ATTEMPTS = 3;
 
-        //--- Class Fields ---
-
-        /// <summary>
-        /// The <see cref="HttpClient"/> instance used for communicating with the AWS CloudFormation service.
-        /// </summary>
-        /// <value>The <see cref="HttpClient"/> instance.</value>
-        public static HttpClient HttpClient = new HttpClient();
-
         //--- Constructors ---
 
         /// <summary>

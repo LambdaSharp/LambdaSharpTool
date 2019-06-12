@@ -1,0 +1,18 @@
+{
+    "requestId": "$context.requestId",
+    "extendedRequestId": "$context.extendedRequestId",
+    "ip": "$context.identity.sourceIp",
+    "caller": "$context.identity.caller",
+    "user": "$context.identity.user",
+
+    "apiKeyId": "$context.identity.apiKeyId",
+    "domainName": "$context.domainName",
+    "requestTime": "$context.requestTime",
+    "eventType": "$context.eventType",
+
+    "apiId": "$context.apiId",
+    "stage": "$context.stage",
+    "connectionId": "$context.connectionId",
+    "route": "$context.routeKey",
+    "status": "$context.status"
+}

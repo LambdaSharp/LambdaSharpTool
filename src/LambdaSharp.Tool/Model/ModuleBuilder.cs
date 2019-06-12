@@ -781,12 +781,17 @@ namespace LambdaSharp.Tool.Model {
                             );
                             moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
                         }
+
+                        // check if x-ray tracing should be enabled in nested module
+                        if(formalParameters.ContainsKey("EnableXRayTracing") && !moduleParameters.ContainsKey("EnableXRayTracing")) {
+                            moduleParameters.Add("EnableXRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
+                        }
                     } else {
 
                         // nothing to do; 'LocateAsync' already reported the error
                     }
                 } else {
-                    LogWarn("unable to validate module parameters");
+                    LogWarn("unable to validate nested module parameters");
                 }
 
                 // add expected parameters
@@ -899,7 +904,7 @@ namespace LambdaSharp.Tool.Model {
             }
             if(!definition.ContainsKey("TracingConfig")) {
                 definition["TracingConfig"] = new Dictionary<string, object> {
-                    ["Mode"] = FnRef("XRayTracing")
+                    ["Mode"] = FnIf("XRayIsEnabled", "Active", "PassThrough")
                 };
             }
             AtLocation("Properties", () => ValidateProperties("AWS::Lambda::Function", definition));

@@ -34,6 +34,6 @@ namespace LambdaSharp.ApiGateway {
     /// There can only be one parameter that is explicitly marked with the <see cref="FromBodyAttribute"/> attribute
     /// or which implicitly is deserialized from the request body.
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple=false, Inherited=true)]
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class FromBodyAttribute : Attribute { }
 }

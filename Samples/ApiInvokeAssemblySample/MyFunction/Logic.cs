@@ -23,6 +23,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Amazon.Lambda.Core;
+using LambdaSharp.ApiGateway;
+using Newtonsoft.Json;
 
 namespace ApiInvokeSample.MyFunction {
 
@@ -33,6 +35,20 @@ namespace ApiInvokeSample.MyFunction {
     }
 
     public class Logic {
+
+        //--- Types ---
+        public class FilterOptions {
+
+            //--- Properties ---
+            [JsonProperty(PropertyName = "contains", Required = Required.DisallowNull)]
+            public string Contains { get; set; }
+
+            [JsonProperty(PropertyName = "offset", Required = Required.DisallowNull)]
+            public int Offset { get; set; } = 0;
+
+            [JsonProperty(PropertyName = "limit", Required = Required.DisallowNull)]
+            public int Limit { get; set; } = 10;
+        }
 
         //--- Fields ---
         private ILogicDependencyProvider _provider;
@@ -59,11 +75,11 @@ namespace ApiInvokeSample.MyFunction {
             };
         }
 
-        public GetItemsResponse GetItems() {
+        public GetItemsResponse GetItems([FromUri] FilterOptions options) {
 
             // response with list of all items
             return new GetItemsResponse {
-                Items = new List<Item>(_items)
+                Items = new List<Item>(_items.Where(item => (options.Contains == null) || item.Value.Contains(options.Contains)).Skip(options.Offset).Take(options.Limit))
             };
         }
 

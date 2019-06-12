@@ -26,6 +26,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Cli.Publish {
@@ -55,9 +56,42 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(manifest == null) {
                 return null;
             }
+            if(!manifest.Module.TryParseModuleDescriptor(
+                out string moduleOwner,
+                out string moduleName,
+                out VersionInfo moduleVersion,
+                out string _
+            )) {
+                throw new ApplicationException("invalid module info");
+            }
+            var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
+
+            // check if we want to always publish, regardless of version or detected changes
+            if(!forcePublish) {
+
+                // TODO (2019-06-11, bjorg): let's enable this for 0.7, but no for 0.6.0.1; it feels too dramatic a change for just a small release
+
+                // // check if module has a stable version, but is compiled from a dirty git branch
+                // if(
+                //     !moduleVersion.IsPreRelease
+                //     && (manifest.Git.SHA?.StartsWith("DIRTY-") ?? false)
+                // ) {
+                //     LogError($"attempting to publish an immutable release of {moduleOwner}.{moduleName} (v{moduleVersion}) with uncommitted/untracked changes; use --force-publish to proceed anyway");
+                //     return null;
+                // }
+
+                // check if a manifest already exists for this version
+                var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(Settings.DeploymentBucketName, destinationKey, errorIfMissing: false);
+                if(existingManifest != null) {
+                    if(!moduleVersion.IsPreRelease) {
+                        LogWarn($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
+                        return null;
+                    }
+                }
+            }
 
             // publish module
-            return await new ModelPublisher(Settings, cloudformationFile).PublishAsync(manifest, forcePublish);
+            return await new ModelPublisher(Settings, cloudformationFile).PublishAsync(manifest, destinationKey, forcePublish);
         }
     }
 }

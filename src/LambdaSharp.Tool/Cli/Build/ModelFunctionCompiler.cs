@@ -27,6 +27,7 @@ using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
@@ -207,7 +208,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             LoggingLevel = "INFO",
                             ResourcePath = "/*"
                         }
-                    }.ToList()
+                    }.ToList(),
+                    TracingEnabled = FnIf("XRayIsEnabled", true, false)
                 },
                 resourceExportAttribute: null,
                 dependsOn: new[] { restLogGroup.FullName },
@@ -219,7 +221,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void AddWebSocketResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
-            // give permission to the Lambda functions to communicate back over the websocket
+            // give permission to the Lambda functions to communicate back over the WebSocket
             _builder.AddGrant(
                 sid: "ModuleWebSocketConnections",
                 awsType: null,
@@ -229,7 +231,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
             );
 
-            // read websocket configuration
+            // read WebSocket configuration
             if(!_builder.TryGetOverride("Module::WebSocket.RouteSelectionExpression", out var routeSelectionExpression)) {
                 routeSelectionExpression = "$request.body.action";
             }
@@ -523,7 +525,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // create log-group for Web-Socket
+            // create log-group for WebSocket
             var webSocketLogGroup = _builder.AddResource(
                 parent: webSocket,
                 name: "LogGroup",
@@ -547,7 +549,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
                     ["AccessLogSettings"] = new Dictionary<string, dynamic> {
                         ["DestinationArn"] = FnSub($"arn:aws:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
-                        ["Format"] = "{\"requestId\":\"$context.requestId\", \"ip\": \"$context.identity.sourceIp\", \"caller\":\"$context.identity.caller\", \"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\", \"eventType\":\"$context.eventType\",\"routeKey\":\"$context.routeKey\", \"status\":\"$context.status\",\"connectionId\":\"$context.connectionId\"}"
+                        ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
                     },
                     ["ApiId"] = FnRef("Module::WebSocket"),
                     ["StageName"] = "LATEST",
@@ -624,8 +626,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     break;
                 case "Void":
 
-                    // NOTE (2018-04-02): unfortunately, this does not enforce that the request has no payload
+                    // NOTE (2019-04-02, bjorg): unfortunately, this does not enforce that the request has no payload
                     apiMethodResource.RequestValidatorId = FnRef("Module::RestApi::RequestValidator");
+
+                    // TODO (2019-05-25, bjorg): check request verb; only GET and OPTIONS should be able to have no request body
+
                     break;
                 case IDictionary _:
 
@@ -720,7 +725,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     integration.RequestParameters["integration.request.header.X-Amz-Invocation-Type"] = "'Event'";
                     integration.IntegrationResponses = new[] {
                         new Humidifier.ApiGateway.MethodTypes.IntegrationResponse {
-                            StatusCode = 200,
+                            StatusCode = 202,
                             ResponseTemplates = new Dictionary<string, object> {
                                 [defaultResponseContentType] = defaultResponsePayload
                             }
@@ -728,7 +733,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }.ToList();
                     apiMethodResource.MethodResponses = new[] {
                         new Humidifier.ApiGateway.MethodTypes.MethodResponse {
-                            StatusCode = 200,
+                            StatusCode = 202,
                             ResponseModels = new Dictionary<string, object> {
                                 [defaultResponseContentType] = "Empty"
                             }

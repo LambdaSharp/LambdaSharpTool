@@ -89,9 +89,9 @@ namespace LambdaSharp.Tool.Internal {
             return result;
         }
 
-        public static async Task<string> GetMostRecentStackEventIdAsync(this IAmazonCloudFormation cfClient, string stackName) {
+        public static async Task<string> GetMostRecentStackEventIdAsync(this IAmazonCloudFormation cfnClient, string stackName) {
             try {
-                var response = await cfClient.DescribeStackEventsAsync(new DescribeStackEventsRequest {
+                var response = await cfnClient.DescribeStackEventsAsync(new DescribeStackEventsRequest {
                     StackName = stackName
                 });
                 var mostRecentStackEvent = response.StackEvents.First();
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Internal {
         }
 
         public static async Task<(Stack Stack, bool Success)> TrackStackUpdateAsync(
-            this IAmazonCloudFormation cfClient,
+            this IAmazonCloudFormation cfnClient,
             string stackName,
             string mostRecentStackEventId,
             IDictionary<string, string> resourceNameMappings = null,
@@ -133,7 +133,7 @@ namespace LambdaSharp.Tool.Internal {
                 // fetch as many events as possible for the current stack
                 var events = new List<StackEvent>();
                 try {
-                    var response = await cfClient.DescribeStackEventsAsync(request);
+                    var response = await cfnClient.DescribeStackEventsAsync(request);
                     events.AddRange(response.StackEvents);
                 } catch(System.Net.Http.HttpRequestException e) when((e.InnerException is System.Net.Sockets.SocketException) && (e.InnerException.Message == "No such host is known")) {
 
@@ -175,7 +175,7 @@ namespace LambdaSharp.Tool.Internal {
             }
 
             // describe stack and report any output values
-            var description = await cfClient.DescribeStacksAsync(new DescribeStacksRequest {
+            var description = await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                 StackName = stackName
             });
             return (Stack: description.Stacks.FirstOrDefault(), Success: success);

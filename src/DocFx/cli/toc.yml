@@ -40,8 +40,8 @@
     - name: Create Invoke Methods Schema
       href: Tool-UtilCreateInvokeMethodsSchema.md
 
-    - name: Delete Orphan Lambda Logs
-      href: Tool-UtilDeleteOrphanLambdaLogs.md
+    - name: Delete Orphaned Logs
+      href: Tool-UtilDeleteOrphanLogs.md
 
     - name: Download CloudFormation Spec
       href: Tool-UtilDownloadCloudFormationSpec.md
