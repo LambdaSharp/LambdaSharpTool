@@ -550,11 +550,11 @@ namespace LambdaSharp {
         }
 
         /// <summary>
-        /// The <see cref="WaitForTask(Task)"/> method adds the specified task to the list of pending tasks. The Lambda function waits until all
+        /// The <see cref="AddPendingTask(Task)"/> method adds the specified task to the list of pending tasks. The Lambda function waits until all
         /// pendings tasks have completed before responding to the active invocation.
         /// </summary>
         /// <param name="task">A task to wait for before responding to the active invocation.</param>
-        protected void WaitForTask(Task task) {
+        protected void AddPendingTask(Task task) {
             lock(_pendingTasksSyncRoot) {
                 _pendingTasks.Add(task);
             }
@@ -566,7 +566,7 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="action">The work to execute asynchronously.</param>
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
-        protected void RunTask(Action action, CancellationToken cancellationToken = default) => WaitForTask(Task.Run(action, cancellationToken));
+        protected void RunTask(Action action, CancellationToken cancellationToken = default) => AddPendingTask(Task.Run(action, cancellationToken));
 
         /// <summary>
         /// The <see cref="RunTask(Func{Task}, CancellationToken)"/> method queues the specified work for background execution. The Lambda function waits until all
@@ -574,7 +574,7 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="function">The work to execute asynchronously.</param>
         /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
-        protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => WaitForTask(Task.Run(function, cancellationToken));
+        protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
 
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
             var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
