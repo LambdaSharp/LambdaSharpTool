@@ -37,7 +37,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2F28E620E9EB2E52032DF2EE807883FD"
+      "Default": "670234E26B108FE527499BE6E9E45CE8"
     }
   },
   "Resources": {
@@ -143,7 +143,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "2F28E620E9EB2E52032DF2EE807883FD",
+      "Hash": "670234E26B108FE527499BE6E9E45CE8",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -151,7 +151,7 @@
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1-WIP"
+          "MinVersion": "0.6.0.1-WIP"
         }
       ],
       "Outputs": [

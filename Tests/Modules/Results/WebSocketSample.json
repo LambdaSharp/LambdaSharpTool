@@ -64,7 +64,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "572F2035122EEB07BA4BCE76F4CA268A"
+      "Default": "0592DB8B947FF610002D14F78FBC7D32"
     }
   },
   "Resources": {
@@ -1014,7 +1014,7 @@
           "DestinationArn": {
             "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
           },
-          "Format": "{\"requestId\":\"$context.requestId\", \"ip\": \"$context.identity.sourceIp\", \"caller\":\"$context.identity.caller\", \"user\":\"$context.identity.user\",\"requestTime\":\"$context.requestTime\", \"eventType\":\"$context.eventType\",\"routeKey\":\"$context.routeKey\", \"status\":\"$context.status\",\"connectionId\":\"$context.connectionId\"}"
+          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\",\"status\":\"$context.status\"}"
         },
         "ApiId": {
           "Ref": "ModuleWebSocket"
@@ -1332,7 +1332,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "572F2035122EEB07BA4BCE76F4CA268A",
+      "Hash": "0592DB8B947FF610002D14F78FBC7D32",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1340,7 +1340,7 @@
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1-WIP"
+          "MinVersion": "0.6.0.1-WIP"
         }
       ],
       "Outputs": [
