@@ -27,6 +27,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
@@ -231,130 +232,124 @@ namespace LambdaSharp.Tool.Cli {
 
             // initialize AWS profile
             await InitializeAwsProfile(awsProfile);
-
-            // list all lambda functions
-            var lambdaClient = new AmazonLambdaClient();
-            var listFunctionsRequest = new ListFunctionsRequest { };
-            var lambdaLogGroupNames = new HashSet<string>();
-            do {
-                var listFunctionsResponse = await lambdaClient.ListFunctionsAsync(listFunctionsRequest);
-                foreach(var function in listFunctionsResponse.Functions) {
-                    lambdaLogGroupNames.Add($"/aws/lambda/{function.FunctionName}");
-                }
-                listFunctionsRequest.Marker = listFunctionsResponse.NextMarker;
-            } while(listFunctionsRequest.Marker != null);
-
-            // list all log groups for lambda functions
             var logsClient = new AmazonCloudWatchLogsClient();
-            var describeLogGroupsRequest = new DescribeLogGroupsRequest {
-                LogGroupNamePrefix = "/aws/lambda/"
-            };
+
+            // delete orphaned logs
             var totalLogGroups = 0;
             var activeLogGroups = 0;
             var orphanedLogGroups = 0;
             var skippedLogGroups = 0;
-            do {
-                var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
-                totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
-                foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
-                    if(lambdaLogGroupNames.Contains(logGroup.LogGroupName)) {
-
-                        // nothing to do
-                        ++activeLogGroups;
-                    } else if(System.Text.RegularExpressions.Regex.IsMatch(logGroup.LogGroupName, @"^\/aws\/lambda\/[a-zA-Z0-9\-_]+$")) {
-
-                        // attempt to delete log group
-                        if(dryRun) {
-                            Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
-                            ++orphanedLogGroups;
-                        } else {
-                            try {
-                                await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
-                                    LogGroupName = logGroup.LogGroupName
-                                });
-                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
-                                ++orphanedLogGroups;
-                            } catch {
-                                LogError($"could not delete '{logGroup.LogGroupName}'");
-                                ++skippedLogGroups;
-                            }
-                        }
-                    } else {
-
-                        // log group has an invalid name structure; skip it
-                        Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
-                        ++skippedLogGroups;
-                    }
-                }
-                describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
-            } while(describeLogGroupsRequest.NextToken != null);
-
-            // list all API Gateway V1 instances
-            var apiGatewayClient = new AmazonAPIGatewayClient();
-            var getRestApisRequest = new GetRestApisRequest { };
-            var apiGatewayGroupNames = new List<string>();
-            do {
-                var getRestApisResponse = await apiGatewayClient.GetRestApisAsync(getRestApisRequest);
-                foreach(var item in getRestApisResponse.Items) {
-                    apiGatewayGroupNames.Add($"API-Gateway-Execution-Logs_{item.Id}/");
-                }
-                getRestApisRequest.Position = getRestApisResponse.Position;
-            } while(getRestApisRequest.Position != null);
-
-            // list all API Gateway V2 instances
-            var apiGatewayV2Client = new AmazonApiGatewayV2Client();
-            var getApisRequest = new GetApisRequest { };
-            do {
-                var getApisResponse = await apiGatewayV2Client.GetApisAsync(getApisRequest);
-                foreach(var item in getApisResponse.Items) {
-                    apiGatewayGroupNames.Add($"API-Gateway-Execution-Logs_{item.ApiId}/");
-                }
-                getApisRequest.NextToken = getApisResponse.NextToken;
-            } while(!string.IsNullOrEmpty(getRestApisRequest.Position));
-
-            // list all log groups for API Gateway instances
-            describeLogGroupsRequest = new DescribeLogGroupsRequest {
-                LogGroupNamePrefix = "API-Gateway-Execution-Logs_"
-            };
-            do {
-                var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
-                totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
-                foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
-                    if(apiGatewayGroupNames.Any(logGroupName => logGroup.LogGroupName.StartsWith(logGroupName, StringComparison.Ordinal))) {
-
-                        // nothing to do
-                        ++activeLogGroups;
-                    } else if(System.Text.RegularExpressions.Regex.IsMatch(logGroup.LogGroupName, @"^API-Gateway-Execution-Logs_[a-zA-Z0-9]+/.+$")) {
-
-                        // attempt to delete log group
-                        if(dryRun) {
-                            Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
-                            ++orphanedLogGroups;
-                        } else {
-                            try {
-                                await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
-                                    LogGroupName = logGroup.LogGroupName
-                                });
-                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
-                                ++orphanedLogGroups;
-                            } catch {
-                                LogError($"could not delete '{logGroup.LogGroupName}'");
-                                ++skippedLogGroups;
-                            }
-                        }
-                    } else {
-
-                        // log group has an invalid name structure; skip it
-                        Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
-                        ++skippedLogGroups;
-                    }
-                }
-                describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
-            } while(describeLogGroupsRequest.NextToken != null);
+            await DeleteOrphanLambdaLogsAsync();
+            await DeleteOrphanApiGatewayLogs();
+            await DeleteOrphanApiGatewayV2Logs();
             if((orphanedLogGroups > 0) || (skippedLogGroups > 0)) {
                 Console.WriteLine();
             }
             Console.WriteLine($"Found {totalLogGroups:N0} log groups. Active {activeLogGroups:N0}. Orphaned {orphanedLogGroups:N0}. Skipped {skippedLogGroups:N0}.");
+
+            // local functions
+            async Task DeleteOrphanLambdaLogsAsync() {
+
+                // list all lambda functions
+                var lambdaClient = new AmazonLambdaClient();
+                var request = new ListFunctionsRequest { };
+                var lambdaLogGroupNames = new HashSet<string>();
+                do {
+                    var response = await lambdaClient.ListFunctionsAsync(request);
+                    foreach(var function in response.Functions) {
+                        lambdaLogGroupNames.Add($"/aws/lambda/{function.FunctionName}");
+                    }
+                    request.Marker = response.NextMarker;
+                } while(request.Marker != null);
+
+                // list all log groups for lambda functions
+                await DeleteOrphanCloudWatchLogs(
+                    "/aws/lambda/",
+                    logGroupName => lambdaLogGroupNames.Contains(logGroupName),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^\/aws\/lambda\/[a-zA-Z0-9\-_]+$")
+                );
+            }
+
+            async Task DeleteOrphanApiGatewayLogs() {
+
+                // list all API Gateway V1 instances
+                var apiGatewayClient = new AmazonAPIGatewayClient();
+                var request = new GetRestApisRequest { };
+                var apiGatewayGroupNames = new List<string>();
+                do {
+                    var response = await apiGatewayClient.GetRestApisAsync(request);
+                    apiGatewayGroupNames.AddRange(response.Items.Select(item => $"API-Gateway-Execution-Logs_{item.Id}/"));
+                    request.Position = response.Position;
+                } while(request.Position != null);
+
+                // list all log groups for API Gateway instances
+                await DeleteOrphanCloudWatchLogs(
+                    "API-Gateway-Execution-Logs_",
+                    logGroupName => apiGatewayGroupNames.Any(apiGatewayGroupName => logGroupName.StartsWith(apiGatewayGroupName, StringComparison.Ordinal)),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^API-Gateway-Execution-Logs_[a-zA-Z0-9]+/.+$")
+                );
+            }
+
+            async Task DeleteOrphanApiGatewayV2Logs() {
+
+                // list all API Gateway V2 instances
+                var apiGatewayV2Client = new AmazonApiGatewayV2Client();
+                var request = new GetApisRequest { };
+                var apiGatewayGroupNames = new List<string>();
+                do {
+                    var response = await apiGatewayV2Client.GetApisAsync(request);
+                    apiGatewayGroupNames.AddRange(response.Items.Select(item => $"/aws/apigateway/{item.ApiId}/"));
+                    request.NextToken = response.NextToken;
+                } while(request.NextToken != null);
+
+                // list all log groups for API Gateway instances
+                await DeleteOrphanCloudWatchLogs(
+                    "/aws/apigateway/",
+                    logGroupName => (logGroupName == "/aws/apigateway/welcome") || apiGatewayGroupNames.Any(apiGatewayGroupName => logGroupName.StartsWith(apiGatewayGroupName, StringComparison.Ordinal)),
+                    logGroupName => Regex.IsMatch(logGroupName, @"^/aws/apigateway/[a-zA-Z0-9]+/.+$")
+                );
+            }
+
+            async Task DeleteOrphanCloudWatchLogs(string logGroupPrefix, Func<string, bool> isActiveLogGroup, Func<string, bool> isValidLogGroup) {
+                var describeLogGroupsRequest = new DescribeLogGroupsRequest {
+                    LogGroupNamePrefix = logGroupPrefix
+                };
+                do {
+                    var describeLogGroupsResponse = await logsClient.DescribeLogGroupsAsync(describeLogGroupsRequest);
+                    totalLogGroups += describeLogGroupsResponse.LogGroups.Count;
+                    foreach(var logGroup in describeLogGroupsResponse.LogGroups) {
+                        if(isActiveLogGroup(logGroup.LogGroupName)) {
+
+                            // nothing to do
+                            ++activeLogGroups;
+                        } else if(isValidLogGroup(logGroup.LogGroupName)) {
+
+                            // attempt to delete log group
+                            if(dryRun) {
+                                Console.WriteLine($"* deleted '{logGroup.LogGroupName}' (skipped)");
+                                ++orphanedLogGroups;
+                            } else {
+                                try {
+                                    await logsClient.DeleteLogGroupAsync(new DeleteLogGroupRequest {
+                                        LogGroupName = logGroup.LogGroupName
+                                    });
+                                    Console.WriteLine($"* deleted '{logGroup.LogGroupName}'");
+                                    ++orphanedLogGroups;
+                                } catch {
+                                    LogError($"could not delete '{logGroup.LogGroupName}'");
+                                    ++skippedLogGroups;
+                                }
+                            }
+                        } else {
+
+                            // log group has an invalid name structure; skip it
+                            Console.WriteLine($"SKIPPED '{logGroup.LogGroupName}'");
+                            ++skippedLogGroups;
+                        }
+                    }
+                    describeLogGroupsRequest.NextToken = describeLogGroupsResponse.NextToken;
+                } while(describeLogGroupsRequest.NextToken != null);
+            }
         }
 
         public async Task CreateInvocationTargetSchemasAsync(

@@ -33,11 +33,10 @@ Output:
 ```
 LambdaSharp CLI (v0.6.0.1) - Delete orphaned Lambda CloudWatch logs
 
-* deleted 'API-Gateway-Execution-Logs_s540s2ian5/staging'
+* deleted '/aws/lambda/test-20190304152100-analytics-43JSABQ42WAP'
 * deleted 'API-Gateway-Execution-Logs_sdpwn23vx4/LATEST'
 ...
-* deleted 'API-Gateway-Execution-Logs_udr9mnhukg/LATEST'
-* deleted 'API-Gateway-Execution-Logs_ury6rahzhj/LATEST'
+* deleted '/aws/apigateway/59jn68v9qc/LATEST'
 
 Found 285 log groups. Active 112. Orphaned 172. Skipped 0.
 
