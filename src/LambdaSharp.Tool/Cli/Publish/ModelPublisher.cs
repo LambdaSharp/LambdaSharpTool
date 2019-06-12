@@ -47,7 +47,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
         }
 
         //--- Methods ---
-        public async Task<string> PublishAsync(ModuleManifest manifest, bool forcePublish) {
+        public async Task<string> PublishAsync(ModuleManifest manifest, string destinationKey, bool forcePublish) {
             Console.WriteLine($"Publishing module: {manifest.GetFullName()}");
             _forcePublish = forcePublish;
             _changesDetected = false;
@@ -61,37 +61,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
             if(Settings.HasErrors) {
                 return null;
-            }
-
-            // verify that manifest is either a pre-release or its version has not been published yet
-            if(!manifest.Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo moduleVersion,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
-            var destinationKey = $"{moduleOwner}/Modules/{moduleName}/Versions/{moduleVersion}/cloudformation.json";
-
-            // check if we want to always publish, regardless of version or detected changes
-            if(!forcePublish) {
-
-                // check if a manifest already exists for this version
-                var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(Settings.DeploymentBucketName, destinationKey, errorIfMissing: false);
-                if(existingManifest != null) {
-                    if(existingManifest.Hash == manifest.Hash) {
-
-                        // manifest matches, nothing further to do
-                        Console.WriteLine($"=> No changes found to publish");
-                        return $"s3://{Settings.DeploymentBucketName}/{destinationKey}";
-                    } else if(!moduleVersion.IsPreRelease) {
-
-                        // don't allow publishing over an existing, stable version
-                        LogError($"{moduleOwner}.{moduleName} (v{moduleVersion}) is already published; use --force-publish to proceed anyway");
-                        return null;
-                    }
-                }
             }
 
             // upload assets

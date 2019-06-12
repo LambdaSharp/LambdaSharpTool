@@ -238,14 +238,18 @@ namespace Tests.LambdaSharp.ApiGateway {
 
         [Fact]
         public void InvokeDefaultStringType() {
-            Test(
-                nameof(MethodDefaultStringType),
-                DefaultRequest,
-                CreateResponse(CreateSimpleResponse(new object[] { null }))
-            );
+            var exception = Assert.Throws<ApiGatewayInvocationTargetParameterException>(() => {
+                Test(
+                    nameof(MethodRequiredStringType),
+                    DefaultRequest,
+                    CreateResponse(CreateSimpleResponse(new object[] { null }))
+                );
+            });
+            exception.ParameterName.Should().Be("unknown");
+            exception.Message.Should().Be("missing value");
         }
 
-        public SimpleResponse MethodDefaultStringType(string unknown) {
+        public SimpleResponse MethodRequiredStringType(string unknown) {
             return CreateSimpleResponse(unknown);
         }
 

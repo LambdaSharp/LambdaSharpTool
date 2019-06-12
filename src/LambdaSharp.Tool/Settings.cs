@@ -23,7 +23,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using Amazon.APIGateway;
 using Amazon.CloudFormation;
+using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
@@ -61,21 +64,46 @@ namespace LambdaSharp.Tool {
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static bool UseAnsiConsole = true;
-        private static IList<(string Message, Exception Exception)> _errors = new List<(string Message, Exception Exception)>();
+        private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
 
         //--- Class Properties ---
-        public static int ErrorCount => _errors.Count;
-        public static bool HasErrors => _errors.Count > 0;
+        public static int ErrorCount => _errors.Count(entry => entry.Error);
+        public static bool HasErrors => _errors.Any(entry => entry.Error);
+        public static int WarningCount => _errors.Count(entry => !entry.Error);
+        public static bool HasWarnings => _errors.Any(entry => !entry.Error);
 
         //--- Class Methods ---
         public static void ShowErrors() {
+            var suppressedStacktrace = false;
             foreach(var error in _errors) {
-                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
-                    Console.WriteLine("ERROR: " + error.Message + Environment.NewLine + error.Exception);
-                } else {
-                    Console.WriteLine("ERROR: " + error.Message);
+                var builder = new StringBuilder();
+                if(UseAnsiConsole) {
+                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.Yellow);
                 }
+                if(error.Error) {
+                    builder.Append("ERROR: " + error.Message);
+                } else {
+                    builder.Append("WARNING: " + error.Message);
+                }
+                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                    builder.AppendLine();
+                    builder.Append(error.Exception.ToString());
+                } else {
+                    suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
+                }
+                if(UseAnsiConsole) {
+                    builder.Append(AnsiTerminal.Reset);
+                }
+                Console.WriteLine(builder.ToString());
             }
+
+            // check if we omitted exception stacktraces
+            if(suppressedStacktrace) {
+                Console.WriteLine();
+                Console.WriteLine("NOTE: one ore more errors have stacktraces; use --verbose:exceptions to show them");
+            }
+
+            // check if the errors are due to missing configuration or initialization steps
             var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
             if(configException != null) {
                 Console.WriteLine();
@@ -91,10 +119,10 @@ namespace LambdaSharp.Tool {
         }
 
         public static void LogWarn(string message)
-            => Console.WriteLine("WARNING: " + message);
+            => _errors.Add((Error: false, Message: message, Exception: null));
 
         public static void LogError(string message, Exception exception = null)
-            => _errors.Add((Message: message, Exception: exception));
+            => _errors.Add((Error: true, Message: message, Exception: exception));
 
         public static void LogError(Exception exception)
             => LogError($"internal error: {exception.Message}", exception);
@@ -116,6 +144,8 @@ namespace LambdaSharp.Tool {
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
+        public IAmazonAPIGateway ApiGatewayClient { get; set; }
+        public IAmazonIdentityManagementService IamClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }

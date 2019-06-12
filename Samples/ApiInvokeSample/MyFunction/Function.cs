@@ -58,11 +58,11 @@ namespace ApiInvokeSample.MyFunction {
             };
         }
 
-        public GetItemsResponse GetItems() {
+        public GetItemsResponse GetItems(string contains = null, int offset = 0, int limit = 10) {
 
             // response with list of all items
             return new GetItemsResponse {
-                Items = new List<Item>(_items)
+                Items = new List<Item>(_items.Where(item => (contains == null) || item.Value.Contains(contains)).Skip(offset).Take(limit))
             };
         }
 

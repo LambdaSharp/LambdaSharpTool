@@ -171,3 +171,5 @@ alias lash="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csp
 ```
 
 __IMPORTANT:__ make sure to always use your  `lash` alias instead of the `lash` command.
+
+In addition, you need to run `Scripts/set-lash-version.sh` to set required environment variables for building the project file. This script sets the `LAMBDASHARP_VERSION_PREFIX`, `LAMBDASHARP_VERSION_SUFFIX`, and `LAMBDASHARP_VERSION` environment variables.

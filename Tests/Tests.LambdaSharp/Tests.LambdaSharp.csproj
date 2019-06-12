@@ -15,9 +15,6 @@
     <PackageReference Include="xunit.abstractions" Version="2.0.3" />
     <PackageReference Include="FluentAssertions" Version="5.6.0" />
   </ItemGroup>
-  <!-- <ItemGroup>
-    <ProjectReference Include="..\..\src\LambdaSharp\LambdaSharp.csproj"/>
-  </ItemGroup> -->
   <ItemGroup>
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromUriAttribute.cs" Link="FromUriAttribute.cs" />

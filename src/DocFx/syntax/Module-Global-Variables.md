@@ -29,17 +29,17 @@ The following resources and variables are defined when a module contains a funct
 |`Module::RestApi::Stage`      |AWS::ApiGateway::Stage        |Stage for deploying REST API; the stage name is always `LATEST`
 |`Module::RestApi::Url`        |String                        |URL of the REST API
 
-## Module Web-Socket API Variables
+## Module WebSocket API Variables
 
 The following resources and variables are defined when a module contains a function that uses an API Gateway V2 source. Otherwise, these resources and variables are not defined.
 
 |Variable                      |Type                            |Definition                                    |
 |------------------------------|--------------------------------|----------------------------------------------|
-|`Module::WebSocket`             |AWS::ApiGatewayV2::Api        |Web-Socket API resource
-|`Module::WebSocket::Deployment` |AWS::ApiGatewayV2::Deployment |Deployment for the Web-Socket API; this resource changes whenever an Web-Socket API resource or method is modified
-|`Module::WebSocket::DomainName` |String                        |Domain name of the Web-Socket API
-|`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying Web-Socket API; the stage name is always `LATEST`
-|`Module::WebSocket::Url`        |String                        |URL of the Web-Socket API
+|`Module::WebSocket`             |AWS::ApiGatewayV2::Api        |WebSocket API resource
+|`Module::WebSocket::Deployment` |AWS::ApiGatewayV2::Deployment |Deployment for the WebSocket API; this resource changes whenever an WebSocket API resource or method is modified
+|`Module::WebSocket::DomainName` |String                        |Domain name of the WebSocket API
+|`Module::WebSocket::Stage`      |AWS::ApiGatewayV2::Stage      |Stage for deploying WebSocket API; the stage name is always `LATEST`
+|`Module::WebSocket::Url`        |String                        |URL of the WebSocket API
 
 ## Module Deployment Variables
 

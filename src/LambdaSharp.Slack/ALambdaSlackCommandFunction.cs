@@ -41,9 +41,6 @@ namespace LambdaSharp.Slack {
 
     public abstract class ALambdaSlackCommandFunction : ALambdaFunction {
 
-        //--- Class Fields ---
-        public static HttpClient HttpClient = new HttpClient();
-
         //--- Fields ---
         private string _slackVerificationToken;
 

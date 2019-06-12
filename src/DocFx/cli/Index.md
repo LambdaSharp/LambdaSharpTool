@@ -23,5 +23,5 @@ The λ# CLI is used to process the module definition, compile the C# projects, u
 
 ## Utility Commands
 1. [`util create-invoke-methods-schema`](Tool-UtilCreateInvokeMethodsSchema.md): create JSON schema for compiled methods
-1. [`util delete-orphan-lambda-logs`](Tool-UtilDeleteOrphanLambdaLogs.md): delete orphaned Lambda CloudWatch logs
+1. [`util delete-orphan-logs`](Tool-UtilDeleteOrphanLogs.md): delete orphaned Lambda CloudWatch logs
 1. [`util download-cloudformation-spec`](Tool-UtilDownloadCloudFormationSpec.md): download the CloudFormation types specification

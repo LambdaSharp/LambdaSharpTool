@@ -102,8 +102,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 ValidateSourceParameter(literalValue);
             } else if(TryGetFnRef(value, out var refKey)) {
                 ValidateSourceParameter(refKey);
+            } else if(TryGetFnGetAtt(value, out var getAttKey, out var getAttAttribute) && (getAttAttribute == "Arn")) {
+                ValidateSourceParameter(getAttKey);
             } else {
-                LogError("invalid expression");
+                LogWarn($"unable to validate expression has type {awsType}");
             }
 
             // local functions

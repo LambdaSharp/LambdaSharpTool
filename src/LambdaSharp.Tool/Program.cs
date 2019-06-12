@@ -1,6 +1,6 @@
 ﻿/*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -43,6 +43,12 @@ namespace LambdaSharp.Tool {
 
         // compile module
         CloudFormation
+    }
+
+    public enum XRayTracingLevel {
+        Disabled,
+        RootModule,
+        AllModules
     }
 
     public class Program : CliBase {
@@ -92,6 +98,10 @@ namespace LambdaSharp.Tool {
                         Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
                         Settings.ShowErrors();
                         return -1;
+                    }
+                    if(Settings.HasWarnings) {
+                        Console.WriteLine();
+                        Settings.ShowErrors();
                     }
                     return 0;
                 } finally {

@@ -70,11 +70,11 @@ public class Function : ALambdaApiGatewayFunction {
 
 ## WebSocket Message
 
-The following site allows interactions with the websockets end-point using the websocket URL.
+The following site allows interactions with the WebSockets end-point using the WebSocket URL.
 
 https://www.websocket.org/echo.html
 
-The websocket payload is a JSON document with the following format:
+The WebSocket payload is a JSON document with the following format:
 ```json
 {
     "action": "send",

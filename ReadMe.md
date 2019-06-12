@@ -10,7 +10,7 @@ The objective of λ# is to accelerate the development pace of serverless solutio
 
 ## Give a Star! :star:
 
-If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.net/). Thanks!
+If you like or are using this project, please give it a star. Make sure to also check out the [documentation site](https://lambdasharp.net). Thanks!
 
 ![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
 
@@ -108,7 +108,7 @@ namespace MySampleModule.MyFunction {
 
 1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
 1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
-1. [Create a Web Chat with API Gateway Websockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
+1. [Create a Web Chat with API Gateway WebSockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
 1. [Misc. λ# Samples](Samples/)
 
 ### References

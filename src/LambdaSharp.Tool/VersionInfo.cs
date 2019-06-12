@@ -134,10 +134,10 @@ namespace LambdaSharp.Tool {
             }
 
             // a suffix indicates a pre-release version, but cannot be compared otherwise
-            if((Suffix == null) && (other.Suffix != null)) {
+            if((Suffix == "") && (other.Suffix != "")) {
                 return 1;
             }
-            if((Suffix != null) && (other.Suffix == null)) {
+            if((Suffix != "") && (other.Suffix == "")) {
                 return -1;
             }
             return 0;
@@ -157,6 +157,50 @@ namespace LambdaSharp.Tool {
             // when Major version is 0, we rely on Minor and Build to match
             return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
+
+        public int? CompareVersionTo(VersionInfo other) {
+            if(object.ReferenceEquals(other, null)) {
+                throw new ArgumentNullException(nameof(other));
+            }
+
+            // version number dominates other comparisions
+            var result = Version.CompareTo(other.Version);
+            if(result != 0) {
+                return result;
+            }
+
+            // a suffix indicates a pre-release version, which is always less than the stable version
+            if((Suffix == "") && (other.Suffix != "")) {
+                return 1;
+            }
+            if((Suffix != "") && (other.Suffix == "")) {
+                return -1;
+            }
+            if(Suffix == other.Suffix) {
+                return 0;
+            }
+
+            // check if the suffixes have a trailing number that can be compared
+            var shortestLength = Math.Min(Suffix.Length, other.Suffix.Length);
+            var i = 1;
+            for(; (i < shortestLength) && char.IsLetter(Suffix[i]) && (Suffix[i] == other.Suffix[i]); ++i);
+            if(
+                int.TryParse(Suffix.Substring(i, Suffix.Length - i), out var leftSuffixValue)
+                && int.TryParse(other.Suffix.Substring(i, other.Suffix.Length - i), out var rightSuffixVersion)
+            ) {
+                if(leftSuffixValue > rightSuffixVersion) {
+                    return 1;
+                }
+                if(leftSuffixValue < rightSuffixVersion) {
+                    return -1;
+                }
+                return 0;
+            }
+
+            // versions cannot be compared
+            return null;
+        }
+
 
         public string GetWildcardVersion() {
             if(IsPreRelease) {

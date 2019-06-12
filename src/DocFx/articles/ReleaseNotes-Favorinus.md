@@ -1,10 +1,10 @@
-# λ# - Favorinus (v0.6) - 2019-05-09
+# λ# - Favorinus (v0.6.0.1) - 2019-06-11
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
 ## What's New
 
-This release focuses on API Gateway, both for REST APIs and Web-Sockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
+This release focuses on API Gateway, both for REST APIs and WebSockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
 
 In addition, there is a [new documentation site](https://lambdasharp.net) that covers all aspects of λ#, including the base classes, modules, and syntax.
 
@@ -89,7 +89,7 @@ A new `WebSocket` event-source is now supported. Similar to the `Api` event-sour
       Invoke: SendMessageAsync
 ```
 
-The target method can now be implemented in a straightforward way, without requiring deserializing or validation. The method uses the `WebSocketClient` property, which is inherited from the base class. The `WebSocketClient` returns the `IAmazonApiGatewayManagementApi` instance when `ALambdaApiGatewayFunction` was instantiated with a web-socket URL.
+The target method can now be implemented in a straightforward way, without requiring deserializing or validation. The method uses the `WebSocketClient` property, which is inherited from the base class. The `WebSocketClient` returns the `IAmazonApiGatewayManagementApi` instance when `ALambdaApiGatewayFunction` was instantiated with a WebSocket URL.
 
 ```csharp
 public Task SendMessageAsync(Message request) {
@@ -184,3 +184,24 @@ This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueServic
 
 The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction) was also enhanced to provide support for target methods invocations.
 
+## Fixes
+
+### (v0.6.0.1) - 2019-06-11
+
+#### Updated Documentation
+* Added documentation for [API Gateway for .NET](~/articles/APIGateway.md).
+* Added [Video Tutorials](~/articles/VideoTutorials.md) section.
+
+#### New Features
+* X-Ray Tracing now works for API Gateway V1 and Nested Modules.
+* Updated CloudFormation spec to 3.3.0.
+* Colorized warning and errors in console output.
+* Added `ALambdaFunction.RunTask()` and `ALambdaFunction.AddPendingTask(Task)` to queue background operations that must complete before the Lambda invocation finishes.
+* Added `HttpClient` with X-Ray tracing instrumentation to `ALambdaFunction` base class.
+* `ALambdaFunction` now unrolls `AggregateException` instances and reports errors individually.
+* `lash util delete-orphan-logs` replaces `delete-orphan-lambda-logs`, which now also delete orphaned API Gateway V1/V2 CloudWatch logs
+
+#### Fixes
+* Fixed an issue with setting the correct IAM role for the API Gateway account.
+* Various bug fixes to generating the proper JSON schema for API Gateway endpoints and routes.
+* `lash publish` now warns if version already exists instead of reporting an error.

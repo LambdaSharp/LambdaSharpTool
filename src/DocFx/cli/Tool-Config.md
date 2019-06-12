@@ -48,10 +48,16 @@ The `config` command is used to configure the λ# CLI. The configuration step op
 (optional) Use a specific AWS profile from the AWS credentials file
 </dd>
 
-<dt><code>--verbose|-V:&lt;LEVEL&gt;</code></dt>
+<dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
-(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)
+(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)
+</dd>
+
+<dt><code>--no-ansi</code></dt>
+<dd>
+
+Disable colored ANSI terminal output
 </dd>
 
 </dl>

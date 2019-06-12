@@ -16,3 +16,6 @@
 - name: Modules Reference
   href: modules/
   topicHref: modules/Index.md
+
+- name: GitHub Source
+  href: https://github.com/LambdaSharp/LambdaSharpTool

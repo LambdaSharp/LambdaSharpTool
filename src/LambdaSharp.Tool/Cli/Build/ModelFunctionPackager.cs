@@ -266,31 +266,39 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // validate the project is using the most recent lambdasharp assembly references
             if(!noAssemblyValidation && function.HasAssemblyValidation) {
-                var includes = csproj.Element("Project")
+                var hasConditionalLambdaSharpGroup = csproj.Element("Project")
                     ?.Elements("ItemGroup")
-                    .Elements("PackageReference")
-                    .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false);
-                if(includes != null) {
-                    foreach(var include in includes) {
-                        var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
-                        var library = include.Attribute("Include").Value;
-                        var libraryVersionText = include.Attribute("Version")?.Value;
-                        if(libraryVersionText == null) {
-                            LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
-                        } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
-                            if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
-                                LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                    .Where(elem => elem.Attribute("Condition")?.Value == "'$(LAMBDASHARP)'!=''")
+                    .Any() ?? false;
+
+                // perform assembly check if there isn't a conditional ItemGroup based on the LAMBDASHARP environment variable -or- the LAMBDASHARP environment is not set
+                if(!hasConditionalLambdaSharpGroup || (System.Environment.GetEnvironmentVariable("LAMBDASHARP") == null)) {
+                    var includes = csproj.Element("Project")
+                        ?.Elements("ItemGroup")
+                        .Elements("PackageReference")
+                        .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false);
+                    if(includes != null) {
+                        foreach(var include in includes) {
+                            var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
+                            var library = include.Attribute("Include").Value;
+                            var libraryVersionText = include.Attribute("Version")?.Value;
+                            if(libraryVersionText == null) {
+                                LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
+                            } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
+                                if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
+                                    LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
+                                    LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                }
+                            } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
+                                LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
                                 LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
-                        } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
-                            LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                        } else if(!libraryVersion.IsCompatibleWith(expectedVersion)) {
-                            LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
-                    }
-                    if(Settings.HasErrors) {
-                        return;
+                        if(Settings.HasErrors) {
+                            return;
+                        }
                     }
                 }
             }
@@ -339,6 +347,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // create request/response schemas for invocation methods
             if(!LambdaSharpCreateInvocationSchemas(
+                function,
                 buildFolder,
                 rootNamespace,
                 function.Function.Handler as string,
@@ -618,6 +627,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private bool LambdaSharpCreateInvocationSchemas(
+            FunctionItem function,
             string buildFolder,
             string rootNamespace,
             string handler,
@@ -673,12 +683,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build invocation arguments
-            string tmpSchemaFile = Path.GetTempFileName();
+            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{function.LogicalId}.json");
+            _existingPackages.Remove(schemaFile);
             var arguments = new[] {
                 "util", "create-invoke-methods-schema",
                 "--directory", buildFolder,
                 "--default-namespace", rootNamespace,
-                "--out", tmpSchemaFile,
+                "--out", schemaFile,
                 "--quiet"
             }
                 .Union(mappings.Select(mapping => $"--method={mapping.Method}"))
@@ -718,73 +729,85 @@ namespace LambdaSharp.Tool.Cli.Build {
                 );
             }
             try {
-                try {
-                    var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(tmpSchemaFile)).ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
-                    foreach(var mapping in mappings) {
-                        if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
-                            LogError($"failed to resolve method '{mapping.Method}'");
-                            continue;
-                        }
-                        if(invocationTarget.Error != null) {
-                            LogError(invocationTarget.Error);
-                            continue;
-                        }
+                var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile)).ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
+                foreach(var mapping in mappings) {
+                    if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
+                        LogError($"failed to resolve method '{mapping.Method}'");
+                        continue;
+                    }
+                    if(invocationTarget.Error != null) {
+                        LogError(invocationTarget.Error);
+                        continue;
+                    }
 
-                        // update mapping information
-                        mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
-                        if(mapping.RestApiSource != null) {
-                            mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
-                            mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
-                            mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                            mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                            mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                            mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                            mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.Method;
+                    // update mapping information
+                    mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
+                    if(mapping.RestApiSource != null) {
+                        mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
+                        mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
+                        mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                        mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                        mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                        mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                        mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.OperationName;
 
-                            // determine which uri parameters come from the request path vs. the query-string
-                            var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
-                            foreach(var pathParameter in mapping.RestApiSource.Path
-                                .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
-                                .Select(segment => segment.ToIdentifier())
-                                .ToArray()
-                            ) {
-                                uriParameters.Remove(pathParameter);
-                            }
-
-                            // remaining uri parameters must be supplied as query parameters
-                            if(uriParameters.Any()) {
-                                if(mapping.RestApiSource.QueryStringParameters == null) {
-                                    mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
-                                }
-                                foreach(var uriParameter in uriParameters) {
-
-                                    // either record new query-string parameter or upgrade requirements for an existing one
-                                    if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
-                                        mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
-                                    }
-                                }
+                        // determine which uri parameters come from the request path vs. the query-string
+                        var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                        foreach(var pathParameter in mapping.RestApiSource.Path
+                            .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
+                            .Select(segment => segment.ToIdentifier())
+                            .ToArray()
+                        ) {
+                            if(!uriParameters.Remove(pathParameter)) {
+                                LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
                             }
                         }
-                        if(mapping.WebSocketSource != null) {
-                            mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
-                            mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
-                            mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                            mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                            mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                            mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                            mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.Method;
+
+                        // remaining uri parameters must be supplied as query parameters
+                        if(uriParameters.Any()) {
+                            if(mapping.RestApiSource.QueryStringParameters == null) {
+                                mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
+                            }
+                            foreach(var uriParameter in uriParameters) {
+
+                                // either record new query-string parameter or upgrade requirements for an existing one
+                                if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
+                                    mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
+                                }
+                            }
                         }
                     }
-                } catch(Exception e) {
-                    LogError("unable to read create-invoke-methods-schema output", e);
-                    return false;
+                    if(mapping.WebSocketSource != null) {
+                        mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
+                        mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
+                        mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                        mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                        mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                        mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                        mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.OperationName;
+
+                        // check if method defined any uri parameters
+                        var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                        if(uriParameters.Any()) {
+
+                            // uri parameters are only valid for $connect route
+                            if(mapping.WebSocketSource.RouteKey == "$connect") {
+
+                                // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
+                                foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
+                                    LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
+                                }
+                            } else {
+                                foreach(var uriParameter in uriParameters) {
+                                    LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
+                                }
+                            }
+                        }
+                    }
                 }
-            } finally {
-                try {
-                    File.Delete(tmpSchemaFile);
-                } catch {
-                    LogWarn($"unable to delete temporary file: {tmpSchemaFile}");
-                }
+            } catch(Exception e) {
+                LogError("unable to read create-invoke-methods-schema output", e);
+                return false;
             }
             return true;
         }

@@ -32,6 +32,6 @@ namespace LambdaSharp.ApiGateway {
     /// The <see cref="FromUriAttribute"/> is not needed for simple types (e.g. <c>string</c>, <c>int</c>, etc.)
     /// as they are deserialized from path- and query-string parameters by default.
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple=false, Inherited=true)]
+    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false, Inherited = true)]
     public class FromUriAttribute : Attribute { }
 }

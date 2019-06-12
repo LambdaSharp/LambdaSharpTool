@@ -1,6 +1,6 @@
 /*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -40,6 +40,7 @@ namespace LambdaSharp.Tool.Cli {
                 // init options
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
+                var enableXRayTracingOption = cmd.Option("--xray", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module", CommandOptionType.NoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
@@ -56,6 +57,13 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
 
+                    // check x-ray settings
+                    if(!TryParseEnumOption(enableXRayTracingOption, XRayTracingLevel.Disabled, XRayTracingLevel.RootModule, out var xRayTracingLevel)) {
+
+                        // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                        return;
+                    }
+
                     // determine if we want to install modules from a local check-out
                     await Init(
                         settings,
@@ -69,7 +77,8 @@ namespace LambdaSharp.Tool.Cli {
                         parametersFileOption.Value(),
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
-                        promptsAsErrorsOption.HasValue()
+                        promptsAsErrorsOption.HasValue(),
+                        xRayTracingLevel
                     );
                 });
             });
@@ -85,7 +94,8 @@ namespace LambdaSharp.Tool.Cli {
             string parametersFilename,
             bool forcePublish,
             bool promptAllParameters,
-            bool promptsAsErrors
+            bool promptsAsErrors,
+            XRayTracingLevel xRayTracingLevel
         ) {
             var command = new CliBuildPublishDeployCommand();
             Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
@@ -105,7 +115,6 @@ namespace LambdaSharp.Tool.Cli {
                     LogError("unable to parse module version from LAMBDASHARP_VERSION");
                     return false;
                 }
-
                 foreach(var module in standardModules) {
                     var moduleSource = Path.Combine(lambdaSharpPath, "Modules", module, "Module.yml");
                     settings.WorkingDirectory = Path.GetDirectoryName(moduleSource);
@@ -137,6 +146,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // deploy LambdaSharp module
             foreach(var module in standardModules) {
+                var isLambdaSharpCoreModule = (module == "LambdaSharp.Core");
                 if(!await command.DeployStepAsync(
                     settings,
                     dryRun: null,
@@ -148,10 +158,15 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     promptsAsErrors: promptsAsErrors,
-                    enableXRayTracing: false,
-                    deployOnlyIfExists: (module != "LambdaSharp.Core")
+                    xRayTracingLevel: xRayTracingLevel,
+                    deployOnlyIfExists: !isLambdaSharpCoreModule
                 )) {
                     return false;
+                }
+
+                // reset tier version if core module was deployed
+                if(isLambdaSharpCoreModule) {
+                    settings.TierVersion = null;
                 }
             }
             return true;

@@ -21,13 +21,18 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
+using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
 using LambdaSharp.ErrorReports;
 using LambdaSharp.Exceptions;
@@ -177,6 +182,8 @@ namespace LambdaSharp {
         private bool _initialized;
         private LambdaConfig _appConfig;
         private Dictionary<Exception, LambdaLogLevel> _reportedExceptions = new Dictionary<Exception, LambdaLogLevel>();
+        private List<Task> _pendingTasks = new List<Task>();
+        private object _pendingTasksSyncRoot = new object();
 
         //--- Constructors ---
 
@@ -251,6 +258,12 @@ namespace LambdaSharp {
         /// <value>The <see cref="ILambdaContext"/> instance.</value>
         protected ILambdaContext CurrentContext { get; private set; }
 
+        /// <summary>
+        /// The <see cref="HttpClient"/> property holds a <c>HttpClient</c> instance that is initialized with X-Ray support.
+        /// </summary>
+        /// <value>The <see cref="HttpClient"/> instance.</value>
+        protected HttpClient HttpClient { get; set; }
+
         //--- Abstract Methods ---
 
         /// <summary>
@@ -316,6 +329,15 @@ namespace LambdaSharp {
                 Stream result;
                 try {
                     result = await ProcessMessageStreamAsync(stream);
+                } catch(AggregateException e) {
+                    foreach(var innerException in e.Flatten().InnerExceptions) {
+                        if(innerException is LambdaRetriableException) {
+                            LogErrorAsWarning(innerException);
+                        } else {
+                            LogError(innerException);
+                        }
+                    }
+                    throw;
                 } catch(LambdaRetriableException e) {
                     LogErrorAsWarning(e);
                     throw;
@@ -325,6 +347,37 @@ namespace LambdaSharp {
                 }
                 return result;
             } finally {
+
+                // wait for pending tasks before returning from lambda invocation
+                while(true) {
+
+                    // check if any pending tasks exist
+                    Task[] pendingTasksCopy;
+                    lock(_pendingTasksSyncRoot) {
+                        if(_pendingTasks.Count == 0) {
+                            break;
+                        }
+
+                        // copy pending tasks and recent accumulator list
+                        pendingTasksCopy = _pendingTasks.ToArray();
+                        _pendingTasks.Clear();
+                    }
+
+                    // wait for copied tasks to finish and report exceptions as appropriate
+                    try {
+                        await Task.WhenAll(pendingTasksCopy);
+                    } catch(AggregateException e) {
+                        foreach(var innerException in e.Flatten().InnerExceptions) {
+                            if(innerException is LambdaRetriableException) {
+                                LogErrorAsWarning(innerException);
+                            } else {
+                                LogError(innerException);
+                            }
+                        }
+                    }
+                }
+
+                // clear function state
                 _reportedExceptions.Clear();
                 CurrentContext = null;
                 LogInfo("invocation completed");
@@ -341,6 +394,7 @@ namespace LambdaSharp {
 
             // register X-RAY for AWS SDK clients (function tracing must be enabled in CloudFormation)
             Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
+            HttpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
 
             // read configuration from environment variables
             _moduleId = envSource.Read("MODULE_ID");
@@ -465,7 +519,7 @@ namespace LambdaSharp {
         }
 
         /// <summary>
-        /// Decrypt a Base64-encoded string with an optional encryption context. The Lambda function
+        /// The <see cref="DecryptSecretAsync(string, Dictionary{string, string})"/> method decrypts a Base64-encoded string with an optional encryption context. The Lambda function
         /// requires permission to use the <c>kms:Decrypt</c> operation on the KMS key used to
         /// encrypt the original message.
         /// </summary>
@@ -480,7 +534,7 @@ namespace LambdaSharp {
         }
 
         /// <summary>
-        /// Encrypt a sequence of bytes using the specified KMS key. The Lambda function requires
+        /// The <see cref="EncryptSecretAsync(string, string, Dictionary{string, string})"/> encrypts a sequence of bytes using the specified KMS key. The Lambda function requires
         /// permission to use the <c>kms:Encrypt</c> opeartion on the specified KMS key.
         /// </summary>
         /// <param name="text">The plaintext string to encrypt.</param>
@@ -494,6 +548,33 @@ namespace LambdaSharp {
                 encryptionContext
             ));
         }
+
+        /// <summary>
+        /// The <see cref="AddPendingTask(Task)"/> method adds the specified task to the list of pending tasks. The Lambda function waits until all
+        /// pendings tasks have completed before responding to the active invocation.
+        /// </summary>
+        /// <param name="task">A task to wait for before responding to the active invocation.</param>
+        protected void AddPendingTask(Task task) {
+            lock(_pendingTasksSyncRoot) {
+                _pendingTasks.Add(task);
+            }
+        }
+
+        /// <summary>
+        /// The <see cref="RunTask(Action, CancellationToken)"/> method queues the specified work for background execution. The Lambda function waits until all
+        /// queued background work has completed before completing the active invocation.
+        /// </summary>
+        /// <param name="action">The work to execute asynchronously.</param>
+        /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
+        protected void RunTask(Action action, CancellationToken cancellationToken = default) => AddPendingTask(Task.Run(action, cancellationToken));
+
+        /// <summary>
+        /// The <see cref="RunTask(Func{Task}, CancellationToken)"/> method queues the specified work for background execution. The Lambda function waits until all
+        /// queued background work has completed before completing the active invocation.
+        /// </summary>
+        /// <param name="function">The work to execute asynchronously.</param>
+        /// <param name="cancellationToken">An optional cancellation token that can be used to cancel the work.</param>
+        protected void RunTask(Func<Task> function, CancellationToken cancellationToken = default)  => AddPendingTask(Task.Run(function, cancellationToken));
 
         private async Task<IDictionary<string, string>> ReadParametersFromEnvironmentVariables() {
             var parameters = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);

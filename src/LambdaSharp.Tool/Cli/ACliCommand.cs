@@ -1,6 +1,6 @@
 /*
  * MindTouch λ#
- * Copyright (C) 2006-2018-2019 MindTouch, Inc.
+ * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
  *
  * For community documentation and downloads visit mindtouch.com;
@@ -22,22 +22,23 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.APIGateway;
+using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using Amazon.IdentityManagement;
+using Amazon.IdentityManagement.Model;
 using Amazon.KeyManagementService;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
-using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using System.Text;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -54,9 +55,6 @@ namespace LambdaSharp.Tool.Cli {
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-
-        public static CommandOption AddNoAnsiOption(CommandLineApplication cmd)
-            => cmd.Option("--no-ansi", "Disable ANSI terminal output", CommandOptionType.NoValue);
 
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
@@ -122,7 +120,8 @@ namespace LambdaSharp.Tool.Cli {
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
-            var verboseLevelOption = cmd.Option("--verbose|-V:<LEVEL>", "(optional) Show verbose output (0=quiet, 1=normal, 2=detailed, 3=exceptions)", CommandOptionType.SingleOrNoValue);
+            var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
+            var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
             var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -141,6 +140,11 @@ namespace LambdaSharp.Tool.Cli {
             moduleBucketNamesOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;
             return async () => {
+
+                // check if ANSI console output needs to be disabled
+                if(noAnsiOutputOption.HasValue()) {
+                    Settings.UseAnsiConsole = false;
+                }
 
                 // initialize logging level
                 if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
@@ -170,6 +174,8 @@ namespace LambdaSharp.Tool.Cli {
                     IAmazonCloudFormation cfClient = null;
                     IAmazonKeyManagementService kmsClient = null;
                     IAmazonS3 s3Client = null;
+                    IAmazonAPIGateway apiGatewayClient = null;
+                    IAmazonIdentityManagementService iamClient = null;
                     if(requireAwsProfile) {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
@@ -183,6 +189,8 @@ namespace LambdaSharp.Tool.Cli {
                         cfClient = new AmazonCloudFormationClient();
                         kmsClient = new AmazonKeyManagementServiceClient();
                         s3Client = new AmazonS3Client();
+                        apiGatewayClient = new AmazonAPIGatewayClient();
+                        iamClient = new AmazonIdentityManagementServiceClient();
                     }
                     if(HasErrors) {
                         return null;
@@ -210,7 +218,9 @@ namespace LambdaSharp.Tool.Cli {
                         SsmClient = ssmClient,
                         CfnClient = cfClient,
                         KmsClient = kmsClient,
-                        S3Client = s3Client
+                        S3Client = s3Client,
+                        ApiGatewayClient = apiGatewayClient,
+                        IamClient = iamClient
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
                     LogError("AWS profile configuration is missing a region specifier");
@@ -265,7 +275,7 @@ namespace LambdaSharp.Tool.Cli {
                         LogError("LambdaSharp CLI is not configured propertly", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
-                    if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion)) {
+                    if((settings.ToolVersion > lambdaSharpToolVersion) && !settings.ToolVersion.IsCompatibleWith(lambdaSharpToolVersion) && !optional) {
                         LogError($"LambdaSharp CLI configuration is not up-to-date (current: {settings.ToolVersion}, existing: {lambdaSharpToolVersion})", new LambdaSharpToolConfigException(settings.ToolProfile));
                         return;
                     }
@@ -417,6 +427,109 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return gitBranch;
+        }
+
+        protected async Task<(string Arn, IEnumerable<string> MissingPolicies)> DetermineMissingApiGatewayRolePolicies(Settings settings) {
+            if((settings.ApiGatewayClient == null) || (settings.IamClient == null)) {
+                return (Arn: null, Enumerable.Empty<string>());
+            }
+
+            // inspect API Gateway role
+            try {
+                var missingPolicies = new List<string> {
+                    "AmazonAPIGatewayPushToCloudWatchLogs",
+                    "AWSXrayWriteOnlyAccess"
+                };
+
+                // retrieve the CloudWatch/X-Ray role from the API Gateway account
+                var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
+                if(account.CloudwatchRoleArn != null) {
+
+                    // check if the role has the expected managed policies
+                    var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
+                        RoleName = account.CloudwatchRoleArn.Split('/').Last()
+                    })).AttachedPolicies;
+                    foreach(var attachedPolicy in attachedPolicies) {
+                        missingPolicies.Remove(attachedPolicy.PolicyName);
+                    }
+                }
+                return (Arn: account.CloudwatchRoleArn, MissingPolicies: Enumerable.Empty<string>());
+            } catch(Exception) {
+                return (Arn: null, Enumerable.Empty<string>());
+            }
+        }
+
+        protected async Task CheckApiGatewayRole(Settings settings) {
+
+            // retrieve the CloudWatch/X-Ray role from the API Gateway account
+            Console.WriteLine("=> Checking API Gateway role");
+            var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
+            var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? "LambdaSharp-ApiGatewayRole");
+
+            // check if the role has the expected managed policies; if not, attach them
+            var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
+                RoleName = role.RoleName
+            })).AttachedPolicies;
+            await CheckOrAttachPolicy("arn:aws:iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs");
+            await CheckOrAttachPolicy("arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess");
+
+            // update API Gateway Account role if needed
+            if(account.CloudwatchRoleArn == null) {
+                Console.WriteLine($"=> Updating API Gateway role to {role.Arn}");
+            again:
+                try {
+                    await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {
+                        PatchOperations = new List<PatchOperation> {
+                            new PatchOperation {
+                                Op = Op.Replace,
+                                Path = "/cloudwatchRoleArn",
+                                Value = role.Arn
+                            }
+                        }
+                    });
+                } catch(BadRequestException) {
+                    Console.WriteLine($"=> Waiting for API Gateway role changes to settle, trying again in 5 seconds");
+                    await Task.Delay(TimeSpan.FromSeconds(5));
+                } catch(TooManyRequestsException) {
+                    Console.WriteLine($"=> Update request was throttled, trying again in 2 seconds");
+                    await Task.Delay(TimeSpan.FromSeconds(2));
+                    goto again;
+                }
+            }
+
+            // local functions
+            async Task CheckOrAttachPolicy(string managedPolicyArn) {
+
+                // check if managed policy is already attached; it not, attach it
+                if(!attachedPolicies.Any(policy => policy.PolicyArn == managedPolicyArn)) {
+                    Console.WriteLine($"=> Attaching managed policy to API Gateway role: {managedPolicyArn}");
+                    await settings.IamClient.AttachRolePolicyAsync(new AttachRolePolicyRequest {
+                        PolicyArn = managedPolicyArn,
+                        RoleName = role.RoleName
+                    });
+                }
+            }
+
+            async Task<Role> GetOrCreateRole(string roleName) {
+                try {
+
+                    // attempt to resolve the given role by name
+                    return (await settings.IamClient.GetRoleAsync(new GetRoleRequest {
+                        RoleName = roleName
+                    })).Role;
+                } catch(NoSuchEntityException) {
+
+                    // IAM role not found, fallthrough to the next step
+                }
+
+                // only create the LambdaSharp API Gateway Role when the account has no role
+                Console.WriteLine("=> Creating API Gateway role");
+                return (await settings.IamClient.CreateRoleAsync(new CreateRoleRequest {
+                    RoleName = "LambdaSharp-ApiGatewayRole",
+                    Description = "API Gateway Role for CloudWatch Logs and X-Ray Tracing",
+                    AssumeRolePolicyDocument = @"{""Version"":""2012-10-17"",""Statement"":[{""Sid"": ""ApiGatewayPrincipal"",""Effect"":""Allow"",""Principal"":{""Service"":""apigateway.amazonaws.com""},""Action"":""sts:AssumeRole""}]}"
+                })).Role;
+            }
         }
     }
 }
