@@ -116,11 +116,11 @@ namespace LambdaSharp.Tool {
             return new ModuleLocation(moduleOwner, moduleName, moduleVersion, moduleBucketName);
         }
 
-        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string moduleBucketName) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-            var searchBucketNames = (bucketName != null)
-                ? new List<string> { bucketName.Replace("${AWS::Region}", Settings.AwsRegion) }
+            var searchBucketNames = (moduleBucketName != null)
+                ? new List<string> { moduleBucketName.Replace("${AWS::Region}", Settings.AwsRegion) }
                 : (Settings.ModuleBucketNames ?? new[] { $"lambdasharp-{Settings.AwsRegion}" });
 
             // attempt to find a matching version
