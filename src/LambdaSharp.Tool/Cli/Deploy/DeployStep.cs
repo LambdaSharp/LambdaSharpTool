@@ -145,14 +145,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
 
-                // check if module can run with core services
+                // check if module should be run with core services
                 if(
                     (Settings.CoreServices == CoreServices.Enabled)
-                    && manifest.GetAllParameters().Any(p => p.Name == "CoreServices")
-                    && !deployParameters.Any(p => p.ParameterKey == "CoreServices")
+                    && manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
+                    && !deployParameters.Any(p => p.ParameterKey == "LambdaSharpCoreServices")
                 ) {
                     deployParameters.Add(new CloudFormationParameter {
-                        ParameterKey = "CoreServices",
+                        ParameterKey = "LambdaSharpCoreServices",
                         ParameterValue = Settings.CoreServices.ToString()
                     });
                 }

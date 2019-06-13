@@ -251,7 +251,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // import lambdasharp dependencies (unless requested otherwise)
             if(_builder.HasLambdaSharpDependencies) {
                 _builder.AddParameter(
-                    name: "CoreServices",
+                    name: "LambdaSharpCoreServices",
                     section: section,
                     label: "Integrate with LambdaSharp.Core services",
                     description: "Use Operating Services",
@@ -279,7 +279,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     parent: null,
                     name: "UseCoreServices",
                     description: null,
-                    value: FnEquals(FnRef("CoreServices"), "Enabled")
+                    value: FnEquals(FnRef("LambdaSharpCoreServices"), "Enabled")
                 );
 
                 // add LambdaSharp Module Internal resource imports
