@@ -314,7 +314,7 @@ namespace LambdaSharp.Tool.Model {
         public ResourceTypeItem(
             string customResourceType,
             string description,
-            object handler
+            string handler
         ) : base(parent: null, customResourceType.ToIdentifier(), description, "String", scope: null, reference: null) {
             CustomResourceType = customResourceType;
             Handler = handler;
@@ -322,12 +322,14 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string CustomResourceType { get; set; }
-        public object Handler { get; set; }
+        public string Handler { get; set; }
 
         //--- Methods ---
         public override void Visit(ModuleVisitorDelegate visitor) {
             base.Visit(visitor);
-            Handler = visitor(this, Handler);
+            var result = visitor(this, FnRef(Handler));
+            TryGetFnRef(result, out var newHandler);
+            Handler = newHandler;
         }
     }
 }

@@ -458,9 +458,8 @@ namespace LambdaSharp.Tool.Cli {
             try {
 
                 // TODO: should be able to build without runtime settings!
-                if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
-                    return false;
-                }
+                await PopulateRuntimeSettingsAsync(settings);
+
                 return await new BuildStep(settings, moduleSource).DoAsync(
                     outputCloudFormationFilePath,
                     noAssemblyValidation,

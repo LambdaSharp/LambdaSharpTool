@@ -108,7 +108,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     if(!upgrade) {
                         return false;
                     }
-                } else if(!Settings.ToolVersion.IsPreRelease && (Settings.TierOperatingServices != TierOperatingServices.Bootstrap)) {
+                } else if(!Settings.ToolVersion.IsPreRelease && (Settings.CoreServices != CoreServices.Bootstrap)) {
 
                     // unless tool version is a pre-release or LambdaSharp.Core is bootstrapping; there is nothing to do
                     return true;
@@ -143,6 +143,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters, promptsAsErrors);
                 if(HasErrors) {
                     return false;
+                }
+
+                // check if module can run with core services
+                if(
+                    (Settings.CoreServices == CoreServices.Enabled)
+                    && manifest.GetAllParameters().Any(p => p.Name == "CoreServices")
+                    && !deployParameters.Any(p => p.ParameterKey == "CoreServices")
+                ) {
+                    deployParameters.Add(new CloudFormationParameter {
+                        ParameterKey = "CoreServices",
+                        ParameterValue = Settings.CoreServices.ToString()
+                    });
                 }
 
                 // check if module supports AWS X-Ray for tracing

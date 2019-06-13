@@ -269,7 +269,7 @@ Items:
 
   # IMPORTANT: must EXACTLY match resources from 'LambdaSharpToolConfig.yml'
 
-  - Variable: TierOperatingServices
+  - Variable: CoreServices
     Scope: public
     Description: Flag indicating if operating services are deployed (String)
     Value: Enabled

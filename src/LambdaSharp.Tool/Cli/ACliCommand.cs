@@ -343,12 +343,12 @@ namespace LambdaSharp.Tool.Cli {
                 settings.ModuleBucketNames = new[] { settings.DeploymentBucketName, $"lambdasharp-{settings.AwsRegion}" };
 
                 // read tier mode
-                var tierModeText = GetStackOutput("TierOperatingServices");
-                if(!Enum.TryParse<TierOperatingServices>(tierModeText, true, out var tierMode)) {
-                    LogError("unable to parse TierOperatingServices output value from stack");
+                var coreServicesModeText = GetStackOutput("CoreServices");
+                if(!Enum.TryParse<CoreServices>(coreServicesModeText, true, out var coreServicesMode)) {
+                    LogError("unable to parse CoreServices output value from stack");
                     return false;
                 }
-                settings.TierOperatingServices = tierMode;
+                settings.CoreServices = coreServicesMode;
 
                 // local functions
                 string GetStackOutput(string key) => stack.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;

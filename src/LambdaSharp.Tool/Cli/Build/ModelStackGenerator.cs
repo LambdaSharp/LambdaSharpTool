@@ -239,7 +239,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             case ResourceTypeItem resourceTypeItem:
                 _stack.Add(resourceTypeItem.LogicalId, new Humidifier.Output {
                     Description = resourceTypeItem.Description,
-                    Value = resourceTypeItem.Handler,
+                    Value = _module.Items.First(i => i.LogicalId == resourceTypeItem.Handler).GetExportReference(),
                     Export = new Dictionary<string, dynamic> {
                         ["Name"] = Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
                     }

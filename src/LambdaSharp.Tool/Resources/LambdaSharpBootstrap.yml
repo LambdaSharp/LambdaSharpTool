@@ -32,9 +32,9 @@ Parameters:
     AllowedPattern: '(arn:aws:s3:.*)?'
     ConstraintDescription: Must be a valid S3 ARN (all lowercase) or left blank
 
-  TierOperatingServices:
+  CoreServices:
     Type: String
-    Description: Deploy LambdaSharp Tier with Operating Services
+    Description: LambdaSharp.Core Services
     AllowedValues:
       - Enabled
       - Disabled
@@ -46,16 +46,16 @@ Metadata:
           default: LambdaSharp Tool Settings
         Parameters:
           - ExistingDeploymentBucket
-          - TierOperatingServices
+          - CoreServices
     ParameterLabels:
       ExistingDeploymentBucket:
         default: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
-      TierOperatingServices:
-        default: Deploy LambdaSharp Tier with Operating Services
+      CoreServices:
+        default: LambdaSharp.Core Services
 
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref ExistingDeploymentBucket, "" ]
-  EnableTierOperatingServices: !Equals [ !Ref TierOperatingServices, "Enabled" ]
+  EnableCoreServices: !Equals [ !Ref CoreServices, "Enabled" ]
 
 ##############
 # Conditions #
@@ -81,8 +81,8 @@ Outputs:
       - !GetAtt DeploymentBucketResource.Arn
       - !Ref ExistingDeploymentBucket
 
-  TierOperatingServices:
+  CoreServices:
     Value: !If
-      - EnableTierOperatingServices
+      - EnableCoreServices
       - Bootstrap
       - Disabled

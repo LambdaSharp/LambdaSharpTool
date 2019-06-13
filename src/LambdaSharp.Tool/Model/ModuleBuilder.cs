@@ -329,7 +329,7 @@ namespace LambdaSharp.Tool.Model {
             } else if(properties == null) {
 
                 // request input parameter resource grants
-                AddGrant(result.LogicalId, type, result.Reference, allow);
+                AddGrant(result.LogicalId, type, result.Reference, allow, condition: null);
             } else {
 
                 // create conditional resource
@@ -361,7 +361,7 @@ namespace LambdaSharp.Tool.Model {
                 );
 
                 // request input parameter or conditional managed resource grants
-                AddGrant(instance.LogicalId, type, result.Reference, allow);
+                AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
             }
             return result;
         }
@@ -485,7 +485,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // add resource type definition
-            AddItem(new ResourceTypeItem(resourceType, description, FnRef(handler)));
+            AddItem(new ResourceTypeItem(resourceType, description, handler));
             _customResourceTypes.Add(new ModuleManifestResourceType {
                 Type = resourceType,
                 Description = description,
@@ -586,7 +586,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add optional grants
             if(allow != null) {
-                AddGrant(result.LogicalId, type, value, allow);
+                AddGrant(result.LogicalId, type, value, allow, condition: null);
             }
             return result;
         }
@@ -685,7 +685,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add optional grants
             if(allow != null) {
-                AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
+                AddGrant(result.LogicalId, type, result.GetExportReference(), allow, condition: null);
             }
             return result;
         }
@@ -1085,7 +1085,7 @@ namespace LambdaSharp.Tool.Model {
             ));
         }
 
-        public void AddGrant(string sid, string awsType, object reference, object allow) {
+        public void AddGrant(string name, string awsType, object reference, object allow, object condition) {
 
             // resolve shorthands and deduplicate statements
             var allowStatements = new List<string>();
@@ -1107,20 +1107,59 @@ namespace LambdaSharp.Tool.Model {
                 return;
             }
 
-            // add role resource statement
-            var statement = new Humidifier.Statement {
-                Sid = sid.ToIdentifier(),
-                Effect = "Allow",
-                Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
-                Action = allowStatements.Distinct().OrderBy(text => text).ToList()
-            };
-            for(var i = 0; i < _resourceStatements.Count; ++i) {
-                if(_resourceStatements[i].Sid == sid) {
-                    _resourceStatements[i] = statement;
-                    return;
+            // check if statement can be added to role directly or needs to be attached as a conditional policy resource
+            if(condition != null) {
+                AddResource(
+                    parent: GetItem("Module::Role"),
+                    name: name + "Policy",
+                    description: null,
+
+                    // by scoping this resource to all Lambda functions, we ensure the policy is created before a Lambda executes
+                    scope: new[] { "all" },
+
+                    resource: new Humidifier.IAM.Policy {
+                        PolicyName = FnSub($"${{AWS::StackName}}ModuleRole{name}"),
+                        PolicyDocument = new Humidifier.PolicyDocument {
+                            Version = "2012-10-17",
+                            Statement = new List<Humidifier.Statement> {
+                                new Humidifier.Statement {
+                                    Sid = name.ToIdentifier(),
+                                    Effect = "Allow",
+                                    Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
+                                    Action = allowStatements.Distinct().OrderBy(text => text).ToList()
+                                }
+                            }
+                        },
+                        Roles = new List<object> {
+                            FnRef("Module::Role")
+                        }
+                    },
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: condition,
+                    pragmas: null
+                ).DiscardIfNotReachable = true;
+            } else {
+
+                // add role resource statement
+                var statement = new Humidifier.Statement {
+                    Sid = name.ToIdentifier(),
+                    Effect = "Allow",
+                    Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
+                    Action = allowStatements.Distinct().OrderBy(text => text).ToList()
+                };
+
+                // check if an existing statement is being updated
+                for(var i = 0; i < _resourceStatements.Count; ++i) {
+                    if(_resourceStatements[i].Sid == name) {
+                        _resourceStatements[i] = statement;
+                        return;
+                    }
                 }
+
+                // add new statement
+                _resourceStatements.Add(statement);
             }
-            _resourceStatements.Add(statement);
         }
 
         public void VisitAll(ModuleVisitorDelegate visitor) {

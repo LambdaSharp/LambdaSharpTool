@@ -136,7 +136,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if bootstrap tier needs to be installed or upgraded
-            if(install || (update && (settings.TierOperatingServices == TierOperatingServices.Disabled))) {
+            if(install || (update && (settings.CoreServices == CoreServices.Disabled))) {
 
                 // initialize stack with seed CloudFormation template
                 var template = ReadResource("LambdaSharpBootstrap.yml", new Dictionary<string, string> {
@@ -233,18 +233,6 @@ namespace LambdaSharp.Tool.Cli {
                 return false;
             }
 
-            // check if operating services need to be installed/updated
-            if(settings.TierOperatingServices == TierOperatingServices.Disabled) {
-                return true;
-            }
-            if(install) {
-                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
-            } else if(update) {
-                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
-            } else {
-                return true;
-            }
-
             // standard modules
             var standardModules = new[] {
                 "LambdaSharp.Core",
@@ -255,6 +243,7 @@ namespace LambdaSharp.Tool.Cli {
             // check if the module must be built and published first
             var buildPublishDeployCommand = new CliBuildPublishDeployCommand();
             if(lambdaSharpPath != null) {
+                Console.WriteLine($"Building LambdaSharp modules");
 
                 // attempt to parse the tool version from environment variables
                 if(!VersionInfo.TryParse(Environment.GetEnvironmentVariable("LAMBDASHARP_VERSION"), out var moduleVersion)) {
@@ -288,6 +277,18 @@ namespace LambdaSharp.Tool.Cli {
                         return false;
                     }
                 }
+            }
+
+            // check if operating services need to be installed/updated
+            if(settings.CoreServices == CoreServices.Disabled) {
+                return true;
+            }
+            if(install) {
+                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            } else if(update) {
+                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            } else {
+                return true;
             }
 
             // read parameters if they haven't been read yet

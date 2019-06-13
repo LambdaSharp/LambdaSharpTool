@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    public enum TierOperatingServices {
+    public enum CoreServices {
         Undefined,
         Disabled,
         Bootstrap,
@@ -138,7 +138,7 @@ namespace LambdaSharp.Tool {
         public VersionInfo ToolVersion { get; set; }
         public string Tier { get; set; }
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
-        public TierOperatingServices TierOperatingServices { get; set; }
+        public CoreServices CoreServices { get; set; }
         public VersionInfo TierVersion { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
