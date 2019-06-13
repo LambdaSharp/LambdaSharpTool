@@ -141,7 +141,7 @@ Items:
   # CloudWatch Log Events Processing
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions
-    Memory: 128
+    Memory: 256
     Timeout: 30
     Sources:
       - Kinesis: LoggingStream
@@ -182,10 +182,15 @@ Items:
 
   - Function: Registration
     Description: Register LambdaSharp modules and functions
-    Memory: 128
+    Memory: 256
     Timeout: 30
     Sources:
       - Topic: RegistrationTopic
+
+  - Function: Finalizer
+    Description: Clean-up resources on tear down
+    Memory: 256
+    Timeout: 900
 
   - ResourceType: LambdaSharp::Registration::Module
     Description: Resource type for LambdaSharp module registrations
@@ -304,10 +309,12 @@ Items:
             Action: s3:GetObject
             Resource: !Sub "${DeploymentBucketResource.Arn}/*"
 
-  - Variable: DeploymentBucket
+  - Resource: DeploymentBucket
     Description: S3 bucket name for publishing modules
-    Scope: public
+    Scope: public, Finalizer
     Value: !If
       - CreateDeploymentBucket
       - !GetAtt DeploymentBucketResource.Arn
       - !Ref ExistingDeploymentBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
