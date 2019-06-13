@@ -477,7 +477,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         } else if(item is ParameterItem) {
                             switch(item.FullName) {
                             case "Secrets":
-                            case "EnableXRayTracing":
+                            case "XRayTracing":
                             case "DeploymentBucketName":
                             case "DeploymentPrefix":
                             case "DeploymentPrefixLowercase":

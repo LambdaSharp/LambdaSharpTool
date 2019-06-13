@@ -210,7 +210,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddParameter(
 
                 // TODO: rename to 'XRayTracing'
-                name: "EnableXRayTracing",
+                name: "XRayTracing",
                 section: section,
                 label: "Enable AWS X-Ray tracing mode for module resources",
                 description: "AWS X-Ray Tracing",
@@ -239,13 +239,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 parent: null,
                 name: "XRayIsEnabled",
                 description: null,
-                value: FnNot(FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.Disabled.ToString()))
+                value: FnNot(FnEquals(FnRef("XRayTracing"), XRayTracingLevel.Disabled.ToString()))
             );
             _builder.AddCondition(
                 parent: null,
                 name: "XRayNestedIsEnabled",
                 description: null,
-                value: FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.AllModules.ToString())
+                value: FnEquals(FnRef("XRayTracing"), XRayTracingLevel.AllModules.ToString())
             );
 
             // import lambdasharp dependencies (unless requested otherwise)
@@ -253,7 +253,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _builder.AddParameter(
                     name: "CoreServices",
                     section: section,
-                    label: "Register module with operating services",
+                    label: "Integrate with LambdaSharp.Core services",
                     description: "Use Operating Services",
                     type: "String",
                     scope: null,

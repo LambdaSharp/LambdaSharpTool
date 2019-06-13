@@ -785,8 +785,8 @@ namespace LambdaSharp.Tool.Model {
                         }
 
                         // check if x-ray tracing should be enabled in nested module
-                        if(formalParameters.ContainsKey("EnableXRayTracing") && !moduleParameters.ContainsKey("EnableXRayTracing")) {
-                            moduleParameters.Add("EnableXRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
+                        if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
+                            moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
                         }
                     } else {
 
