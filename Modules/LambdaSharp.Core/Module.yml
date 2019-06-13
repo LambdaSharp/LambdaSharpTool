@@ -120,7 +120,7 @@ Items:
     Label: Account-level token for read operations (leave blank to disable Rollbar integration)
     Description: Read Access Token
     Type: Secret
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarWriteAccessToken
@@ -128,14 +128,14 @@ Items:
     Label: Account-level token for write operations (leave blank to disable Rollbar integration)
     Description: Write Access Token
     Type: Secret
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
     Label: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
     Description: Project Prefix
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   # CloudWatch Log Events Processing
@@ -147,11 +147,6 @@ Items:
       - Kinesis: LoggingStream
 
   # Module & Function Registrations
-  - Resource: RegistrationTopic
-    Description: Custom resource topic for registering LambdaSharp modules
-    Type: AWS::SNS::Topic
-    Allow: Subscribe
-
   - Resource: ErrorReportTopic
     Scope: public
     Description: SNS topic for LambdaSharp module errors
@@ -180,21 +175,14 @@ Items:
         - AttributeName: Id
           KeyType: HASH
 
-  - Function: Registration
+  - Function: RegistrationFunction
     Description: Register LambdaSharp modules and functions
     Memory: 256
     Timeout: 30
-    Sources:
-      - Topic: RegistrationTopic
-
-  - Function: Finalizer
-    Description: Clean-up resources on tear down
-    Memory: 256
-    Timeout: 900
 
   - ResourceType: LambdaSharp::Registration::Module
     Description: Resource type for LambdaSharp module registrations
-    Handler: RegistrationTopic
+    Handler: RegistrationFunction
     Properties:
 
       - Name: ModuleId
@@ -215,7 +203,7 @@ Items:
 
   - ResourceType: LambdaSharp::Registration::Function
     Description: Resource type for LambdaSharp function registrations
-    Handler: RegistrationTopic
+    Handler: RegistrationFunction
     Properties:
 
       - Name: ModuleId
@@ -268,6 +256,12 @@ Items:
       - Name: Registration
         Description: Registration ID
         Type: String
+
+  # Module Finalizer
+  - Function: Finalizer
+    Description: Clean-up resources on tear down
+    Memory: 256
+    Timeout: 900
 
   #######################
   # Bootstrap Resources #
