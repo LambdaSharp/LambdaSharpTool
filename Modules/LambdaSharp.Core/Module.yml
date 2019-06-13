@@ -93,7 +93,7 @@ Items:
   # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
   - Resource: LoggingStreamRole
     Scope: public
-    Description: Role used by CloudWatch logs to write to the Kinesis stream
+    Description: CloudWatch Logs Role for writing to logging stream (ARN)
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -181,7 +181,7 @@ Items:
     Timeout: 30
 
   - ResourceType: LambdaSharp::Registration::Module
-    Description: Resource type for LambdaSharp module registrations
+    Description: Custom resource type for module registrations
     Handler: RegistrationFunction
     Properties:
 
@@ -202,7 +202,7 @@ Items:
         Type: String
 
   - ResourceType: LambdaSharp::Registration::Function
-    Description: Resource type for LambdaSharp function registrations
+    Description: Custom resource type for function registrations
     Handler: RegistrationFunction
     Properties:
 
@@ -271,6 +271,7 @@ Items:
 
   - Variable: TierOperatingServices
     Scope: public
+    Description: Flag indicating if operating services are deployed (String)
     Value: Enabled
 
   # S3 Deployment Bucket
@@ -304,7 +305,7 @@ Items:
             Resource: !Sub "${DeploymentBucketResource.Arn}/*"
 
   - Resource: DeploymentBucket
-    Description: S3 bucket name for publishing modules
+    Description: S3 bucket for published modules (ARN)
     Scope: public, Finalizer
     Value: !If
       - CreateDeploymentBucket
