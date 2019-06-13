@@ -638,7 +638,7 @@ namespace LambdaSharp.Tool.Model {
             } else if(condition != null) {
                 var conditionItem = AddCondition(
                     parent: result,
-                    name: "If",
+                    name: "Condition",
                     description: null,
                     value: condition
                 );
@@ -1161,46 +1161,6 @@ namespace LambdaSharp.Tool.Model {
             if(TryGetItem("Module::Role", out var moduleRoleItem)) {
                 var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
-
-                // add conditional KMS permissions for secrets parameter
-                var secretsIsEmpty = AddCondition(
-                    parent: null,
-                    name: "HasSecrets",
-                    description: null,
-                    value: FnNot(FnEquals(FnRef("Secrets"), ""))
-                );
-                AddResource(
-                    parent: moduleRoleItem,
-                    name: "SecretsPolicy",
-                    description: "Policy for using secrets passed as parameter",
-                    scope: null,
-                    resource: new Humidifier.IAM.Policy {
-                        PolicyName = FnSub("${AWS::StackName}ModuleSecretsPolicy"),
-                        PolicyDocument = new Humidifier.PolicyDocument {
-                            Version = "2012-10-17",
-                            Statement = new List<Humidifier.Statement> {
-                                new Humidifier.Statement {
-                                    Sid = "SecretsPolicy",
-                                    Effect = "Allow",
-                                    Resource = FnSplit(",", FnRef("Secrets")),
-                                    Action = new List<string> {
-                                        "kms:Decrypt",
-                                        "kms:Encrypt"
-                                    }
-                                }
-                            }
-                        },
-                        Roles = new List<object> {
-
-                            // NOTE: this method is invoked after resources references have been resolved to logical IDs
-                            FnRef(moduleRoleItem.LogicalId)
-                        }
-                    },
-                    resourceExportAttribute: null,
-                    dependsOn: null,
-                    condition: secretsIsEmpty.LogicalId,
-                    pragmas: null
-                );
             }
             return new Module {
                 Owner = _owner,

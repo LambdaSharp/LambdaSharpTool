@@ -454,7 +454,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // create module IAM role used by all functions
-            _builder.AddResource(
+            var moduleRoleItem = _builder.AddResource(
                 parent: moduleItem,
                 name: "Role",
                 description: null,
@@ -486,6 +486,39 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resourceExportAttribute: null,
                 dependsOn: null,
                 condition: null,
+                pragmas: null
+            );
+            moduleRoleItem.DiscardIfNotReachable = true;
+
+            // add conditional KMS permissions for secrets parameter
+            _builder.AddResource(
+                parent: moduleRoleItem,
+                name: "SecretsPolicy",
+                description: "Policy for using secrets passed as parameter",
+                scope: new[] { "all" },
+                resource: new Humidifier.IAM.Policy {
+                    PolicyName = FnSub("${AWS::StackName}ModuleSecretsPolicy"),
+                    PolicyDocument = new Humidifier.PolicyDocument {
+                        Version = "2012-10-17",
+                        Statement = new List<Humidifier.Statement> {
+                            new Humidifier.Statement {
+                                Sid = "SecretsPolicy",
+                                Effect = "Allow",
+                                Resource = FnSplit(",", FnRef("Secrets")),
+                                Action = new List<string> {
+                                    "kms:Decrypt",
+                                    "kms:Encrypt"
+                                }
+                            }
+                        }
+                    },
+                    Roles = new List<object> {
+                        FnRef("Module::Role")
+                    }
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: FnNot(FnEquals(FnRef("Secrets"), "")),
                 pragmas: null
             ).DiscardIfNotReachable = true;
 

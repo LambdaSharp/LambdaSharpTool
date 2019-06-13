@@ -21,16 +21,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Humidifier;
 using Humidifier.Json;
-using Humidifier.Logs;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -199,7 +196,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 break;
             case ResourceItem resourceItem:
                 _stack.Add(
-                    logicalId,
+                    resourceItem.LogicalId,
                     resourceItem.Resource,
                     resourceItem.Condition,
                     dependsOn: resourceItem.DependsOn.ToArray()
