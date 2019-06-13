@@ -476,6 +476,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             string PromptString(ModuleManifestParameter parameter, string defaultValue = null) {
+
+                // TODO: show multiple choice values
+
                 var prompt = $"|=> {parameter.Name} [{parameter.Type}]:";
                 if(parameter.Label != null) {
                     prompt += $" {parameter.Label}:";

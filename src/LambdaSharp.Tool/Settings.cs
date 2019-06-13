@@ -147,8 +147,6 @@ namespace LambdaSharp.Tool {
 
         // TODO: need to get rid of this
         public IEnumerable<string> ModuleBucketNames { get; set; }
-
-        // TODO: check if we can remove this
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

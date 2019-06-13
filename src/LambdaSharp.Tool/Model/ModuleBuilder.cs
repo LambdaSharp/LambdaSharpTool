@@ -445,6 +445,7 @@ namespace LambdaSharp.Tool.Model {
                     )
                 );
 
+                // check if import itself is conditional
                 import.Reference = FnIf(
                     condition.ResourceName,
                     FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
@@ -455,7 +456,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // TODO (2019-02-07, bjorg): since the variable is created for each import, it also duplicates the '::Plaintext' sub-resource
-            //  for imports of type 'Secret'; while it's technically not wrong, it's not efficient if this happens multiple times.
+            //  for imports of type 'Secret'; while it's technically not wrong, it's not efficient when multiple secrets are being imported.
 
             // register import parameter reference
             return AddVariable(
