@@ -34,10 +34,10 @@ Parameters:
 
   TierOperatingServices:
     Type: String
-    Description:
+    Description: Deploy LambdaSharp Tier with Operating Services
     AllowedValues:
-      - enabled
-      - disabled
+      - Enabled
+      - Disabled
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -51,11 +51,11 @@ Metadata:
       ExistingDeploymentBucket:
         default: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
       TierOperatingServices:
-        default: Deploy Tier with LambdaSharp Operating Services
+        default: Deploy LambdaSharp Tier with Operating Services
 
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref ExistingDeploymentBucket, "" ]
-  EnableTierOperatingServices: !Equals [ !Ref TierOperatingServices, "enabled" ]
+  EnableTierOperatingServices: !Equals [ !Ref TierOperatingServices, "Enabled" ]
 
 ##############
 # Conditions #
@@ -84,5 +84,5 @@ Outputs:
   TierOperatingServices:
     Value: !If
       - EnableTierOperatingServices
-      - bootstrap
-      - disabled
+      - Bootstrap
+      - Disabled

@@ -255,96 +255,103 @@ namespace LambdaSharp.Tool.Cli {
                 || (settings.ModuleBucketNames == null)
                 || (settings.TierVersion == null)
             ) {
-
-                // import LambdaSharp profile settings
-                if(settings.Tier != null) {
-
-                    // TODO: finalize core module name
-                    var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
-                    Stack stack = null;
-
-                    // attempt to find an existing core module
-                    try {
-                        var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                            StackName = stackName
-                        });
-
-                        // make sure the stack is in a stable state (not updating and not failed)
-                        stack = describe.Stacks.FirstOrDefault();
-                        switch(stack?.StackStatus) {
-                        case null:
-                        case "CREATE_COMPLETE":
-                        case "ROLLBACK_COMPLETE":
-                        case "UPDATE_COMPLETE":
-                        case "UPDATE_ROLLBACK_COMPLETE":
-
-                            // we're good to go
-                            break;
-                        default:
-                            LogError($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})");
-                            return false;
-                        }
-                    } catch(AmazonCloudFormationException) {
-
-                        // stack not found; nothing to do
-                    }
-
-                    // validate module information
-                    var tierModuleInfo = stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                    if(tierModuleInfo == null) {
-                        if(!optional) {
-                            LogError($"Could not find LambdaSharp tier information for {stackName}");
-                        }
-                        return false;
-                    }
-                    if(
-                        !tierModuleInfo.TryParseModuleDescriptor(out var tierModuleOwner, out var tierModuleName, out var tierModuleVersion, out var _)
-                        || (tierModuleOwner != "LambdaSharp")
-                        || (tierModuleName != "Core")
-                    ) {
-                        LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                        return false;
-                    }
-                    settings.TierVersion = tierModuleVersion;
-
-                    // check if tier and tool versions are compatible
+                if(settings.Tier == null) {
                     if(!optional) {
-                        var tierToToolVersionComparison = tierModuleVersion.CompareToVersion(settings.ToolVersion);
-                        if(tierToToolVersionComparison == 0) {
-
-                            // versions are identical; nothing to do
-                        } else if(tierToToolVersionComparison < 0) {
-                            LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpDeploymentTierSetupException(settings.Tier));
-                            return false;
-                        } else if(tierToToolVersionComparison > 0) {
-
-                            // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
-                        } else {
-                            LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpToolOutOfDateException(tierModuleVersion));
-                            return false;
-                        }
+                        LogError($"must provide a tier name with --tier option");
                     }
-
-                    // read deployment S3 bucket name
-                    var tieModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
-                    if(tieModuleBucketArnParts == null) {
-                        LogError("could not find 'DeploymentBucket' output value");
-                        return false;
-                    }
-                    if((tieModuleBucketArnParts.Length != 6) || (tieModuleBucketArnParts[0] != "arn") || (tieModuleBucketArnParts[1] != "aws") || (tieModuleBucketArnParts[2] != "s3")) {
-                        LogError("invalid value for 'DeploymentBucket' output value");
-                        return false;
-                    }
-                    settings.DeploymentBucketName = tieModuleBucketArnParts[5];
-                    settings.ModuleBucketNames = new[] { settings.DeploymentBucketName, $"lambdasharp-{settings.AwsRegion}" };
-
-                    // read default KMS secret key ARN
-                    settings.TierDefaultSecretKey = GetStackOutput("DefaultSecretKey");
-                    settings.TierOperatingServices = GetStackOutput("TierOperatingServices");
-
-                    // local functions
-                    string GetStackOutput(string key) => stack.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
+                    return false;
                 }
+
+                // TODO: finalize core module name
+                var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
+                Stack stack = null;
+
+                // attempt to find an existing core module
+                try {
+                    var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
+                        StackName = stackName
+                    });
+
+                    // make sure the stack is in a stable state (not updating and not failed)
+                    stack = describe.Stacks.FirstOrDefault();
+                    switch(stack?.StackStatus) {
+                    case null:
+                    case "CREATE_COMPLETE":
+                    case "ROLLBACK_COMPLETE":
+                    case "UPDATE_COMPLETE":
+                    case "UPDATE_ROLLBACK_COMPLETE":
+
+                        // we're good to go
+                        break;
+                    default:
+                        LogError($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})");
+                        return false;
+                    }
+                } catch(AmazonCloudFormationException) {
+
+                    // stack not found; nothing to do
+                }
+
+                // validate module information
+                var tierModuleInfo = stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                if(tierModuleInfo == null) {
+                    if(!optional) {
+                        LogError($"Could not find LambdaSharp tier information for {stackName}");
+                    }
+                    return false;
+                }
+                if(
+                    !tierModuleInfo.TryParseModuleDescriptor(out var tierModuleOwner, out var tierModuleName, out var tierModuleVersion, out var _)
+                    || (tierModuleOwner != "LambdaSharp")
+                    || (tierModuleName != "Core")
+                ) {
+                    LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    return false;
+                }
+                settings.TierVersion = tierModuleVersion;
+
+                // check if tier and tool versions are compatible
+                if(!optional) {
+                    var tierToToolVersionComparison = tierModuleVersion.CompareToVersion(settings.ToolVersion);
+                    if(tierToToolVersionComparison == 0) {
+
+                        // versions are identical; nothing to do
+                    } else if(tierToToolVersionComparison < 0) {
+                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        return false;
+                    } else if(tierToToolVersionComparison > 0) {
+
+                        // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
+                    } else {
+                        LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpToolOutOfDateException(tierModuleVersion));
+                        return false;
+                    }
+                }
+
+                // read deployment S3 bucket name
+                var tieModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
+                if(tieModuleBucketArnParts == null) {
+                    LogError("could not find 'DeploymentBucket' output value");
+                    return false;
+                }
+                if((tieModuleBucketArnParts.Length != 6) || (tieModuleBucketArnParts[0] != "arn") || (tieModuleBucketArnParts[1] != "aws") || (tieModuleBucketArnParts[2] != "s3")) {
+                    LogError("invalid value for 'DeploymentBucket' output value");
+                    return false;
+                }
+                settings.DeploymentBucketName = tieModuleBucketArnParts[5];
+                settings.ModuleBucketNames = new[] { settings.DeploymentBucketName, $"lambdasharp-{settings.AwsRegion}" };
+
+                // read default KMS secret key ARN
+                settings.TierDefaultSecretKey = GetStackOutput("DefaultSecretKey");
+                var tierModeText = GetStackOutput("TierOperatingServices");
+                if(!Enum.TryParse<TierOperatingServices>(tierModeText, true, out var tierMode)) {
+                    LogError("unable to parse TierOperatingServices output value from stack");
+                    return false;
+                }
+                settings.TierOperatingServices = tierMode;
+
+                // local functions
+                string GetStackOutput(string key) => stack.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
             }
             return true;
         }

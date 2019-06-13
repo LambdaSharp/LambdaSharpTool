@@ -108,7 +108,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     if(!upgrade) {
                         return false;
                     }
-                } else if(!Settings.ToolVersion.IsPreRelease && !Settings.IsTierOperatingServicesBootstrapping) {
+                } else if(!Settings.ToolVersion.IsPreRelease && (Settings.TierOperatingServices != TierOperatingServices.Bootstrap)) {
 
                     // unless tool version is a pre-release or LambdaSharp.Core is bootstrapping; there is nothing to do
                     return true;

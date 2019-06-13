@@ -102,26 +102,66 @@ namespace LambdaSharp.Tool.Cli {
             XRayTracingLevel xRayTracingLevel
         ) {
             Dictionary<string, string> parameters = null;
-            if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
+            await PopulateRuntimeSettingsAsync(settings, optional: true);
+            if(HasErrors) {
+                return false;
+            }
+
+            // check if installation needs to be upgraded
+            var install = (settings.TierVersion == null);
+            var update = false;
+            if(!install) {
+                var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.ToolVersion);
+                if(tierToToolVersionComparison == 0) {
+
+                    // versions are identical; nothing to do, unless it's a pre-release, which always need to be updated
+                    update = settings.ToolVersion.IsPreRelease;
+                } else if(tierToToolVersionComparison < 0) {
+
+                    // tier is older; let's only upgrade it if we can
+                    update = true;
+                } else if(tierToToolVersionComparison > 0) {
+
+                    // tier is newer; tool needs to get updated
+                    LogError($"LambdaSharp tool is out of date (tool: {settings.ToolVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
+                    return false;
+                } else if(!forceDeploy) {
+                    LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
+                    return false;
+                } else {
+
+                    // force deploy it is!
+                    update = true;
+                }
+            }
+
+            // check if bootstrap tier needs to be installed or upgraded
+            if(install || (update && (settings.TierOperatingServices == TierOperatingServices.Disabled))) {
 
                 // initialize stack with seed CloudFormation template
-                var template = ReadResource("LambdaSharpToolConfig.yml", new Dictionary<string, string> {
+                var template = ReadResource("LambdaSharpBootstrap.yml", new Dictionary<string, string> {
                     ["VERSION"] = settings.ToolVersion.ToString()
                 });
-                Console.WriteLine($"Configuring a new LambdaSharp profile");
 
-                // prompt for profile name
-                if(settings.Tier == null) {
-                    if(promptsAsErrors) {
-                        LogError($"must provide profile name with --cli-profile option");
-                        return false;
+                // check if boostrap template is being updated or installed
+                if(install) {
+                    Console.WriteLine($"Creating LambdaSharp tier");
+
+                    // prompt for profile name
+                    if(settings.Tier == null) {
+                        if(promptsAsErrors) {
+                            LogError($"must provide a tier name with --tier option");
+                            return false;
+                        }
+
+                        // confirm that the implicit name is the desired name
+                        settings.Tier = Prompt.GetString("|=> LambdaSharp tier name:", "Default");
                     }
-
-                    // confirm that the implicit name is the desired name
-                    settings.Tier = Prompt.GetString("|=> LambdaSharp profile name:", "Default");
+                } else {
+                    Console.WriteLine($"Updating LambdaSharp tier");
                 }
 
-                // create lambdasharp CLI resources stack
+                // create lambdasharp CLI bootstrap stack
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
                 parameters = (parametersFilename != null)
                     ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
@@ -139,33 +179,71 @@ namespace LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
-                Console.WriteLine($"=> Stack creation initiated for {stackName}");
-                var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
-                    StackName = stackName,
-                    Capabilities = new List<string> { "CAPABILITY_IAM" },
-                    OnFailure = OnFailure.DELETE,
-                    Parameters = templateParameters,
-                    EnableTerminationProtection = protectStack,
-                    TemplateBody = template
-                });
-                var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
-                if(created.Success) {
-                    Console.WriteLine("=> Stack creation finished");
+
+                // create/update cloudformation stack
+                if(install) {
+                    Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                    await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                        StackName = stackName,
+                        Capabilities = new List<string> { },
+                        OnFailure = OnFailure.DELETE,
+                        Parameters = templateParameters,
+                        EnableTerminationProtection = protectStack,
+                        TemplateBody = template
+                    });
+                    var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
+                    if(created.Success) {
+                        Console.WriteLine("=> Stack creation finished");
+                    } else {
+                        Console.WriteLine("=> Stack creation FAILED");
+                        return false;
+                    }
                 } else {
-                    Console.WriteLine("=> Stack creation FAILED");
-                    return false;
+                    Console.WriteLine($"=> Stack update initiated for {stackName}");
+                    try {
+                        var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
+                        await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
+                            StackName = stackName,
+                            Capabilities = new List<string> { },
+                            Parameters = templateParameters,
+                            TemplateBody = template
+                        });
+                        var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, logError: LogError);
+                        if(created.Success) {
+                            Console.WriteLine("=> Stack update finished");
+                        } else {
+                            Console.WriteLine("=> Stack update FAILED");
+                            return false;
+                        }
+                    } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
+
+                        // this error is thrown when no required updates where found
+                        Console.WriteLine("=> No stack update required");
+                    }
                 }
-                if(!await PopulateRuntimeSettingsAsync(settings)) {
+                await PopulateRuntimeSettingsAsync(settings);
+                if(HasErrors) {
                     return false;
                 }
             }
 
-            // check if API Gateway role needs to be set
+            // check if API Gateway role needs to be set or updated
             await CheckApiGatewayRole(settings);
+            if(HasErrors) {
+                return false;
+            }
 
-            // TODO: message is misleading; this could also run when upgrading
-            var command = new CliBuildPublishDeployCommand();
-            Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            // check if operating services need to be installed/updated
+            if(settings.TierOperatingServices == TierOperatingServices.Disabled) {
+                return true;
+            }
+            if(install) {
+                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            } else if(update) {
+                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+            } else {
+                return true;
+            }
 
             // standard modules
             var standardModules = new[] {
@@ -175,6 +253,7 @@ namespace LambdaSharp.Tool.Cli {
             };
 
             // check if the module must be built and published first
+            var buildPublishDeployCommand = new CliBuildPublishDeployCommand();
             if(lambdaSharpPath != null) {
 
                 // attempt to parse the tool version from environment variables
@@ -188,7 +267,7 @@ namespace LambdaSharp.Tool.Cli {
                     settings.OutputDirectory = Path.Combine(settings.WorkingDirectory, "bin");
 
                     // build local module
-                    if(!await command.BuildStepAsync(
+                    if(!await buildPublishDeployCommand.BuildStepAsync(
                         settings,
                         Path.Combine(settings.OutputDirectory, "cloudformation.json"),
                         noAssemblyValidation: true,
@@ -204,7 +283,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    var moduleReference = await command.PublishStepAsync(settings, forcePublish);
+                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish);
                     if(moduleReference == null) {
                         return false;
                     }
@@ -224,7 +303,7 @@ namespace LambdaSharp.Tool.Cli {
             // deploy LambdaSharp module
             foreach(var module in standardModules) {
                 var isLambdaSharpCoreModule = (module == "LambdaSharp.Core");
-                if(!await command.DeployStepAsync(
+                if(!await buildPublishDeployCommand.DeployStepAsync(
                     settings,
                     dryRun: null,
                     moduleReference: $"{module}:{version}",
@@ -312,16 +391,34 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine();
                 Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
                 foreach(var missingParameter in missingParameters) {
-                    var enteredValue = Prompt.GetString($"|=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
-                    result.Add(new Parameter {
-                        ParameterKey = missingParameter.ParameterKey,
-                        ParameterValue = enteredValue
-                    });
+                    if(missingParameter.ParameterConstraints?.AllowedValues.Any() ?? false) {
+                        Console.WriteLine($"|=> {missingParameter.Description ?? missingParameter.ParameterKey} (multiple choice)");
+                        var choiceCount = missingParameter.ParameterConstraints.AllowedValues.Count;
+                        for(var i = 0; i < choiceCount; ++i) {
+                            Console.WriteLine($"{i + 1}. {missingParameter.ParameterConstraints.AllowedValues[i]}");
+                        }
+                        while(true) {
+                            var enteredValue = Prompt.GetString($"Enter a choice (1-{choiceCount}):");
+                            if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                                result.Add(new Parameter {
+                                    ParameterKey = missingParameter.ParameterKey,
+                                    ParameterValue = missingParameter.ParameterConstraints.AllowedValues[choice - 1]
+                                });
+                                break;
+                            }
+                        }
+                    } else {
+                        var enteredValue = Prompt.GetString($"|=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
+                        result.Add(new Parameter {
+                            ParameterKey = missingParameter.ParameterKey,
+                            ParameterValue = enteredValue
+                        });
+                    }
                 }
                 Console.WriteLine();
             }
 
-            // NOTE (2019-06-06, bjorg): extraneous parameters are ignored
+            // NOTE (2019-06-06, bjorg): extraneous parameters are ignored as they might be relevant to the LambdaSharp.Core initialization
 
             // return the collected paramaters
             return result;
