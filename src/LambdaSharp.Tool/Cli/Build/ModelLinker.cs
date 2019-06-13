@@ -416,19 +416,19 @@ namespace LambdaSharp.Tool.Cli.Build {
                         throw new ApplicationException($"unsupported type: {freeItem?.GetType().ToString() ?? "<null>"}");
                     }
 
-                    // check if we're accessing a conditional resource from a resource with a different condition or no condition
-                    var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
-                    if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
-                        _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
-                        if(resourceItem.Condition == null) {
+                    // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
 
-                            // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
-                            LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
-                        } else if(resourceItem.Condition != freeItemConditionName) {
-                             _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
-                            LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
-                        }
-                    }
+                    // // check if we're accessing a conditional resource from a resource with a different condition or no condition
+                    // var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
+                    // if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
+                    //     _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
+                    //     if(resourceItem.Condition == null) {
+                    //         LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
+                    //     } else if(resourceItem.Condition != freeItemConditionName) {
+                    //          _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
+                    //         LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
+                    //     }
+                    // }
                     return true;
                 }
                 return false;
