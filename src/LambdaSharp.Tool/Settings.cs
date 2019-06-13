@@ -56,6 +56,13 @@ namespace LambdaSharp.Tool {
         }
     }
 
+    public enum TierOperatingServices {
+        Undefined,
+        Disabled,
+        Bootstrap,
+        Enabled
+    }
+
     public class Settings {
 
         //--- Constants ---
@@ -131,10 +138,8 @@ namespace LambdaSharp.Tool {
         public VersionInfo ToolVersion { get; set; }
         public string Tier { get; set; }
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
-        public string TierOperatingServices { get; set; }
-        public bool IsTierOperatingServicesBootstrapping => TierOperatingServices == "bootstrap";
+        public TierOperatingServices TierOperatingServices { get; set; }
         public VersionInfo TierVersion { get; set; }
-        public string TierDefaultSecretKey { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string AwsUserArn { get; set; }

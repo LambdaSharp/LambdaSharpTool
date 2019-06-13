@@ -41,7 +41,7 @@ namespace LambdaSharp.Tool.Cli {
             app.Command("encrypt", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Encrypt Value";
-                var keyOption = cmd.Option("--key <KEY-ID>", "(optional) Specify encryption key ID or alias to use (default: use default deployment tier key)", CommandOptionType.SingleValue);
+                var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
@@ -56,11 +56,8 @@ namespace LambdaSharp.Tool.Cli {
                     // either use an explicitly provided key ID or use the default key for the deployment
                     var keyId = keyOption.Value();
                     if(keyId == null) {
-                        if(settings.Tier == null) {
-                            LogError("must provide a key id with --key");
-                            return;
-                        }
-                        keyId = $"alias/{settings.TierPrefix}LambdaSharpDefaultSecretKey";
+                        LogError("must provide a key ARN or alias with --key");
+                        return;
                     }
 
                     // if no argument is provided, read text from standard in

@@ -27,7 +27,6 @@ Pragmas:
       Module::DeadLetterQueue: !Ref DeadLetterQueue
       Module::LoggingStream: !Ref LoggingStream
       Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
-      Module::DefaultSecretKey: !Ref DefaultSecretKey
 
 Items:
 
@@ -38,7 +37,7 @@ Items:
     Label: Dead letter queue for functions (leave blank to create a new queue)
     Description: Dead Letter Queue (ARN)
     Type: AWS::SQS::Queue
-    Default: ""
+    Properties: { }
 
   - Parameter: LoggingStream
     Scope: public
@@ -46,7 +45,6 @@ Items:
     Label: Logging Kinesis stream for functions (leave blank to create a new stream)
     Description: Logging Stream (ARN)
     Type: AWS::Kinesis::Stream
-    Default: ""
     Allow: Subscribe
     Properties:
       RetentionPeriodHours: !Ref LoggingStreamRetentionPeriodHours
@@ -67,6 +65,30 @@ Items:
     Type: Number
     Default: 1
     MinValue: 1
+
+  - Parameter: CoreSecretsKey
+    Scope: all
+    Section: LambdaSharp Tier Settings
+    Label: KMS key used by LambdaSharp.Core to encrypt sensitive values (leave blank to create a new key)
+    Description: Encryption Key (ARN)
+    Type: AWS::KMS::Key
+    AllowedPattern: '(arn:aws:kms:.*)?'
+    ConstraintDescription: Must be a valid KMS Key ARN or left blank
+    Allow:
+      - kms:Decrypt
+      - kms:Encrypt
+    Properties:
+      Description: !Sub "LambdaSharp.Core encryption key for ${AWS::StackName}"
+      KeyPolicy:
+        Version: 2012-10-17
+        Id: !Sub "${AWS::StackName}CoreSecretsKeyPolicy"
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action:
+              - kms:*
+            Resource: "*"
 
   # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
   - Resource: LoggingStreamRole
@@ -95,7 +117,7 @@ Items:
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
     Section: Rollbar Settings
-    Label: Account-level token for read operations (keep blank to disable Rollbar integration)
+    Label: Account-level token for read operations (leave blank to disable Rollbar integration)
     Description: Read Access Token
     Type: Secret
     Scope: Registration
@@ -103,7 +125,7 @@ Items:
 
   - Parameter: RollbarWriteAccessToken
     Section: Rollbar Settings
-    Label: Account-level token for write operations (keep blank to disable Rollbar integration)
+    Label: Account-level token for write operations (leave blank to disable Rollbar integration)
     Description: Write Access Token
     Type: Secret
     Scope: Registration
@@ -250,7 +272,7 @@ Items:
 
   - Variable: TierOperatingServices
     Scope: public
-    Value: enabled
+    Value: Enabled
 
   # S3 Deployment Bucket
   - Parameter: ExistingDeploymentBucket

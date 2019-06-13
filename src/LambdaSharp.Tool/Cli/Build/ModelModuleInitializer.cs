@@ -170,12 +170,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null
             );
-            var secretsIsEmpty = _builder.AddCondition(
-                parent: null,
-                name: "SecretsIsEmpty",
-                description: null,
-                value: FnEquals(FnRef("Secrets"), "")
-            );
             var enableXRayTracing = _builder.AddParameter(
                 name: "EnableXRayTracing",
                 section: section,
@@ -267,20 +261,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     module: "LambdaSharp.Core",
                     encryptionContext: null
                 );
-                _builder.AddImport(
-                    parent: lambdasharp,
-                    name: "DefaultSecretKey",
-                    description: null,
-
-                    // TODO (2018-12-01, bjorg): consider using 'AWS::KMS::Key'
-                    type: "String",
-                    scope: null,
-
-                    // NOTE (2018-12-11, bjorg): we grant decryption access later as part of a bulk permissioning operation
-                    allow: null,
-                    module: "LambdaSharp.Core",
-                    encryptionContext: null
-                );
             }
 
             // add module variables
@@ -328,51 +308,19 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("DefaultSecretKey", out var defaultSecretKeyVariable)) {
-                _builder.AddVariable(
-                    parent: moduleItem,
-                    name: "DefaultSecretKey",
-                    description: "Module Default Secret Key (ARN)",
-                    type: "String",
-                    scope: null,
-                    value: defaultSecretKeyVariable,
-                    allow: null,
-                    encryptionContext: null
+
+            // add KMS permissions for secrets in module
+            if(_builder.Secrets.Any()) {
+                _builder.AddGrant(
+                    sid: "SecretsDecryption",
+                    awsType: null,
+                    reference: _builder.Secrets.ToList(),
+                    allow: new[] {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    }
                 );
-                _builder.AddSecret(FnRef("Module::DefaultSecretKey"));
             }
-
-            // add decryption permission for secrets
-            var secretsReference = _builder.Secrets.Any()
-                ? FnSplit(
-                    ",",
-                    FnIf(
-                        secretsIsEmpty.FullName,
-                        FnJoin(",", _builder.Secrets),
-                        FnJoin(
-                            ",",
-                            _builder.Secrets.Append(FnRef("Secrets")).ToList()
-                        )
-                    )
-                )
-                : FnIf(
-                    secretsIsEmpty.FullName,
-
-                    // TODO (2018-11-26, bjorg): this hack does not work to bypass the error of an empty list :(
-                    "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
-                    FnSplit(",", FnRef("Secrets"))
-                );
-            _builder.AddGrant(
-                sid: "SecretsDecryption",
-                awsType: null,
-                reference: secretsReference,
-                allow: new[] {
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                }
-            );
 
             // add decryption function for secret parameters and values
             _builder.AddInlineFunction(

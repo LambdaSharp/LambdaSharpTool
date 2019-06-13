@@ -157,9 +157,9 @@ namespace LambdaSharp.Tool.Cli {
                 if(requireDeploymentTier) {
                     tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     if(string.IsNullOrEmpty(tier)) {
+
+                        // TODO: allow empty tier name
                         LogError("missing deployment tier name");
-                    } else if(tier == "Default") {
-                        LogError("deployment tier cannot be 'Default' because it is a reserved name");
                     }
                 }
 
@@ -258,8 +258,9 @@ namespace LambdaSharp.Tool.Cli {
                 if(settings.Tier == null) {
                     if(!optional) {
                         LogError($"must provide a tier name with --tier option");
+                        return false;
                     }
-                    return false;
+                    return true;
                 }
 
                 // TODO: finalize core module name
@@ -341,8 +342,7 @@ namespace LambdaSharp.Tool.Cli {
                 settings.DeploymentBucketName = tieModuleBucketArnParts[5];
                 settings.ModuleBucketNames = new[] { settings.DeploymentBucketName, $"lambdasharp-{settings.AwsRegion}" };
 
-                // read default KMS secret key ARN
-                settings.TierDefaultSecretKey = GetStackOutput("DefaultSecretKey");
+                // read tier mode
                 var tierModeText = GetStackOutput("TierOperatingServices");
                 if(!Enum.TryParse<TierOperatingServices>(tierModeText, true, out var tierMode)) {
                     LogError("unable to parse TierOperatingServices output value from stack");

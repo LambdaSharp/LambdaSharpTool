@@ -251,7 +251,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Parameter, () => {
 
                     // validation
-                    Validate((node.Default != null) || (node.Properties == null), "'Properties' section cannot be used unless the 'Default' attribute is set");
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
                     }
