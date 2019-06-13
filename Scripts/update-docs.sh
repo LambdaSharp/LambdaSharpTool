@@ -24,6 +24,9 @@ echo "*** DELETING OLD DOCUMENTATION"
 cd $LAMBDASHARP/../Docs-LambdaSharpTool
 git ls-files -z | xargs -0 rm -f
 
+# restore CNAME file, which is required by github
+git checkout master -- CNAME
+
 # generate new documentation
 echo "*** GENERATING NEW DOCUMENTATION"
 cd $LAMBDASHARP/src/DocFx
