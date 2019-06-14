@@ -19,7 +19,7 @@
 # limitations under the License.
 #
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Bootstrap (v%%VERSION%%)
+Description: LambdaSharp Core Resources (v%%VERSION%%)
 
 ##############
 # Parameters #
@@ -34,10 +34,14 @@ Parameters:
 
   CoreServices:
     Type: String
-    Description: LambdaSharp.Core Services
+    Description: Enable LambdaSharp.Core services
     AllowedValues:
       - Enabled
       - Disabled
+
+  TierName:
+    Type: String
+    Description: LambdaSharp tier name
 
 Metadata:
   AWS::CloudFormation::Interface:
@@ -86,3 +90,6 @@ Outputs:
       - EnableCoreServices
       - Bootstrap
       - Disabled
+
+  LambdaSharpTier:
+    Value: !Ref TierName

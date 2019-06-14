@@ -53,14 +53,13 @@ namespace LambdaSharp.Tool.Cli {
         public async Task List(Settings settings) {
 
             // fetch all stacks
-            var prefix = settings.TierPrefix;
             var stacks = new List<Stack>();
             var request = new DescribeStacksRequest();
             do {
                 var response = await settings.CfnClient.DescribeStacksAsync(request);
-
-                // TODO: BROKEN - `StartsWith(prefix)` is not good enough when the tier name is empty!
-                stacks.AddRange(response.Stacks.Where(summary => summary.StackName.StartsWith(prefix, StringComparison.Ordinal)));
+                stacks.AddRange(response.Stacks.Where(
+                    summary => summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier")?.OutputValue == settings.Tier
+                ));
                 request.NextToken = response.NextToken;
             } while(request.NextToken != null);
 
@@ -68,6 +67,7 @@ namespace LambdaSharp.Tool.Cli {
             if(stacks.Any()) {
 
                 // gather summaries
+                var prefix = settings.TierPrefix;
                 var summaries = stacks.Select(stack => new {
                     ModuleName = stack.StackName.Substring(prefix.Length),
                     StackStatus = stack.StackStatus.ToString(),

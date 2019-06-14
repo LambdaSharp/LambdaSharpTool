@@ -139,11 +139,11 @@ namespace LambdaSharp.Tool.Cli {
             if(install || (update && (settings.CoreServices == CoreServices.Disabled))) {
 
                 // initialize stack with seed CloudFormation template
-                var template = ReadResource("LambdaSharpBootstrap.yml", new Dictionary<string, string> {
+                var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
                     ["VERSION"] = settings.ToolVersion.ToString()
                 });
 
-                // check if boostrap template is being updated or installed
+                // check if bootstrap template is being updated or installed
                 if(install) {
                     Console.WriteLine($"Creating LambdaSharp tier");
 
@@ -169,6 +169,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
+                parameters["TierName"] = settings.Tier;
                 var templateParameters = await PromptMissingTemplateParameters(
                     settings.CfnClient,
                     promptsAsErrors,

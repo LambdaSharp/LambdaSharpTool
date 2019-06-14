@@ -61,6 +61,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             _stack.Add("Module", new Humidifier.Output {
                 Value = _module.FullName + ":" + _module.Version.ToString()
             });
+            _stack.Add("LambdaSharpTier", new Humidifier.Output {
+                Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
+            });
 
             // add items
             foreach(var item in _module.Items) {
