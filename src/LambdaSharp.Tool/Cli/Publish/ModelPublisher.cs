@@ -124,6 +124,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 throw new ApplicationException("invalid module info");
             }
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
+
+            // TODO: put this in 'ModuleInfo' class since 'TemplatePath' is already there
             var key = $"{moduleInfo.Owner}/Modules/{moduleInfo.Name}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
