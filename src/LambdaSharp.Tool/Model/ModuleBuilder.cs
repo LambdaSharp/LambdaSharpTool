@@ -24,14 +24,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Model {
-    using System.Reflection;
     using static ModelFunctions;
 
     public class ModuleBuilder : AModelProcessor {
@@ -719,17 +716,7 @@ namespace LambdaSharp.Tool.Model {
                             Value = moduleInfo.FullName
                         }
                     },
-
-                    // TODO: this should now always come from the 'DeploymentBucket'
-
-                    // TODO (2019-05-09, bjorg); path-style S3 bucket references will be deprecated in September 30th 2020
-                    //  see https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
-                    TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
-                        ["ModuleOwner"] = moduleInfo.Owner,
-                        ["ModuleName"] = moduleInfo.Name,
-                        ["ModuleVersion"] = moduleInfo.Version.ToString(),
-                        ["ModuleOrigin"] = moduleOrigin
-                    }),
+                    TemplateURL = moduleInfo.GetTemplateUrlExpression(),
 
                     // TODO (2018-11-29, bjorg): make timeout configurable
                     TimeoutInMinutes = 15
@@ -844,7 +831,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = FnSub($"${{Module::Owner}}/Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+            package.Reference = ModuleInfo.GetModuleAssetExpression($"{{{packageName.FullName}}}");
             return package;
         }
 
@@ -953,7 +940,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = FnSub($"${{Module::Owner}}/Modules/${{Module::Name}}/Assets/${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = ModuleInfo.GetModuleAssetExpression($"{{{packageName.FullName}}}");
 
             // check if function is a finalizer
             var isFinalizer = (parent == null) && (name == "Finalizer");

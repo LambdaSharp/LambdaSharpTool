@@ -40,25 +40,33 @@ namespace LambdaSharp.Tool {
         public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public async Task<ModuleManifest> LoadFromFileAsync(string filepath) {
+        public bool TryLoadFromFile(string filepath, out ModuleManifest manifest) {
+            JObject cloudformation;
+            try {
 
-            // load cloudformation template
-            var template = await File.ReadAllTextAsync(filepath);
-            var cloudformation = JsonConvert.DeserializeObject<JObject>(template);
+                // load cloudformation template
+                var template = File.ReadAllText(filepath);
+                cloudformation = JObject.Parse(template);
+            } catch(Exception) {
+                LogError($"invalid CloudFormation template: {filepath}");
+                manifest = null;
+                cloudformation = null;
+                return false;
+            }
 
             // extract manifest
-            var manifest = GetManifest(cloudformation);
+            manifest = GetManifest(cloudformation);
             if(manifest == null) {
                 LogError("CloudFormation file does not contain a LambdaSharp manifest");
-                return null;
+                return false;
             }
 
             // validate manifest
             if(manifest.Version != ModuleManifest.CurrentVersion) {
                 LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
-                return null;
+                return false;
             }
-            return manifest;
+            return true;
         }
 
         public async Task<ModuleManifest> LoadFromS3Async(ModuleInfo moduleInfo, bool errorIfMissing = true) {
@@ -136,7 +144,7 @@ namespace LambdaSharp.Tool {
                 var versions = new List<VersionInfo>();
                 var request = new ListObjectsV2Request {
                     BucketName = bucketName,
-                    Prefix = $"{moduleOwner}/Modules/{moduleName}/Versions/",
+                    Prefix = ModuleInfo.GetModuleBucketPrefix(moduleOwner, moduleName, moduleOrigin),
                     Delimiter = "/",
                     MaxKeys = 100
                 };

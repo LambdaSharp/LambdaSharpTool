@@ -273,7 +273,9 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish);
+
+                    // TODO: change 'forceModuleOrigin' to "lambdasharp"
+                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, forceModuleOrigin: null);
                     if(moduleReference == null) {
                         return false;
                     }

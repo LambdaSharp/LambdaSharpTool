@@ -278,7 +278,7 @@ namespace LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(await PublishStepAsync(settings, forcePublishOption.HasValue()) == null) {
+                            if(await PublishStepAsync(settings, forcePublishOption.HasValue(), forceModuleOrigin: null) == null) {
                                 break;
                             }
                         }
@@ -416,7 +416,7 @@ namespace LambdaSharp.Tool.Cli {
 
                             // check if module needs to be published first
                             if(moduleInfo == null) {
-                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue());
+                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue(), forceModuleOrigin: null);
                                 if(moduleInfo == null) {
                                     break;
                                 }
@@ -476,12 +476,12 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<ModuleInfo> PublishStepAsync(Settings settings, bool forcePublish) {
+        public async Task<ModuleInfo> PublishStepAsync(Settings settings, bool forcePublish, string forceModuleOrigin) {
             if(!await PopulateRuntimeSettingsAsync(settings)) {
                 return null;
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
-            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish);
+            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish, forceModuleOrigin);
         }
 
         public async Task<bool> DeployStepAsync(

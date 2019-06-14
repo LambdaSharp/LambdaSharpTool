@@ -46,7 +46,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
         public PublishStep(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods---
-        public async Task<ModuleInfo> DoAsync(string cloudformationFile, bool forcePublish) {
+        public async Task<ModuleInfo> DoAsync(
+            string cloudformationFile,
+            bool forcePublish,
+            string forceModuleOrigin
+        ) {
             _forcePublish = forcePublish;
             _changesDetected = false;
             _transferUtility = new TransferUtility(Settings.S3Client);
@@ -64,22 +68,19 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // load cloudformation file
-            var manifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromFileAsync(cloudformationFile);
-            if(manifest == null) {
+            if(!new ModelManifestLoader(Settings, "cloudformation.json").TryLoadFromFile(cloudformationFile, out var manifest)) {
                 return null;
             }
             if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
+                LogError("invalid module file");
+                return null;
             }
 
-            // check if we want to always publish, regardless of version or detected changes
+            // check if we want to always publish
             if(!forcePublish) {
 
                 // check if module has a stable version, but is compiled from a dirty git branch
-                if(
-                    !moduleInfo.Version.IsPreRelease
-                    && (manifest.Git.SHA?.StartsWith("DIRTY-") ?? false)
-                ) {
+                if(!moduleInfo.Version.IsPreRelease && (manifest.Git.SHA?.StartsWith("DIRTY-") ?? false)) {
                     LogError($"attempting to publish an immutable release of {moduleInfo.FullName} (v{moduleInfo.Version}) with uncommitted/untracked changes; use --force-publish to proceed anyway");
                     return null;
                 }
@@ -113,13 +114,25 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 manifest.Assets[i] = await UploadPackageAsync(manifest, manifest.Assets[i], "asset");
             }
 
+            // update module origin
+            var manifestModuleInfo = manifest.GetModuleInfo();
+            manifest.Module = new ModuleInfo(
+                manifestModuleInfo.Owner,
+                manifestModuleInfo.Name,
+                manifestModuleInfo.Version,
+                forceModuleOrigin ?? Settings.DeploymentBucketName
+            ).ToModuleReference();
+
             // upload CloudFormation template
-            var template = await UploadTemplateFileAsync(manifest, "template");
+            var templateKey = await UploadTemplateFileAsync(manifest, "template");
+            if(templateKey == null) {
+                return null;
+            }
 
             // store copy of cloudformation template under version number
             await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
                 SourceBucket = Settings.DeploymentBucketName,
-                SourceKey = template,
+                SourceKey = templateKey,
                 DestinationBucket = Settings.DeploymentBucketName,
                 DestinationKey = moduleInfo.TemplatePath,
                 ContentType = "application/json"
@@ -135,7 +148,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
 
             // update cloudformation template with manifest and minify it
-            var cloudformation = JsonConvert.DeserializeObject<JObject>(File.ReadAllText(SourceFilename));
+            var template = File.ReadAllText(SourceFilename);
+
+            // TODO: substitute module origin in template text
+            var cloudformation = JObject.Parse(template);
             ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
                 NullValueHandling = NullValueHandling.Ignore
             });
@@ -145,41 +161,31 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
-
-            // TODO: put this in 'ModuleInfo' class since 'TemplatePath' is already there
-            var key = $"{moduleInfo.Owner}/Modules/{moduleInfo.Name}/Assets/cloudformation_v{moduleInfo.Version}_{manifest.Hash}.json";
-            if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
+            var destinationKey = manifest.GetModuleInfo().GetTemplateAssetPath(manifest.Hash);
+            if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
                     BucketName = Settings.DeploymentBucketName,
                     ContentBody = minified,
                     ContentType = "application/json",
-                    Key = key,
+                    Key = destinationKey,
                 });
                 _changesDetected = true;
             }
-            return key;
+            return destinationKey;
         }
 
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
-            if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
 
-            // TODO: put this in 'ModuleInfo' class since 'TemplatePath' is already there
-            var key = $"{moduleInfo.Owner}/Modules/{moduleInfo.Name}/Assets/{Path.GetFileName(filePath)}";
-
             // only upload files that don't exist
-            if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
-                await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, key);
+            var destinationKey = manifest.GetModuleInfo().GetAssetPath(Path.GetFileName(filePath));
+            if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
+                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
+                await _transferUtility.UploadAsync(filePath, Settings.DeploymentBucketName, destinationKey);
                 _changesDetected = true;
             }
-            return key;
+            return destinationKey;
         }
 
         private async Task<bool> DoesS3ObjectExistsAsync(string key) {
