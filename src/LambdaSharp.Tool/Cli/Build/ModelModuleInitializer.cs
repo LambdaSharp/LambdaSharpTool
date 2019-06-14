@@ -208,8 +208,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
             _builder.AddParameter(
-
-                // TODO: rename to 'XRayTracing'
                 name: "XRayTracing",
                 section: section,
                 label: "Enable AWS X-Ray tracing mode for module resources",
