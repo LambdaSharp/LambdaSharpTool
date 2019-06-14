@@ -168,38 +168,38 @@ namespace LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public void AddDependency(string moduleFullName, VersionInfo minVersion, VersionInfo maxVersion, string bucketName) {
+        public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
 
             // check if a dependency was already registered
             ModuleDependency dependency;
             if(_dependencies.TryGetValue(moduleFullName, out dependency)) {
 
                 // keep the strongest version constraints
-                if(minVersion != null) {
-                    if((dependency.MinVersion == null) || dependency.MinVersion.IsLessThanVersion(minVersion)) {
-                        dependency.MinVersion = minVersion;
+                if(moduleMinVersion != null) {
+                    if((dependency.MinVersion == null) || dependency.MinVersion.IsLessThanVersion(moduleMinVersion)) {
+                        dependency.MinVersion = moduleMinVersion;
                     }
                 }
-                if(maxVersion != null) {
-                    if((dependency.MaxVersion == null) || dependency.MaxVersion.IsGreaterThanVersion(maxVersion)) {
-                        dependency.MaxVersion = maxVersion;
+                if(moduleMaxVersion != null) {
+                    if((dependency.MaxVersion == null) || dependency.MaxVersion.IsGreaterThanVersion(moduleMaxVersion)) {
+                        dependency.MaxVersion = moduleMaxVersion;
                     }
                 }
 
                 // check there is no conflict in origin bucket names
-                if(bucketName != null) {
+                if(moduleOrigin != null) {
                     if(dependency.BucketName == null) {
-                        dependency.BucketName = bucketName;
-                    } else if(dependency.BucketName != bucketName) {
-                        LogError($"module {moduleFullName} source bucket conflict is empty ({dependency.BucketName} vs. {bucketName})");
+                        dependency.BucketName = moduleOrigin;
+                    } else if(dependency.BucketName != moduleOrigin) {
+                        LogError($"module {moduleFullName} origin conflict is empty ({dependency.BucketName} vs. {moduleOrigin})");
                     }
                 }
             } else {
                 dependency = new ModuleDependency {
                     ModuleFullName = moduleFullName,
-                    MinVersion = minVersion,
-                    MaxVersion = maxVersion,
-                    BucketName = bucketName
+                    MinVersion = moduleMinVersion,
+                    MaxVersion = moduleMaxVersion,
+                    BucketName = moduleOrigin
                 };
             }
 
@@ -215,11 +215,11 @@ namespace LambdaSharp.Tool.Model {
                     return;
                 }
                 var loader = new ModelManifestLoader(Settings, moduleFullName);
-                var location = loader.LocateAsync(moduleOwner, moduleName, minVersion, maxVersion, bucketName).Result;
-                if(location == null) {
+                var moduleInfo = loader.LocateAsync(moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion, moduleOrigin).Result;
+                if(moduleInfo == null) {
                     return;
                 }
-                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
+                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(moduleInfo).Result;
                 if(manifest == null) {
 
                     // nothing to do; loader already emitted an error
@@ -386,16 +386,16 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // validate module name
-            if(!module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
+            if(!ModuleInfo.TryParse(module, out var moduleInfo)) {
                 LogError("invalid 'Module' attribute");
             } else {
-                module = $"{moduleOwner}.{moduleName}";
+                module = moduleInfo.FullName;
             }
-            if(moduleVersion != null) {
+            if(moduleInfo.Version != null) {
                 LogError("'Module' attribute cannot have a version");
             }
-            if(moduleBucketName != null) {
-                LogError("'Module' attribute cannot have a source bucket name");
+            if(moduleInfo.Origin != null) {
+                LogError("'Module' attribute cannot have an origin");
             }
 
             // create input parameter item
@@ -694,15 +694,12 @@ namespace LambdaSharp.Tool.Model {
             AModuleItem parent,
             string name,
             string description,
-            string moduleOwner,
-            string moduleName,
-            VersionInfo moduleVersion,
-            string moduleBucketName,
+            ModuleInfo moduleInfo,
             IList<string> scope,
             object dependsOn,
             IDictionary<string, object> parameters
         ) {
-            var sourceBucketName = moduleBucketName ?? FnRef("DeploymentBucketName");
+            var moduleOrigin = moduleInfo.Origin ?? FnRef("DeploymentBucketName");
             var moduleParameters = (parameters != null)
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
@@ -719,17 +716,19 @@ namespace LambdaSharp.Tool.Model {
                     Tags = new List<Humidifier.Tag> {
                         new Humidifier.Tag {
                             Key = "LambdaSharp:Module",
-                            Value = $"{moduleOwner}.{moduleName}"
+                            Value = moduleInfo.FullName
                         }
                     },
 
+                    // TODO: this should now always come from the 'DeploymentBucket'
+
                     // TODO (2019-05-09, bjorg); path-style S3 bucket references will be deprecated in September 30th 2020
                     //  see https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
-                    TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleBucketName}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
-                        ["ModuleOwner"] = moduleOwner,
-                        ["ModuleName"] = moduleName,
-                        ["ModuleVersion"] = moduleVersion.ToString(),
-                        ["ModuleBucketName"] = sourceBucketName
+                    TemplateURL = FnSub("https://s3.amazonaws.com/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+                        ["ModuleOwner"] = moduleInfo.Owner,
+                        ["ModuleName"] = moduleInfo.Name,
+                        ["ModuleVersion"] = moduleInfo.Version.ToString(),
+                        ["ModuleOrigin"] = moduleOrigin
                     }),
 
                     // TODO (2018-11-29, bjorg): make timeout configurable
@@ -744,11 +743,11 @@ namespace LambdaSharp.Tool.Model {
             // validate module parameters
             AtLocation("Parameters", () => {
                 if(!Settings.NoDependencyValidation) {
-                    var moduleFullName = $"{moduleOwner}.{moduleName}";
+                    var moduleFullName = moduleInfo.FullName;
                     var loader = new ModelManifestLoader(Settings, moduleFullName);
-                    var location = loader.LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName).Result;
-                    if(location != null) {
-                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(location.ModuleBucketName, location.TemplatePath).Result;
+                    var foundModuleInfo = loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin).Result;
+                    if(foundModuleInfo != null) {
+                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(foundModuleInfo).Result;
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
@@ -797,7 +796,7 @@ namespace LambdaSharp.Tool.Model {
                 }
 
                 // add expected parameters
-                MandatoryAdd("DeploymentBucketName", sourceBucketName);
+                MandatoryAdd("DeploymentBucketName", moduleOrigin);
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));

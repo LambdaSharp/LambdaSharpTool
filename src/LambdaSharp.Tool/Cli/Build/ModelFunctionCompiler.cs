@@ -1007,7 +1007,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     _restApiRoutes.Add((Function: function, Source: apiGatewaySource));
                     break;
                 case S3Source s3Source:
-                    _builder.AddDependency("LambdaSharp.S3.Subscriber", Settings.ToolVersion.GetCompatibleBaseVersion(), maxVersion: null, bucketName: null);
+
+                    // TODO: review use of 'GetCompatibleBaseVersion()'
+                    _builder.AddDependency("LambdaSharp.S3.Subscriber", Settings.ToolVersion.GetCompatibleBaseVersion(), moduleMaxVersion: null, moduleOrigin: null);
                     Enumerate(s3Source.Bucket, (suffix, arn) => {
                         var permission = _builder.AddResource(
                             parent: function,

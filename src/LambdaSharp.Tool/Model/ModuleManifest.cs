@@ -49,51 +49,31 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public string GetFullName() {
-            if(!Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo _,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            return $"{moduleOwner}.{moduleName}";
+            return moduleInfo.FullName;
         }
 
         public string GetOwner() {
-            if(!Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string _,
-                out VersionInfo _,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            return moduleOwner;
+            return moduleInfo.Owner;
         }
 
         public string GetName() {
-            if(!Module.TryParseModuleDescriptor(
-                out string _,
-                out string moduleName,
-                out VersionInfo _,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            return moduleName;
+            return moduleInfo.Name;
         }
 
         public VersionInfo GetVersion() {
-            if(!Module.TryParseModuleDescriptor(
-                out string _,
-                out string _,
-                out VersionInfo moduleVersion,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            return moduleVersion;
+            return moduleInfo.Version;
         }
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()

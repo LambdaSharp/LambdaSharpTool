@@ -263,11 +263,9 @@ namespace LambdaSharp.Tool.Cli {
                     return true;
                 }
 
-                // TODO: finalize core module name
+                // attempt to find an existing core module
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
                 Stack stack = null;
-
-                // attempt to find an existing core module
                 try {
                     var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                         StackName = stackName
@@ -294,37 +292,37 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // validate module information
-                var tierModuleInfo = stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                if(tierModuleInfo == null) {
+                var tierModuleInfoText = stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                if(tierModuleInfoText == null) {
                     if(!optional) {
                         LogError($"Could not find LambdaSharp tier information for {stackName}");
                     }
                     return false;
                 }
                 if(
-                    !tierModuleInfo.TryParseModuleDescriptor(out var tierModuleOwner, out var tierModuleName, out var tierModuleVersion, out var _)
-                    || (tierModuleOwner != "LambdaSharp")
-                    || (tierModuleName != "Core")
+                    !ModuleInfo.TryParse(tierModuleInfoText, out var tierModuleInfo)
+                    || (tierModuleInfo.Owner != "LambdaSharp")
+                    || (tierModuleInfo.Name != "Core")
                 ) {
                     LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                     return false;
                 }
-                settings.TierVersion = tierModuleVersion;
+                settings.TierVersion = tierModuleInfo.Version;
 
                 // check if tier and tool versions are compatible
                 if(!optional) {
-                    var tierToToolVersionComparison = tierModuleVersion.CompareToVersion(settings.ToolVersion);
+                    var tierToToolVersionComparison = tierModuleInfo.Version.CompareToVersion(settings.ToolVersion);
                     if(tierToToolVersionComparison == 0) {
 
                         // versions are identical; nothing to do
                     } else if(tierToToolVersionComparison < 0) {
-                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierSetupException(settings.Tier));
                         return false;
                     } else if(tierToToolVersionComparison > 0) {
 
                         // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
                     } else {
-                        LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleVersion})", new LambdaSharpToolOutOfDateException(tierModuleVersion));
+                        LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
                         return false;
                     }
                 }

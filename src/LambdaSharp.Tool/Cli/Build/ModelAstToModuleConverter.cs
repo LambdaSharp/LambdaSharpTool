@@ -110,15 +110,15 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ConvertDependency(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
-                if(!dependency.Module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
+                if(!ModuleInfo.TryParse(dependency.Module, out var moduleInfo)) {
                     LogError("invalid module reference format");
                     return;
                 }
                 _builder.AddDependency(
-                    moduleFullName: $"{moduleOwner}.{moduleName}",
-                    minVersion: moduleVersion,
-                    maxVersion: null,
-                    bucketName: moduleBucketName
+                    moduleFullName: moduleInfo.FullName,
+                    moduleMinVersion: moduleInfo.Version,
+                    moduleMaxVersion: null,
+                    moduleOrigin: moduleInfo.Origin
                 );
             });
         }
@@ -398,12 +398,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Module == null) {
                         LogError("missing 'Module' attribute");
-                    } else if(!node.Module.TryParseModuleDescriptor(
-                        out string moduleOwner,
-                        out string moduleName,
-                        out VersionInfo moduleVersion,
-                        out string moduleBucketName
-                    )) {
+                    } else if(!ModuleInfo.TryParse(node.Module, out var moduleInfo)) {
                         LogError("invalid value for 'Module' attribute");
                     } else {
 
@@ -412,10 +407,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             parent: parent,
                             name: node.Nested,
                             description: node.Description,
-                            moduleOwner: moduleOwner,
-                            moduleName: moduleName,
-                            moduleVersion: moduleVersion,
-                            moduleBucketName: moduleBucketName,
+                            moduleInfo: moduleInfo,
                             scope: ConvertScope(node.Scope),
                             dependsOn: node.DependsOn,
                             parameters: node.Parameters

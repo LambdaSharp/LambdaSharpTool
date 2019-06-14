@@ -40,9 +40,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         private class DependencyRecord {
 
             //--- Properties ---
+
+            // TODO: consider a different name for 'Owner', which represent the module name that owns this dependency
             public string Owner { get; set; }
             public ModuleManifest Manifest { get; set; }
-            public ModuleLocation Location { get; set; }
+            public ModuleInfo ModuleInfo { get; set; }
         }
 
 
@@ -71,14 +73,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
             // determine location of cloudformation template from module key
-            var location = await _loader.LocateAsync(moduleReference);
-            if(location == null) {
+            var moduleInfo = await _loader.LocateAsync(moduleReference);
+            if(moduleInfo == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(location.ModuleBucketName, location.TemplatePath);
+            var manifest = await _loader.LoadFromS3Async(moduleInfo);
             if(manifest == null) {
                 return false;
             }
@@ -187,9 +189,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
                 foreach(var dependency in dependencies) {
-                    if(!await new ModelUpdater(Settings, dependency.Location.ToModuleReference()).DeployChangeSetAsync(
+                    if(!await new ModelUpdater(Settings, dependency.ModuleInfo.ToModuleReference()).DeployChangeSetAsync(
                         dependency.Manifest,
-                        dependency.Location,
+                        dependency.ModuleInfo,
                         ToStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
@@ -202,7 +204,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // deploy module
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    location,
+                    moduleInfo,
                     stackName,
                     allowDataLoos,
                     protectStack,
@@ -239,26 +241,20 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // validate existing module deployment
                 var deployedOutputs = existing?.Outputs;
                 var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                if(!deployed.TryParseModuleDescriptor(
-                    out string deployedOwner,
-                    out string deployedName,
-                    out VersionInfo deployedVersion,
-                    out string _
-                )) {
+                if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
                     LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                var deployedFullName = $"{deployedOwner}.{deployedName}";
-                if(deployedFullName != manifest.GetFullName()) {
-                    LogError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                if(deployedModuleInfo.FullName != manifest.GetFullName()) {
+                    LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
-                var versionComparison = deployedVersion.CompareToVersion(manifest.GetVersion());
+                var versionComparison = deployedModuleInfo.Version.CompareToVersion(manifest.GetVersion());
                 if(versionComparison > 0) {
-                    LogError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 } else if(versionComparison == null) {
-                    LogError($"deployed module version (v{deployedVersion}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
                     return (false, existing);
                 }
                 return (true, existing);
@@ -269,14 +265,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             return (true, null);
         }
 
-        private async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation Location)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
+        private async Task<IEnumerable<(ModuleManifest Manifest, ModuleInfo ModuleInfo)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
 
             // create a topological sort of dependencies
             await Recurse(manifest);
-            return deployments.Select(tuple => (tuple.Manifest, tuple.Location)).ToList();
+            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleInfo)).ToList();
 
             // local functions
             async Task Recurse(ModuleManifest current) {
@@ -288,10 +284,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
 
                     // check if this dependency needs to be deployed
-                    var deployed = await FindExistingDependencyAsync(dependency);
-                    if(deployed != null) {
+                    var deployedModuleInfo = await FindExistingDependencyAsync(dependency);
+                    if(deployedModuleInfo != null) {
                         existing.Add(new DependencyRecord {
-                            Location = deployed
+                            ModuleInfo = deployedModuleInfo
                         });
                     } else if(inProgress.Any(d => d.Manifest.GetFullName() == dependency.ModuleFullName)) {
 
@@ -302,15 +298,15 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
 
                         // resolve dependencies for dependency module
-                        var dependencyLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
-                        if(dependencyLocation == null) {
+                        var dependencyModuleInfo = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
+                        if(dependencyModuleInfo == null) {
 
                             // error has already been reported
                             continue;
                         }
 
                         // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.ModuleBucketName, dependencyLocation.TemplatePath);
+                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyModuleInfo);
                         if(dependencyManifest == null) {
 
                             // error has already been reported
@@ -319,7 +315,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         var nestedDependency = new DependencyRecord {
                             Owner = current.Module,
                             Manifest = dependencyManifest,
-                            Location = dependencyLocation
+                            ModuleInfo = dependencyModuleInfo
                         };
 
                         // keep marker for in-progress resolutions so that circular errors can be detected
@@ -328,7 +324,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyLocation}");
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyModuleInfo}");
                         deployments.Add(nestedDependency);
                     }
                 }
@@ -336,7 +332,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
-            var deployed = modules.FirstOrDefault(module => module.Location.ModuleFullName == dependency.ModuleFullName);
+            var deployed = modules.FirstOrDefault(module => module.ModuleInfo.FullName == dependency.ModuleFullName);
             if(deployed == null) {
                 return false;
             }
@@ -345,7 +341,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 : $"module '{deployed.Owner}'";
 
             // confirm that the dependency version is in a valid range
-            var deployedVersion = deployed.Location.ModuleVersion;
+            var deployedVersion = deployed.ModuleInfo.Version;
             if((dependency.MaxVersion != null) && !(deployedVersion.CompareToVersion(dependency.MaxVersion) <= 0)) {
                 LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
@@ -355,53 +351,47 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             return true;
         }
 
-        private async Task<ModuleLocation> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
+        private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
             try {
                 var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = ToStackName(dependency.ModuleFullName)
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                var success = deployedInfo.TryParseModuleDescriptor(
-                    out string deployedOwner,
-                    out string deployedName,
-                    out VersionInfo deployedVersion,
-                    out string deployedBucketName
-                );
-                var deployed = new ModuleLocation(deployedOwner, deployedName, deployedVersion, deployedBucketName);
+                var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
                 if(!success) {
                     LogError($"unable to retrieve information of the deployed dependent module");
-                    return deployed;
+                    return deployedModuleInfo;
                 }
 
                 // confirm that the module name matches
-                if(deployed.ModuleFullName != dependency.ModuleFullName) {
-                    LogError($"deployed dependent module name ({deployed.ModuleFullName}) does not match {dependency.ModuleFullName}");
-                    return deployed;
+                if(deployedModuleInfo.FullName != dependency.ModuleFullName) {
+                    LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleFullName}");
+                    return deployedModuleInfo;
                 }
 
                 // confirm that the module version is in a valid range
                 if(dependency.MaxVersion != null) {
-                    var deployedToMinVersionComparison = deployedVersion.CompareToVersion(dependency.MaxVersion);
+                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
                     if(deployedToMinVersionComparison > 0) {
-                        LogError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
-                        return deployed;
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
+                        return deployedModuleInfo;
                     } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedVersion}) is not compatible with max version constraint v{dependency.MaxVersion}");
-                        return deployed;
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
+                        return deployedModuleInfo;
                     }
                 }
                 if(dependency.MinVersion != null) {
-                    var deployedToMaxVersionComparison = deployedVersion.CompareToVersion(dependency.MinVersion);
+                    var deployedToMaxVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
                     if(deployedToMaxVersionComparison < 0) {
-                        LogError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
-                        return deployed;
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
+                        return deployedModuleInfo;
                     } else if(deployedToMaxVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedVersion}) is not compatible with min version constraint v{dependency.MinVersion}");
-                        return deployed;
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
+                        return deployedModuleInfo;
                     }
                 }
-                return deployed;
+                return deployedModuleInfo;
             } catch(AmazonCloudFormationException) {
 
                 // stack doesn't exist

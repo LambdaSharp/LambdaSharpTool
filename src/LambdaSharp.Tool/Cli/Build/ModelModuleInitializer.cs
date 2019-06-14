@@ -589,7 +589,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependency("LambdaSharp.Core", Settings.ToolVersion.GetCompatibleBaseVersion(), maxVersion: null, bucketName: null);
+
+                // TODO: review use of 'GetCompatibleBaseVersion()'
+                _builder.AddDependency("LambdaSharp.Core", Settings.ToolVersion.GetCompatibleBaseVersion(), moduleMaxVersion: null, moduleOrigin: null);
 
                 // create module registration
                 _builder.AddResource(

@@ -100,15 +100,12 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            if(!manifest.Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo moduleVersion,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            var key = $"{moduleOwner}/Modules/{moduleName}/Assets/cloudformation_v{moduleVersion}_{manifest.Hash}.json";
+
+            // TODO: put this in 'ModuleInfo' class since 'TemplatePath' is already there
+            var key = $"{moduleInfo.Owner}/Modules/{moduleInfo.Name}/Assets/cloudformation_v{moduleInfo.Version}_{manifest.Hash}.json";
             if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{key}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {
@@ -123,16 +120,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
         }
 
         private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
-            if(!manifest.Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo _,
-                out string _
-            )) {
+            if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
-            var key = $"{moduleOwner}/Modules/{moduleName}/Assets/{Path.GetFileName(filePath)}";
+            var key = $"{moduleInfo.Owner}/Modules/{moduleInfo.Name}/Assets/{Path.GetFileName(filePath)}";
 
             // only upload files that don't exist
             if(_forcePublish || !await DoesS3ObjectExistsAsync(key)) {

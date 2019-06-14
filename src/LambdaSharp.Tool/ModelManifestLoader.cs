@@ -61,13 +61,16 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleManifest> LoadFromS3Async(string bucketName, string templatePath, bool errorIfMissing = true) {
+        public async Task<ModuleManifest> LoadFromS3Async(ModuleInfo moduleInfo, bool errorIfMissing = true) {
+
+            // TODO: need to also search 'Settings.DeploymentBucketName'
 
             // download cloudformation template
-            var cloudformationText = await GetS3ObjectContents(bucketName, templatePath);
+            var origin = moduleInfo.Origin ?? Settings.DeploymentBucketName;
+            var cloudformationText = await GetS3ObjectContents(origin, moduleInfo.TemplatePath);
             if(cloudformationText == null) {
                 if(errorIfMissing) {
-                    LogError($"could not load CloudFormation template from s3://{bucketName}/{templatePath}");
+                    LogError($"could not load CloudFormation template from s3://{origin}/{moduleInfo.TemplatePath}");
                 }
                 return null;
             }
@@ -88,68 +91,52 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleLocation> LocateAsync(string moduleReference) {
-
-            // module reference formats:
-            // * ModuleOwner.ModuleName
-            // * ModuleOwner.ModuleName:*
-            // * ModuleOwner.ModuleName:Version
-            // * ModuleOwner.ModuleName@Bucket
-            // * ModuleOwner.ModuleName:*@Bucket
-            // * ModuleOwner.ModuleName:Version@Bucket
-            // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/
-            // * s3://bucket-name/{ModuleOwner}/Modules/{ModuleName}/Versions/{Version}/cloudformation.json
-
-            if(!moduleReference.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo moduleVersion,
-                out string moduleBucketName
-            )) {
+        public async Task<ModuleInfo> LocateAsync(string moduleReference) {
+            if(!ModuleInfo.TryParse(moduleReference, out var moduleInfo)) {
                 return null;
             }
-            if((moduleVersion == null) || (moduleBucketName == null)) {
+            if((moduleInfo.Version == null) || (moduleInfo.Origin == null)) {
 
                 // find compatible module version
-                return await LocateAsync(moduleOwner, moduleName, moduleVersion, moduleVersion, moduleBucketName);
+                return await LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
             }
-            return new ModuleLocation(moduleOwner, moduleName, moduleVersion, moduleBucketName);
+            return moduleInfo;
         }
 
-        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion, string moduleBucketName) {
+        public async Task<ModuleInfo> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-            var searchBucketNames = (moduleBucketName != null)
-                ? new List<string> { moduleBucketName.Replace("${AWS::Region}", Settings.AwsRegion) }
+            var searchBucketNames = (moduleOrigin != null)
+                ? new List<string> { moduleOrigin.Replace("${AWS::Region}", Settings.AwsRegion) }
                 : (Settings.ModuleBucketNames ?? new[] { $"lambdasharp-{Settings.AwsRegion}" });
 
             // attempt to find a matching version
             VersionInfo foundVersion = null;
-            string foundBucketName = null;
+            string foundOrigin = null;
             foreach(var bucket in searchBucketNames) {
-                foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, minVersion, maxVersion);
+                foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion);
                 if(foundVersion != null) {
-                    foundBucketName = bucket;
+                    foundOrigin = bucket;
                     break;
                 }
             }
             if(foundVersion == null) {
                 var versionConstraint = "any version";
-                if((minVersion != null) && (maxVersion != null)) {
-                    if(minVersion == maxVersion) {
-                        versionConstraint = $"v{minVersion}";
+                if((moduleMinVersion != null) && (moduleMaxVersion != null)) {
+                    if(moduleMinVersion == moduleMaxVersion) {
+                        versionConstraint = $"v{moduleMinVersion}";
                     } else {
-                        versionConstraint = $"v{minVersion}..v{maxVersion}";
+                        versionConstraint = $"v{moduleMinVersion}..v{moduleMaxVersion}";
                     }
-                } else if(minVersion != null) {
-                    versionConstraint = $"v{minVersion} or later";
-                } else if(maxVersion != null) {
-                    versionConstraint = $"v{maxVersion} or earlier";
+                } else if(moduleMinVersion != null) {
+                    versionConstraint = $"v{moduleMinVersion} or later";
+                } else if(moduleMaxVersion != null) {
+                    versionConstraint = $"v{moduleMaxVersion} or earlier";
                 }
                 LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
                 return null;
             }
-            return new ModuleLocation(moduleOwner, moduleName, foundVersion, foundBucketName);
+            return new ModuleInfo(moduleOwner, moduleName, foundVersion, foundOrigin);
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {
@@ -216,6 +203,8 @@ namespace LambdaSharp.Tool {
                 if((minVersion != null) && version.IsLessThanVersion(minVersion)) {
                     return false;
                 }
+
+                // TODO: the following test prevents us from picking up patch releases!
 
                 // ensure max-version constraint is met
                 if((maxVersion != null) && version.IsGreaterThanVersion(maxVersion)) {
