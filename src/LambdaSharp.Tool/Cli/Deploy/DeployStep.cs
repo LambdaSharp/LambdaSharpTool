@@ -59,6 +59,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Methods ---
         public async Task<bool> DoAsync(
             DryRunLevel? dryRun,
+
+            // TODO: change to 'ModuleInfo'
             string moduleReference,
             string instanceName,
             bool allowDataLoos,
@@ -73,14 +75,20 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
             // determine location of cloudformation template from module key
-            var moduleInfo = await _loader.LocateAsync(moduleReference);
-            if(moduleInfo == null) {
+            if(!ModuleInfo.TryParse(moduleReference, out var moduleInfo)) {
+                LogError($"invalid module reference: {moduleReference}");
+                return false;
+            }
+
+            // TODO: this uses a tight version range which will prevent patches from being picked up
+            var foundModuleInfo = await _loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version /* bad */, moduleInfo.Origin);
+            if(foundModuleInfo == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(moduleInfo);
+            var manifest = await _loader.LoadFromS3Async(foundModuleInfo);
             if(manifest == null) {
                 return false;
             }
@@ -204,7 +212,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // deploy module
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    moduleInfo,
+                    manifest.GetModuleInfo(),
                     stackName,
                     allowDataLoos,
                     protectStack,

@@ -91,18 +91,6 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleInfo> LocateAsync(string moduleReference) {
-            if(!ModuleInfo.TryParse(moduleReference, out var moduleInfo)) {
-                return null;
-            }
-            if((moduleInfo.Version == null) || (moduleInfo.Origin == null)) {
-
-                // find compatible module version
-                return await LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
-            }
-            return moduleInfo;
-        }
-
         public async Task<ModuleInfo> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
 
             // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
@@ -113,20 +101,23 @@ namespace LambdaSharp.Tool {
             // attempt to find a matching version
             VersionInfo foundVersion = null;
             string foundOrigin = null;
-            foreach(var bucket in searchBucketNames) {
-                foundVersion = await FindNewestVersion(Settings, bucket, moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion);
+            foreach(var bucketName in searchBucketNames) {
+                foundVersion = await FindNewestVersion(bucketName);
                 if(foundVersion != null) {
-                    foundOrigin = bucket;
+                    foundOrigin = bucketName;
                     break;
                 }
             }
             if(foundVersion == null) {
                 var versionConstraint = "any version";
                 if((moduleMinVersion != null) && (moduleMaxVersion != null)) {
-                    if(moduleMinVersion == moduleMaxVersion) {
+                    var versionCompare = moduleMinVersion.CompareToVersion(moduleMaxVersion);
+                    if(versionCompare == 0) {
                         versionConstraint = $"v{moduleMinVersion}";
-                    } else {
+                    } else if(versionCompare != null) {
                         versionConstraint = $"v{moduleMinVersion}..v{moduleMaxVersion}";
+                    } else {
+                        versionConstraint = $"invalid range from v{moduleMinVersion} to v{moduleMaxVersion}";
                     }
                 } else if(moduleMinVersion != null) {
                     versionConstraint = $"v{moduleMinVersion} or later";
@@ -137,6 +128,56 @@ namespace LambdaSharp.Tool {
                 return null;
             }
             return new ModuleInfo(moduleOwner, moduleName, foundVersion, foundOrigin);
+
+            // local functions
+            async Task<VersionInfo> FindNewestVersion(string bucketName) {
+
+                // enumerate versions in bucket
+                var versions = new List<VersionInfo>();
+                var request = new ListObjectsV2Request {
+                    BucketName = bucketName,
+                    Prefix = $"{moduleOwner}/Modules/{moduleName}/Versions/",
+                    Delimiter = "/",
+                    MaxKeys = 100
+                };
+                do {
+                    var response = await Settings.S3Client.ListObjectsV2Async(request);
+                    versions.AddRange(response.CommonPrefixes
+                        .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
+                        .Select(found => VersionInfo.Parse(found))
+                        .Where(IsVersionMatch)
+                    );
+                    request.ContinuationToken = response.NextContinuationToken;
+                } while(request.ContinuationToken != null);
+                if(!versions.Any()) {
+                    return null;
+                }
+
+                // attempt to identify the newest version
+                return versions.Max();
+
+                // local functions
+                bool IsVersionMatch(VersionInfo version) {
+
+                    // if there are no min-max version constraints, accept any non pre-release version
+                    if((moduleMinVersion == null) && (moduleMaxVersion == null)) {
+                        return !version.IsPreRelease;
+                    }
+
+                    // ensure min-version constraint is met
+                    if((moduleMinVersion != null) && version.IsLessThanVersion(moduleMinVersion)) {
+                        return false;
+                    }
+
+                    // TODO: the following test prevents us from picking up patch releases!
+
+                    // ensure max-version constraint is met
+                    if((moduleMaxVersion != null) && version.IsGreaterThanVersion(moduleMaxVersion)) {
+                        return false;
+                    }
+                    return true;
+                }
+            }
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {
@@ -163,55 +204,6 @@ namespace LambdaSharp.Tool {
                 return manifestToken.ToObject<ModuleManifest>();
             }
             return null;
-        }
-
-        private async Task<VersionInfo> FindNewestVersion(Settings settings, string bucketName, string moduleOwner, string moduleName, VersionInfo minVersion, VersionInfo maxVersion) {
-
-            // enumerate versions in bucket
-            var versions = new List<VersionInfo>();
-            var request = new ListObjectsV2Request {
-                BucketName = bucketName,
-                Prefix = $"{moduleOwner}/Modules/{moduleName}/Versions/",
-                Delimiter = "/",
-                MaxKeys = 100
-            };
-            do {
-                var response = await settings.S3Client.ListObjectsV2Async(request);
-                versions.AddRange(response.CommonPrefixes
-                    .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
-                    .Select(found => VersionInfo.Parse(found))
-                    .Where(IsVersionMatch)
-                );
-                request.ContinuationToken = response.NextContinuationToken;
-            } while(request.ContinuationToken != null);
-            if(!versions.Any()) {
-                return null;
-            }
-
-            // attempt to identify the newest version
-            return versions.Max();
-
-            // local function
-            bool IsVersionMatch(VersionInfo version) {
-
-                // if there are no min-max version constraints, accept any non pre-release version
-                if((minVersion == null) && (maxVersion == null)) {
-                    return !version.IsPreRelease;
-                }
-
-                // ensure min-version constraint is met
-                if((minVersion != null) && version.IsLessThanVersion(minVersion)) {
-                    return false;
-                }
-
-                // TODO: the following test prevents us from picking up patch releases!
-
-                // ensure max-version constraint is met
-                if((maxVersion != null) && version.IsGreaterThanVersion(maxVersion)) {
-                    return false;
-                }
-                return true;
-            }
         }
     }
 }

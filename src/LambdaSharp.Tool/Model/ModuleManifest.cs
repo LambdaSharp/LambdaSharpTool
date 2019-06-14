@@ -48,33 +48,17 @@ namespace LambdaSharp.Tool.Model {
         public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
 
         //--- Methods ---
-        public string GetFullName() {
+        public ModuleInfo GetModuleInfo()  {
             if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
                 throw new ApplicationException("invalid module info");
             }
-            return moduleInfo.FullName;
+            return moduleInfo;
         }
 
-        public string GetOwner() {
-            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleInfo.Owner;
-        }
-
-        public string GetName() {
-            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleInfo.Name;
-        }
-
-        public VersionInfo GetVersion() {
-            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleInfo.Version;
-        }
+        public string GetFullName() => GetModuleInfo().FullName;
+        public string GetOwner() => GetModuleInfo().Owner;
+        public string GetName() => GetModuleInfo().Name;
+        public VersionInfo GetVersion() => GetModuleInfo().Version;
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()
             => ParameterSections.SelectMany(section => section.Parameters);

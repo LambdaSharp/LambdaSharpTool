@@ -371,7 +371,7 @@ namespace LambdaSharp.Tool.Cli {
 
                     // run build, publish, and deploy steps
                     foreach(var argument in arguments) {
-                        string moduleReference = null;
+                        ModuleInfo moduleInfo = null;
                         string moduleSource = null;
                         if(Directory.Exists(argument)) {
 
@@ -387,9 +387,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
-                        } else if(ModuleInfo.TryParse(argument, out _)) {
-                            moduleReference = argument;
-                        } else {
+                        } else if(!ModuleInfo.TryParse(argument, out moduleInfo)) {
                             LogError($"unrecognized argument: {argument}");
                             break;
                         }
@@ -415,16 +413,18 @@ namespace LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(moduleReference == null) {
-                                moduleReference = await PublishStepAsync(settings, forcePublishOption.HasValue());
-                                if(moduleReference == null) {
+
+                            // check if module needs to be published first
+                            if(moduleInfo == null) {
+                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue());
+                                if(moduleInfo == null) {
                                     break;
                                 }
                             }
                             if(!await DeployStepAsync(
                                 settings,
                                 dryRun,
-                                moduleReference,
+                                moduleInfo.ToModuleReference(),
                                 alternativeNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
@@ -476,7 +476,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<string> PublishStepAsync(Settings settings, bool forcePublish) {
+        public async Task<ModuleInfo> PublishStepAsync(Settings settings, bool forcePublish) {
             if(!await PopulateRuntimeSettingsAsync(settings)) {
                 return null;
             }

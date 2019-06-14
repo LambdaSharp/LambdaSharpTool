@@ -35,8 +35,6 @@ namespace LambdaSharp.Tool {
         // * Owner.Name@Origin
         // * Owner.Name:*@Bucket
         // * Owner.Name:Version@Bucket
-
-        // TODO: do we still need this format?
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/cloudformation.json
 
@@ -44,19 +42,19 @@ namespace LambdaSharp.Tool {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static bool TryParse(string text, out ModuleInfo moduleInfo) {
+        public static bool TryParse(string moduleReference, out ModuleInfo moduleInfo) {
             string owner;
             string name;
             VersionInfo version;
             string origin;
-            if(text == null) {
+            if(moduleReference == null) {
                 moduleInfo = null;
                 return false;
             }
 
-            // TODO: do we still need this format?
-            if(text.StartsWith("s3://", StringComparison.Ordinal)) {
-                var uri = new Uri(text);
+            // check if module reference is given in S3 URI format
+            if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
+                var uri = new Uri(moduleReference);
 
                 // absolute path always starts with '/', which needs to be removed
                 var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -71,7 +69,7 @@ namespace LambdaSharp.Tool {
             } else {
 
                 // try parsing module reference
-                var match = ModuleKeyPattern.Match(text);
+                var match = ModuleKeyPattern.Match(moduleReference);
                 if(!match.Success) {
                     moduleInfo = null;
                     return false;

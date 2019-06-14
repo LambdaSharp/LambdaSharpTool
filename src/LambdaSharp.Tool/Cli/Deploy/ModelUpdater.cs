@@ -68,11 +68,13 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // check if cloudformation stack already exists and is in a final state
             Console.WriteLine();
-            Console.WriteLine($"Deploying stack: {stackName} [{moduleInfo.FullName}:{moduleInfo.Version}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{moduleInfo}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
             // validate template
-            var templateUrl = $"https://{moduleInfo.Origin}.s3.amazonaws.com/{moduleInfo.TemplatePath}";
+
+            // TODO: change key to include module origin
+            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{moduleInfo.TemplatePath}";
             ValidateTemplateResponse validation;
             try {
                 validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
@@ -107,7 +109,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
-                        ParameterValue = moduleInfo.Origin ?? ""
+                        ParameterValue = Settings.DeploymentBucketName
                     }
                 },
                 StackName = stackName,
