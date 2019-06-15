@@ -94,7 +94,13 @@ namespace LambdaSharp.Tool {
                 }
                 if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
                     builder.AppendLine();
-                    builder.Append(error.Exception.ToString());
+                    if(error.Exception is AggregateException aggregateException) {
+                        foreach(var innerException in aggregateException.Flatten().InnerExceptions) {
+                            builder.Append(innerException.ToString());
+                        }
+                    } else {
+                        builder.Append(error.Exception.ToString());
+                    }
                 } else {
                     suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
                 }
@@ -144,9 +150,6 @@ namespace LambdaSharp.Tool {
         public string AwsAccountId { get; set; }
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
-
-        // TODO: need to get rid of this
-        public IEnumerable<string> ModuleBucketNames { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }

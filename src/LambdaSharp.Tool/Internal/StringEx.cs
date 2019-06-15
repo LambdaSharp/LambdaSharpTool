@@ -82,23 +82,17 @@ namespace LambdaSharp.Tool.Internal {
             return char.ToUpperInvariant(identifier[0]) + ((identifier.Length > 1) ? identifier.Substring(1) : "");
         }
 
-        // TODO: use 'ModuleInfo.TryParse()' instead
         public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
             moduleOwner = "<BAD>";
             moduleName = "<BAD>";
-            if(compositeModuleOwnerName == null) {
+            if(!ModuleInfo.TryParse(compositeModuleOwnerName, out var moduleInfo)) {
                 return false;
             }
-            var moduleOwnerAndName = compositeModuleOwnerName.Split(".", 2);
-            if(
-                (moduleOwnerAndName.Length != 2)
-                || (moduleOwnerAndName[0].Length == 0)
-                || (moduleOwnerAndName[1].Length == 0)
-            ) {
+            if((moduleInfo.Version != null) || (moduleInfo.Origin != null)) {
                 return false;
             }
-            moduleOwner = moduleOwnerAndName[0];
-            moduleName = moduleOwnerAndName[1];
+            moduleOwner = moduleInfo.Owner;
+            moduleName = moduleInfo.Name;
             return true;
         }
 

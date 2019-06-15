@@ -85,7 +85,7 @@ namespace LambdaSharp.Tool.Cli {
                         // get function name
                         var functionName = nameArgument.Value;
                         while(string.IsNullOrEmpty(functionName)) {
-                            functionName = Prompt.GetString("|=> Enter the function name:");
+                            functionName = PromptString("Enter the function name");
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
@@ -117,7 +117,7 @@ namespace LambdaSharp.Tool.Cli {
                         // get the module name
                         var moduleName = nameArgument.Value;
                         while(string.IsNullOrEmpty(moduleName)) {
-                            moduleName = Prompt.GetString("|=> Enter the module name:");
+                            moduleName = PromptString("Enter the module name");
                         }
 
                         // prepend default owner string
@@ -145,13 +145,13 @@ namespace LambdaSharp.Tool.Cli {
                         // get the resource name
                         var name = nameArgument.Value;
                         while(string.IsNullOrEmpty(name)) {
-                            name = Prompt.GetString("|=> Enter the resource name:");
+                            name = PromptString("Enter the resource name");
                         }
 
                         // get the resource type
                         var type = typeArgument.Value;
                         while(string.IsNullOrEmpty(type)) {
-                            type = Prompt.GetString("|=> Enter the resource type:");
+                            type = PromptString("Enter the resource type");
                         }
                         NewResource(
                             moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),

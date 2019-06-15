@@ -52,6 +52,9 @@ namespace LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
 
+        //--- Class Fields ---
+        private static string PromptColor = AnsiTerminal.Cyan;
+
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
@@ -64,6 +67,71 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return result;
+        }
+
+        public static string PromptString(string message, string defaultValue = null) {
+            var prompt = "";
+            if(Settings.UseAnsiConsole) {
+                prompt += PromptColor;
+            }
+            prompt += $"|=> {message}:";
+            if(!string.IsNullOrEmpty(defaultValue)) {
+                prompt += $" [{defaultValue}]";
+            }
+            if(Settings.UseAnsiConsole) {
+                prompt += AnsiTerminal.Reset;
+            }
+            prompt += " ";
+            Console.Write(prompt);
+            SetCursorVisible(true);
+            var result = Console.ReadLine();
+            SetCursorVisible(false);
+            return string.IsNullOrEmpty(result)
+                ? defaultValue
+                : result;
+
+            // local functions
+            void SetCursorVisible(bool visible) {
+                try {
+                    Console.CursorVisible = visible;
+                } catch { }
+            }
+        }
+
+        public static void PromptText(string message) {
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"{PromptColor}*** {message} ***{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"*** {message} ***");
+            }
+        }
+
+        public static string PromptChoice(string message, IList<string> choices) {
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"{PromptColor}{message} (multiple choice){AnsiTerminal.Reset}");
+                var choiceCount = choices.Count;
+                for(var i = 0; i < choiceCount; ++i) {
+                    Console.WriteLine($"{PromptColor}{i + 1}. {choices[i]}{AnsiTerminal.Reset}");
+                }
+                while(true) {
+                    var enteredValue = PromptString($"Enter a choice (1-{choiceCount})");
+                    if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                        return choices[choice - 1];
+                    }
+                }
+            } else {
+                Console.WriteLine($"{message} (multiple choice)");
+                var choiceCount = choices.Count;
+                for(var i = 0; i < choiceCount; ++i) {
+                    Console.WriteLine($"{i + 1}. {choices[i]}");
+                }
+                while(true) {
+                    var enteredValue = PromptString($"Enter a choice (1-{choiceCount})");
+                    if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                        return choices[choice - 1];
+                    }
+                }
+            }
         }
 
         //--- Methods ---
@@ -207,7 +275,6 @@ namespace LambdaSharp.Tool.Cli {
                         AwsAccountId = awsAccount?.AccountId,
                         AwsUserArn = awsAccount?.UserArn,
                         DeploymentBucketName = deploymentBucketName,
-                        ModuleBucketNames = moduleBucketNames,
                         SsmClient = ssmClient,
                         CfnClient = cfnClient,
                         KmsClient = kmsClient,
@@ -252,7 +319,6 @@ namespace LambdaSharp.Tool.Cli {
         protected async Task<bool> PopulateRuntimeSettingsAsync(Settings settings, bool optional = false) {
             if(
                 (settings.DeploymentBucketName == null)
-                || (settings.ModuleBucketNames == null)
                 || (settings.TierVersion == null)
             ) {
                 if(settings.Tier == null) {
@@ -338,7 +404,6 @@ namespace LambdaSharp.Tool.Cli {
                     return false;
                 }
                 settings.DeploymentBucketName = tieModuleBucketArnParts[5];
-                settings.ModuleBucketNames = new[] { settings.DeploymentBucketName, $"lambdasharp-{settings.AwsRegion}" };
 
                 // read tier mode
                 var coreServicesModeText = GetStackOutput("CoreServices");

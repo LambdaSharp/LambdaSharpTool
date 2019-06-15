@@ -28,6 +28,22 @@ using System.Text.RegularExpressions;
 namespace LambdaSharp.Tool {
     using static ModelFunctions;
 
+    public class ModuleLocation {
+
+        //--- Fields ---
+        public readonly string SourceBucketName;
+        public readonly ModuleInfo ModuleInfo;
+
+        //--- Properties ---
+        public string S3Url => $"s3://{SourceBucketName}/{ModuleInfo.TemplatePath}";
+
+        //--- Constructors ---
+        public ModuleLocation(string sourceBucketName, ModuleInfo moduleInfo) {
+            SourceBucketName = sourceBucketName ?? throw new ArgumentNullException(nameof(sourceBucketName));
+            ModuleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
+        }
+    }
+
     public class ModuleInfo {
 
         // NOTE: module reference formats:
@@ -44,8 +60,8 @@ namespace LambdaSharp.Tool {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleAssetExpression(string filename) => FnSub($"${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
-        public static string GetModuleBucketPrefix(string moduleOwner, string moduleName, string moduleOrigin) => $"{moduleOwner}/Modules/{moduleName}/Versions/";
+        public static object GetModuleAssetExpression(string filename) => FnSub($"%%MODULEORIGIN%%/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
+        public static string GetModuleVersionsBucketPrefix(string moduleOwner, string moduleName, string moduleOrigin) => $"{moduleOrigin}/{moduleOwner}/Modules/{moduleName}/Versions/";
 
         public static bool TryParse(string moduleReference, out ModuleInfo moduleInfo) {
             string owner;
@@ -117,13 +133,11 @@ namespace LambdaSharp.Tool {
         }
 
         //--- Properties ---
-
-        // TODO: revisit the template path
-        public string TemplatePath => $"{Owner}/Modules/{Name}/Versions/{Version ?? throw new ApplicationException("missing Version information")}/cloudformation.json";
+        public string TemplatePath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Versions/{Version ?? throw new ApplicationException("missing Version information")}/cloudformation.json";
 
         //--- Methods ---
         public string GetTemplateAssetPath(string hash) => GetAssetPath($"cloudformation_v{Version ?? throw new ApplicationException("missing Version information")}_{hash}.json");
-        public string GetAssetPath(string filename) => $"{Owner}/Modules/{Name}/Assets/{filename}";
+        public string GetAssetPath(string filename) => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Assets/{filename}";
 
         public object GetTemplateUrlExpression() {
 
@@ -131,13 +145,13 @@ namespace LambdaSharp.Tool {
 
             // TODO (2019-05-09, bjorg); path-style S3 bucket references will be deprecated in September 30th 2020
             //  see https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
-            return FnSub("https://s3.amazonaws.com/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+            return FnSub("https://s3.amazonaws.com/${ModuleOrigin}/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                 ["ModuleOwner"] = Owner,
                 ["ModuleName"] = Name,
                 ["ModuleVersion"] = Version.ToString(),
 
                 // TODO: shouldn't 'Origin' always be set?
-                ["ModuleOrigin"] = Origin ?? FnRef("DeploymentBucketName")
+                ["ModuleOrigin"] = Origin /*  ?? FnRef("DeploymentBucketName") */
             });
         }
 

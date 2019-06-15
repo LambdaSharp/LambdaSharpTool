@@ -83,16 +83,6 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine($"    API Gateway Role: <INCOMPLETE> {ConcealAwsAccountId(apiGatewayAccount.Arn)}");
                 LogWarn($"API Gateway role is incomplete (missing: {string.Join(", ", apiGatewayAccount.MissingPolicies)})");
             }
-
-            // TODO (2019-06-03, bjorg): remove this once we no longer need multiple buckets registered
-            if(settings.ModuleBucketNames != null) {
-                Console.WriteLine($"    Module S3 Buckets:");
-                foreach(var bucketName in settings.ModuleBucketNames) {
-                    Console.WriteLine($"        - {bucketName}");
-                }
-            } else {
-                Console.WriteLine($"    Module S3 Buckets: <NOT SET>");
-            }
             Console.WriteLine($"Git");
             Console.WriteLine($"    Branch: {gitBranch ?? "<NOT SET>"}");
             Console.WriteLine($"    SHA: {gitSha ?? "<NOT SET>"}");

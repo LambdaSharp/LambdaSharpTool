@@ -166,6 +166,7 @@ namespace LambdaSharp.Tool.Model {
         }
 
         public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
+            moduleOrigin = moduleOrigin ?? "%%MODULEORIGIN%%";
 
             // check if a dependency was already registered
             ModuleDependency dependency;
@@ -173,37 +174,37 @@ namespace LambdaSharp.Tool.Model {
 
                 // keep the strongest version constraints
                 if(moduleMinVersion != null) {
-                    if((dependency.MinVersion == null) || dependency.MinVersion.IsLessThanVersion(moduleMinVersion)) {
-                        dependency.MinVersion = moduleMinVersion;
+                    if((dependency.ModuleMinVersion == null) || dependency.ModuleMinVersion.IsLessThanVersion(moduleMinVersion)) {
+                        dependency.ModuleMinVersion = moduleMinVersion;
                     }
                 }
                 if(moduleMaxVersion != null) {
-                    if((dependency.MaxVersion == null) || dependency.MaxVersion.IsGreaterThanVersion(moduleMaxVersion)) {
-                        dependency.MaxVersion = moduleMaxVersion;
+                    if((dependency.ModuleMaxVersion == null) || dependency.ModuleMaxVersion.IsGreaterThanVersion(moduleMaxVersion)) {
+                        dependency.ModuleMaxVersion = moduleMaxVersion;
                     }
                 }
 
                 // check there is no conflict in origin bucket names
                 if(moduleOrigin != null) {
-                    if(dependency.BucketName == null) {
-                        dependency.BucketName = moduleOrigin;
-                    } else if(dependency.BucketName != moduleOrigin) {
-                        LogError($"module {moduleFullName} origin conflict is empty ({dependency.BucketName} vs. {moduleOrigin})");
+                    if(dependency.ModuleOrigin == null) {
+                        dependency.ModuleOrigin = moduleOrigin;
+                    } else if(dependency.ModuleOrigin != moduleOrigin) {
+                        LogError($"module {moduleFullName} origin conflict is empty ({dependency.ModuleOrigin} vs. {moduleOrigin})");
                     }
                 }
             } else {
                 dependency = new ModuleDependency {
                     ModuleFullName = moduleFullName,
-                    MinVersion = moduleMinVersion,
-                    MaxVersion = moduleMaxVersion,
-                    BucketName = moduleOrigin
+                    ModuleMinVersion = moduleMinVersion,
+                    ModuleMaxVersion = moduleMaxVersion,
+                    ModuleOrigin = moduleOrigin
                 };
             }
 
             // validate dependency
-            var minMaxVersionComparison = dependency.MinVersion?.CompareToVersion(dependency.MaxVersion);
-            if((dependency.MinVersion != null) && (dependency.MaxVersion != null) && !(minMaxVersionComparison <= 0)) {
-                LogError($"module {moduleFullName} version range is empty (v{dependency.MinVersion}..v{dependency.MaxVersion})");
+            var minMaxVersionComparison = dependency.ModuleMinVersion?.CompareToVersion(dependency.ModuleMaxVersion);
+            if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null) && !(minMaxVersionComparison <= 0)) {
+                LogError($"module {moduleFullName} version range is empty (v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion})");
                 return;
             }
             if(!Settings.NoDependencyValidation) {
@@ -212,11 +213,11 @@ namespace LambdaSharp.Tool.Model {
                     return;
                 }
                 var loader = new ModelManifestLoader(Settings, moduleFullName);
-                var moduleInfo = loader.LocateAsync(moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion, moduleOrigin).Result;
-                if(moduleInfo == null) {
+                var moduleLocation = loader.LocateAsync(moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion, moduleOrigin).Result;
+                if(moduleLocation == null) {
                     return;
                 }
-                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(moduleInfo).Result;
+                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(moduleLocation).Result;
                 if(manifest == null) {
 
                     // nothing to do; loader already emitted an error
@@ -732,9 +733,9 @@ namespace LambdaSharp.Tool.Model {
                 if(!Settings.NoDependencyValidation) {
                     var moduleFullName = moduleInfo.FullName;
                     var loader = new ModelManifestLoader(Settings, moduleFullName);
-                    var foundModuleInfo = loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin).Result;
-                    if(foundModuleInfo != null) {
-                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(foundModuleInfo).Result;
+                    var foundModuleLocation = loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin).Result;
+                    if(foundModuleLocation != null) {
+                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(foundModuleLocation).Result;
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
@@ -749,7 +750,7 @@ namespace LambdaSharp.Tool.Model {
 
                         // inherit dependencies from nested module
                         foreach(var dependency in manifest.Dependencies) {
-                            AddDependency(dependency.ModuleFullName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
+                            AddDependency(dependency.ModuleFullName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin);
                         }
 
                         // inherit import parameters that are not provided by the declaration
@@ -940,7 +941,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = ModuleInfo.GetModuleAssetExpression($"{{{packageName.FullName}}}");
+            function.Function.Code.S3Key = ModuleInfo.GetModuleAssetExpression($"${{{packageName.FullName}}}");
 
             // check if function is a finalizer
             var isFinalizer = (parent == null) && (name == "Finalizer");

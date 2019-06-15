@@ -71,10 +71,16 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(!new ModelManifestLoader(Settings, "cloudformation.json").TryLoadFromFile(cloudformationFile, out var manifest)) {
                 return null;
             }
-            if(!ModuleInfo.TryParse(manifest.Module, out var moduleInfo)) {
-                LogError("invalid module file");
-                return null;
-            }
+            var moduleInfo = manifest.GetModuleInfo();
+
+            // update module origin
+            moduleInfo = new ModuleInfo(
+                moduleInfo.Owner,
+                moduleInfo.Name,
+                moduleInfo.Version,
+                forceModuleOrigin ?? Settings.DeploymentBucketName
+            );
+            manifest.Module = moduleInfo.ToModuleReference();
 
             // check if we want to always publish
             if(!forcePublish) {
@@ -86,7 +92,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 }
 
                 // check if a manifest already exists for this version
-                var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(moduleInfo, errorIfMissing: false);
+                var existingManifest = await new ModelManifestLoader(Settings, "cloudformation.json").LoadFromS3Async(new ModuleLocation(Settings.DeploymentBucketName, moduleInfo), errorIfMissing: false);
                 if(existingManifest != null) {
                     if(!moduleInfo.Version.IsPreRelease) {
                         LogWarn($"{moduleInfo.FullName} (v{moduleInfo.Version}) is already published; use --force-publish to proceed anyway");
@@ -114,15 +120,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 manifest.Assets[i] = await UploadPackageAsync(manifest, manifest.Assets[i], "asset");
             }
 
-            // update module origin
-            var manifestModuleInfo = manifest.GetModuleInfo();
-            manifest.Module = new ModuleInfo(
-                manifestModuleInfo.Owner,
-                manifestModuleInfo.Name,
-                manifestModuleInfo.Version,
-                forceModuleOrigin ?? Settings.DeploymentBucketName
-            ).ToModuleReference();
-
             // upload CloudFormation template
             var templateKey = await UploadTemplateFileAsync(manifest, "template");
             if(templateKey == null) {
@@ -148,9 +145,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
 
             // update cloudformation template with manifest and minify it
-            var template = File.ReadAllText(SourceFilename);
-
-            // TODO: substitute module origin in template text
+            var template = File.ReadAllText(SourceFilename).Replace("%%MODULEORIGIN%%", manifest.GetModuleInfo().Origin);
             var cloudformation = JObject.Parse(template);
             ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
                 NullValueHandling = NullValueHandling.Ignore

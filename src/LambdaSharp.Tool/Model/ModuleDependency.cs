@@ -26,9 +26,9 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string ModuleFullName { get; set; }
-        public VersionInfo MinVersion { get; set; }
-        public VersionInfo MaxVersion { get; set; }
-        public string BucketName { get; set; }
+        public VersionInfo ModuleMinVersion { get; set; }
+        public VersionInfo ModuleMaxVersion { get; set; }
+        public string ModuleOrigin { get; set; }
         public ModuleManifest Manifest { get; set; }
     }
 }

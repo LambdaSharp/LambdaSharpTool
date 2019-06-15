@@ -23,9 +23,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Amazon;
+using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -35,6 +39,9 @@ using Newtonsoft.Json.Linq;
 namespace LambdaSharp.Tool {
 
     public class ModelManifestLoader : AModelProcessor {
+
+        //--- Class Fields ---
+        private static HttpClient _httpClient = new HttpClient();
 
         //--- Constructors --
         public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
@@ -69,16 +76,13 @@ namespace LambdaSharp.Tool {
             return true;
         }
 
-        public async Task<ModuleManifest> LoadFromS3Async(ModuleInfo moduleInfo, bool errorIfMissing = true) {
-
-            // TODO: need to also search 'Settings.DeploymentBucketName'
+        public async Task<ModuleManifest> LoadFromS3Async(ModuleLocation moduleLocation, bool errorIfMissing = true) {
 
             // download cloudformation template
-            var origin = moduleInfo.Origin ?? Settings.DeploymentBucketName;
-            var cloudformationText = await GetS3ObjectContents(origin, moduleInfo.TemplatePath);
+            var cloudformationText = await GetS3ObjectContents(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.TemplatePath);
             if(cloudformationText == null) {
                 if(errorIfMissing) {
-                    LogError($"could not load CloudFormation template from s3://{origin}/{moduleInfo.TemplatePath}");
+                    LogError($"could not load CloudFormation template from {moduleLocation.S3Url}");
                 }
                 return null;
             }
@@ -99,63 +103,112 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleInfo> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
+        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
 
-            // by default, attempt to find the module in the deployment bucket and then the regional lambdasharp bucket
-            var searchBucketNames = (moduleOrigin != null)
-                ? new List<string> { moduleOrigin.Replace("${AWS::Region}", Settings.AwsRegion) }
-                : (Settings.ModuleBucketNames ?? new[] { $"lambdasharp-{Settings.AwsRegion}" });
+            // attempt to find the latest matching version in the module origin and deployment buckets
+            var moduleOriginFoundVersion = await FindNewestVersion(moduleOrigin);
+            var deploymentBucketFoundVersion = (moduleOrigin == Settings.DeploymentBucketName)
+                ? moduleOriginFoundVersion
+                : await FindNewestVersion(Settings.DeploymentBucketName);
 
-            // attempt to find a matching version
-            VersionInfo foundVersion = null;
-            string foundOrigin = null;
-            foreach(var bucketName in searchBucketNames) {
-                foundVersion = await FindNewestVersion(bucketName);
-                if(foundVersion != null) {
-                    foundOrigin = bucketName;
-                    break;
-                }
-            }
-            if(foundVersion == null) {
-                var versionConstraint = "any version";
-                if((moduleMinVersion != null) && (moduleMaxVersion != null)) {
-                    var versionCompare = moduleMinVersion.CompareToVersion(moduleMaxVersion);
-                    if(versionCompare == 0) {
-                        versionConstraint = $"v{moduleMinVersion}";
-                    } else if(versionCompare != null) {
-                        versionConstraint = $"v{moduleMinVersion}..v{moduleMaxVersion}";
+            // determine which bucket to use for the module
+            if((moduleOriginFoundVersion != null) && (deploymentBucketFoundVersion != null)) {
+
+                // check which bucket has the newer version
+                var compareOriginDeploymentVersions = moduleOriginFoundVersion.CompareToVersion(deploymentBucketFoundVersion);
+                if(compareOriginDeploymentVersions == 0) {
+                    if(moduleOriginFoundVersion.IsPreRelease) {
+
+                        // always default to module origin for pre-release version
+                        return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
                     } else {
-                        versionConstraint = $"invalid range from v{moduleMinVersion} to v{moduleMaxVersion}";
+
+                        // keep version in deployment bucket since version is stable and it matches
+                        return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
                     }
-                } else if(moduleMinVersion != null) {
-                    versionConstraint = $"v{moduleMinVersion} or later";
-                } else if(moduleMaxVersion != null) {
-                    versionConstraint = $"v{moduleMaxVersion} or earlier";
+                } else if(compareOriginDeploymentVersions < 0) {
+
+                    // use version from deployment bucket since it's newer
+                    return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
+                } else if(compareOriginDeploymentVersions > 0) {
+
+                    // use version from origin since it's newer
+                    return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
+                } else {
+                    LogError($"unable to determine which version to use: {moduleOriginFoundVersion} vs. {deploymentBucketFoundVersion}");
+                    return null;
                 }
-                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
-                return null;
+            } else if(moduleOriginFoundVersion != null) {
+                return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
+            } else if(deploymentBucketFoundVersion != null) {
+                return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
             }
-            return new ModuleInfo(moduleOwner, moduleName, foundVersion, foundOrigin);
+
+            // could not find a matching version
+            var versionConstraint = "any version";
+            if((moduleMinVersion != null) && (moduleMaxVersion != null)) {
+                var versionCompare = moduleMinVersion.CompareToVersion(moduleMaxVersion);
+                if(versionCompare == 0) {
+                    versionConstraint = $"v{moduleMinVersion}";
+                } else if(versionCompare != null) {
+                    versionConstraint = $"v{moduleMinVersion}..v{moduleMaxVersion}";
+                } else {
+                    versionConstraint = $"invalid range from v{moduleMinVersion} to v{moduleMaxVersion}";
+                }
+            } else if(moduleMinVersion != null) {
+                versionConstraint = $"v{moduleMinVersion} or later";
+            } else if(moduleMaxVersion != null) {
+                versionConstraint = $"v{moduleMaxVersion} or earlier";
+            }
+            LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
+            return null;
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
+
+                // NOTE (2019-06-14, bjorg): we need to determine which region the bucket belongs to
+                //  so that we can instantiate the S3 client properly; doing a HEAD request against
+                //  the domain name returns a 'x-amz-bucket-region' even when then bucket itself is private.
+                var headResponse = await _httpClient.SendAsync(new HttpRequestMessage {
+                    Method = HttpMethod.Head,
+                    RequestUri = new Uri($"https://{bucketName}.s3.amazonaws.com")
+                });
+
+                // check if bucket exists
+                if(headResponse.StatusCode == HttpStatusCode.NotFound) {
+                    LogWarn($"could not find '{bucketName}'");
+                    return null;
+                }
+
+                // check for region header of bucket
+                if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
+                    LogWarn($"could not detect region for '{bucketName}'");
+                    return null;
+                }
+
+                // create region specific S3 client
+                var s3Client = new AmazonS3Client(RegionEndpoint.GetBySystemName(values.First()));
 
                 // enumerate versions in bucket
                 var versions = new List<VersionInfo>();
                 var request = new ListObjectsV2Request {
                     BucketName = bucketName,
-                    Prefix = ModuleInfo.GetModuleBucketPrefix(moduleOwner, moduleName, moduleOrigin),
+                    Prefix = ModuleInfo.GetModuleVersionsBucketPrefix(moduleOwner, moduleName, moduleOrigin),
                     Delimiter = "/",
                     MaxKeys = 100
                 };
                 do {
-                    var response = await Settings.S3Client.ListObjectsV2Async(request);
-                    versions.AddRange(response.CommonPrefixes
-                        .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
-                        .Select(found => VersionInfo.Parse(found))
-                        .Where(IsVersionMatch)
-                    );
-                    request.ContinuationToken = response.NextContinuationToken;
+                    try {
+                        var response = await s3Client.ListObjectsV2Async(request);
+                        versions.AddRange(response.CommonPrefixes
+                            .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
+                            .Select(found => VersionInfo.Parse(found))
+                            .Where(IsVersionMatch)
+                        );
+                        request.ContinuationToken = response.NextContinuationToken;
+                    } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
+                        return null;
+                    }
                 } while(request.ContinuationToken != null);
                 if(!versions.Any()) {
                     return null;

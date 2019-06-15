@@ -81,14 +81,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
 
             // TODO: this uses a tight version range which will prevent patches from being picked up
-            var foundModuleInfo = await _loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version /* bad */, moduleInfo.Origin);
-            if(foundModuleInfo == null) {
+            var foundModuleLocation = await _loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version /* bad */, moduleInfo.Origin);
+            if(foundModuleLocation == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(foundModuleInfo);
+            var manifest = await _loader.LoadFromS3Async(foundModuleLocation);
             if(manifest == null) {
                 return false;
             }
@@ -114,7 +114,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                     // tool version is more recent; check if user wants to upgrade tier
                     Console.WriteLine($"LambdaSharp Tier is out of date");
-                    var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                    var upgrade = Settings.UseAnsiConsole
+                        ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
+                        : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
                     if(!upgrade) {
                         return false;
                     }
@@ -303,18 +305,20 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
                         return;
                     } else {
+
+                        // TODO: log error?
                         dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleInfo = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
-                        if(dependencyModuleInfo == null) {
+                        var dependencyModuleLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin);
+                        if(dependencyModuleLocation == null) {
 
                             // error has already been reported
                             continue;
                         }
 
                         // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyModuleInfo);
+                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyModuleLocation);
                         if(dependencyManifest == null) {
 
                             // error has already been reported
@@ -323,7 +327,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         var nestedDependency = new DependencyRecord {
                             Owner = current.Module,
                             Manifest = dependencyManifest,
-                            ModuleInfo = dependencyModuleInfo
+                            ModuleInfo = dependencyModuleLocation.ModuleInfo
                         };
 
                         // keep marker for in-progress resolutions so that circular errors can be detected
@@ -332,7 +336,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyModuleInfo}");
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyModuleLocation}");
                         deployments.Add(nestedDependency);
                     }
                 }
@@ -350,11 +354,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployed.ModuleInfo.Version;
-            if((dependency.MaxVersion != null) && !(deployedVersion.CompareToVersion(dependency.MaxVersion) <= 0)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+            if((dependency.ModuleMaxVersion != null) && !(deployedVersion.CompareToVersion(dependency.ModuleMaxVersion) <= 0)) {
+                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.ModuleMaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
-            if((dependency.MinVersion != null) && !(deployedVersion.CompareToVersion(dependency.MinVersion) >= 0)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
+            if((dependency.ModuleMinVersion != null) && !(deployedVersion.CompareToVersion(dependency.ModuleMinVersion) >= 0)) {
+                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.ModuleMinVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
         }
@@ -379,23 +383,23 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // confirm that the module version is in a valid range
-                if(dependency.MaxVersion != null) {
-                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
+                if(dependency.ModuleMaxVersion != null) {
+                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMaxVersion);
                     if(deployedToMinVersionComparison > 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.ModuleMaxVersion}");
                         return deployedModuleInfo;
                     } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.ModuleMaxVersion}");
                         return deployedModuleInfo;
                     }
                 }
-                if(dependency.MinVersion != null) {
-                    var deployedToMaxVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
+                if(dependency.ModuleMinVersion != null) {
+                    var deployedToMaxVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMinVersion);
                     if(deployedToMaxVersionComparison < 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.ModuleMinVersion}");
                         return deployedModuleInfo;
                     } else if(deployedToMaxVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.ModuleMinVersion}");
                         return deployedModuleInfo;
                     }
                 }
@@ -447,11 +451,15 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
                     Console.WriteLine();
-                    Console.WriteLine($"*** {parameterGroup.Title.ToUpper()} ***");
+                    ACliCommand.PromptText(parameterGroup.Title.ToUpper());
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
-                        var enteredValue = PromptString(parameter, parameter.Default) ?? "";
+                        var message = $"{parameter.Name} [{parameter.Type}]";
+                        if(parameter.Label != null) {
+                            message += $": {parameter.Label}";
+                        }
+                        var enteredValue = ACliCommand.PromptString(message, parameter.Default) ?? "";
                         stackParameters[parameter.Name] = new CloudFormationParameter {
                             ParameterKey = parameter.Name,
                             ParameterValue = enteredValue
@@ -483,35 +491,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
                 return true;
-            }
-
-            string PromptString(ModuleManifestParameter parameter, string defaultValue = null) {
-
-                // TODO: show multiple choice values
-
-                var prompt = $"|=> {parameter.Name} [{parameter.Type}]:";
-                if(parameter.Label != null) {
-                    prompt += $" {parameter.Label}:";
-                }
-                if(!string.IsNullOrEmpty(defaultValue)) {
-                    prompt = $"{prompt} [{defaultValue}]";
-                }
-                Console.Write(prompt);
-                Console.Write(' ');
-                SetCursorVisible(true);
-                var resp = Console.ReadLine();
-                SetCursorVisible(false);
-                if(!string.IsNullOrEmpty(resp)) {
-                    return resp;
-                }
-                return defaultValue;
-
-                // local functions
-                void SetCursorVisible(bool visible) {
-                    try {
-                        Console.CursorVisible = visible;
-                    } catch { }
-                }
             }
         }
 

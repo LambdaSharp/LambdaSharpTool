@@ -23,9 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using LambdaSharp.Tool.Internal;
@@ -155,7 +153,7 @@ namespace LambdaSharp.Tool.Cli {
                         }
 
                         // confirm that the implicit name is the desired name
-                        settings.Tier = Prompt.GetString("|=> LambdaSharp tier name:", "Default");
+                        settings.Tier = PromptString("LambdaSharp tier name", "Default");
                     }
                 } else {
                     Console.WriteLine($"Updating LambdaSharp tier");
@@ -169,12 +167,13 @@ namespace LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
-                parameters["TierName"] = settings.Tier;
                 var templateParameters = await PromptMissingTemplateParameters(
                     settings.CfnClient,
                     promptsAsErrors,
                     stackName,
-                    parameters,
+                    new Dictionary<string, string>(parameters) {
+                        ["TierName"] = settings.Tier
+                    },
                     template
                 );
                 if(HasErrors) {
@@ -273,9 +272,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-
-                    // TODO: change 'forceModuleOrigin' to "lambdasharp"
-                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, forceModuleOrigin: null);
+                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, forceModuleOrigin: "lambdasharp");
                     if(moduleReference == null) {
                         return false;
                     }
@@ -310,7 +307,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(!await buildPublishDeployCommand.DeployStepAsync(
                     settings,
                     dryRun: null,
-                    moduleReference: $"{module}:{version}",
+                    moduleReference: $"{module}:{version}@lambdasharp",
                     instanceName: null,
                     allowDataLoos: allowDataLoos,
                     protectStack: protectStack,
@@ -396,23 +393,16 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
                 foreach(var missingParameter in missingParameters) {
                     if(missingParameter.ParameterConstraints?.AllowedValues.Any() ?? false) {
-                        Console.WriteLine($"|=> {missingParameter.Description ?? missingParameter.ParameterKey} (multiple choice)");
-                        var choiceCount = missingParameter.ParameterConstraints.AllowedValues.Count;
-                        for(var i = 0; i < choiceCount; ++i) {
-                            Console.WriteLine($"{i + 1}. {missingParameter.ParameterConstraints.AllowedValues[i]}");
-                        }
-                        while(true) {
-                            var enteredValue = Prompt.GetString($"Enter a choice (1-{choiceCount}):");
-                            if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
-                                result.Add(new Parameter {
-                                    ParameterKey = missingParameter.ParameterKey,
-                                    ParameterValue = missingParameter.ParameterConstraints.AllowedValues[choice - 1]
-                                });
-                                break;
-                            }
-                        }
+                        var enteredValue = PromptChoice(
+                            $"{missingParameter.Description ?? missingParameter.ParameterKey}",
+                            missingParameter.ParameterConstraints.AllowedValues
+                        );
+                        result.Add(new Parameter {
+                            ParameterKey = missingParameter.ParameterKey,
+                            ParameterValue = enteredValue
+                        });
                     } else {
-                        var enteredValue = Prompt.GetString($"|=> {missingParameter.Description ?? missingParameter.ParameterKey}:", missingParameter.DefaultValue) ?? "";
+                        var enteredValue = PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
                         result.Add(new Parameter {
                             ParameterKey = missingParameter.ParameterKey,
                             ParameterValue = enteredValue

@@ -30,7 +30,7 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-12-31";
+        public const string CurrentVersion = "2019-06-14";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
@@ -107,9 +107,9 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string ModuleFullName { get; set; }
-        public VersionInfo MinVersion { get; set; }
-        public VersionInfo MaxVersion { get; set; }
-        public string BucketName { get; set; }
+        public VersionInfo ModuleMinVersion { get; set; }
+        public VersionInfo ModuleMaxVersion { get; set; }
+        public string ModuleOrigin { get; set; }
     }
 
     public class ModuleManifestParameterSection {

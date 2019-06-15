@@ -69,7 +69,7 @@ Items:
   - Parameter: CoreSecretsKey
     Scope: all
     Section: LambdaSharp Tier Settings
-    Label: KMS key used by LambdaSharp.Core to encrypt sensitive values (leave blank to create a new key)
+    Label: KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key)
     Description: Encryption Key (ARN)
     Type: AWS::KMS::Key
     AllowedPattern: '(arn:aws:kms:.*)?'
