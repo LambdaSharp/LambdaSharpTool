@@ -114,7 +114,7 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine($"{PromptColor}{i + 1}. {choices[i]}{AnsiTerminal.Reset}");
                 }
                 while(true) {
-                    var enteredValue = PromptString($"Enter a choice (1-{choiceCount})");
+                    var enteredValue = PromptString("Enter a choice");
                     if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
                         return choices[choice - 1];
                     }
