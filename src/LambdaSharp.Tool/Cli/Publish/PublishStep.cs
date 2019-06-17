@@ -20,15 +20,10 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading.Tasks;
-using Amazon.CloudFormation;
-using Amazon.CloudFormation.Model;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
-using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -143,9 +138,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
+            var moduleInfo = manifest.GetModuleInfo();
 
             // update cloudformation template with manifest and minify it
-            var template = File.ReadAllText(SourceFilename).Replace("%%MODULEORIGIN%%", manifest.GetModuleInfo().Origin);
+            var template = File.ReadAllText(SourceFilename).Replace("%%MODULEORIGIN%%", moduleInfo.Origin ?? throw new ApplicationException("missing Origin information"));
             var cloudformation = JObject.Parse(template);
             ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
                 NullValueHandling = NullValueHandling.Ignore
@@ -156,7 +152,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            var destinationKey = manifest.GetModuleInfo().GetTemplateAssetPath(manifest.Hash);
+            var cloudformationFilename = $"cloudformation_v{moduleInfo.Version ?? throw new ApplicationException("missing Version information")}_{manifest.Hash}.json";
+            var destinationKey = manifest.GetModuleInfo().GetAssetPath(cloudformationFilename);
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {

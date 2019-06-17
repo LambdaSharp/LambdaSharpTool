@@ -29,6 +29,7 @@ using Amazon.CloudFormation.Model;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
+using Amazon.S3.Model;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
@@ -176,7 +177,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     });
                 }
 
-                // discover and deploy module dependencies
+                // discover module dependencies and prompt for missing parameters
                 var dependencies = await DiscoverDependenciesAsync(manifest);
                 if(HasErrors) {
                     return false;
@@ -194,6 +195,21 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(HasErrors) {
                     return false;
                 }
+
+                // TODO: this should be done at publishing as well!
+                // copy all dependencies to deployment bucket that are missing or have a pre-release version
+                foreach(var dependency in dependencies.Append((Manifest: manifest, ModuleInfo: moduleInfo))) {
+
+                    // copy module assets
+                    foreach(var asset in dependency.Manifest.Assets) {
+                        await CopyS3Object(dependency.ModuleInfo.Version.IsPreRelease, dependency.ModuleInfo.Origin, asset);
+                    }
+
+                    // copy cloudformation template
+                    await CopyS3Object(dependency.ModuleInfo.Version.IsPreRelease, dependency.ModuleInfo.Origin, dependency.ModuleInfo.TemplatePath);
+                }
+
+                // deploy module dependencies
                 foreach(var dependency in dependencies) {
                     if(!await new ModelUpdater(Settings, dependency.ModuleInfo.ToModuleReference()).DeployChangeSetAsync(
                         dependency.Manifest,
@@ -218,6 +234,30 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 );
             }
             return true;
+
+            // local functions
+            async Task CopyS3Object(bool isPreRelease, string sourceBucket, string key) {
+
+                // check if object must be copied, because it's a pre-release or is missing
+                var found = false;
+                if(!isPreRelease) {
+                    try {
+                        await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                            BucketName = Settings.DeploymentBucketName,
+                            Key = key
+                        });
+                        found = true;
+                    } catch { }
+                }
+                if(!found) {
+                    await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
+                        SourceBucket = sourceBucket,
+                        SourceKey = key,
+                        DestinationBucket = Settings.DeploymentBucketName,
+                        DestinationKey = key
+                    });
+                }
+            }
         }
 
         private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
@@ -302,7 +342,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         return;
                     } else {
 
-                        // TODO: log error?
+                        // TODO: log error? use ModuleInfo.TryParse()?
                         dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
 
                         // resolve dependencies for dependency module
@@ -339,20 +379,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             }
         }
 
-        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
-
-            // TODO: module origin needs to be part of this check as well
-            var deployed = modules.FirstOrDefault(module => module.ModuleInfo.FullName == dependency.ModuleFullName);
-            if(deployed == null) {
+        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
+            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleOrigin) && (deployed.ModuleInfo.FullName == dependency.ModuleFullName));
+            if(deployedModule == null) {
                 return false;
             }
-            var deployedOwner = (deployed.DependencyOwner == null)
+            var deployedOwner = (deployedModule.DependencyOwner == null)
                 ? "existing module"
-                : $"module '{deployed.DependencyOwner}'";
+                : $"module '{deployedModule.DependencyOwner}'";
 
             // confirm that the dependency version is in a valid range
-            var deployedVersion = deployed.ModuleInfo.Version;
-            if(!deployed.ModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
+            var deployedVersion = deployedModule.ModuleInfo.Version;
+            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
                 LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
@@ -378,7 +416,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // confirm that the module version is in a valid range
-                if(dependency.ModuleMaxVersion != null) {
+                if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null)) {
+                    if(!deployedModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleMinVersion} to v{dependency.ModuleMaxVersion}");
+                        return deployedModuleInfo;
+                    }
+                } else if(dependency.ModuleMaxVersion != null) {
                     var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMaxVersion);
                     if(deployedToMinVersionComparison >= 0) {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.ModuleMaxVersion}");
@@ -387,8 +430,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.ModuleMaxVersion}");
                         return deployedModuleInfo;
                     }
-                }
-                if(dependency.ModuleMinVersion != null) {
+                } else if(dependency.ModuleMinVersion != null) {
                     var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMinVersion);
                     if(deployedToMinVersionComparison < 0) {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.ModuleMinVersion}");

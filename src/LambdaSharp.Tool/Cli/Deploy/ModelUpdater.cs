@@ -71,9 +71,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Console.WriteLine($"Deploying stack: {stackName} [{moduleInfo}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
-            // validate template
-
-            // TODO: change key to include module origin
+            // validate template (must have been copied to deployment bucket at this stage)
             var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{moduleInfo.TemplatePath}";
             ValidateTemplateResponse validation;
             try {

@@ -136,7 +136,6 @@ namespace LambdaSharp.Tool {
         public string TemplatePath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Versions/{Version ?? throw new ApplicationException("missing Version information")}/cloudformation.json";
 
         //--- Methods ---
-        public string GetTemplateAssetPath(string hash) => GetAssetPath($"cloudformation_v{Version ?? throw new ApplicationException("missing Version information")}_{hash}.json");
         public string GetAssetPath(string filename) => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Assets/{filename}";
 
         public object GetTemplateUrlExpression() {

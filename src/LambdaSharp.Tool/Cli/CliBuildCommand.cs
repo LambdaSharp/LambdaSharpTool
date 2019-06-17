@@ -208,7 +208,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 

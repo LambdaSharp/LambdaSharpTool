@@ -589,7 +589,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependency(new ModuleInfo("LambdaSharp", "Core", Settings.ToolVersion.GetCompatibleBaseVersion(), "lambdasharp"));
+                _builder.AddDependency(new ModuleInfo("LambdaSharp", "Core", Settings.ToolVersion.GetCompatibleBaseVersion(), "lambdasharp"), nested: false);
 
                 // create module registration
                 _builder.AddResource(

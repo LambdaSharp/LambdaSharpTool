@@ -110,6 +110,7 @@ namespace LambdaSharp.Tool.Model {
         public VersionInfo ModuleMinVersion { get; set; }
         public VersionInfo ModuleMaxVersion { get; set; }
         public string ModuleOrigin { get; set; }
+        public bool Nested { get; set; }
     }
 
     public class ModuleManifestParameterSection {

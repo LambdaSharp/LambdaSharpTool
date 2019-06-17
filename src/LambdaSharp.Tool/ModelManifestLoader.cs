@@ -46,6 +46,9 @@ namespace LambdaSharp.Tool {
         //--- Constructors --
         public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
+        //--- Fields ---
+        private Dictionary<string, IAmazonS3> _s3ClientByBucketName = new Dictionary<string, IAmazonS3>();
+
         //--- Methods ---
         public bool TryLoadFromFile(string filepath, out ModuleManifest manifest) {
             JObject cloudformation;
@@ -77,8 +80,6 @@ namespace LambdaSharp.Tool {
         }
 
         public async Task<ModuleManifest> LoadFromS3Async(ModuleLocation moduleLocation, bool errorIfMissing = true) {
-
-            // TODO: make bucket region agnostic
 
             // download cloudformation template
             var cloudformationText = await GetS3ObjectContents(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.TemplatePath);
@@ -170,32 +171,14 @@ namespace LambdaSharp.Tool {
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
-                if(bucketName == null) {
+
+                // get bucket region specific S3 client
+                var s3Client = await GetS3ClientByBucketName(bucketName);
+                if(s3Client == null) {
+
+                    // nothing to do; GetS3ClientByBucketName already emitted an error
                     return null;
                 }
-
-                // NOTE (2019-06-14, bjorg): we need to determine which region the bucket belongs to
-                //  so that we can instantiate the S3 client properly; doing a HEAD request against
-                //  the domain name returns a 'x-amz-bucket-region' even when then bucket is private.
-                var headResponse = await _httpClient.SendAsync(new HttpRequestMessage {
-                    Method = HttpMethod.Head,
-                    RequestUri = new Uri($"https://{bucketName}.s3.amazonaws.com")
-                });
-
-                // check if bucket exists
-                if(headResponse.StatusCode == HttpStatusCode.NotFound) {
-                    LogWarn($"could not find '{bucketName}'");
-                    return null;
-                }
-
-                // check for region header of bucket
-                if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
-                    LogWarn($"could not detect region for '{bucketName}'");
-                    return null;
-                }
-
-                // create region specific S3 client
-                var s3Client = new AmazonS3Client(RegionEndpoint.GetBySystemName(values.First()));
 
                 // enumerate versions in bucket
                 var versions = new List<VersionInfo>();
@@ -228,8 +211,16 @@ namespace LambdaSharp.Tool {
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {
+
+            // get bucket region specific S3 client
+            var s3Client = await GetS3ClientByBucketName(bucketName);
+            if(s3Client == null) {
+
+                // nothing to do; GetS3ClientByBucketName already emitted an error
+                return null;
+            }
             try {
-                var response = await Settings.S3Client.GetObjectAsync(new GetObjectRequest {
+                var response = await s3Client.GetObjectAsync(new GetObjectRequest {
                     BucketName = bucketName,
                     Key = key
                 });
@@ -252,5 +243,38 @@ namespace LambdaSharp.Tool {
             }
             return null;
         }
+
+        private async Task<IAmazonS3> GetS3ClientByBucketName(string bucketName) {
+            if(bucketName == null) {
+                return null;
+            } if(_s3ClientByBucketName.TryGetValue(bucketName, out var result)) {
+                return result;
+            }
+
+            // NOTE (2019-06-14, bjorg): we need to determine which region the bucket belongs to
+            //  so that we can instantiate the S3 client properly; doing a HEAD request against
+            //  the domain name returns a 'x-amz-bucket-region' even when then bucket is private.
+            var headResponse = await _httpClient.SendAsync(new HttpRequestMessage {
+                Method = HttpMethod.Head,
+                RequestUri = new Uri($"https://{bucketName}.s3.amazonaws.com")
+            });
+
+            // check if bucket exists
+            if(headResponse.StatusCode == HttpStatusCode.NotFound) {
+                LogWarn($"could not find '{bucketName}'");
+                return null;
+            }
+
+            // check for region header of bucket
+            if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
+                LogWarn($"could not detect region for '{bucketName}'");
+                return null;
+            }
+
+            // create a bucket region specific S3 client
+            result = new AmazonS3Client(RegionEndpoint.GetBySystemName(values.First()));
+            _s3ClientByBucketName[bucketName] = result;
+            return result;
+       }
     }
 }

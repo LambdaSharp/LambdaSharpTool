@@ -115,7 +115,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ModuleFullName = dependency.Value.ModuleFullName,
                         ModuleMinVersion = dependency.Value.ModuleMinVersion,
                         ModuleMaxVersion = dependency.Value.ModuleMaxVersion,
-                        ModuleOrigin = dependency.Value.ModuleOrigin
+                        ModuleOrigin = dependency.Value.ModuleOrigin,
+                        Nested = dependency.Value.Nested
                     })
                     .OrderBy(dependency => dependency.ModuleFullName)
                     .ToList(),

@@ -25,10 +25,13 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleDependency {
 
         //--- Properties ---
+
+        // TODO: remove 'Module' prefix
         public string ModuleFullName { get; set; }
         public VersionInfo ModuleMinVersion { get; set; }
         public VersionInfo ModuleMaxVersion { get; set; }
         public string ModuleOrigin { get; set; }
         public ModuleManifest Manifest { get; set; }
+        public bool Nested;
     }
 }

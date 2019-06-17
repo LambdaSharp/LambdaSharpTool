@@ -165,10 +165,10 @@ namespace LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public void AddDependency(ModuleInfo moduleInfo)
-            => AddDependency(moduleInfo.FullName, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
+        public void AddDependency(ModuleInfo moduleInfo, bool nested)
+            => AddDependency(moduleInfo.FullName, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin, nested);
 
-        public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
+        public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin, bool nested) {
             moduleOrigin = moduleOrigin ?? "%%MODULEORIGIN%%";
 
             // check if a dependency was already registered
@@ -200,7 +200,8 @@ namespace LambdaSharp.Tool.Model {
                     ModuleFullName = moduleFullName,
                     ModuleMinVersion = moduleMinVersion,
                     ModuleMaxVersion = moduleMaxVersion,
-                    ModuleOrigin = moduleOrigin
+                    ModuleOrigin = moduleOrigin,
+                    Nested = nested
                 };
             }
 
@@ -732,6 +733,7 @@ namespace LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
+            AddDependency(moduleInfo, nested: true);
 
             // validate module parameters
             AtLocation("Parameters", () => {
@@ -754,7 +756,7 @@ namespace LambdaSharp.Tool.Model {
 
                         // inherit dependencies from nested module
                         foreach(var dependency in manifest.Dependencies) {
-                            AddDependency(dependency.ModuleFullName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin);
+                            AddDependency(dependency.ModuleFullName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin, dependency.Nested);
                         }
 
                         // inherit import parameters that are not provided by the declaration

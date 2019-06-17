@@ -114,7 +114,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("invalid module reference format");
                     return;
                 }
-                _builder.AddDependency(moduleInfo);
+                _builder.AddDependency(moduleInfo, nested: false);
             });
         }
 
