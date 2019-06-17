@@ -112,7 +112,14 @@ namespace LambdaSharp.Tool.Cli {
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+
+
+                // TODO: we need a better way to determine if the tier is needed or not; whenever we want to reference
+                //  modules from the tier, we can only do so if the tier was passed in or each module reference
+                //  has it origin set.
+                var isContributorMode = (Environment.GetEnvironmentVariable("LAMBDASHARP") != null);
+
+                var initSettingsCallback = CreateSettingsInitializer(cmd , requireDeploymentTier: isContributorMode);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -457,9 +464,10 @@ namespace LambdaSharp.Tool.Cli {
         ) {
             try {
 
-                // TODO: should be able to build without runtime settings!
-                await PopulateRuntimeSettingsAsync(settings);
-
+                // TODO: why do we need this? -> resolve referenced manifests
+                if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
+                    return false;
+                }
                 return await new BuildStep(settings, moduleSource).DoAsync(
                     outputCloudFormationFilePath,
                     noAssemblyValidation,

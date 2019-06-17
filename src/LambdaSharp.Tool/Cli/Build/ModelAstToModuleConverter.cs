@@ -78,7 +78,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // convert collections
                 ForEach("Pragmas", module.Pragmas, ConvertPragma);
                 ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("Using", module.Using, ConvertDependency);
+                ForEach("Using", module.Using, ConvertUsing);
                 ForEach("Items", module.Items, ConvertItem);
                 return _builder;
             } catch(Exception e) {
@@ -108,18 +108,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
         }
 
-        private void ConvertDependency(int index, ModuleDependencyNode dependency) {
+        private void ConvertUsing(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
                 if(!ModuleInfo.TryParse(dependency.Module, out var moduleInfo)) {
                     LogError("invalid module reference format");
                     return;
                 }
-                _builder.AddDependency(
-                    moduleFullName: moduleInfo.FullName,
-                    moduleMinVersion: moduleInfo.Version,
-                    moduleMaxVersion: null,
-                    moduleOrigin: moduleInfo.Origin
-                );
+                _builder.AddDependency(moduleInfo);
             });
         }
 

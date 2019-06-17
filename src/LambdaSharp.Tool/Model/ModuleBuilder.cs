@@ -165,6 +165,9 @@ namespace LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
+        public void AddDependency(ModuleInfo moduleInfo)
+            => AddDependency(moduleInfo.FullName, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
+
         public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
             moduleOrigin = moduleOrigin ?? "%%MODULEORIGIN%%";
 
@@ -203,7 +206,7 @@ namespace LambdaSharp.Tool.Model {
 
             // validate dependency
             var minMaxVersionComparison = dependency.ModuleMinVersion?.CompareToVersion(dependency.ModuleMaxVersion);
-            if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null) && !(minMaxVersionComparison <= 0)) {
+            if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null) && dependency.ModuleMinVersion.IsGreaterThanVersion(dependency.ModuleMaxVersion)) {
                 LogError($"module {moduleFullName} version range is empty (v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion})");
                 return;
             }
@@ -215,6 +218,8 @@ namespace LambdaSharp.Tool.Model {
                 var loader = new ModelManifestLoader(Settings, moduleFullName);
                 var moduleLocation = loader.LocateAsync(moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion, moduleOrigin).Result;
                 if(moduleLocation == null) {
+
+                    // nothing to do; locator already emitted an error
                     return;
                 }
                 var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(moduleLocation).Result;
@@ -731,11 +736,10 @@ namespace LambdaSharp.Tool.Model {
             // validate module parameters
             AtLocation("Parameters", () => {
                 if(!Settings.NoDependencyValidation) {
-                    var moduleFullName = moduleInfo.FullName;
-                    var loader = new ModelManifestLoader(Settings, moduleFullName);
-                    var foundModuleLocation = loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin).Result;
+                    var loader = new ModelManifestLoader(Settings, moduleInfo.ToModuleReference());
+                    var foundModuleLocation = loader.LocateAsync(moduleInfo).Result;
                     if(foundModuleLocation != null) {
-                        var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(foundModuleLocation).Result;
+                        var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadFromS3Async(foundModuleLocation).Result;
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);

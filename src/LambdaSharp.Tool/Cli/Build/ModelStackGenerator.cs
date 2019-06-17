@@ -110,6 +110,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies
                     .Select(dependency => new ModuleManifestDependency {
+
+                        // TODO: single line format?
                         ModuleFullName = dependency.Value.ModuleFullName,
                         ModuleMinVersion = dependency.Value.ModuleMinVersion,
                         ModuleMaxVersion = dependency.Value.ModuleMaxVersion,

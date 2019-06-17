@@ -137,7 +137,9 @@ namespace LambdaSharp.Tool {
         }
 
         public bool IsLessThanVersion(VersionInfo info) => CompareToVersion(info) < 0;
+        public bool IsLessOrEqualThanVersion(VersionInfo info) => CompareToVersion(info) <= 0;
         public bool IsGreaterThanVersion(VersionInfo info) => CompareToVersion(info) > 0;
+        public bool IsGreaterOrEqualThanVersion(VersionInfo info) => CompareToVersion(info) >= 0;
         public bool IsEqualToVersion(VersionInfo info) => CompareToVersion(info) == 0;
 
         public string GetWildcardVersion() {
@@ -166,6 +168,25 @@ namespace LambdaSharp.Tool {
                 return new VersionInfo(new Version(Major, Minor, Version.Build), suffix: "");
             }
             return new VersionInfo(new Version(Major, Minor), suffix: "");
+        }
+
+        public bool MatchesConstraints(VersionInfo minVersion, VersionInfo maxVersion) {
+
+            // check if min-max versions are the same; which indicates a tight version match
+            if((minVersion != null) && (maxVersion != null) && minVersion.CompareToVersion(maxVersion) == 0) {
+                if(minVersion.Major == 0) {
+
+                    // when Major version is 0, the build number is relevant
+                    return (Major == minVersion.Major)
+                        && (Minor == minVersion.Minor)
+                        && (Version.Build == minVersion.Version.Build);
+                } else {
+                    return (Major == minVersion.Major)
+                        && (Minor == minVersion.Minor);
+                }
+            }
+            return ((minVersion == null) || IsGreaterOrEqualThanVersion(minVersion))
+                && ((maxVersion == null) || IsLessThanVersion(maxVersion));
         }
     }
 

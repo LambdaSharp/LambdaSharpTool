@@ -40,9 +40,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         private class DependencyRecord {
 
             //--- Properties ---
-
-            // TODO: consider a different name for 'Owner', which represent the module name that owns this dependency
-            public string Owner { get; set; }
+            public string DependencyOwner { get; set; }
             public ModuleManifest Manifest { get; set; }
             public ModuleInfo ModuleInfo { get; set; }
         }
@@ -79,9 +77,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-
-            // TODO: this uses a tight version range which will prevent patches from being picked up
-            var foundModuleLocation = await _loader.LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version /* bad */, moduleInfo.Origin);
+            var foundModuleLocation = await _loader.LocateAsync(moduleInfo);
             if(foundModuleLocation == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
@@ -325,7 +321,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
-                            Owner = current.Module,
+                            DependencyOwner = current.Module,
                             Manifest = dependencyManifest,
                             ModuleInfo = dependencyModuleLocation.ModuleInfo
                         };
@@ -344,21 +340,20 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
+
+            // TODO: module origin needs to be part of this check as well
             var deployed = modules.FirstOrDefault(module => module.ModuleInfo.FullName == dependency.ModuleFullName);
             if(deployed == null) {
                 return false;
             }
-            var deployedOwner = (deployed.Owner == null)
+            var deployedOwner = (deployed.DependencyOwner == null)
                 ? "existing module"
-                : $"module '{deployed.Owner}'";
+                : $"module '{deployed.DependencyOwner}'";
 
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployed.ModuleInfo.Version;
-            if((dependency.ModuleMaxVersion != null) && !(deployedVersion.CompareToVersion(dependency.ModuleMaxVersion) <= 0)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.ModuleMaxVersion}, but {deployedOwner} uses v{deployedVersion})");
-            }
-            if((dependency.ModuleMinVersion != null) && !(deployedVersion.CompareToVersion(dependency.ModuleMinVersion) >= 0)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.ModuleMinVersion}, but {deployedOwner} uses v{deployedVersion})");
+            if(!deployed.ModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
+                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
         }
@@ -372,8 +367,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
                 var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
                 if(!success) {
-                    LogError($"unable to retrieve information of the deployed dependent module");
-                    return deployedModuleInfo;
+                    LogWarn($"unable to retrieve information of the deployed dependent module");
+                    return null;
                 }
 
                 // confirm that the module name matches
@@ -385,7 +380,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // confirm that the module version is in a valid range
                 if(dependency.ModuleMaxVersion != null) {
                     var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMaxVersion);
-                    if(deployedToMinVersionComparison > 0) {
+                    if(deployedToMinVersionComparison >= 0) {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.ModuleMaxVersion}");
                         return deployedModuleInfo;
                     } else if(deployedToMinVersionComparison == null) {
@@ -394,11 +389,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
                 }
                 if(dependency.ModuleMinVersion != null) {
-                    var deployedToMaxVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMinVersion);
-                    if(deployedToMaxVersionComparison < 0) {
+                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMinVersion);
+                    if(deployedToMinVersionComparison < 0) {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.ModuleMinVersion}");
                         return deployedModuleInfo;
-                    } else if(deployedToMaxVersionComparison == null) {
+                    } else if(deployedToMinVersionComparison == null) {
                         LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.ModuleMinVersion}");
                         return deployedModuleInfo;
                     }

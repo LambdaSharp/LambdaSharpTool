@@ -78,6 +78,8 @@ namespace LambdaSharp.Tool {
 
         public async Task<ModuleManifest> LoadFromS3Async(ModuleLocation moduleLocation, bool errorIfMissing = true) {
 
+            // TODO: make bucket region agnostic
+
             // download cloudformation template
             var cloudformationText = await GetS3ObjectContents(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.TemplatePath);
             if(cloudformationText == null) {
@@ -102,6 +104,9 @@ namespace LambdaSharp.Tool {
             }
             return manifest;
         }
+
+        public Task<ModuleLocation> LocateAsync(ModuleInfo moduleInfo)
+            => LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
 
         public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
 
@@ -165,10 +170,13 @@ namespace LambdaSharp.Tool {
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
+                if(bucketName == null) {
+                    return null;
+                }
 
                 // NOTE (2019-06-14, bjorg): we need to determine which region the bucket belongs to
                 //  so that we can instantiate the S3 client properly; doing a HEAD request against
-                //  the domain name returns a 'x-amz-bucket-region' even when then bucket itself is private.
+                //  the domain name returns a 'x-amz-bucket-region' even when then bucket is private.
                 var headResponse = await _httpClient.SendAsync(new HttpRequestMessage {
                     Method = HttpMethod.Head,
                     RequestUri = new Uri($"https://{bucketName}.s3.amazonaws.com")
@@ -203,7 +211,7 @@ namespace LambdaSharp.Tool {
                         versions.AddRange(response.CommonPrefixes
                             .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
                             .Select(found => VersionInfo.Parse(found))
-                            .Where(IsVersionMatch)
+                            .Where(version => version.MatchesConstraints(moduleMinVersion, moduleMaxVersion))
                         );
                         request.ContinuationToken = response.NextContinuationToken;
                     } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
@@ -216,28 +224,6 @@ namespace LambdaSharp.Tool {
 
                 // attempt to identify the newest version
                 return versions.Max();
-
-                // local functions
-                bool IsVersionMatch(VersionInfo version) {
-
-                    // if there are no min-max version constraints, accept any non pre-release version
-                    if((moduleMinVersion == null) && (moduleMaxVersion == null)) {
-                        return !version.IsPreRelease;
-                    }
-
-                    // ensure min-version constraint is met
-                    if((moduleMinVersion != null) && version.IsLessThanVersion(moduleMinVersion)) {
-                        return false;
-                    }
-
-                    // TODO: the following test prevents us from picking up patch releases!
-
-                    // ensure max-version constraint is met
-                    if((moduleMaxVersion != null) && version.IsGreaterThanVersion(moduleMaxVersion)) {
-                        return false;
-                    }
-                    return true;
-                }
             }
         }
 
