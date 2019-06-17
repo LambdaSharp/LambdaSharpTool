@@ -394,16 +394,16 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // read deployment S3 bucket name
-                var tieModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
-                if(tieModuleBucketArnParts == null) {
+                var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
+                if(tierModuleBucketArnParts == null) {
                     LogError("could not find 'DeploymentBucket' output value");
                     return false;
                 }
-                if((tieModuleBucketArnParts.Length != 6) || (tieModuleBucketArnParts[0] != "arn") || (tieModuleBucketArnParts[1] != "aws") || (tieModuleBucketArnParts[2] != "s3")) {
+                if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
                     LogError("invalid value for 'DeploymentBucket' output value");
                     return false;
                 }
-                settings.DeploymentBucketName = tieModuleBucketArnParts[5];
+                settings.DeploymentBucketName = tierModuleBucketArnParts[5];
 
                 // read tier mode
                 var coreServicesModeText = GetStackOutput("CoreServices");
