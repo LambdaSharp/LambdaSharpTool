@@ -246,13 +246,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 value: FnEquals(FnRef("XRayTracing"), XRayTracingLevel.AllModules.ToString())
             );
 
-            // import lambdasharp dependencies (unless requested otherwise)
-            if(_builder.HasLambdaSharpDependencies) {
+            // check if module might depdent on core services
+            if(_builder.HasLambdaSharpDependencies || _builder.HasModuleRegistration) {
                 _builder.AddParameter(
                     name: "LambdaSharpCoreServices",
                     section: section,
                     label: "Integrate with LambdaSharp.Core services",
-                    description: "Use Operating Services",
+                    description: "Use LambdaSharp.Core Services",
                     type: "String",
                     scope: null,
                     noEcho: null,
@@ -279,6 +279,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     description: null,
                     value: FnEquals(FnRef("LambdaSharpCoreServices"), "Enabled")
                 );
+            }
+
+            // import lambdasharp dependencies (unless requested otherwise)
+            if(_builder.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharp = _builder.AddVariable(

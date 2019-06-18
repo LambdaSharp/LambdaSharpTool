@@ -703,10 +703,12 @@ namespace LambdaSharp.Tool.Model {
             object dependsOn,
             IDictionary<string, object> parameters
         ) {
-            var moduleOrigin = moduleInfo.Origin ?? FnRef("DeploymentBucketName");
             var moduleParameters = (parameters != null)
                 ? new Dictionary<string, object>(parameters)
                 : new Dictionary<string, object>();
+            if(moduleInfo.Version == null) {
+                LogError("missing module version");
+            }
 
             // add nested module resource
             var resource = AddResource(
@@ -790,7 +792,7 @@ namespace LambdaSharp.Tool.Model {
                 }
 
                 // add expected parameters
-                MandatoryAdd("DeploymentBucketName", moduleOrigin);
+                MandatoryAdd("DeploymentBucketName", FnRef("DeploymentBucketName"));
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));

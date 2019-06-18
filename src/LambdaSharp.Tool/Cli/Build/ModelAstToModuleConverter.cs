@@ -407,7 +407,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                             dependsOn: node.DependsOn,
                             parameters: node.Parameters
                         );
-
                     }
                 });
                 break;
@@ -912,8 +911,9 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private IDictionary<string, object> ParseToDictionary(string location, object value) {
-            var result = new Dictionary<string, object>();
+            Dictionary<string, object> result = null;
             if(value != null) {
+                result = new Dictionary<string, object>();
                 AtLocation(location, () => {
                     if(value is IDictionary dictionary) {
                         foreach(DictionaryEntry entry in dictionary) {

@@ -55,11 +55,12 @@ namespace LambdaSharp.Tool {
         // * Owner.Name@Origin
         // * Owner.Name:*@Bucket
         // * Owner.Name:Version@Bucket
+        // * Owner.Name:Version@%%MODULEORIGIN%%
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/cloudformation.json
 
         //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
         public static object GetModuleAssetExpression(string filename) => FnSub($"%%MODULEORIGIN%%/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
@@ -148,18 +149,11 @@ namespace LambdaSharp.Tool {
         public string GetAssetPath(string filename) => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Assets/{filename}";
 
         public object GetTemplateUrlExpression() {
-
-            // TODO: this should now always come from the 'DeploymentBucket'
-
-            // TODO (2019-05-09, bjorg); path-style S3 bucket references will be deprecated in September 30th 2020
-            //  see https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
-            return FnSub("https://s3.amazonaws.com/${ModuleOrigin}/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
+            return FnSub("https://${DeploymentBucketName}.s3.amazonaws.com/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
                 ["ModuleOwner"] = Owner,
                 ["ModuleName"] = Name,
-                ["ModuleVersion"] = Version.ToString(),
-
-                // TODO: shouldn't 'Origin' always be set?
-                ["ModuleOrigin"] = Origin /*  ?? FnRef("DeploymentBucketName") */
+                ["ModuleVersion"] = Version?.ToString() ?? "<BAD>",
+                ["ModuleOrigin"] = Origin ?? "%%MODULEORIGIN%%"
             });
         }
 
