@@ -32,6 +32,7 @@ using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement;
 using Amazon.IdentityManagement.Model;
 using Amazon.KeyManagementService;
+using Amazon.Lambda;
 using Amazon.Runtime;
 using Amazon.S3;
 using Amazon.SecurityToken;
@@ -226,6 +227,7 @@ namespace LambdaSharp.Tool.Cli {
                     IAmazonS3 s3Client = null;
                     IAmazonAPIGateway apiGatewayClient = null;
                     IAmazonIdentityManagementService iamClient = null;
+                    IAmazonLambda lambdaClient = null;
                     if(requireAwsProfile) {
                         awsAccount = await InitializeAwsProfile(
                             awsProfileOption.Value(),
@@ -241,6 +243,7 @@ namespace LambdaSharp.Tool.Cli {
                         s3Client = new AmazonS3Client();
                         apiGatewayClient = new AmazonAPIGatewayClient();
                         iamClient = new AmazonIdentityManagementServiceClient();
+                        lambdaClient = new AmazonLambdaClient();
                     }
                     if(HasErrors) {
                         return null;
@@ -265,7 +268,8 @@ namespace LambdaSharp.Tool.Cli {
                         KmsClient = kmsClient,
                         S3Client = s3Client,
                         ApiGatewayClient = apiGatewayClient,
-                        IamClient = iamClient
+                        IamClient = iamClient,
+                        LambdaClient = lambdaClient
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
                     LogError("AWS profile configuration is missing a region specifier");
@@ -488,36 +492,6 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return gitBranch;
-        }
-
-        protected async Task<(string Arn, IEnumerable<string> MissingPolicies)> DetermineMissingApiGatewayRolePolicies(Settings settings) {
-            if((settings.ApiGatewayClient == null) || (settings.IamClient == null)) {
-                return (Arn: null, Enumerable.Empty<string>());
-            }
-
-            // inspect API Gateway role
-            try {
-                var missingPolicies = new List<string> {
-                    "AmazonAPIGatewayPushToCloudWatchLogs",
-                    "AWSXrayWriteOnlyAccess"
-                };
-
-                // retrieve the CloudWatch/X-Ray role from the API Gateway account
-                var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
-                if(account.CloudwatchRoleArn != null) {
-
-                    // check if the role has the expected managed policies
-                    var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
-                        RoleName = account.CloudwatchRoleArn.Split('/').Last()
-                    })).AttachedPolicies;
-                    foreach(var attachedPolicy in attachedPolicies) {
-                        missingPolicies.Remove(attachedPolicy.PolicyName);
-                    }
-                }
-                return (Arn: account.CloudwatchRoleArn, MissingPolicies: Enumerable.Empty<string>());
-            } catch(Exception) {
-                return (Arn: null, Enumerable.Empty<string>());
-            }
         }
 
         protected async Task CheckApiGatewayRole(Settings settings) {

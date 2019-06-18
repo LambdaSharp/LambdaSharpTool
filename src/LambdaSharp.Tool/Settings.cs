@@ -29,6 +29,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
+using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
 using LambdaSharp.Tool.Model;
@@ -158,6 +159,7 @@ namespace LambdaSharp.Tool {
         public IAmazonS3 S3Client { get; set; }
         public IAmazonAPIGateway ApiGatewayClient { get; set; }
         public IAmazonIdentityManagementService IamClient { get; set; }
+        public IAmazonLambda LambdaClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }
