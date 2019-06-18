@@ -57,7 +57,7 @@ namespace LambdaSharp.Tool {
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/cloudformation.json
 
         //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
         public static object GetModuleAssetExpression(string filename) => FnSub($"%%MODULEORIGIN%%/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
