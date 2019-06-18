@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
 using Amazon.S3;
@@ -37,11 +38,11 @@ namespace LambdaSharp.Tool {
     public class LambdaSharpDeploymentTierSetupException : Exception {
 
         //--- Fields ---
-        public readonly string Tier;
+        public readonly string TierName;
 
         //--- Constructors ---
-        public LambdaSharpDeploymentTierSetupException(string tier) : base() {
-            Tier = tier ?? throw new ArgumentNullException(nameof(tier));
+        public LambdaSharpDeploymentTierSetupException(string tierName) : base() {
+            TierName = tierName ?? throw new ArgumentNullException(nameof(tierName));
         }
     }
 
@@ -126,7 +127,7 @@ namespace LambdaSharp.Tool {
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.Tier}'");
+                Console.WriteLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'");
                 return;
             }
         }
@@ -143,6 +144,7 @@ namespace LambdaSharp.Tool {
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
         public string Tier { get; set; }
+        public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
         public CoreServices CoreServices { get; set; }
         public VersionInfo TierVersion { get; set; }
@@ -159,5 +161,26 @@ namespace LambdaSharp.Tool {
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }
+
+        //--- Methods ---
+        public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
+            => new List<Tag> {
+                new Tag {
+                    Key = "LambdaSharp:Tier",
+                    Value = string.IsNullOrEmpty(Tier) ? "-" : Tier
+                },
+                new Tag {
+                    Key = "LambdaSharp:Module",
+                    Value = moduleName
+                },
+                new Tag {
+                    Key = "LambdaSharp:RootStack",
+                    Value = stackName
+                },
+                new Tag {
+                    Key = "LambdaSharp:DeployedBy",
+                    Value = AwsUserArn.Split(':').Last()
+                }
+            };
     }
 }

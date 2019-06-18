@@ -112,8 +112,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     // tool version is more recent; check if user wants to upgrade tier
                     Console.WriteLine($"LambdaSharp Tier is out of date");
                     var upgrade = Settings.UseAnsiConsole
-                        ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
-                        : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                        ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
+                        : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
                     if(!upgrade) {
                         return false;
                     }

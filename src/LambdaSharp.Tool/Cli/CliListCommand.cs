@@ -58,7 +58,16 @@ namespace LambdaSharp.Tool.Cli {
             do {
                 var response = await settings.CfnClient.DescribeStacksAsync(request);
                 stacks.AddRange(response.Stacks.Where(
-                    summary => summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier")?.OutputValue == settings.Tier
+                    summary => {
+
+                        // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
+                        //  if an output key exists and then default to empty string when it is null to properly compare it.
+                        var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
+                        if(lambdaSharpTier == null) {
+                            return false;
+                        }
+                        return (lambdaSharpTier.OutputValue ?? "") == settings.Tier;
+                    }
                 ));
                 request.NextToken = response.NextToken;
             } while(request.NextToken != null);
@@ -83,7 +92,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // print results
                 Console.WriteLine();
-                Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.Tier}'");
+                Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.TierName}'");
                 Console.WriteLine();
                 Console.WriteLine($"{"NAME".PadRight(moduleNameWidth)}{"MODULE".PadRight(moduleReferenceWidth)}{"STATUS".PadRight(statusWidth)}DATE");
                 foreach(var summary in summaries) {
@@ -91,7 +100,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
             } else {
                 Console.WriteLine();
-                Console.WriteLine($"Found no modules for deployment tier '{settings.Tier}'");
+                Console.WriteLine($"Found no modules for deployment tier '{settings.TierName}'");
             }
         }
     }

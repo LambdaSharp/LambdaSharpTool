@@ -112,24 +112,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 },
                 StackName = stackName,
                 TemplateURL = templateUrl,
-                Tags = new List<Tag> {
-                    new Tag {
-                        Key = "LambdaSharp:Tier",
-                        Value = Settings.Tier
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:Module",
-                        Value = moduleInfo.FullName
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:RootStack",
-                        Value = stackName
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:DeployedBy",
-                        Value = Settings.AwsUserArn.Split(':').Last()
-                    }
-                }
+                Tags = Settings.GetCloudFormationStackTags(moduleInfo.FullName, stackName)
             });
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);

@@ -20,17 +20,12 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
-using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
-using LambdaSharp.Tool.Internal;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -45,7 +40,7 @@ namespace LambdaSharp.Tool.Cli {
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: true);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();

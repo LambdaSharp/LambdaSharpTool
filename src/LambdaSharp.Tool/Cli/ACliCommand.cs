@@ -174,16 +174,12 @@ namespace LambdaSharp.Tool.Cli {
 
         protected Func<Task<Settings>> CreateSettingsInitializer(
             CommandLineApplication cmd,
-            bool requireAwsProfile = true,
-            bool requireDeploymentTier = true
+            bool requireAwsProfile = true
         ) {
-            CommandOption tierOption = null;
             CommandOption awsProfileOption = null;
 
             // add misc options
-            if(requireDeploymentTier) {
-                tierOption = AddTierOption(cmd);
-            }
+            var tierOption = AddTierOption(cmd);
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
             }
@@ -221,15 +217,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // initialize deployment tier
-                string tier = null;
-                if(requireDeploymentTier) {
-                    tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
-                    if(string.IsNullOrEmpty(tier)) {
-
-                        // TODO: allow empty tier name
-                        LogError("missing deployment tier name");
-                    }
-                }
+                string tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER") ?? "";
 
                 // initialize AWS profile
                 try {
@@ -321,13 +309,6 @@ namespace LambdaSharp.Tool.Cli {
                 (settings.DeploymentBucketName == null)
                 || (settings.TierVersion == null)
             ) {
-                if(settings.Tier == null) {
-                    if(!optional) {
-                        LogError($"must provide a tier name with --tier option");
-                        return false;
-                    }
-                    return true;
-                }
 
                 // attempt to find an existing core module
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
@@ -370,7 +351,7 @@ namespace LambdaSharp.Tool.Cli {
                     || (tierModuleInfo.Owner != "LambdaSharp")
                     || (tierModuleInfo.Name != "Core")
                 ) {
-                    LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                    LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.TierName));
                     return false;
                 }
                 settings.TierVersion = tierModuleInfo.Version;
@@ -382,7 +363,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // versions are identical; nothing to do
                     } else if(tierToToolVersionComparison < 0) {
-                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierSetupException(settings.Tier));
+                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierSetupException(settings.TierName));
                         return false;
                     } else if(tierToToolVersionComparison > 0) {
 

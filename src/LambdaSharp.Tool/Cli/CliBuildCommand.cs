@@ -20,26 +20,14 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
-using Amazon.SimpleSystemsManagement;
-using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Cli.Deploy;
 using LambdaSharp.Tool.Cli.Publish;
-using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -114,12 +102,7 @@ namespace LambdaSharp.Tool.Cli {
                 var dryRunOption = AddDryRunOption(cmd);
 
 
-                // TODO: we need a better way to determine if the tier is needed or not; whenever we want to reference
-                //  modules from the tier, we can only do so if the tier was passed in or each module reference
-                //  has it origin set.
-                var isContributorMode = (Environment.GetEnvironmentVariable("LAMBDASHARP") != null);
-
-                var initSettingsCallback = CreateSettingsInitializer(cmd , requireDeploymentTier: isContributorMode);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -356,7 +339,7 @@ namespace LambdaSharp.Tool.Cli {
                     var arguments = publishedModulesArgument.Values.Any()
                         ? publishedModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
-                    Console.WriteLine($"Readying module for deployment tier '{settings.Tier}'");
+                    Console.WriteLine($"Readying module for deployment tier '{settings.TierName}'");
 
                     // check if a module version number is supplied
                     VersionInfo moduleVersion = null;

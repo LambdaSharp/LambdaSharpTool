@@ -51,6 +51,7 @@ namespace LambdaSharp.Tool.Cli {
                 var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
+                var quickStartOption = cmd.Option("--quick-start", "(optional) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -80,7 +81,8 @@ namespace LambdaSharp.Tool.Cli {
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
                         promptsAsErrorsOption.HasValue(),
-                        xRayTracingLevel
+                        xRayTracingLevel,
+                        quickStartOption.HasValue()
                     );
                 });
             });
@@ -97,9 +99,9 @@ namespace LambdaSharp.Tool.Cli {
             bool forcePublish,
             bool promptAllParameters,
             bool promptsAsErrors,
-            XRayTracingLevel xRayTracingLevel
+            XRayTracingLevel xRayTracingLevel,
+            bool quickStart
         ) {
-            Dictionary<string, string> parameters = null;
             await PopulateRuntimeSettingsAsync(settings, optional: true);
             if(HasErrors) {
                 return false;
@@ -134,6 +136,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if bootstrap tier needs to be installed or upgraded
+            Dictionary<string, string> parameters = null;
             if(install || (update && (settings.CoreServices == CoreServices.Disabled))) {
 
                 // initialize stack with seed CloudFormation template
@@ -144,17 +147,6 @@ namespace LambdaSharp.Tool.Cli {
                 // check if bootstrap template is being updated or installed
                 if(install) {
                     Console.WriteLine($"Creating LambdaSharp tier");
-
-                    // prompt for profile name
-                    if(settings.Tier == null) {
-                        if(promptsAsErrors) {
-                            LogError($"must provide a tier name with --tier option");
-                            return false;
-                        }
-
-                        // confirm that the implicit name is the desired name
-                        settings.Tier = PromptString("LambdaSharp tier name", "Default");
-                    }
                 } else {
                     Console.WriteLine($"Updating LambdaSharp tier");
                 }
@@ -167,13 +159,20 @@ namespace LambdaSharp.Tool.Cli {
                 if(HasErrors) {
                     return false;
                 }
+                var bootstrapParameters = new Dictionary<string, string>(parameters) {
+                    ["TierName"] = settings.Tier
+                };
+
+                // check if safe default should be assumed for quickly setting up an environment
+                if(quickStart) {
+                    bootstrapParameters["CoreServices"] = CoreServices.Disabled.ToString();
+                    bootstrapParameters["ExistingDeploymentBucket"] = "";
+                }
                 var templateParameters = await PromptMissingTemplateParameters(
                     settings.CfnClient,
                     promptsAsErrors,
                     stackName,
-                    new Dictionary<string, string>(parameters) {
-                        ["TierName"] = settings.Tier
-                    },
+                    bootstrapParameters,
                     template
                 );
                 if(HasErrors) {
@@ -189,7 +188,8 @@ namespace LambdaSharp.Tool.Cli {
                         OnFailure = OnFailure.DELETE,
                         Parameters = templateParameters,
                         EnableTerminationProtection = protectStack,
-                        TemplateBody = template
+                        TemplateBody = template,
+                        Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
                     });
                     var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
                     if(created.Success) {
@@ -206,7 +206,8 @@ namespace LambdaSharp.Tool.Cli {
                             StackName = stackName,
                             Capabilities = new List<string> { },
                             Parameters = templateParameters,
-                            TemplateBody = template
+                            TemplateBody = template,
+                            Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
                         });
                         var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, logError: LogError);
                         if(created.Success) {
@@ -284,9 +285,9 @@ namespace LambdaSharp.Tool.Cli {
                 return true;
             }
             if(install) {
-                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+                Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
             } else if(update) {
-                Console.WriteLine($"Creating new deployment tier '{settings.Tier}'");
+                Console.WriteLine($"Updating deployment tier '{settings.TierName}'");
             } else {
                 return true;
             }

@@ -41,16 +41,13 @@ namespace LambdaSharp.Tool.Cli {
                 // info options
                 var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
                 var tierOption = AddTierOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;
                     }
-
-                    // NOTE (2018-12-11, bjorg): '--tier' is optional for the 'info' command; so we replicate it here without the error reporting
-                    settings.Tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER");
                     await Info(
                         settings,
                         GetGitShaValue(Directory.GetCurrentDirectory(), showWarningOnFailure: false),
@@ -72,7 +69,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // show LambdaSharp settings
             Console.WriteLine($"LambdaSharp Deployment Tier");
-            Console.WriteLine($"    Name: {settings.Tier ?? "<NOT SET>"}");
+            Console.WriteLine($"    Name: {settings.TierName}");
             Console.WriteLine($"    Version: {settings.TierVersion?.ToString() ?? "<NOT SET>"}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             if(apiGatewayAccount.Arn == null) {
