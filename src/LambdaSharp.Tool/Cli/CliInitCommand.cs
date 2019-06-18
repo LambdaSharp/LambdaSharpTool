@@ -403,6 +403,8 @@ namespace LambdaSharp.Tool.Cli {
                             ParameterValue = enteredValue
                         });
                     } else {
+
+                        // TODO: add pattern and constraint description
                         var enteredValue = PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
                         result.Add(new Parameter {
                             ParameterKey = missingParameter.ParameterKey,

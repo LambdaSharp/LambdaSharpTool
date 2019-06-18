@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool {
     using static ModelFunctions;
@@ -44,6 +45,7 @@ namespace LambdaSharp.Tool {
         }
     }
 
+    [JsonConverter(typeof(ModuleInfoConverter))]
     public class ModuleInfo {
 
         // NOTE: module reference formats:
@@ -62,6 +64,13 @@ namespace LambdaSharp.Tool {
         //--- Class Methods ---
         public static object GetModuleAssetExpression(string filename) => FnSub($"%%MODULEORIGIN%%/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
         public static string GetModuleVersionsBucketPrefix(string moduleOwner, string moduleName, string moduleOrigin) => $"{moduleOrigin}/{moduleOwner}/Modules/{moduleName}/Versions/";
+
+        public static ModuleInfo Parse(string moduleReference) {
+            if(TryParse(moduleReference, out var result)) {
+                return result;
+            }
+            throw new FormatException("Input string was not in a correct format.");
+        }
 
         public static bool TryParse(string moduleReference, out ModuleInfo moduleInfo) {
             string owner;
@@ -180,5 +189,20 @@ namespace LambdaSharp.Tool {
             }
             return result.ToString();
         }
+    }
+
+    public class ModuleInfoConverter : JsonConverter {
+
+        //--- Methods ---
+        public override bool CanConvert(Type objectType)
+            => objectType == typeof(ModuleInfo);
+
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+            => (reader.Value != null)
+                ? ModuleInfo.Parse((string)reader.Value)
+                : null;
+
+        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+            => writer.WriteValue(((ModuleInfo)value).ToModuleReference());
     }
 }

@@ -103,7 +103,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                             Type = input.Type,
                             Label = input.Label,
                             Default = input.Parameter.Default,
-                            Import = input.Import
+                            Import = input.Import,
+                            AllowedValues = input.Parameter.AllowedValues,
+                            AllowedPattern = input.Parameter.AllowedPattern,
+                            ConstraintDescription = input.Parameter.ConstraintDescription
                         }).ToList()
                     }).ToList(),
                 RuntimeCheck = module.HasRuntimeCheck,
@@ -112,13 +115,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Select(dependency => new ModuleManifestDependency {
 
                         // TODO: single line format?
-                        ModuleFullName = dependency.Value.ModuleFullName,
-                        ModuleMinVersion = dependency.Value.ModuleMinVersion,
-                        ModuleMaxVersion = dependency.Value.ModuleMaxVersion,
-                        ModuleOrigin = dependency.Value.ModuleOrigin,
+                        ModuleInfo = ModuleInfo.Parse($"{dependency.Value.ModuleFullName}@{dependency.Value.ModuleOrigin}"),
+                        MinVersion = dependency.Value.ModuleMinVersion,
+                        MaxVersion = dependency.Value.ModuleMaxVersion,
                         Nested = dependency.Value.Nested
                     })
-                    .OrderBy(dependency => dependency.ModuleFullName)
+                    .OrderBy(dependency => dependency.ModuleInfo.ToModuleReference())
                     .ToList(),
                 ResourceTypes = module.CustomResourceTypes.ToList(),
                 Outputs = module.Items

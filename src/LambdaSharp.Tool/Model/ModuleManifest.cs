@@ -111,10 +111,9 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleManifestDependency {
 
         //--- Properties ---
-        public string ModuleFullName { get; set; }
-        public VersionInfo ModuleMinVersion { get; set; }
-        public VersionInfo ModuleMaxVersion { get; set; }
-        public string ModuleOrigin { get; set; }
+        public ModuleInfo ModuleInfo { get; set; }
+        public VersionInfo MinVersion { get; set; }
+        public VersionInfo MaxVersion { get; set; }
         public bool Nested { get; set; }
     }
 
@@ -133,5 +132,8 @@ namespace LambdaSharp.Tool.Model {
         public string Label { get; set; }
         public string Default { get; set; }
         public string Import { get; set; }
+        public List<string> AllowedValues { get; set; }
+        public string AllowedPattern { get; set; }
+        public string ConstraintDescription { get; set; }
     }
 }

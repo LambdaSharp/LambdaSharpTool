@@ -756,7 +756,7 @@ namespace LambdaSharp.Tool.Model {
 
                         // inherit dependencies from nested module
                         foreach(var dependency in manifest.Dependencies) {
-                            AddDependency(dependency.ModuleFullName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin, dependency.Nested);
+                            AddDependency(dependency.ModuleInfo.FullName, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin, dependency.Nested);
                         }
 
                         // inherit import parameters that are not provided by the declaration

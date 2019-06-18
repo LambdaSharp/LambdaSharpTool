@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.APIGateway;
@@ -70,23 +71,23 @@ namespace LambdaSharp.Tool.Cli {
             return result;
         }
 
-        public static string PromptString(string message, string defaultValue = null) {
-            var prompt = "";
-            if(Settings.UseAnsiConsole) {
-                prompt += PromptColor;
-            }
-            prompt += $"|=> {message}:";
+        public static string PromptString(string message, string defaultValue = null)
+            => PromptString(message, defaultValue, pattern: null, constraintDescription: null);
+
+        public static string PromptString(string message, string defaultValue, string pattern, string constraintDescription) {
+            var prompt = $"|=> {message}: ";
             if(!string.IsNullOrEmpty(defaultValue)) {
-                prompt += $" [{defaultValue}]";
+                prompt += $"[{defaultValue}] ";
             }
-            if(Settings.UseAnsiConsole) {
-                prompt += AnsiTerminal.Reset;
-            }
-            prompt += " ";
-            Console.Write(prompt);
+        again:
+            WriteAnsi(prompt, PromptColor);
             SetCursorVisible(true);
             var result = Console.ReadLine();
             SetCursorVisible(false);
+            if((pattern != null) && !Regex.IsMatch(result, pattern)) {
+                WriteAnsiLine(constraintDescription ?? $"Value must match regular expression pattern: {pattern}", PromptColor);
+                goto again;
+            }
             return string.IsNullOrEmpty(result)
                 ? defaultValue
                 : result;
@@ -99,39 +100,35 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public static void PromptText(string message) {
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"{PromptColor}*** {message} ***{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine($"*** {message} ***");
+        public static void PromptText(string message) => WriteAnsiLine($"*** {message} ***", PromptColor);
+
+        public static string PromptChoice(string message, IList<string> choices) {
+            WriteAnsiLine($"{message} (multiple choice)", PromptColor);
+            var choiceCount = choices.Count;
+            for(var i = 0; i < choiceCount; ++i) {
+                WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
+            }
+            while(true) {
+                var enteredValue = PromptString($"Enter a choice (1-{choiceCount})", pattern: null, constraintDescription: null, defaultValue: null);
+                if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                    return choices[choice - 1];
+                }
             }
         }
 
-        public static string PromptChoice(string message, IList<string> choices) {
+        private static void WriteAnsiLine(string text, string ansiColor) {
             if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"{PromptColor}{message} (multiple choice){AnsiTerminal.Reset}");
-                var choiceCount = choices.Count;
-                for(var i = 0; i < choiceCount; ++i) {
-                    Console.WriteLine($"{PromptColor}{i + 1}. {choices[i]}{AnsiTerminal.Reset}");
-                }
-                while(true) {
-                    var enteredValue = PromptString("Enter a choice");
-                    if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
-                        return choices[choice - 1];
-                    }
-                }
+                Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
             } else {
-                Console.WriteLine($"{message} (multiple choice)");
-                var choiceCount = choices.Count;
-                for(var i = 0; i < choiceCount; ++i) {
-                    Console.WriteLine($"{i + 1}. {choices[i]}");
-                }
-                while(true) {
-                    var enteredValue = PromptString($"Enter a choice (1-{choiceCount})");
-                    if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
-                        return choices[choice - 1];
-                    }
-                }
+                Console.WriteLine(text);
+            }
+        }
+
+        private static void WriteAnsi(string text, string ansiColor) {
+            if(Settings.UseAnsiConsole) {
+                Console.Write($"{ansiColor}{text}{AnsiTerminal.Reset}");
+            } else {
+                Console.Write(text);
             }
         }
 

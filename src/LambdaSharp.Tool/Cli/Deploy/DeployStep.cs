@@ -58,8 +58,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Methods ---
         public async Task<bool> DoAsync(
             DryRunLevel? dryRun,
-
-            // TODO: change to 'ModuleInfo'
             string moduleReference,
             string instanceName,
             bool allowDataLoos,
@@ -335,18 +333,15 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         existing.Add(new DependencyRecord {
                             ModuleInfo = deployedModuleInfo
                         });
-                    } else if(inProgress.Any(d => d.Manifest.GetFullName() == dependency.ModuleFullName)) {
+                    } else if(inProgress.Any(d => d.Manifest.GetModuleInfo().FullName == dependency.ModuleInfo.FullName)) {
 
                         // circular dependency detected
                         LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
                         return;
                     } else {
 
-                        // TODO: log error? use ModuleInfo.TryParse()?
-                        dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
-
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.ModuleMinVersion, dependency.ModuleMaxVersion, dependency.ModuleOrigin);
+                        var dependencyModuleLocation = await _loader.LocateAsync(dependency.ModuleInfo.Owner, dependency.ModuleInfo.Name, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin);
                         if(dependencyModuleLocation == null) {
 
                             // error has already been reported
@@ -372,7 +367,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyModuleLocation}");
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to module reference: {dependencyModuleLocation}");
                         deployments.Add(nestedDependency);
                     }
                 }
@@ -380,7 +375,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
-            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleOrigin) && (deployed.ModuleInfo.FullName == dependency.ModuleFullName));
+            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
             if(deployedModule == null) {
                 return false;
             }
@@ -390,8 +385,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // confirm that the dependency version is in a valid range
             var deployedVersion = deployedModule.ModuleInfo.Version;
-            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
+                LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{fullName}' requires v{dependency.MinVersion}..v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
             }
             return true;
         }
@@ -399,7 +394,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
             try {
                 var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = ToStackName(dependency.ModuleFullName)
+                    StackName = ToStackName(dependency.ModuleInfo.FullName)
                 });
                 var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
                 var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
@@ -410,33 +405,33 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // confirm that the module name matches
-                if(deployedModuleInfo.FullName != dependency.ModuleFullName) {
-                    LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleFullName}");
+                if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
+                    LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
                     return deployedModuleInfo;
                 }
 
                 // confirm that the module version is in a valid range
-                if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null)) {
-                    if(!deployedModuleInfo.Version.MatchesConstraints(dependency.ModuleMinVersion, dependency.ModuleMaxVersion)) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleMinVersion} to v{dependency.ModuleMaxVersion}");
+                if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
+                    if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
                         return deployedModuleInfo;
                     }
-                } else if(dependency.ModuleMaxVersion != null) {
-                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMaxVersion);
+                } else if(dependency.MaxVersion != null) {
+                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
                     if(deployedToMinVersionComparison >= 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.ModuleMaxVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
                         return deployedModuleInfo;
                     } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.ModuleMaxVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
                         return deployedModuleInfo;
                     }
-                } else if(dependency.ModuleMinVersion != null) {
-                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.ModuleMinVersion);
+                } else if(dependency.MinVersion != null) {
+                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
                     if(deployedToMinVersionComparison < 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.ModuleMinVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
                         return deployedModuleInfo;
                     } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.ModuleMinVersion}");
+                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
                         return deployedModuleInfo;
                     }
                 }
@@ -492,11 +487,22 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
-                        var message = $"{parameter.Name} [{parameter.Type}]";
-                        if(parameter.Label != null) {
-                            message += $": {parameter.Label}";
+
+                        // check if parameter is multiple choice
+                        string enteredValue;
+                        if(parameter.AllowedValues?.Any() ?? false) {
+                            var message = parameter.Name;
+                            if(parameter.Label != null) {
+                                message += $": {parameter.Label}";
+                            }
+                            enteredValue = ACliCommand.PromptChoice(message, parameter.AllowedValues);
+                        } else {
+                            var message = $"{parameter.Name} [{parameter.Type}]";
+                            if(parameter.Label != null) {
+                                message += $": {parameter.Label}";
+                            }
+                            enteredValue = ACliCommand.PromptString(message, parameter.Default, parameter.AllowedPattern, parameter.ConstraintDescription) ?? "";
                         }
-                        var enteredValue = ACliCommand.PromptString(message, parameter.Default) ?? "";
                         stackParameters[parameter.Name] = new CloudFormationParameter {
                             ParameterKey = parameter.Name,
                             ParameterValue = enteredValue
