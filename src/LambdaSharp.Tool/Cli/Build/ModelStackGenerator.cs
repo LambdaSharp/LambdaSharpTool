@@ -59,7 +59,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add outputs
             _stack.Add("Module", new Humidifier.Output {
-                Value = _module.FullName + ":" + _module.Version.ToString()
+                Value = $"{_module.FullName}:{_module.Version}@%%MODULEORIGIN%%"
             });
             _stack.Add("LambdaSharpTier", new Humidifier.Output {
                 Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
