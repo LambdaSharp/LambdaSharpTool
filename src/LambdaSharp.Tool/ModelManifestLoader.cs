@@ -206,7 +206,13 @@ namespace LambdaSharp.Tool {
                 }
 
                 // attempt to identify the newest version
-                return versions.Max();
+                var latest = versions.First();
+                foreach(var version in versions.Skip(1)) {
+                    if(version.IsGreaterThanVersion(latest)) {
+                        latest = version;
+                    }
+                }
+                return latest;
             }
         }
 
