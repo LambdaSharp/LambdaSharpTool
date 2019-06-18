@@ -152,8 +152,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            var cloudformationFilename = $"cloudformation_v{moduleInfo.Version ?? throw new ApplicationException("missing Version information")}_{manifest.Hash}.json";
-            var destinationKey = manifest.GetModuleInfo().GetAssetPath(cloudformationFilename);
+            var destinationKey = manifest.GetVersionedTemplatePath();
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 await Settings.S3Client.PutObjectAsync(new PutObjectRequest {

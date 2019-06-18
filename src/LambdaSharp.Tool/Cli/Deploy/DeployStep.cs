@@ -197,16 +197,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // TODO: this should be done at publishing as well!
-                // copy all dependencies to deployment bucket that are missing or have a pre-release version
-                foreach(var dependency in dependencies.Append((Manifest: manifest, ModuleInfo: moduleInfo))) {
 
-                    // copy module assets
+                // copy all dependencies to deployment bucket that are missing or have a pre-release version
+                foreach(var dependency in dependencies.Append((Manifest: manifest, ModuleInfo: moduleInfo)).Where(dependency => dependency.ModuleInfo.Origin != Settings.DeploymentBucketName)) {
+
+                    // copy check-summed module assets (guaranteed immutable)
                     foreach(var asset in dependency.Manifest.Assets) {
-                        await CopyS3Object(dependency.ModuleInfo.Version.IsPreRelease, dependency.ModuleInfo.Origin, asset);
+                        await CopyS3Object(dependency.ModuleInfo.Origin, asset);
                     }
+                    await CopyS3Object(dependency.ModuleInfo.Origin, dependency.Manifest.GetVersionedTemplatePath());
 
                     // copy cloudformation template
-                    await CopyS3Object(dependency.ModuleInfo.Version.IsPreRelease, dependency.ModuleInfo.Origin, dependency.ModuleInfo.TemplatePath);
+                    await CopyS3Object(dependency.ModuleInfo.Origin, dependency.ModuleInfo.TemplatePath, replace: dependency.ModuleInfo.Version.IsPreRelease);
                 }
 
                 // deploy module dependencies
@@ -236,20 +238,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             return true;
 
             // local functions
-            async Task CopyS3Object(bool isPreRelease, string sourceBucket, string key) {
+            async Task CopyS3Object(string sourceBucket, string key, bool replace = false) {
 
                 // check if object must be copied, because it's a pre-release or is missing
                 var found = false;
-                if(!isPreRelease) {
-                    try {
-                        await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                            BucketName = Settings.DeploymentBucketName,
-                            Key = key
-                        });
-                        found = true;
-                    } catch { }
-                }
-                if(!found) {
+                try {
+                    await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                        BucketName = Settings.DeploymentBucketName,
+                        Key = key
+                    });
+                    found = true;
+                } catch { }
+                if(!found || replace) {
                     await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
                         SourceBucket = sourceBucket,
                         SourceKey = key,

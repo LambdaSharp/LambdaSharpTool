@@ -55,6 +55,11 @@ namespace LambdaSharp.Tool.Model {
             return moduleInfo;
         }
 
+        public string GetVersionedTemplatePath() {
+            var moduleInfo = GetModuleInfo();
+            return moduleInfo.GetAssetPath($"cloudformation_v{moduleInfo.Version ?? throw new ApplicationException("missing Version information")}_{Hash}.json");
+        }
+
         public string GetFullName() => GetModuleInfo().FullName;
         public string GetOwner() => GetModuleInfo().Owner;
         public string GetName() => GetModuleInfo().Name;
