@@ -4,13 +4,11 @@
   "Parameters": {
     "DeadLetterQueue": {
       "Type": "String",
-      "Description": "Dead Letter Queue (ARN)",
-      "Default": ""
+      "Description": "Dead Letter Queue (ARN)"
     },
     "LoggingStream": {
       "Type": "String",
-      "Description": "Logging Stream (ARN)",
-      "Default": ""
+      "Description": "Logging Stream (ARN)"
     },
     "LoggingStreamRetentionPeriodHours": {
       "Type": "Number",
@@ -24,19 +22,11 @@
       "Default": "1",
       "MinValue": 1
     },
-    "DefaultSecretKey": {
+    "CoreSecretsKey": {
       "Type": "String",
-      "Description": "Default Secret Key (ARN)",
-      "Default": ""
-    },
-    "DefaultSecretKeyRotationEnabled": {
-      "Type": "String",
-      "Description": "Default key rotation enabled",
-      "AllowedValues": [
-        "true",
-        "false"
-      ],
-      "Default": "false"
+      "Description": "Encryption Key (ARN)",
+      "AllowedPattern": "(arn:aws:kms:.*)?",
+      "ConstraintDescription": "Must be a valid KMS Key ARN or left blank"
     },
     "RollbarReadAccessToken": {
       "Type": "String",
@@ -53,12 +43,18 @@
       "Description": "Project Prefix",
       "Default": ""
     },
+    "ExistingDeploymentBucket": {
+      "Type": "String",
+      "Description": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)",
+      "AllowedPattern": "(arn:aws:s3:.*)?",
+      "ConstraintDescription": "Must be a valid S3 ARN (all lowercase) or left blank"
+    },
     "Secrets": {
       "Type": "String",
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "XRayTracing": {
       "Type": "String",
       "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
@@ -88,18 +84,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A4A62248E9F2200557B2F2019C5D145F"
+      "Default": "41615CAFB681945D095C795EC52EC80B"
     }
   },
   "Resources": {
     "DeadLetterQueueResource": {
       "Type": "AWS::SQS::Queue",
-      "Condition": "DeadLetterQueueIsCreated",
+      "Condition": "DeadLetterQueueIsBlank",
       "Properties": {}
     },
     "LoggingStreamResource": {
       "Type": "AWS::Kinesis::Stream",
-      "Condition": "LoggingStreamIsCreated",
+      "Condition": "LoggingStreamIsBlank",
       "Properties": {
         "RetentionPeriodHours": {
           "Ref": "LoggingStreamRetentionPeriodHours"
@@ -109,18 +105,17 @@
         }
       }
     },
-    "DefaultSecretKeyResource": {
+    "CoreSecretsKeyResource": {
       "Type": "AWS::KMS::Key",
-      "Condition": "DefaultSecretKeyIsCreated",
+      "Condition": "CoreSecretsKeyIsBlank",
       "Properties": {
-        "Description": "Default encryption/decryption key for LambdaSharp modules",
-        "EnableKeyRotation": {
-          "Ref": "DefaultSecretKeyRotationEnabled"
+        "Description": {
+          "Fn::Sub": "LambdaSharp.Core encryption key for ${AWS::StackName}"
         },
         "KeyPolicy": {
           "Version": "2012-10-17",
           "Id": {
-            "Fn::Sub": "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+            "Fn::Sub": "${AWS::StackName}CoreSecretsKeyPolicy"
           },
           "Statement": [
             {
@@ -134,28 +129,6 @@
                 "kms:*"
               ],
               "Resource": "*"
-            }
-          ]
-        }
-      }
-    },
-    "DefaultSecretKeyAlias": {
-      "Type": "AWS::KMS::Alias",
-      "Properties": {
-        "AliasName": {
-          "Fn::Sub": "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-        },
-        "TargetKeyId": {
-          "Fn::If": [
-            "DefaultSecretKeyIsCreated",
-            {
-              "Fn::GetAtt": [
-                "DefaultSecretKeyResource",
-                "Arn"
-              ]
-            },
-            {
-              "Ref": "DefaultSecretKey"
             }
           ]
         }
@@ -193,7 +166,7 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamIsCreated",
+                      "LoggingStreamIsBlank",
                       {
                         "Fn::GetAtt": [
                           "LoggingStreamResource",
@@ -219,12 +192,12 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/Core/Assets/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/ProcessLogEvents-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "DeadLetterQueueIsCreated",
+              "DeadLetterQueueIsBlank",
               {
                 "Fn::GetAtt": [
                   "DeadLetterQueueResource",
@@ -248,7 +221,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "DeadLetterQueueIsCreated",
+                "DeadLetterQueueIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DeadLetterQueueResource",
@@ -260,17 +233,17 @@
                 }
               ]
             },
-            "DEFAULTSECRETKEY": {
+            "STR_CORESECRETSKEY": {
               "Fn::If": [
-                "DefaultSecretKeyIsCreated",
+                "CoreSecretsKeyIsBlank",
                 {
                   "Fn::GetAtt": [
-                    "DefaultSecretKeyResource",
+                    "CoreSecretsKeyResource",
                     "Arn"
                   ]
                 },
                 {
-                  "Ref": "DefaultSecretKey"
+                  "Ref": "CoreSecretsKey"
                 }
               ]
             },
@@ -285,11 +258,22 @@
                 "RegistrationTable",
                 "Arn"
               ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
             }
           }
         },
         "Handler": "ProcessLogEvents::LambdaSharp.Core.ProcessLogEvents.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
+        "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -318,10 +302,6 @@
         "RetentionInDays": 30
       }
     },
-    "RegistrationTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
     "ErrorReportTopic": {
       "Type": "AWS::SNS::Topic",
       "Properties": {}
@@ -348,19 +328,19 @@
         ]
       }
     },
-    "Registration": {
+    "RegistrationFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "LambdaSharp/Modules/Core/Assets/Registration-DRYRUN.zip"
+          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/RegistrationFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "DeadLetterQueueIsCreated",
+              "DeadLetterQueueIsBlank",
               {
                 "Fn::GetAtt": [
                   "DeadLetterQueueResource",
@@ -380,11 +360,11 @@
               "Ref": "AWS::StackName"
             },
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
-            "LAMBDA_NAME": "Registration",
+            "LAMBDA_NAME": "RegistrationFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "DeadLetterQueueIsCreated",
+                "DeadLetterQueueIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DeadLetterQueueResource",
@@ -396,17 +376,17 @@
                 }
               ]
             },
-            "DEFAULTSECRETKEY": {
+            "STR_CORESECRETSKEY": {
               "Fn::If": [
-                "DefaultSecretKeyIsCreated",
+                "CoreSecretsKeyIsBlank",
                 {
                   "Fn::GetAtt": [
-                    "DefaultSecretKeyResource",
+                    "CoreSecretsKeyResource",
                     "Arn"
                   ]
                 },
                 {
-                  "Ref": "DefaultSecretKey"
+                  "Ref": "CoreSecretsKey"
                 }
               ]
             },
@@ -424,11 +404,22 @@
                 "RegistrationTable",
                 "Arn"
               ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
             }
           }
         },
-        "Handler": "Registration::LambdaSharp.Core.Registration.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
+        "Handler": "RegistrationFunction::LambdaSharp.Core.RegistrationFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -448,13 +439,225 @@
         }
       }
     },
-    "RegistrationLogGroup": {
+    "RegistrationFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${Registration}"
+          "Fn::Sub": "/aws/lambda/${RegistrationFunction}"
         },
         "RetentionInDays": 30
+      }
+    },
+    "Finalizer": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/Finalizer-DRYRUN.zip"
+        },
+        "Description": "Clean-up resources on tear down (v1.0-DEV)",
+        "Environment": {
+          "Variables": {
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
+            "LAMBDA_NAME": "Finalizer",
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "STR_CORESECRETSKEY": {
+              "Fn::If": [
+                "CoreSecretsKeyIsBlank",
+                {
+                  "Fn::GetAtt": [
+                    "CoreSecretsKeyResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "CoreSecretsKey"
+                }
+              ]
+            },
+            "STR_REGISTRATIONTABLE": {
+              "Fn::GetAtt": [
+                "RegistrationTable",
+                "Arn"
+              ]
+            },
+            "STR_DEPLOYMENTBUCKET": {
+              "Fn::If": [
+                "CreateDeploymentBucket",
+                {
+                  "Fn::GetAtt": [
+                    "DeploymentBucketResource",
+                    "Arn"
+                  ]
+                },
+                {
+                  "Ref": "ExistingDeploymentBucket"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "Finalizer::LambdaSharp.Core.Finalizer.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore2.1",
+        "Timeout": 900,
+        "TracingConfig": {
+          "Mode": {
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
+          }
+        }
+      }
+    },
+    "FinalizerInvocation": {
+      "Type": "Custom::ModuleFinalizer",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::GetAtt": [
+            "Finalizer",
+            "Arn"
+          ]
+        },
+        "ResourceType": "Module::Finalizer",
+        "DeploymentChecksum": {
+          "Ref": "DeploymentChecksum"
+        },
+        "ModuleVersion": "1.0-DEV",
+        "DependsOn": [
+          {
+            "Fn::If": [
+              "DeadLetterQueueIsBlank",
+              {
+                "Ref": "DeadLetterQueueResource"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "LoggingStreamIsBlank",
+              {
+                "Ref": "LoggingStreamResource"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "CoreSecretsKeyIsBlank",
+              {
+                "Ref": "CoreSecretsKeyResource"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "CreateDeploymentBucket",
+              {
+                "Ref": "DeploymentBucketResource"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "CreateDeploymentBucket",
+              {
+                "Ref": "DeploymentBucketPolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "ModuleRoleSecretsPolicyCondition",
+              {
+                "Ref": "ModuleRoleSecretsPolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ]
+      },
+      "DependsOn": [
+        "ErrorReportTopic",
+        "Finalizer",
+        "LoggingStreamRole",
+        "ModuleRole",
+        "ProcessLogEvents",
+        "ProcessLogEventsLogGroup",
+        "ProcessLogEventsSource1EventMapping",
+        "RegistrationFunction",
+        "RegistrationFunctionLogGroup",
+        "RegistrationTable",
+        "UsageReportTopic"
+      ]
+    },
+    "DeploymentBucketResource": {
+      "Type": "AWS::S3::Bucket",
+      "Condition": "CreateDeploymentBucket",
+      "Properties": {}
+    },
+    "DeploymentBucketPolicy": {
+      "Type": "AWS::S3::BucketPolicy",
+      "Condition": "CreateDeploymentBucket",
+      "Properties": {
+        "Bucket": {
+          "Ref": "DeploymentBucketResource"
+        },
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "serverlessrepo.amazonaws.com"
+              },
+              "Action": "s3:GetObject",
+              "Resource": {
+                "Fn::Sub": "${DeploymentBucketResource.Arn}/*"
+              }
+            }
+          ]
+        }
       }
     },
     "ModuleRole": {
@@ -488,7 +691,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamIsCreated",
+                      "LoggingStreamIsBlank",
                       {
                         "Fn::GetAtt": [
                           "LoggingStreamResource",
@@ -502,13 +705,25 @@
                   }
                 },
                 {
-                  "Sid": "RegistrationTopic",
+                  "Sid": "CoreSecretsKeyResource",
                   "Effect": "Allow",
                   "Action": [
-                    "sns:Subscribe"
+                    "kms:Decrypt",
+                    "kms:Encrypt"
                   ],
                   "Resource": {
-                    "Ref": "RegistrationTopic"
+                    "Fn::If": [
+                      "CoreSecretsKeyIsBlank",
+                      {
+                        "Fn::GetAtt": [
+                          "CoreSecretsKeyResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "CoreSecretsKey"
+                      }
+                    ]
                   }
                 },
                 {
@@ -586,14 +801,82 @@
                   ]
                 },
                 {
-                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::If": [
+                        "CreateDeploymentBucket",
+                        {
+                          "Fn::GetAtt": [
+                            "DeploymentBucketResource",
+                            "Arn"
+                          ]
+                        },
+                        {
+                          "Ref": "ExistingDeploymentBucket"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::If": [
+                              "CreateDeploymentBucket",
+                              {
+                                "Fn::GetAtt": [
+                                  "DeploymentBucketResource",
+                                  "Arn"
+                                ]
+                              },
+                              {
+                                "Ref": "ExistingDeploymentBucket"
+                              }
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "Sid": "DeadLetterQueue",
                   "Effect": "Allow",
                   "Action": [
                     "sqs:SendMessage"
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "DeadLetterQueueIsCreated",
+                      "DeadLetterQueueIsBlank",
                       {
                         "Fn::GetAtt": [
                           "DeadLetterQueueResource",
@@ -607,65 +890,7 @@
                   }
                 },
                 {
-                  "Sid": "SecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::Split": [
-                      ",",
-                      {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          {
-                            "Fn::If": [
-                              "DefaultSecretKeyIsCreated",
-                              {
-                                "Fn::GetAtt": [
-                                  "DefaultSecretKeyResource",
-                                  "Arn"
-                                ]
-                              },
-                              {
-                                "Ref": "DefaultSecretKey"
-                              }
-                            ]
-                          },
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                {
-                                  "Fn::If": [
-                                    "DefaultSecretKeyIsCreated",
-                                    {
-                                      "Fn::GetAtt": [
-                                        "DefaultSecretKeyResource",
-                                        "Arn"
-                                      ]
-                                    },
-                                    {
-                                      "Ref": "DefaultSecretKey"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "ModuleLogStreamAccess",
+                  "Sid": "LogStream",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -674,7 +899,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "AWSXRayWriteAccess",
+                  "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
                     "xray:GetSamplingRules",
@@ -694,6 +919,41 @@
         ]
       }
     },
+    "ModuleRoleSecretsPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "ModuleRoleSecretsPolicyCondition",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Secrets",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Ref": "Secrets"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
     "ProcessLogEventsSource1EventMapping": {
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
@@ -701,7 +961,7 @@
         "Enabled": true,
         "EventSourceArn": {
           "Fn::If": [
-            "LoggingStreamIsCreated",
+            "LoggingStreamIsBlank",
             {
               "Fn::GetAtt": [
                 "LoggingStreamResource",
@@ -718,47 +978,31 @@
         },
         "StartingPosition": "LATEST"
       }
-    },
-    "RegistrationSource1Subscription": {
-      "Type": "AWS::SNS::Subscription",
-      "Properties": {
-        "Endpoint": {
-          "Fn::GetAtt": [
-            "Registration",
-            "Arn"
-          ]
-        },
-        "Protocol": "lambda",
-        "TopicArn": {
-          "Ref": "RegistrationTopic"
-        }
-      }
-    },
-    "RegistrationSource1Permission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Registration",
-            "Arn"
-          ]
-        },
-        "Principal": "sns.amazonaws.com",
-        "SourceArn": {
-          "Ref": "RegistrationTopic"
-        }
-      }
     }
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Core:1.0-DEV"
+      "Value": "LambdaSharp.Core:1.0-DEV@%%MODULEORIGIN%%"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     },
     "DeadLetterQueue": {
       "Value": {
         "Fn::If": [
-          "DeadLetterQueueIsCreated",
+          "DeadLetterQueueIsBlank",
           {
             "Fn::GetAtt": [
               "DeadLetterQueueResource",
@@ -780,7 +1024,7 @@
     "LoggingStream": {
       "Value": {
         "Fn::If": [
-          "LoggingStreamIsCreated",
+          "LoggingStreamIsBlank",
           {
             "Fn::GetAtt": [
               "LoggingStreamResource",
@@ -799,28 +1043,6 @@
       },
       "Description": "Logging Stream (ARN)"
     },
-    "DefaultSecretKey": {
-      "Value": {
-        "Fn::If": [
-          "DefaultSecretKeyIsCreated",
-          {
-            "Fn::GetAtt": [
-              "DefaultSecretKeyResource",
-              "Arn"
-            ]
-          },
-          {
-            "Ref": "DefaultSecretKey"
-          }
-        ]
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::DefaultSecretKey"
-        }
-      },
-      "Description": "Default Secret Key (ARN)"
-    },
     "LoggingStreamRole": {
       "Value": {
         "Fn::GetAtt": [
@@ -833,33 +1055,70 @@
           "Fn::Sub": "${AWS::StackName}::LoggingStreamRole"
         }
       },
-      "Description": "Role used by CloudWatch logs to write to the Kinesis stream"
+      "Description": "CloudWatch Logs Role for writing to logging stream (ARN)"
     },
     "LambdaSharpRegistrationModule": {
       "Value": {
-        "Ref": "RegistrationTopic"
+        "Fn::GetAtt": [
+          "RegistrationFunction",
+          "Arn"
+        ]
       },
       "Export": {
         "Name": {
           "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
         }
       },
-      "Description": "Resource type for LambdaSharp module registrations"
+      "Description": "Custom resource type for module registrations"
     },
     "LambdaSharpRegistrationFunction": {
       "Value": {
-        "Ref": "RegistrationTopic"
+        "Fn::GetAtt": [
+          "RegistrationFunction",
+          "Arn"
+        ]
       },
       "Export": {
         "Name": {
           "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
         }
       },
-      "Description": "Resource type for LambdaSharp function registrations"
+      "Description": "Custom resource type for function registrations"
+    },
+    "CoreServices": {
+      "Value": "Enabled",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::CoreServices"
+        }
+      },
+      "Description": "Flag indicating if operating services are deployed (String)"
+    },
+    "DeploymentBucket": {
+      "Value": {
+        "Fn::If": [
+          "CreateDeploymentBucket",
+          {
+            "Fn::GetAtt": [
+              "DeploymentBucketResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "ExistingDeploymentBucket"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::DeploymentBucket"
+        }
+      },
+      "Description": "S3 bucket for published modules (ARN)"
     }
   },
   "Conditions": {
-    "DeadLetterQueueIsCreated": {
+    "DeadLetterQueueIsBlank": {
       "Fn::Equals": [
         {
           "Ref": "DeadLetterQueue"
@@ -867,7 +1126,7 @@
         ""
       ]
     },
-    "LoggingStreamIsCreated": {
+    "LoggingStreamIsBlank": {
       "Fn::Equals": [
         {
           "Ref": "LoggingStream"
@@ -875,18 +1134,18 @@
         ""
       ]
     },
-    "DefaultSecretKeyIsCreated": {
+    "CoreSecretsKeyIsBlank": {
       "Fn::Equals": [
         {
-          "Ref": "DefaultSecretKey"
+          "Ref": "CoreSecretsKey"
         },
         ""
       ]
     },
-    "SecretsIsEmpty": {
+    "CreateDeploymentBucket": {
       "Fn::Equals": [
         {
-          "Ref": "Secrets"
+          "Ref": "ExistingDeploymentBucket"
         },
         ""
       ]
@@ -896,9 +1155,21 @@
         {
           "Fn::Equals": [
             {
-              "Ref": "EnableXRayTracing"
+              "Ref": "XRayTracing"
             },
             "Disabled"
+          ]
+        }
+      ]
+    },
+    "ModuleRoleSecretsPolicyCondition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
           ]
         }
       ]
@@ -919,25 +1190,25 @@
         "LoggingStreamShardCount": {
           "default": "Number of Kinesis shards for the logging streams [Number]"
         },
-        "DefaultSecretKey": {
-          "default": "Default secret key for functions (leave blank to create a new encryption key) [AWS::KMS::Key]"
-        },
-        "DefaultSecretKeyRotationEnabled": {
-          "default": "Enabled rotating KMS key automatically every 365 days [String]"
+        "CoreSecretsKey": {
+          "default": "KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key) [AWS::KMS::Key]"
         },
         "RollbarReadAccessToken": {
-          "default": "Account-level token for read operations (keep blank to disable Rollbar integration) [Secret]"
+          "default": "Account-level token for read operations (leave blank to disable Rollbar integration) [Secret]"
         },
         "RollbarWriteAccessToken": {
-          "default": "Account-level token for write operations (keep blank to disable Rollbar integration) [Secret]"
+          "default": "Account-level token for write operations (leave blank to disable Rollbar integration) [Secret]"
         },
         "RollbarProjectPrefix": {
           "default": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\") [String]"
         },
+        "ExistingDeploymentBucket": {
+          "default": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created) [String]"
+        },
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
+        "XRayTracing": {
           "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "DeploymentBucketName": {
@@ -966,8 +1237,7 @@
             "LoggingStream",
             "LoggingStreamRetentionPeriodHours",
             "LoggingStreamShardCount",
-            "DefaultSecretKey",
-            "DefaultSecretKeyRotationEnabled"
+            "CoreSecretsKey"
           ]
         },
         {
@@ -982,11 +1252,19 @@
         },
         {
           "Label": {
+            "default": "LambdaSharp Deployment Settings"
+          },
+          "Parameters": [
+            "ExistingDeploymentBucket"
+          ]
+        },
+        {
+          "Label": {
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "XRayTracing"
           ]
         },
         {
@@ -1004,7 +1282,7 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-06-14",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "ParameterSections": [
         {
@@ -1013,14 +1291,12 @@
             {
               "Name": "DeadLetterQueue",
               "Type": "AWS::SQS::Queue",
-              "Label": "Dead letter queue for functions (leave blank to create a new queue)",
-              "Default": ""
+              "Label": "Dead letter queue for functions (leave blank to create a new queue)"
             },
             {
               "Name": "LoggingStream",
               "Type": "AWS::Kinesis::Stream",
-              "Label": "Logging Kinesis stream for functions (leave blank to create a new stream)",
-              "Default": ""
+              "Label": "Logging Kinesis stream for functions (leave blank to create a new stream)"
             },
             {
               "Name": "LoggingStreamRetentionPeriodHours",
@@ -1035,16 +1311,11 @@
               "Default": "1"
             },
             {
-              "Name": "DefaultSecretKey",
+              "Name": "CoreSecretsKey",
               "Type": "AWS::KMS::Key",
-              "Label": "Default secret key for functions (leave blank to create a new encryption key)",
-              "Default": ""
-            },
-            {
-              "Name": "DefaultSecretKeyRotationEnabled",
-              "Type": "String",
-              "Label": "Enabled rotating KMS key automatically every 365 days",
-              "Default": "false"
+              "Label": "KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key)",
+              "AllowedPattern": "(arn:aws:kms:.*)?",
+              "ConstraintDescription": "Must be a valid KMS Key ARN or left blank"
             }
           ]
         },
@@ -1054,13 +1325,13 @@
             {
               "Name": "RollbarReadAccessToken",
               "Type": "Secret",
-              "Label": "Account-level token for read operations (keep blank to disable Rollbar integration)",
+              "Label": "Account-level token for read operations (leave blank to disable Rollbar integration)",
               "Default": ""
             },
             {
               "Name": "RollbarWriteAccessToken",
               "Type": "Secret",
-              "Label": "Account-level token for write operations (keep blank to disable Rollbar integration)",
+              "Label": "Account-level token for write operations (leave blank to disable Rollbar integration)",
               "Default": ""
             },
             {
@@ -1068,6 +1339,18 @@
               "Type": "String",
               "Label": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\")",
               "Default": ""
+            }
+          ]
+        },
+        {
+          "Title": "LambdaSharp Deployment Settings",
+          "Parameters": [
+            {
+              "Name": "ExistingDeploymentBucket",
+              "Type": "String",
+              "Label": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)",
+              "AllowedPattern": "(arn:aws:s3:.*)?",
+              "ConstraintDescription": "Must be a valid S3 ARN (all lowercase) or left blank"
             }
           ]
         },
@@ -1081,16 +1364,21 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "XRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "RootModule",
+                "AllModules"
+              ]
             }
           ]
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "A4A62248E9F2200557B2F2019C5D145F",
+      "Hash": "41615CAFB681945D095C795EC52EC80B",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1098,7 +1386,7 @@
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::Registration::Function",
-          "Description": "Resource type for LambdaSharp function registrations",
+          "Description": "Custom resource type for function registrations",
           "Properties": [
             {
               "Name": "ModuleId",
@@ -1166,7 +1454,7 @@
         },
         {
           "Type": "LambdaSharp::Registration::Module",
-          "Description": "Resource type for LambdaSharp module registrations",
+          "Description": "Custom resource type for module registrations",
           "Properties": [
             {
               "Name": "ModuleId",
@@ -1193,14 +1481,19 @@
       ],
       "Outputs": [
         {
+          "Name": "CoreServices",
+          "Description": "Flag indicating if operating services are deployed (String)",
+          "Type": "String"
+        },
+        {
           "Name": "DeadLetterQueue",
           "Description": "Dead Letter Queue (ARN)",
           "Type": "AWS::SQS::Queue"
         },
         {
-          "Name": "DefaultSecretKey",
-          "Description": "Default Secret Key (ARN)",
-          "Type": "AWS::KMS::Key"
+          "Name": "DeploymentBucket",
+          "Description": "S3 bucket for published modules (ARN)",
+          "Type": "AWS::S3::Bucket"
         },
         {
           "Name": "LoggingStream",
@@ -1209,20 +1502,23 @@
         },
         {
           "Name": "LoggingStreamRole",
-          "Description": "Role used by CloudWatch logs to write to the Kinesis stream",
+          "Description": "CloudWatch Logs Role for writing to logging stream (ARN)",
           "Type": "AWS::IAM::Role"
         }
       ],
       "ResourceNameMappings": {
         "DeadLetterQueueResource": "DeadLetterQueue::Resource",
         "LoggingStreamResource": "LoggingStream::Resource",
-        "DefaultSecretKeyResource": "DefaultSecretKey::Resource",
+        "CoreSecretsKeyResource": "CoreSecretsKey::Resource",
         "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
-        "RegistrationLogGroup": "Registration::LogGroup",
+        "RegistrationFunctionLogGroup": "RegistrationFunction::LogGroup",
+        "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
-        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
-        "RegistrationSource1Subscription": "Registration::Source1Subscription",
-        "RegistrationSource1Permission": "Registration::Source1Permission"
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
+        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping"
+      },
+      "TypeNameMappings": {
+        "Custom::ModuleFinalizer": "Module::Finalizer"
       }
     }
   }

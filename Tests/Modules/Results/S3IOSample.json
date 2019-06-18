@@ -17,13 +17,12 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "LambdaSharpCoreServices": {
       "Type": "String",
-      "Description": "AWS X-Ray Tracing",
+      "Description": "Use LambdaSharp.Core Services",
       "AllowedValues": [
         "Disabled",
-        "RootModule",
-        "AllModules"
+        "Enabled"
       ],
       "Default": "Disabled"
     },
@@ -47,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "502433DD49C33FF7CAA1F3D26A08DF22"
+      "Default": "71D4ED282BC59F9438A20308B6E9DEEB"
     }
   },
   "Resources": {
@@ -133,7 +132,7 @@
         "SourceBucket": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "LambdaSharp/Modules/Sample.S3.IO/Assets/WebsiteContents-DRYRUN.zip",
+        "SourceKey": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.S3.IO/Assets/{WebsiteContents::PackageName}",
         "DestinationBucket": {
           "Ref": "WebsiteBucket"
         },
@@ -142,6 +141,7 @@
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -158,7 +158,22 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV"
+      "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV@%%MODULEORIGIN%%"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     },
     "WebsiteUrl": {
       "Value": {
@@ -175,6 +190,16 @@
       "Description": "Website URL"
     }
   },
+  "Conditions": {
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
+    }
+  },
   "Metadata": {
     "AWS::CloudFormation::Interface": {
       "ParameterLabels": {
@@ -187,8 +212,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
-          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -222,7 +247,7 @@
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "LambdaSharpCoreServices"
           ]
         },
         {
@@ -240,7 +265,7 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-06-14",
       "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
       "ParameterSections": [
         {
@@ -270,28 +295,36 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "LambdaSharpCoreServices",
               "Type": "String",
-              "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled"
+              "Label": "Integrate with LambdaSharp.Core services",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "502433DD49C33FF7CAA1F3D26A08DF22",
+      "Hash": "71D4ED282BC59F9438A20308B6E9DEEB",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.0.1-WIP"
+          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
+          "MinVersion": "0.7-WIP",
+          "MaxVersion": "0.7-WIP",
+          "Nested": false
         },
         {
-          "ModuleFullName": "LambdaSharp.S3.IO",
-          "MinVersion": "0.5"
+          "ModuleInfo": "LambdaSharp.S3.IO@%%MODULEORIGIN%%",
+          "MinVersion": "0.5",
+          "MaxVersion": "0.5",
+          "Nested": false
         }
       ],
       "Outputs": [

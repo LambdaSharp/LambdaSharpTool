@@ -7,13 +7,22 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "XRayTracing": {
       "Type": "String",
       "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
         "Disabled",
         "RootModule",
         "AllModules"
+      ],
+      "Default": "Disabled"
+    },
+    "LambdaSharpCoreServices": {
+      "Type": "String",
+      "Description": "Use LambdaSharp.Core Services",
+      "AllowedValues": [
+        "Disabled",
+        "Enabled"
       ],
       "Default": "Disabled"
     },
@@ -37,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E70D47E9E43CD76F3C3AC55A445BDEE5"
+      "Default": "8B06110BA84BAC547633E21CE8C558ED"
     }
   },
   "Resources": {
@@ -48,7 +57,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "%%MODULEORIGIN%%/Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
         },
         "Description": "My function (v1.0-DEV)",
         "Environment": {
@@ -58,7 +67,18 @@
             },
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
-            "LAMBDA_RUNTIME": "dotnetcore2.1"
+            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
           }
         },
         "Handler": "Function::LambdaSharpTestModule.Function.Function::FunctionHandlerAsync",
@@ -113,31 +133,7 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "SecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "SecretsIsEmpty",
-                      "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
-                      {
-                        "Fn::Split": [
-                          ",",
-                          {
-                            "Ref": "Secrets"
-                          }
-                        ]
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "ModuleLogStreamAccess",
+                  "Sid": "LogStream",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -146,7 +142,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "AWSXRayWriteAccess",
+                  "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
                     "xray:GetSamplingRules",
@@ -166,8 +162,44 @@
         ]
       }
     },
+    "ModuleRoleSecretsPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "ModuleRoleSecretsPolicyCondition",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Secrets",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Ref": "Secrets"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -183,6 +215,7 @@
     },
     "FunctionRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Condition": "UseCoreServices",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -213,26 +246,53 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Conditions": {
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
-        },
-        ""
-      ]
-    },
     "XRayIsEnabled": {
       "Fn::Not": [
         {
           "Fn::Equals": [
             {
-              "Ref": "EnableXRayTracing"
+              "Ref": "XRayTracing"
             },
             "Disabled"
+          ]
+        }
+      ]
+    },
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
+    },
+    "ModuleRoleSecretsPolicyCondition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
           ]
         }
       ]
@@ -244,8 +304,11 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
+        "XRayTracing": {
           "default": "Enable AWS X-Ray tracing mode for module resources [String]"
+        },
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -270,7 +333,8 @@
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "XRayTracing",
+            "LambdaSharpCoreServices"
           ]
         },
         {
@@ -288,7 +352,7 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-06-14",
       "Module": "Test.TestModule:1.0-DEV",
       "ParameterSections": [
         {
@@ -301,29 +365,47 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "XRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "RootModule",
+                "AllModules"
+              ]
+            },
+            {
+              "Name": "LambdaSharpCoreServices",
+              "Type": "String",
+              "Label": "Integrate with LambdaSharp.Core services",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "E70D47E9E43CD76F3C3AC55A445BDEE5",
+      "Hash": "8B06110BA84BAC547633E21CE8C558ED",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.0.1-WIP"
+          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
+          "MinVersion": "0.7-WIP",
+          "MaxVersion": "0.7-WIP",
+          "Nested": false
         }
       ],
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration",
         "FunctionRegistration": "Function::Registration"
       },

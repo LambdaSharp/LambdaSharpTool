@@ -7,16 +7,6 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
-      "Type": "String",
-      "Description": "AWS X-Ray Tracing",
-      "AllowedValues": [
-        "Disabled",
-        "RootModule",
-        "AllModules"
-      ],
-      "Default": "Disabled"
-    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "Deployment S3 Bucket Name"
@@ -37,12 +27,27 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "BC6B77C3CFFB7F2EA6A8E06F56A1E41A"
+      "Default": "3DA537C9983CB83C9E6289A5B88208A4"
     }
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Metadata": {
@@ -50,9 +55,6 @@
       "ParameterLabels": {
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
-        },
-        "EnableXRayTracing": {
-          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -76,8 +78,7 @@
             "default": "LambdaSharp Module Options"
           },
           "Parameters": [
-            "Secrets",
-            "EnableXRayTracing"
+            "Secrets"
           ]
         },
         {
@@ -95,7 +96,7 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-06-14",
       "Module": "Test.TestModule:1.0-DEV",
       "ParameterSections": [
         {
@@ -106,18 +107,12 @@
               "Type": "String",
               "Label": "Comma-separated list of additional KMS secret keys",
               "Default": ""
-            },
-            {
-              "Name": "EnableXRayTracing",
-              "Type": "String",
-              "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "BC6B77C3CFFB7F2EA6A8E06F56A1E41A",
+      "Hash": "3DA537C9983CB83C9E6289A5B88208A4",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
