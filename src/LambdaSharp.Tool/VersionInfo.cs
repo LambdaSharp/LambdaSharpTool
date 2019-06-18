@@ -76,7 +76,7 @@ namespace LambdaSharp.Tool {
         public override string ToString() => Version.ToString() + Suffix;
         public override int GetHashCode() => Version.GetHashCode() ^ Suffix.GetHashCode();
 
-        public bool IsCompatibleWith(VersionInfo other) {
+        public bool IsAssemblyCompatibleWith(VersionInfo other) {
             if(Suffix != other.Suffix) {
                 return false;
             }
@@ -179,10 +179,12 @@ namespace LambdaSharp.Tool {
                     // when Major version is 0, the build number is relevant
                     return (Major == minVersion.Major)
                         && (Minor == minVersion.Minor)
-                        && (Version.Build == minVersion.Version.Build);
+                        && (Math.Max(Version.Build, 0) == Math.Max(minVersion.Version.Build, 0))
+                        && (Suffix == minVersion.Suffix);
                 } else {
                     return (Major == minVersion.Major)
-                        && (Minor == minVersion.Minor);
+                        && (Minor == minVersion.Minor)
+                        && (Suffix == minVersion.Suffix);
                 }
             }
             return ((minVersion == null) || IsGreaterOrEqualThanVersion(minVersion))

@@ -94,6 +94,20 @@ namespace Tests.LambdaSharp.Tool {
             result.Should().Be(null);
         }
 
+        [Fact]
+        public void DoesNotMatchTightConstraint() {
+
+            // arrange
+            var versionConstraint = VersionInfo.Parse("0.7-WIP");
+            var version = VersionInfo.Parse("0.7-RC1");
+
+            // act
+            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+
+            // assert
+            result.Should().Be(false);
+        }
+
         private void IsLessThan(string left, string right) {
 
             // arrange
@@ -101,10 +115,10 @@ namespace Tests.LambdaSharp.Tool {
             var version2 = VersionInfo.Parse(right);
 
             // act
-            var result = version1.CompareToVersion(version2);
+            var result = version1.CompareToVersion(version2) < 0;
 
             // assert
-            result.Should().Be(-1);
+            result.Should().Be(true);
         }
     }
 }
