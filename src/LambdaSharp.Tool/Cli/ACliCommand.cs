@@ -193,14 +193,12 @@ namespace LambdaSharp.Tool.Cli {
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var moduleBucketNamesOption = cmd.Option("--module-bucket-names <NAMES>", "(test only) Comma-separated list of S3 Bucket names used to find modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
             deploymentNotificationTopicOption.ShowInHelpText = false;
-            moduleBucketNamesOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;
             return async () => {
 
@@ -252,7 +250,6 @@ namespace LambdaSharp.Tool.Cli {
                     var tierVersion = tierVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
                     var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
-                    var moduleBucketNames = moduleBucketNamesOption.Value()?.Split(',');
 
                     // create a settings instance for each module filename
                     return new Settings {
