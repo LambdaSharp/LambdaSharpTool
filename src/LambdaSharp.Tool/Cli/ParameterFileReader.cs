@@ -46,6 +46,7 @@ namespace LambdaSharp.Tool.Cli {
 
             //--- Fields ---
             public readonly Dictionary<string, string> Dictionary = new Dictionary<string, string>();
+            public readonly Dictionary<string, string> Encryption = new Dictionary<string, string>();
             private readonly Dictionary<string, JObject> _configFiles = new Dictionary<string, JObject>();
             private readonly string _workingDirectory;
 
@@ -96,6 +97,8 @@ namespace LambdaSharp.Tool.Cli {
                                         return true;
                                     }
                                     return true;
+                                } else {
+                                    LogError("invalid expression for !GetConfig", null);
                                 }
                             }
                         }
@@ -109,6 +112,8 @@ namespace LambdaSharp.Tool.Cli {
                                     value = Environment.GetEnvironmentVariable(key);
                                     return true;
                                 }
+                            } else {
+                                LogError("invalid expression for !GetEnv", null);
                             }
                         }
                         break;
@@ -117,19 +122,49 @@ namespace LambdaSharp.Tool.Cli {
 
                                 // deserialize single parameter
                                 INodeDeserializer nested = new ScalarNodeDeserializer();
-                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string key)) {
-                                    if(Dictionary.TryGetValue(key, out var parameterValue)) {
+                                if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
+                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
 
                                         // substitute expression with parameter value
                                         value = parameterValue;
                                     } else {
 
                                         // record missing parameter key
-                                        Dictionary[key] = null;
+                                        Dictionary[parameterKey] = null;
                                         value = null;
                                     }
                                     return true;
                                 }
+                            } else if(node is SequenceStart sequenceStart) {
+
+                                // TODO: this needs to be tested
+
+                                // deserialize single parameter
+                                INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
+                                if(
+                                    nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value)
+                                    && (value is IList list)
+                                    && (list.Count == 2)
+                                    && (list[0] is string parameterKey)
+                                    && (list[1] is string encryptionKey)
+                                ) {
+                                    if(Dictionary.TryGetValue(parameterKey, out var parameterValue)) {
+
+                                        // substitute expression with parameter value
+                                        value = parameterValue;
+                                    } else {
+
+                                        // record missing parameter key
+                                        Dictionary[parameterKey] = null;
+                                        Encryption[parameterKey] = encryptionKey;
+                                        value = null;
+                                    }
+                                    return true;
+                                } else {
+                                    LogError("invalid expression for !GetConfig", null);
+                                }
+                            } else {
+                                LogError("invalid expression for !GetParam", null);
                             }
                         }
                         break;
@@ -190,25 +225,22 @@ namespace LambdaSharp.Tool.Cli {
                     // add resolved values
                     foreach(var parameter in getParameteresResponse.Parameters) {
 
-                        // check if retrieve parameter store value was encrypted
-                        if(parameter.Type == ParameterType.SecureString) {
-
-                            // TODO: need to review this logic once DefaultSecretKey is optional
-                            if(Settings.TierDefaultSecretKey == null) {
-                                LogError("cannot use encrypted parameter store values before LambdaSharp tier is initialized");
-                                return new Dictionary<string, string>();
-                            }
+                        // check if retrieved parameter needs to be encrypted
+                        if(parameterStoreDeserializer.Encryption.TryGetValue(parameter.Name, out var encryptionKey) && (encryptionKey != null)) {
 
                             // re-encrypt value using the tier's default secret key
                             var encryptedResult = Settings.KmsClient.EncryptAsync(new EncryptRequest {
-                                KeyId = Settings.TierDefaultSecretKey,
+                                KeyId = encryptionKey,
                                 Plaintext = new MemoryStream(Encoding.UTF8.GetBytes(parameter.Value))
                             }).Result;
                             parameterStoreDeserializer.Dictionary[parameter.Name] = Convert.ToBase64String(encryptedResult.CiphertextBlob.ToArray());
-                        } else {
+                        } else if(parameter.Type != ParameterType.SecureString) {
 
                             // store value in plaintext
                             parameterStoreDeserializer.Dictionary[parameter.Name] = parameter.Value;
+                        } else {
+                            LogError($"parameter '{parameter.Name}' is a SecureString; either provide an encryption key to re-encrypt the value or null to store as plaintext");
+                            parameterStoreDeserializer.Dictionary[parameter.Name] = "<BAD>";
                         }
                     }
                 }
@@ -221,7 +253,6 @@ namespace LambdaSharp.Tool.Cli {
                 // reparse document after parameter references were resolved
                 inputs = ParseYamlFile(source);
             }
-
 
             // resolve 'alias/' key names to key ARNs
             if(inputs.TryGetValue("Secrets", out var keys)) {
