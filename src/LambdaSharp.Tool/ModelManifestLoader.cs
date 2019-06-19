@@ -166,11 +166,18 @@ namespace LambdaSharp.Tool {
             } else if(moduleMaxVersion != null) {
                 versionConstraint = $"v{moduleMaxVersion} or earlier";
             }
-            LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
+            if(moduleOrigin == "%%MODULEORIGIN%%") {
+                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
+            } else {
+                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint}) @ {moduleOrigin}");
+            }
             return null;
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
+                if(bucketName == "%%MODULEORIGIN%%") {
+                    bucketName = Settings.DeploymentBucketName;
+                }
 
                 // get bucket region specific S3 client
                 var s3Client = await GetS3ClientByBucketName(bucketName);
