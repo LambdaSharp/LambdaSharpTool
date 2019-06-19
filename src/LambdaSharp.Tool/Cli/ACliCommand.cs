@@ -56,6 +56,7 @@ namespace LambdaSharp.Tool.Cli {
 
         //--- Class Fields ---
         private static string PromptColor = AnsiTerminal.Cyan;
+        private static string LabelColor = AnsiTerminal.BrightCyan;
 
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
@@ -100,7 +101,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public static void PromptText(string message) => WriteAnsiLine($"*** {message} ***", PromptColor);
+        public static void PromptText(string message) => WriteAnsiLine($"*** {message} ***", LabelColor);
 
         public static string PromptChoice(string message, IList<string> choices) {
             WriteAnsiLine($"{message} (multiple choice)", PromptColor);

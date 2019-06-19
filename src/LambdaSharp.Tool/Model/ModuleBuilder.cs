@@ -840,7 +840,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = ModuleInfo.GetModuleAssetExpression($"{{{packageName.FullName}}}");
+            package.Reference = ModuleInfo.GetModuleAssetExpression($"${{{packageName.FullName}}}");
             return package;
         }
 
