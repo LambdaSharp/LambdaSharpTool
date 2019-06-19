@@ -30,6 +30,8 @@ using Amazon.SimpleSystemsManagement.Model;
 
 namespace LambdaSharp.Tool.Internal {
 
+    public delegate void LogErrorDelegate(string messages, Exception exception);
+
     internal static class AwsEx {
 
         //--- Class Fields ---
@@ -114,7 +116,7 @@ namespace LambdaSharp.Tool.Internal {
             string mostRecentStackEventId,
             IDictionary<string, string> resourceNameMappings = null,
             IDictionary<string, string> typeNameMappings = null,
-            Action<string, Exception> logError = null
+            LogErrorDelegate logError = null
         ) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
@@ -265,5 +267,34 @@ namespace LambdaSharp.Tool.Internal {
         public static bool IsSuccessfulFinalStackEvent(this StackEvent evt)
             => (evt.ResourceType == "AWS::CloudFormation::Stack")
                 && ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"));
+
+        public static async Task<(bool Success, Stack Stack)> GetStackAsync(this IAmazonCloudFormation cfnClient, string stackName, LogErrorDelegate logError) {
+            Stack stack = null;
+            try {
+                var describe = await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = stackName
+                });
+
+                // make sure the stack is in a stable state (not updating and not failed)
+                stack = describe.Stacks.FirstOrDefault();
+                switch(stack?.StackStatus) {
+                case null:
+                case "CREATE_COMPLETE":
+                case "ROLLBACK_COMPLETE":
+                case "UPDATE_COMPLETE":
+                case "UPDATE_ROLLBACK_COMPLETE":
+
+                    // we're good to go
+                    break;
+                default:
+                    logError?.Invoke($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})", null);
+                    return (false, null);
+                }
+            } catch(AmazonCloudFormationException) {
+
+                // stack not found; nothing to do
+            }
+            return (true, stack);
+        }
    }
 }

@@ -311,34 +311,13 @@ namespace LambdaSharp.Tool.Cli {
 
                 // attempt to find an existing core module
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
-                Stack stack = null;
-                try {
-                    var describe = await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                        StackName = stackName
-                    });
-
-                    // make sure the stack is in a stable state (not updating and not failed)
-                    stack = describe.Stacks.FirstOrDefault();
-                    switch(stack?.StackStatus) {
-                    case null:
-                    case "CREATE_COMPLETE":
-                    case "ROLLBACK_COMPLETE":
-                    case "UPDATE_COMPLETE":
-                    case "UPDATE_ROLLBACK_COMPLETE":
-
-                        // we're good to go
-                        break;
-                    default:
-                        LogError($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})");
-                        return false;
-                    }
-                } catch(AmazonCloudFormationException) {
-
-                    // stack not found; nothing to do
+                var existing = await settings.CfnClient.GetStackAsync(stackName, LogError);
+                if(!existing.Success) {
+                    return false;
                 }
 
                 // validate module information
-                var tierModuleInfoText = stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                var tierModuleInfoText = existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
                 if(tierModuleInfoText == null) {
                     if(!optional) {
                         LogError($"Could not find LambdaSharp tier information for {stackName}");
@@ -394,7 +373,7 @@ namespace LambdaSharp.Tool.Cli {
                 settings.CoreServices = coreServicesMode;
 
                 // local functions
-                string GetStackOutput(string key) => stack.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
+                string GetStackOutput(string key) => existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
             }
             return true;
         }

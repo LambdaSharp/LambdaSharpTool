@@ -51,13 +51,13 @@ namespace LambdaSharp.Tool.Cli {
             private readonly string _workingDirectory;
 
             //--- Constructors ---
-            public ParameterStoreFunctionNodeDeserializer(string workingDirectory, Action<string, Exception> logError) {
+            public ParameterStoreFunctionNodeDeserializer(string workingDirectory, LogErrorDelegate logError) {
                 _workingDirectory = workingDirectory ?? throw new ArgumentNullException(nameof(workingDirectory));
                 LogError = logError ?? throw new ArgumentNullException(nameof(logError));
             }
 
             //--- Properties ---
-            private Action<string, Exception> LogError { get; }
+            private LogErrorDelegate LogError { get; }
 
             //--- Methods ---
             public bool Deserialize(IParser reader, Type expectedType, Func<IParser, Type, object> nestedObjectDeserializer, out object value) {

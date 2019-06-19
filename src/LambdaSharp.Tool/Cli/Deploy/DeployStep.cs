@@ -197,7 +197,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // TODO: this should be done at publishing as well!
 
                 // copy all dependencies to deployment bucket that are missing or have a pre-release version
-                foreach(var dependency in dependencies.Append((Manifest: manifest, ModuleInfo: moduleInfo)).Where(dependency => dependency.ModuleInfo.Origin != Settings.DeploymentBucketName)) {
+                foreach(var dependency in dependencies
+                    .Append((Manifest: manifest, ModuleInfo: moduleInfo))
+                    .Where(dependency => dependency.ModuleInfo.Origin != Settings.DeploymentBucketName)
+                ) {
 
                     // copy check-summed module assets (guaranteed immutable)
                     foreach(var asset in dependency.Manifest.Assets) {
@@ -259,54 +262,33 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
-            try {
 
-                // check if the module was already deployed
-                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = stackName
-                });
-
-                // make sure the stack is in a stable state (not updating and not failed)
-                var existing = describe.Stacks.FirstOrDefault();
-                switch(existing?.StackStatus) {
-                case null:
-                case "CREATE_COMPLETE":
-                case "ROLLBACK_COMPLETE":
-                case "UPDATE_COMPLETE":
-                case "UPDATE_ROLLBACK_COMPLETE":
-
-                    // we're good to go
-                    break;
-                default:
-                    LogError($"deployed module is not in a valid state; module deployment must be complete and successful (status: {existing?.StackStatus})");
-                    return (false, existing);
-                }
-
-                // validate existing module deployment
-                var deployedOutputs = existing?.Outputs;
-                var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
-                    LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                if(deployedModuleInfo.FullName != manifest.GetFullName()) {
-                    LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                var versionComparison = deployedModuleInfo.Version.CompareToVersion(manifest.GetVersion());
-                if(versionComparison > 0) {
-                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                } else if(versionComparison == null) {
-                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                return (true, existing);
-            } catch(AmazonCloudFormationException) {
-
-                // stack doesn't exist
+            // check if the module was already deployed
+            var existing = await Settings.CfnClient.GetStackAsync(stackName, LogError);
+            if(!existing.Success || (existing.Stack == null)) {
+                return (existing.Success, existing.Stack);
             }
-            return (true, null);
+
+            // validate existing module deployment
+            var deployedOutputs = existing.Stack?.Outputs;
+            var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+            if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
+                LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
+            }
+            if(deployedModuleInfo.FullName != manifest.GetFullName()) {
+                LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
+            }
+            var versionComparison = deployedModuleInfo.Version.CompareToVersion(manifest.GetVersion());
+            if(versionComparison > 0) {
+                LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
+            } else if(versionComparison == null) {
+                LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
+            }
+            return (true, existing.Stack);
         }
 
         private async Task<IEnumerable<(ModuleManifest Manifest, ModuleInfo ModuleInfo)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
@@ -392,55 +374,50 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
-            try {
-                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = ToStackName(dependency.ModuleInfo.FullName)
-                });
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
-                if(!success) {
-                    LogWarn($"unable to retrieve information of the deployed dependent module");
-                    return null;
-                }
-
-                // confirm that the module name matches
-                if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
-                    LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
-                    return deployedModuleInfo;
-                }
-
-                // confirm that the module version is in a valid range
-                if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
-                    if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
-                        return deployedModuleInfo;
-                    }
-                } else if(dependency.MaxVersion != null) {
-                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
-                    if(deployedToMinVersionComparison >= 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
-                        return deployedModuleInfo;
-                    } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
-                        return deployedModuleInfo;
-                    }
-                } else if(dependency.MinVersion != null) {
-                    var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
-                    if(deployedToMinVersionComparison < 0) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
-                        return deployedModuleInfo;
-                    } else if(deployedToMinVersionComparison == null) {
-                        LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
-                        return deployedModuleInfo;
-                    }
-                }
-                return deployedModuleInfo;
-            } catch(AmazonCloudFormationException) {
-
-                // stack doesn't exist
+            var existing = await Settings.CfnClient.GetStackAsync(ToStackName(dependency.ModuleInfo.FullName), LogError);
+            if(!existing.Success || (existing.Stack == null)) {
                 return null;
             }
+            var deployedOutputs = existing.Stack.Outputs;
+            var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+            var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
+            if(!success) {
+                LogWarn($"unable to retrieve information of the deployed dependent module");
+                return null;
+            }
+
+            // confirm that the module name matches
+            if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
+                LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
+                return deployedModuleInfo;
+            }
+
+            // confirm that the module version is in a valid range
+            if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
+                if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                }
+            } else if(dependency.MaxVersion != null) {
+                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
+                if(deployedToMinVersionComparison >= 0) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                } else if(deployedToMinVersionComparison == null) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                }
+            } else if(dependency.MinVersion != null) {
+                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
+                if(deployedToMinVersionComparison < 0) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
+                    return deployedModuleInfo;
+                } else if(deployedToMinVersionComparison == null) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
+                    return deployedModuleInfo;
+                }
+            }
+            return deployedModuleInfo;
         }
 
         private List<CloudFormationParameter> PromptModuleParameters(
