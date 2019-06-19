@@ -41,6 +41,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
         public PublishStep(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods---
+
+        // TODO: copy all module assets to tier deployment bucket
+
         public async Task<ModuleInfo> DoAsync(
             string cloudformationFile,
             bool forcePublish,

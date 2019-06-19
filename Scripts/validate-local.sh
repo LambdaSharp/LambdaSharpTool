@@ -42,7 +42,7 @@ if ! git diff-index --quiet HEAD -- Tests/; then
     exit 1
 fi
 
-scripts/runtests.sh
+Scripts/runtests.sh
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then
@@ -101,15 +101,10 @@ echo "*************************"
 cd $LAMBDASHARP
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=TestContrib$SUFFIX
-LAMBDASHARP_PROFILE=TestProfile$SUFFIX
 
-lash config \
-    --cli-profile $LAMBDASHARP_PROFILE \
+lash init \
+    --core-services enabled \
     --existing-s3-bucket-name="" \
-    --requested-s3-bucket-name="" \
-    --cloudformation-notifications-topic=""
-
-lash init
 if [ $? -ne 0 ]; then
     exit $?
 fi

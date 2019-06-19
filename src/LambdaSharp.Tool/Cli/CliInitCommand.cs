@@ -52,6 +52,8 @@ namespace LambdaSharp.Tool.Cli {
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
                 var quickStartOption = cmd.Option("--quick-start", "(optional) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
+                var coreServicesOption = cmd.Option("--core-services <VALUE>", "(optional) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)", CommandOptionType.SingleValue);
+                var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -62,6 +64,11 @@ namespace LambdaSharp.Tool.Cli {
 
                     // check x-ray settings
                     if(!TryParseEnumOption(enableXRayTracingOption, XRayTracingLevel.Disabled, XRayTracingLevel.RootModule, out var xRayTracingLevel)) {
+
+                        // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                        return;
+                    }
+                    if(!TryParseEnumOption(coreServicesOption, CoreServices.Undefined, CoreServices.Undefined, out var coreServices)) {
 
                         // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
                         return;
@@ -82,7 +89,9 @@ namespace LambdaSharp.Tool.Cli {
                         promptAllParametersOption.HasValue(),
                         promptsAsErrorsOption.HasValue(),
                         xRayTracingLevel,
-                        quickStartOption.HasValue()
+                        quickStartOption.HasValue(),
+                        coreServices,
+                        existingS3BucketNameOption.Value()
                     );
                 });
             });
@@ -100,7 +109,9 @@ namespace LambdaSharp.Tool.Cli {
             bool promptAllParameters,
             bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
-            bool quickStart
+            bool quickStart,
+            CoreServices coreServices,
+            string existingS3BucketName
         ) {
             await PopulateRuntimeSettingsAsync(settings, optional: true);
             if(HasErrors) {
@@ -168,6 +179,16 @@ namespace LambdaSharp.Tool.Cli {
                     bootstrapParameters["CoreServices"] = CoreServices.Disabled.ToString();
                     bootstrapParameters["ExistingDeploymentBucket"] = "";
                 }
+
+                // check if command line options were provided to set template parameters
+                if((coreServices == CoreServices.Enabled) || (coreServices == CoreServices.Disabled)) {
+                    bootstrapParameters["CoreServices"] = coreServices.ToString();
+                }
+                if(existingS3BucketName != null) {
+                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName;
+                }
+
+                // prompt for missing parameters
                 var templateParameters = await PromptMissingTemplateParameters(
                     settings.CfnClient,
                     promptsAsErrors,
