@@ -169,7 +169,7 @@ namespace LambdaSharp.Tool {
             if(moduleOrigin == "%%MODULEORIGIN%%") {
                 LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
             } else {
-                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint}) @ {moduleOrigin}");
+                LogError($"could not find module: {moduleOwner}.{moduleName}@{moduleOrigin} ({versionConstraint})");
             }
             return null;
 
