@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "71B2BA5E5D82ADBC1A63ED1B1F926FCB"
+      "Default": "76788CBDB3DF9CA10FC9DD0C9A7CD9C6"
     }
   },
   "Resources": {
@@ -159,7 +159,7 @@
           }
         ],
         "TemplateURL": {
-          "Fn::Sub": "https://${DeploymentBucketName}.s3.amazonaws.com/%%MODULEORIGIN%%/LambdaSharp/Modules/Twitter.Query/Versions/0.5/cloudformation.json"
+          "Fn::Sub": "https://${DeploymentBucketName}.s3.amazonaws.com/lambdasharp/LambdaSharp/Modules/Twitter.Query/Versions/0.7-WIP/cloudformation.json"
         },
         "TimeoutInMinutes": 15
       }
@@ -1094,7 +1094,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "71B2BA5E5D82ADBC1A63ED1B1F926FCB",
+      "Hash": "76788CBDB3DF9CA10FC9DD0C9A7CD9C6",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1107,9 +1107,9 @@
           "Nested": false
         },
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query@%%MODULEORIGIN%%",
-          "MinVersion": "0.5",
-          "MaxVersion": "0.5",
+          "ModuleInfo": "LambdaSharp.Twitter.Query@lambdasharp",
+          "MinVersion": "0.7-WIP",
+          "MaxVersion": "0.7-WIP",
           "Nested": true
         }
       ],
