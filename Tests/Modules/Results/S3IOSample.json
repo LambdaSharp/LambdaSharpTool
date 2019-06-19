@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "71D4ED282BC59F9438A20308B6E9DEEB"
+      "Default": "22F47BE33FCA1D56B983CB5AB23C5C4E"
     }
   },
   "Resources": {
@@ -308,7 +308,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "71D4ED282BC59F9438A20308B6E9DEEB",
+      "Hash": "22F47BE33FCA1D56B983CB5AB23C5C4E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -321,9 +321,9 @@
           "Nested": false
         },
         {
-          "ModuleInfo": "LambdaSharp.S3.IO@%%MODULEORIGIN%%",
-          "MinVersion": "0.5",
-          "MaxVersion": "0.5",
+          "ModuleInfo": "LambdaSharp.S3.IO@lambdasharp",
+          "MinVersion": "0.7-WIP",
+          "MaxVersion": "0.7-WIP",
           "Nested": false
         }
       ],
