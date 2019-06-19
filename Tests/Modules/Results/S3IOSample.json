@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "22F47BE33FCA1D56B983CB5AB23C5C4E"
+      "Default": "686A2AB097F73DDD16BE005E90B7065A"
     }
   },
   "Resources": {
@@ -132,7 +132,7 @@
         "SourceBucket": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.S3.IO/Assets/{WebsiteContents::PackageName}",
+        "SourceKey": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.S3.IO/Assets/WebsiteContents-DRYRUN.zip",
         "DestinationBucket": {
           "Ref": "WebsiteBucket"
         },
@@ -308,7 +308,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "22F47BE33FCA1D56B983CB5AB23C5C4E",
+      "Hash": "686A2AB097F73DDD16BE005E90B7065A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

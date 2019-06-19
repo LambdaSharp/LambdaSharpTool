@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4F3BD8A65C0FE2DE1924E6C1F6578672"
+      "Default": "934EC9B3610A38ACDFFB6FC1C77F0DAE"
     }
   },
   "Resources": {
@@ -91,7 +91,7 @@
         "SourceBucketName": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "%%MODULEORIGIN%%/Test/Modules/TestModule/Assets/{FilesPackage::PackageName}"
+        "SourceKey": "%%MODULEORIGIN%%/Test/Modules/TestModule/Assets/FilesPackage-DRYRUN.zip"
       }
     },
     "Function": {
@@ -861,7 +861,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "4F3BD8A65C0FE2DE1924E6C1F6578672",
+      "Hash": "934EC9B3610A38ACDFFB6FC1C77F0DAE",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
