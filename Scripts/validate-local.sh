@@ -79,7 +79,7 @@ echo "*** Build Samples ***"
 echo "*********************"
 
 cd $LAMBDASHARP/Samples
-find . -name "Module.yml" | xargs dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- build
+lash build `find . -name "Module.yml"`
 if [ $? -ne 0 ]; then
     exit $?
 fi
@@ -89,7 +89,7 @@ echo "*** Build Demos ***"
 echo "********************"
 
 cd $LAMBDASHARP/Demos
-find . -name "Module.yml" | xargs dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- build
+lash build `find . -name "Module.yml"`
 if [ $? -ne 0 ]; then
     exit $?
 fi
@@ -111,32 +111,6 @@ fi
 
 
 # Deploy all λ# Sample Modules
-echo "*********************"
-echo "*** Build Samples ***"
-echo "*********************"
-
-lash build \
-    Samples/AlexaSample \
-    Samples/ApiSample \
-    Samples/CustomResourceTypeSample \
-    Samples/DynamoDBSample \
-    Samples/FinalizerSample \
-    Samples/KinesisSample \
-    Samples/LambdaLayerSample \
-    Samples/MacroSample \
-    Samples/S3IOSample \
-    Samples/S3SubscriptionSample \
-    Samples/ScheduleSample \
-    Samples/SlackCommandSample \
-    Samples/SnsSample \
-    Samples/SqsSample \
-    Samples/VpcFunctionSample
-
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-
 echo "**********************"
 echo "*** Deploy Samples ***"
 echo "**********************"
