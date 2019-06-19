@@ -79,7 +79,7 @@ echo "*** Build Samples ***"
 echo "*********************"
 
 cd $LAMBDASHARP/Samples
-find . -name "Module.yml" | xargs lash build
+find . -name "Module.yml" | xargs dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- build
 if [ $? -ne 0 ]; then
     exit $?
 fi
@@ -89,7 +89,7 @@ echo "*** Build Demos ***"
 echo "********************"
 
 cd $LAMBDASHARP/Demos
-find . -name "Module.yml" | xargs lash build
+find . -name "Module.yml" | xargs dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- build
 if [ $? -ne 0 ]; then
     exit $?
 fi
