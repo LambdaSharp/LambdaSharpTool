@@ -55,15 +55,18 @@ namespace LambdaSharp.Tool {
         // * Owner.Name@Origin
         // * Owner.Name:*@Bucket
         // * Owner.Name:Version@Bucket
-        // * Owner.Name:Version@%%MODULEORIGIN%%
+        // * Owner.Name:Version@<%MODULE_ORIGIN%>
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/
         // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/cloudformation.json
+
+        //--- Constants ---
+        public const string MODULE_ORIGIN_PLACEHOLDER = "<%MODULE_ORIGIN%>";
 
         //--- Class Fields ---
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleAssetExpression(string filename) => FnSub($"%%MODULEORIGIN%%/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
+        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
         public static string GetModuleVersionsBucketPrefix(string moduleOwner, string moduleName, string moduleOrigin) => $"{moduleOrigin}/{moduleOwner}/Modules/{moduleName}/Versions/";
 
         public static ModuleInfo Parse(string moduleReference) {
@@ -153,7 +156,7 @@ namespace LambdaSharp.Tool {
                 ["ModuleOwner"] = Owner,
                 ["ModuleName"] = Name,
                 ["ModuleVersion"] = Version?.ToString() ?? "<BAD>",
-                ["ModuleOrigin"] = Origin ?? "%%MODULEORIGIN%%"
+                ["ModuleOrigin"] = Origin ?? MODULE_ORIGIN_PLACEHOLDER
             });
         }
 

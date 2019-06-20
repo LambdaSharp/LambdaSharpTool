@@ -461,7 +461,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // update API Gateway Account role if needed
             if(account.CloudwatchRoleArn == null) {
-                Console.WriteLine($"=> Updating API Gateway role to {role.Arn}");
+                Console.WriteLine($"=> Updating API Gateway role");
                 while(true) {
                     try {
                         var response = await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {

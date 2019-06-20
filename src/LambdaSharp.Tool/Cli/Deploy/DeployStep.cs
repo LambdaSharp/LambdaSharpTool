@@ -21,11 +21,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.CloudFormation;
-using Amazon.CloudFormation.Model;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -36,15 +33,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class DeployStep : AModelProcessor {
-
-        //--- Types ---
-        private class DependencyRecord {
-
-            //--- Properties ---
-            public string DependencyOwner { get; set; }
-            public ModuleManifest Manifest { get; set; }
-            public ModuleInfo ModuleInfo { get; set; }
-        }
 
 
         //--- Fields ---
@@ -124,7 +112,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // deploy module
             if(dryRun == null) {
-                var stackName = ToStackName(manifest.GetFullName(), instanceName);
+                var stackName = Settings.GetStackName(manifest.GetFullName(), instanceName);
 
                 // check version of previously deployed module
                 CloudFormationStack existing = null;
@@ -176,7 +164,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // discover module dependencies and prompt for missing parameters
-                var dependencies = await DiscoverDependenciesAsync(manifest);
+                var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true);
                 if(HasErrors) {
                     return false;
                 }
@@ -194,30 +182,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
 
-                // TODO: this should be done at publishing as well!
-
-                // copy all dependencies to deployment bucket that are missing or have a pre-release version
-                foreach(var dependency in dependencies
-                    .Append((Manifest: manifest, ModuleInfo: moduleInfo))
-                    .Where(dependency => dependency.ModuleInfo.Origin != Settings.DeploymentBucketName)
-                ) {
-
-                    // copy check-summed module assets (guaranteed immutable)
-                    foreach(var asset in dependency.Manifest.Assets) {
-                        await CopyS3Object(dependency.ModuleInfo.Origin, asset);
-                    }
-                    await CopyS3Object(dependency.ModuleInfo.Origin, dependency.Manifest.GetVersionedTemplatePath());
-
-                    // copy cloudformation template
-                    await CopyS3Object(dependency.ModuleInfo.Origin, dependency.ModuleInfo.TemplatePath, replace: dependency.ModuleInfo.Version.IsPreRelease);
-                }
-
                 // deploy module dependencies
                 foreach(var dependency in dependencies) {
                     if(!await new ModelUpdater(Settings, dependency.ModuleInfo.ToModuleReference()).DeployChangeSetAsync(
                         dependency.Manifest,
                         dependency.ModuleInfo,
-                        ToStackName(dependency.Manifest.GetFullName()),
+                        Settings.GetStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
                         dependenciesParameters[dependency.Manifest.GetFullName()]
@@ -237,28 +207,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 );
             }
             return true;
-
-            // local functions
-            async Task CopyS3Object(string sourceBucket, string key, bool replace = false) {
-
-                // check if object must be copied, because it's a pre-release or is missing
-                var found = false;
-                try {
-                    await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                        BucketName = Settings.DeploymentBucketName,
-                        Key = key
-                    });
-                    found = true;
-                } catch { }
-                if(!found || replace) {
-                    await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
-                        SourceBucket = sourceBucket,
-                        SourceKey = key,
-                        DestinationBucket = Settings.DeploymentBucketName,
-                        DestinationKey = key
-                    });
-                }
-            }
         }
 
         private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
@@ -289,135 +237,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 return (false, existing.Stack);
             }
             return (true, existing.Stack);
-        }
-
-        private async Task<IEnumerable<(ModuleManifest Manifest, ModuleInfo ModuleInfo)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
-            var deployments = new List<DependencyRecord>();
-            var existing = new List<DependencyRecord>();
-            var inProgress = new List<DependencyRecord>();
-
-            // create a topological sort of dependencies
-            await Recurse(manifest);
-            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleInfo)).ToList();
-
-            // local functions
-            async Task Recurse(ModuleManifest current) {
-                foreach(var dependency in current.Dependencies) {
-
-                    // check if we have already discovered this dependency
-                    if(IsDependencyInList(current.GetFullName(), dependency, existing) || IsDependencyInList(current.GetFullName(), dependency, deployments))  {
-                        continue;
-                    }
-
-                    // check if this dependency needs to be deployed
-                    var deployedModuleInfo = await FindExistingDependencyAsync(dependency);
-                    if(deployedModuleInfo != null) {
-                        existing.Add(new DependencyRecord {
-                            ModuleInfo = deployedModuleInfo
-                        });
-                    } else if(inProgress.Any(d => d.Manifest.GetModuleInfo().FullName == dependency.ModuleInfo.FullName)) {
-
-                        // circular dependency detected
-                        LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
-                        return;
-                    } else {
-
-                        // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await _loader.LocateAsync(dependency.ModuleInfo.Owner, dependency.ModuleInfo.Name, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin);
-                        if(dependencyModuleLocation == null) {
-
-                            // error has already been reported
-                            continue;
-                        }
-
-                        // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyModuleLocation);
-                        if(dependencyManifest == null) {
-
-                            // error has already been reported
-                            continue;
-                        }
-                        var nestedDependency = new DependencyRecord {
-                            DependencyOwner = current.Module,
-                            Manifest = dependencyManifest,
-                            ModuleInfo = dependencyModuleLocation.ModuleInfo
-                        };
-
-                        // keep marker for in-progress resolutions so that circular errors can be detected
-                        inProgress.Add(nestedDependency);
-                        await Recurse(dependencyManifest);
-                        inProgress.Remove(nestedDependency);
-
-                        // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to module reference: {dependencyModuleLocation}");
-                        deployments.Add(nestedDependency);
-                    }
-                }
-            }
-        }
-
-        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
-            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
-            if(deployedModule == null) {
-                return false;
-            }
-            var deployedOwner = (deployedModule.DependencyOwner == null)
-                ? "existing module"
-                : $"module '{deployedModule.DependencyOwner}'";
-
-            // confirm that the dependency version is in a valid range
-            var deployedVersion = deployedModule.ModuleInfo.Version;
-            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
-                LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{fullName}' requires v{dependency.MinVersion}..v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
-            }
-            return true;
-        }
-
-        private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
-            var existing = await Settings.CfnClient.GetStackAsync(ToStackName(dependency.ModuleInfo.FullName), LogError);
-            if(!existing.Success || (existing.Stack == null)) {
-                return null;
-            }
-            var deployedOutputs = existing.Stack.Outputs;
-            var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-            var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
-            if(!success) {
-                LogWarn($"unable to retrieve information of the deployed dependent module");
-                return null;
-            }
-
-            // confirm that the module name matches
-            if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
-                LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
-                return deployedModuleInfo;
-            }
-
-            // confirm that the module version is in a valid range
-            if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
-                if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                }
-            } else if(dependency.MaxVersion != null) {
-                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
-                if(deployedToMinVersionComparison >= 0) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                } else if(deployedToMinVersionComparison == null) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                }
-            } else if(dependency.MinVersion != null) {
-                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
-                if(deployedToMinVersionComparison < 0) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
-                    return deployedModuleInfo;
-                } else if(deployedToMinVersionComparison == null) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
-                    return deployedModuleInfo;
-                }
-            }
-            return deployedModuleInfo;
         }
 
         private List<CloudFormationParameter> PromptModuleParameters(
@@ -513,8 +332,5 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 return true;
             }
         }
-
-        private string ToStackName(string moduleName, string instanceName = null)
-            => $"{Settings.TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
-    }
+   }
 }

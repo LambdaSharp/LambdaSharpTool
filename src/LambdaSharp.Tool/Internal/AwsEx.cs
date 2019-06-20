@@ -31,6 +31,7 @@ using Amazon.SimpleSystemsManagement.Model;
 namespace LambdaSharp.Tool.Internal {
 
     public delegate void LogErrorDelegate(string messages, Exception exception);
+    public delegate void LogWarnDelegate(string messages);
 
     internal static class AwsEx {
 

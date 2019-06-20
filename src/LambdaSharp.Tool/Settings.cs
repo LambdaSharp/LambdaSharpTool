@@ -184,5 +184,7 @@ namespace LambdaSharp.Tool {
                     Value = AwsUserArn.Split(':').Last()
                 }
             };
-    }
+
+        public string GetStackName(string moduleName, string instanceName = null) => $"{TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
+   }
 }

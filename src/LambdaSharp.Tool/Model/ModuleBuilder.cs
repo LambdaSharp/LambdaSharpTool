@@ -169,7 +169,7 @@ namespace LambdaSharp.Tool.Model {
             => AddDependency(moduleInfo.FullName, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin, nested);
 
         public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin, bool nested) {
-            moduleOrigin = moduleOrigin ?? "%%MODULEORIGIN%%";
+            moduleOrigin = moduleOrigin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER;
 
             // check if a dependency was already registered
             ModuleDependency dependency;

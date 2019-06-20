@@ -26,7 +26,6 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
@@ -39,6 +38,15 @@ using Newtonsoft.Json.Linq;
 namespace LambdaSharp.Tool {
 
     public class ModelManifestLoader : AModelProcessor {
+
+        //--- Types ---
+        private class DependencyRecord {
+
+            //--- Properties ---
+            public string DependencyOwner { get; set; }
+            public ModuleManifest Manifest { get; set; }
+            public ModuleInfo ModuleInfo { get; set; }
+        }
 
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
@@ -166,7 +174,7 @@ namespace LambdaSharp.Tool {
             } else if(moduleMaxVersion != null) {
                 versionConstraint = $"v{moduleMaxVersion} or earlier";
             }
-            if(moduleOrigin == "%%MODULEORIGIN%%") {
+            if(moduleOrigin == ModuleInfo.MODULE_ORIGIN_PLACEHOLDER) {
                 LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
             } else {
                 LogError($"could not find module: {moduleOwner}.{moduleName}@{moduleOrigin} ({versionConstraint})");
@@ -175,7 +183,9 @@ namespace LambdaSharp.Tool {
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
-                if(bucketName == "%%MODULEORIGIN%%") {
+
+                // check if bucket name is the origin placeholder
+                if(bucketName == ModuleInfo.MODULE_ORIGIN_PLACEHOLDER) {
                     bucketName = Settings.DeploymentBucketName;
                 }
 
@@ -221,6 +231,137 @@ namespace LambdaSharp.Tool {
                 }
                 return latest;
             }
+        }
+
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleInfo ModuleInfo)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting) {
+            var deployments = new List<DependencyRecord>();
+            var existing = new List<DependencyRecord>();
+            var inProgress = new List<DependencyRecord>();
+
+            // create a topological sort of dependencies
+            await Recurse(manifest);
+            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleInfo)).ToList();
+
+            // local functions
+            async Task Recurse(ModuleManifest current) {
+                foreach(var dependency in current.Dependencies) {
+
+                    // check if we have already discovered this dependency
+                    if(IsDependencyInList(current.GetFullName(), dependency, existing) || IsDependencyInList(current.GetFullName(), dependency, deployments))  {
+                        continue;
+                    }
+
+                    // check if this dependency needs to be deployed
+                    var deployedModuleInfo = checkExisting
+                        ? await FindExistingDependencyAsync(dependency)
+                        : null;
+                    if(deployedModuleInfo != null) {
+                        existing.Add(new DependencyRecord {
+                            ModuleInfo = deployedModuleInfo
+                        });
+                    } else if(inProgress.Any(d => d.Manifest.GetModuleInfo().FullName == dependency.ModuleInfo.FullName)) {
+
+                        // circular dependency detected
+                        LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
+                        return;
+                    } else {
+
+                        // resolve dependencies for dependency module
+                        var dependencyModuleLocation = await LocateAsync(dependency.ModuleInfo.Owner, dependency.ModuleInfo.Name, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin);
+                        if(dependencyModuleLocation == null) {
+
+                            // error has already been reported
+                            continue;
+                        }
+
+                        // load manifest of dependency and add its dependencies
+                        var dependencyManifest = await LoadFromS3Async(dependencyModuleLocation);
+                        if(dependencyManifest == null) {
+
+                            // error has already been reported
+                            continue;
+                        }
+                        var nestedDependency = new DependencyRecord {
+                            DependencyOwner = current.Module,
+                            Manifest = dependencyManifest,
+                            ModuleInfo = dependencyModuleLocation.ModuleInfo
+                        };
+
+                        // keep marker for in-progress resolutions so that circular errors can be detected
+                        inProgress.Add(nestedDependency);
+                        await Recurse(dependencyManifest);
+                        inProgress.Remove(nestedDependency);
+
+                        // append dependency now that all nested dependencies have been resolved
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo.ToModuleReference()}");
+                        deployments.Add(nestedDependency);
+                    }
+                }
+            }
+        }
+
+        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
+            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
+            if(deployedModule == null) {
+                return false;
+            }
+            var deployedOwner = (deployedModule.DependencyOwner == null)
+                ? "existing module"
+                : $"module '{deployedModule.DependencyOwner}'";
+
+            // confirm that the dependency version is in a valid range
+            var deployedVersion = deployedModule.ModuleInfo.Version;
+            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
+                LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{fullName}' requires v{dependency.MinVersion}..v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+            }
+            return true;
+        }
+
+        private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
+            var existing = await Settings.CfnClient.GetStackAsync(Settings.GetStackName(dependency.ModuleInfo.FullName), LogError);
+            if(!existing.Success || (existing.Stack == null)) {
+                return null;
+            }
+            var deployedOutputs = existing.Stack.Outputs;
+            var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+            var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
+            if(!success) {
+                LogWarn($"unable to retrieve information of the deployed dependent module");
+                return null;
+            }
+
+            // confirm that the module name matches
+            if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
+                LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
+                return deployedModuleInfo;
+            }
+
+            // confirm that the module version is in a valid range
+            if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
+                if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                }
+            } else if(dependency.MaxVersion != null) {
+                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
+                if(deployedToMinVersionComparison >= 0) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                } else if(deployedToMinVersionComparison == null) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
+                    return deployedModuleInfo;
+                }
+            } else if(dependency.MinVersion != null) {
+                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
+                if(deployedToMinVersionComparison < 0) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
+                    return deployedModuleInfo;
+                } else if(deployedToMinVersionComparison == null) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
+                    return deployedModuleInfo;
+                }
+            }
+            return deployedModuleInfo;
         }
 
         private async Task<string> GetS3ObjectContents(string bucketName, string key) {
