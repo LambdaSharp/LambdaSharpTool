@@ -22,14 +22,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Core;
 using LambdaSharp.ApiGateway.Internal;
-using LambdaSharp.ConfigSource;
 using LambdaSharp.Logger;
 
 namespace LambdaSharp.ApiGateway {
