@@ -21,11 +21,9 @@
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Text;
@@ -292,6 +290,7 @@ namespace LambdaSharp {
         /// <returns>The task object representing the asynchronous operation.</returns>
         public async Task<Stream> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
             CurrentContext = context;
+            Exception foregroundException = null;
             try {
 
                 // function startup
@@ -340,9 +339,13 @@ namespace LambdaSharp {
                     throw;
                 }
                 return result;
+            } catch(Exception e) {
+                foregroundException = e;
+                throw;
             } finally {
+                List<Exception> exceptions = null;
 
-                // wait for pending tasks before returning from lambda invocation
+                // wait for pending background tasks before returning from lambda invocation
                 while(true) {
 
                     // check if any pending tasks exist
@@ -362,6 +365,14 @@ namespace LambdaSharp {
                         await Task.WhenAll(pendingTasksCopy);
                     } catch(AggregateException e) {
                         foreach(var innerException in e.Flatten().InnerExceptions) {
+
+                            // capture background exception
+                            if(exceptions == null) {
+                                exceptions = new List<Exception>();
+                            }
+                            exceptions.Add(innerException);
+
+                            // report background exception
                             if(innerException is LambdaRetriableException) {
                                 LogErrorAsWarning(innerException);
                             } else {
@@ -372,9 +383,36 @@ namespace LambdaSharp {
                 }
 
                 // clear function state
+                LogInfo($"invocation completed (reported errors: {_reportedExceptions.Count}:N0)");
                 _reportedExceptions.Clear();
                 CurrentContext = null;
-                LogInfo("invocation completed");
+
+                // NOTE (2019-06-20, bjorg): we can let the normal control flow exit the finally statement when no background exceptions occur;
+                //  if a foreground exception has occurred, it will the thrown automatically at the end of the finally statement;
+                //  however, if background exceptions occurred, we need to combine them with the foreground exception, so that all exceptions
+                //  (forground and background) are reported on.
+
+                // check if foreground exception needs to be added to background exceptions
+                if(exceptions != null) {
+
+                    // check if we need to add a foreground exception
+                    if(foregroundException != null) {
+                        exceptions.Add(foregroundException);
+                    }
+
+                    // check if an aggregate exception needs to be created
+                    switch(exceptions.Count) {
+                    case 1:
+
+                        // rethrow the lonely exception
+                        ExceptionDispatchInfo.Capture(exceptions[0]).Throw();
+                        break;
+                    default:
+
+                        // multiple exceptions occurred, rethrow them as an aggregate exception
+                        throw new AggregateException(exceptions);
+                    }
+                }
             }
         }
 
