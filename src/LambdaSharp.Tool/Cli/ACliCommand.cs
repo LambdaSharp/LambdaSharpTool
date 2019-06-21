@@ -23,7 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.APIGateway;
@@ -51,10 +50,6 @@ namespace LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
 
-        //--- Class Fields ---
-        private static string PromptColor = AnsiTerminal.Cyan;
-        private static string LabelColor = AnsiTerminal.BrightCyan;
-
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
@@ -69,69 +64,13 @@ namespace LambdaSharp.Tool.Cli {
             return result;
         }
 
-        public static string PromptString(string message, string defaultValue = null)
-            => PromptString(message, defaultValue, pattern: null, constraintDescription: null);
-
-        public static string PromptString(string message, string defaultValue, string pattern, string constraintDescription) {
-            var prompt = $"|=> {message}: ";
-            if(!string.IsNullOrEmpty(defaultValue)) {
-                prompt += $"[{defaultValue}] ";
-            }
-        again:
-            WriteAnsi(prompt, PromptColor);
-            SetCursorVisible(true);
-            var result = Console.ReadLine();
-            SetCursorVisible(false);
-            if((pattern != null) && !Regex.IsMatch(result, pattern)) {
-                WriteAnsiLine(constraintDescription ?? $"Value must match regular expression pattern: {pattern}", PromptColor);
-                goto again;
-            }
-            return string.IsNullOrEmpty(result)
-                ? defaultValue
-                : result;
-
-            // local functions
-            void SetCursorVisible(bool visible) {
-                try {
-                    Console.CursorVisible = visible;
-                } catch { }
-            }
-        }
-
-        public static void PromptText(string message) => WriteAnsiLine($"*** {message} ***", LabelColor);
-
-        public static string PromptChoice(string message, IList<string> choices) {
-            WriteAnsiLine($"{message} (multiple choice)", PromptColor);
-            var choiceCount = choices.Count;
-            for(var i = 0; i < choiceCount; ++i) {
-                WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
-            }
-            while(true) {
-                var enteredValue = PromptString($"Enter a choice (1-{choiceCount})", pattern: null, constraintDescription: null, defaultValue: null);
-                if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
-                    return choices[choice - 1];
-                }
-            }
-        }
-
-        private static void WriteAnsiLine(string text, string ansiColor) {
-            if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
-            } else {
-                Console.WriteLine(text);
-            }
-        }
-
-        private static void WriteAnsi(string text, string ansiColor) {
-            if(Settings.UseAnsiConsole) {
-                Console.Write($"{ansiColor}{text}{AnsiTerminal.Reset}");
-            } else {
-                Console.Write(text);
-            }
-        }
-
         //--- Methods ---
-        protected async Task<AwsAccountInfo> InitializeAwsProfile(string awsProfile, string awsAccountId = null, string awsRegion = null, string awsUserArn = null) {
+        protected async Task<AwsAccountInfo> InitializeAwsProfile(
+            string awsProfile,
+            string awsAccountId = null,
+            string awsRegion = null,
+            string awsUserArn = null
+        ) {
 
             // initialize AWS profile
             if(awsProfile != null) {
@@ -190,6 +129,7 @@ namespace LambdaSharp.Tool.Cli {
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
+            var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
@@ -264,7 +204,8 @@ namespace LambdaSharp.Tool.Cli {
                         S3Client = s3Client,
                         ApiGatewayClient = apiGatewayClient,
                         IamClient = iamClient,
-                        LambdaClient = lambdaClient
+                        LambdaClient = lambdaClient,
+                        PromptsAsErrors = promptsAsErrorsOption.HasValue()
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
                     LogError("AWS profile configuration is missing a region specifier");

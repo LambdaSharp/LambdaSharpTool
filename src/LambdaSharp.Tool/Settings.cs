@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
@@ -74,6 +75,8 @@ namespace LambdaSharp.Tool {
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static bool UseAnsiConsole = true;
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
+        private static string PromptColor = AnsiTerminal.Cyan;
+        private static string LabelColor = AnsiTerminal.BrightCyan;
 
         //--- Class Properties ---
         public static int ErrorCount => _errors.Count(entry => entry.Error);
@@ -142,6 +145,22 @@ namespace LambdaSharp.Tool {
         public static void LogError(Exception exception)
             => LogError($"internal error: {exception.Message}", exception);
 
+        private static void WriteAnsiLine(string text, string ansiColor) {
+            if(UseAnsiConsole) {
+                Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine(text);
+            }
+        }
+
+        private static void WriteAnsi(string text, string ansiColor) {
+            if(UseAnsiConsole) {
+                Console.Write($"{ansiColor}{text}{AnsiTerminal.Reset}");
+            } else {
+                Console.Write(text);
+            }
+        }
+
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
         public string Tier { get; set; }
@@ -163,6 +182,7 @@ namespace LambdaSharp.Tool {
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }
+        public bool PromptsAsErrors { get; set; }
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
@@ -185,6 +205,60 @@ namespace LambdaSharp.Tool {
                 }
             };
 
-        public string GetStackName(string moduleName, string instanceName = null) => $"{TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
-   }
+        public string GetStackName(string moduleName, string instanceName = null)
+            => $"{TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
+
+        public string PromptString(string message, string defaultValue = null)
+            => PromptString(message, defaultValue, pattern: null, constraintDescription: null);
+
+        public string PromptString(string message, string defaultValue, string pattern, string constraintDescription) {
+            if(PromptsAsErrors) {
+                LogError($"prompt was attempted for \"{message}\"");
+                return defaultValue;
+            }
+            var prompt = $"|=> {message}: ";
+            if(!string.IsNullOrEmpty(defaultValue)) {
+                prompt += $"[{defaultValue}] ";
+            }
+        again:
+            WriteAnsi(prompt, PromptColor);
+            SetCursorVisible(true);
+            var result = Console.ReadLine();
+            SetCursorVisible(false);
+            if((pattern != null) && !Regex.IsMatch(result, pattern)) {
+                WriteAnsiLine(constraintDescription ?? $"Value must match regular expression pattern: {pattern}", PromptColor);
+                goto again;
+            }
+            return string.IsNullOrEmpty(result)
+                ? defaultValue
+                : result;
+
+            // local functions
+            void SetCursorVisible(bool visible) {
+                try {
+                    Console.CursorVisible = visible;
+                } catch { }
+            }
+        }
+
+        public void PromptLabel(string message) => WriteAnsiLine($"*** {message} ***", LabelColor);
+
+        public string PromptChoice(string message, IList<string> choices) {
+            if(PromptsAsErrors) {
+                LogError($"prompt was attempted for \"{message}\"");
+                return choices.FirstOrDefault();
+            }
+            WriteAnsiLine($"{message} (multiple choice)", PromptColor);
+            var choiceCount = choices.Count;
+            for(var i = 0; i < choiceCount; ++i) {
+                WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
+            }
+            while(true) {
+                var enteredValue = PromptString($"Enter a choice (1-{choiceCount})", pattern: null, constraintDescription: null, defaultValue: null);
+                if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                    return choices[choice - 1];
+                }
+            }
+        }
+    }
 }

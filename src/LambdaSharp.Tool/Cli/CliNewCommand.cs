@@ -54,6 +54,7 @@ namespace LambdaSharp.Tool.Cli {
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        var settings = new Settings { };
 
                         // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
                         var functionMemory = 256;
@@ -62,7 +63,7 @@ namespace LambdaSharp.Tool.Cli {
                         // get function name
                         var functionName = nameArgument.Value;
                         while(string.IsNullOrEmpty(functionName)) {
-                            functionName = PromptString("Enter the function name");
+                            functionName = settings.PromptString("Enter the function name");
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
@@ -88,11 +89,12 @@ namespace LambdaSharp.Tool.Cli {
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        var settings = new Settings { };
 
                         // get the module name
                         var moduleName = nameArgument.Value;
                         while(string.IsNullOrEmpty(moduleName)) {
-                            moduleName = PromptString("Enter the module name");
+                            moduleName = settings.PromptString("Enter the module name");
                         }
 
                         // prepend default owner string
@@ -116,17 +118,18 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        var settings = new Settings { };
 
                         // get the resource name
                         var name = nameArgument.Value;
                         while(string.IsNullOrEmpty(name)) {
-                            name = PromptString("Enter the resource name");
+                            name = settings.PromptString("Enter the resource name");
                         }
 
                         // get the resource type
                         var type = typeArgument.Value;
                         while(string.IsNullOrEmpty(type)) {
-                            type = PromptString("Enter the resource type");
+                            type = settings.PromptString("Enter the resource type");
                         }
                         NewResource(
                             moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),

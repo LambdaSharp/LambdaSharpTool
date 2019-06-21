@@ -290,7 +290,6 @@ namespace LambdaSharp.Tool.Cli {
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
@@ -421,7 +420,6 @@ namespace LambdaSharp.Tool.Cli {
                                 parameters,
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
-                                promptsAsErrorsOption.HasValue(),
                                 xRayTracingLevel,
                                 deployOnlyIfExists: false
                             )) {
@@ -485,7 +483,6 @@ namespace LambdaSharp.Tool.Cli {
             Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
-            bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
@@ -507,7 +504,6 @@ namespace LambdaSharp.Tool.Cli {
                     parameters,
                     forceDeploy,
                     promptAllParameters,
-                    promptsAsErrors,
                     xRayTracingLevel,
                     deployOnlyIfExists
                 );

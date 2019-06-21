@@ -50,9 +50,9 @@ namespace LambdaSharp.Tool.Cli {
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
+                // TODO: set individual parameters
                 var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
                 var quickStartOption = cmd.Option("--quick-start", "(optional) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
                 var coreServicesOption = cmd.Option("--core-services <VALUE>", "(optional) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)", CommandOptionType.SingleValue);
                 var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
@@ -89,7 +89,6 @@ namespace LambdaSharp.Tool.Cli {
                         parametersFileOption.Value(),
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
-                        promptsAsErrorsOption.HasValue(),
                         xRayTracingLevel,
                         quickStartOption.HasValue(),
                         coreServices,
@@ -109,7 +108,6 @@ namespace LambdaSharp.Tool.Cli {
             string parametersFilename,
             bool forcePublish,
             bool promptAllParameters,
-            bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
             bool quickStart,
             CoreServices coreServices,
@@ -192,8 +190,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // prompt for missing parameters
                 var templateParameters = await PromptMissingTemplateParameters(
-                    settings.CfnClient,
-                    promptsAsErrors,
+                    settings,
                     stackName,
                     bootstrapParameters,
                     template
@@ -339,7 +336,6 @@ namespace LambdaSharp.Tool.Cli {
                     parameters: parameters,
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
-                    promptsAsErrors: promptsAsErrors,
                     xRayTracingLevel: xRayTracingLevel,
                     deployOnlyIfExists: !isLambdaSharpCoreModule
                 )) {
@@ -355,8 +351,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         private async Task<List<Parameter>> PromptMissingTemplateParameters(
-            IAmazonCloudFormation cfnClient,
-            bool promptsAsErrors,
+            Settings settings,
             string stackName,
             IDictionary<string, string> providedParameters,
             string templateBody
@@ -365,7 +360,7 @@ namespace LambdaSharp.Tool.Cli {
             // get summary of new template
             GetTemplateSummaryResponse templateSummary;
             try {
-                templateSummary = await cfnClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
+                templateSummary = await settings.CfnClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
                     TemplateBody = templateBody
                 });
             } catch(AmazonCloudFormationException e) {
@@ -377,7 +372,7 @@ namespace LambdaSharp.Tool.Cli {
             Stack existing = null;
             if(stackName != null) {
                 try {
-                    existing = (await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    existing = (await settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                         StackName = stackName
                     })).Stacks.First();
                 } catch(AmazonCloudFormationException) { }
@@ -408,17 +403,11 @@ namespace LambdaSharp.Tool.Cli {
 
             // ask user for missing values
             if(missingParameters.Any()) {
-                if(promptsAsErrors) {
-                    foreach(var missingParameter in missingParameters) {
-                        LogError($"template requires value for parameter '{missingParameter.ParameterKey}'");
-                    }
-                    return null;
-                }
                 Console.WriteLine();
                 Console.WriteLine($"Configuring {templateSummary.Description} Parameters");
                 foreach(var missingParameter in missingParameters) {
                     if(missingParameter.ParameterConstraints?.AllowedValues.Any() ?? false) {
-                        var enteredValue = PromptChoice(
+                        var enteredValue = settings.PromptChoice(
                             $"{missingParameter.Description ?? missingParameter.ParameterKey}",
                             missingParameter.ParameterConstraints.AllowedValues
                         );
@@ -429,7 +418,7 @@ namespace LambdaSharp.Tool.Cli {
                     } else {
 
                         // TODO: add pattern and constraint description
-                        var enteredValue = PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
+                        var enteredValue = settings.PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
                         result.Add(new Parameter {
                             ParameterKey = missingParameter.ParameterKey,
                             ParameterValue = enteredValue

@@ -53,7 +53,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
-            bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
@@ -135,7 +134,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // prompt for missing parameters
-                var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters, promptsAsErrors);
+                var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters);
                 if(HasErrors) {
                     return false;
                 }
@@ -173,8 +172,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         ModuleFullName = dependency.Manifest.GetFullName(),
                         Parameters = PromptModuleParameters(
                             dependency.Manifest,
-                            promptAll: promptAllParameters,
-                            promptsAsErrors: promptsAsErrors
+                            promptAll: promptAllParameters
                         )
                     })
                     .ToDictionary(t => t.ModuleFullName, t => t.Parameters);
@@ -243,8 +241,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             ModuleManifest manifest,
             CloudFormationStack existing = null,
             Dictionary<string, string> parameters = null,
-            bool promptAll = false,
-            bool promptsAsErrors = false
+            bool promptAll = false
         ) {
             var stackParameters = new Dictionary<string, CloudFormationParameter>();
 
@@ -279,7 +276,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
                     Console.WriteLine();
-                    ACliCommand.PromptText(parameterGroup.Title.ToUpper());
+                    Settings.PromptLabel(parameterGroup.Title.ToUpper());
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
@@ -291,13 +288,13 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             if(parameter.Label != null) {
                                 message += $": {parameter.Label}";
                             }
-                            enteredValue = ACliCommand.PromptChoice(message, parameter.AllowedValues);
+                            enteredValue = Settings.PromptChoice(message, parameter.AllowedValues);
                         } else {
                             var message = $"{parameter.Name} [{parameter.Type}]";
                             if(parameter.Label != null) {
                                 message += $": {parameter.Label}";
                             }
-                            enteredValue = ACliCommand.PromptString(message, parameter.Default, parameter.AllowedPattern, parameter.ConstraintDescription) ?? "";
+                            enteredValue = Settings.PromptString(message, parameter.Default, parameter.AllowedPattern, parameter.ConstraintDescription) ?? "";
                         }
                         stackParameters[parameter.Name] = new CloudFormationParameter {
                             ParameterKey = parameter.Name,
@@ -325,7 +322,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     // no prompt since parameter has a default value
                     return false;
                 }
-                if(promptsAsErrors) {
+                if(Settings.PromptsAsErrors) {
                     LogError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
                     return false;
                 }
