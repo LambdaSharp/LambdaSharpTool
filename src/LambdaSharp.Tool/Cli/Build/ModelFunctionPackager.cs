@@ -268,29 +268,42 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(!noAssemblyValidation && function.HasAssemblyValidation) {
                 var includes = csproj.Element("Project")
                     ?.Descendants("PackageReference")
-                    .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false);
-                if(includes != null) {
-                    foreach(var include in includes) {
-                        var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
-                        var library = include.Attribute("Include").Value;
-                        var libraryVersionText = include.Attribute("Version")?.Value;
-                        if(libraryVersionText == null) {
-                            LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
-                        } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
-                            if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
-                                LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                            } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
+                    .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false)
+                    ?? Enumerable.Empty<XElement>();
+                foreach(var include in includes) {
+                    var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
+                    var library = include.Attribute("Include").Value;
+                    var libraryVersionText = include.Attribute("Version")?.Value;
+                    if(libraryVersionText == null) {
+                        LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
+                    } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
+                        if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
+                            LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                        } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
+
+                            // check if we're compiling a conditional package reference in contributor mode
+                            if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
+
+                                // show error as warning instead since this package reference will not be used anyway
+                                LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                            } else {
                                 LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
-                        } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
-                            LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                        } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
+                        }
+                    } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
+                        LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                    } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
+
+                        // check if we're compiling a conditional package reference in contributor mode
+                        if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
+                            LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                        } else {
                             LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
-                    if(Settings.HasErrors) {
-                        return;
-                    }
+                }
+                if(Settings.HasErrors) {
+                    return;
                 }
             }
             if(noCompile) {
