@@ -51,32 +51,9 @@ namespace LambdaSharp.Tool.Cli {
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
-                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "(optional) Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
-                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "(optional) Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
                         Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-
-                        // validate project vs. nuget reference options
-                        bool useProjectReference;
-                        if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
-                            LogError("cannot use --use-project-reference and --use-nuget-reference at the same time");
-                            return;
-                        }
-                        if(useProjectReferenceOption.HasValue()) {
-                            if(lambdasharpDirectory == null) {
-                                LogError("missing LAMBDASHARP environment variable");
-                                return;
-                            }
-                            useProjectReference = true;
-                        } else if(useNugetReferenceOption.HasValue()) {
-                            useProjectReference = false;
-                        } else if(lambdasharpDirectory != null) {
-                            useProjectReference = true;
-                        } else {
-                            useProjectReference = false;
-                        }
 
                         // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
                         var functionMemory = 256;
@@ -89,11 +66,9 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
-                            lambdasharpDirectory,
                             functionName,
                             namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
-                            useProjectReference,
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",
@@ -192,11 +167,9 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewFunction(
-            string lambdasharpDirectory,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             string language,
@@ -237,11 +210,9 @@ namespace LambdaSharp.Tool.Cli {
             switch(language) {
             case "csharp":
                 NewCSharpFunction(
-                    lambdasharpDirectory,
                     functionName,
                     rootNamespace,
                     framework,
-                    useProjectReference,
                     workingDirectory,
                     moduleFile,
                     functionMemory,
@@ -251,11 +222,9 @@ namespace LambdaSharp.Tool.Cli {
                 break;
             case "javascript":
                 NewJavascriptFunction(
-                    lambdasharpDirectory,
                     functionName,
                     rootNamespace,
                     framework,
-                    useProjectReference,
                     workingDirectory,
                     moduleFile,
                     functionMemory,
@@ -275,11 +244,9 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewCSharpFunction(
-            string lambdasharpDirectory,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             int functionMemory,
@@ -292,20 +259,12 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_PROJECT"] = useProjectReference
-                    ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "LambdaSharp", "LambdaSharp.csproj"))
-                    : "(not used)",
 
                 // TODO: this should NOT be a wildcard
                 ["LAMBDASHARP_VERSION"] = Version.GetWildcardVersion()
             };
             try {
-                var projectContents = ReadResource(
-                    useProjectReference
-                        ? "NewCSharpFunctionProjectLocal.xml"
-                        : "NewCSharpFunctionProjectNuget.xml",
-                    substitutions
-                );
+                var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
@@ -326,11 +285,9 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewJavascriptFunction(
-            string lambdasharpDirectory,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             int functionMemory,
