@@ -194,7 +194,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private void AddItem(AModuleItem item) {
-            var logicalId = item.LogicalId;
             switch(item) {
             case VariableItem _:
             case PackageItem _:
@@ -214,7 +213,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ParameterItem parameterItem:
-                _stack.Add(logicalId, parameterItem.Parameter);
+                _stack.Add(parameterItem.LogicalId, parameterItem.Parameter);
                 if(item.IsPublic) {
                     AddExport(item);
                 }
