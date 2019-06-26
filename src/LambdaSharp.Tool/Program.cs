@@ -21,11 +21,9 @@
 
 using System;
 using System.Diagnostics;
-using System.Linq;
-using Amazon.CloudFormation.Model;
-using Amazon.S3.Transfer;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli;
+using LambdaSharp.Tool.Cli.Tier;
 
 namespace LambdaSharp.Tool {
 
@@ -67,6 +65,7 @@ namespace LambdaSharp.Tool {
 
             // register commands
             new CliInitCommand().Register(app);
+            new CliTierCommand().Register(app);
             new CliInfoCommand().Register(app);
             new CliListCommand().Register(app);
             new CliNewCommand().Register(app);

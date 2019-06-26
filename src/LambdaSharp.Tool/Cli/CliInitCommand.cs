@@ -35,6 +35,9 @@ namespace LambdaSharp.Tool.Cli {
 
     public class CliInitCommand : ACliCommand {
 
+        //--- Constants ---
+        private const string DEFAULT_API_GATEWAY_ROLE = "LambdaSharp-ApiGatewayRole";
+
         //--- Methods --
         public void Register(CommandLineApplication app) {
             app.Command("init", cmd => {
@@ -486,22 +489,29 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             async Task<Role> GetOrCreateRole(string roleName) {
-                try {
 
-                    // attempt to resolve the given role by name
+                // attempt to resolve the given role by name
+            again:
+                try {
                     return (await settings.IamClient.GetRoleAsync(new GetRoleRequest {
                         RoleName = roleName
                     })).Role;
                 } catch(NoSuchEntityException) {
 
+                    // check if we looked up a custom name; if so, we need to fallback to the default role and check again
+                    if(roleName != DEFAULT_API_GATEWAY_ROLE) {
+                        roleName = DEFAULT_API_GATEWAY_ROLE;
+                        goto again;
+                    }
+
                     // IAM role not found, fallthrough to the next step
                 }
 
-                // only create the LambdaSharp API Gateway Role when the account has no role
+                // only create the LambdaSharp API Gateway Role when the account has no role or the role no longer exists
                 Console.WriteLine("=> Creating API Gateway role");
                 return (await settings.IamClient.CreateRoleAsync(new CreateRoleRequest {
-                    RoleName = "LambdaSharp-ApiGatewayRole",
-                    Description = "API Gateway Role for CloudWatch Logs and X-Ray Tracing",
+                    RoleName = DEFAULT_API_GATEWAY_ROLE,
+                    Description = "API Gateway Role for LambdaSharp modules",
                     AssumeRolePolicyDocument = @"{""Version"":""2012-10-17"",""Statement"":[{""Sid"": ""ApiGatewayPrincipal"",""Effect"":""Allow"",""Principal"":{""Service"":""apigateway.amazonaws.com""},""Action"":""sts:AssumeRole""}]}"
                 })).Role;
             }

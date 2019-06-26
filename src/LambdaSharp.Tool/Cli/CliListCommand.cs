@@ -53,22 +53,23 @@ namespace LambdaSharp.Tool.Cli {
         public async Task List(Settings settings) {
 
             // fetch all stacks
+            var prefix = settings.TierPrefix;
             var stacks = new List<Stack>();
             var request = new DescribeStacksRequest();
             do {
                 var response = await settings.CfnClient.DescribeStacksAsync(request);
-                stacks.AddRange(response.Stacks.Where(
-                    summary => {
+                stacks.AddRange(response.Stacks.Where(summary => {
 
-                        // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
-                        //  if an output key exists and then default to empty string when it is null to properly compare it.
-                        var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
-                        if(lambdaSharpTier == null) {
-                            return false;
-                        }
-                        return (lambdaSharpTier.OutputValue ?? "") == settings.Tier;
+                    // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
+                    //  if an output key exists and then default to empty string when it is null to properly compare it.
+                    var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
+                    if(lambdaSharpTier == null) {
+
+                        // TODO: check which lambdasharp tool built the module; if < 0.7, use prefix check to determine if module belongs to tier
+                        return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
                     }
-                ));
+                    return (lambdaSharpTier.OutputValue ?? "") == settings.Tier;
+                }));
                 request.NextToken = response.NextToken;
             } while(request.NextToken != null);
 
@@ -76,13 +77,12 @@ namespace LambdaSharp.Tool.Cli {
             if(stacks.Any()) {
 
                 // gather summaries
-                var prefix = settings.TierPrefix;
                 var summaries = stacks.Select(stack => new {
                     ModuleName = stack.StackName.Substring(prefix.Length),
                     StackStatus = stack.StackStatus.ToString(),
                     Date = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
                     Description = stack.Description,
-                    ModuleReference = stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue
+                    ModuleReference = GetShortModuleReference(stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue ?? "")
                 }).OrderBy(summary => summary.Date).ToList();
 
                 // extract formatting information
@@ -101,6 +101,14 @@ namespace LambdaSharp.Tool.Cli {
             } else {
                 Console.WriteLine();
                 Console.WriteLine($"Found no modules for deployment tier '{settings.TierName}'");
+            }
+
+            // local functions
+            string GetShortModuleReference(string moduleReference) {
+                if(moduleReference.EndsWith("@" + settings.DeploymentBucketName, StringComparison.Ordinal)) {
+                    return moduleReference.Substring(0, moduleReference.Length - settings.DeploymentBucketName.Length - 1);
+                }
+                return moduleReference;
             }
         }
     }
