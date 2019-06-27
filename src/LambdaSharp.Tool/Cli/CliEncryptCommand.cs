@@ -37,6 +37,7 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.HelpOption();
                 cmd.Description = "Encrypt Value";
                 var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
+                var decryptOption = cmd.Option("--decrypt", "(optional) Decrypt value before encrypting it.", CommandOptionType.NoValue);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
@@ -67,7 +68,8 @@ namespace LambdaSharp.Tool.Cli {
 
                     var result = await EncryptAsync(
                         keyId,
-                        text
+                        text,
+                        decryptOption.HasValue()
                     );
                     Console.WriteLine();
                     Console.WriteLine(result);
@@ -75,14 +77,24 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        public async Task<string> EncryptAsync(string keyId, string text) {
+        public async Task<string> EncryptAsync(string keyId, string text, bool decrypt) {
             var kmsClient = new AmazonKeyManagementServiceClient();
-            var response = await kmsClient.EncryptAsync(new EncryptRequest {
+
+            // check if value needs to be decrypted first
+            if(decrypt) {
+                var decryptResponse = await kmsClient.DecryptAsync(new DecryptRequest {
+                    CiphertextBlob = new MemoryStream(Convert.FromBase64String(text))
+                });
+                text = Encoding.UTF8.GetString(decryptResponse.Plaintext.ToArray());
+            }
+
+            // encrypt text value
+            var encryptResponse = await kmsClient.EncryptAsync(new EncryptRequest {
                 KeyId = keyId,
                 Plaintext = new MemoryStream(Encoding.UTF8.GetBytes(text)),
                 EncryptionContext = null
             });
-            return Convert.ToBase64String(response.CiphertextBlob.ToArray());
+            return Convert.ToBase64String(encryptResponse.CiphertextBlob.ToArray());
         }
     }
 }
