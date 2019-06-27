@@ -143,7 +143,10 @@ namespace LambdaSharp.Tool {
             return 0;
         }
 
-        public bool IsCompatibleWith(VersionInfo other) {
+        // TODO (2019-06-23, bjorg): remove once merged into v0.7
+        public bool IsCompatibleWith(VersionInfo other) => IsAssemblyCompatibleWith(other);
+
+        public bool IsAssemblyCompatibleWith(VersionInfo other) {
             if(Suffix != other.Suffix) {
                 return false;
             }
@@ -158,7 +161,7 @@ namespace LambdaSharp.Tool {
             return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
         }
 
-        public int? CompareVersionTo(VersionInfo other) {
+        public int? CompareToVersion(VersionInfo other) {
             if(object.ReferenceEquals(other, null)) {
                 throw new ArgumentNullException(nameof(other));
             }
@@ -200,7 +203,6 @@ namespace LambdaSharp.Tool {
             // versions cannot be compared
             return null;
         }
-
 
         public string GetWildcardVersion() {
             if(IsPreRelease) {

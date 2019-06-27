@@ -223,12 +223,13 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // give permission to the Lambda functions to communicate back over the WebSocket
             _builder.AddGrant(
-                sid: "ModuleWebSocketConnections",
+                name: "WebSocketConnections",
                 awsType: null,
                 reference: FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/LATEST/POST/@connections/*"),
                 allow: new[] {
                     "execute-api:ManageConnections"
-                }
+                },
+                condition: null
             );
 
             // read WebSocket configuration

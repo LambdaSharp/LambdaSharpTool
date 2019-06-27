@@ -10,13 +10,12 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "LambdaSharpCoreServices": {
       "Type": "String",
-      "Description": "AWS X-Ray Tracing",
+      "Description": "Use LambdaSharp.Core Services",
       "AllowedValues": [
         "Disabled",
-        "RootModule",
-        "AllModules"
+        "Enabled"
       ],
       "Default": "Disabled"
     },
@@ -40,7 +39,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5402EB732C6D9833899CAD53C5D7E8B4"
+      "Default": "05ECA01E8B1D34CA06B3E2480C247C44"
     }
   },
   "Resources": {
@@ -51,6 +50,7 @@
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -68,6 +68,9 @@
   "Outputs": {
     "Module": {
       "Value": "Test.TestModule:1.0-DEV"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.6.0.2"
     }
   },
   "Conditions": {
@@ -96,6 +99,14 @@
           "Condition": "MySecondCondition"
         }
       ]
+    },
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
     }
   },
   "Metadata": {
@@ -104,8 +115,8 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
-          "default": "Enable AWS X-Ray tracing mode for module resources [String]"
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -138,7 +149,7 @@
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "LambdaSharpCoreServices"
           ]
         },
         {
@@ -178,16 +189,16 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "LambdaSharpCoreServices",
               "Type": "String",
-              "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Label": "Integrate with LambdaSharp.Core services",
               "Default": "Disabled"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "5402EB732C6D9833899CAD53C5D7E8B4",
+      "Hash": "05ECA01E8B1D34CA06B3E2480C247C44",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

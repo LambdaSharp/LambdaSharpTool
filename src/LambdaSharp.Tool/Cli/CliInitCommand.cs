@@ -104,7 +104,8 @@ namespace LambdaSharp.Tool.Cli {
             var standardModules = new[] {
                 "LambdaSharp.Core",
                 "LambdaSharp.S3.IO",
-                "LambdaSharp.S3.Subscriber"
+                "LambdaSharp.S3.Subscriber",
+                "LambdaSharp.Twitter.Query"
             };
 
             // check if the module must be built and published first

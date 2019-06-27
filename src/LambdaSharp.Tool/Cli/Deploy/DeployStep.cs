@@ -149,13 +149,25 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
 
-                // check if module supports AWS X-Ray for tracing
+                // enable LambdaSharp.Core services by default
                 if(
-                    manifest.GetAllParameters().Any(p => p.Name == "EnableXRayTracing")
-                    && !deployParameters.Any(p => p.ParameterKey == "EnableXRayTracing")
+                    manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
+                    && !deployParameters.Any(p => p.ParameterKey == "LambdaSharpCoreServices")
                 ) {
                     deployParameters.Add(new CloudFormationParameter {
-                        ParameterKey = "EnableXRayTracing",
+                        ParameterKey = "LambdaSharpCoreServices",
+                        ParameterValue = "Enabled"
+                    });
+                }
+
+                // check if module supports AWS X-Ray for tracing
+                if(
+                    manifest.GetAllParameters().Any(p => p.Name == "XRayTracing")
+                    && !deployParameters.Any(p => (p.ParameterKey == "XRayTracing") && !p.UsePreviousValue)
+                ) {
+                    deployParameters.RemoveAll(p => p.ParameterKey == "XRayTracing");
+                    deployParameters.Add(new CloudFormationParameter {
+                        ParameterKey = "XRayTracing",
                         ParameterValue = xRayTracingLevel.ToString()
                     });
                 }

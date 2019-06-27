@@ -1,4 +1,4 @@
-# λ# - Favorinus (v0.6.0.1) - 2019-06-11
+# λ# - Favorinus (v0.6.0.2) - 2019-06-26
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
@@ -184,7 +184,21 @@ This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueServic
 
 The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction) was also enhanced to provide support for target methods invocations.
 
-## Fixes
+## Releases
+
+### (v0.6.0.2) - 2019-06-26
+
+#### New Features
+* Modules are now compiled with a new `LambdaSharpCoreServices` parameter that controls if a module binds to λ# Core Services.
+* Added `lash tier coreservices` command to enable/disable the use of λ# Core Services in deployed modules.
+* Added standard module output parameter `LambdaSharpTool` that captures the version of the λ# CLI used to build the module.
+
+#### Fixes
+* Fixed an issue where exceptions thrown in pending tasks submitted using `ALambdaFunction.RunTask()` did not cause the Lambda function to fail.
+* Fixed an issue where `lash config` failed to properly initialize the API Gateway Account role when it was set to a deleted role.
+* Fixed an issue where the physical ID instead of the ARN was used for custom resource handlers when the handler was a Lambda function.
+* Mismatched `lambdasharp` assembly version is now reported as a warning instead of an error when running in contributor mode.
+* Disabled warnings for potentially invalid references to conditional resources, because of too many false negatives.
 
 ### (v0.6.0.1) - 2019-06-11
 

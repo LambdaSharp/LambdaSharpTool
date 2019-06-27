@@ -7,13 +7,22 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "XRayTracing": {
       "Type": "String",
       "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
         "Disabled",
         "RootModule",
         "AllModules"
+      ],
+      "Default": "Disabled"
+    },
+    "LambdaSharpCoreServices": {
+      "Type": "String",
+      "Description": "Use LambdaSharp.Core Services",
+      "AllowedValues": [
+        "Disabled",
+        "Enabled"
       ],
       "Default": "Disabled"
     },
@@ -51,7 +60,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5DA7398B143F0C06CF8938099DC3F08D"
+      "Default": "041644C3F2479D3E600899979BF36495"
     }
   },
   "Resources": {
@@ -79,31 +88,72 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "LambdaSharpCoreDefaultSecretKeyIsImported",
+                "UseCoreServices",
                 {
-                  "Fn::ImportValue": {
-                    "Fn::Sub": [
-                      "${DeploymentPrefix}${Import}",
-                      {
-                        "Import": {
-                          "Fn::Select": [
-                            "1",
-                            {
-                              "Fn::Split": [
-                                "$",
+                  "Fn::If": [
+                    "LambdaSharpCoreDefaultSecretKeyIsImported",
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": [
+                          "${DeploymentPrefix}${Import}",
+                          {
+                            "Import": {
+                              "Fn::Select": [
+                                "1",
                                 {
-                                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                  "Fn::Split": [
+                                    "$",
+                                    {
+                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                    }
+                                  ]
                                 }
                               ]
                             }
-                          ]
-                        }
+                          }
+                        ]
                       }
-                    ]
-                  }
+                    },
+                    {
+                      "Ref": "LambdaSharpCoreDefaultSecretKey"
+                    }
+                  ]
                 },
                 {
-                  "Ref": "LambdaSharpCoreDefaultSecretKey"
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_DEFAULTSECRETKEYPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDefaultSecretKeyPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
                 }
               ]
             }
@@ -143,11 +193,45 @@
         "DeploymentChecksum": {
           "Ref": "DeploymentChecksum"
         },
-        "ModuleVersion": "1.0-DEV"
+        "ModuleVersion": "1.0-DEV",
+        "DependsOn": [
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRoleDeadLetterQueuePolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Ref": "ModuleRoleDefaultSecretKeyPolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          },
+          {
+            "Fn::If": [
+              "ModuleRoleSecretsPolicyCondition",
+              {
+                "Ref": "ModuleRoleSecretsPolicy"
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        ]
       },
       "DependsOn": [
         "Finalizer",
-        "ModuleRegistration",
         "ModuleRole",
         "MyTopic"
       ]
@@ -174,12 +258,52 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Sid": "LogStream",
                   "Effect": "Allow",
                   "Action": [
-                    "sqs:SendMessage"
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
                   ],
-                  "Resource": {
+                  "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "AWSXRay",
+                  "Effect": "Allow",
+                  "Action": [
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingStatisticSummaries",
+                    "xray:GetSamplingTargets",
+                    "xray:PutTelemetryRecords",
+                    "xray:PutTraceSegments"
+                  ],
+                  "Resource": "*"
+                }
+              ]
+            },
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+            }
+          }
+        ]
+      }
+    },
+    "ModuleRoleDeadLetterQueuePolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DeadLetterQueue",
+              "Effect": "Allow",
+              "Action": [
+                "sqs:SendMessage"
+              ],
+              "Resource": {
+                "Fn::If": [
+                  "UseCoreServices",
+                  {
                     "Fn::If": [
                       "LambdaSharpCoreDeadLetterQueueIsImported",
                       {
@@ -208,130 +332,128 @@
                         "Ref": "LambdaSharpCoreDeadLetterQueue"
                       }
                     ]
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
                   }
-                },
-                {
-                  "Sid": "SecretsDecryption",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                  ],
-                  "Resource": {
-                    "Fn::Split": [
-                      ",",
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleDeadLetterQueue"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
+    "ModuleRoleDefaultSecretKeyPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "DefaultSecretKey",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::If": [
+                  "UseCoreServices",
+                  {
+                    "Fn::If": [
+                      "LambdaSharpCoreDefaultSecretKeyIsImported",
                       {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          {
-                            "Fn::If": [
-                              "LambdaSharpCoreDefaultSecretKeyIsImported",
-                              {
-                                "Fn::ImportValue": {
-                                  "Fn::Sub": [
-                                    "${DeploymentPrefix}${Import}",
-                                    {
-                                      "Import": {
-                                        "Fn::Select": [
-                                          "1",
-                                          {
-                                            "Fn::Split": [
-                                              "$",
-                                              {
-                                                "Ref": "LambdaSharpCoreDefaultSecretKey"
-                                              }
-                                            ]
-                                          }
-                                        ]
+                        "Fn::ImportValue": {
+                          "Fn::Sub": [
+                            "${DeploymentPrefix}${Import}",
+                            {
+                              "Import": {
+                                "Fn::Select": [
+                                  "1",
+                                  {
+                                    "Fn::Split": [
+                                      "$",
+                                      {
+                                        "Ref": "LambdaSharpCoreDefaultSecretKey"
                                       }
-                                    }
-                                  ]
-                                }
-                              },
-                              {
-                                "Ref": "LambdaSharpCoreDefaultSecretKey"
+                                    ]
+                                  }
+                                ]
                               }
-                            ]
-                          },
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                {
-                                  "Fn::If": [
-                                    "LambdaSharpCoreDefaultSecretKeyIsImported",
-                                    {
-                                      "Fn::ImportValue": {
-                                        "Fn::Sub": [
-                                          "${DeploymentPrefix}${Import}",
-                                          {
-                                            "Import": {
-                                              "Fn::Select": [
-                                                "1",
-                                                {
-                                                  "Fn::Split": [
-                                                    "$",
-                                                    {
-                                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
-                                                    }
-                                                  ]
-                                                }
-                                              ]
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    },
-                                    {
-                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
-                          }
-                        ]
+                            }
+                          ]
+                        }
+                      },
+                      {
+                        "Ref": "LambdaSharpCoreDefaultSecretKey"
                       }
                     ]
+                  },
+                  {
+                    "Ref": "AWS::NoValue"
                   }
-                },
-                {
-                  "Sid": "ModuleLogStreamAccess",
-                  "Effect": "Allow",
-                  "Action": [
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents"
-                  ],
-                  "Resource": "arn:aws:logs:*:*:*"
-                },
-                {
-                  "Sid": "AWSXRayWriteAccess",
-                  "Effect": "Allow",
-                  "Action": [
-                    "xray:GetSamplingRules",
-                    "xray:GetSamplingStatisticSummaries",
-                    "xray:GetSamplingTargets",
-                    "xray:PutTelemetryRecords",
-                    "xray:PutTraceSegments"
-                  ],
-                  "Resource": "*"
-                }
-              ]
-            },
-            "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}ModulePolicy"
+                ]
+              }
             }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleDefaultSecretKey"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
+    "ModuleRoleSecretsPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "ModuleRoleSecretsPolicyCondition",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Secrets",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Ref": "Secrets"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
           }
         ]
       }
     },
     "ModuleRegistration": {
       "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
       "Properties": {
         "ServiceToken": {
           "Fn::ImportValue": {
@@ -349,27 +471,30 @@
   "Outputs": {
     "Module": {
       "Value": "Test.TestModule:1.0-DEV"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.6.0.2"
     }
   },
   "Conditions": {
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
-        },
-        ""
-      ]
-    },
     "XRayIsEnabled": {
       "Fn::Not": [
         {
           "Fn::Equals": [
             {
-              "Ref": "EnableXRayTracing"
+              "Ref": "XRayTracing"
             },
             "Disabled"
           ]
         }
+      ]
+    },
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
       ]
     },
     "LambdaSharpCoreDeadLetterQueueIsImported": {
@@ -439,6 +564,18 @@
           ]
         }
       ]
+    },
+    "ModuleRoleSecretsPolicyCondition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
+          ]
+        }
+      ]
     }
   },
   "Metadata": {
@@ -447,8 +584,11 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
+        "XRayTracing": {
           "default": "Enable AWS X-Ray tracing mode for module resources [String]"
+        },
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
         },
         "LambdaSharpCoreDeadLetterQueue": {
           "default": "DeadLetterQueue [String]"
@@ -479,7 +619,8 @@
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "XRayTracing",
+            "LambdaSharpCoreServices"
           ]
         },
         {
@@ -519,9 +660,15 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "XRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
+              "Default": "Disabled"
+            },
+            {
+              "Name": "LambdaSharpCoreServices",
+              "Type": "String",
+              "Label": "Integrate with LambdaSharp.Core services",
               "Default": "Disabled"
             }
           ]
@@ -547,7 +694,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "5DA7398B143F0C06CF8938099DC3F08D",
+      "Hash": "041644C3F2479D3E600899979BF36495",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -561,6 +708,9 @@
       "ResourceNameMappings": {
         "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
+        "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
+        "ModuleRoleDefaultSecretKeyPolicy": "Module::Role::DefaultSecretKeyPolicy",
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration"
       },
       "TypeNameMappings": {

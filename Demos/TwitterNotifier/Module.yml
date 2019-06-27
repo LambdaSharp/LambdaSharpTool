@@ -70,7 +70,7 @@ Items:
 
   # Resources
   - Nested: TwitterNotify
-    Module: LambdaSharp.Twitter.Query:0.5
+    Module: LambdaSharp.Twitter.Query:0.6.0.2
     Parameters:
       TwitterApiKey: !Ref TwitterApiKey
       TwitterApiSecretKey: !Ref TwitterApiSecretKey

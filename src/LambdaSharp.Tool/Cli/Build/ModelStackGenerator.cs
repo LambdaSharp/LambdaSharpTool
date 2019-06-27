@@ -64,6 +64,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             _stack.Add("Module", new Humidifier.Output {
                 Value = _module.FullName + ":" + _module.Version.ToString()
             });
+            _stack.Add("LambdaSharpTool", new Humidifier.Output {
+                Value = Settings.ToolVersion.ToString()
+            });
 
             // add items
             foreach(var item in _module.Items) {
@@ -189,7 +192,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private void AddItem(AModuleItem item) {
-            var logicalId = item.LogicalId;
             switch(item) {
             case VariableItem _:
             case PackageItem _:
@@ -199,7 +201,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 break;
             case ResourceItem resourceItem:
                 _stack.Add(
-                    logicalId,
+                    resourceItem.LogicalId,
                     resourceItem.Resource,
                     resourceItem.Condition,
                     dependsOn: resourceItem.DependsOn.ToArray()
@@ -209,7 +211,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 break;
             case ParameterItem parameterItem:
-                _stack.Add(logicalId, parameterItem.Parameter);
+                _stack.Add(parameterItem.LogicalId, parameterItem.Parameter);
                 if(item.IsPublic) {
                     AddExport(item);
                 }
@@ -242,7 +244,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             case ResourceTypeItem resourceTypeItem:
                 _stack.Add(resourceTypeItem.LogicalId, new Humidifier.Output {
                     Description = resourceTypeItem.Description,
-                    Value = resourceTypeItem.Handler,
+                    Value = _module.Items.First(i => i.LogicalId == resourceTypeItem.Handler).GetExportReference(),
                     Export = new Dictionary<string, dynamic> {
                         ["Name"] = Fn.Sub($"${{DeploymentPrefix}}{resourceTypeItem.CustomResourceType}")
                     }

@@ -21,7 +21,10 @@ The λ# CLI is used to process the module definition, compile the C# projects, u
 1. [`config`](Tool-Config.md): configure λ# CLI
 1. [`init`](Tool-Init.md): initialize λ# deployment tier
 
+## Tier Commands
+1. [`tier coreservices`](Tool-Tier-CoreServices.md): show/update λ# Core Services configuration
+
 ## Utility Commands
-1. [`util create-invoke-methods-schema`](Tool-UtilCreateInvokeMethodsSchema.md): create JSON schema for compiled methods
-1. [`util delete-orphan-logs`](Tool-UtilDeleteOrphanLogs.md): delete orphaned Lambda CloudWatch logs
-1. [`util download-cloudformation-spec`](Tool-UtilDownloadCloudFormationSpec.md): download the CloudFormation types specification
+1. [`util create-invoke-methods-schema`](Tool-Util-CreateInvokeMethodsSchema.md): create JSON schema for compiled methods
+1. [`util delete-orphan-logs`](Tool-Util-DeleteOrphanLogs.md): delete orphaned Lambda CloudWatch logs
+1. [`util download-cloudformation-spec`](Tool-Util-DownloadCloudFormationSpec.md): download the CloudFormation types specification
