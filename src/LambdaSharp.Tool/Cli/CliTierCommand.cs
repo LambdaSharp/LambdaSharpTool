@@ -59,7 +59,7 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     subCmd.Description = "Enable/disable LambdaSharp.Core services for all modules in tier";
                     var enableOption = subCmd.Option("--enable", "(optional) Enable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var disableOption = subCmd.Option("--disable", "(optional) Disable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
-                    var initSettingsCallback = CreateSettingsInitializer(cmd);
+                    var initSettingsCallback = CreateSettingsInitializer(subCmd);
 
                     // run command
                     subCmd.OnExecute(async () => {
@@ -108,12 +108,15 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     return;
                 }
 
-                // update core services for each affected module
+                // update core services for each affected root module
                 var coreServicesParameter = enable.Value ? "Enabled" : "Disabled";
                 var parameters = new Dictionary<string, string> {
                     ["LambdaSharpCoreServices"] = coreServicesParameter
                 };
-                foreach(var summary in summaries.Where(s => (s.CoreServices != coreServicesParameter))) {
+                foreach(var summary in summaries
+                    .Where(s => (s.CoreServices != coreServicesParameter))
+                    .Where(summary => summary.Stack.RootId == null)
+                ) {
                     await UpdateStackParameters(settings, summary, parameters);
                 }
 
@@ -198,7 +201,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     ?.ParameterValue
             })
                 .Where(summary => !summary.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))
-                .Where(summary => summary.Stack.RootId == null)
                 .OrderBy(summary => summary.DeploymentDate)
                 .ToList();
 
