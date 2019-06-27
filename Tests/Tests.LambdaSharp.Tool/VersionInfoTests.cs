@@ -75,7 +75,7 @@ namespace Tests.LambdaSharp.Tool {
             var version2 = VersionInfo.Parse("1.0-WIP");
 
             // act
-            var result = version1.CompareVersionTo(version2);
+            var result = version1.CompareToVersion(version2);
 
             // assert
             result.Should().Be(null);
@@ -88,7 +88,7 @@ namespace Tests.LambdaSharp.Tool {
             var version2 = VersionInfo.Parse(right);
 
             // act
-            var result = version1.CompareVersionTo(version2);
+            var result = version1.CompareToVersion(version2);
 
             // assert
             result.Should().Be(-1);

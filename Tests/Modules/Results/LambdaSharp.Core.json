@@ -58,7 +58,7 @@
       "Description": "Secret Keys (ARNs)",
       "Default": ""
     },
-    "EnableXRayTracing": {
+    "XRayTracing": {
       "Type": "String",
       "Description": "AWS X-Ray Tracing",
       "AllowedValues": [
@@ -88,18 +88,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A4A62248E9F2200557B2F2019C5D145F"
+      "Default": "919475FB2C065EAA82EE2E7BADE8FE94"
     }
   },
   "Resources": {
     "DeadLetterQueueResource": {
       "Type": "AWS::SQS::Queue",
-      "Condition": "DeadLetterQueueIsCreated",
+      "Condition": "DeadLetterQueueIsBlank",
       "Properties": {}
     },
     "LoggingStreamResource": {
       "Type": "AWS::Kinesis::Stream",
-      "Condition": "LoggingStreamIsCreated",
+      "Condition": "LoggingStreamIsBlank",
       "Properties": {
         "RetentionPeriodHours": {
           "Ref": "LoggingStreamRetentionPeriodHours"
@@ -111,7 +111,7 @@
     },
     "DefaultSecretKeyResource": {
       "Type": "AWS::KMS::Key",
-      "Condition": "DefaultSecretKeyIsCreated",
+      "Condition": "DefaultSecretKeyIsBlank",
       "Properties": {
         "Description": "Default encryption/decryption key for LambdaSharp modules",
         "EnableKeyRotation": {
@@ -147,7 +147,7 @@
         },
         "TargetKeyId": {
           "Fn::If": [
-            "DefaultSecretKeyIsCreated",
+            "DefaultSecretKeyIsBlank",
             {
               "Fn::GetAtt": [
                 "DefaultSecretKeyResource",
@@ -193,7 +193,7 @@
                   "Action": "kinesis:PutRecord",
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamIsCreated",
+                      "LoggingStreamIsBlank",
                       {
                         "Fn::GetAtt": [
                           "LoggingStreamResource",
@@ -224,7 +224,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "DeadLetterQueueIsCreated",
+              "DeadLetterQueueIsBlank",
               {
                 "Fn::GetAtt": [
                   "DeadLetterQueueResource",
@@ -248,7 +248,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "DeadLetterQueueIsCreated",
+                "DeadLetterQueueIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DeadLetterQueueResource",
@@ -262,7 +262,7 @@
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "DefaultSecretKeyIsCreated",
+                "DefaultSecretKeyIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DefaultSecretKeyResource",
@@ -284,6 +284,17 @@
               "Fn::GetAtt": [
                 "RegistrationTable",
                 "Arn"
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
               ]
             }
           }
@@ -360,7 +371,7 @@
         "DeadLetterConfig": {
           "TargetArn": {
             "Fn::If": [
-              "DeadLetterQueueIsCreated",
+              "DeadLetterQueueIsBlank",
               {
                 "Fn::GetAtt": [
                   "DeadLetterQueueResource",
@@ -384,7 +395,7 @@
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEADLETTERQUEUE": {
               "Fn::If": [
-                "DeadLetterQueueIsCreated",
+                "DeadLetterQueueIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DeadLetterQueueResource",
@@ -398,7 +409,7 @@
             },
             "DEFAULTSECRETKEY": {
               "Fn::If": [
-                "DefaultSecretKeyIsCreated",
+                "DefaultSecretKeyIsBlank",
                 {
                   "Fn::GetAtt": [
                     "DefaultSecretKeyResource",
@@ -423,6 +434,17 @@
               "Fn::GetAtt": [
                 "RegistrationTable",
                 "Arn"
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
               ]
             }
           }
@@ -488,7 +510,7 @@
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamIsCreated",
+                      "LoggingStreamIsBlank",
                       {
                         "Fn::GetAtt": [
                           "LoggingStreamResource",
@@ -586,14 +608,14 @@
                   ]
                 },
                 {
-                  "Sid": "ModuleDeadLetterQueueLogging",
+                  "Sid": "DeadLetterQueue",
                   "Effect": "Allow",
                   "Action": [
                     "sqs:SendMessage"
                   ],
                   "Resource": {
                     "Fn::If": [
-                      "DeadLetterQueueIsCreated",
+                      "DeadLetterQueueIsBlank",
                       {
                         "Fn::GetAtt": [
                           "DeadLetterQueueResource",
@@ -607,65 +629,29 @@
                   }
                 },
                 {
-                  "Sid": "SecretsDecryption",
+                  "Sid": "DefaultSecretKey",
                   "Effect": "Allow",
                   "Action": [
                     "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
+                    "kms:Encrypt"
                   ],
                   "Resource": {
-                    "Fn::Split": [
-                      ",",
+                    "Fn::If": [
+                      "DefaultSecretKeyIsBlank",
                       {
-                        "Fn::If": [
-                          "SecretsIsEmpty",
-                          {
-                            "Fn::If": [
-                              "DefaultSecretKeyIsCreated",
-                              {
-                                "Fn::GetAtt": [
-                                  "DefaultSecretKeyResource",
-                                  "Arn"
-                                ]
-                              },
-                              {
-                                "Ref": "DefaultSecretKey"
-                              }
-                            ]
-                          },
-                          {
-                            "Fn::Join": [
-                              ",",
-                              [
-                                {
-                                  "Fn::If": [
-                                    "DefaultSecretKeyIsCreated",
-                                    {
-                                      "Fn::GetAtt": [
-                                        "DefaultSecretKeyResource",
-                                        "Arn"
-                                      ]
-                                    },
-                                    {
-                                      "Ref": "DefaultSecretKey"
-                                    }
-                                  ]
-                                },
-                                {
-                                  "Ref": "Secrets"
-                                }
-                              ]
-                            ]
-                          }
+                        "Fn::GetAtt": [
+                          "DefaultSecretKeyResource",
+                          "Arn"
                         ]
+                      },
+                      {
+                        "Ref": "DefaultSecretKey"
                       }
                     ]
                   }
                 },
                 {
-                  "Sid": "ModuleLogStreamAccess",
+                  "Sid": "LogStream",
                   "Effect": "Allow",
                   "Action": [
                     "logs:CreateLogStream",
@@ -674,7 +660,7 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
-                  "Sid": "AWSXRayWriteAccess",
+                  "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
                     "xray:GetSamplingRules",
@@ -694,6 +680,41 @@
         ]
       }
     },
+    "ModuleRoleSecretsPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Condition": "ModuleRoleSecretsPolicyCondition",
+      "Properties": {
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "Secrets",
+              "Effect": "Allow",
+              "Action": [
+                "kms:Decrypt",
+                "kms:Encrypt"
+              ],
+              "Resource": {
+                "Fn::Split": [
+                  ",",
+                  {
+                    "Ref": "Secrets"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "PolicyName": {
+          "Fn::Sub": "${AWS::StackName}ModuleRoleSecrets"
+        },
+        "Roles": [
+          {
+            "Ref": "ModuleRole"
+          }
+        ]
+      }
+    },
     "ProcessLogEventsSource1EventMapping": {
       "Type": "AWS::Lambda::EventSourceMapping",
       "Properties": {
@@ -701,7 +722,7 @@
         "Enabled": true,
         "EventSourceArn": {
           "Fn::If": [
-            "LoggingStreamIsCreated",
+            "LoggingStreamIsBlank",
             {
               "Fn::GetAtt": [
                 "LoggingStreamResource",
@@ -755,10 +776,13 @@
     "Module": {
       "Value": "LambdaSharp.Core:1.0-DEV"
     },
+    "LambdaSharpTool": {
+      "Value": "0.6.0.2"
+    },
     "DeadLetterQueue": {
       "Value": {
         "Fn::If": [
-          "DeadLetterQueueIsCreated",
+          "DeadLetterQueueIsBlank",
           {
             "Fn::GetAtt": [
               "DeadLetterQueueResource",
@@ -780,7 +804,7 @@
     "LoggingStream": {
       "Value": {
         "Fn::If": [
-          "LoggingStreamIsCreated",
+          "LoggingStreamIsBlank",
           {
             "Fn::GetAtt": [
               "LoggingStreamResource",
@@ -802,7 +826,7 @@
     "DefaultSecretKey": {
       "Value": {
         "Fn::If": [
-          "DefaultSecretKeyIsCreated",
+          "DefaultSecretKeyIsBlank",
           {
             "Fn::GetAtt": [
               "DefaultSecretKeyResource",
@@ -859,7 +883,7 @@
     }
   },
   "Conditions": {
-    "DeadLetterQueueIsCreated": {
+    "DeadLetterQueueIsBlank": {
       "Fn::Equals": [
         {
           "Ref": "DeadLetterQueue"
@@ -867,7 +891,7 @@
         ""
       ]
     },
-    "LoggingStreamIsCreated": {
+    "LoggingStreamIsBlank": {
       "Fn::Equals": [
         {
           "Ref": "LoggingStream"
@@ -875,18 +899,10 @@
         ""
       ]
     },
-    "DefaultSecretKeyIsCreated": {
+    "DefaultSecretKeyIsBlank": {
       "Fn::Equals": [
         {
           "Ref": "DefaultSecretKey"
-        },
-        ""
-      ]
-    },
-    "SecretsIsEmpty": {
-      "Fn::Equals": [
-        {
-          "Ref": "Secrets"
         },
         ""
       ]
@@ -896,9 +912,21 @@
         {
           "Fn::Equals": [
             {
-              "Ref": "EnableXRayTracing"
+              "Ref": "XRayTracing"
             },
             "Disabled"
+          ]
+        }
+      ]
+    },
+    "ModuleRoleSecretsPolicyCondition": {
+      "Fn::Not": [
+        {
+          "Fn::Equals": [
+            {
+              "Ref": "Secrets"
+            },
+            ""
           ]
         }
       ]
@@ -937,7 +965,7 @@
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
         },
-        "EnableXRayTracing": {
+        "XRayTracing": {
           "default": "Enable AWS X-Ray tracing mode for module resources [String]"
         },
         "DeploymentBucketName": {
@@ -986,7 +1014,7 @@
           },
           "Parameters": [
             "Secrets",
-            "EnableXRayTracing"
+            "XRayTracing"
           ]
         },
         {
@@ -1081,7 +1109,7 @@
               "Default": ""
             },
             {
-              "Name": "EnableXRayTracing",
+              "Name": "XRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
               "Default": "Disabled"
@@ -1090,7 +1118,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "A4A62248E9F2200557B2F2019C5D145F",
+      "Hash": "919475FB2C065EAA82EE2E7BADE8FE94",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -1220,6 +1248,7 @@
         "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
         "RegistrationLogGroup": "Registration::LogGroup",
         "ModuleRole": "Module::Role",
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping",
         "RegistrationSource1Subscription": "Registration::Source1Subscription",
         "RegistrationSource1Permission": "Registration::Source1Permission"

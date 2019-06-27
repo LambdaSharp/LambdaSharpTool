@@ -328,15 +328,15 @@ namespace LambdaSharp.Tool.Model {
             } else if(defaultValue == null) {
 
                 // request input parameter resource grants
-                AddGrant(result.LogicalId, type, result.Reference, allow);
+                AddGrant(result.LogicalId, type, result.Reference, allow, condition: null);
             } else {
 
-                // create conditional managed resource
+                // create conditional resource
                 var condition = AddCondition(
                     parent: result,
-                    name: "IsCreated",
+                    name: "IsBlank",
                     description: null,
-                    value: FnEquals(FnRef(result.ResourceName), defaultValue)
+                    value: FnEquals(FnRef(result.ResourceName), "")
                 );
                 var instance = AddResource(
                     parent: result,
@@ -348,7 +348,7 @@ namespace LambdaSharp.Tool.Model {
                     properties: properties,
                     arnAttribute: arnAttribute,
                     dependsOn: null,
-                    condition: condition.ResourceName,
+                    condition: condition.FullName,
                     pragmas: pragmas
                 );
 
@@ -360,7 +360,7 @@ namespace LambdaSharp.Tool.Model {
                 );
 
                 // request input parameter or conditional managed resource grants
-                AddGrant(instance.LogicalId, type, result.Reference, allow);
+                AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
             }
             return result;
         }
@@ -444,6 +444,7 @@ namespace LambdaSharp.Tool.Model {
                     )
                 );
 
+                // check if import itself is conditional
                 import.Reference = FnIf(
                     condition.ResourceName,
                     FnImportValue(FnSub("${DeploymentPrefix}${Import}", new Dictionary<string, object> {
@@ -454,7 +455,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // TODO (2019-02-07, bjorg): since the variable is created for each import, it also duplicates the '::Plaintext' sub-resource
-            //  for imports of type 'Secret'; while it's technically not wrong, it's not efficient if this happens multiple times.
+            //  for imports of type 'Secret'; while it's technically not wrong, it's not efficient when multiple secrets are being imported.
 
             // register import parameter reference
             return AddVariable(
@@ -483,7 +484,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // add resource type definition
-            AddItem(new ResourceTypeItem(resourceType, description, FnRef(handler)));
+            AddItem(new ResourceTypeItem(resourceType, description, handler));
             _customResourceTypes.Add(new ModuleManifestResourceType {
                 Type = resourceType,
                 Description = description,
@@ -584,7 +585,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add optional grants
             if(allow != null) {
-                AddGrant(result.LogicalId, type, value, allow);
+                AddGrant(result.LogicalId, type, value, allow, condition: null);
             }
             return result;
         }
@@ -637,7 +638,7 @@ namespace LambdaSharp.Tool.Model {
             } else if(condition != null) {
                 var conditionItem = AddCondition(
                     parent: result,
-                    name: "If",
+                    name: "Condition",
                     description: null,
                     value: condition
                 );
@@ -683,7 +684,7 @@ namespace LambdaSharp.Tool.Model {
 
             // add optional grants
             if(allow != null) {
-                AddGrant(result.LogicalId, type, result.GetExportReference(), allow);
+                AddGrant(result.LogicalId, type, result.GetExportReference(), allow, condition: null);
             }
             return result;
         }
@@ -783,8 +784,8 @@ namespace LambdaSharp.Tool.Model {
                         }
 
                         // check if x-ray tracing should be enabled in nested module
-                        if(formalParameters.ContainsKey("EnableXRayTracing") && !moduleParameters.ContainsKey("EnableXRayTracing")) {
-                            moduleParameters.Add("EnableXRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
+                        if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
+                            moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", XRayTracingLevel.AllModules.ToString(), XRayTracingLevel.Disabled.ToString()));
                         }
                     } else {
 
@@ -799,6 +800,7 @@ namespace LambdaSharp.Tool.Model {
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
+                MandatoryAdd("LambdaSharpCoreServices", FnRef("LambdaSharpCoreServices"));
             });
             return resource;
 
@@ -1083,7 +1085,7 @@ namespace LambdaSharp.Tool.Model {
             ));
         }
 
-        public void AddGrant(string sid, string awsType, object reference, object allow) {
+        public void AddGrant(string name, string awsType, object reference, object allow, object condition) {
 
             // resolve shorthands and deduplicate statements
             var allowStatements = new List<string>();
@@ -1105,20 +1107,59 @@ namespace LambdaSharp.Tool.Model {
                 return;
             }
 
-            // add role resource statement
-            var statement = new Humidifier.Statement {
-                Sid = sid.ToIdentifier(),
-                Effect = "Allow",
-                Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
-                Action = allowStatements.Distinct().OrderBy(text => text).ToList()
-            };
-            for(var i = 0; i < _resourceStatements.Count; ++i) {
-                if(_resourceStatements[i].Sid == sid) {
-                    _resourceStatements[i] = statement;
-                    return;
+            // check if statement can be added to role directly or needs to be attached as a conditional policy resource
+            if(condition != null) {
+                AddResource(
+                    parent: GetItem("Module::Role"),
+                    name: name + "Policy",
+                    description: null,
+
+                    // by scoping this resource to all Lambda functions, we ensure the policy is created before a Lambda executes
+                    scope: new[] { "all" },
+
+                    resource: new Humidifier.IAM.Policy {
+                        PolicyName = FnSub($"${{AWS::StackName}}ModuleRole{name}"),
+                        PolicyDocument = new Humidifier.PolicyDocument {
+                            Version = "2012-10-17",
+                            Statement = new List<Humidifier.Statement> {
+                                new Humidifier.Statement {
+                                    Sid = name.ToIdentifier(),
+                                    Effect = "Allow",
+                                    Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
+                                    Action = allowStatements.Distinct().OrderBy(text => text).ToList()
+                                }
+                            }
+                        },
+                        Roles = new List<object> {
+                            FnRef("Module::Role")
+                        }
+                    },
+                    resourceExportAttribute: null,
+                    dependsOn: null,
+                    condition: condition,
+                    pragmas: null
+                ).DiscardIfNotReachable = true;
+            } else {
+
+                // add role resource statement
+                var statement = new Humidifier.Statement {
+                    Sid = name.ToIdentifier(),
+                    Effect = "Allow",
+                    Resource = ResourceMapping.ExpandResourceReference(awsType, reference),
+                    Action = allowStatements.Distinct().OrderBy(text => text).ToList()
+                };
+
+                // check if an existing statement is being updated
+                for(var i = 0; i < _resourceStatements.Count; ++i) {
+                    if(_resourceStatements[i].Sid == name) {
+                        _resourceStatements[i] = statement;
+                        return;
+                    }
                 }
+
+                // add new statement
+                _resourceStatements.Add(statement);
             }
-            _resourceStatements.Add(statement);
         }
 
         public void VisitAll(ModuleVisitorDelegate visitor) {

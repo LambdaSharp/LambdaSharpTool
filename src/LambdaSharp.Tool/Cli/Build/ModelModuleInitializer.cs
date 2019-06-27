@@ -131,6 +131,43 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
+            // create module IAM role used by all functions
+            var moduleRoleItem = _builder.AddResource(
+                parent: moduleItem,
+                name: "Role",
+                description: null,
+                scope: null,
+                resource: new Humidifier.IAM.Role {
+                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
+                        Version = "2012-10-17",
+                        Statement = new[] {
+                            new Humidifier.Statement {
+                                Sid = "ModuleLambdaPrincipal",
+                                Effect = "Allow",
+                                Principal = new Humidifier.Principal {
+                                    Service = "lambda.amazonaws.com"
+                                },
+                                Action = "sts:AssumeRole"
+                            }
+                        }.ToList()
+                    },
+                    Policies = new[] {
+                        new Humidifier.IAM.Policy {
+                            PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
+                            PolicyDocument = new Humidifier.PolicyDocument {
+                                Version = "2012-10-17",
+                                Statement = new List<Humidifier.Statement>()
+                            }
+                        }
+                    }.ToList()
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: null,
+                pragmas: null
+            );
+            moduleRoleItem.DiscardIfNotReachable = true;
+
             // add overridable logging retention variable
             if(!_builder.TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
                 logRetentionInDays = 30;
@@ -170,14 +207,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null,
                 pragmas: null
             );
-            var secretsIsEmpty = _builder.AddCondition(
-                parent: null,
-                name: "SecretsIsEmpty",
-                description: null,
-                value: FnEquals(FnRef("Secrets"), "")
-            );
-            var enableXRayTracing = _builder.AddParameter(
-                name: "EnableXRayTracing",
+            _builder.AddParameter(
+                name: "XRayTracing",
                 section: section,
                 label: "Enable AWS X-Ray tracing mode for module resources",
                 description: "AWS X-Ray Tracing",
@@ -201,19 +232,54 @@ namespace LambdaSharp.Tool.Cli.Build {
                 arnAttribute: null,
                 encryptionContext: null,
                 pragmas: null
-            );
+            ).DiscardIfNotReachable = true;
             _builder.AddCondition(
                 parent: null,
                 name: "XRayIsEnabled",
                 description: null,
-                value: FnNot(FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.Disabled.ToString()))
+                value: FnNot(FnEquals(FnRef("XRayTracing"), XRayTracingLevel.Disabled.ToString()))
             );
             _builder.AddCondition(
                 parent: null,
                 name: "XRayNestedIsEnabled",
                 description: null,
-                value: FnEquals(FnRef("EnableXRayTracing"), XRayTracingLevel.AllModules.ToString())
+                value: FnEquals(FnRef("XRayTracing"), XRayTracingLevel.AllModules.ToString())
             );
+
+            // check if module might depdent on core services
+            if(_builder.HasLambdaSharpDependencies || _builder.HasModuleRegistration) {
+                _builder.AddParameter(
+                    name: "LambdaSharpCoreServices",
+                    section: section,
+                    label: "Integrate with LambdaSharp.Core services",
+                    description: "Use LambdaSharp.Core Services",
+                    type: "String",
+                    scope: null,
+                    noEcho: null,
+                    defaultValue: "Disabled",
+                    constraintDescription: null,
+                    allowedPattern: null,
+                    allowedValues: new[] {
+                        "Disabled",
+                        "Enabled"
+                    },
+                    maxLength: null,
+                    maxValue: null,
+                    minLength: null,
+                    minValue: null,
+                    allow: null,
+                    properties: null,
+                    arnAttribute: null,
+                    encryptionContext: null,
+                    pragmas: null
+                ).DiscardIfNotReachable = true;
+                _builder.AddCondition(
+                    parent: null,
+                    name: "UseCoreServices",
+                    description: null,
+                    value: FnEquals(FnRef("LambdaSharpCoreServices"), "Enabled")
+                );
+            }
 
             // import lambdasharp dependencies (unless requested otherwise)
             if(_builder.HasLambdaSharpDependencies) {
@@ -237,9 +303,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
                     type: "String",
                     scope: null,
-                    allow: null /* new[] {
-                        "sqs:SendMessage"
-                    }*/,
+                    allow: null,
                     module: "LambdaSharp.Core",
                     encryptionContext: null
                 );
@@ -284,7 +348,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // add module variables
-            if(TryGetModuleVariable("DeadLetterQueue", out var deadLetterQueueVariable)) {
+            if(TryGetModuleVariable("DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "DeadLetterQueue",
@@ -296,15 +360,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
                 _builder.AddGrant(
-                    sid: "ModuleDeadLetterQueueLogging",
+                    name: "DeadLetterQueue",
                     awsType: null,
                     reference: FnRef("Module::DeadLetterQueue"),
                     allow: new[] {
                         "sqs:SendMessage"
-                    }
+                    },
+                    condition: deadLetterQueueCondition
                 );
             }
-            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable)) {
+            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable, out var _)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStream",
@@ -316,7 +381,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable)) {
+            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "LoggingStreamRole",
@@ -328,7 +393,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            if(TryGetModuleVariable("DefaultSecretKey", out var defaultSecretKeyVariable)) {
+            if(TryGetModuleVariable("DefaultSecretKey", out var defaultSecretKeyVariable, out var defaultSecretKeyCondition)) {
                 _builder.AddVariable(
                     parent: moduleItem,
                     name: "DefaultSecretKey",
@@ -339,40 +404,31 @@ namespace LambdaSharp.Tool.Cli.Build {
                     allow: null,
                     encryptionContext: null
                 );
-                _builder.AddSecret(FnRef("Module::DefaultSecretKey"));
+                _builder.AddGrant(
+                    name: "DefaultSecretKey",
+                    awsType: null,
+                    reference: FnRef("Module::DefaultSecretKey"),
+                    allow: new[] {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    },
+                    condition: defaultSecretKeyCondition
+                );
             }
 
-            // add decryption permission for secrets
-            var secretsReference = _builder.Secrets.Any()
-                ? FnSplit(
-                    ",",
-                    FnIf(
-                        secretsIsEmpty.FullName,
-                        FnJoin(",", _builder.Secrets),
-                        FnJoin(
-                            ",",
-                            _builder.Secrets.Append(FnRef("Secrets")).ToList()
-                        )
-                    )
-                )
-                : FnIf(
-                    secretsIsEmpty.FullName,
-
-                    // TODO (2018-11-26, bjorg): this hack does not work to bypass the error of an empty list :(
-                    "arn:aws:kms:${AWS::Region}:${AWS::AccountId}:key/12345678-1234-1234-1234-123456789012",
-                    FnSplit(",", FnRef("Secrets"))
+            // add KMS permissions for secrets in module
+            if(_builder.Secrets.Any()) {
+                _builder.AddGrant(
+                    name: "EmbeddedSecrets",
+                    awsType: null,
+                    reference: _builder.Secrets.ToList(),
+                    allow: new[] {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    },
+                    condition: null
                 );
-            _builder.AddGrant(
-                sid: "SecretsDecryption",
-                awsType: null,
-                reference: secretsReference,
-                allow: new[] {
-                    "kms:Decrypt",
-                    "kms:Encrypt",
-                    "kms:GenerateDataKey",
-                    "kms:GenerateDataKeyWithoutPlaintext"
-                }
-            );
+            }
 
             // add decryption function for secret parameters and values
             _builder.AddInlineFunction(
@@ -505,56 +561,33 @@ namespace LambdaSharp.Tool.Cli.Build {
                 pragmas: null
             );
 
-            // create module IAM role used by all functions
-            _builder.AddResource(
-                parent: moduleItem,
-                name: "Role",
-                description: null,
-                scope: null,
-                resource: new Humidifier.IAM.Role {
-                    AssumeRolePolicyDocument = new Humidifier.PolicyDocument {
-                        Version = "2012-10-17",
-                        Statement = new[] {
-                            new Humidifier.Statement {
-                                Sid = "ModuleLambdaPrincipal",
-                                Effect = "Allow",
-                                Principal = new Humidifier.Principal {
-                                    Service = "lambda.amazonaws.com"
-                                },
-                                Action = "sts:AssumeRole"
-                            }
-                        }.ToList()
-                    },
-                    Policies = new[] {
-                        new Humidifier.IAM.Policy {
-                            PolicyName = FnSub("${AWS::StackName}ModulePolicy"),
-                            PolicyDocument = new Humidifier.PolicyDocument {
-                                Version = "2012-10-17",
-                                Statement = new List<Humidifier.Statement>()
-                            }
-                        }
-                    }.ToList()
+            // add conditional KMS permissions for secrets parameter
+            _builder.AddGrant(
+                name: "Secrets",
+                awsType: null,
+                reference: FnSplit(",", FnRef("Secrets")),
+                allow: new List<string> {
+                    "kms:Decrypt",
+                    "kms:Encrypt"
                 },
-                resourceExportAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null
-            ).DiscardIfNotReachable = true;
+                condition: FnNot(FnEquals(FnRef("Secrets"), ""))
+            );
 
             // permissions needed for writing to log streams (but not for creating log groups!)
             _builder.AddGrant(
-                sid: "ModuleLogStreamAccess",
+                name: "LogStream",
                 awsType: null,
                 reference: "arn:aws:logs:*:*:*",
                 allow: new[] {
                     "logs:CreateLogStream",
                     "logs:PutLogEvents"
-                }
+                },
+                condition: null
             );
 
             // permissions needed for X-Ray lambda daemon to upload tracing information
             _builder.AddGrant(
-                sid: "AWSXRayWriteAccess",
+                name: "AWSXRay",
                 awsType: null,
                 reference: "*",
                 allow: new[] {
@@ -563,7 +596,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "xray:GetSamplingRules",
                     "xray:GetSamplingTargets",
                     "xray:GetSamplingStatisticSummaries"
-                }
+                },
+                condition: null
             );
 
             // check if lambdasharp specific resources need to be initialized
@@ -581,14 +615,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             // permissions needed for lambda functions to exist in a VPC
             if(functions.Any(function => function.Function.VpcConfig != null)) {
                 _builder.AddGrant(
-                    sid: "ModuleVpcNetworkInterfaces",
+                    name: "VpcNetworkInterfaces",
                     awsType: null,
                     reference: "*",
                     allow: new[] {
                         "ec2:DescribeNetworkInterfaces",
                         "ec2:CreateNetworkInterface",
                         "ec2:DeleteNetworkInterface"
-                    }
+                    },
+                    condition: null
                 );
             }
 
@@ -610,7 +645,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     },
                     dependsOn: null,
                     arnAttribute: null,
-                    condition: null,
+                    condition: "UseCoreServices",
                     pragmas: null
                 );
 
@@ -645,7 +680,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                             },
                             dependsOn: new[] { "Module::Registration" },
                             arnAttribute: null,
-                            condition: function.Condition,
+                            condition: (function.Condition != null)
+                                ? FnAnd(FnCondition("UseCoreServices"), FnCondition(function.Condition))
+                                : "UseCoreServices",
                             pragmas: null
                         );
 
@@ -667,7 +704,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 },
                                 resourceExportAttribute: null,
                                 dependsOn: null,
-                                condition: function.Condition,
+                                condition: (function.Condition != null)
+                                    ? FnAnd(FnCondition("UseCoreServices"), FnCondition(function.Condition))
+                                    : "UseCoreServices",
                                 pragmas: null
                             );
                         }
@@ -676,15 +715,18 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private bool TryGetModuleVariable(string name, out object variable) {
+        private bool TryGetModuleVariable(string name, out object variable, out string condition) {
             if(_builder.TryGetOverride($"Module::{name}", out variable)) {
+                condition = null;
                 return true;
             }
             if(_builder.HasLambdaSharpDependencies) {
-                variable = FnRef($"LambdaSharp::{name}");
+                condition = "UseCoreServices";
+                variable = FnIf("UseCoreServices", FnRef($"LambdaSharp::{name}"), FnRef("AWS::NoValue"));
                 return true;
             }
             variable = null;
+            condition = null;
             return false;
         }
     }
