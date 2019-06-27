@@ -95,7 +95,7 @@ namespace Tests.LambdaSharp.Tool {
         }
 
         [Fact]
-        public void DoesNotMatchTightConstraint() {
+        public void MismatchedSuffixDoesNotMatchTightConstraint() {
 
             // arrange
             var versionConstraint = VersionInfo.Parse("0.7-WIP");
@@ -106,6 +106,34 @@ namespace Tests.LambdaSharp.Tool {
 
             // assert
             result.Should().Be(false);
+        }
+
+        [Fact]
+        public void PreviousVersionDoesNotMatchTightConstraint() {
+
+            // arrange
+            var versionConstraint = VersionInfo.Parse("0.6.0.2");
+            var version = VersionInfo.Parse("0.6");
+
+            // act
+            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+
+            // assert
+            result.Should().Be(false);
+        }
+
+        [Fact]
+        public void RevisionVersionMatchesTightConstraint() {
+
+            // arrange
+            var versionConstraint = VersionInfo.Parse("0.6.1");
+            var version = VersionInfo.Parse("0.6.1.2");
+
+            // act
+            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+
+            // assert
+            result.Should().Be(true);
         }
 
         private void IsLessThan(string left, string right) {

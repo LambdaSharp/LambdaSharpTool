@@ -173,19 +173,12 @@ namespace LambdaSharp.Tool {
         public bool MatchesConstraints(VersionInfo minVersion, VersionInfo maxVersion) {
 
             // check if min-max versions are the same; which indicates a tight version match
-            if((minVersion != null) && (maxVersion != null) && minVersion.CompareToVersion(maxVersion) == 0) {
-                if(minVersion.Major == 0) {
-
-                    // when Major version is 0, the build number is relevant
-                    return (Major == minVersion.Major)
-                        && (Minor == minVersion.Minor)
-                        && (Math.Max(Version.Build, 0) == Math.Max(minVersion.Version.Build, 0))
-                        && (Suffix == minVersion.Suffix);
-                } else {
-                    return (Major == minVersion.Major)
-                        && (Minor == minVersion.Minor)
-                        && (Suffix == minVersion.Suffix);
-                }
+            if((minVersion != null) && (maxVersion != null) && (minVersion.CompareToVersion(maxVersion) == 0)) {
+                return (Major == minVersion.Major)
+                    && (Minor == minVersion.Minor)
+                    && (Suffix == minVersion.Suffix)
+                    && ((minVersion.Version.Build == -1) || (minVersion.Version.Build == Version.Build))
+                    && ((minVersion.Version.Revision == -1) || (minVersion.Version.Revision == Version.Revision));
             }
             return ((minVersion == null) || IsGreaterOrEqualThanVersion(minVersion))
                 && ((maxVersion == null) || IsLessThanVersion(maxVersion));
