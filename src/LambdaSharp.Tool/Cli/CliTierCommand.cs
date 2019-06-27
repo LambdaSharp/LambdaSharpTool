@@ -87,6 +87,9 @@ namespace LambdaSharp.Tool.Cli.Tier {
         }
 
         private async Task UpdateCoreServicesAsync(Settings settings, bool? enable) {
+            if(!await PopulateRuntimeSettingsAsync(settings)) {
+                return;
+            }
 
             // fetch all stacks
             var prefix = $"{settings.Tier}-";
