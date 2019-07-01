@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7AE3C06C1B22AC53E21DAB092A868213"
+      "Default": "8229AF5A7BD9C88954C9A331853F09A4"
     }
   },
   "Resources": {
@@ -855,7 +855,7 @@
       "Value": "LambdaSharp.Sample.S3.Subscription:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     }
   },
   "Conditions": {
@@ -1166,7 +1166,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "7AE3C06C1B22AC53E21DAB092A868213",
+      "Hash": "8229AF5A7BD9C88954C9A331853F09A4",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

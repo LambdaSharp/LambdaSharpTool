@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "51FB7BE247B225FAB3F756A9124EA985"
+      "Default": "EA4C43C004D20643A9ACEC245D08B86E"
     }
   },
   "Resources": {
@@ -665,7 +665,7 @@
       "Value": "Test.TestModule:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     },
     "TestModuleMyCustomSnsResource": {
       "Value": {
@@ -1001,7 +1001,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "51FB7BE247B225FAB3F756A9124EA985",
+      "Hash": "EA4C43C004D20643A9ACEC245D08B86E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

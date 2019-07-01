@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6DCFB39FE52F370CACAC19A20441520A"
+      "Default": "E26F1AD81CA65AE27BAECA9361F5BC18"
     }
   },
   "Resources": {
@@ -1232,7 +1232,7 @@
       "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     },
     "WebSocketUrl": {
       "Value": {
@@ -1554,7 +1554,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "6DCFB39FE52F370CACAC19A20441520A",
+      "Hash": "E26F1AD81CA65AE27BAECA9361F5BC18",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

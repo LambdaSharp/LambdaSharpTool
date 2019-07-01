@@ -112,7 +112,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0E2FDB3E6855E2B02F267A33EEBFAA7D"
+      "Default": "D81C0C86F6339287216B45D81AF213C1"
     }
   },
   "Resources": {
@@ -831,7 +831,7 @@
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     },
     "TweetTopic": {
       "Value": {
@@ -1232,7 +1232,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "0E2FDB3E6855E2B02F267A33EEBFAA7D",
+      "Hash": "D81C0C86F6339287216B45D81AF213C1",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

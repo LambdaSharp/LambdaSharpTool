@@ -12,6 +12,12 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 (optional) Specify encryption key ID or alias to use (default: use default deployment tier key)
 </dd>
 
+<dt><code>--decrypt</code></dt>
+<dd>
+
+(optional) Decrypt value before encrypting it
+</dd>
+
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
 
