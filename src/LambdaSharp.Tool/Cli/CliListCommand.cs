@@ -20,11 +20,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.CloudFormation;
-using Amazon.CloudFormation.Model;
+using LambdaSharp.Tool.Cli.Tier;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -51,65 +49,20 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task List(Settings settings) {
+            await PopulateRuntimeSettingsAsync(settings);
 
-            // fetch all stacks
-            var prefix = settings.TierPrefix;
-            var stacks = new List<Stack>();
-            var request = new DescribeStacksRequest();
-            do {
-                var response = await settings.CfnClient.DescribeStacksAsync(request);
-                stacks.AddRange(response.Stacks.Where(summary => {
-
-                    // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
-                    //  if an output key exists and then default to empty string when it is null to properly compare it.
-                    var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
-                    if(lambdaSharpTier == null) {
-
-                        // TODO: check which lambdasharp tool built the module; if < 0.7, use prefix check to determine if module belongs to tier
-                        return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
-                    }
-                    return (lambdaSharpTier.OutputValue ?? "") == settings.Tier;
-                }));
-                request.NextToken = response.NextToken;
-            } while(request.NextToken != null);
+            // gather module details
+            var tierManager = new TierManager(settings);
+            var moduleDetails = await tierManager.GetModuleDetailsAsync();
 
             // sort and format output
-            if(stacks.Any()) {
-
-                // gather summaries
-                var summaries = stacks.Select(stack => new {
-                    ModuleName = stack.StackName.Substring(prefix.Length),
-                    StackStatus = stack.StackStatus.ToString(),
-                    Date = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
-                    Description = stack.Description,
-                    ModuleReference = GetShortModuleReference(stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue ?? "")
-                }).OrderBy(summary => summary.Date).ToList();
-
-                // extract formatting information
-                var moduleNameWidth = summaries.Max(stack => stack.ModuleName.Length) + 4;
-                var moduleReferenceWidth = summaries.Max(stack => stack.ModuleReference.Length + 4);
-                var statusWidth = summaries.Max(stack => stack.StackStatus.Length) + 4;
-
-                // print results
-                Console.WriteLine();
-                Console.WriteLine($"Found {stacks.Count:N0} modules for deployment tier '{settings.TierName}'");
-                Console.WriteLine();
-                Console.WriteLine($"{"NAME".PadRight(moduleNameWidth)}{"MODULE".PadRight(moduleReferenceWidth)}{"STATUS".PadRight(statusWidth)}DATE");
-                foreach(var summary in summaries) {
-                    Console.WriteLine($"{summary.ModuleName.PadRight(moduleNameWidth)}{summary.ModuleReference.PadRight(moduleReferenceWidth)}{summary.StackStatus.PadRight(statusWidth)}{summary.Date:yyyy-MM-dd HH:mm:ss}");
-                }
-            } else {
-                Console.WriteLine();
-                Console.WriteLine($"Found no modules for deployment tier '{settings.TierName}'");
-            }
-
-            // local functions
-            string GetShortModuleReference(string moduleReference) {
-                if(moduleReference.EndsWith("@" + settings.DeploymentBucketName, StringComparison.Ordinal)) {
-                    return moduleReference.Substring(0, moduleReference.Length - settings.DeploymentBucketName.Length - 1);
-                }
-                return moduleReference;
-            }
+            tierManager.ShowModuleDetails(
+                moduleDetails.OrderBy(module => module.DeploymentDate),
+                (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
+                (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
+                (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
+                (ColumnTitle: "DATE", GetColumnValue: module => module.DeploymentDate.ToString("yyyy-MM-dd HH:mm:ss"))
+            );
         }
     }
 }

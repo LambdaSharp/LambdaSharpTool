@@ -25,27 +25,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using LambdaSharp.Tool.Cli.Tier;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace LambdaSharp.Tool.Cli.Tier {
+namespace LambdaSharp.Tool.Cli {
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class CliTierCommand : ACliCommand {
-
-        //--- Types ---
-        private class ModuleSummary {
-
-            //--- Properties ---
-            public string StackName { get; set; }
-            public string ModuleDeploymentName { get; set; }
-            public string StackStatus { get; set; }
-            public DateTime DeploymentDate { get; set; }
-            public Stack Stack { get; set; }
-            public string ModuleReference { get; set; }
-            public string CoreServices { get; set; }
-
-        }
 
         //--- Methods ---
         public void Register(CommandLineApplication app) {
@@ -91,45 +78,40 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 return;
             }
 
-            // fetch all stacks
-            var prefix = $"{settings.Tier}-";
-
-            // gather summaries
-            var summaries = await GetModuleSummaries(settings);
+            // gather module details
+            var tierManager = new TierManager(settings);
+            var moduleDetails = (await tierManager.GetModuleDetailsAsync()).OrderBy(module => module.ModuleDeploymentName);
+            ShowModuleDetails(tierManager, moduleDetails);
 
             // check if tier has any stacks
-            if(summaries.Any()) {
-                ShowSummaries(settings, summaries);
-
-                // validate that all modules in tier can enable/disable core services
-                if(enable.HasValue) {
-                    foreach(var summary in summaries.Where(s => s.CoreServices == null)) {
-                        LogError($"${summary.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
-                    }
-                }
-                if(!enable.HasValue || HasErrors) {
-                    return;
-                }
-
-                // update core services for each affected root module
-                var coreServicesParameter = enable.Value ? "Enabled" : "Disabled";
-                var parameters = new Dictionary<string, string> {
-                    ["LambdaSharpCoreServices"] = coreServicesParameter
-                };
-                foreach(var summary in summaries
-                    .Where(s => (s.CoreServices != coreServicesParameter))
-                    .Where(summary => summary.Stack.RootId == null)
-                ) {
-                    await UpdateStackParameters(settings, summary, parameters);
-                }
-
-                // show updated state
-                summaries = await GetModuleSummaries(settings);
-                ShowSummaries(settings, summaries);
-            } else {
-                Console.WriteLine();
-                Console.WriteLine($"Found no modules for deployment tier '{settings.Tier}'");
+            if(!moduleDetails.Any()) {
+                return;
             }
+
+            // validate that all modules in tier can enable/disable core services
+            if(enable.HasValue) {
+                foreach(var summary in moduleDetails.Where(s => s.CoreServices == null)) {
+                    LogError($"${summary.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
+                }
+            }
+            if(!enable.HasValue || HasErrors) {
+                return;
+            }
+
+            // update core services for each affected root module
+            var coreServicesParameter = enable.Value ? "Enabled" : "Disabled";
+            var parameters = new Dictionary<string, string> {
+                ["LambdaSharpCoreServices"] = coreServicesParameter
+            };
+            foreach(var module in moduleDetails
+                .Where(module => (module.CoreServices != coreServicesParameter))
+                .Where(module => module.IsRoot)
+            ) {
+                await UpdateStackParameters(settings, module, parameters);
+            }
+
+            // show updated state
+            ShowModuleDetails(tierManager, await tierManager.GetModuleDetailsAsync());
         }
 
         private async Task<List<Change>> WaitForChangeSetAsync(Settings settings, string changeSetId) {
@@ -172,69 +154,20 @@ namespace LambdaSharp.Tool.Cli.Tier {
             }
         }
 
-        private async Task<IEnumerable<ModuleSummary>> GetModuleSummaries(Settings settings) {
-            var prefix = settings.TierPrefix;
-            var stacks = new List<Stack>();
-            var request = new DescribeStacksRequest();
-            do {
-                var response = await settings.CfnClient.DescribeStacksAsync(request);
-                stacks.AddRange(response.Stacks.Where(summary => {
-
-                    // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
-                    //  if an output key exists and then default to empty string when it is null to properly compare it.
-                    var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
-                    if(lambdaSharpTier == null) {
-
-                        // TODO: check which lambdasharp tool built the module; if < 0.7, use prefix check to determine if module belongs to tier
-                        return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
-                    }
-                    return (lambdaSharpTier.OutputValue ?? "") == settings.Tier;
-                }));
-                request.NextToken = response.NextToken;
-            } while(request.NextToken != null);
-            return stacks.Select(stack => new ModuleSummary {
-                StackName = stack.StackName,
-                ModuleDeploymentName = stack.StackName.Substring(prefix.Length),
-                StackStatus = stack.StackStatus.ToString(),
-                DeploymentDate = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
-                Stack = stack,
-                ModuleReference = GetShortModuleReference(stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue ?? ""),
-                CoreServices = stack.Parameters
-                    .FirstOrDefault(parameter => parameter.ParameterKey == "LambdaSharpCoreServices")
-                    ?.ParameterValue
-            })
-                .Where(summary => !summary.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))
-                .OrderBy(summary => summary.DeploymentDate)
-                .ToList();
-
-            // local functions
-            string GetShortModuleReference(string moduleReference) {
-                if(moduleReference.EndsWith("@" + settings.DeploymentBucketName, StringComparison.Ordinal)) {
-                    return moduleReference.Substring(0, moduleReference.Length - settings.DeploymentBucketName.Length - 1);
-                }
-                return moduleReference;
-            }
+        private void ShowModuleDetails(TierManager tierManager, IEnumerable<TierModuleDetails> moduleDetails) {
+            tierManager.ShowModuleDetails(
+                moduleDetails.OrderBy(module => module.ModuleDeploymentName),
+                (ColumnTitle: "NAME", GetColumnValue: module => module.ModuleDeploymentName),
+                (ColumnTitle: "MODULE", GetColumnValue: module => module.ModuleReference),
+                (ColumnTitle: "STATUS", GetColumnValue: module => module.StackStatus),
+                (ColumnTitle: "CORE-SERVICES", GetColumnValue: module => module.CoreServices?.ToUpperInvariant() ?? "N/A")
+            );
         }
 
-        private void ShowSummaries(Settings settings, IEnumerable<ModuleSummary> summaries) {
-
-            // validate that all modules in tier can enable/disable core services
-            var moduleNameWidth = summaries.Max(stack => stack.ModuleDeploymentName.Length) + 4;
-            var moduleReferenceWidth = summaries.Max(stack => stack.ModuleReference.Length + 4);
-            var statusWidth = summaries.Max(stack => stack.StackStatus.Length) + 4;
-            Console.WriteLine();
-            Console.WriteLine($"Found {summaries.Count():N0} modules for deployment tier '{settings.Tier}'");
-            Console.WriteLine();
-            Console.WriteLine($"{"NAME".PadRight(moduleNameWidth)}{"MODULE".PadRight(moduleReferenceWidth)}{"STATUS".PadRight(statusWidth)}CORE-SERVICES");
-            foreach(var summary in summaries) {
-                Console.WriteLine($"{summary.ModuleDeploymentName.PadRight(moduleNameWidth)}{summary.ModuleReference.PadRight(moduleReferenceWidth)}{summary.StackStatus.PadRight(statusWidth)}{summary.CoreServices?.ToUpperInvariant() ?? "N/A"}");
-            }
-        }
-
-        private async Task UpdateStackParameters(Settings settings, ModuleSummary summary, Dictionary<string, string> parameters) {
+        private async Task UpdateStackParameters(Settings settings, TierModuleDetails module, Dictionary<string, string> parameters) {
 
             // keep all original parameter values except for 'LambdaSharpCoreServices'
-            var stackParameters = summary.Stack.Parameters
+            var stackParameters = module.Stack.Parameters
                 .Select(parameter => {
                     if(parameters.TryGetValue(parameter.ParameterKey, out var value)) {
                         return new CloudFormationParameter {
@@ -250,24 +183,24 @@ namespace LambdaSharp.Tool.Cli.Tier {
 
             // create change-set
             var now = DateTime.UtcNow;
-            var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(summary.StackName);
-            var changeSetName = $"{summary.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(module.StackName);
+            var changeSetName = $"{module.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
             Console.WriteLine();
-            Console.WriteLine($"=> Stack update initiated for {summary.StackName}");
+            Console.WriteLine($"=> Stack update initiated for {module.StackName}");
             var response = await settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
-                Capabilities = summary.Stack.Capabilities,
+                Capabilities = module.Stack.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack parameters update for {summary.ModuleReference}",
+                Description = $"Stack parameters update for {module.ModuleReference}",
                 Parameters = stackParameters,
-                StackName = summary.StackName,
+                StackName = module.StackName,
                 UsePreviousTemplate = true,
-                Tags = summary.Stack.Tags
+                Tags = module.Stack.Tags
             });
             try {
                 var changes = await WaitForChangeSetAsync(settings, response.Id);
                 if(changes == null) {
-                    LogError($"unable to apply changes to ${summary.ModuleDeploymentName}");
+                    LogError($"unable to apply changes to ${module.ModuleDeploymentName}");
                     return;
                 }
                 if(!changes.Any()) {
@@ -278,14 +211,14 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 // execute change-set
                 await settings.CfnClient.ExecuteChangeSetAsync(new ExecuteChangeSetRequest {
                     ChangeSetName = changeSetName,
-                    StackName = summary.StackName
+                    StackName = module.StackName
                 });
-                var outcome = await settings.CfnClient.TrackStackUpdateAsync(summary.StackName, mostRecentStackEventId, logError: LogError);
+                var outcome = await settings.CfnClient.TrackStackUpdateAsync(module.StackName, mostRecentStackEventId, logError: LogError);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack update finished");
                 } else {
                     Console.WriteLine($"=> Stack update FAILED");
-                    LogError($"unable to update {summary.ModuleDeploymentName}");
+                    LogError($"unable to update {module.ModuleDeploymentName}");
                 }
             } finally {
                 try {

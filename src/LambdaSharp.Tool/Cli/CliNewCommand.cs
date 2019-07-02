@@ -23,8 +23,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Model;
