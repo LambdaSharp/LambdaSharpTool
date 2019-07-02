@@ -1,4 +1,4 @@
-# λ# - Favorinus (v0.6.0.2) - 2019-06-26
+# λ# - Favorinus (v0.6.0.3) - 2019-07-01
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
@@ -185,6 +185,17 @@ This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueServic
 The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction) was also enhanced to provide support for target methods invocations.
 
 ## Releases
+
+### (v0.6.0.3) - 2019-07-01
+
+#### New Features
+
+* Added `--decrypt` option to `lash encrypt`, which decrypts the supplied value before encrypting it again. Useful when changing secret keys.
+* Enhanced `lash tier coreservices` to also show nested stacks, but ignore them when using either the `--enable` or `--disable` options.
+
+#### Fixes
+
+* Fixed an issue where the IAM policy for using secret keys was not created/updated before the embedded `DecryptionSecret` function was invoked, leading to a CloudFormation failure.
 
 ### (v0.6.0.2) - 2019-06-26
 

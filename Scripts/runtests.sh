@@ -4,6 +4,9 @@ if [ -z "$LAMBDASHARP" ]; then
     exit 1
 fi
 
+# never use suffix for tests
+unset LAMBDASHARP_VERSION_SUFFIX
+
 if [ -z "$1" ]; then
 
     # run everything
@@ -13,10 +16,9 @@ if [ -z "$1" ]; then
         --aws-region us-east-1 \
         --aws-account-id 123456789012 \
         --aws-user-arn arn:aws:iam::123456789012:user/test-user \
-        --tier-version 0.5 \
-        --cli-version 0.5 \
-        --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic
+        --tier-version $LAMBDASHARP_VERSION_PREFIX \
+        --cli-version $LAMBDASHARP_VERSION_PREFIX \
+        --deployment-bucket-name lambdasharp-bucket-name
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -33,10 +35,9 @@ if [ -z "$1" ]; then
         --aws-user-arn arn:aws:iam::123456789012:user/test-user \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --tier-version 0.5 \
-        --cli-version 0.5 \
+        --tier-version $LAMBDASHARP_VERSION_PREFIX \
+        --cli-version $LAMBDASHARP_VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
         $LAMBDASHARP/Tests/Modules/Empty.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoLambdaSharpDependencies.yml \
@@ -130,10 +131,9 @@ else
         --aws-region us-east-1 \
         --git-sha 0123456789ABCDEF0123456789ABCDEF01234567 \
         --git-branch test-branch \
-        --tier-version 0.5 \
-        --cli-version 0.5 \
+        --tier-version $LAMBDASHARP_VERSION_PREFIX \
+        --cli-version $LAMBDASHARP_VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
         $LAMBDASHARP/Tests/Modules/$1
 fi

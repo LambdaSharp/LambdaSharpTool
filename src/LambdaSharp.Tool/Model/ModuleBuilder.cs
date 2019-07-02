@@ -796,6 +796,7 @@ namespace LambdaSharp.Tool.Model {
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
+                MandatoryAdd("LambdaSharpCoreServices", FnRef("LambdaSharpCoreServices"));
             });
             return resource;
 

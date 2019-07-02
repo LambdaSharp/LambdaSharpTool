@@ -1,6 +1,6 @@
 # Encrypt Text
 
-The `encrypt` command is used to encrypt sensitive information using a managed encryption key. The encryption key can either be selected by using the `--key` option or by specifying the deployment tier with the `--tier` option. In the latter case, the default LambdaSharp secret key for the chosen deployment tier is used.
+The `encrypt` command is used to encrypt sensitive information using a managed encryption key. The encryption key is selected by using the `--key` option.
 
 ## Options
 
@@ -9,7 +9,13 @@ The `encrypt` command is used to encrypt sensitive information using a managed e
 <dt><code>--key &lt;KEY-ID&gt;</code></dt>
 <dd>
 
-(optional) Specify encryption key ID or alias to use (default: use default deployment tier key)
+Specify encryption key ID or alias to use (default: use default deployment tier key)
+</dd>
+
+<dt><code>--decrypt</code></dt>
+<dd>
+
+(optional) Decrypt value before encrypting it
 </dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>

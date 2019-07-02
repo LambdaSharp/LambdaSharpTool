@@ -74,6 +74,22 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
+echo "************************"
+echo "*** Init LambdaSharp ***"
+echo "*************************"
+
+cd $LAMBDASHARP
+SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
+LAMBDASHARP_TIER=TestContrib$SUFFIX
+
+lash init \
+    --core-services enabled \
+    --existing-s3-bucket-name=""
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+
+
 echo "*********************"
 echo "*** Build Samples ***"
 echo "*********************"
@@ -94,27 +110,12 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 
-echo "************************"
-echo "*** Init LambdaSharp ***"
-echo "*************************"
-
-cd $LAMBDASHARP
-SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
-LAMBDASHARP_TIER=TestContrib$SUFFIX
-
-lash init \
-    --core-services enabled \
-    --existing-s3-bucket-name=""
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-
-
 # Deploy all λ# Sample Modules
 echo "**********************"
 echo "*** Deploy Samples ***"
 echo "**********************"
 
+cd $LAMBDASHARP
 lash deploy \
     Samples/AlexaSample/bin/cloudformation.json \
     Samples/ApiSample/bin/cloudformation.json \

@@ -442,7 +442,7 @@ namespace LambdaSharp.Tool.Cli {
                 // retrieve the CloudWatch/X-Ray role from the API Gateway account
             Console.WriteLine("=> Checking API Gateway role");
             var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
-            var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? "LambdaSharp-ApiGatewayRole");
+            var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? DEFAULT_API_GATEWAY_ROLE);
 
             // check if the role has the expected managed policies; if not, attach them
             var attachedPolicies = (await settings.IamClient.ListAttachedRolePoliciesAsync(new ListAttachedRolePoliciesRequest {
@@ -452,7 +452,7 @@ namespace LambdaSharp.Tool.Cli {
             await CheckOrAttachPolicy("arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess");
 
             // update API Gateway Account role if needed
-            if(account.CloudwatchRoleArn == null) {
+            if(account.CloudwatchRoleArn != role.Arn) {
                 Console.WriteLine($"=> Updating API Gateway role");
                 while(true) {
                     try {

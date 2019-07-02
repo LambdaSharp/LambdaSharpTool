@@ -127,14 +127,12 @@ namespace LambdaSharp.Tool.Cli {
             var awsUserArnOption = cmd.Option("--aws-user-arn <ARN>", "(test only) Override AWS user ARN (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
-            var deploymentNotificationTopicOption = cmd.Option("--deployment-notifications-topic <ARN>", "(test only) SNS Topic for CloudFormation deployment notifications (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
             awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
-            deploymentNotificationTopicOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;
             return async () => {
 
@@ -187,7 +185,6 @@ namespace LambdaSharp.Tool.Cli {
                     // initialize LambdaSharp deployment values
                     var tierVersion = tierVersionOption.Value();
                     var deploymentBucketName = deploymentBucketNameOption.Value();
-                    var deploymentNotificationTopic = deploymentNotificationTopicOption.Value();
 
                     // create a settings instance for each module filename
                     return new Settings {
