@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EE2D915C0B329F3C86E099C214A471D0"
+      "Default": "052FB63752C868FAAA91B163C25D6711"
     }
   },
   "Resources": {
@@ -720,7 +720,7 @@
       "Value": "LambdaSharp.Sample.DynamoDB:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     }
   },
   "Conditions": {
@@ -1031,7 +1031,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "EE2D915C0B329F3C86E099C214A471D0",
+      "Hash": "052FB63752C868FAAA91B163C25D6711",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

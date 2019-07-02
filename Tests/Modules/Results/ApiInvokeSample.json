@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C4EAF147FA3477BABA0AA4FE32823434"
+      "Default": "7E326007C347BE342B39F79FACECF04E"
     }
   },
   "Resources": {
@@ -871,7 +871,7 @@
       "Value": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     },
     "ApiUrl": {
       "Value": {
@@ -1193,7 +1193,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "C4EAF147FA3477BABA0AA4FE32823434",
+      "Hash": "7E326007C347BE342B39F79FACECF04E",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

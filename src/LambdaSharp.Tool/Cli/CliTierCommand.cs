@@ -113,7 +113,10 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 var parameters = new Dictionary<string, string> {
                     ["LambdaSharpCoreServices"] = coreServicesParameter
                 };
-                foreach(var summary in summaries.Where(s => (s.CoreServices != coreServicesParameter))) {
+                foreach(var summary in summaries
+                    .Where(summary => summary.Stack.RootId == null)
+                    .Where(s => (s.CoreServices != coreServicesParameter))
+                ) {
                     await UpdateStackParameters(settings, summary, parameters);
                 }
 
@@ -187,7 +190,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     ?.ParameterValue
             })
                 .Where(summary => !summary.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))
-                .Where(summary => summary.Stack.RootId == null)
                 .OrderBy(summary => summary.DeploymentDate)
                 .ToList();
         }

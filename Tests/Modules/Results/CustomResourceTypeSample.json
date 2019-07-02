@@ -74,7 +74,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "525B5DDB6556ADC8D2834C11DC4082D9"
+      "Default": "A6D8001304634F4CA04C4846A3859487"
     }
   },
   "Resources": {
@@ -630,7 +630,7 @@
       "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     },
     "MyNamespaceMyResource": {
       "Value": {
@@ -955,7 +955,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "525B5DDB6556ADC8D2834C11DC4082D9",
+      "Hash": "A6D8001304634F4CA04C4846A3859487",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

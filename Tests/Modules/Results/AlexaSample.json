@@ -79,7 +79,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9935A5D6C63458C70DFAD4C26C83B3C4"
+      "Default": "245917C1AE262C29D01BC7DD9EE62D14"
     }
   },
   "Resources": {
@@ -659,7 +659,7 @@
       "Value": "LambdaSharp.Sample.Alexa:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     }
   },
   "Conditions": {
@@ -999,7 +999,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "9935A5D6C63458C70DFAD4C26C83B3C4",
+      "Hash": "245917C1AE262C29D01BC7DD9EE62D14",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

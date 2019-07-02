@@ -77,7 +77,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "10EFB79630AE5B0CD149E4BFA7F10EBC"
+      "Default": "6F3691FBDC89579E0A53C7809CE2435F"
     }
   },
   "Resources": {
@@ -648,7 +648,7 @@
       "Value": "Test.TestModule:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     }
   },
   "Conditions": {
@@ -984,7 +984,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "10EFB79630AE5B0CD149E4BFA7F10EBC",
+      "Hash": "6F3691FBDC89579E0A53C7809CE2435F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

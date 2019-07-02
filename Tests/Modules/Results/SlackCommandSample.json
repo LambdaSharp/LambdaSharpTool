@@ -79,7 +79,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AD5665D46A4487279DD5E5247B8AAC4D"
+      "Default": "E314CF5F10EC42455FF8DF1ABB1F567A"
     }
   },
   "Resources": {
@@ -775,7 +775,7 @@
       "Value": "LambdaSharp.Sample.SlackCommand:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.2"
+      "Value": "0.6.0.3"
     }
   },
   "Conditions": {
@@ -1107,7 +1107,7 @@
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "AD5665D46A4487279DD5E5247B8AAC4D",
+      "Hash": "E314CF5F10EC42455FF8DF1ABB1F567A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
