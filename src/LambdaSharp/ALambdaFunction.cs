@@ -459,9 +459,6 @@ namespace LambdaSharp {
                 LogInfo($"GIT-BRANCH = {gitBranch ?? "NONE"}");
             }
 
-            // convert environment variables to lambda parameters
-            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
-
             // initialize error/warning reporter
             ErrorReportGenerator = new LambdaErrorReportGenerator(
                 _moduleId,
@@ -472,6 +469,9 @@ namespace LambdaSharp {
                 gitSha,
                 gitBranch
             );
+
+            // convert environment variables to lambda parameters
+            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
         }
 
         /// <summary>
