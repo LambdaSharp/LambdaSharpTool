@@ -115,6 +115,7 @@ namespace LambdaSharp.CustomResource {
                 var request = new Request<TProperties> {
                     RequestType = rawRequest.RequestType,
                     ResourceType = rawRequest.ResourceType,
+                    StackId = rawRequest.StackId,
                     LogicalResourceId = rawRequest.LogicalResourceId,
                     PhysicalResourceId = rawRequest.PhysicalResourceId,
                     ResourceProperties = rawRequest.ResourceProperties,

@@ -57,17 +57,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _stack.Transform = "AWS::Serverless-2016-10-31";
             }
 
-            // add outputs
-            _stack.Add("Module", new Humidifier.Output {
-                Value = $"{_module.FullName}:{_module.Version}@{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}"
-            });
-            _stack.Add("LambdaSharpTool", new Humidifier.Output {
-                Value = Settings.ToolVersion.ToString()
-            });
-            _stack.Add("LambdaSharpTier", new Humidifier.Output {
-                Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
-            });
-
             // add items
             foreach(var item in _module.Items) {
                 AddItem(item);
@@ -96,6 +85,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // add module manifest
             var manifest = new ModuleManifest {
                 Module = module.Info,
+                Description = module.Description,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
@@ -112,16 +102,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                             ConstraintDescription = input.Parameter.ConstraintDescription
                         }).ToList()
                     }).ToList(),
-                RuntimeCheck = module.HasRuntimeCheck,
                 Assets = module.Assets.ToList(),
                 Dependencies = module.Dependencies
                     .Select(dependency => new ModuleManifestDependency {
-
-                        // TODO: single line format?
-                        ModuleInfo = ModuleInfo.Parse($"{dependency.Value.ModuleFullName}@{dependency.Value.ModuleOrigin}"),
-                        MinVersion = dependency.Value.ModuleMinVersion,
-                        MaxVersion = dependency.Value.ModuleMaxVersion,
-                        Nested = dependency.Value.Nested
+                        ModuleInfo = dependency.Value.ModuleLocation.ModuleInfo,
+                        Type = dependency.Value.Type
                     })
                     .OrderBy(dependency => dependency.ModuleInfo.ToModuleReference())
                     .ToList(),
@@ -135,12 +120,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     })
                     .OrderBy(output => output.Name)
                     .ToList(),
-                Macros = module.MacroNames
-                    .Select(name => new ModuleManifestMacro {
-                        Name = name
-                    })
-                    .OrderBy(macro => macro.Name)
-                    .ToList(),
                 TypeNameMappings = module.ResourceTypeNameMappings
                     .Where(kv => _stack.Resources.Any(resource => resource.Value.AWSTypeName == kv.Key))
                     .ToDictionary(kv => kv.Key, kv => kv.Value),
@@ -153,37 +132,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Where(item => item.LogicalId != item.FullName)
                     .ToDictionary(item => item.LogicalId, item => item.FullName)
             };
-
-            // remove empty collections, they are not needed
-            if(!manifest.ParameterSections.Any()) {
-                manifest.ParameterSections = null;
-            }
-            if(!manifest.Assets.Any()) {
-                manifest.Assets = null;
-            }
-            if(!manifest.Dependencies.Any()) {
-                manifest.Dependencies = null;
-            }
-            if(!manifest.ResourceTypes.Any()) {
-                manifest.ResourceTypes = null;
-            }
-            if(!manifest.Outputs.Any()) {
-                manifest.Outputs = null;
-            }
-            if(!manifest.Macros.Any()) {
-                manifest.Macros = null;
-            }
-            if(!manifest.TypeNameMappings.Any()) {
-                manifest.TypeNameMappings = null;
-            }
-            if(!manifest.ResourceNameMappings.Any()) {
-                manifest.ResourceNameMappings = null;
-            }
             _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
 
             // update template with template hash
-            var templateHash = GenerateCloudFormationTemplateHash();
-            manifest.Hash = templateHash;
+            var templateHash = GenerateCloudFormationTemplateChecksum();
+            manifest.TemplateChecksum = templateHash;
             if((gitSha != null) || (gitBranch != null)) {
                 manifest.Git = new ModuleManifestGitInfo {
                     SHA = gitSha,
@@ -191,6 +144,20 @@ namespace LambdaSharp.Tool.Cli.Build {
                 };
             }
             _stack.Parameters["DeploymentChecksum"].Default = templateHash;
+
+            // add outputs
+            _stack.Add("Module", new Humidifier.Output {
+                Value = $"{_module.FullName}:{_module.Version}@{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}"
+            });
+            _stack.Add("LambdaSharpTool", new Humidifier.Output {
+                Value = Settings.ToolVersion.ToString()
+            });
+            _stack.Add("LambdaSharpTier", new Humidifier.Output {
+                Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
+            });
+            _stack.Add("ModuleTemplateChecksum", new Humidifier.Output {
+                Value = templateHash
+            });
 
             // generate JSON template
             return new JsonStackSerializer().Serialize(_stack);
@@ -271,7 +238,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private string GenerateCloudFormationTemplateHash() {
+        private string GenerateCloudFormationTemplateChecksum() {
 
             // convert stack to string using the Humidifier serializer
             var json = new JsonStackSerializer().Serialize(_stack);

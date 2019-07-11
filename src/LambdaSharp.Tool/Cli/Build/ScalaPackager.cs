@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // rename function package with hash
-            var package = Path.Combine(outputDirectory, $"function_{function.Name}_{hash}.jar");
+            var package = Path.Combine(outputDirectory, $"function_{builder.FullName}_{function.LogicalId}_{hash}.jar");
             if(!existingPackages.Remove(package)) {
                 File.Move(scalaOutputJar, package);
 

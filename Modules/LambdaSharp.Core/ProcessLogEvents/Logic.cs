@@ -164,13 +164,13 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         }
 
         private Task MatchTimeoutAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
-            report.Message = match.Groups["ErrorMessage"].Value;
+            report.Message = $"Lambda timed out after {match.Groups["Duration"].Value} seconds";
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
 
         private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, LambdaErrorReport report, Match match) {
-            report.Message = match.Groups["ErrorMessage"].Value;
+            report.Message = "Lambda exited before completing request";
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
@@ -201,8 +201,8 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
                 // report out-of-memory error
                 report.Level = "ERROR";
-                report.Message = $"Process ran out of memory (Max: {usage.UsedMemory} MB)";
-                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Process ran out of memory");
+                report.Message = $"Lambda ran out of memory (Max: {usage.UsedMemory} MB)";
+                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda ran out of memory");
             } else if(usage.UsedDurationPercent >= 1.0f) {
 
                 // nothing to do since timeouts are reported separately
@@ -210,8 +210,8 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
                 // report near out-of-memory/timeout warning
                 report.Level = "WARNING";
-                report.Message = $"Process nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
-                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Process nearing execution limits");
+                report.Message = $"Lambda nearing execution limits (Memory {usage.UsedMemoryPercent:P2}, Duration: {usage.UsedDurationPercent:P2})";
+                report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda nearing execution limits");
             }
             if(report.Message != null) {
                 tasks.Add(_provider.SendErrorReportAsync(owner, report));

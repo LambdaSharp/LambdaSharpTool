@@ -39,7 +39,7 @@ namespace LambdaSharp.Tool.Model {
         public IEnumerable<object> Secrets { get; set; }
         public IEnumerable<AModuleItem> Items { get; set; }
         public IEnumerable<string> Assets { get; set; }
-        public IEnumerable<KeyValuePair<string, ModuleDependency>> Dependencies { get; set; }
+        public IEnumerable<KeyValuePair<string, ModuleBuilderDependency>> Dependencies { get; set; }
         public IEnumerable<ModuleManifestResourceType> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }
         public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
@@ -50,7 +50,6 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;
-        public bool HasRuntimeCheck => !HasPragma("no-core-version-check");
         public bool HasSamTransform => HasPragma("sam-transform");
     }
 }

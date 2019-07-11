@@ -63,14 +63,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-            var foundModuleLocation = await _loader.LocateAsync(moduleInfo);
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo);
             if(foundModuleLocation == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(foundModuleLocation);
+            var manifest = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
             if(manifest == null) {
                 return false;
             }
@@ -182,9 +182,9 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // deploy module dependencies
                 foreach(var dependency in dependencies) {
-                    if(!await new ModelUpdater(Settings, dependency.ModuleInfo.ToModuleReference()).DeployChangeSetAsync(
+                    if(!await new ModelUpdater(Settings, SourceFilename).DeployChangeSetAsync(
                         dependency.Manifest,
-                        dependency.ModuleInfo,
+                        new ModuleLocation(Settings.DeploymentBucketName, dependency.ModuleLocation.ModuleInfo, dependency.ModuleLocation.Hash),
                         Settings.GetStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
@@ -197,7 +197,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // deploy module
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    manifest.GetModuleInfo(),
+                    new ModuleLocation(Settings.DeploymentBucketName, manifest.GetModuleInfo(), manifest.TemplateChecksum),
                     stackName,
                     allowDataLoos,
                     protectStack,
@@ -211,13 +211,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // check if the module was already deployed
             var existing = await Settings.CfnClient.GetStackAsync(stackName, LogError);
-            if(!existing.Success || (existing.Stack == null)) {
+            if(existing.Stack == null) {
                 return (existing.Success, existing.Stack);
             }
 
             // validate existing module deployment
-            var deployedOutputs = existing.Stack?.Outputs;
-            var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+            var deployed = existing.Stack?.GetModuleVersionText();
             if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
                 LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
                 return (false, existing.Stack);

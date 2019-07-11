@@ -1,3 +1,5 @@
+> TODO: update documentation for this command
+
 # Initialize Deployment Tier
 
 The `init` command is used to both initialize a new deployment tier and update an existing one.

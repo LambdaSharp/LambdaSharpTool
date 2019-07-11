@@ -4,7 +4,6 @@ Pragmas are used to change the default processing behavior of the λ# CLI. They 
 
 |Pragma                                 |Definition                           |
 |---------------------------------------|-------------------------------------|
-|`no-core-version-check`                |Don't check if the λ# Core and CLI versions match|
 |`no-lambdasharp-dependencies`          |Don't reference λ# Core resources (DLQ, Logging Stream, etc.)|
 |`no-module-registration`               |Don't create a module registration|
 |`Overrides`                            |Override default values for built-in declarations|

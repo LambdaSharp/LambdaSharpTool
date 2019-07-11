@@ -103,6 +103,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
+        //--- Methods ---
         public void Package(
             ModuleBuilder builder,
             bool noCompile,
@@ -238,7 +239,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // compile function project
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
-            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_temporary.zip");
+            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             var obsoleteNodes = csproj.DescendantNodes()
@@ -400,7 +401,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // rename function package with hash
-            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
             if(!_existingPackages.Remove(package)) {
                 File.Move(temporaryPackage, package);
 
@@ -532,7 +533,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
             var buildFolder = Path.GetDirectoryName(function.Project);
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
-            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
             if(!_existingPackages.Remove(package)) {
                 CreatePackage(package, gitSha, gitBranch, buildFolder);
             }
@@ -687,7 +688,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build invocation arguments
-            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{function.LogicalId}.json");
+            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
             _existingPackages.Remove(schemaFile);
             var arguments = new[] {
                 "util", "create-invoke-methods-schema",

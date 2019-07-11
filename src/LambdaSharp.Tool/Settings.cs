@@ -181,7 +181,6 @@ namespace LambdaSharp.Tool {
         public IAmazonLambda LambdaClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
-        public bool NoDependencyValidation { get; set; }
         public bool PromptsAsErrors { get; set; }
 
         //--- Methods ---
@@ -254,7 +253,7 @@ namespace LambdaSharp.Tool {
                 WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
             }
             while(true) {
-                var enteredValue = PromptString($"Enter a choice (1-{choiceCount})", pattern: null, constraintDescription: null, defaultValue: null);
+                var enteredValue = PromptString($"Enter a choice", pattern: null, constraintDescription: null, defaultValue: null);
                 if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
                     return choices[choice - 1];
                 }

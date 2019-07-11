@@ -129,7 +129,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // compute hash for all files
                 var fileValueToFileKey = parameter.Files.ToDictionary(kv => kv.Value, kv => kv.Key);
                 var hash = parameter.Files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
-                var package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{hash}.zip");
+                var package = Path.Combine(Settings.OutputDirectory, $"package_{_builder.FullName}_{parameter.LogicalId}_{hash}.zip");
 
                 // only build package if it doesn't exist
                 if(!_existingPackages.Remove(package)) {

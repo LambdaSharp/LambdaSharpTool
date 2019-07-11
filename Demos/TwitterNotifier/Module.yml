@@ -77,6 +77,7 @@ Items:
       TwitterQuery: !Ref TwitterQuery
       TwitterLanguageFilter: !Ref TwitterLanguageFilter
       TwitterSentimentFilter: !Ref TwitterSentimentFilter
+      Secrets: !Ref Secrets
 
   - Resource: TwitterNotifyTopic
     Type: AWS::SNS::Topic

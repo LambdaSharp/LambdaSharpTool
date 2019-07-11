@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Methods ---
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
-            ModuleInfo moduleInfo,
+            ModuleLocation moduleLocation,
             string stackName,
             bool allowDataLoss,
             bool protectStack,
@@ -68,24 +68,27 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // check if cloudformation stack already exists and is in a final state
             Console.WriteLine();
-            Console.WriteLine($"Deploying stack: {stackName} [{moduleInfo}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{moduleLocation.ModuleInfo}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
             // validate template (must have been copied to deployment bucket at this stage)
-            var templateUrl = $"https://{Settings.DeploymentBucketName}.s3.amazonaws.com/{moduleInfo.TemplatePath}";
+            if(moduleLocation.SourceBucketName != Settings.DeploymentBucketName) {
+                LogError($"module source must match the deployment tier S3 bucket (EXPECTED: {Settings.DeploymentBucketName}, FOUND: {moduleLocation.SourceBucketName})");
+                return false;
+            }
             ValidateTemplateResponse validation;
             try {
                 validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
-                    TemplateURL = templateUrl
+                    TemplateURL = moduleLocation.ModuleTemplateUrl
                 });
             } catch(AmazonCloudFormationException e) {
-                LogError(e.Message);
+                LogError($"{e.Message} (url: {moduleLocation.ModuleTemplateUrl})");
                 return false;
             }
 
             // create change-set
             var success = false;
-            var changeSetName = $"{moduleInfo.FullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var changeSetName = $"{moduleLocation.ModuleInfo.FullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
@@ -95,7 +98,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 Capabilities = validation.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {moduleInfo.FullName} (v{moduleInfo.Version})",
+                Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
@@ -111,8 +114,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
                 },
                 StackName = stackName,
-                TemplateURL = templateUrl,
-                Tags = Settings.GetCloudFormationStackTags(moduleInfo.FullName, stackName)
+                TemplateURL = moduleLocation.ModuleTemplateUrl,
+                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
             });
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);

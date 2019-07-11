@@ -549,6 +549,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 condition: null
             );
 
+            // permissions needed for reading state of CloudFormation stack (used by Finalizer to confirm a delete operation is happening)
+            _builder.AddGrant(
+                name: "CloudFormation",
+                awsType: null,
+                reference: FnRef("AWS::StackId"),
+                allow: new[] {
+                    "cloudformation:DescribeStacks"
+                },
+                condition: null
+            );
+
             // permissions needed for X-Ray lambda daemon to upload tracing information
             _builder.AddGrant(
                 name: "AWSXRay",
@@ -593,7 +604,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependency(new ModuleInfo("LambdaSharp", "Core", Settings.ToolVersion.GetCompatibleBaseVersion(), "lambdasharp"), nested: false);
+                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.ToolVersion.GetCompatibleBaseVersion(), "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
 
                 // create module registration
                 _builder.AddResource(

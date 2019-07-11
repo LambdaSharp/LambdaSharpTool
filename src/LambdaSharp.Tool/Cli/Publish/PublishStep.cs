@@ -24,8 +24,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.S3.Transfer;
+using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -50,13 +52,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
         }
 
         //--- Methods---
-
-        // TODO: copy all module assets to tier deployment bucket
-
         public async Task<ModuleInfo> DoAsync(
             string cloudformationFile,
             bool forcePublish,
-            string forceModuleOrigin
+            string moduleOrigin
         ) {
             _forcePublish = forcePublish;
             _changesDetected = false;
@@ -84,7 +83,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 moduleInfo.Owner,
                 moduleInfo.Name,
                 moduleInfo.Version,
-                forceModuleOrigin ?? Settings.DeploymentBucketName
+                moduleOrigin ?? Settings.DeploymentBucketName
             );
             manifest.Module = moduleInfo.ToModuleReference();
 
@@ -98,12 +97,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 }
 
                 // check if a manifest already exists for this version
-                var existingManifest = await _loader.LoadFromS3Async(new ModuleLocation(Settings.DeploymentBucketName, moduleInfo), errorIfMissing: false);
-                if(existingManifest != null) {
-                    if(!moduleInfo.Version.IsPreRelease) {
-                        LogWarn($"{moduleInfo.FullName} (v{moduleInfo.Version}) is already published; use --force-publish to proceed anyway");
-                        return null;
-                    }
+                if(!moduleInfo.Version.IsPreRelease && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)) {
+                    LogError($"{moduleInfo.FullName} (v{moduleInfo.Version}) is already published; use --force-publish to proceed anyway");
+                    return null;
                 }
             }
 
@@ -117,7 +113,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     LogError($"could not find: '{filepath}'");
                 }
             }
-            if(Settings.HasErrors) {
+            if(HasErrors) {
                 return null;
             }
 
@@ -136,36 +132,37 @@ namespace LambdaSharp.Tool.Cli.Publish {
             var templateKey = await UploadTemplateFileAsync(manifest, "template");
 
             // copy all dependencies to deployment bucket that are missing or have a pre-release version
-            foreach(var dependency in dependencies
-                .Append((Manifest: manifest, ModuleInfo: moduleInfo))
-                .Where(dependency => dependency.ModuleInfo.Origin != Settings.DeploymentBucketName)
-            ) {
+            foreach(var dependency in dependencies.Where(dependency => dependency.ModuleLocation.SourceBucketName != Settings.DeploymentBucketName)) {
                 var imported = false;
 
                 // copy check-summed module assets (guaranteed immutable)
                 foreach(var asset in dependency.Manifest.Assets) {
-                    imported = imported | await CopyS3Object(dependency.ModuleInfo.Origin, dependency.ModuleInfo.GetAssetPath(asset));
+                    imported = imported | await CopyS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
                 }
-                imported = imported | await CopyS3Object(dependency.ModuleInfo.Origin, dependency.Manifest.GetVersionedTemplatePath());
 
-                // copy cloudformation template
-                imported = imported | await CopyS3Object(dependency.ModuleInfo.Origin, dependency.ModuleInfo.TemplatePath, replace: dependency.ModuleInfo.Version.IsPreRelease);
+                // copy version manifest
+                imported = imported | await CopyS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
 
                 // show message if any assets were imported
                 if(imported) {
-                    Console.WriteLine($"=> Imported {dependency.ModuleInfo.ToModuleReference()}");
+                    Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo.ToModuleReference()}");
                 }
             }
 
-            // store copy of cloudformation template under version number
-            await Settings.S3Client.CopyObjectAsync(new CopyObjectRequest {
-                SourceBucket = Settings.DeploymentBucketName,
-                SourceKey = templateKey,
-                DestinationBucket = Settings.DeploymentBucketName,
-                DestinationKey = moduleInfo.TemplatePath,
-                ContentType = "application/json"
-            });
-            if(!_changesDetected) {
+            // upload manifest under version number
+            if(_changesDetected) {
+                var request = new TransferUtilityUploadRequest {
+                    InputStream = new MemoryStream(Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(manifest, new JsonSerializerSettings {
+                        Formatting = Formatting.None,
+                        NullValueHandling = NullValueHandling.Ignore
+                    }))),
+                    BucketName = Settings.DeploymentBucketName,
+                    ContentType = "application/json",
+                    Key = moduleInfo.VersionPath
+                };
+                request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
+                await _transferUtility.UploadAsync(request);
+            } else {
 
                 // NOTE: this message should never appear since we already do a similar check earlier
                 Console.WriteLine($"=> No changes found to upload");
@@ -176,8 +173,18 @@ namespace LambdaSharp.Tool.Cli.Publish {
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
             var moduleInfo = manifest.GetModuleInfo();
 
+            // rewrite assets in manifest to have an absolute path
+            manifest.Assets = manifest.Assets
+                .OrderBy(asset => asset)
+                .Select(asset => moduleInfo.GetAssetPath(asset)).ToList();
+
+            // add template to list of assets
+            var destinationKey = manifest.GetModuleTemplatePath();
+            manifest.Assets.Insert(0, destinationKey);
+
             // update cloudformation template with manifest and minify it
-            var template = File.ReadAllText(SourceFilename).Replace(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER, moduleInfo.Origin ?? throw new ApplicationException("missing Origin information"));
+            var template = File.ReadAllText(SourceFilename)
+                .Replace(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER, moduleInfo.Origin ?? throw new ApplicationException("missing Origin information"));
             var cloudformation = JObject.Parse(template);
             ((JObject)cloudformation["Metadata"])["LambdaSharp::Manifest"] = JObject.FromObject(manifest, new JsonSerializer {
                 NullValueHandling = NullValueHandling.Ignore
@@ -188,7 +195,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
             });
 
             // upload minified json
-            var destinationKey = manifest.GetVersionedTemplatePath();
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 var request = new TransferUtilityUploadRequest {
@@ -223,47 +229,42 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return destinationKey;
         }
 
-        private async Task<bool> DoesS3ObjectExistsAsync(string key) {
-            var found = false;
-            try {
-                await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
-                    BucketName = Settings.DeploymentBucketName,
-                    Key = key
-                });
-                found = true;
-            } catch { }
-            return found;
-        }
+        private Task<bool> DoesS3ObjectExistsAsync(string key) => Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, key);
 
         private async Task<bool> CopyS3Object(string sourceBucket, string key, bool replace = false) {
 
-            // check if object must be copied, because it's a pre-release or is missing
+            // check if target object already exists
             var found = false;
             try {
                 var existing = await Settings.S3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
                     BucketName = Settings.DeploymentBucketName,
-                    Key = key
+                    Key = key,
+                    RequestPayer = RequestPayer.Requester
                 });
                 found = true;
 
-                // check if this asset was uploaded locally and therefore should not be replaced
+                // TODO: should copying the original be forceable?
+
+                // check if this object was uploaded locally and therefore should not be replaced
                 if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {
                     return false;
                 }
-            } catch {
-            }
+            } catch { }
             if(!found || replace) {
                 var request = new CopyObjectRequest {
                     SourceBucket = sourceBucket,
                     SourceKey = key,
                     DestinationBucket = Settings.DeploymentBucketName,
                     DestinationKey = key,
-                    MetadataDirective = Amazon.S3.S3MetadataDirective.COPY
+                    MetadataDirective = Amazon.S3.S3MetadataDirective.COPY,
+                    RequestPayer = RequestPayer.Requester
                 };
+
+                // capture the origin of this object
                 request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
                 await Settings.S3Client.CopyObjectAsync(request);
                  _changesDetected = true;
-                 return true;
+                return true;
            }
            return false;
         }

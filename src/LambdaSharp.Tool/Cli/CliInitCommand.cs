@@ -297,7 +297,7 @@ namespace LambdaSharp.Tool.Cli {
                     }
 
                     // publish module
-                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, forceModuleOrigin: "lambdasharp");
+                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, moduleOrigin: "lambdasharp");
                     if(moduleReference == null) {
                         return false;
                     }

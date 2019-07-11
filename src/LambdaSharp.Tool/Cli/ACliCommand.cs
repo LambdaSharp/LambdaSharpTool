@@ -252,7 +252,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // validate module information
-                var tierModuleInfoText = existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+                var tierModuleInfoText = existing.Stack?.GetModuleVersionText();
                 if(tierModuleInfoText == null) {
                     if(!optional) {
                         LogError($"Could not find LambdaSharp tier information for {stackName}");

@@ -25,6 +25,7 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.100.14" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.101" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.14" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.5.1" />

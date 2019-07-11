@@ -28,7 +28,7 @@ Parameters:
 
   ExistingDeploymentBucket:
     Type: String
-    Description: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
     AllowedPattern: '(arn:aws:s3:.*)?'
     ConstraintDescription: Must be a valid S3 ARN (all lowercase) or left blank
 
@@ -53,7 +53,7 @@ Metadata:
           - CoreServices
     ParameterLabels:
       ExistingDeploymentBucket:
-        default: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+        default: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
       CoreServices:
         default: LambdaSharp.Core Services
 

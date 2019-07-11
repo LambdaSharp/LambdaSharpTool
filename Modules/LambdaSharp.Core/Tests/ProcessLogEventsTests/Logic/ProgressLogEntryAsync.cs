@@ -115,7 +115,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             var success = _logic.ProgressLogEntryAsync(_owner, "2018-10-11T07:00:40.906Z 546933ad-cd23-11e8-bb5d-7f3682cfa000 Task timed out after 15.02 seconds", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Task timed out after 15.02 seconds");
+            _provider.ErrorReport.Message.Should().Be("Lambda timed out after 15.02 seconds");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("546933ad-cd23-11e8-bb5d-7f3682cfa000");
         }
@@ -125,7 +125,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             var success = _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Process exited before completing request");
+            _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }
@@ -159,7 +159,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
 
             CommonErrorReportAsserts(usageReportCheck: false);
-            _provider.ErrorReport.Message.Should().Be("Process ran out of memory (Max: 128 MB)");
+            _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }

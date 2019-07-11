@@ -20,8 +20,6 @@
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Newtonsoft.Json;
@@ -34,14 +32,17 @@ namespace LambdaSharp.Tool {
         //--- Fields ---
         public readonly string SourceBucketName;
         public readonly ModuleInfo ModuleInfo;
+        public readonly string Hash;
 
         //--- Properties ---
-        public string S3Url => $"s3://{SourceBucketName}/{ModuleInfo.TemplatePath}";
+        public string ModuleTemplateUrl => $"https://{SourceBucketName}.s3.amazonaws.com/{ModuleTemplateKey}";
+        public string ModuleTemplateKey => ModuleInfo.GetAssetPath($"cloudformation_{ModuleInfo.FullName}_{Hash}.json");
 
         //--- Constructors ---
-        public ModuleLocation(string sourceBucketName, ModuleInfo moduleInfo) {
+        public ModuleLocation(string sourceBucketName, ModuleInfo moduleInfo, string hash) {
             SourceBucketName = sourceBucketName ?? throw new ArgumentNullException(nameof(sourceBucketName));
             ModuleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
+            Hash = hash ?? throw new ArgumentNullException(nameof(hash));
         }
     }
 
@@ -56,18 +57,19 @@ namespace LambdaSharp.Tool {
         // * Owner.Name:*@Bucket
         // * Owner.Name:Version@Bucket
         // * Owner.Name:Version@<%MODULE_ORIGIN%>
-        // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/
-        // * s3://{Origin}/{Owner}/Modules/{Name}/Versions/{Version}/cloudformation.json
 
         //--- Constants ---
+
+        // TODO: could this be replaced with `Settings.DeploymentBucketName` in most cases?
         public const string MODULE_ORIGIN_PLACEHOLDER = "<%MODULE_ORIGIN%>";
 
         //--- Class Fields ---
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Owner}}/Modules/${{Module::Name}}/Assets/{filename}");
-        public static string GetModuleVersionsBucketPrefix(string moduleOwner, string moduleName, string moduleOrigin) => $"{moduleOrigin}/{moduleOwner}/Modules/{moduleName}/Versions/";
+
+        // TODO: can we get rid of this?
+        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Owner}}/${{Module::Name}}/.assets/{filename}");
 
         public static ModuleInfo Parse(string moduleReference) {
             if(TryParse(moduleReference, out var result)) {
@@ -77,56 +79,34 @@ namespace LambdaSharp.Tool {
         }
 
         public static bool TryParse(string moduleReference, out ModuleInfo moduleInfo) {
-            string owner;
-            string name;
-            VersionInfo version;
-            string origin;
             if(moduleReference == null) {
                 moduleInfo = null;
                 return false;
             }
 
-            // check if module reference is given in S3 URI format
-            if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
-                var uri = new Uri(moduleReference);
-
-                // absolute path always starts with '/', which needs to be removed
-                var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
-                if((pathSegments.Count < 5) || (pathSegments[1] != "Modules") || (pathSegments[3] != "Versions")) {
-                    moduleInfo = null;
-                    return false;
-                }
-                owner = pathSegments[0];
-                name = pathSegments[2];
-                version = VersionInfo.Parse(pathSegments[4]);
-                origin = uri.Host;
-            } else {
-
-                // try parsing module reference
-                var match = ModuleKeyPattern.Match(moduleReference);
-                if(!match.Success) {
-                    moduleInfo = null;
-                    return false;
-                }
-                owner = GetMatchValue("Owner");
-                name = GetMatchValue("Name");
-                origin = GetMatchValue("Origin");
-
-                // parse optional version
-                var versionText = GetMatchValue("Version");
-                version = ((versionText != null) && (versionText != "*"))
-                    ? VersionInfo.Parse(versionText)
-                    : null;
-
-                // local function
-                string GetMatchValue(string groupName) {
-                    var group = match.Groups[groupName];
-                    return group.Success ? group.Value : null;
-                }
+            // try parsing module reference
+            var match = ModuleKeyPattern.Match(moduleReference);
+            if(!match.Success) {
+                moduleInfo = null;
+                return false;
             }
+            var owner = GetMatchValue("Owner");
+            var name = GetMatchValue("Name");
+            var origin = GetMatchValue("Origin");
+
+            // parse optional version
+            var versionText = GetMatchValue("Version");
+            var version = ((versionText != null) && (versionText != "*"))
+                ? VersionInfo.Parse(versionText)
+                : null;
             moduleInfo = new ModuleInfo(owner, name, version, origin);
             return true;
 
+            // local function
+            string GetMatchValue(string groupName) {
+                var group = match.Groups[groupName];
+                return group.Success ? group.Value : null;
+            }
         }
 
         //--- Fields ---
@@ -146,20 +126,12 @@ namespace LambdaSharp.Tool {
         }
 
         //--- Properties ---
-        public string TemplatePath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Versions/{Version ?? throw new ApplicationException("missing Version information")}/cloudformation.json";
+        public string VersionPath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/{Name}/{Version ?? throw new ApplicationException("missing Version information")}";
 
         //--- Methods ---
-        public string GetAssetPath(string filename) => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/Modules/{Name}/Assets/{filename}";
+        public string GetAssetPath(string assetName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Owner}/{Name}/.assets/{assetName}";
 
-        public object GetTemplateUrlExpression() {
-            return FnSub("https://${DeploymentBucketName}.s3.amazonaws.com/${ModuleOrigin}/${ModuleOwner}/Modules/${ModuleName}/Versions/${ModuleVersion}/cloudformation.json", new Dictionary<string, object> {
-                ["ModuleOwner"] = Owner,
-                ["ModuleName"] = Name,
-                ["ModuleVersion"] = Version?.ToString() ?? "<BAD>",
-                ["ModuleOrigin"] = Origin ?? MODULE_ORIGIN_PLACEHOLDER
-            });
-        }
-
+        // TODO: make this the `ToString()` method
         public string ToModuleReference() {
             var result = new StringBuilder();
             result.Append(FullName);
@@ -186,6 +158,9 @@ namespace LambdaSharp.Tool {
             }
             return result.ToString();
         }
+
+        public ModuleInfo WithoutVersion() => new ModuleInfo(Owner, Name, null, Origin);
+        public ModuleInfo WithVersion(VersionInfo version) => new ModuleInfo(Owner, Name, version ?? throw new ArgumentNullException(nameof(version)), Origin);
     }
 
     public class ModuleInfoConverter : JsonConverter {

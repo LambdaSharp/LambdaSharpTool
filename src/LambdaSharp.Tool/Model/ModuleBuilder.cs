@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using LambdaSharp.Tool.Internal;
 using Newtonsoft.Json.Linq;
 
@@ -34,7 +35,7 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
-        public string _owner;
+        private string _owner;
         private string _name;
         private string _description;
         private IList<object> _pragmas;
@@ -43,7 +44,7 @@ namespace LambdaSharp.Tool.Model {
         private List<AModuleItem> _items;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
         private IList<string> _assets;
-        private IDictionary<string, ModuleDependency> _dependencies;
+        private IDictionary<string, ModuleBuilderDependency> _dependencies;
         private IList<ModuleManifestResourceType> _customResourceTypes;
         private IList<string> _macroNames;
         private IDictionary<string, string> _resourceTypeNameMappings;
@@ -60,8 +61,8 @@ namespace LambdaSharp.Tool.Model {
             _itemsByFullName = _items.ToDictionary(item => item.FullName);
             _assets = new List<string>(module.Assets ?? new string[0]);
             _dependencies = (module.Dependencies != null)
-                ? new Dictionary<string, ModuleDependency>(module.Dependencies)
-                : new Dictionary<string, ModuleDependency>();
+                ? new Dictionary<string, ModuleBuilderDependency>(module.Dependencies)
+                : new Dictionary<string, ModuleBuilderDependency>();
             _customResourceTypes = (module.CustomResourceTypes != null)
                 ? new List<ModuleManifestResourceType>(module.CustomResourceTypes)
                 : new List<ModuleManifestResourceType>();
@@ -82,8 +83,8 @@ namespace LambdaSharp.Tool.Model {
         public string Owner => _owner;
         public string Name => _name;
         public string FullName => $"{_owner}.{_name}";
-
         public string Info => $"{FullName}:{Version}";
+        public ModuleInfo ModuleInfo => new ModuleInfo(_owner, _name, Version, origin: null);
         public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
@@ -165,77 +166,60 @@ namespace LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public void AddDependency(ModuleInfo moduleInfo, bool nested)
-            => AddDependency(moduleInfo.FullName, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin, nested);
+        public async Task AddDependencyAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType) {
+            string moduleKey;
+            switch(dependencyType) {
+            case ModuleManifestDependencyType.Nested:
 
-        public void AddDependency(string moduleFullName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin, bool nested) {
-            moduleOrigin = moduleOrigin ?? ModuleInfo.MODULE_ORIGIN_PLACEHOLDER;
+                // nested dependencies can reference different versions
+                moduleKey = moduleInfo.ToModuleReference();
+                if(_dependencies.ContainsKey(moduleKey)) {
+                    return;
+                }
+                break;
+            case ModuleManifestDependencyType.Shared:
 
-            // check if a dependency was already registered
-            ModuleDependency dependency;
-            if(_dependencies.TryGetValue(moduleFullName, out dependency)) {
+                // shared dependencies can only have one version
+                moduleKey = moduleInfo.WithoutVersion().ToModuleReference();
 
-                // keep the strongest version constraints
-                if(moduleMinVersion != null) {
-                    if((dependency.ModuleMinVersion == null) || dependency.ModuleMinVersion.IsLessThanVersion(moduleMinVersion)) {
-                        dependency.ModuleMinVersion = moduleMinVersion;
+                // check if a dependency was already registered
+                if(_dependencies.TryGetValue(moduleKey, out var existingDependency)) {
+                    if(
+                        (moduleInfo.Version == null)
+                        || (
+                            (existingDependency.ModuleLocation.ModuleInfo.Version != null)
+                            && existingDependency.ModuleLocation.ModuleInfo.Version.IsGreaterOrEqualThanVersion(moduleInfo.Version)
+                        )
+                    ) {
+
+                        // keep existing shared dependency
+                        return;
                     }
                 }
-                if(moduleMaxVersion != null) {
-                    if((dependency.ModuleMaxVersion == null) || dependency.ModuleMaxVersion.IsGreaterThanVersion(moduleMaxVersion)) {
-                        dependency.ModuleMaxVersion = moduleMaxVersion;
-                    }
-                }
-
-                // check there is no conflict in origin bucket names
-                if(moduleOrigin != null) {
-                    if(dependency.ModuleOrigin == null) {
-                        dependency.ModuleOrigin = moduleOrigin;
-                    } else if(dependency.ModuleOrigin != moduleOrigin) {
-                        LogError($"module {moduleFullName} origin conflict is empty ({dependency.ModuleOrigin} vs. {moduleOrigin})");
-                    }
-                }
-            } else {
-                dependency = new ModuleDependency {
-                    ModuleFullName = moduleFullName,
-                    ModuleMinVersion = moduleMinVersion,
-                    ModuleMaxVersion = moduleMaxVersion,
-                    ModuleOrigin = moduleOrigin,
-                    Nested = nested
-                };
+                break;
+            default:
+                LogError($"unrecognized depency type '{dependencyType}' for {moduleInfo.ToModuleReference()}");
+                return;
             }
 
             // validate dependency
-            var minMaxVersionComparison = dependency.ModuleMinVersion?.CompareToVersion(dependency.ModuleMaxVersion);
-            if((dependency.ModuleMinVersion != null) && (dependency.ModuleMaxVersion != null) && dependency.ModuleMinVersion.IsGreaterThanVersion(dependency.ModuleMaxVersion)) {
-                LogError($"module {moduleFullName} version range is empty (v{dependency.ModuleMinVersion}..v{dependency.ModuleMaxVersion})");
+            var loader = new ModelManifestLoader(Settings, SourceFilename);
+            var dependency = new ModuleBuilderDependency {
+                Type = dependencyType,
+                ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo)
+            };
+            if(dependency.ModuleLocation == null) {
+
+                // nothing to do; loader already emitted an error
                 return;
             }
-            if(!Settings.NoDependencyValidation) {
-                if(!moduleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
-                    LogError("invalid module reference");
-                    return;
-                }
-                var loader = new ModelManifestLoader(Settings, moduleFullName);
-                var moduleLocation = loader.LocateAsync(moduleOwner, moduleName, moduleMinVersion, moduleMaxVersion, moduleOrigin).Result;
-                if(moduleLocation == null) {
+            dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
+            if(dependency.Manifest == null) {
 
-                    // nothing to do; locator already emitted an error
-                    return;
-                }
-                var manifest = new ModelManifestLoader(Settings, moduleFullName).LoadFromS3Async(moduleLocation).Result;
-                if(manifest == null) {
-
-                    // nothing to do; loader already emitted an error
-                    return;
-                }
-
-                // update manifest in dependency
-                dependency.Manifest = manifest;
+                // nothing to do; loader already emitted an error
+                return;
             }
-            if(!_dependencies.ContainsKey(moduleFullName)) {
-                _dependencies.Add(moduleFullName, dependency);
-            }
+            _dependencies[moduleKey] = dependency;
         }
 
         public bool AddSecret(object secret) {
@@ -711,81 +695,82 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // add nested module resource
+            var stack = new Humidifier.CloudFormation.Stack {
+                NotificationARNs = FnRef("AWS::NotificationARNs"),
+                Parameters = moduleParameters,
+                Tags = new List<Humidifier.Tag> {
+                    new Humidifier.Tag {
+                        Key = "LambdaSharp:Module",
+                        Value = moduleInfo.FullName
+                    }
+                },
+
+                // this value gets set once the template was successfully loaded for validation
+                TemplateURL = "<BAD>",
+
+                // TODO (2018-11-29, bjorg): make timeout configurable
+                TimeoutInMinutes = 15
+            };
             var resource = AddResource(
                 parent: parent,
                 name: name,
                 description: description,
                 scope: scope,
-                resource: new Humidifier.CloudFormation.Stack {
-                    NotificationARNs = FnRef("AWS::NotificationARNs"),
-                    Parameters = moduleParameters,
-                    Tags = new List<Humidifier.Tag> {
-                        new Humidifier.Tag {
-                            Key = "LambdaSharp:Module",
-                            Value = moduleInfo.FullName
-                        }
-                    },
-                    TemplateURL = moduleInfo.GetTemplateUrlExpression(),
-
-                    // TODO (2018-11-29, bjorg): make timeout configurable
-                    TimeoutInMinutes = 15
-                },
+                resource: stack,
                 resourceExportAttribute: null,
                 dependsOn: ConvertToStringList(dependsOn),
                 condition: null,
                 pragmas: null
             );
-            AddDependency(moduleInfo, nested: true);
+            AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).Wait();
 
             // validate module parameters
             AtLocation("Parameters", () => {
-                if(!Settings.NoDependencyValidation) {
-                    var loader = new ModelManifestLoader(Settings, moduleInfo.ToModuleReference());
-                    var foundModuleLocation = loader.LocateAsync(moduleInfo).Result;
-                    if(foundModuleLocation != null) {
-                        var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadFromS3Async(foundModuleLocation).Result;
+                var loader = new ModelManifestLoader(Settings, moduleInfo.ToModuleReference());
+                var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo).Result;
+                if(foundModuleLocation != null) {
+                    var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadManifestFromLocationAsync(foundModuleLocation).Result;
 
-                        // validate that all required parameters are supplied
-                        var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
-                        foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
-                            LogError($"missing module parameter '{formalParameter.Name}'");
-                        }
+                    // update stack resource source with hashed cloudformation key
+                    stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{foundModuleLocation.ModuleTemplateKey}";
 
-                        // validate that all supplied parameters exist
-                        foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
-                            LogError($"unknown module parameter '{moduleParameter.Key}'");
-                        }
+                    // validate that all required parameters are supplied
+                    var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
+                    foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
+                        LogError($"missing module parameter '{formalParameter.Name}'");
+                    }
 
-                        // inherit dependencies from nested module
-                        foreach(var dependency in manifest.Dependencies) {
-                            AddDependency(dependency.ModuleInfo.FullName, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin, dependency.Nested);
-                        }
+                    // validate that all supplied parameters exist
+                    foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
+                        LogError($"unknown module parameter '{moduleParameter.Key}'");
+                    }
 
-                        // inherit import parameters that are not provided by the declaration
-                        foreach(var nestedImport in manifest.GetAllParameters()
-                            .Where(parameter => parameter.Import != null)
-                            .Where(parameter => !moduleParameters.ContainsKey(parameter.Name))
-                        ) {
-                            var import = AddImport(
-                                parent: resource,
-                                name: nestedImport.Name,
-                                description: null,
-                                type: nestedImport.Type,
-                                scope: null,
-                                allow: null,
-                                module: nestedImport.Import,
-                                encryptionContext: null
-                            );
-                            moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
-                        }
+                    // inherit dependencies from nested module
+                    foreach(var dependency in manifest.Dependencies) {
+                        AddDependencyAsync(dependency.ModuleInfo, dependency.Type).Wait();
+                    }
 
-                        // check if x-ray tracing should be enabled in nested module
-                        if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
-                            moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
-                        }
-                    } else {
+                    // inherit import parameters that are not provided by the declaration
+                    foreach(var nestedImport in manifest.GetAllParameters()
+                        .Where(parameter => parameter.Import != null)
+                        .Where(parameter => !moduleParameters.ContainsKey(parameter.Name))
+                    ) {
+                        var import = AddImport(
+                            parent: resource,
+                            name: nestedImport.Name,
+                            description: null,
+                            type: nestedImport.Type,
+                            scope: null,
+                            allow: null,
+                            module: nestedImport.Import,
+                            encryptionContext: null
+                        );
+                        moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
+                    }
 
-                        // nothing to do; 'LocateAsync' already reported the error
+                    // check if x-ray tracing should be enabled in nested module
+                    if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
+                        moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", "EnableAllModules", "Disable"));
                     }
                 } else {
                     LogWarn("unable to validate nested module parameters");

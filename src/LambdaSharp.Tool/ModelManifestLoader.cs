@@ -45,7 +45,7 @@ namespace LambdaSharp.Tool {
             //--- Properties ---
             public string DependencyOwner { get; set; }
             public ModuleManifest Manifest { get; set; }
-            public ModuleInfo ModuleInfo { get; set; }
+            public ModuleLocation ModuleLocation { get; set; }
         }
 
         //--- Class Fields ---
@@ -74,26 +74,16 @@ namespace LambdaSharp.Tool {
 
             // extract manifest
             manifest = GetManifest(cloudformation);
-            if(manifest == null) {
-                LogError("CloudFormation file does not contain a LambdaSharp manifest");
-                return false;
-            }
-
-            // validate manifest
-            if(manifest.Version != ModuleManifest.CurrentVersion) {
-                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
-                return false;
-            }
-            return true;
+            return manifest != null;
         }
 
-        public async Task<ModuleManifest> LoadFromS3Async(ModuleLocation moduleLocation, bool errorIfMissing = true) {
+        public async Task<ModuleManifest> LoadManifestFromLocationAsync(ModuleLocation moduleLocation, bool errorIfMissing = true) {
 
             // download cloudformation template
-            var cloudformationText = await GetS3ObjectContents(moduleLocation.SourceBucketName, moduleLocation.ModuleInfo.TemplatePath);
+            var cloudformationText = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleTemplateKey);
             if(cloudformationText == null) {
                 if(errorIfMissing) {
-                    LogError($"could not load CloudFormation template from {moduleLocation.S3Url}");
+                    LogError($"could not load CloudFormation template for {moduleLocation.ModuleInfo.ToModuleReference()}");
                 }
                 return null;
             }
@@ -102,7 +92,6 @@ namespace LambdaSharp.Tool {
             var cloudformation = JsonConvert.DeserializeObject<JObject>(cloudformationText);
             var manifest = GetManifest(cloudformation);
             if(manifest == null) {
-                LogError("CloudFormation file does not contain a LambdaSharp manifest");
                 return null;
             }
 
@@ -114,16 +103,17 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public Task<ModuleLocation> LocateAsync(ModuleInfo moduleInfo)
-            => LocateAsync(moduleInfo.Owner, moduleInfo.Name, moduleInfo.Version, moduleInfo.Version, moduleInfo.Origin);
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo) {
 
-        public async Task<ModuleLocation> LocateAsync(string moduleOwner, string moduleName, VersionInfo moduleMinVersion, VersionInfo moduleMaxVersion, string moduleOrigin) {
+            // TODO: shouldn't we first check our deployment bucket for a custom version before we check the origin?
 
             // attempt to find the latest matching version in the module origin and deployment buckets
-            var moduleOriginFoundVersion = await FindNewestVersion(moduleOrigin);
-            var deploymentBucketFoundVersion = (moduleOrigin == Settings.DeploymentBucketName)
-                ? moduleOriginFoundVersion
-                : await FindNewestVersion(Settings.DeploymentBucketName);
+            var moduleOriginFoundVersion = (moduleInfo.Origin != null)
+                ? await FindNewestVersion(moduleInfo.Origin)
+                : null;
+            var deploymentBucketFoundVersion = (moduleInfo.Origin != Settings.DeploymentBucketName)
+                ? await FindNewestVersion(Settings.DeploymentBucketName)
+                : moduleOriginFoundVersion;
 
             // determine which bucket to use for the module
             if((moduleOriginFoundVersion != null) && (deploymentBucketFoundVersion != null)) {
@@ -134,63 +124,42 @@ namespace LambdaSharp.Tool {
                     if(moduleOriginFoundVersion.IsPreRelease) {
 
                         // always default to module origin for pre-release version
-                        return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
+                        return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
                     } else {
 
                         // keep version in deployment bucket since version is stable and it matches
-                        return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
+                        return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
                     }
                 } else if(compareOriginDeploymentVersions < 0) {
 
                     // use version from deployment bucket since it's newer
-                    return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
+                    return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
                 } else if(compareOriginDeploymentVersions > 0) {
 
                     // use version from origin since it's newer
-                    return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
+                    return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
                 } else {
-                    LogError($"unable to determine which version to use: {moduleOriginFoundVersion} vs. {deploymentBucketFoundVersion}");
+                    LogError($"unable to determine which version to use for {moduleInfo.ToModuleReference()}: {moduleOriginFoundVersion} (origin) vs. {deploymentBucketFoundVersion} (deployment bucket)");
                     return null;
                 }
             } else if(moduleOriginFoundVersion != null) {
-                return new ModuleLocation(moduleOrigin, new ModuleInfo(moduleOwner, moduleName, moduleOriginFoundVersion, moduleOrigin));
+                return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
             } else if(deploymentBucketFoundVersion != null) {
-                return new ModuleLocation(Settings.DeploymentBucketName, new ModuleInfo(moduleOwner, moduleName, deploymentBucketFoundVersion, moduleOrigin));
+                return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
             }
 
             // could not find a matching version
-            var versionConstraint = "any version";
-            if((moduleMinVersion != null) && (moduleMaxVersion != null)) {
-                var versionCompare = moduleMinVersion.CompareToVersion(moduleMaxVersion);
-                if(versionCompare == 0) {
-                    versionConstraint = $"v{moduleMinVersion}";
-                } else if(versionCompare != null) {
-                    versionConstraint = $"v{moduleMinVersion}..v{moduleMaxVersion}";
-                } else {
-                    versionConstraint = $"invalid range from v{moduleMinVersion} to v{moduleMaxVersion}";
-                }
-            } else if(moduleMinVersion != null) {
-                versionConstraint = $"v{moduleMinVersion} or later";
-            } else if(moduleMaxVersion != null) {
-                versionConstraint = $"v{moduleMaxVersion} or earlier";
-            }
-            if(moduleOrigin == ModuleInfo.MODULE_ORIGIN_PLACEHOLDER) {
-                LogError($"could not find module: {moduleOwner}.{moduleName} ({versionConstraint})");
-            } else {
-                LogError($"could not find module: {moduleOwner}.{moduleName}@{moduleOrigin} ({versionConstraint})");
-            }
+            var versionConstraint = (moduleInfo.Version != null)
+                ? $"v{moduleInfo.Version} or later"
+                : "any version";
+            LogError($"could not find module: {moduleInfo.ToModuleReference()} ({versionConstraint})");
             return null;
 
             // local functions
             async Task<VersionInfo> FindNewestVersion(string bucketName) {
 
-                // check if bucket name is the origin placeholder
-                if(bucketName == ModuleInfo.MODULE_ORIGIN_PLACEHOLDER) {
-                    bucketName = Settings.DeploymentBucketName;
-                }
-
                 // get bucket region specific S3 client
-                var s3Client = await GetS3ClientByBucketName(bucketName);
+                var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
                 if(s3Client == null) {
 
                     // nothing to do; GetS3ClientByBucketName already emitted an error
@@ -201,17 +170,18 @@ namespace LambdaSharp.Tool {
                 var versions = new List<VersionInfo>();
                 var request = new ListObjectsV2Request {
                     BucketName = bucketName,
-                    Prefix = ModuleInfo.GetModuleVersionsBucketPrefix(moduleOwner, moduleName, moduleOrigin),
+                    Prefix = $"{moduleInfo.Origin ?? Settings.DeploymentBucketName}/{moduleInfo.Owner}/{moduleInfo.Name}/",
                     Delimiter = "/",
-                    MaxKeys = 100
+                    MaxKeys = 100,
+                    RequestPayer = RequestPayer.Requester
                 };
                 do {
                     try {
                         var response = await s3Client.ListObjectsV2Async(request);
-                        versions.AddRange(response.CommonPrefixes
-                            .Select(prefix => prefix.Substring(request.Prefix.Length).TrimEnd('/'))
+                        versions.AddRange(response.S3Objects
+                            .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
                             .Select(found => VersionInfo.Parse(found))
-                            .Where(version => version.MatchesConstraints(moduleMinVersion, moduleMaxVersion))
+                            .Where(version => version.MatchesConstraints(moduleInfo.Version, moduleInfo.Version))
                         );
                         request.ContinuationToken = response.NextContinuationToken;
                     } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
@@ -231,16 +201,33 @@ namespace LambdaSharp.Tool {
                 }
                 return latest;
             }
+
+            async Task<ModuleLocation> MakeModuleLocation(string sourceBucketName, ModuleInfo info) {
+
+                // fetch module manifest for version
+                var manifestText = await GetS3ObjectContentsAsync(sourceBucketName, info.VersionPath);
+                if(manifestText == null) {
+                    LogError($"could not load module manifest for {info.ToModuleReference()}");
+                    return null;
+                }
+                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
+                if(manifest == null) {
+                    return null;
+                }
+
+                // create module location reference with found manifest hash
+                return new ModuleLocation(sourceBucketName, info, manifest.TemplateChecksum);
+            }
         }
 
-        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleInfo ModuleInfo)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting) {
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
 
             // create a topological sort of dependencies
             await Recurse(manifest);
-            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleInfo)).ToList();
+            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleLocation)).ToList();
 
             // local functions
             async Task Recurse(ModuleManifest current) {
@@ -252,13 +239,11 @@ namespace LambdaSharp.Tool {
                     }
 
                     // check if this dependency needs to be deployed
-                    var deployedModuleInfo = checkExisting
+                    var existingDependency = checkExisting
                         ? await FindExistingDependencyAsync(dependency)
                         : null;
-                    if(deployedModuleInfo != null) {
-                        existing.Add(new DependencyRecord {
-                            ModuleInfo = deployedModuleInfo
-                        });
+                    if(existingDependency != null) {
+                        existing.Add(existingDependency);
                     } else if(inProgress.Any(d => d.Manifest.GetModuleInfo().FullName == dependency.ModuleInfo.FullName)) {
 
                         // circular dependency detected
@@ -267,7 +252,7 @@ namespace LambdaSharp.Tool {
                     } else {
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await LocateAsync(dependency.ModuleInfo.Owner, dependency.ModuleInfo.Name, dependency.MinVersion, dependency.MaxVersion, dependency.ModuleInfo.Origin);
+                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo);
                         if(dependencyModuleLocation == null) {
 
                             // error has already been reported
@@ -275,7 +260,7 @@ namespace LambdaSharp.Tool {
                         }
 
                         // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await LoadFromS3Async(dependencyModuleLocation);
+                        var dependencyManifest = await LoadManifestFromLocationAsync(dependencyModuleLocation);
                         if(dependencyManifest == null) {
 
                             // error has already been reported
@@ -284,7 +269,7 @@ namespace LambdaSharp.Tool {
                         var nestedDependency = new DependencyRecord {
                             DependencyOwner = current.Module,
                             Manifest = dependencyManifest,
-                            ModuleInfo = dependencyModuleLocation.ModuleInfo
+                            ModuleLocation = dependencyModuleLocation
                         };
 
                         // keep marker for in-progress resolutions so that circular errors can be detected
@@ -298,93 +283,60 @@ namespace LambdaSharp.Tool {
                     }
                 }
             }
+
+            bool IsDependencyInList(string dependentModuleFullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
+                var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleLocation.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleLocation.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
+                if(deployedModule == null) {
+                    return false;
+                }
+                var deployedOwner = (deployedModule.DependencyOwner == null)
+                    ? "existing module"
+                    : $"module '{deployedModule.DependencyOwner}'";
+
+                // confirm that the dependency version is in a valid range
+                var deployedVersion = deployedModule.ModuleLocation.ModuleInfo.Version;
+                if(!deployedModule.ModuleLocation.ModuleInfo.Version.MatchesConstraints(dependency.ModuleInfo.Version, dependency.ModuleInfo.Version)) {
+                    LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{dependentModuleFullName}' requires v{dependency.ModuleInfo.Version}, but {deployedOwner} uses v{deployedVersion})");
+                }
+                return true;
+            }
+
+            async Task<DependencyRecord> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
+
+                // attempt to find an existing, deployed stack matching the dependency
+                var stackName = Settings.GetStackName(dependency.ModuleInfo.FullName);
+                var deployedModule = await Settings.CfnClient.GetStackAsync(stackName, LogError);
+                if(deployedModule.Stack == null) {
+                    return null;
+                }
+                if(!ModuleInfo.TryParse(deployedModule.Stack.GetModuleVersionText(), out var deployedModuleInfo)) {
+                    LogWarn($"unable to retrieve module version from CloudFormation stack '{stackName}'");
+                    return null;
+                }
+                var result = new DependencyRecord {
+                    ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, deployedModuleInfo, deployedModule.Stack.GetModuleManifestChecksum())
+                };
+
+                // confirm that the module name, version and hash match
+                if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
+                    LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
+                } else if(!deployedModuleInfo.Version.MatchesConstraints(dependency.ModuleInfo.Version, dependency.ModuleInfo.Version)) {
+                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
+                }
+                return result;
+            }
         }
 
-        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
-            var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
-            if(deployedModule == null) {
-                return false;
-            }
-            var deployedOwner = (deployedModule.DependencyOwner == null)
-                ? "existing module"
-                : $"module '{deployedModule.DependencyOwner}'";
-
-            // confirm that the dependency version is in a valid range
-            var deployedVersion = deployedModule.ModuleInfo.Version;
-            if(!deployedModule.ModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
-                LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{fullName}' requires v{dependency.MinVersion}..v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
-            }
-            return true;
-        }
-
-        private async Task<ModuleInfo> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
-            var existing = await Settings.CfnClient.GetStackAsync(Settings.GetStackName(dependency.ModuleInfo.FullName), LogError);
-            if(!existing.Success || (existing.Stack == null)) {
-                return null;
-            }
-            var deployedOutputs = existing.Stack.Outputs;
-            var deployedModuleInfoText = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-            var success = ModuleInfo.TryParse(deployedModuleInfoText, out var deployedModuleInfo);
-            if(!success) {
-                LogWarn($"unable to retrieve information of the deployed dependent module");
-                return null;
-            }
-
-            // confirm that the module name matches
-            if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
-                LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
-                return deployedModuleInfo;
-            }
-
-            // confirm that the module version is in a valid range
-            if((dependency.MinVersion != null) && (dependency.MaxVersion != null)) {
-                if(!deployedModuleInfo.Version.MatchesConstraints(dependency.MinVersion, dependency.MaxVersion)) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.MinVersion} to v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                }
-            } else if(dependency.MaxVersion != null) {
-                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MaxVersion);
-                if(deployedToMinVersionComparison >= 0) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is newer than max version constraint v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                } else if(deployedToMinVersionComparison == null) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with max version constraint v{dependency.MaxVersion}");
-                    return deployedModuleInfo;
-                }
-            } else if(dependency.MinVersion != null) {
-                var deployedToMinVersionComparison = deployedModuleInfo.Version.CompareToVersion(dependency.MinVersion);
-                if(deployedToMinVersionComparison < 0) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is older than min version constraint v{dependency.MinVersion}");
-                    return deployedModuleInfo;
-                } else if(deployedToMinVersionComparison == null) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with min version constraint v{dependency.MinVersion}");
-                    return deployedModuleInfo;
-                }
-            }
-            return deployedModuleInfo;
-        }
-
-        private async Task<string> GetS3ObjectContents(string bucketName, string key) {
+        private async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
 
             // get bucket region specific S3 client
-            var s3Client = await GetS3ClientByBucketName(bucketName);
+            var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
             if(s3Client == null) {
 
                 // nothing to do; GetS3ClientByBucketName already emitted an error
                 return null;
             }
-            try {
-                var response = await s3Client.GetObjectAsync(new GetObjectRequest {
-                    BucketName = bucketName,
-                    Key = key
-                });
-                using(var stream = new MemoryStream()) {
-                    await response.ResponseStream.CopyToAsync(stream);
-                    return Encoding.UTF8.GetString(stream.ToArray());
-                }
-            } catch {
-                return null;
-            }
+            return await s3Client.GetS3ObjectContents(bucketName, key);
         }
 
         private ModuleManifest GetManifest(JObject cloudformation) {
@@ -393,12 +345,18 @@ namespace LambdaSharp.Tool {
                 && (metadataToken is JObject metadata)
                 && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
             ) {
-                return manifestToken.ToObject<ModuleManifest>();
+                var manifest = manifestToken.ToObject<ModuleManifest>();
+                if(manifest.Version == ModuleManifest.CurrentVersion) {
+                    return manifest;
+                }
+                LogError($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleManifest.CurrentVersion})");
+                return null;
             }
+            LogError("CloudFormation file does not contain a LambdaSharp manifest");
             return null;
         }
 
-        private async Task<IAmazonS3> GetS3ClientByBucketName(string bucketName) {
+        private async Task<IAmazonS3> GetS3ClientByBucketNameAsync(string bucketName) {
             if(bucketName == null) {
                 return null;
             } if(_s3ClientByBucketName.TryGetValue(bucketName, out var result)) {

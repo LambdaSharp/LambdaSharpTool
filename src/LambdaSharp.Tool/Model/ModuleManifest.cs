@@ -22,28 +22,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Internal;
-using YamlDotNet.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool.Model {
 
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2019-06-14";
+        public const string CurrentVersion = "2019-07-04";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
+
+        // TODO: use ModuleInfo type
         public string Module { get; set; }
+        public string Description { get; set; }
+        public string TemplateChecksum { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
-        public bool RuntimeCheck { get; set; }
-        public string Hash { get; set; }
         public ModuleManifestGitInfo Git { get; set; }
         public IList<string> Assets { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
-        public IList<ModuleManifestMacro> Macros { get; set; } = new List<ModuleManifestMacro>();
         public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
         public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
 
@@ -55,9 +56,9 @@ namespace LambdaSharp.Tool.Model {
             return moduleInfo;
         }
 
-        public string GetVersionedTemplatePath() {
+        public string GetModuleTemplatePath() {
             var moduleInfo = GetModuleInfo();
-            return moduleInfo.GetAssetPath($"cloudformation_v{moduleInfo.Version ?? throw new ApplicationException("missing Version information")}_{Hash}.json");
+            return moduleInfo.GetAssetPath($"cloudformation_{moduleInfo.FullName}_{TemplateChecksum}.json");
         }
 
         public string GetFullName() => GetModuleInfo().FullName;
@@ -108,13 +109,19 @@ namespace LambdaSharp.Tool.Model {
         public string Name { get; set; }
     }
 
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum ModuleManifestDependencyType {
+        Unknown,
+        Nested,
+        Shared
+    }
+
+    // TODO: change to `ModuleManifest.Dependency`
     public class ModuleManifestDependency {
 
         //--- Properties ---
         public ModuleInfo ModuleInfo { get; set; }
-        public VersionInfo MinVersion { get; set; }
-        public VersionInfo MaxVersion { get; set; }
-        public bool Nested { get; set; }
+        public ModuleManifestDependencyType Type { get; set; }
     }
 
     public class ModuleManifestParameterSection {

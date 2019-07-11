@@ -20,7 +20,6 @@
 Module: LambdaSharp.Core
 Description: LambdaSharp Core Resources and Services
 Pragmas:
-  - no-core-version-check
   - no-lambdasharp-dependencies
   - no-module-registration
   - Overrides:
@@ -277,8 +276,8 @@ Items:
   # S3 Deployment Bucket
   - Parameter: ExistingDeploymentBucket
     Section: LambdaSharp Deployment Settings
-    Label: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
-    Description: ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)
+    Label: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
     Type: String
     AllowedPattern: '(arn:aws:s3:.*)?'
     ConstraintDescription: Must be a valid S3 ARN (all lowercase) or left blank

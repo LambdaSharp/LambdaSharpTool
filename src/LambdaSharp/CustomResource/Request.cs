@@ -74,6 +74,16 @@ namespace LambdaSharp.CustomResource {
         public string ResourceType { get; set; }
 
         /// <summary>
+        /// The Amazon Resource Name (ARN) that identifies the stack that
+        /// contains the custom resource.
+        ///
+        /// Combining the StackId with the RequestId forms a value that you
+        /// can use to uniquely identify a request on a particular custom
+        /// resource.
+        /// </summary>
+        public string StackId { get; set; }
+
+        /// <summary>
         /// The template developer-chosen name (logical ID) of the custom
         /// resource in the AWS CloudFormation template. This is provided to
         /// facilitate communication between the custom resource provider and

@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation.Model;
+using LambdaSharp.Tool.Internal;
 
 namespace LambdaSharp.Tool.Cli.Tier {
 
@@ -61,7 +62,7 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 StackStatus = stack.StackStatus.ToString(),
                 DeploymentDate = (stack.LastUpdatedTime > stack.CreationTime) ? stack.LastUpdatedTime : stack.CreationTime,
                 Stack = stack,
-                ModuleReference = GetShortModuleReference(stack.Outputs.FirstOrDefault(o => o.OutputKey == "Module")?.OutputValue ?? ""),
+                ModuleReference = GetShortModuleReference(stack.GetModuleVersionText() ?? ""),
                 CoreServices = stack.Parameters
                     .FirstOrDefault(parameter => parameter.ParameterKey == "LambdaSharpCoreServices")
                     ?.ParameterValue,

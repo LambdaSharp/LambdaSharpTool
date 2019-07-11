@@ -1,4 +1,4 @@
-/*
+﻿/*
  * MindTouch λ#
  * Copyright (C) 2018-2019 MindTouch, Inc.
  * www.mindtouch.com  oss@mindtouch.com
@@ -22,16 +22,12 @@
 
 namespace LambdaSharp.Tool.Model {
 
-    public class ModuleDependency {
+    // TODO: should this class be moved into ModuleBuilder file?
+    public class ModuleBuilderDependency {
 
         //--- Properties ---
-
-        // TODO: remove 'Module' prefix
-        public string ModuleFullName { get; set; }
-        public VersionInfo ModuleMinVersion { get; set; }
-        public VersionInfo ModuleMaxVersion { get; set; }
-        public string ModuleOrigin { get; set; }
         public ModuleManifest Manifest { get; set; }
-        public bool Nested;
+        public ModuleLocation ModuleLocation { get; set; }
+        public ModuleManifestDependencyType Type;
     }
 }

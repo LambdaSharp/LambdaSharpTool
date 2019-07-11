@@ -18,7 +18,6 @@ The λ# CLI is used to process the module definition, compile the C# projects, u
 1. [`info`](Tool-Info.md): show information about CLI setup
 
 ## Setup Commands
-1. [`config`](Tool-Config.md): configure λ# CLI
 1. [`init`](Tool-Init.md): initialize λ# deployment tier
 
 ## Tier Commands

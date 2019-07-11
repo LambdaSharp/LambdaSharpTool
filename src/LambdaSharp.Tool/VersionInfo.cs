@@ -162,7 +162,7 @@ namespace LambdaSharp.Tool {
                 // NOTE (2019-02-19, bjorg): for pre-release version, the base version is this version
                 return this;
             }
-            if((Major == 0) && (Version.Build > 0)) {
+            if((Major == 0) && (Version.Build >= 0)) {
 
                 // when Major version is 0, the build number is relevant
                 return new VersionInfo(new Version(Major, Minor, Version.Build), suffix: "");

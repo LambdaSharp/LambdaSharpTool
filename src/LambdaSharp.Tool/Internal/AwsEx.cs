@@ -21,10 +21,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
 
@@ -297,5 +301,37 @@ namespace LambdaSharp.Tool.Internal {
             }
             return (true, stack);
         }
-   }
+
+        public static async Task<string> GetS3ObjectContents(this IAmazonS3 s3Client, string bucketName, string key) {
+            try {
+                var response = await s3Client.GetObjectAsync(new GetObjectRequest {
+                    BucketName = bucketName,
+                    Key = key,
+                    RequestPayer = RequestPayer.Requester
+                });
+                using(var stream = new MemoryStream()) {
+                    await response.ResponseStream.CopyToAsync(stream);
+                    return Encoding.UTF8.GetString(stream.ToArray());
+                }
+            } catch(AmazonS3Exception) {
+                return null;
+            }
+        }
+
+        public static async Task<bool> DoesS3ObjectExistAsync(this IAmazonS3 s3Client, string bucketName, string key) {
+            try {
+                await s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                    BucketName = bucketName,
+                    Key = key,
+                    RequestPayer = RequestPayer.Requester
+                });
+            } catch {
+                return false;
+            }
+            return true;
+        }
+
+        public static string GetModuleVersionText(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+        public static string GetModuleManifestChecksum(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "ModuleTemplateChecksum")?.OutputValue;
+    }
 }
