@@ -159,8 +159,10 @@ namespace LambdaSharp.Tool {
             return result.ToString();
         }
 
-        public ModuleInfo WithoutVersion() => new ModuleInfo(Owner, Name, null, Origin);
+        public ModuleInfo WithoutVersion() => new ModuleInfo(Owner, Name, version: null, Origin);
         public ModuleInfo WithVersion(VersionInfo version) => new ModuleInfo(Owner, Name, version ?? throw new ArgumentNullException(nameof(version)), Origin);
+        public ModuleInfo WithoutOrigin() => new ModuleInfo(Owner, Name, Version, origin: null);
+        public ModuleInfo WithOrigin(string origin) => new ModuleInfo(Owner, Name, Version, origin);
     }
 
     public class ModuleInfoConverter : JsonConverter {

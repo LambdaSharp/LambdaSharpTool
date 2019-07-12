@@ -45,8 +45,7 @@ namespace LambdaSharp.Tool.Model {
         public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
 
         //--- Properties ---
-        public string FullName => Owner + "." + Name;
-        public string Info => FullName + ":" + Version;
+        public ModuleInfo ModuleInfo => new ModuleInfo(Owner, Name, Version, origin: null);
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;

@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool {
             return $"{Major}.{Minor}.*";
         }
 
-        public VersionInfo GetCompatibleBaseVersion() {
+        public VersionInfo GetCompatibleCoreServicesVersion() {
             if(IsPreRelease) {
 
                 // NOTE (2019-02-19, bjorg): for pre-release version, the base version is this version

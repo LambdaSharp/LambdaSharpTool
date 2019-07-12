@@ -76,7 +76,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             _provider = new MockDependencyProvider(output);
             _logic = new Logic(_provider);
             _owner = new OwnerMetaData {
-                Module = "Test.Module:1.0",
+                Module = "Test.Module:1.0@origin",
                 ModuleId = "ModuleId",
                 FunctionId = "ModuleName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
@@ -92,7 +92,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
         //--- Methods ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
@@ -166,7 +166,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
-            _provider.ErrorReport.Module.Should().Be("Test.Module:1.0");
+            _provider.ErrorReport.Module.Should().Be("Test.Module:1.0@origin");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
             _provider.ErrorReport.FunctionId.Should().Be("ModuleName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");

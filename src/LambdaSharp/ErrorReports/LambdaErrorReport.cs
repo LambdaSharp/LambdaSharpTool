@@ -52,12 +52,12 @@ namespace LambdaSharp.ErrorReports {
         // Origin
 
         /// <summary>
-        /// The <see cref="Module"/> property describes the LambdaSharp module name and version.
+        /// The <see cref="Module"/> property describes the LambdaSharp module name, version, and origin.
         /// </summary>
         /// <value>The LambdaSharp module name and version.</value>
         /// <example>
         /// Sample module name and version:
-        /// <code>My.AcmeModule:1.0-Dev</code>
+        /// <code>My.AcmeModule:1.0-Dev@origin</code>
         /// </example>
         public string Module { get; set; }
 

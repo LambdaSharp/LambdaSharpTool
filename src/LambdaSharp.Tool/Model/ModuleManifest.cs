@@ -34,11 +34,10 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-
-        // TODO: use ModuleInfo type
-        public string Module { get; set; }
+        public ModuleInfo Module { get; set; }
         public string Description { get; set; }
         public string TemplateChecksum { get; set; }
+        public VersionInfo CoreServicesVersion { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
         public ModuleManifestGitInfo Git { get; set; }
         public IList<string> Assets { get; set; } = new List<string>();
@@ -49,22 +48,11 @@ namespace LambdaSharp.Tool.Model {
         public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
 
         //--- Methods ---
-        public ModuleInfo GetModuleInfo()  {
-            if(!ModuleInfo.TryParse(Module, out var moduleInfo)) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleInfo;
-        }
-
-        public string GetModuleTemplatePath() {
-            var moduleInfo = GetModuleInfo();
-            return moduleInfo.GetAssetPath($"cloudformation_{moduleInfo.FullName}_{TemplateChecksum}.json");
-        }
-
-        public string GetFullName() => GetModuleInfo().FullName;
-        public string GetOwner() => GetModuleInfo().Owner;
-        public string GetName() => GetModuleInfo().Name;
-        public VersionInfo GetVersion() => GetModuleInfo().Version;
+        public string GetModuleTemplatePath() => Module.GetAssetPath($"cloudformation_{Module.FullName}_{TemplateChecksum}.json");
+        public string GetFullName() => Module.FullName;
+        public string GetOwner() => Module.Owner;
+        public string GetName() => Module.Name;
+        public VersionInfo GetVersion() => Module.Version;
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()
             => ParameterSections.SelectMany(section => section.Parameters);

@@ -43,7 +43,7 @@ namespace LambdaSharp.Tool {
         private class DependencyRecord {
 
             //--- Properties ---
-            public string DependencyOwner { get; set; }
+            public ModuleInfo DependencyOwner { get; set; }
             public ModuleManifest Manifest { get; set; }
             public ModuleLocation ModuleLocation { get; set; }
         }
@@ -244,7 +244,7 @@ namespace LambdaSharp.Tool {
                         : null;
                     if(existingDependency != null) {
                         existing.Add(existingDependency);
-                    } else if(inProgress.Any(d => d.Manifest.GetModuleInfo().FullName == dependency.ModuleInfo.FullName)) {
+                    } else if(inProgress.Any(d => d.Manifest.Module.FullName == dependency.ModuleInfo.FullName)) {
 
                         // circular dependency detected
                         LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
@@ -291,7 +291,7 @@ namespace LambdaSharp.Tool {
                 }
                 var deployedOwner = (deployedModule.DependencyOwner == null)
                     ? "existing module"
-                    : $"module '{deployedModule.DependencyOwner}'";
+                    : $"module '{deployedModule.DependencyOwner.ToModuleReference()}'";
 
                 // confirm that the dependency version is in a valid range
                 var deployedVersion = deployedModule.ModuleLocation.ModuleInfo.Version;

@@ -197,7 +197,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // deploy module
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    new ModuleLocation(Settings.DeploymentBucketName, manifest.GetModuleInfo(), manifest.TemplateChecksum),
+                    new ModuleLocation(Settings.DeploymentBucketName, manifest.Module, manifest.TemplateChecksum),
                     stackName,
                     allowDataLoos,
                     protectStack,

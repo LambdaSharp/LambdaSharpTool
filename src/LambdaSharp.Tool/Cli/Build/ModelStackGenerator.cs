@@ -84,8 +84,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module manifest
             var manifest = new ModuleManifest {
-                Module = module.Info,
+                Module = module.ModuleInfo,
                 Description = module.Description,
+                CoreServicesVersion = Settings.ToolVersion.GetCompatibleCoreServicesVersion(),
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
@@ -147,7 +148,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add outputs
             _stack.Add("Module", new Humidifier.Output {
-                Value = $"{_module.FullName}:{_module.Version}@{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}"
+                Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToModuleReference()
             });
             _stack.Add("LambdaSharpTool", new Humidifier.Output {
                 Value = Settings.ToolVersion.ToString()

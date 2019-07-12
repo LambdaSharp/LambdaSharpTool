@@ -76,16 +76,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
             if(!_loader.TryLoadFromFile(cloudformationFile, out var manifest)) {
                 return null;
             }
-            var moduleInfo = manifest.GetModuleInfo();
 
             // update module origin
-            moduleInfo = new ModuleInfo(
-                moduleInfo.Owner,
-                moduleInfo.Name,
-                moduleInfo.Version,
-                moduleOrigin ?? Settings.DeploymentBucketName
-            );
-            manifest.Module = moduleInfo.ToModuleReference();
+            var moduleInfo = manifest.Module.WithOrigin(moduleOrigin ?? Settings.DeploymentBucketName);
+            manifest.Module = moduleInfo;
 
             // check if we want to always publish
             if(!forcePublish) {
@@ -167,11 +161,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 // NOTE: this message should never appear since we already do a similar check earlier
                 Console.WriteLine($"=> No changes found to upload");
             }
-            return manifest.GetModuleInfo();
+            return manifest.Module;
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
-            var moduleInfo = manifest.GetModuleInfo();
+            var moduleInfo = manifest.Module;
 
             // rewrite assets in manifest to have an absolute path
             manifest.Assets = manifest.Assets
@@ -214,7 +208,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
 
             // only upload files that don't exist
-            var destinationKey = manifest.GetModuleInfo().GetAssetPath(Path.GetFileName(filePath));
+            var destinationKey = manifest.Module.GetAssetPath(Path.GetFileName(filePath));
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 var request = new TransferUtilityUploadRequest {
