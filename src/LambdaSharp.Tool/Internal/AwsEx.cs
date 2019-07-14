@@ -31,6 +31,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Internal {
 
@@ -119,8 +120,7 @@ namespace LambdaSharp.Tool.Internal {
             this IAmazonCloudFormation cfnClient,
             string stackName,
             string mostRecentStackEventId,
-            IDictionary<string, string> resourceNameMappings = null,
-            IDictionary<string, string> typeNameMappings = null,
+            ModuleNameMappings nameMappings = null,
             LogErrorDelegate logError = null
         ) {
             var seenEventIds = new HashSet<string>();
@@ -190,13 +190,13 @@ namespace LambdaSharp.Tool.Internal {
             // local function
             string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                resourceNameMappings?.TryGetValue(logicalId, out fullName);
+                nameMappings?.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
             }
 
             string TranslateResourceTypeToFullName(string awsType) {
                 var fullName = awsType;
-                typeNameMappings?.TryGetValue(awsType, out fullName);
+                nameMappings?.TypeNameMappings?.TryGetValue(awsType, out fullName);
                 return fullName ?? awsType;
             }
 

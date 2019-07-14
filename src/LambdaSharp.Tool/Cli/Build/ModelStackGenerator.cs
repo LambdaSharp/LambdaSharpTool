@@ -84,7 +84,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module manifest
             var manifest = new ModuleManifest {
-                Module = module.ModuleInfo,
+                ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
                 CoreServicesVersion = Settings.ToolVersion.GetCompatibleCoreServicesVersion(),
                 ParameterSections = inputParameters
@@ -121,6 +121,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     })
                     .OrderBy(output => output.Name)
                     .ToList(),
+            };
+            _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
+
+            // add resource name and type name mappings
+            _stack.AddTemplateMetadata("LambdaSharp::NameMappings", new ModuleNameMappings {
                 TypeNameMappings = module.ResourceTypeNameMappings
                     .Where(kv => _stack.Resources.Any(resource => resource.Value.AWSTypeName == kv.Key))
                     .ToDictionary(kv => kv.Key, kv => kv.Value),
@@ -132,8 +137,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // we only care about items where the logical ID and full-name don't match
                     .Where(item => item.LogicalId != item.FullName)
                     .ToDictionary(item => item.LogicalId, item => item.FullName)
-            };
-            _stack.AddTemplateMetadata("LambdaSharp::Manifest", manifest);
+            });
 
             // update template with template hash
             var templateHash = GenerateCloudFormationTemplateChecksum();

@@ -182,9 +182,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // deploy module dependencies
                 foreach(var dependency in dependencies) {
+                    var dependencyLocation = new ModuleLocation(Settings.DeploymentBucketName, dependency.ModuleLocation.ModuleInfo, dependency.ModuleLocation.Hash);
                     if(!await new ModelUpdater(Settings, SourceFilename).DeployChangeSetAsync(
                         dependency.Manifest,
-                        new ModuleLocation(Settings.DeploymentBucketName, dependency.ModuleLocation.ModuleInfo, dependency.ModuleLocation.Hash),
+                        await _loader.GetNameMappingsFromLocationAsync(dependencyLocation),
+                        dependencyLocation,
                         Settings.GetStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
@@ -195,9 +197,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // deploy module
+                var moduleLocation = new ModuleLocation(Settings.DeploymentBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    new ModuleLocation(Settings.DeploymentBucketName, manifest.Module, manifest.TemplateChecksum),
+                    await _loader.GetNameMappingsFromLocationAsync(moduleLocation),
+                    moduleLocation,
                     stackName,
                     allowDataLoos,
                     protectStack,

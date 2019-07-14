@@ -58,6 +58,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Methods ---
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
+            ModuleNameMappings nameMappings,
             ModuleLocation moduleLocation,
             string stackName,
             bool allowDataLoss,
@@ -145,7 +146,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.TypeNameMappings, logError: LogError);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, nameMappings, LogError);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
@@ -185,7 +186,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             // local function
             string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                manifest.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
+                nameMappings?.ResourceNameMappings.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
             }
         }

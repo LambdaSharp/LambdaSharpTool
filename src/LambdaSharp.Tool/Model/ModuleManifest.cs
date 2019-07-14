@@ -27,6 +27,18 @@ using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool.Model {
 
+    public class ModuleNameMappings {
+
+        //--- Constants ---
+        public const string CurrentVersion = "2019-07-04";
+
+
+        //--- Properties ---
+        public string Version { get; set; } = CurrentVersion;
+        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
+    }
+
     public class ModuleManifest {
 
         //--- Constants ---
@@ -34,7 +46,9 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-        public ModuleInfo Module { get; set; }
+
+        [JsonProperty("Module")]
+        public ModuleInfo ModuleInfo { get; set; }
         public string Description { get; set; }
         public string TemplateChecksum { get; set; }
         public VersionInfo CoreServicesVersion { get; set; }
@@ -44,15 +58,13 @@ namespace LambdaSharp.Tool.Model {
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
-        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
-        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
 
         //--- Methods ---
-        public string GetModuleTemplatePath() => Module.GetAssetPath($"cloudformation_{Module.FullName}_{TemplateChecksum}.json");
-        public string GetFullName() => Module.FullName;
-        public string GetOwner() => Module.Owner;
-        public string GetName() => Module.Name;
-        public VersionInfo GetVersion() => Module.Version;
+        public string GetModuleTemplatePath() => ModuleInfo.GetAssetPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
+        public string GetFullName() => ModuleInfo.FullName;
+        public string GetOwner() => ModuleInfo.Owner;
+        public string GetName() => ModuleInfo.Name;
+        public VersionInfo GetVersion() => ModuleInfo.Version;
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()
             => ParameterSections.SelectMany(section => section.Parameters);

@@ -244,7 +244,7 @@ namespace LambdaSharp.Tool {
                         : null;
                     if(existingDependency != null) {
                         existing.Add(existingDependency);
-                    } else if(inProgress.Any(d => d.Manifest.Module.FullName == dependency.ModuleInfo.FullName)) {
+                    } else if(inProgress.Any(d => d.Manifest.ModuleInfo.FullName == dependency.ModuleInfo.FullName)) {
 
                         // circular dependency detected
                         LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
@@ -267,7 +267,7 @@ namespace LambdaSharp.Tool {
                             continue;
                         }
                         var nestedDependency = new DependencyRecord {
-                            DependencyOwner = current.Module,
+                            DependencyOwner = current.ModuleInfo,
                             Manifest = dependencyManifest,
                             ModuleLocation = dependencyModuleLocation
                         };
@@ -325,6 +325,29 @@ namespace LambdaSharp.Tool {
                 }
                 return result;
             }
+        }
+
+        public async Task<ModuleNameMappings> GetNameMappingsFromLocationAsync(ModuleLocation moduleLocation) {
+            var template = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleTemplateKey);
+            return GetNameMappingsFromTemplate(template);
+        }
+
+        public ModuleNameMappings GetNameMappingsFromTemplate(string template) {
+            var cloudformation = JObject.Parse(template);
+            if(
+                cloudformation.TryGetValue("Metadata", out var metadataToken)
+                && (metadataToken is JObject metadata)
+                && metadata.TryGetValue("LambdaSharp::NameMappings", out var nameMappingsToken)
+            ) {
+                var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
+                if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
+                    return nameMappings;
+                }
+                LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                return null;
+            }
+            LogError("CloudFormation file does not contain LambdaSharp name mappings");
+            return null;
         }
 
         private async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {

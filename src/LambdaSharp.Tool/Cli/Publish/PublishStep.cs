@@ -78,8 +78,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // update module origin
-            var moduleInfo = manifest.Module.WithOrigin(moduleOrigin ?? Settings.DeploymentBucketName);
-            manifest.Module = moduleInfo;
+            var moduleInfo = manifest.ModuleInfo.WithOrigin(moduleOrigin ?? Settings.DeploymentBucketName);
+            manifest.ModuleInfo = moduleInfo;
 
             // check if we want to always publish
             if(!forcePublish) {
@@ -161,11 +161,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 // NOTE: this message should never appear since we already do a similar check earlier
                 Console.WriteLine($"=> No changes found to upload");
             }
-            return manifest.Module;
+            return manifest.ModuleInfo;
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
-            var moduleInfo = manifest.Module;
+            var moduleInfo = manifest.ModuleInfo;
 
             // rewrite assets in manifest to have an absolute path
             manifest.Assets = manifest.Assets
@@ -208,7 +208,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
 
             // only upload files that don't exist
-            var destinationKey = manifest.Module.GetAssetPath(Path.GetFileName(filePath));
+            var destinationKey = manifest.ModuleInfo.GetAssetPath(Path.GetFileName(filePath));
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 var request = new TransferUtilityUploadRequest {
