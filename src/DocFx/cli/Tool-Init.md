@@ -1,8 +1,8 @@
-> TODO: update documentation for this command
-
 # Initialize Deployment Tier
 
-The `init` command is used to both initialize a new deployment tier and update an existing one.
+The `init` command is used to both create a new deployment tier and update an existing one. The resources required for a new deployment tier will be created unless provided.
+
+The `--quick-start` option minimizes the setup time by disabling the core services and assuming safe defaults for all prompts. This option is useful for learning about λ# and getting started quickly. However, **DO NOT** use this option in production or test environments!
 
 ## Options
 
@@ -26,28 +26,10 @@ The `init` command is used to both initialize a new deployment tier and update a
 (optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)
 </dd>
 
-<dt><code>--force-deploy</code></dt>
-<dd>
-
-(optional) Force module deployment
-</dd>
-
 <dt><code>--version &lt;VERSION&gt;</code></dt>
 <dd>
 
 (optional) Specify version for LambdaSharp modules (default: same as CLI version)
-</dd>
-
-<dt><code>--local &lt;PATH&gt;</code></dt>
-<dd>
-
-(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)
-</dd>
-
-<dt><code>--use-published</code></dt>
-<dd>
-
-(optional) Force the init command to use the published LambdaSharp modules
 </dd>
 
 <dt><code>--parameters &lt;FILE&gt;</code></dt>
@@ -62,16 +44,46 @@ The `init` command is used to both initialize a new deployment tier and update a
 (optional) Publish modules and their assets even when no changes were detected
 </dd>
 
+<dt><code>--force-deploy</code></dt>
+<dd>
+
+(optional) Force module deployment
+</dd>
+
+<dt><code>--quick-start</code></dt>
+<dd>
+
+(optional) Use safe defaults for quickly setting up a LambdaSharp deployment tier.
+</dd>
+
+<dt><code>--core-services &lt;VALUE&gt;</code></dt>
+<dd>
+
+(optional) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)
+</dd>
+
+<dt><code>--existing-s3-bucket-name &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)
+</dd>
+
+<dt><code>--local &lt;PATH&gt;</code></dt>
+<dd>
+
+(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)
+</dd>
+
+<dt><code>--use-published</code></dt>
+<dd>
+
+(optional) Force the init command to use the published LambdaSharp modules
+</dd>
+
 <dt><code>--prompt-all</code></dt>
 <dd>
 
 (optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)
-</dd>
-
-<dt><code>--prompts-as-errors</code></dt>
-<dd>
-
-(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)
 </dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
@@ -104,48 +116,35 @@ The `init` command is used to both initialize a new deployment tier and update a
 Disable colored ANSI terminal output
 </dd>
 
+<dt><code>--prompts-as-errors</code></dt>
+<dd>
+
+(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)
+</dd>
+
 </dl>
 
 ## Examples
 
-### Create a new deployment tier or update an existing one
+### Creating a new deployment tier using the `--quick-start` option
 
 __Using PowerShell/Bash:__
 ```bash
-lash init --tier Sandbox
+lash init --tier Sandbox --quick-start
 ```
-
 Output:
 ```
-LambdaSharp CLI (v0.5) - Initialize LambdaSharp deployment tier
-Creating new deployment tier 'Sandbox'
-Resolving module reference: LambdaSharp.Core:0.5
-=> Validating module for deployment tier
+LambdaSharp CLI (v0.7-WIP) - Create or update a LambdaSharp deployment tier
+Creating LambdaSharp tier
+=> Stack creation initiated for Sandbox-LambdaSharp-Core
+CREATE_COMPLETE    AWS::CloudFormation::Stack    Sandbox-LambdaSharp-Core
+CREATE_COMPLETE    AWS::S3::Bucket               DeploymentBucketResource
+=> Stack creation finished
+=> Checking API Gateway role
 
-Deploying stack: Sandbox--LambdaSharp-Core [LambdaSharp.Core:0.5]
-=> Stack create initiated for Sandbox--LambdaSharp-Core [CAPABILITY_IAM]
-REVIEW_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox--LambdaSharp-Core (User Initiated)
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox--LambdaSharp-Core (User Initiated)
-CREATE_IN_PROGRESS                  AWS::SQS::Queue                                         DeadLetterQueue::Resource
-CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         UsageReportTopic
-...
-CREATE_COMPLETE                     AWS::Lambda::Permission                                 Registration::Source1Permission
-CREATE_IN_PROGRESS                  AWS::KMS::Alias                                         DefaultSecretKeyAlias (Resource creation Initiated)
-CREATE_COMPLETE                     AWS::KMS::Alias                                         DefaultSecretKeyAlias
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Core
-=> Stack create finished
-Stack output values:
-=> Dead Letter Queue (ARN): arn:aws:sqs:us-east-1:123456789012:Sandbox-LambdaSharp-Core-DeadLetterQueueResource-1RU4L5WQ0VWEZ
-=> Default Secret Key (ARN): arn:aws:kms:us-east-1:123456789012:key/42f85bb4-c254-43b1-90de-afa986bb906c
-=> Resource type for LambdaSharp function registrations: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Core-RegistrationTopic-OYSNGOC85DP7
-=> Resource type for LambdaSharp module registrations: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Core-RegistrationTopic-OYSNGOC85DP7
-=> Logging Stream (ARN): arn:aws:kinesis:us-east-1:123456789012:stream/Sandbox-LambdaSharp-Core-LoggingStreamResource-131NRS53BQZBN
-=> Role for writing CloudWatch logs to the Kinesis stream: arn:aws:iam::123456789012:role/Sandbox-LambdaSharp-Core-LoggingStreamRole-159RDENYID067
-=> Module: LambdaSharp.Core:0.5
-
-Done (finished: 1/18/2019 6:54:05 AM; duration: 00:02:22.8247619)
+Done (finished: 7/15/2019 10:20:09 AM; duration: 00:01:14.0338861)
 ```
 
 ## For λ# Contributors
-The `init` command builds and deploys the local λ# Core module when the `LAMBDASHARP` environment variable is set. To force `init` to use the published λ# Core module instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
+The `init` command builds and deploys the local LambdaSharp.Core module when the `LAMBDASHARP` environment variable is set. To force `init` to use the published λ# Core module instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
 
