@@ -67,8 +67,6 @@ namespace LambdaSharp.Tool {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-
-        // TODO: can we get rid of this?
         public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Owner}}/${{Module::Name}}/.assets/{filename}");
 
         public static ModuleInfo Parse(string moduleReference) {
@@ -131,16 +129,14 @@ namespace LambdaSharp.Tool {
         //--- Methods ---
         public string GetAssetPath(string assetName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Owner}/{Name}/.assets/{assetName}";
 
-        // TODO: make this the `ToString()` method
-        public string ToModuleReference() {
+        public string ToPrettyString() {
             var result = new StringBuilder();
             result.Append(FullName);
             if(Version != null) {
-                result.Append(":");
-                result.Append(Version);
+                result.Append($" (v{Version})");
             }
             if(Origin != null) {
-                result.Append("@");
+                result.Append(" from ");
                 result.Append(Origin);
             }
             return result.ToString();
@@ -150,10 +146,11 @@ namespace LambdaSharp.Tool {
             var result = new StringBuilder();
             result.Append(FullName);
             if(Version != null) {
-                result.Append($" (v{Version})");
+                result.Append(":");
+                result.Append(Version);
             }
             if(Origin != null) {
-                result.Append(" from ");
+                result.Append("@");
                 result.Append(Origin);
             }
             return result.ToString();
@@ -177,6 +174,6 @@ namespace LambdaSharp.Tool {
                 : null;
 
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
-            => writer.WriteValue(((ModuleInfo)value).ToModuleReference());
+            => writer.WriteValue(((ModuleInfo)value).ToString());
     }
 }

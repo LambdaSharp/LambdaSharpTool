@@ -403,7 +403,7 @@ namespace LambdaSharp.Tool.Cli {
                             if(!await DeployStepAsync(
                                 settings,
                                 dryRun,
-                                moduleInfo.ToModuleReference(),
+                                moduleInfo.ToString(),
                                 alternativeNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
@@ -434,8 +434,6 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo moduleVersion
         ) {
             try {
-
-                // TODO: why do we need this? -> resolve referenced manifests
                 if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
                     return false;
                 }

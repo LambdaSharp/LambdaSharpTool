@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ModuleInfo = dependency.Value.ModuleLocation.ModuleInfo,
                         Type = dependency.Value.Type
                     })
-                    .OrderBy(dependency => dependency.ModuleInfo.ToModuleReference())
+                    .OrderBy(dependency => dependency.ModuleInfo.ToString())
                     .ToList(),
                 ResourceTypes = module.CustomResourceTypes.ToList(),
                 Outputs = module.Items
@@ -152,7 +152,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add outputs
             _stack.Add("Module", new Humidifier.Output {
-                Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToModuleReference()
+                Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("LambdaSharpTool", new Humidifier.Output {
                 Value = Settings.ToolVersion.ToString()

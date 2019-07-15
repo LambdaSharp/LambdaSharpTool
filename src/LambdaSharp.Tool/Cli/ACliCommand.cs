@@ -129,8 +129,9 @@ namespace LambdaSharp.Tool.Cli {
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
-            awsAccountIdOption.ShowInHelpText = false;
             awsRegionOption.ShowInHelpText = false;
+            awsAccountIdOption.ShowInHelpText = false;
+            awsUserArnOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
             deploymentBucketNameOption.ShowInHelpText = false;
             tierVersionOption.ShowInHelpText = false;

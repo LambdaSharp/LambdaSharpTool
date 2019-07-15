@@ -42,23 +42,22 @@ namespace LambdaSharp.Tool.Cli {
         public void Register(CommandLineApplication app) {
             app.Command("init", cmd => {
                 cmd.HelpOption();
-                cmd.Description = "Initialize LambdaSharp deployment tier";
+                cmd.Description = "Create or update a LambdaSharp deployment tier";
 
                 // init options
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
-                var enableXRayTracingOption = cmd.Option("--xray", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module", CommandOptionType.NoValue);
-                var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+                var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
+                var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
+                var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
+                var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
+                var quickStartOption = cmd.Option("--quick-start", "(optional, create-only) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
+                var coreServicesOption = cmd.Option("--core-services <VALUE>", "(optional, create-only) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)", CommandOptionType.SingleValue);
+                var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional, create-only) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
-                var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
-                // TODO: set individual parameters
-                var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var quickStartOption = cmd.Option("--quick-start", "(optional) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
-                var coreServicesOption = cmd.Option("--core-services <VALUE>", "(optional) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)", CommandOptionType.SingleValue);
-                var existingS3BucketNameOption = cmd.Option("--existing-s3-bucket-name <NAME>", "(optional) Existing S3 bucket name for module deployments (blank value creates new bucket)", CommandOptionType.SingleValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -130,15 +129,15 @@ namespace LambdaSharp.Tool.Cli {
 
                     // versions are identical; nothing to do, unless it's a pre-release, which always need to be updated
                     update = settings.ToolVersion.IsPreRelease;
-                } else if(tierToToolVersionComparison < 0) {
-
-                    // tier is older; let's only upgrade it if we can
-                    update = true;
                 } else if(tierToToolVersionComparison > 0) {
 
                     // tier is newer; tool needs to get updated
                     LogError($"LambdaSharp tool is out of date (tool: {settings.ToolVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
                     return false;
+                } else if(tierToToolVersionComparison < 0) {
+
+                    // tier is older; let's only upgrade it if we can
+                    update = true;
                 } else if(!forceDeploy) {
                     LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
@@ -363,6 +362,8 @@ namespace LambdaSharp.Tool.Cli {
             // get summary of new template
             GetTemplateSummaryResponse templateSummary;
             try {
+
+                // TODO: should we fetch the template JSON instead?
                 templateSummary = await settings.CfnClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
                     TemplateBody = templateBody
                 });

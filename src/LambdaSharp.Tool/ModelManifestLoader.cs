@@ -83,7 +83,7 @@ namespace LambdaSharp.Tool {
             var cloudformationText = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleTemplateKey);
             if(cloudformationText == null) {
                 if(errorIfMissing) {
-                    LogError($"could not load CloudFormation template for {moduleLocation.ModuleInfo.ToModuleReference()}");
+                    LogError($"could not load CloudFormation template for {moduleLocation.ModuleInfo}");
                 }
                 return null;
             }
@@ -139,7 +139,7 @@ namespace LambdaSharp.Tool {
                     // use version from origin since it's newer
                     return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
                 } else {
-                    LogError($"unable to determine which version to use for {moduleInfo.ToModuleReference()}: {moduleOriginFoundVersion} (origin) vs. {deploymentBucketFoundVersion} (deployment bucket)");
+                    LogError($"unable to determine which version to use for {moduleInfo}: {moduleOriginFoundVersion} (origin) vs. {deploymentBucketFoundVersion} (deployment bucket)");
                     return null;
                 }
             } else if(moduleOriginFoundVersion != null) {
@@ -152,7 +152,7 @@ namespace LambdaSharp.Tool {
             var versionConstraint = (moduleInfo.Version != null)
                 ? $"v{moduleInfo.Version} or later"
                 : "any version";
-            LogError($"could not find module: {moduleInfo.ToModuleReference()} ({versionConstraint})");
+            LogError($"could not find module: {moduleInfo} ({versionConstraint})");
             return null;
 
             // local functions
@@ -207,7 +207,7 @@ namespace LambdaSharp.Tool {
                 // fetch module manifest for version
                 var manifestText = await GetS3ObjectContentsAsync(sourceBucketName, info.VersionPath);
                 if(manifestText == null) {
-                    LogError($"could not load module manifest for {info.ToModuleReference()}");
+                    LogError($"could not load module manifest for {info}");
                     return null;
                 }
                 var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
@@ -278,7 +278,7 @@ namespace LambdaSharp.Tool {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo.ToModuleReference()}");
+                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo}");
                         deployments.Add(nestedDependency);
                     }
                 }
@@ -291,7 +291,7 @@ namespace LambdaSharp.Tool {
                 }
                 var deployedOwner = (deployedModule.DependencyOwner == null)
                     ? "existing module"
-                    : $"module '{deployedModule.DependencyOwner.ToModuleReference()}'";
+                    : $"module '{deployedModule.DependencyOwner}'";
 
                 // confirm that the dependency version is in a valid range
                 var deployedVersion = deployedModule.ModuleLocation.ModuleInfo.Version;

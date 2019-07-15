@@ -131,15 +131,15 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // copy check-summed module assets (guaranteed immutable)
                 foreach(var asset in dependency.Manifest.Assets) {
-                    imported = imported | await CopyS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
+                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
                 }
 
                 // copy version manifest
-                imported = imported | await CopyS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
+                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
 
                 // show message if any assets were imported
                 if(imported) {
-                    Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo.ToModuleReference()}");
+                    Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo}");
                 }
             }
 
@@ -225,7 +225,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
         private Task<bool> DoesS3ObjectExistsAsync(string key) => Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, key);
 
-        private async Task<bool> CopyS3Object(string sourceBucket, string key, bool replace = false) {
+        private async Task<bool> ImportS3Object(string sourceBucket, string key, bool replace = false) {
 
             // check if target object already exists
             var found = false;
@@ -236,8 +236,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     RequestPayer = RequestPayer.Requester
                 });
                 found = true;
-
-                // TODO: should copying the original be forceable?
 
                 // check if this object was uploaded locally and therefore should not be replaced
                 if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {

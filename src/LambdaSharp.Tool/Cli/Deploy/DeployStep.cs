@@ -77,22 +77,20 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // check that the LambdaSharp Core & CLI versions match
             if(!forceDeploy && (manifest.GetFullName() == "LambdaSharp.Core")) {
-                var toolToTierVersionComparison = Settings.ToolVersion.CompareToVersion(Settings.TierVersion);
+                var tierToToolVersionComparison = Settings.TierVersion.CompareToVersion(Settings.ToolVersion);
 
                 // core module has special rules for updates
-                if(toolToTierVersionComparison == null) {
+                if(tierToToolVersionComparison == null) {
 
                     // tool version and tier version cannot be compared
                     LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
-                } else if(toolToTierVersionComparison < 0) {
-
-                    // TODO: this seems to be the opposite logic of `lash init`
+                } else if(tierToToolVersionComparison > 0) {
 
                     // tier version is more recent; inform user to upgrade tool
                     LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion})", new LambdaSharpToolOutOfDateException(Settings.TierVersion));
                     return false;
-                } else if(toolToTierVersionComparison > 0) {
+                } else if(tierToToolVersionComparison < 0) {
 
                     // tool version is more recent; check if user wants to upgrade tier
                     Console.WriteLine($"LambdaSharp Tier is out of date");

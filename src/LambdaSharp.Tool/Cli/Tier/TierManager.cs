@@ -46,8 +46,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     //  if an output key exists and then default to empty string when it is null to properly compare it.
                     var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
                     if(lambdaSharpTier == null) {
-
-                        // TODO: check which lambdasharp tool built the module; if < 0.7, use prefix check to determine if module belongs to tier
                         return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
                     }
                     return (lambdaSharpTier.OutputValue ?? "") == Settings.Tier;

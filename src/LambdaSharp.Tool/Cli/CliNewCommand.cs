@@ -260,8 +260,6 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-
-                // TODO: this should NOT be a wildcard
                 ["LAMBDASHARP_VERSION"] = Version.GetWildcardVersion()
             };
             try {

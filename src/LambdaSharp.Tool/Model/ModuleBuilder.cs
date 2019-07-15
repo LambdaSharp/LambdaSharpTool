@@ -32,6 +32,14 @@ using Newtonsoft.Json.Linq;
 namespace LambdaSharp.Tool.Model {
     using static ModelFunctions;
 
+    public class ModuleBuilderDependency {
+
+        //--- Properties ---
+        public ModuleManifest Manifest { get; set; }
+        public ModuleLocation ModuleLocation { get; set; }
+        public ModuleManifestDependencyType Type;
+    }
+
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
@@ -172,7 +180,7 @@ namespace LambdaSharp.Tool.Model {
             case ModuleManifestDependencyType.Nested:
 
                 // nested dependencies can reference different versions
-                moduleKey = moduleInfo.ToModuleReference();
+                moduleKey = moduleInfo.ToString();
                 if(_dependencies.ContainsKey(moduleKey)) {
                     return;
                 }
@@ -180,7 +188,7 @@ namespace LambdaSharp.Tool.Model {
             case ModuleManifestDependencyType.Shared:
 
                 // shared dependencies can only have one version
-                moduleKey = moduleInfo.WithoutVersion().ToModuleReference();
+                moduleKey = moduleInfo.WithoutVersion().ToString();
 
                 // check if a dependency was already registered
                 if(_dependencies.TryGetValue(moduleKey, out var existingDependency)) {
@@ -198,7 +206,7 @@ namespace LambdaSharp.Tool.Model {
                 }
                 break;
             default:
-                LogError($"unrecognized depency type '{dependencyType}' for {moduleInfo.ToModuleReference()}");
+                LogError($"unrecognized depency type '{dependencyType}' for {moduleInfo.ToString()}");
                 return;
             }
 
@@ -726,7 +734,7 @@ namespace LambdaSharp.Tool.Model {
 
             // validate module parameters
             AtLocation("Parameters", () => {
-                var loader = new ModelManifestLoader(Settings, moduleInfo.ToModuleReference());
+                var loader = new ModelManifestLoader(Settings, moduleInfo.ToString());
                 var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo).Result;
                 if(foundModuleLocation != null) {
                     var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadManifestFromLocationAsync(foundModuleLocation).Result;
