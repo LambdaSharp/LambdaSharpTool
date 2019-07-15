@@ -93,8 +93,6 @@ namespace LambdaSharp.Tool {
 
         public int? CompareToVersion(VersionInfo other) {
             if(object.ReferenceEquals(other, null)) {
-
-                // TODO: is this really how we want to make this behave?
                 return null;
             }
 

@@ -116,7 +116,6 @@ namespace LambdaSharp.Tool.Model {
         Shared
     }
 
-    // TODO: change to `ModuleManifest.Dependency`
     public class ModuleManifestDependency {
 
         //--- Properties ---
