@@ -112,7 +112,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // discover module dependencies
-            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false);
+            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport: true);
             if(HasErrors) {
                 return null;
             }

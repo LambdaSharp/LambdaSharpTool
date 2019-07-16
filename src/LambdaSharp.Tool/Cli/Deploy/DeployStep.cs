@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo);
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: false);
             if(foundModuleLocation == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;
@@ -161,7 +161,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // discover module dependencies and prompt for missing parameters
-                var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true);
+                var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false);
                 if(HasErrors) {
                     return false;
                 }

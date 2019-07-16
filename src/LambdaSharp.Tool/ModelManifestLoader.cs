@@ -103,14 +103,15 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo) {
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, bool allowImport) {
 
             // check if module can be found in the deployment bucket
             var result = await FindNewestVersionAsync(Settings.DeploymentBucketName);
 
             // check if the origin bucket needs to be checked
             if(
-                (Settings.DeploymentBucketName != moduleInfo.Origin)
+                allowImport
+                && (Settings.DeploymentBucketName != moduleInfo.Origin)
                 && (
 
                     // no version has been found
@@ -215,7 +216,7 @@ namespace LambdaSharp.Tool {
             ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest) => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
-        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting) {
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
@@ -247,7 +248,7 @@ namespace LambdaSharp.Tool {
                     } else {
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo);
+                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, allowImport);
                         if(dependencyModuleLocation == null) {
 
                             // error has already been reported

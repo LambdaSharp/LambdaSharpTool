@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Model {
             var loader = new ModelManifestLoader(Settings, SourceFilename);
             var dependency = new ModuleBuilderDependency {
                 Type = dependencyType,
-                ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo)
+                ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true)
             };
             if(dependency.ModuleLocation == null) {
 
@@ -735,7 +735,7 @@ namespace LambdaSharp.Tool.Model {
             // validate module parameters
             AtLocation("Parameters", () => {
                 var loader = new ModelManifestLoader(Settings, moduleInfo.ToString());
-                var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo).Result;
+                var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true).Result;
                 if(foundModuleLocation != null) {
                     var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadManifestFromLocationAsync(foundModuleLocation).Result;
 
