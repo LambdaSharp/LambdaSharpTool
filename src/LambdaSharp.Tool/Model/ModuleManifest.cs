@@ -51,6 +51,7 @@ namespace LambdaSharp.Tool.Model {
         public ModuleInfo ModuleInfo { get; set; }
         public string Description { get; set; }
         public string TemplateChecksum { get; set; }
+        public DateTime Date { get; set; }
         public VersionInfo CoreServicesVersion { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
         public ModuleManifestGitInfo Git { get; set; }

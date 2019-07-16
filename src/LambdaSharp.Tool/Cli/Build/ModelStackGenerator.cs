@@ -83,9 +83,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
 
             // add module manifest
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
             var manifest = new ModuleManifest {
                 ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
+                Date = now,
                 CoreServicesVersion = Settings.ToolVersion.GetCompatibleCoreServicesVersion(),
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
