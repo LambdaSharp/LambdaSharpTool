@@ -105,65 +105,86 @@ namespace LambdaSharp.Tool {
 
         public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo) {
 
-            // TODO: shouldn't we first check our deployment bucket for a custom version before we check the origin?
+            // check if module can be found in the deployment bucket
+            var result = await FindNewestVersionAsync(Settings.DeploymentBucketName);
 
-            // attempt to find the latest matching version in the module origin and deployment buckets
-            var moduleOriginFoundVersion = (moduleInfo.Origin != null)
-                ? await FindNewestVersion(moduleInfo.Origin)
-                : null;
-            var deploymentBucketFoundVersion = (moduleInfo.Origin != Settings.DeploymentBucketName)
-                ? await FindNewestVersion(Settings.DeploymentBucketName)
-                : moduleOriginFoundVersion;
+            // check if the origin bucket needs to be checked
+            if(
+                (Settings.DeploymentBucketName != moduleInfo.Origin)
+                && (
 
-            // determine which bucket to use for the module
-            if((moduleOriginFoundVersion != null) && (deploymentBucketFoundVersion != null)) {
+                    // no version has been found
+                    (result.Version == null)
 
-                // check which bucket has the newer version
-                var compareOriginDeploymentVersions = moduleOriginFoundVersion.CompareToVersion(deploymentBucketFoundVersion);
-                if(compareOriginDeploymentVersions == 0) {
-                    if(moduleOriginFoundVersion.IsPreRelease) {
+                    // no module version constraint was given; the ultimate floating version
+                    || (moduleInfo.Version == null)
 
-                        // always default to module origin for pre-release version
-                        return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
-                    } else {
+                    // the module version constraint is for a pre-release; we always prefer the origin version then
+                    || moduleInfo.Version.IsPreRelease
 
-                        // keep version in deployment bucket since version is stable and it matches
-                        return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
-                    }
-                } else if(compareOriginDeploymentVersions < 0) {
+                    // the module version constraint is floating; we need to check if origin has a newer version
+                    || moduleInfo.Version.HasFloatingConstraints
+                )
+            ) {
+                var originResult = await FindNewestVersionAsync(moduleInfo.Origin);
 
-                    // use version from deployment bucket since it's newer
-                    return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
-                } else if(compareOriginDeploymentVersions > 0) {
-
-                    // use version from origin since it's newer
-                    return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
-                } else {
-                    LogError($"unable to determine which version to use for {moduleInfo}: {moduleOriginFoundVersion} (origin) vs. {deploymentBucketFoundVersion} (deployment bucket)");
-                    return null;
+                // check if module found at origin should be kept instead
+                if(
+                    (originResult.Version != null)
+                    && (
+                        (result.Version == null)
+                        || (moduleInfo.Version?.IsPreRelease ?? false)
+                        || originResult.Version.IsGreaterThanVersion(result.Version)
+                    )
+                ) {
+                    result = originResult;
                 }
-            } else if(moduleOriginFoundVersion != null) {
-                return await MakeModuleLocation(moduleInfo.Origin, moduleInfo.WithVersion(moduleOriginFoundVersion));
-            } else if(deploymentBucketFoundVersion != null) {
-                return await MakeModuleLocation(Settings.DeploymentBucketName, moduleInfo.WithVersion(deploymentBucketFoundVersion));
             }
 
-            // could not find a matching version
-            var versionConstraint = (moduleInfo.Version != null)
-                ? $"v{moduleInfo.Version} or later"
-                : "any version";
-            LogError($"could not find module: {moduleInfo} ({versionConstraint})");
-            return null;
+            // check if a module was found
+            if(result.Version == null) {
+
+                // could not find a matching version
+                var versionConstraint = (moduleInfo.Version != null)
+                    ? $"v{moduleInfo.Version} or later"
+                    : "any version";
+                LogError($"could not find module: {moduleInfo} ({versionConstraint})");
+                return null;
+            }
+            return MakeModuleLocation(result.Origin, result.Manifest);
 
             // local functions
-            async Task<VersionInfo> FindNewestVersion(string bucketName) {
+            async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestVersionAsync(string bucketName) {
+
+                // enumerate versions in bucket
+                var found = await FindVersionsAsync(bucketName);
+                if(!found.Any()) {
+                    return (Origin: bucketName, Version: null, Manifest: null);
+                }
+
+                // attempt to identify the newest version
+                while(found.Any()) {
+                    var latest = VersionInfo.Max(found, strict: true);
+                    var latestModuleInfo = new ModuleInfo(moduleInfo.Owner, moduleInfo.Name, latest, moduleInfo.Origin);
+                    var manifestText = await GetS3ObjectContentsAsync(bucketName, latestModuleInfo.VersionPath);
+                    var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
+
+                    // check if version is compatible with this tool
+                    if(manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
+                        return (Origin: bucketName, Version: latest, Manifest: manifest);
+                    }
+                }
+                return (Origin: bucketName, Version: null, Manifest: null);
+            }
+
+            async Task<List<VersionInfo>> FindVersionsAsync(string bucketName) {
 
                 // get bucket region specific S3 client
                 var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
                 if(s3Client == null) {
 
                     // nothing to do; GetS3ClientByBucketName already emitted an error
-                    return null;
+                    return new List<VersionInfo>();
                 }
 
                 // enumerate versions in bucket
@@ -181,43 +202,17 @@ namespace LambdaSharp.Tool {
                         versions.AddRange(response.S3Objects
                             .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
                             .Select(found => VersionInfo.Parse(found))
-                            .Where(version => version.MatchesConstraints(moduleInfo.Version, moduleInfo.Version))
+                            .Where(version => version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true))
                         );
                         request.ContinuationToken = response.NextContinuationToken;
                     } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
-                        return null;
+                        break;
                     }
                 } while(request.ContinuationToken != null);
-                if(!versions.Any()) {
-                    return null;
-                }
-
-                // attempt to identify the newest version
-                var latest = versions.First();
-                foreach(var version in versions.Skip(1)) {
-                    if(version.IsGreaterThanVersion(latest)) {
-                        latest = version;
-                    }
-                }
-                return latest;
+                return versions;
             }
 
-            async Task<ModuleLocation> MakeModuleLocation(string sourceBucketName, ModuleInfo info) {
-
-                // fetch module manifest for version
-                var manifestText = await GetS3ObjectContentsAsync(sourceBucketName, info.VersionPath);
-                if(manifestText == null) {
-                    LogError($"could not load module manifest for {info}");
-                    return null;
-                }
-                var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
-                if(manifest == null) {
-                    return null;
-                }
-
-                // create module location reference with found manifest hash
-                return new ModuleLocation(sourceBucketName, info, manifest.TemplateChecksum);
-            }
+            ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest) => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
         public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting) {

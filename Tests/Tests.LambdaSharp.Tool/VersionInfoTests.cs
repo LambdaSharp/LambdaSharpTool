@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-using System;
 using FluentAssertions;
 using LambdaSharp.Tool;
 using Xunit;
@@ -42,9 +41,61 @@ namespace Tests.LambdaSharp.Tool {
             // assert
             version.Major.Should().Be(7);
             version.Minor.Should().Be(2);
-            version.Version.Revision.Should().Be(-1);
-            version.Version.Build.Should().Be(-1);
+            version.Patch.Should().Be(null);
+            version.PatchRevision.Should().Be(null);
             version.Suffix.Should().Be("-DEV1");
+        }
+
+        [Fact]
+        public void ToStringMajorMinorVersion() {
+
+            // arrange
+            var text = "7.2";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
+
+        [Fact]
+        public void ToStringMajorMinorSuffixVersion() {
+
+            // arrange
+            var text = "7.2-DEV1";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
+
+        [Fact]
+        public void ToStringMajorMinorPatchSuffixVersion() {
+
+            // arrange
+            var text = "7.2.3-DEV1";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
+
+        [Fact]
+        public void ToStringMajorMinorPatchMinorSuffixVersion() {
+
+            // arrange
+            var text = "7.2.0.4-DEV1";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
         }
 
         [Fact]
@@ -92,6 +143,48 @@ namespace Tests.LambdaSharp.Tool {
 
             // assert
             result.Should().Be(null);
+        }
+
+        [Fact]
+        public void CompareMajorMinorToMajorMinorPatch() {
+
+            // arrange
+            var version1 = VersionInfo.Parse("1.0");
+            var version2 = VersionInfo.Parse("1.0.0");
+
+            // act
+            var result = version1.CompareToVersion(version2) == 0;
+
+            // assert
+            result.Should().Be(true);
+        }
+
+        [Fact]
+        public void CompareMajorMinorToMajorMinorPatchPatchMinor() {
+
+            // arrange
+            var version1 = VersionInfo.Parse("1.0");
+            var version2 = VersionInfo.Parse("1.0.0.0");
+
+            // act
+            var result = version1.CompareToVersion(version2) == 0;
+
+            // assert
+            result.Should().Be(true);
+        }
+
+        [Fact]
+        public void CompareMajorMinorPatchToMajorMinorPatchPatchMinor() {
+
+            // arrange
+            var version1 = VersionInfo.Parse("1.0.0");
+            var version2 = VersionInfo.Parse("1.0.0.0");
+
+            // act
+            var result = version1.CompareToVersion(version2) == 0;
+
+            // assert
+            result.Should().Be(true);
         }
 
         [Fact]
