@@ -488,7 +488,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _dotnetLambdaToolVersionValid = true;
                 return true;
             }
-            if(version.IsLessThanVersion(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION))) {
+            if(version.IsLessThanVersion(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION), strict: true)) {
 
                 // attempt to install the AWS Lambda Tools extension
                 if(!ProcessLauncher.Execute(
