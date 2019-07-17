@@ -5,6 +5,8 @@
 ## What's New
 
 > TODO:
+> * `lash init --quick-start`
+> * cannot publish a stable version with DIRTY changes
 
 ### Request Payer format
 
