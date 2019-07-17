@@ -46,6 +46,7 @@ namespace LambdaSharp.Tool {
             public ModuleInfo DependencyOwner { get; set; }
             public ModuleManifest Manifest { get; set; }
             public ModuleLocation ModuleLocation { get; set; }
+            public ModuleManifestDependencyType Type { get; set; }
         }
 
         //--- Class Fields ---
@@ -216,14 +217,14 @@ namespace LambdaSharp.Tool {
             ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest) => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
-        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
+        public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
             var deployments = new List<DependencyRecord>();
             var existing = new List<DependencyRecord>();
             var inProgress = new List<DependencyRecord>();
 
             // create a topological sort of dependencies
             await Recurse(manifest);
-            return deployments.Select(tuple => (tuple.Manifest, tuple.ModuleLocation)).ToList();
+            return deployments.Select(record => (record.Manifest, record.ModuleLocation, record.Type)).ToList();
 
             // local functions
             async Task Recurse(ModuleManifest current) {
@@ -265,7 +266,8 @@ namespace LambdaSharp.Tool {
                         var nestedDependency = new DependencyRecord {
                             DependencyOwner = current.ModuleInfo,
                             Manifest = dependencyManifest,
-                            ModuleLocation = dependencyModuleLocation
+                            ModuleLocation = dependencyModuleLocation,
+                            Type = dependency.Type
                         };
 
                         // keep marker for in-progress resolutions so that circular errors can be detected

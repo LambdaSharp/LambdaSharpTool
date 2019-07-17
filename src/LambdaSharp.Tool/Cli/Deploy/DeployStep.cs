@@ -160,8 +160,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     });
                 }
 
-                // discover module dependencies and prompt for missing parameters
-                var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false);
+                // discover shard module dependencies and prompt for missing parameters
+                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false))
+                    .Where(dependency => dependency.Type == ModuleManifestDependencyType.Shared)
+                    .ToList();
                 if(HasErrors) {
                     return false;
                 }
