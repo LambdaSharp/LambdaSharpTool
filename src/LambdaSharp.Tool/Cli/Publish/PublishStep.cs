@@ -111,9 +111,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 return null;
             }
 
-            // discover module dependencies
-            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport: true);
-            if(HasErrors) {
+            // import module dependencies
+            if(!await ImportDependencies(manifest)) {
                 return null;
             }
 
@@ -124,24 +123,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // upload CloudFormation template
             var templateKey = await UploadTemplateFileAsync(manifest, "template");
-
-            // copy all dependencies to deployment bucket that are missing or have a pre-release version
-            foreach(var dependency in dependencies.Where(dependency => dependency.ModuleLocation.SourceBucketName != Settings.DeploymentBucketName)) {
-                var imported = false;
-
-                // copy check-summed module assets (guaranteed immutable)
-                foreach(var asset in dependency.Manifest.Assets) {
-                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
-                }
-
-                // copy version manifest
-                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
-
-                // show message if any assets were imported
-                if(imported) {
-                    Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo}");
-                }
-            }
 
             // upload manifest under version number
             if(_changesDetected) {
@@ -162,6 +143,76 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 Console.WriteLine($"=> No changes found to upload");
             }
             return manifest.ModuleInfo;
+        }
+
+        public async Task<bool> DoImportAsync(ModuleInfo moduleInfo, bool forcePublish) {
+
+            // check if module has already been imported
+            if(
+                !forcePublish
+                && !(moduleInfo.Version?.IsPreRelease ?? false)
+                && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)
+            ) {
+                LogError($"{moduleInfo} has already been imported");
+                return false;
+            }
+
+            // find manifest for module to import
+            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true);
+            if(moduleLocation == null) {
+
+                // error has already been reported
+                return false;
+            }
+            var manifest = await _loader.LoadManifestFromLocationAsync(moduleLocation);
+            if(manifest == null) {
+
+                // error has already been reported
+                return false;
+            }
+
+            // import module dependencies
+            if(!await ImportDependencies(manifest)) {
+
+                // error has already been reported
+                return false;
+            }
+
+            // import module
+            foreach(var asset in manifest.Assets) {
+                await ImportS3Object(moduleInfo.Origin, asset, replace: forcePublish);
+            }
+            await ImportS3Object(moduleInfo.Origin, moduleInfo.VersionPath, replace: forcePublish || moduleInfo.Version.IsPreRelease);
+            Console.WriteLine($"=> Imported {moduleInfo}");
+            return true;
+        }
+
+        private async Task<bool> ImportDependencies(ModuleManifest manifest) {
+
+            // discover module dependencies
+            var dependencies = await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: false, allowImport: true);
+            if(HasErrors) {
+                return false;
+            }
+
+            // copy all dependencies to deployment bucket that are missing or have a pre-release version
+            foreach(var dependency in dependencies.Where(dependency => dependency.ModuleLocation.SourceBucketName != Settings.DeploymentBucketName)) {
+                var imported = false;
+
+                // copy check-summed module assets (guaranteed immutable)
+                foreach(var asset in dependency.Manifest.Assets) {
+                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
+                }
+
+                // copy version manifest
+                imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
+
+                // show message if any assets were imported
+                if(imported) {
+                    Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo}");
+                }
+            }
+            return true;
         }
 
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
@@ -239,6 +290,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // check if this object was uploaded locally and therefore should not be replaced
                 if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {
+                    LogWarn($"skipping importing 's3://{sourceBucket}/{key}' because it was published locally");
                     return false;
                 }
             } catch { }

@@ -221,6 +221,7 @@ namespace LambdaSharp.Tool.Cli {
                     // run build & publish steps
                     foreach(var argument in arguments) {
                         string moduleSource = null;
+                        ModuleInfo moduleInfo = null;
                         if(Directory.Exists(argument)) {
 
                             // check if argument is pointing to a folder containing a cloudformation file
@@ -235,6 +236,11 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
+                        } else if(ModuleInfo.TryParse(argument, out moduleInfo)) {
+                            if(moduleInfo.Origin == null) {
+                                LogError($"missing module origin for '{moduleInfo}'");
+                                break;
+                            }
                         } else {
                             LogError($"unrecognized argument: {argument}");
                             break;
@@ -260,8 +266,14 @@ namespace LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOriginOption.Value()) == null) {
-                                break;
+                            if(moduleSource != null) {
+                                if(await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOriginOption.Value()) == null) {
+                                    break;
+                                }
+                            } else if(moduleInfo != null) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -393,10 +405,14 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         if(dryRun == null) {
 
-                            // check if module needs to be published first
+                            // check if module needs to be published or imported first
                             if(moduleInfo == null) {
                                 moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOrigin: null);
                                 if(moduleInfo == null) {
+                                    break;
+                                }
+                            } else if(moduleInfo.Origin != null) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
                                     break;
                                 }
                             }
@@ -459,6 +475,17 @@ namespace LambdaSharp.Tool.Cli {
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
             return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish, moduleOrigin);
+        }
+
+        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish) {
+            if(!await PopulateRuntimeSettingsAsync(settings)) {
+                return false;
+            }
+            if(moduleInfo.Origin == settings.DeploymentBucketName) {
+                LogWarn($"skipping importing {moduleInfo} because origin matches deployment bucket");
+                return true;
+            }
+            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish);
         }
 
         public async Task<bool> DeployStepAsync(
