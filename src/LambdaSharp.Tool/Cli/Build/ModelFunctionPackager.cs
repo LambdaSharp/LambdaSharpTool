@@ -436,7 +436,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackagePath },
+                new[] {
+                    "lambda", "package",
+                    "--configuration", buildConfiguration,
+                    "--framework", targetFramework,
+                    "--output-package", outputPackagePath,
+                    "--disable-interactive", "true"
+                },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
