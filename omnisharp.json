@@ -19,6 +19,8 @@
         "WrappingKeepStatementsOnSingleLine": true,
         "UseTabs": false,
         "SpaceSize": 4,
-        "SpaceAfterCast": false
+        "SpaceAfterCast": false,
+        "SpaceAfterControlFlowStatementKeyword": false,
+        "IndentSwitchSection": false
     }
 }
