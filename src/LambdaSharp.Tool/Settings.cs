@@ -33,7 +33,6 @@ using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
-using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool {
 
@@ -56,6 +55,17 @@ namespace LambdaSharp.Tool {
         //--- Constructors ---
         public LambdaSharpToolOutOfDateException(VersionInfo version) : base() {
             Version = version ?? throw new ArgumentNullException(nameof(version));
+        }
+    }
+
+    public class LambdaSharpDeploymentTierOutOfDateException : Exception {
+
+        //--- Fields ---
+        public readonly string TierName;
+
+        //--- Constructors ---
+        public LambdaSharpDeploymentTierOutOfDateException(string tierName) : base() {
+            TierName = tierName ?? throw new ArgumentNullException(nameof(tierName));
         }
     }
 
@@ -125,14 +135,19 @@ namespace LambdaSharp.Tool {
             var toolException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolOutOfDateException>().FirstOrDefault();
             if(toolException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command");
+                WriteAnsiLine($"IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command", AnsiTerminal.BrightWhite);
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'");
+                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'", AnsiTerminal.BrightWhite);
                 return;
+            }
+            var tierException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierOutOfDateException>().FirstOrDefault();
+            if(tierException != null) {
+                Console.WriteLine();
+                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to upgrade the LambdaSharp deployment tier '{tierException.TierName}'", AnsiTerminal.BrightWhite);
             }
         }
 
@@ -144,6 +159,18 @@ namespace LambdaSharp.Tool {
 
         public static void LogError(Exception exception)
             => LogError($"internal error: {exception.Message}", exception);
+
+        public static void LogInfo(string message) {
+            if(VerboseLevel > Tool.VerboseLevel.Quiet) {
+                Console.WriteLine(message);
+            }
+        }
+
+        public static void LogInfoVerbose(string message) {
+            if(VerboseLevel >= Tool.VerboseLevel.Detailed) {
+                Console.WriteLine(message);
+            }
+        }
 
         private static void WriteAnsiLine(string text, string ansiColor) {
             if(UseAnsiConsole) {

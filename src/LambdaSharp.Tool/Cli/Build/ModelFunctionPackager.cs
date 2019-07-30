@@ -272,7 +272,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false)
                     ?? Enumerable.Empty<XElement>();
                 foreach(var include in includes) {
-                    var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
+                    var expectedVersion = (Settings.ToolVersion.Major == 0)
+                        ? VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}.{Settings.ToolVersion.Patch ?? 0}{Settings.ToolVersion.Suffix}")
+                        : VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
                     var library = include.Attribute("Include").Value;
                     var libraryVersionText = include.Attribute("Version")?.Value;
                     if(libraryVersionText == null) {

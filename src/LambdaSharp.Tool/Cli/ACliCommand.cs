@@ -277,7 +277,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // versions are identical; nothing to do
                     } else if(tierToToolVersionComparison < 0) {
-                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierSetupException(settings.TierName));
+                        LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                         return false;
                     } else if(tierToToolVersionComparison > 0) {
 
@@ -291,11 +291,11 @@ namespace LambdaSharp.Tool.Cli {
                 // read deployment S3 bucket name
                 var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
                 if(tierModuleBucketArnParts == null) {
-                    LogError("could not find 'DeploymentBucket' output value");
+                    LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                     return false;
                 }
                 if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
-                    LogError("invalid value for 'DeploymentBucket' output value");
+                    LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                     return false;
                 }
                 settings.DeploymentBucketName = tierModuleBucketArnParts[5];

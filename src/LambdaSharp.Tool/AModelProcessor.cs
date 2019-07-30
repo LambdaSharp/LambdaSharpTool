@@ -119,6 +119,12 @@ namespace LambdaSharp.Tool {
         protected void LogError(Exception exception)
             => Settings.LogError(exception);
 
+        protected void LogInfo(string message)
+            => Settings.LogInfo(message);
+
+        protected void LogInfoVerbose(string message)
+            => Settings.LogInfoVerbose(message);
+
         protected List<string> ConvertToStringList(object value) {
             var result = new List<string>();
             if(value is string inlineValue) {

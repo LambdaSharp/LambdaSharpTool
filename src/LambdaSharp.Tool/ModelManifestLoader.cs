@@ -150,7 +150,7 @@ namespace LambdaSharp.Tool {
                 var versionConstraint = (moduleInfo.Version != null)
                     ? $"v{moduleInfo.Version} or later"
                     : "any version";
-                LogError($"could not find module: {moduleInfo} ({versionConstraint})");
+                LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
                 return null;
             }
             return MakeModuleLocation(result.Origin, result.Manifest);
@@ -173,6 +173,7 @@ namespace LambdaSharp.Tool {
 
                     // check if version is compatible with this tool
                     if(manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
+                        LogInfoVerbose($"=> selected module {moduleInfo.WithVersion(latest)} from {bucketName}");
                         return (Origin: bucketName, Version: latest, Manifest: manifest);
                     }
                 }
@@ -204,17 +205,19 @@ namespace LambdaSharp.Tool {
                         versions.AddRange(response.S3Objects
                             .Select(s3Object => s3Object.Key.Substring(request.Prefix.Length))
                             .Select(found => VersionInfo.Parse(found))
-                            .Where(version => version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true))
+                            .Where(version => (moduleInfo.Version == null) || version.IsGreaterOrEqualThanVersion(moduleInfo.Version, strict: true))
                         );
                         request.ContinuationToken = response.NextContinuationToken;
                     } catch(AmazonS3Exception e) when(e.Message == "Access Denied") {
                         break;
                     }
                 } while(request.ContinuationToken != null);
+                LogInfoVerbose($"=> found {versions.Count} versions while scanning {bucketName} in {s3Client.Config.RegionEndpoint}");
                 return versions;
             }
 
-            ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest) => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
+            ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest)
+                => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
         }
 
         public async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation ModuleLocation, ModuleManifestDependencyType Type)>> DiscoverAllDependenciesAsync(ModuleManifest manifest, bool checkExisting, bool allowImport) {
@@ -276,7 +279,7 @@ namespace LambdaSharp.Tool {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo}");
+                        LogInfoVerbose($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo}");
                         deployments.Add(nestedDependency);
                     }
                 }
