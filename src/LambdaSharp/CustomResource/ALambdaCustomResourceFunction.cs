@@ -26,9 +26,9 @@ using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.SNSEvents;
 using LambdaSharp.CustomResource.Internal;
+using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -51,6 +51,13 @@ namespace LambdaSharp.CustomResource {
 
         //--- Constants ---
         private const int MAX_SEND_ATTEMPTS = 3;
+
+        //--- Types ---
+        private class CustomResourceAbortException : ALambdaException {
+
+            //--- Constructors ---
+            public CustomResourceAbortException(string format, params object[] args) : base(format, args) { }
+        }
 
         //--- Constructors ---
 
@@ -154,6 +161,16 @@ namespace LambdaSharp.CustomResource {
                     NoEcho = responseTask.Result.NoEcho,
                     Data = responseTask.Result.Attributes
                 };
+            } catch(CustomResourceAbortException e) {
+                LogInfo($"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation ABORTED [{{0}}]", e.Message);
+                rawResponse = new CloudFormationResourceResponse<TAttributes> {
+                    Status = CloudFormationResourceResponseStatus.FAILED,
+                    Reason = e.Message,
+                    StackId = rawRequest.StackId,
+                    RequestId = rawRequest.RequestId,
+                    LogicalResourceId = rawRequest.LogicalResourceId,
+                    PhysicalResourceId = rawRequest.PhysicalResourceId ?? "no-physical-id"
+                };
             } catch(Exception e) {
                 LogError(e, $"{rawRequest.ResourceType}: {rawRequest.RequestType.ToString().ToUpperInvariant()} operation FAILED [{{0}}]", e.Message);
                 rawResponse = new CloudFormationResourceResponse<TAttributes> {
@@ -170,6 +187,22 @@ namespace LambdaSharp.CustomResource {
             await WriteResponse(rawRequest, rawResponse);
             return rawResponse.Status.ToString().ToStream();
         }
+
+        /// <summary>
+        /// The <see cref="Abort(string)"/> stops the request processing with an error message.
+        /// </summary>
+        /// <remarks>
+        /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
+        /// to make it easier to tell the compiler the control flow.
+        /// </remarks>
+        /// <param name="message">The response message.</param>
+        /// <returns>Nothing. See remarks.</returns>
+        /// <example>
+        /// <code>
+        /// throw Abort("value for property X is invalid");
+        /// </code>
+        /// </example>
+        protected Exception Abort(string message) => throw new CustomResourceAbortException(message);
 
         /// <inheritdoc/>
         protected override async Task HandleFailedInitializationAsync(Stream stream) {
