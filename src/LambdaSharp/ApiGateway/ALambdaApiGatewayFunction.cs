@@ -266,7 +266,7 @@ namespace LambdaSharp.ApiGateway {
             => throw new ApiGatewayAbortException(response);
 
         /// <summary>
-        /// The <see cref="AbortBadRequest(string)"/> stops request the request processing with a <c>400 - Bad Request</c> response.
+        /// The <see cref="AbortBadRequest(string)"/> stops the request processing with a <c>400 - Bad Request</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
@@ -283,7 +283,7 @@ namespace LambdaSharp.ApiGateway {
             => Abort(CreateResponse(400, message));
 
         /// <summary>
-        /// The <see cref="AbortForbidden(string)"/> stops request the request processing with a <c>403 - Forbidden</c> response.
+        /// The <see cref="AbortForbidden(string)"/> stops the request processing with a <c>403 - Forbidden</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
@@ -300,7 +300,7 @@ namespace LambdaSharp.ApiGateway {
             => Abort(CreateResponse(403, message));
 
         /// <summary>
-        /// The <see cref="AbortNotFound(string)"/> stops request the request processing with a <c>404 - Not Found</c> response.
+        /// The <see cref="AbortNotFound(string)"/> stops the request processing with a <c>404 - Not Found</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
