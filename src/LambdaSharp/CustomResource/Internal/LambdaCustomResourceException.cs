@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-using LambdaSharp.ErrorReports;
 using LambdaSharp.Exceptions;
 
 namespace LambdaSharp.CustomResource.Internal {
