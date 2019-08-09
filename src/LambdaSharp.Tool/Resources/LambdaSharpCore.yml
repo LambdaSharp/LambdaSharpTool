@@ -76,7 +76,7 @@ Resources:
 Outputs:
 
   Module:
-    Value: !Sub "LambdaSharp.Core:%%VERSION%%"
+    Value: "LambdaSharp.Core:%%VERSION%%@lambdasharp"
 
   ModuleChecksum:
     Value: "%%CHECKSUM%%"

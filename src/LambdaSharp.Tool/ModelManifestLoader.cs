@@ -105,6 +105,7 @@ namespace LambdaSharp.Tool {
         }
 
         public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, bool allowImport) {
+            LogInfoVerbose($"=> Resolving module {moduleInfo}");
 
             // check if module can be found in the deployment bucket
             var result = await FindNewestVersionAsync(Settings.DeploymentBucketName);
@@ -153,6 +154,7 @@ namespace LambdaSharp.Tool {
                 LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
                 return null;
             }
+            LogInfoVerbose($"=> Selected module {moduleInfo.WithVersion(result.Version)} from {result.Origin}");
             return MakeModuleLocation(result.Origin, result.Manifest);
 
             // local functions
@@ -173,7 +175,6 @@ namespace LambdaSharp.Tool {
 
                     // check if version is compatible with this tool
                     if(manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
-                        LogInfoVerbose($"=> selected module {moduleInfo.WithVersion(latest)} from {bucketName}");
                         return (Origin: bucketName, Version: latest, Manifest: manifest);
                     }
                 }
@@ -212,7 +213,7 @@ namespace LambdaSharp.Tool {
                         break;
                     }
                 } while(request.ContinuationToken != null);
-                LogInfoVerbose($"=> found {versions.Count} versions while scanning {bucketName} in {s3Client.Config.RegionEndpoint}");
+                LogInfoVerbose($"==> Found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
                 return versions;
             }
 
