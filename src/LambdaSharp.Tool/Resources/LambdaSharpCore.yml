@@ -93,3 +93,9 @@ Outputs:
 
   LambdaSharpTier:
     Value: !Ref TierName
+
+  LambdaSharpTool:
+    Value: "%%VERSION%%"
+
+  ModuleTemplateChecksum:
+    Value: "%%TEMPLATE-CHECKSUM%%"
