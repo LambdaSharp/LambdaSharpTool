@@ -207,6 +207,14 @@ namespace LambdaSharp.Tool {
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }
         public bool PromptsAsErrors { get; set; }
+        public DateTime UtcNow { get; set; }
+
+        //--- Constructors ---
+        public Settings() {
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
+            UtcNow = now;
+        }
 
         //--- Methods ---
         public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)

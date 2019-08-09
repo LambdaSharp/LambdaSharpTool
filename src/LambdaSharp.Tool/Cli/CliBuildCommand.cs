@@ -64,6 +64,9 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddModuleVersionOption(CommandLineApplication cmd)
             => cmd.Option("--module-version", "(optional) Override the module version", CommandOptionType.SingleValue);
 
+        public static CommandOption AddModuleBuildDateOption(CommandLineApplication cmd)
+            => cmd.Option("--module-build-date", "(optional) Override module build date [yyyyMMddHHmmss]", CommandOptionType.SingleValue);
+
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
                 LogError("cannot find parameters file");
@@ -94,6 +97,7 @@ namespace LambdaSharp.Tool.Cli {
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -129,6 +133,15 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("--module-version is not a valid version number");
                             return;
                         }
+                    }
+
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
                     }
 
                     // run build step
@@ -184,6 +197,7 @@ namespace LambdaSharp.Tool.Cli {
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -219,6 +233,15 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("--module-version is not a valid version number");
                             return;
                         }
+                    }
+
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
                     }
 
                     // run build & publish steps
@@ -311,6 +334,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -355,6 +379,15 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("--module-version is not a valid version number");
                             return;
                         }
+                    }
+
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
                     }
 
                     // read optional parameters file

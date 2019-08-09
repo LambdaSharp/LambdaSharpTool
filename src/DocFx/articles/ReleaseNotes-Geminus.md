@@ -67,3 +67,8 @@ Using:
 
 * show how much lambda storage is used
 * show how much lambda reserved capacity is used
+
+## lash build options
+
+* `--module-version`: (optional) Override the module version
+* `--module-build-date`: (optional) Override module build date [yyyyMMddHHmmss]

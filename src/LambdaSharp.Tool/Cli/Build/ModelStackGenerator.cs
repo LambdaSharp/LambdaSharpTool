@@ -80,8 +80,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
 
             // add module manifest
-            var now = DateTime.UtcNow;
-            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
             var manifest = new ModuleManifest {
                 ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
@@ -141,7 +139,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // update template with template hash
             var templateHash = GenerateCloudFormationTemplateChecksum();
             manifest.TemplateChecksum = templateHash;
-            manifest.Date = now;
+            manifest.Date = Settings.UtcNow;
             if((gitSha != null) || (gitBranch != null)) {
                 manifest.Git = new ModuleManifestGitInfo {
                     SHA = gitSha,
