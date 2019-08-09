@@ -361,7 +361,7 @@ namespace LambdaSharp.Tool.Cli {
             GetTemplateSummaryResponse templateSummary;
             try {
 
-                // TODO: should we fetch the template JSON instead?
+                // TODO (2019-08-09, bjorg): should we fetch the template JSON instead?
                 templateSummary = await settings.CfnClient.GetTemplateSummaryAsync(new GetTemplateSummaryRequest {
                     TemplateBody = templateBody
                 });
@@ -419,7 +419,7 @@ namespace LambdaSharp.Tool.Cli {
                         });
                     } else {
 
-                        // TODO: add pattern and constraint description
+                        // TODO (2019-08-09, bjorg): add pattern and constraint description
                         var enteredValue = settings.PromptString($"{missingParameter.Description ?? missingParameter.ParameterKey}", missingParameter.DefaultValue) ?? "";
                         result.Add(new Parameter {
                             ParameterKey = missingParameter.ParameterKey,

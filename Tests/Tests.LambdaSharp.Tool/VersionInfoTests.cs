@@ -192,7 +192,7 @@ namespace Tests.LambdaSharp.Tool {
             var version = VersionInfo.Parse("0.7-RC1");
 
             // act
-            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+            var result = version.MatchesConstraint(versionConstraint);
 
             // assert
             result.Should().Be(false);
@@ -206,7 +206,7 @@ namespace Tests.LambdaSharp.Tool {
             var version = VersionInfo.Parse("0.6");
 
             // act
-            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+            var result = version.MatchesConstraint(versionConstraint);
 
             // assert
             result.Should().Be(false);
@@ -220,7 +220,7 @@ namespace Tests.LambdaSharp.Tool {
             var version = VersionInfo.Parse("0.6.1.2");
 
             // act
-            var result = version.MatchesConstraints(versionConstraint, versionConstraint);
+            var result = version.MatchesConstraint(versionConstraint);
 
             // assert
             result.Should().Be(true);

@@ -258,19 +258,12 @@ namespace LambdaSharp.Tool {
             return new VersionInfo(Major, Minor, patch: null, patchMinor: null, Suffix);
         }
 
-        // TODO: is this method still needed?
-        public bool MatchesConstraints(VersionInfo minVersion, VersionInfo maxVersion) {
-
-            // check if min-max versions are the same; which indicates a tight version match
-            if((minVersion != null) && (maxVersion != null) && (minVersion.CompareToVersion(maxVersion) == 0)) {
-                return (Major == minVersion.Major)
-                    && (Minor == minVersion.Minor)
-                    && (Suffix == minVersion.Suffix)
-                    && (!minVersion.Patch.HasValue || (Patch == minVersion.Patch))
-                    && (!minVersion.PatchRevision.HasValue || (PatchRevision == minVersion.PatchRevision));
-            }
-            return ((minVersion == null) || IsGreaterOrEqualThanVersion(minVersion))
-                && ((maxVersion == null) || IsLessThanVersion(maxVersion));
+        public bool MatchesConstraint(VersionInfo versionConstraint) {
+            return (Major == versionConstraint.Major)
+                && (Minor == versionConstraint.Minor)
+                && (Suffix == versionConstraint.Suffix)
+                && (!versionConstraint.Patch.HasValue || (Patch == versionConstraint.Patch))
+                && (!versionConstraint.PatchRevision.HasValue || (PatchRevision == versionConstraint.PatchRevision));
         }
 
         public bool IsCoreServicesCompatible(VersionInfo info) {

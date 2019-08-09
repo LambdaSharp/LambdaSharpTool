@@ -294,7 +294,7 @@ namespace LambdaSharp.Tool {
 
                 // confirm that the dependency version is in a valid range
                 var deployedVersion = deployedModule.ModuleLocation.ModuleInfo.Version;
-                if(!deployedModule.ModuleLocation.ModuleInfo.Version.MatchesConstraints(dependency.ModuleInfo.Version, dependency.ModuleInfo.Version)) {
+                if(!deployedModule.ModuleLocation.ModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
                     LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{dependentModuleFullName}' requires v{dependency.ModuleInfo.Version}, but {deployedOwner} uses v{deployedVersion})");
                 }
                 return true;
@@ -319,7 +319,7 @@ namespace LambdaSharp.Tool {
                 // confirm that the module name, version and hash match
                 if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
                     LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
-                } else if(!deployedModuleInfo.Version.MatchesConstraints(dependency.ModuleInfo.Version, dependency.ModuleInfo.Version)) {
+                } else if(!deployedModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
                     LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
                 }
                 return result;

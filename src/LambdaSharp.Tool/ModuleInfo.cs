@@ -56,8 +56,6 @@ namespace LambdaSharp.Tool {
         // * Owner.Name:Version@<%MODULE_ORIGIN%>
 
         //--- Constants ---
-
-        // TODO: could this be replaced with `Settings.DeploymentBucketName` in most cases?
         public const string MODULE_ORIGIN_PLACEHOLDER = "<%MODULE_ORIGIN%>";
 
         //--- Class Fields ---
