@@ -7,11 +7,11 @@
     <PackageId>LambdaSharp.Slack</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>MindTouch λ# Slack</Title>
+    <Title>LambdaSharp (λ#) Slack</Title>
     <Description>A serverless framework for rapid application development of Slack integrations</Description>
     <Company>MindTouch, Inc.</Company>
-    <Copyright>Copyright (C) 2018-2019 MindTouch, Inc.</Copyright>
-    <Authors>Bjorg;Onema;DerekRobbins;MindTouch</Authors>
+    <Copyright>Copyright (C) 2018-2019</Copyright>
+    <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
