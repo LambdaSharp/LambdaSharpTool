@@ -767,7 +767,7 @@
       "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
       "TemplateChecksum": "E3CDDCA099312885EAA3B8D1DBE8F32A",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

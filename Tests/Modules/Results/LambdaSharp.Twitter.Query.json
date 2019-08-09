@@ -1003,7 +1003,7 @@
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
       "TemplateChecksum": "34C35CD86AF97A39C60F90F6A99F28D0",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

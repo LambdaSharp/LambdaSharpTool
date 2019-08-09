@@ -812,7 +812,7 @@
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
       "TemplateChecksum": "CE733774CBC238A3CB292563E15DE38A",
-      "Date": "2019-08-09T21:58:18Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

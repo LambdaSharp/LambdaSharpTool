@@ -1005,7 +1005,7 @@
       "Module": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
       "TemplateChecksum": "D892F8577B42CDE252AD6AEB6522BE6E",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

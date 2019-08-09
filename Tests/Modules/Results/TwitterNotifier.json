@@ -991,7 +991,7 @@
       "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
       "TemplateChecksum": "219E1CA0F8F34A0A5B7B8C990117E810",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

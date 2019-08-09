@@ -275,7 +275,7 @@
       "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
       "Description": "Showcase how to write files to an S3 bucket",
       "TemplateChecksum": "C65FE6B147AAA091E9EF79B61DC7813A",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -791,7 +791,7 @@
       "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
       "TemplateChecksum": "DFF14B196B6317B06ACC751DBAE1BCE0",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

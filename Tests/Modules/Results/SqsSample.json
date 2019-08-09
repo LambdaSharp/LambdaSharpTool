@@ -833,7 +833,7 @@
       "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
       "TemplateChecksum": "2B45C3E600051A23320BE24B1DC65DA3",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

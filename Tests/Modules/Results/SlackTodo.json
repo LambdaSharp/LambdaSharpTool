@@ -998,7 +998,7 @@
       "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
       "TemplateChecksum": "1BBE16A33B4AB66D152B3DBC567FAB92",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

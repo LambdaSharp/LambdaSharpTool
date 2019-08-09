@@ -882,7 +882,7 @@
       "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
       "TemplateChecksum": "8BEF988D9D484DF38694BC76213E62F7",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

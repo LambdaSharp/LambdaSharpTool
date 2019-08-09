@@ -785,7 +785,7 @@
       "Module": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
       "Description": "A sample module defining a Lambda function in VPC",
       "TemplateChecksum": "4B5760595E3E06E20C16DEE66033D45C",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

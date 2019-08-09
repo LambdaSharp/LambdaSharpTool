@@ -965,7 +965,7 @@
       "Module": "LambdaSharp.S3.IO:1.0-DEV",
       "Description": "LambdaSharp S3 Utility Module",
       "TemplateChecksum": "466F470EB29C08E329A711C9BBB2DC3A",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

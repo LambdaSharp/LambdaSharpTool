@@ -771,7 +771,7 @@
       "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
       "TemplateChecksum": "D914074BCBDA33DA489AD94D32B9E1F5",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

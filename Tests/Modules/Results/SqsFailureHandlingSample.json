@@ -1088,7 +1088,7 @@
       "Module": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
       "TemplateChecksum": "80790E84D181CE8FF28AE250F33EABB2",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

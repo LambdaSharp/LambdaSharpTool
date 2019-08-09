@@ -834,7 +834,7 @@
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
       "TemplateChecksum": "84A4DBAA8B5C1ADC739BF4D1B7B979BD",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -799,7 +799,7 @@
       "Module": "LambdaSharp.Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
       "TemplateChecksum": "3DE2E28A235FEE21085EF0ED72F5E6D4",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -801,7 +801,7 @@
       "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
       "Description": "A sample module using an Alexa skill",
       "TemplateChecksum": "029A4C19B170D258E60788746CCBC2FF",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

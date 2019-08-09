@@ -3147,7 +3147,7 @@
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
       "TemplateChecksum": "A3A9EABEB4B31490E39F8A6AA5CE41D8",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -909,7 +909,7 @@
       "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
       "TemplateChecksum": "6656184FBF94F22637A9E385AAB75820",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

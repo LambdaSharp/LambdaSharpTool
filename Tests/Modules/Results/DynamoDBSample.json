@@ -843,7 +843,7 @@
       "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
       "TemplateChecksum": "8E78610E89B63CC0E1AAD3031E29C156",
-      "Date": "2019-08-09T21:58:19Z",
+      "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
