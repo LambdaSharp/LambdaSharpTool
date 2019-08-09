@@ -85,7 +85,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             var manifest = new ModuleManifest {
                 ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
-                Date = now,
                 CoreServicesVersion = Settings.ToolVersion.GetCompatibleCoreServicesVersion(),
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
@@ -142,6 +141,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // update template with template hash
             var templateHash = GenerateCloudFormationTemplateChecksum();
             manifest.TemplateChecksum = templateHash;
+            manifest.Date = now;
             if((gitSha != null) || (gitBranch != null)) {
                 manifest.Git = new ModuleManifestGitInfo {
                     SHA = gitSha,
