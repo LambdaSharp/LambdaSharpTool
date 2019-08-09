@@ -9520,6 +9520,67 @@
         }
       }
     },
+    "AWS::Glue::MLTransform.FindMatchesParameters": {
+      "Properties": {
+        "AccuracyCostTradeoff": {
+          "PrimitiveType": "Double",
+          "Required": false
+        },
+        "EnforceProvidedLabels": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "PrecisionRecallTradeoff": {
+          "PrimitiveType": "Double",
+          "Required": false
+        },
+        "PrimaryKeyColumnName": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Glue::MLTransform.GlueTables": {
+      "Properties": {
+        "CatalogId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ConnectionName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DatabaseName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "TableName": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Glue::MLTransform.InputRecordTables": {
+      "Properties": {
+        "GlueTables": {
+          "ItemType": "GlueTables",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Glue::MLTransform.TransformParameters": {
+      "Properties": {
+        "FindMatchesParameters": {
+          "Required": false,
+          "Type": "FindMatchesParameters"
+        },
+        "TransformType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::Glue::Partition.Column": {
       "Properties": {
         "Comment": {
@@ -13357,6 +13418,59 @@
         }
       }
     },
+    "AWS::LakeFormation::DataLakeSettings.Admins": {
+      "ItemType": "DataLakePrincipal",
+      "Required": false,
+      "Type": "List"
+    },
+    "AWS::LakeFormation::DataLakeSettings.DataLakePrincipal": {
+      "Properties": {
+        "DataLakePrincipalIdentifier": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions.DatabaseResource": {
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions.DataLakePrincipal": {
+      "Properties": {
+        "DataLakePrincipalIdentifier": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions.Resource": {
+      "Properties": {
+        "DatabaseResource": {
+          "Required": false,
+          "Type": "DatabaseResource"
+        },
+        "TableResource": {
+          "Required": false,
+          "Type": "TableResource"
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions.TableResource": {
+      "Properties": {
+        "DatabaseName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::Lambda::Alias.AliasRoutingConfiguration": {
       "Properties": {
         "AdditionalVersionWeights": {
@@ -13472,6 +13586,122 @@
           "Required": true
         },
         "MetricValue": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.ApprovalThresholdPolicy": {
+      "Properties": {
+        "ProposalDurationInHours": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ThresholdComparator": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ThresholdPercentage": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.MemberConfiguration": {
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MemberFrameworkConfiguration": {
+          "Required": false,
+          "Type": "MemberFrameworkConfiguration"
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.MemberFabricConfiguration": {
+      "Properties": {
+        "AdminPassword": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "AdminUsername": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.MemberFrameworkConfiguration": {
+      "Properties": {
+        "MemberFabricConfiguration": {
+          "Required": false,
+          "Type": "MemberFabricConfiguration"
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.NetworkConfiguration": {
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Framework": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "FrameworkVersion": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "NetworkFrameworkConfiguration": {
+          "Required": false,
+          "Type": "NetworkFrameworkConfiguration"
+        },
+        "VotingPolicy": {
+          "Required": true,
+          "Type": "VotingPolicy"
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.NetworkFabricConfiguration": {
+      "Properties": {
+        "Edition": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.NetworkFrameworkConfiguration": {
+      "Properties": {
+        "NetworkFabricConfiguration": {
+          "Required": false,
+          "Type": "NetworkFabricConfiguration"
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member.VotingPolicy": {
+      "Properties": {
+        "ApprovalThresholdPolicy": {
+          "Required": false,
+          "Type": "ApprovalThresholdPolicy"
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Node.NodeConfiguration": {
+      "Properties": {
+        "AvailabilityZone": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "InstanceType": {
           "PrimitiveType": "String",
           "Required": true
         }
@@ -17484,7 +17714,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "5.0.0",
+  "ResourceSpecificationVersion": "5.1.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -20565,6 +20795,27 @@
         }
       }
     },
+    "AWS::CodeBuild::SourceCredential": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codebuild-sourcecredential.html",
+      "Properties": {
+        "AuthType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ServerType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Token": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Username": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::CodeCommit::Repository": {
       "Attributes": {
         "Arn": {
@@ -22226,6 +22477,10 @@
         "ServerCertificateArn": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "SplitTunnel": {
+          "PrimitiveType": "Boolean",
+          "Required": false
         },
         "TagSpecifications": {
           "ItemType": "TagSpecification",
@@ -25486,6 +25741,51 @@
         }
       }
     },
+    "AWS::Glue::MLTransform": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-glue-mltransform.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "InputRecordTables": {
+          "Required": true,
+          "Type": "InputRecordTables"
+        },
+        "MaxCapacity": {
+          "PrimitiveType": "Double",
+          "Required": false
+        },
+        "MaxRetries": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "NumberOfWorkers": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Role": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Timeout": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "TransformParameters": {
+          "Required": true,
+          "Type": "TransformParameters"
+        },
+        "WorkerType": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::Glue::Partition": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-glue-partition.html",
       "Properties": {
@@ -25595,6 +25895,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25636,6 +25940,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25677,6 +25985,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25718,6 +26030,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25772,6 +26088,10 @@
         },
         "RoleArn": {
           "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
           "Required": false
         }
       }
@@ -25837,6 +26157,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25878,6 +26202,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -25919,6 +26247,10 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -27011,6 +27343,55 @@
         }
       }
     },
+    "AWS::LakeFormation::DataLakeSettings": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lakeformation-datalakesettings.html",
+      "Properties": {
+        "Admins": {
+          "Required": false,
+          "Type": "Admins"
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lakeformation-permissions.html",
+      "Properties": {
+        "DataLakePrincipal": {
+          "Required": true,
+          "Type": "DataLakePrincipal"
+        },
+        "Permissions": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "PermissionsWithGrantOption": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "Resource": {
+          "Required": true,
+          "Type": "Resource"
+        }
+      }
+    },
+    "AWS::LakeFormation::Resource": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lakeformation-resource.html",
+      "Properties": {
+        "ResourceArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "UseServiceLinkedRole": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
     "AWS::Lambda::Alias": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-alias.html",
       "Properties": {
@@ -27331,6 +27712,66 @@
         "RoleArn": {
           "PrimitiveType": "String",
           "Required": false
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Member": {
+      "Attributes": {
+        "MemberId": {
+          "PrimitiveType": "String"
+        },
+        "NetworkId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-managedblockchain-member.html",
+      "Properties": {
+        "InvitationId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MemberConfiguration": {
+          "Required": true,
+          "Type": "MemberConfiguration"
+        },
+        "NetworkConfiguration": {
+          "Required": false,
+          "Type": "NetworkConfiguration"
+        },
+        "NetworkId": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ManagedBlockchain::Node": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "MemberId": {
+          "PrimitiveType": "String"
+        },
+        "NetworkId": {
+          "PrimitiveType": "String"
+        },
+        "NodeId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-managedblockchain-node.html",
+      "Properties": {
+        "MemberId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "NetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "NodeConfiguration": {
+          "Required": true,
+          "Type": "NodeConfiguration"
         }
       }
     },
