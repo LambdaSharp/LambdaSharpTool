@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1FD1A529645E99ED669C3C9D39D038E1"
+      "Default": "029A4C19B170D258E60788746CCBC2FF"
     }
   },
   "Resources": {
@@ -548,7 +548,7 @@
       "Value": "LambdaSharp.Sample.Alexa:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1FD1A529645E99ED669C3C9D39D038E1"
+      "Value": "029A4C19B170D258E60788746CCBC2FF"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -800,8 +800,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
       "Description": "A sample module using an Alexa skill",
-      "TemplateChecksum": "1FD1A529645E99ED669C3C9D39D038E1",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "029A4C19B170D258E60788746CCBC2FF",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

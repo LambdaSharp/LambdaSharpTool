@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "63BC524E4D73E5B2B242179762CA345B"
+      "Default": "3DE2E28A235FEE21085EF0ED72F5E6D4"
     }
   },
   "Resources": {
@@ -565,7 +565,7 @@
       "Value": "LambdaSharp.Sample.Sns:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "63BC524E4D73E5B2B242179762CA345B"
+      "Value": "3DE2E28A235FEE21085EF0ED72F5E6D4"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -798,8 +798,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "63BC524E4D73E5B2B242179762CA345B",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "3DE2E28A235FEE21085EF0ED72F5E6D4",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

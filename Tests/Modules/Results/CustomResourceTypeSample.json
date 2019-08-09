@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1B01CC9FA564FE4A9A71573393E234AC"
+      "Default": "E3CDDCA099312885EAA3B8D1DBE8F32A"
     }
   },
   "Resources": {
@@ -533,7 +533,7 @@
       "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1B01CC9FA564FE4A9A71573393E234AC"
+      "Value": "E3CDDCA099312885EAA3B8D1DBE8F32A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -766,8 +766,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "1B01CC9FA564FE4A9A71573393E234AC",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "E3CDDCA099312885EAA3B8D1DBE8F32A",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

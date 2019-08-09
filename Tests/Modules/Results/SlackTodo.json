@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1DB782F09FF82AC425495B213216CE8B"
+      "Default": "1BBE16A33B4AB66D152B3DBC567FAB92"
     }
   },
   "Resources": {
@@ -753,7 +753,7 @@
       "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1DB782F09FF82AC425495B213216CE8B"
+      "Value": "1BBE16A33B4AB66D152B3DBC567FAB92"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -997,8 +997,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "1DB782F09FF82AC425495B213216CE8B",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "1BBE16A33B4AB66D152B3DBC567FAB92",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

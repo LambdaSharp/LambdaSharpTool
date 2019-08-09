@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B5277991D83E94164DFD9293F9A87ABB"
+      "Default": "34C35CD86AF97A39C60F90F6A99F28D0"
     }
   },
   "Resources": {
@@ -731,7 +731,7 @@
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B5277991D83E94164DFD9293F9A87ABB"
+      "Value": "34C35CD86AF97A39C60F90F6A99F28D0"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1002,8 +1002,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "B5277991D83E94164DFD9293F9A87ABB",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "34C35CD86AF97A39C60F90F6A99F28D0",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

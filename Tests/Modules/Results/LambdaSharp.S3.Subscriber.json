@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F71B68A694693D46F5A9144BBF5533AD"
+      "Default": "84A4DBAA8B5C1ADC739BF4D1B7B979BD"
     }
   },
   "Resources": {
@@ -600,7 +600,7 @@
       "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "F71B68A694693D46F5A9144BBF5533AD"
+      "Value": "84A4DBAA8B5C1ADC739BF4D1B7B979BD"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -833,8 +833,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "F71B68A694693D46F5A9144BBF5533AD",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "84A4DBAA8B5C1ADC739BF4D1B7B979BD",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FEAF006E73DEF6B125B103D48A223FE0"
+      "Default": "6343064B08FB910B7BA6C755355B1759"
     }
   },
   "Resources": {
@@ -74,7 +74,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "FEAF006E73DEF6B125B103D48A223FE0"
+      "Value": "6343064B08FB910B7BA6C755355B1759"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -158,8 +158,8 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "FEAF006E73DEF6B125B103D48A223FE0",
-      "Date": "2019-08-09T21:43:16Z",
+      "TemplateChecksum": "6343064B08FB910B7BA6C755355B1759",
+      "Date": "2019-08-09T21:58:18Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

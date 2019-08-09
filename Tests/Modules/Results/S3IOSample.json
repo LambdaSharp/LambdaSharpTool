@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4730E5173428C3E1986A24096473E990"
+      "Default": "C65FE6B147AAA091E9EF79B61DC7813A"
     }
   },
   "Resources": {
@@ -175,7 +175,7 @@
       "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "4730E5173428C3E1986A24096473E990"
+      "Value": "C65FE6B147AAA091E9EF79B61DC7813A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -274,8 +274,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
       "Description": "Showcase how to write files to an S3 bucket",
-      "TemplateChecksum": "4730E5173428C3E1986A24096473E990",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "C65FE6B147AAA091E9EF79B61DC7813A",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

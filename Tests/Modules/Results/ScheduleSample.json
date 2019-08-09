@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "72CDB8249E06C1D75578A80F8F9674F7"
+      "Default": "8BEF988D9D484DF38694BC76213E62F7"
     }
   },
   "Resources": {
@@ -648,7 +648,7 @@
       "Value": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "72CDB8249E06C1D75578A80F8F9674F7"
+      "Value": "8BEF988D9D484DF38694BC76213E62F7"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -881,8 +881,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
-      "TemplateChecksum": "72CDB8249E06C1D75578A80F8F9674F7",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "8BEF988D9D484DF38694BC76213E62F7",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

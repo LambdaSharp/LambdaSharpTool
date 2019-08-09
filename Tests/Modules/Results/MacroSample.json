@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E56616D92B16F42AA1658B5B21197914"
+      "Default": "D914074BCBDA33DA489AD94D32B9E1F5"
     }
   },
   "Resources": {
@@ -537,7 +537,7 @@
       "Value": "LambdaSharp.Sample.Macro:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "E56616D92B16F42AA1658B5B21197914"
+      "Value": "D914074BCBDA33DA489AD94D32B9E1F5"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -770,8 +770,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "E56616D92B16F42AA1658B5B21197914",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "D914074BCBDA33DA489AD94D32B9E1F5",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3066A22B0D1A20F8F842A39778401073"
+      "Default": "DFF14B196B6317B06ACC751DBAE1BCE0"
     }
   },
   "Resources": {
@@ -557,7 +557,7 @@
       "Value": "LambdaSharp.Sample.Kinesis:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "3066A22B0D1A20F8F842A39778401073"
+      "Value": "DFF14B196B6317B06ACC751DBAE1BCE0"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -790,8 +790,8 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "3066A22B0D1A20F8F842A39778401073",
-      "Date": "2019-08-09T21:43:17Z",
+      "TemplateChecksum": "DFF14B196B6317B06ACC751DBAE1BCE0",
+      "Date": "2019-08-09T21:58:19Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
