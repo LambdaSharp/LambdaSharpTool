@@ -155,7 +155,7 @@ namespace LambdaSharp.Tool.Cli {
                 // initialize stack with seed CloudFormation template
                 var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
                     ["VERSION"] = settings.ToolVersion.ToString(),
-                    ["TEMPLATE-CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
+                    ["CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
                 });
 
                 // check if bootstrap template is being updated or installed

@@ -332,6 +332,6 @@ namespace LambdaSharp.Tool.Internal {
         }
 
         public static string GetModuleVersionText(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-        public static string GetModuleManifestChecksum(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "ModuleTemplateChecksum")?.OutputValue;
+        public static string GetModuleManifestChecksum(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "ModuleChecksum")?.OutputValue;
     }
 }

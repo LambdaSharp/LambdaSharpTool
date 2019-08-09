@@ -157,14 +157,14 @@ namespace LambdaSharp.Tool.Cli.Build {
             _stack.Add("Module", new Humidifier.Output {
                 Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
+            _stack.Add("ModuleChecksum", new Humidifier.Output {
+                Value = templateHash
+            });
             _stack.Add("LambdaSharpTool", new Humidifier.Output {
                 Value = Settings.ToolVersion.ToString()
             });
             _stack.Add("LambdaSharpTier", new Humidifier.Output {
                 Value = Fn.Select("0", Fn.Split("-", Fn.Ref("DeploymentPrefix")))
-            });
-            _stack.Add("ModuleTemplateChecksum", new Humidifier.Output {
-                Value = templateHash
             });
 
             // generate JSON template

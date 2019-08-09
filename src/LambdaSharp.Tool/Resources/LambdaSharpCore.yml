@@ -78,6 +78,9 @@ Outputs:
   Module:
     Value: !Sub "LambdaSharp.Core:%%VERSION%%"
 
+  ModuleChecksum:
+    Value: "%%CHECKSUM%%"
+
   DeploymentBucket:
     Description: S3 bucket name for publishing modules
     Value: !If
@@ -96,6 +99,3 @@ Outputs:
 
   LambdaSharpTool:
     Value: "%%VERSION%%"
-
-  ModuleTemplateChecksum:
-    Value: "%%TEMPLATE-CHECKSUM%%"
