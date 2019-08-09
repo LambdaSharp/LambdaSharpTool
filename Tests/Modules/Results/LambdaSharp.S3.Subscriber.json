@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E8CE31D91221CD0C764F50270DEB8854"
+      "Default": "F71B68A694693D46F5A9144BBF5533AD"
     }
   },
   "Resources": {
@@ -82,7 +82,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/S3.Subscriber/Assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/S3.Subscriber/.assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -289,6 +289,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -575,8 +585,25 @@
     }
   },
   "Outputs": {
+    "LambdaSharpS3Subscription": {
+      "Value": {
+        "Ref": "CustomResourceTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
+        }
+      },
+      "Description": "Custom resource for S3 bucket subscriptions"
+    },
     "Module": {
-      "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "F71B68A694693D46F5A9144BBF5533AD"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -592,17 +619,6 @@
           }
         ]
       }
-    },
-    "LambdaSharpS3Subscription": {
-      "Value": {
-        "Ref": "CustomResourceTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
-        }
-      },
-      "Description": "Custom resource for S3 bucket subscriptions"
     }
   },
   "Conditions": {
@@ -814,8 +830,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
+      "Description": "LambdaSharp S3 Lambda Function Subscriber",
+      "TemplateChecksum": "F71B68A694693D46F5A9144BBF5533AD",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -882,18 +902,15 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "E8CE31D91221CD0C764F50270DEB8854",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
       "ResourceTypes": [
@@ -930,6 +947,10 @@
           ]
         }
       ],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",

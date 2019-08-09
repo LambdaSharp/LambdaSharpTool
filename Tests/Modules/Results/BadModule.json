@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3C725176F2FF008E31F68B7755004F0C"
+      "Default": "83B6E5B35DF8BF32BBCFBFABC7EB290B"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/NearTimeout-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/NearTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -228,7 +228,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/NearOutOfMemory-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/NearOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -378,7 +378,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/FailBadEntryPoint-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailBadEntryPoint-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -528,7 +528,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/FailError-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -678,7 +678,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/FailTimeout-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -828,7 +828,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/FailOutOfMemory-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -978,7 +978,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/FailConstructor-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailConstructor-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1128,7 +1128,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/JsBadSyntax-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsBadSyntax-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1278,7 +1278,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/JsError-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1428,7 +1428,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/BadModule/Assets/JsThrow-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsThrow-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1600,6 +1600,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -2900,7 +2910,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.BadModule:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "83B6E5B35DF8BF32BBCFBFABC7EB290B"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3127,8 +3143,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
+      "Description": "Module for generating errors",
+      "TemplateChecksum": "83B6E5B35DF8BF32BBCFBFABC7EB290B",
+      "Date": "2019-08-09T21:43:16Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -3195,20 +3215,22 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "3C725176F2FF008E31F68B7755004F0C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "NearTimeoutLogGroup": "NearTimeout::LogGroup",
         "NearOutOfMemoryLogGroup": "NearOutOfMemory::LogGroup",

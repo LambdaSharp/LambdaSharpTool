@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E9B9EC8176C6AF5007F29F1F0441E4D6"
+      "Default": "47AC821A7C1F95F94843D8542C918C87"
     }
   },
   "Resources": {
@@ -86,7 +86,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/S3.IO/Assets/S3Writer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/S3.IO/.assets/S3Writer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -400,6 +400,16 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
+                },
+                {
                   "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
@@ -684,24 +694,6 @@
     }
   },
   "Outputs": {
-    "Module": {
-      "Value": "LambdaSharp.S3.IO:1.0-DEV@%%MODULEORIGIN%%"
-    },
-    "LambdaSharpTier": {
-      "Value": {
-        "Fn::Select": [
-          "0",
-          {
-            "Fn::Split": [
-              "-",
-              {
-                "Ref": "DeploymentPrefix"
-              }
-            ]
-          }
-        ]
-      }
-    },
     "LambdaSharpS3Unzip": {
       "Value": {
         "Ref": "S3WriterTopic"
@@ -734,6 +726,30 @@
         }
       },
       "Description": "Resource for emptying an S3 bucket on deletion"
+    },
+    "Module": {
+      "Value": "LambdaSharp.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "47AC821A7C1F95F94843D8542C918C87"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Conditions": {
@@ -945,8 +961,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.IO:1.0-DEV",
+      "Description": "LambdaSharp S3 Utility Module",
+      "TemplateChecksum": "47AC821A7C1F95F94843D8542C918C87",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1013,18 +1033,15 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "E9B9EC8176C6AF5007F29F1F0441E4D6",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
       "ResourceTypes": [
@@ -1125,6 +1142,10 @@
           ]
         }
       ],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "S3WriterLogGroup": "S3Writer::LogGroup",
         "ModuleRole": "Module::Role",

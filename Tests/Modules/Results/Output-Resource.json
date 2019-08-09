@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8499C9911259772F8DFB9D40CB90642C"
+      "Default": "D82957CD152DAFC833850C13C3C31653"
     }
   },
   "Resources": {
@@ -62,8 +62,25 @@
     }
   },
   "Outputs": {
+    "ResourceValue": {
+      "Value": {
+        "Ref": "ResourceValue"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ResourceValue"
+        }
+      },
+      "Description": "ResourceValue description"
+    },
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "D82957CD152DAFC833850C13C3C31653"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -79,17 +96,6 @@
           }
         ]
       }
-    },
-    "ResourceValue": {
-      "Value": {
-        "Ref": "ResourceValue"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ResourceValue"
-        }
-      },
-      "Description": "ResourceValue description"
     }
   },
   "Conditions": {
@@ -152,8 +158,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "D82957CD152DAFC833850C13C3C31653",
+      "Date": "2019-08-09T21:43:16Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -177,27 +187,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "8499C9911259772F8DFB9D40CB90642C",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "ResourceValue",
           "Description": "ResourceValue description",
           "Type": "AWS::SNS::Topic"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

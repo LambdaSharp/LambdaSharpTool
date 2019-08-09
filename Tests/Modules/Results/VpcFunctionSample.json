@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EDA1A7A9D21374BEDF151EAD4F4798A7"
+      "Default": "6A35DED11F8458EE2D64CC9AC836ACE8"
     }
   },
   "Resources": {
@@ -84,7 +84,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.VpcFunction/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.VpcFunction/.assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -263,6 +263,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -529,7 +539,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.VpcFunction:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.VpcFunction:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "6A35DED11F8458EE2D64CC9AC836ACE8"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -765,8 +781,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
+      "Description": "A sample module defining a Lambda function in VPC",
+      "TemplateChecksum": "6A35DED11F8458EE2D64CC9AC836ACE8",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -846,20 +866,22 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "EDA1A7A9D21374BEDF151EAD4F4798A7",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",

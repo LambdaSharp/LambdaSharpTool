@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C12B2B18B4B4E5EE385B8FBF409D5E4D"
+      "Default": "3066A22B0D1A20F8F842A39778401073"
     }
   },
   "Resources": {
@@ -84,7 +84,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.Kinesis/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Kinesis/.assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -271,6 +271,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -544,7 +554,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Kinesis:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.Kinesis:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "3066A22B0D1A20F8F842A39778401073"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -771,8 +787,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
+      "Description": "A sample module using Kinesis streams",
+      "TemplateChecksum": "3066A22B0D1A20F8F842A39778401073",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -839,20 +859,22 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "C12B2B18B4B4E5EE385B8FBF409D5E4D",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",

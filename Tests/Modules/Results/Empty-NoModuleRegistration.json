@@ -27,12 +27,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3DA537C9983CB83C9E6289A5B88208A4"
+      "Default": "05CC023258192F56CCAB47C614BE19D2"
     }
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "05CC023258192F56CCAB47C614BE19D2"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -96,8 +102,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "05CC023258192F56CCAB47C614BE19D2",
+      "Date": "2019-08-09T21:43:16Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -111,12 +121,19 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "3DA537C9983CB83C9E6289A5B88208A4",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
-      }
+      },
+      "Assets": [],
+      "Dependencies": [],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
+      "ResourceNameMappings": {},
+      "TypeNameMappings": {}
     }
   }
 }

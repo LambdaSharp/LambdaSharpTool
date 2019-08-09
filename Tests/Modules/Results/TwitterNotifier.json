@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "76788CBDB3DF9CA10FC9DD0C9A7CD9C6"
+      "Default": "411C36736BC4A91C27533CF84D73F0B7"
     }
   },
   "Resources": {
@@ -131,6 +131,9 @@
           "TwitterSentimentFilter": {
             "Ref": "TwitterSentimentFilter"
           },
+          "Secrets": {
+            "Ref": "Secrets"
+          },
           "DeploymentBucketName": {
             "Ref": "DeploymentBucketName"
           },
@@ -150,6 +153,9 @@
                 "Ref": "AWS::StackName"
               }
             ]
+          },
+          "LambdaSharpCoreServices": {
+            "Ref": "LambdaSharpCoreServices"
           }
         },
         "Tags": [
@@ -158,9 +164,7 @@
             "Value": "LambdaSharp.Twitter.Query"
           }
         ],
-        "TemplateURL": {
-          "Fn::Sub": "https://${DeploymentBucketName}.s3.amazonaws.com/lambdasharp/LambdaSharp/Modules/Twitter.Query/Versions/0.7-WIP/cloudformation.json"
-        },
+        "TemplateURL": "<BAD>",
         "TimeoutInMinutes": 15
       }
     },
@@ -184,7 +188,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Demo.TwitterNotifier/Assets/NotifyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.TwitterNotifier/.assets/NotifyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -390,6 +394,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -683,7 +697,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "411C36736BC4A91C27533CF84D73F0B7"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -967,8 +987,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
+      "Description": "Listen for specific tweets and publish to an email address via SNS topic",
+      "TemplateChecksum": "411C36736BC4A91C27533CF84D73F0B7",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",
@@ -1093,26 +1117,26 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "76788CBDB3DF9CA10FC9DD0C9A7CD9C6",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         },
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": true
+          "ModuleInfo": "LambdaSharp.Twitter.Query:0.7.0-WIP@lambdasharp",
+          "Type": "Nested"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "NotifyFunctionLogGroup": "NotifyFunction::LogGroup",
         "ModuleRole": "Module::Role",

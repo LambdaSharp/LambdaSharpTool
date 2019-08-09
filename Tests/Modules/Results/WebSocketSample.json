@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F5485011A4B7E7B33565027B932D3818"
+      "Default": "763D61584433471508EE90F191503F2C"
     }
   },
   "Resources": {
@@ -95,7 +95,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.WebSockets/Assets/ConnectionFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.assets/ConnectionFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -253,7 +253,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.WebSockets/Assets/MessageFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.assets/MessageFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -487,6 +487,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -1058,8 +1068,25 @@
     }
   },
   "Outputs": {
+    "WebSocketUrl": {
+      "Value": {
+        "Fn::Sub": "wss://${ModuleWebSocket}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::WebSocketUrl"
+        }
+      },
+      "Description": "WebSocket URL"
+    },
     "Module": {
-      "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "763D61584433471508EE90F191503F2C"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1075,17 +1102,6 @@
           }
         ]
       }
-    },
-    "WebSocketUrl": {
-      "Value": {
-        "Fn::Sub": "wss://${ModuleWebSocket}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::WebSocketUrl"
-        }
-      },
-      "Description": "WebSocket URL"
     }
   },
   "Conditions": {
@@ -1297,8 +1313,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+      "TemplateChecksum": "763D61584433471508EE90F191503F2C",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1365,27 +1384,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "F5485011A4B7E7B33565027B932D3818",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "WebSocketUrl",
           "Description": "WebSocket URL",
           "Type": "String"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ConnectionFunctionLogGroup": "ConnectionFunction::LogGroup",
         "MessageFunctionLogGroup": "MessageFunction::LogGroup",

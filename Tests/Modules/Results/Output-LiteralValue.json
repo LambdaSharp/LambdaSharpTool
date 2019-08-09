@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "652F7C4D4605E814AFBBFCCBD16CCC7A"
+      "Default": "B8B5E68429E548918E27CE59A4AD9968"
     }
   },
   "Resources": {
@@ -58,8 +58,23 @@
     }
   },
   "Outputs": {
+    "LiteralValue": {
+      "Value": "123",
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LiteralValue"
+        }
+      },
+      "Description": "An exported literal value"
+    },
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "B8B5E68429E548918E27CE59A4AD9968"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -75,15 +90,6 @@
           }
         ]
       }
-    },
-    "LiteralValue": {
-      "Value": "123",
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::LiteralValue"
-        }
-      },
-      "Description": "An exported literal value"
     }
   },
   "Conditions": {
@@ -146,8 +152,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "B8B5E68429E548918E27CE59A4AD9968",
+      "Date": "2019-08-09T21:43:16Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -171,27 +181,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "652F7C4D4605E814AFBBFCCBD16CCC7A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "LiteralValue",
           "Description": "An exported literal value",
           "Type": "String"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

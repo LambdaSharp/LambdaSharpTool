@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "60A5B6F6CD79F2BA5A3B978AE9E98EC7"
+      "Default": "41AC5A6B7BF94300644A968DD32789CA"
     }
   },
   "Resources": {
@@ -97,7 +97,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.SqsHandler/Assets/SqsProducer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.assets/SqsProducer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -253,7 +253,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.SqsHandler/Assets/SqsConsumer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.assets/SqsConsumer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -453,6 +453,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -841,7 +851,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.SqsHandler:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "41AC5A6B7BF94300644A968DD32789CA"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1068,8 +1084,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
+      "Description": "Module description",
+      "TemplateChecksum": "41AC5A6B7BF94300644A968DD32789CA",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1136,20 +1156,22 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "60A5B6F6CD79F2BA5A3B978AE9E98EC7",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "SqsProducerLogGroup": "SqsProducer::LogGroup",
         "SqsConsumerLogGroup": "SqsConsumer::LogGroup",

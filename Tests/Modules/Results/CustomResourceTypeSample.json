@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B4C910B0DF0F75F0DFEDA65D13133F9A"
+      "Default": "1B01CC9FA564FE4A9A71573393E234AC"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.CustomResourceType/Assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.CustomResourceType/.assets/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -250,6 +250,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -505,8 +515,28 @@
     }
   },
   "Outputs": {
+    "MyNamespaceMyResource": {
+      "Value": {
+        "Fn::GetAtt": [
+          "ResourceHandler",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}MyNamespace::MyResource"
+        }
+      },
+      "Description": "Definition for MyNamespace::MyResource resource"
+    },
     "Module": {
-      "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "1B01CC9FA564FE4A9A71573393E234AC"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -522,20 +552,6 @@
           }
         ]
       }
-    },
-    "MyNamespaceMyResource": {
-      "Value": {
-        "Fn::GetAtt": [
-          "ResourceHandler",
-          "Arn"
-        ]
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${DeploymentPrefix}MyNamespace::MyResource"
-        }
-      },
-      "Description": "Definition for MyNamespace::MyResource resource"
     }
   },
   "Conditions": {
@@ -747,8 +763,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
+      "Description": "A sample module for defining a custom resource",
+      "TemplateChecksum": "1B01CC9FA564FE4A9A71573393E234AC",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -815,18 +835,15 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "B4C910B0DF0F75F0DFEDA65D13133F9A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
       "ResourceTypes": [
@@ -851,6 +868,10 @@
           ]
         }
       ],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ResourceHandlerLogGroup": "ResourceHandler::LogGroup",
         "ModuleRole": "Module::Role",

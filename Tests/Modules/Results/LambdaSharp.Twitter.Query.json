@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B6E5CF9121F285072A8E2CC800CDDD9B"
+      "Default": "B5277991D83E94164DFD9293F9A87ABB"
     }
   },
   "Resources": {
@@ -138,7 +138,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Twitter.Query/Assets/QueryFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Twitter.Query/.assets/QueryFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -406,6 +406,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -706,8 +716,25 @@
     }
   },
   "Outputs": {
+    "TweetTopic": {
+      "Value": {
+        "Ref": "TweetTopic"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::TweetTopic"
+        }
+      },
+      "Description": "This topic publishes tweets that match the query"
+    },
     "Module": {
-      "Value": "LambdaSharp.Twitter.Query:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "B5277991D83E94164DFD9293F9A87ABB"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -723,17 +750,6 @@
           }
         ]
       }
-    },
-    "TweetTopic": {
-      "Value": {
-        "Ref": "TweetTopic"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::TweetTopic"
-        }
-      },
-      "Description": "This topic publishes tweets that match the query"
     }
   },
   "Conditions": {
@@ -983,8 +999,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
+      "Description": "Search Twitter at regular intervals and publish new found tweets",
+      "TemplateChecksum": "B5277991D83E94164DFD9293F9A87ABB",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",
@@ -1102,27 +1122,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "B6E5CF9121F285072A8E2CC800CDDD9B",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "TweetTopic",
           "Description": "This topic publishes tweets that match the query",
           "Type": "AWS::SNS::Topic"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "QueryFunctionLogGroup": "QueryFunction::LogGroup",
         "ModuleRole": "Module::Role",

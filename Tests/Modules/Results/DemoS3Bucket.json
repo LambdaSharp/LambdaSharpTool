@@ -35,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6E35EA9CD9920797E97CBD0B5E0E39B9"
+      "Default": "000382037C34DB9268240963F245BF9B"
     }
   },
   "Resources": {
@@ -61,8 +61,27 @@
     }
   },
   "Outputs": {
+    "Bucket": {
+      "Value": {
+        "Fn::GetAtt": [
+          "Bucket",
+          "Arn"
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::Bucket"
+        }
+      }
+    },
     "Module": {
-      "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "000382037C34DB9268240963F245BF9B"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -77,19 +96,6 @@
             ]
           }
         ]
-      }
-    },
-    "Bucket": {
-      "Value": {
-        "Fn::GetAtt": [
-          "Bucket",
-          "Arn"
-        ]
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::Bucket"
-        }
       }
     }
   },
@@ -153,8 +159,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Bucket:1.0-DEV",
+      "TemplateChecksum": "000382037C34DB9268240963F245BF9B",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -178,26 +187,27 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "6E35EA9CD9920797E97CBD0B5E0E39B9",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "Bucket",
           "Type": "AWS::S3::Bucket"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

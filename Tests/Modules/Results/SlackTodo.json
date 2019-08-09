@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1CC2B3D6654425D72DD631E02D5B6CC6"
+      "Default": "1DB782F09FF82AC425495B213216CE8B"
     }
   },
   "Resources": {
@@ -101,7 +101,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Demo.SlackTodo/Assets/SlackCommand-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.assets/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -336,6 +336,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -728,8 +738,25 @@
     }
   },
   "Outputs": {
+    "SlackApiPath": {
+      "Value": {
+        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/slack"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::SlackApiPath"
+        }
+      },
+      "Description": "Slack Command URL"
+    },
     "Module": {
-      "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "1DB782F09FF82AC425495B213216CE8B"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -745,17 +772,6 @@
           }
         ]
       }
-    },
-    "SlackApiPath": {
-      "Value": {
-        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST/slack"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::SlackApiPath"
-        }
-      },
-      "Description": "Slack Command URL"
     }
   },
   "Conditions": {
@@ -978,8 +994,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
+      "Description": "Manage a personal To-Do list from Slack",
+      "TemplateChecksum": "1DB782F09FF82AC425495B213216CE8B",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1056,27 +1076,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "1CC2B3D6654425D72DD631E02D5B6CC6",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "SlackApiPath",
           "Description": "Slack Command URL",
           "Type": "String"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "SlackCommandLogGroup": "SlackCommand::LogGroup",
         "ModuleRole": "Module::Role",

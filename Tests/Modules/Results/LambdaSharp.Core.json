@@ -45,7 +45,7 @@
     },
     "ExistingDeploymentBucket": {
       "Type": "String",
-      "Description": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)",
+      "Description": "ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)",
       "AllowedPattern": "(arn:aws:s3:.*)?",
       "ConstraintDescription": "Must be a valid S3 ARN (all lowercase) or left blank"
     },
@@ -84,7 +84,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "41615CAFB681945D095C795EC52EC80B"
+      "Default": "B8AB2F41CCFD765B7874311D18C0C62C"
     }
   },
   "Resources": {
@@ -192,7 +192,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/ProcessLogEvents-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -335,7 +335,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/RegistrationFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/RegistrationFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -455,7 +455,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Core/Assets/Finalizer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/Finalizer-DRYRUN.zip"
         },
         "Description": "Clean-up resources on tear down (v1.0-DEV)",
         "Environment": {
@@ -899,6 +899,16 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
+                },
+                {
                   "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
@@ -981,24 +991,6 @@
     }
   },
   "Outputs": {
-    "Module": {
-      "Value": "LambdaSharp.Core:1.0-DEV@%%MODULEORIGIN%%"
-    },
-    "LambdaSharpTier": {
-      "Value": {
-        "Fn::Select": [
-          "0",
-          {
-            "Fn::Split": [
-              "-",
-              {
-                "Ref": "DeploymentPrefix"
-              }
-            ]
-          }
-        ]
-      }
-    },
     "DeadLetterQueue": {
       "Value": {
         "Fn::If": [
@@ -1115,6 +1107,30 @@
         }
       },
       "Description": "S3 bucket for published modules (ARN)"
+    },
+    "Module": {
+      "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "B8AB2F41CCFD765B7874311D18C0C62C"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Conditions": {
@@ -1203,7 +1219,7 @@
           "default": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\") [String]"
         },
         "ExistingDeploymentBucket": {
-          "default": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created) [String]"
+          "default": "ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket) [String]"
         },
         "Secrets": {
           "default": "Comma-separated list of additional KMS secret keys [String]"
@@ -1282,8 +1298,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
+      "Description": "LambdaSharp Core Resources and Services",
+      "TemplateChecksum": "B8AB2F41CCFD765B7874311D18C0C62C",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -1348,7 +1368,7 @@
             {
               "Name": "ExistingDeploymentBucket",
               "Type": "String",
-              "Label": "ARN of an existing S3 bucket for LambdaSharp deployments (if blank, a new S3 bucket is created)",
+              "Label": "ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)",
               "AllowedPattern": "(arn:aws:s3:.*)?",
               "ConstraintDescription": "Must be a valid S3 ARN (all lowercase) or left blank"
             }
@@ -1377,12 +1397,12 @@
           ]
         }
       ],
-      "RuntimeCheck": false,
-      "Hash": "41615CAFB681945D095C795EC52EC80B",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
+      "Dependencies": [],
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::Registration::Function",
@@ -1505,7 +1525,10 @@
           "Description": "CloudWatch Logs Role for writing to logging stream (ARN)",
           "Type": "AWS::IAM::Role"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "DeadLetterQueueResource": "DeadLetterQueue::Resource",
         "LoggingStreamResource": "LoggingStream::Resource",

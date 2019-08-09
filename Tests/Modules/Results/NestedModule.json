@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "91D340A602B702E9BA6997B407BEC5A8"
+      "Default": "1D7FAF81AA1947A8CA7F55A7E7B98509"
     }
   },
   "Resources": {
@@ -67,6 +67,9 @@
                 "Ref": "AWS::StackName"
               }
             ]
+          },
+          "LambdaSharpCoreServices": {
+            "Ref": "LambdaSharpCoreServices"
           }
         },
         "Tags": [
@@ -75,9 +78,7 @@
             "Value": "Test.OtherModule"
           }
         ],
-        "TemplateURL": {
-          "Fn::Sub": "https://${DeploymentBucketName}.s3.amazonaws.com/%%MODULEORIGIN%%/Test/Modules/OtherModule/Versions/1.0/cloudformation.json"
-        },
+        "TemplateURL": "<BAD>",
         "TimeoutInMinutes": 15
       }
     },
@@ -100,7 +101,13 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "1D7FAF81AA1947A8CA7F55A7E7B98509"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -190,8 +197,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "1D7FAF81AA1947A8CA7F55A7E7B98509",
+      "Date": "2019-08-09T21:43:16Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -215,26 +226,26 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "91D340A602B702E9BA6997B407BEC5A8",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         },
         {
-          "ModuleInfo": "Test.OtherModule@%%MODULEORIGIN%%",
-          "MinVersion": "1.0",
-          "MaxVersion": "1.0",
-          "Nested": true
+          "ModuleInfo": "Test.OtherModule:1.0",
+          "Type": "Nested"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

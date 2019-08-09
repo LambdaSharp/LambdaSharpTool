@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F6442A7850EC6F48B17168E534175E4F"
+      "Default": "E79928BF3B3FE60173D63AEC87984AEC"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "%%MODULEORIGIN%%/LambdaSharp/Modules/Sample.ApiGatewayInvoke/Assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGatewayInvoke/.assets/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -250,6 +250,16 @@
                     "logs:PutLogEvents"
                   ],
                   "Resource": "arn:aws:logs:*:*:*"
+                },
+                {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
                 },
                 {
                   "Sid": "AWSXRay",
@@ -746,8 +756,25 @@
     }
   },
   "Outputs": {
+    "ApiUrl": {
+      "Value": {
+        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST"
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::ApiUrl"
+        }
+      },
+      "Description": "API Gateway URL"
+    },
     "Module": {
-      "Value": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV@%%MODULEORIGIN%%"
+      "Value": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "E79928BF3B3FE60173D63AEC87984AEC"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -763,17 +790,6 @@
           }
         ]
       }
-    },
-    "ApiUrl": {
-      "Value": {
-        "Fn::Sub": "https://${ModuleRestApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/LATEST"
-      },
-      "Export": {
-        "Name": {
-          "Fn::Sub": "${AWS::StackName}::ApiUrl"
-        }
-      },
-      "Description": "API Gateway URL"
     }
   },
   "Conditions": {
@@ -985,8 +1001,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2019-06-14",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV",
+      "Description": "A sample module integrating with API Gateway",
+      "TemplateChecksum": "E79928BF3B3FE60173D63AEC87984AEC",
+      "Date": "2019-08-09T21:43:17Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1053,27 +1073,28 @@
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "F6442A7850EC6F48B17168E534175E4F",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Assets": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Core@lambdasharp",
-          "MinVersion": "0.7-WIP",
-          "MaxVersion": "0.7-WIP",
-          "Nested": false
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "ApiUrl",
           "Description": "API Gateway URL",
           "Type": "String"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "MyFunctionLogGroup": "MyFunction::LogGroup",
         "ModuleRole": "Module::Role",
