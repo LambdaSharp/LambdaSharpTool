@@ -34,6 +34,9 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddSkipAssemblyValidationOption(CommandLineApplication cmd)
             => cmd.Option("--no-assembly-validation", "(optional) Disable validating LambdaSharp assemblies", CommandOptionType.NoValue);
 
+        public static CommandOption AddSkipDependencyValidationOption(CommandLineApplication cmd)
+            => cmd.Option("--no-dependency-validation", "(optional) Disable validating LambdaSharp module dependencies", CommandOptionType.NoValue);
+
         public static CommandOption AddBuildConfigurationOption(CommandLineApplication cmd)
             => cmd.Option("--configuration|-c <CONFIGURATION>", "(optional) Build configuration for function projects (default: \"Release\")", CommandOptionType.SingleValue);
 
@@ -83,6 +86,7 @@ namespace LambdaSharp.Tool.Cli {
                 // build options
                 var modulesArgument = cmd.Argument("<NAME>", "(optional) Path to module definition/folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
                 var gitBranchOption = AddGitBranchOption(cmd);
@@ -141,6 +145,7 @@ namespace LambdaSharp.Tool.Cli {
                         settings.OutputDirectory = outputDirectoryOption.HasValue()
                             ? Path.GetFullPath(outputDirectoryOption.Value())
                             : Path.Combine(settings.WorkingDirectory, "bin");
+                        settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                         if(!await BuildStepAsync(
                             settings,
                             GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
@@ -171,6 +176,7 @@ namespace LambdaSharp.Tool.Cli {
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module definition/folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
                 var gitBranchOption = AddGitBranchOption(cmd);
@@ -247,6 +253,7 @@ namespace LambdaSharp.Tool.Cli {
                             settings.OutputDirectory = outputDirectoryOption.HasValue()
                                 ? Path.GetFullPath(outputDirectoryOption.Value())
                                 : Path.Combine(settings.WorkingDirectory, "bin");
+                            settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),
@@ -297,6 +304,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
+                var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
                 var gitShaOption = AddGitShaOption(cmd);
                 var gitBranchOption = AddGitBranchOption(cmd);
@@ -385,6 +393,7 @@ namespace LambdaSharp.Tool.Cli {
                             settings.OutputDirectory = outputDirectoryOption.HasValue()
                                 ? Path.GetFullPath(outputDirectoryOption.Value())
                                 : Path.Combine(settings.WorkingDirectory, "bin");
+                            settings.NoDependencyValidation = skipDependencyValidationOption.HasValue();
                             if(!await BuildStepAsync(
                                 settings,
                                 GetOutputFilePath(settings, outputCloudFormationPathOption, moduleSource),

@@ -205,6 +205,7 @@ namespace LambdaSharp.Tool {
         public IAmazonLambda LambdaClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
+        public bool NoDependencyValidation { get; set; }
         public bool PromptsAsErrors { get; set; }
 
         //--- Methods ---

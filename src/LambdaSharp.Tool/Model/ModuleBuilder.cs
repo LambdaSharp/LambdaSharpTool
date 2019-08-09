@@ -209,22 +209,30 @@ namespace LambdaSharp.Tool.Model {
 
             // validate dependency
             var loader = new ModelManifestLoader(Settings, SourceFilename);
-            var dependency = new ModuleBuilderDependency {
-                Type = dependencyType,
-                ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true)
-            };
-            if(dependency.ModuleLocation == null) {
+            if(!Settings.NoDependencyValidation) {
+                var dependency = new ModuleBuilderDependency {
+                    Type = dependencyType,
+                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true)
+                };
+                if(dependency.ModuleLocation == null) {
 
-                // nothing to do; loader already emitted an error
-                return;
-            }
-            dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
-            if(dependency.Manifest == null) {
+                    // nothing to do; loader already emitted an error
+                    return;
+                }
+                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
+                if(dependency.Manifest == null) {
 
-                // nothing to do; loader already emitted an error
-                return;
+                    // nothing to do; loader already emitted an error
+                    return;
+                }
+                _dependencies[moduleKey] = dependency;
+            } else {
+                LogWarn("unable to validate dependency");
+                _dependencies[moduleKey] = new ModuleBuilderDependency {
+                    Type = dependencyType,
+                    ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, moduleInfo, "00000000000000000000000000000000")
+                };
             }
-            _dependencies[moduleKey] = dependency;
         }
 
         public bool AddSecret(object secret) {
@@ -731,51 +739,56 @@ namespace LambdaSharp.Tool.Model {
 
             // validate module parameters
             AtLocation("Parameters", () => {
-                var loader = new ModelManifestLoader(Settings, moduleInfo.ToString());
-                var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true).Result;
-                if(foundModuleLocation != null) {
-                    var manifest = new ModelManifestLoader(Settings, moduleInfo.FullName).LoadManifestFromLocationAsync(foundModuleLocation).Result;
+                if(!Settings.NoDependencyValidation) {
+                    var loader = new ModelManifestLoader(Settings, moduleInfo.ToString());
+                    var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true).Result;
+                    if(foundModuleLocation != null) {
+                        var manifest = loader.LoadManifestFromLocationAsync(foundModuleLocation).Result;
 
-                    // update stack resource source with hashed cloudformation key
-                    stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{foundModuleLocation.ModuleTemplateKey}";
+                        // update stack resource source with hashed cloudformation key
+                        stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{foundModuleLocation.ModuleTemplateKey}";
 
-                    // validate that all required parameters are supplied
-                    var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
-                    foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
-                        LogError($"missing module parameter '{formalParameter.Name}'");
-                    }
+                        // validate that all required parameters are supplied
+                        var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
+                        foreach(var formalParameter in formalParameters.Values.Where(p => (p.Default == null) && !moduleParameters.ContainsKey(p.Name))) {
+                            LogError($"missing module parameter '{formalParameter.Name}'");
+                        }
 
-                    // validate that all supplied parameters exist
-                    foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
-                        LogError($"unknown module parameter '{moduleParameter.Key}'");
-                    }
+                        // validate that all supplied parameters exist
+                        foreach(var moduleParameter in moduleParameters.Where(kv => !formalParameters.ContainsKey(kv.Key))) {
+                            LogError($"unknown module parameter '{moduleParameter.Key}'");
+                        }
 
-                    // inherit dependencies from nested module
-                    foreach(var dependency in manifest.Dependencies) {
-                        AddDependencyAsync(dependency.ModuleInfo, dependency.Type).Wait();
-                    }
+                        // inherit dependencies from nested module
+                        foreach(var dependency in manifest.Dependencies) {
+                            AddDependencyAsync(dependency.ModuleInfo, dependency.Type).Wait();
+                        }
 
-                    // inherit import parameters that are not provided by the declaration
-                    foreach(var nestedImport in manifest.GetAllParameters()
-                        .Where(parameter => parameter.Import != null)
-                        .Where(parameter => !moduleParameters.ContainsKey(parameter.Name))
-                    ) {
-                        var import = AddImport(
-                            parent: resource,
-                            name: nestedImport.Name,
-                            description: null,
-                            type: nestedImport.Type,
-                            scope: null,
-                            allow: null,
-                            module: nestedImport.Import,
-                            encryptionContext: null
-                        );
-                        moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
-                    }
+                        // inherit import parameters that are not provided by the declaration
+                        foreach(var nestedImport in manifest.GetAllParameters()
+                            .Where(parameter => parameter.Import != null)
+                            .Where(parameter => !moduleParameters.ContainsKey(parameter.Name))
+                        ) {
+                            var import = AddImport(
+                                parent: resource,
+                                name: nestedImport.Name,
+                                description: null,
+                                type: nestedImport.Type,
+                                scope: null,
+                                allow: null,
+                                module: nestedImport.Import,
+                                encryptionContext: null
+                            );
+                            moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
+                        }
 
-                    // check if x-ray tracing should be enabled in nested module
-                    if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
-                        moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", XRayTracingLevel.AllModules.ToString(), XRayTracingLevel.Disabled.ToString()));
+                        // check if x-ray tracing should be enabled in nested module
+                        if(formalParameters.ContainsKey("XRayTracing") && !moduleParameters.ContainsKey("XRayTracing")) {
+                            moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", XRayTracingLevel.AllModules.ToString(), XRayTracingLevel.Disabled.ToString()));
+                        }
+                    } else {
+
+                        // nothing to do; loader already emitted an error
                     }
                 } else {
                     LogWarn("unable to validate nested module parameters");
