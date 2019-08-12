@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 LogError($"invalid module reference: {moduleReference}");
                 return false;
             }
-            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: false);
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: false);
             if(foundModuleLocation == null) {
                 LogError($"unable to resolve: {moduleReference}");
                 return false;

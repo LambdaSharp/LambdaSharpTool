@@ -171,7 +171,7 @@ namespace LambdaSharp.Tool.Model {
             GetItem(fullName).Reference = Path.GetFileName(asset);
         }
 
-        public async Task AddDependencyAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType) {
+        public async Task<ModuleBuilderDependency> AddDependencyAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType) {
             string moduleKey;
             switch(dependencyType) {
             case ModuleManifestDependencyType.Nested:
@@ -179,7 +179,7 @@ namespace LambdaSharp.Tool.Model {
                 // nested dependencies can reference different versions
                 moduleKey = moduleInfo.ToString();
                 if(_dependencies.ContainsKey(moduleKey)) {
-                    return;
+                    return null;
                 }
                 break;
             case ModuleManifestDependencyType.Shared:
@@ -198,41 +198,43 @@ namespace LambdaSharp.Tool.Model {
                     ) {
 
                         // keep existing shared dependency
-                        return;
+                        return null;
                     }
                 }
                 break;
             default:
-                LogError($"unrecognized depency type '{dependencyType}' for {moduleInfo.ToString()}");
-                return;
+                LogError($"unsupported depency type '{dependencyType}' for {moduleInfo.ToString()}");
+                return null;
             }
 
             // validate dependency
             var loader = new ModelManifestLoader(Settings, SourceFilename);
+            ModuleBuilderDependency dependency;
             if(!Settings.NoDependencyValidation) {
-                var dependency = new ModuleBuilderDependency {
+                dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
-                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true)
+                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true)
                 };
                 if(dependency.ModuleLocation == null) {
 
                     // nothing to do; loader already emitted an error
-                    return;
+                    return null;
                 }
                 dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
                 if(dependency.Manifest == null) {
 
                     // nothing to do; loader already emitted an error
-                    return;
+                    return null;
                 }
-                _dependencies[moduleKey] = dependency;
             } else {
                 LogWarn("unable to validate dependency");
-                _dependencies[moduleKey] = new ModuleBuilderDependency {
+                dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
                     ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, moduleInfo, "00000000000000000000000000000000")
                 };
             }
+            _dependencies[moduleKey] = dependency;
+            return dependency;
         }
 
         public bool AddSecret(object secret) {
@@ -691,7 +693,7 @@ namespace LambdaSharp.Tool.Model {
             return result;
         }
 
-        public AModuleItem AddModule(
+        public AModuleItem AddNestedModule(
             AModuleItem parent,
             string name,
             string description,
@@ -735,18 +737,16 @@ namespace LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
-            AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).Wait();
+            var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).Result;
 
             // validate module parameters
             AtLocation("Parameters", () => {
-                if(!Settings.NoDependencyValidation) {
-                    var loader = new ModelManifestLoader(Settings, moduleInfo.ToString());
-                    var foundModuleLocation = loader.ResolveInfoToLocationAsync(moduleInfo, allowImport: true).Result;
-                    if(foundModuleLocation != null) {
-                        var manifest = loader.LoadManifestFromLocationAsync(foundModuleLocation).Result;
+                if(dependency?.Manifest != null) {
+                    if(!Settings.NoDependencyValidation) {
+                        var manifest = dependency.Manifest;
 
                         // update stack resource source with hashed cloudformation key
-                        stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{foundModuleLocation.ModuleTemplateKey}";
+                        stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{dependency.ModuleLocation.ModuleTemplateKey}";
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
@@ -760,8 +760,8 @@ namespace LambdaSharp.Tool.Model {
                         }
 
                         // inherit dependencies from nested module
-                        foreach(var dependency in manifest.Dependencies) {
-                            AddDependencyAsync(dependency.ModuleInfo, dependency.Type).Wait();
+                        foreach(var manifestDependency in manifest.Dependencies) {
+                            AddDependencyAsync(manifestDependency.ModuleInfo, dependency.Type).Wait();
                         }
 
                         // inherit import parameters that are not provided by the declaration
@@ -787,11 +787,11 @@ namespace LambdaSharp.Tool.Model {
                             moduleParameters.Add("XRayTracing", FnIf("XRayNestedIsEnabled", XRayTracingLevel.AllModules.ToString(), XRayTracingLevel.Disabled.ToString()));
                         }
                     } else {
-
-                        // nothing to do; loader already emitted an error
+                        LogWarn("unable to validate nested module parameters");
                     }
                 } else {
-                    LogWarn("unable to validate nested module parameters");
+
+                    // nothing to do; loader already emitted an error
                 }
 
                 // add expected parameters
@@ -1251,7 +1251,7 @@ namespace LambdaSharp.Tool.Model {
                         LogError($"unrecognized resource type {awsType}");
                     }
                 } else if(properties != null) {
-                    var definition = dependency.Manifest.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
+                    var definition = dependency.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
                     if(definition != null) {
                         foreach(var key in properties.Keys) {
                             var stringKey = (string)key;

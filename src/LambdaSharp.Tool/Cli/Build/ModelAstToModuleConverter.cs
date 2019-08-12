@@ -395,7 +395,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     } else {
 
                         // create nested module item
-                        _builder.AddModule(
+                        _builder.AddNestedModule(
                             parent: parent,
                             name: node.Nested,
                             description: node.Description,

@@ -100,11 +100,11 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, bool allowImport) {
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport) {
             LogInfoVerbose($"=> Resolving module {moduleInfo}");
 
             // check if module can be found in the deployment bucket
-            var result = await FindNewestVersionAsync(Settings.DeploymentBucketName);
+            var result = await FindNewestModuleVersionAsync(Settings.DeploymentBucketName);
 
             // check if the origin bucket needs to be checked
             if(
@@ -125,7 +125,7 @@ namespace LambdaSharp.Tool {
                     || moduleInfo.Version.HasFloatingConstraints
                 )
             ) {
-                var originResult = await FindNewestVersionAsync(moduleInfo.Origin);
+                var originResult = await FindNewestModuleVersionAsync(moduleInfo.Origin);
 
                 // check if module found at origin should be kept instead
                 if(
@@ -154,30 +154,46 @@ namespace LambdaSharp.Tool {
             return MakeModuleLocation(result.Origin, result.Manifest);
 
             // local functions
-            async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestVersionAsync(string bucketName) {
+            async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestModuleVersionAsync(string bucketName) {
 
                 // enumerate versions in bucket
-                var found = await FindVersionsAsync(bucketName);
+                var found = await FindModuleVersionsAsync(bucketName);
                 if(!found.Any()) {
                     return (Origin: bucketName, Version: null, Manifest: null);
                 }
 
-                // attempt to identify the newest version
+                // NOTE (2019-08-12, bjorg): unless the module is shared, we filter the list of found versions to
+                //  only contain versions that meet the module version constraint; for shared modules, we want to
+                //  keep the latest version that is compatible with the tool and is equal-or-greater than the
+                //  module version constraint.
+                if((dependencyType != ModuleManifestDependencyType.Shared) && (moduleInfo.Version != null)) {
+                    found = found.Where(version => version.MatchesConstraint(moduleInfo.Version)).ToList();
+                }
+
+                // attempt to identify the newest module version compatible with the tool
                 while(found.Any()) {
                     var latest = VersionInfo.Max(found, strict: true);
+
+                    // check if latest version meets minimum version constraint
+                    if(moduleInfo.Version?.IsGreaterThanVersion(latest) ?? false) {
+                        break;
+                    }
                     var latestModuleInfo = new ModuleInfo(moduleInfo.Owner, moduleInfo.Name, latest, moduleInfo.Origin);
                     var manifestText = await GetS3ObjectContentsAsync(bucketName, latestModuleInfo.VersionPath);
                     var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
-                    // check if version is compatible with this tool
+                    // check if module is compatible with this tool
                     if(manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
                         return (Origin: bucketName, Version: latest, Manifest: manifest);
                     }
+
+                    // remove latest version since it didn't meet the constraints
+                    found.Remove(latest);
                 }
                 return (Origin: bucketName, Version: null, Manifest: null);
             }
 
-            async Task<List<VersionInfo>> FindVersionsAsync(string bucketName) {
+            async Task<List<VersionInfo>> FindModuleVersionsAsync(string bucketName) {
 
                 // get bucket region specific S3 client
                 var s3Client = await GetS3ClientByBucketNameAsync(bucketName);
@@ -249,7 +265,7 @@ namespace LambdaSharp.Tool {
                     } else {
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, allowImport);
+                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, dependency.Type, allowImport);
                         if(dependencyModuleLocation == null) {
 
                             // error has already been reported
@@ -283,7 +299,7 @@ namespace LambdaSharp.Tool {
             }
 
             bool IsDependencyInList(string dependentModuleFullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> deployedModules) {
-                var deployedModule = deployedModules.FirstOrDefault(deployed => (deployed.ModuleLocation.ModuleInfo.Origin == dependency.ModuleInfo.Origin) && (deployed.ModuleLocation.ModuleInfo.FullName == dependency.ModuleInfo.FullName));
+                var deployedModule = deployedModules.FirstOrDefault(deployed => deployed.ModuleLocation.ModuleInfo.FullName == dependency.ModuleInfo.FullName);
                 if(deployedModule == null) {
                     return false;
                 }
@@ -291,9 +307,9 @@ namespace LambdaSharp.Tool {
                     ? "existing module"
                     : $"module '{deployedModule.DependencyOwner}'";
 
-                // confirm that the dependency version is in a valid range
+                // confirm the requested version by the dependency is not greater than the deployed version
                 var deployedVersion = deployedModule.ModuleLocation.ModuleInfo.Version;
-                if(!deployedModule.ModuleLocation.ModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
+                if(dependency.ModuleInfo.Version?.IsGreaterThanVersion(deployedVersion) ?? false) {
                     LogError($"version conflict for module '{dependency.ModuleInfo.FullName}': module '{dependentModuleFullName}' requires v{dependency.ModuleInfo.Version}, but {deployedOwner} uses v{deployedVersion})");
                 }
                 return true;

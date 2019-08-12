@@ -110,6 +110,7 @@ namespace LambdaSharp.Tool.Model {
     [JsonConverter(typeof(StringEnumConverter))]
     public enum ModuleManifestDependencyType {
         Unknown,
+        Root,
         Nested,
         Shared
     }
