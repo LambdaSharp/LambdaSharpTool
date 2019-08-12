@@ -16,10 +16,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.SQSEvents;
 using LambdaSharp;
 using LambdaSharp.SimpleQueueService;
 
