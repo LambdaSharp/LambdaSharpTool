@@ -31,6 +31,7 @@ using LambdaSharp.Tool.Internal;
 using System.Threading.Tasks;
 
 namespace LambdaSharp.Tool.Cli {
+    using Tag = Amazon.CloudFormation.Model.Tag;
 
     public enum FunctionType {
         Generic,
@@ -63,7 +64,7 @@ namespace LambdaSharp.Tool.Cli {
                     var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
                     var functionTypes = typeof(FunctionType).GetEnumNames().OrderBy(value => value).ToList();
-                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", functionTypes).ToLowerInvariant()}; default: {FunctionType.Generic.ToString().ToLowerInvariant()})", CommandOptionType.SingleValue);
+                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", functionTypes).ToLowerInvariant()}; default: prompt)", CommandOptionType.SingleValue);
                     var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
                     var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
@@ -175,16 +176,23 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("bucket", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
 
                     // sub-command options
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
+                        // initialize AWS profile
+                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+
                         // initialize settings instance
                         var settings = new Settings {
                             CfnClient = new AmazonCloudFormationClient(),
-                            S3Client = new AmazonS3Client()
+                            S3Client = new AmazonS3Client(),
+                            AwsRegion = awsAccount.Region,
+                            AwsAccountId = awsAccount.AccountId,
+                            AwsUserArn = awsAccount.UserArn
                         };
 
                         // get the resource name
@@ -493,7 +501,17 @@ namespace LambdaSharp.Tool.Cli {
                         ParameterValue = bucketName
                     }
                 },
-                TemplateBody = template
+                TemplateBody = template,
+                Tags = new List<Tag> {
+                    new Tag {
+                        Key = "LambdaSharp:PublicBucket",
+                        Value = bucketName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = settings.AwsUserArn.Split(':').Last()
+                    }
+                }
             });
             var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
             if(created.Success) {
