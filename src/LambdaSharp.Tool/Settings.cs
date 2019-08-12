@@ -280,7 +280,7 @@ namespace LambdaSharp.Tool {
                 LogError($"prompt was attempted for \"{message}\"");
                 return choices.FirstOrDefault();
             }
-            WriteAnsiLine($"{message} (multiple choice)", PromptColor);
+            WriteAnsiLine($"{message}:", PromptColor);
             var choiceCount = choices.Count;
             for(var i = 0; i < choiceCount; ++i) {
                 WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);

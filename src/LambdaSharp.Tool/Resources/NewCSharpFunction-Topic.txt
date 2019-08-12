@@ -1,0 +1,32 @@
+using System;
+using System.Threading.Tasks;
+using Amazon.Lambda.Core;
+using LambdaSharp;
+using LambdaSharp.SimpleNotificationService;
+
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
+
+namespace %%ROOTNAMESPACE%% {
+
+    public class Message {
+
+        //--- Properties ---
+
+        // TO-DO: add message properties
+    }
+
+    public class Function : ALambdaTopicFunction<Message> {
+
+        //--- Methods ---
+        public override async Task InitializeAsync(LambdaConfig config) {
+
+            // TO-DO: add function initialization and reading configuration settings
+        }
+
+        public override async Task ProcessMessageAsync(Message message) {
+
+            // TO-DO: add business logic
+        }
+    }
+}

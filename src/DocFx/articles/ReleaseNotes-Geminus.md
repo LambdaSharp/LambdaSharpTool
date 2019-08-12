@@ -76,3 +76,7 @@ Using:
 ## lash new bucket
 
 * command to create a new public S3 bucket for sharing LambdaSharp modules
+
+## last new function --type ...
+
+* you can specify the function type you want to create when adding a function to a module

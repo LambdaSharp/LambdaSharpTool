@@ -32,6 +32,16 @@ using System.Threading.Tasks;
 
 namespace LambdaSharp.Tool.Cli {
 
+    public enum FunctionType {
+        Generic,
+        ApiGateway,
+        CustomResource,
+        Schedule,
+        Queue,
+        Topic,
+        WebSocket
+    }
+
     public class CliNewCommand : ACliCommand {
 
         //--- Methods --
@@ -50,21 +60,41 @@ namespace LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
-                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
+                    var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
+                    var functionTypes = typeof(FunctionType).GetEnumNames().OrderBy(value => value).ToList();
+                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", functionTypes).ToLowerInvariant()}; default: {FunctionType.Generic.ToString().ToLowerInvariant()})", CommandOptionType.SingleValue);
+                    var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
+                    var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
                         var settings = new Settings { };
-
-                        // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
-                        var functionMemory = 256;
-                        var functionTimeout = 30;
 
                         // get function name
                         var functionName = nameArgument.Value;
                         while(string.IsNullOrEmpty(functionName)) {
                             functionName = settings.PromptString("Enter the function name");
+                        }
+
+                        // get function type
+                        FunctionType functionType;
+                        if(functionTypeOption.HasValue()) {
+                            if(!TryParseEnumOption(functionTypeOption, FunctionType.Generic, FunctionType.Generic, out functionType)) {
+
+                                // NOTE (2019-08-12, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                                return;
+                            }
+                        } else {
+                            functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", functionTypes), ignoreCase: true);
+                        }
+                        if(!int.TryParse(functionTimeoutOption.Value() ?? "30", out var functionTimeout)) {
+                            LogError("invalid value for --timeout option");
+                            return;
+                        }
+                        if(!int.TryParse(functionMemoryOption.Value() ?? "256", out var functionMemory)) {
+                            LogError("invalid value for --memory option");
+                            return;
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
@@ -75,7 +105,8 @@ namespace LambdaSharp.Tool.Cli {
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",
                             functionMemory,
-                            functionTimeout
+                            functionTimeout,
+                            functionType
                         );
                     });
                 });
@@ -89,7 +120,7 @@ namespace LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
                         var settings = new Settings { };
 
                         // get the module name
@@ -118,7 +149,7 @@ namespace LambdaSharp.Tool.Cli {
 
                     // sub-command options
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
                         var settings = new Settings { };
 
                         // get the resource name
@@ -143,12 +174,12 @@ namespace LambdaSharp.Tool.Cli {
                 // bucket sub-command
                 cmd.Command("bucket", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Create a public S3 bucket for sharing LambdaSharp modules";
+                    subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
 
                     // sub-command options
                     subCmd.OnExecute(async () => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // initialize settings instance
                         var settings = new Settings {
@@ -203,7 +234,8 @@ namespace LambdaSharp.Tool.Cli {
             string moduleFile,
             string language,
             int functionMemory,
-            int functionTimeout
+            int functionTimeout,
+            FunctionType functionType
         ) {
 
             // parse yaml module definition
@@ -246,7 +278,8 @@ namespace LambdaSharp.Tool.Cli {
                     moduleFile,
                     functionMemory,
                     functionTimeout,
-                    projectDirectory
+                    projectDirectory,
+                    functionType
                 );
                 break;
             case "javascript":
@@ -280,7 +313,8 @@ namespace LambdaSharp.Tool.Cli {
             string moduleFile,
             int functionMemory,
             int functionTimeout,
-            string projectDirectory
+            string projectDirectory,
+            FunctionType functionType
         ) {
 
             // create function project
@@ -301,7 +335,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource("NewCSharpFunction.txt", substitutions);
+            var functionContents = ReadResource($"NewCSharpFunction-{functionType}.txt", substitutions);
             try {
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
@@ -447,8 +481,6 @@ namespace LambdaSharp.Tool.Cli {
         public async Task NewBucket(Settings settings, string bucketName) {
 
             // create bucket using template
-            Console.WriteLine();
-            Console.WriteLine("Creating public S3 bucket for sharing LambdaSharp modules");
             var template = ReadResource("PublicLambdaSharpBucket.yml");
             var stackName = $"PublicLambdaSharpBucket-{bucketName}";
             var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
