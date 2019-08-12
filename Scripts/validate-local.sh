@@ -154,11 +154,35 @@ lash new module MyModule
 if [ $? -ne 0 ]; then
     exit $?
 fi
-lash new function MyFirstFunction
+lash new function --type apigateway MyApiGatewayFunction
 if [ $? -ne 0 ]; then
     exit $?
 fi
-lash new function --language javascript MySecondFunction
+lash new function --type customresource MyCustomResourceFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --type generic MyGenericFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --type queue MyQueueFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --type topic MyTopicFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --type schedule MyScheduleFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --type websocket MyWebSocketFunction
+if [ $? -ne 0 ]; then
+    exit $?
+fi
+lash new function --language javascript MyJavascriptFunction
 if [ $? -ne 0 ]; then
     exit $?
 fi
