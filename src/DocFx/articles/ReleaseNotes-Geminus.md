@@ -77,6 +77,9 @@ Using:
 
 * command to create a new public S3 bucket for sharing LambdaSharp modules
 
-## last new function --type ...
+## last new function
 
-* you can specify the function type you want to create when adding a function to a module
+* `--type`: you can specify the function type you want to create when adding a function to a module
+* `--timeout`
+* `--memory`
+* `--use-project-reference` and `--use-nuget-reference` are obsolete
