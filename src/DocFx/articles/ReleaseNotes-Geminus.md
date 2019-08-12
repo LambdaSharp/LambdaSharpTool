@@ -72,3 +72,7 @@ Using:
 
 * `--module-version`: (optional) Override the module version
 * `--module-build-date`: (optional) Override module build date [yyyyMMddHHmmss]
+
+## lash new bucket
+
+* command to create a new public S3 bucket for sharing LambdaSharp modules

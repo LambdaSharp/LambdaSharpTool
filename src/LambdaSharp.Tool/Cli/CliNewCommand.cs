@@ -23,6 +23,12 @@ using System.Linq;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Model;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
+using Amazon.S3;
+using Amazon.S3.Model;
+using LambdaSharp.Tool.Internal;
+using System.Threading.Tasks;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -131,6 +137,31 @@ namespace LambdaSharp.Tool.Cli {
                             resourceName: name,
                             resourceTypeName: type
                         );
+                    });
+                });
+
+                // bucket sub-command
+                cmd.Command("bucket", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create a public S3 bucket for sharing LambdaSharp modules";
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
+
+                    // sub-command options
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+
+                        // initialize settings instance
+                        var settings = new Settings {
+                            CfnClient = new AmazonCloudFormationClient(),
+                            S3Client = new AmazonS3Client()
+                        };
+
+                        // get the resource name
+                        var bucketName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(bucketName)) {
+                            bucketName = settings.PromptString("Enter the S3 bucket name");
+                        }
+                        await NewBucket(settings, bucketName);
                     });
                 });
 
@@ -411,6 +442,40 @@ namespace LambdaSharp.Tool.Cli {
                     }
                 }
             }
+        }
+
+        public async Task NewBucket(Settings settings, string bucketName) {
+
+            // create bucket using template
+            Console.WriteLine();
+            Console.WriteLine("Creating public S3 bucket for sharing LambdaSharp modules");
+            var template = ReadResource("PublicLambdaSharpBucket.yml");
+            var stackName = $"PublicLambdaSharpBucket-{bucketName}";
+            var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                StackName = stackName,
+                Capabilities = new List<string> { },
+                OnFailure = OnFailure.DELETE,
+                Parameters = new List<Parameter> {
+                    new Parameter {
+                        ParameterKey = "BucketName",
+                        ParameterValue = bucketName
+                    }
+                },
+                TemplateBody = template
+            });
+            var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
+            if(created.Success) {
+                Console.WriteLine("=> Stack creation finished");
+            } else {
+                Console.WriteLine("=> Stack creation FAILED");
+                return;
+            }
+
+            // update bucket to require requester pays
+            Console.WriteLine($"=> Updating S3 Bucket for Requester Pays access");
+            await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
+                Payer = "Requester"
+            });
         }
 
         private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {
