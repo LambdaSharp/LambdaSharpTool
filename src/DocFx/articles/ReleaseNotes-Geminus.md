@@ -5,7 +5,6 @@
 ## What's New
 
 > TODO:
-> * `lash init --quick-start`
 > * cannot publish a stable version with DIRTY changes
 > *
 ```
@@ -30,7 +29,7 @@ Using:
 ### Publish
 
 * `--module-origin`
-* TODO: add docs
+* publish is responsible for importing modules from other origins
 
 ## Removed Module::DefaultSecretKey
 
@@ -59,6 +58,12 @@ Using:
 * can be enabled for root module or all modules
 * added support for api gateway
 
+## lash init
+
+* `--quick-start` option
+* `--cli-profile`, `--module-bucket-names`, `--deployment-notifications-topic` are obsolete
+* tier name can now be empty (Q: is that the default?)
+
 ## lash encrypt
 
 * new `--decrypt` option
@@ -83,3 +88,14 @@ Using:
 * `--timeout`
 * `--memory`
 * `--use-project-reference` and `--use-nuget-reference` are obsolete
+
+## ALambdaFinalizerFunction
+
+* finalizer now makes sure that a stack is being deleted before returning a different physical id for itself
+* physical id
+  * before: `Finalizer:{request.OldResourceProperties.DeploymentChecksum}`
+  * after: `Finalizer:Module`
+
+## Misc
+
+*
