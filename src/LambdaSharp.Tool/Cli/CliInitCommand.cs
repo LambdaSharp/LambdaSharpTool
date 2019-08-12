@@ -202,7 +202,7 @@ namespace LambdaSharp.Tool.Cli {
                 // create/update cloudformation stack
                 if(install) {
                     Console.WriteLine($"=> Stack creation initiated for {stackName}");
-                    await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                    var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                         StackName = stackName,
                         Capabilities = new List<string> { },
                         OnFailure = OnFailure.DELETE,
@@ -211,7 +211,7 @@ namespace LambdaSharp.Tool.Cli {
                         TemplateBody = template,
                         Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
                     });
-                    var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId: null, logError: LogError);
+                    var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
                     if(created.Success) {
                         Console.WriteLine("=> Stack creation finished");
                     } else {
@@ -222,14 +222,14 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine($"=> Stack update initiated for {stackName}");
                     try {
                         var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
-                        await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
+                        var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
                             StackName = stackName,
                             Capabilities = new List<string> { },
                             Parameters = templateParameters,
                             TemplateBody = template,
                             Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
                         });
-                        var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, logError: LogError);
+                        var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, logError: LogError);
                         if(created.Success) {
                             Console.WriteLine("=> Stack update finished");
                         } else {

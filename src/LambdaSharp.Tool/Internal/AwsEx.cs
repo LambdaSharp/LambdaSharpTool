@@ -116,6 +116,7 @@ namespace LambdaSharp.Tool.Internal {
         public static async Task<(Stack Stack, bool Success)> TrackStackUpdateAsync(
             this IAmazonCloudFormation cfnClient,
             string stackName,
+            string stackId,
             string mostRecentStackEventId,
             ModuleNameMappings nameMappings = null,
             LogErrorDelegate logError = null
@@ -123,7 +124,7 @@ namespace LambdaSharp.Tool.Internal {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
             var request = new DescribeStackEventsRequest {
-                StackName = stackName
+                StackName = stackId ?? stackName
             };
             var eventList = new List<StackEvent>();
             var ansiLinesPrinted = 0;
@@ -176,6 +177,9 @@ namespace LambdaSharp.Tool.Internal {
                     }
                 }
                 RenderEvents();
+            }
+            if(!success) {
+                return (Stack: null, Success: false);
             }
 
             // describe stack and report any output values

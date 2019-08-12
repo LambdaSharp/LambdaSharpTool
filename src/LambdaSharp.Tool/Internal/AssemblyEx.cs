@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -27,7 +28,7 @@ namespace LambdaSharp.Tool.Internal {
         //--- Extension Methods ---
         public static string ReadManifestResource(this Assembly assembly, string resourceName, bool convertLineEndings = true) {
             using(var resource = assembly.GetManifestResourceStream(resourceName))
-            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+            using(var reader = new StreamReader(resource ?? throw new ApplicationException($"unable to locate embedded resource: '{resourceName}'"), Encoding.UTF8)) {
                 var result = reader.ReadToEnd();
                 if(convertLineEndings) {
                     result = result.Replace("\r", "");

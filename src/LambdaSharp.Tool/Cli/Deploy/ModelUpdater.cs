@@ -143,7 +143,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, nameMappings, LogError);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
