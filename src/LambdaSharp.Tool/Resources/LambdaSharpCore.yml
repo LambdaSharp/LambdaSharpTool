@@ -53,13 +53,16 @@ Metadata:
       CoreServices:
         default: LambdaSharp.Core Services
 
+##############
+# Conditions #
+##############
 Conditions:
   CreateDeploymentBucket: !Equals [ !Ref ExistingDeploymentBucket, "" ]
   EnableCoreServices: !Equals [ !Ref CoreServices, "Enabled" ]
 
-##############
-# Conditions #
-##############
+#############
+# Resources #
+#############
 Resources:
 
   DeploymentBucketResource:
