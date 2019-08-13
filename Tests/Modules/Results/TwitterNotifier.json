@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "219E1CA0F8F34A0A5B7B8C990117E810"
+      "Default": "2056DF099A5CB9370D7B5B692A3C1ADB"
     }
   },
   "Resources": {
@@ -700,7 +700,7 @@
       "Value": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "219E1CA0F8F34A0A5B7B8C990117E810"
+      "Value": "2056DF099A5CB9370D7B5B692A3C1ADB"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -990,7 +990,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "219E1CA0F8F34A0A5B7B8C990117E810",
+      "TemplateChecksum": "2056DF099A5CB9370D7B5B692A3C1ADB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1128,7 +1128,7 @@
           "Type": "Shared"
         },
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query:0.7.0-WIP@lambdasharp",
+          "ModuleInfo": "LambdaSharp.Twitter.Query:0.7.0@lambdasharp",
           "Type": "Nested"
         }
       ],
