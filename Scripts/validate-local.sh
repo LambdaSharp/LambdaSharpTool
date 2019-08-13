@@ -10,8 +10,13 @@ cd $LAMBDASHARP
 
 # Setup λ# in Contributor Mode
 
+# if ! (dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force | grep -q "LambdaSharp CLI (v${LAMBDASHARP_VERSION})"); then
+#     echo "ERROR: MSBUILD output doesn't have the expected version number; expected 'LambdaSharp CLI (v${LAMBDASHARP_VERSION})'"
+#     exit 1
+# fi
+
 lash() {
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- $*
 }
 
 
