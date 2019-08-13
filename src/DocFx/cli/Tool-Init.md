@@ -134,7 +134,7 @@ lash init --tier Sandbox --quick-start
 ```
 Output:
 ```
-LambdaSharp CLI (v0.7-WIP) - Create or update a LambdaSharp deployment tier
+LambdaSharp CLI (v0.7.0) - Create or update a LambdaSharp deployment tier
 Creating LambdaSharp tier
 => Stack creation initiated for Sandbox-LambdaSharp-Core
 CREATE_COMPLETE    AWS::CloudFormation::Stack    Sandbox-LambdaSharp-Core

@@ -305,6 +305,7 @@ namespace LambdaSharp.Tool.Cli {
             if(settings.CoreServices == CoreServices.Disabled) {
                 return true;
             }
+            Console.WriteLine();
             if(install) {
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
             } else if(update) {
