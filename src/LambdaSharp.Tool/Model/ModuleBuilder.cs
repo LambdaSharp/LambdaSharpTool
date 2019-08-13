@@ -40,7 +40,7 @@ namespace LambdaSharp.Tool.Model {
     public class ModuleBuilder : AModelProcessor {
 
         //--- Fields ---
-        private string _owner;
+        private string _namespace;
         private string _name;
         private string _description;
         private IList<object> _pragmas;
@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Constructors ---
         public ModuleBuilder(Settings settings, string sourceFilename, Module module) : base(settings, sourceFilename) {
-            _owner = module.Owner;
+            _namespace = module.Namespace;
             _name = module.Name;
             Version = module.Version;
             _description = module.Description;
@@ -85,11 +85,11 @@ namespace LambdaSharp.Tool.Model {
         }
 
         //--- Properties ---
-        public string Owner => _owner;
+        public string Namespace => _namespace;
         public string Name => _name;
-        public string FullName => $"{_owner}.{_name}";
+        public string FullName => $"{_namespace}.{_name}";
         public string Info => $"{FullName}:{Version}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(_owner, _name, Version, origin: null);
+        public ModuleInfo ModuleInfo => new ModuleInfo(_namespace, _name, Version, origin: null);
         public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
@@ -1202,7 +1202,7 @@ namespace LambdaSharp.Tool.Model {
                 role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
             }
             return new Module {
-                Owner = _owner,
+                Namespace = _namespace,
                 Name = _name,
                 Version = Version,
                 Description = _description,

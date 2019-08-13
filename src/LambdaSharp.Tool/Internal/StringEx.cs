@@ -28,9 +28,6 @@ namespace LambdaSharp.Tool.Internal {
 
     internal static class StringEx {
 
-        //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<ModuleOwner>\w+)\.(?<ModuleName>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<BucketName>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-
         //--- Extension Methods ---
         public static string ToMD5Hash(this string text) {
             using(var md5 = MD5.Create()) {
@@ -79,16 +76,16 @@ namespace LambdaSharp.Tool.Internal {
             return char.ToUpperInvariant(identifier[0]) + ((identifier.Length > 1) ? identifier.Substring(1) : "");
         }
 
-        public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
-            moduleOwner = "<BAD>";
+        public static bool TryParseModuleFullName(this string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
+            moduleNamespace = "<BAD>";
             moduleName = "<BAD>";
-            if(!ModuleInfo.TryParse(compositeModuleOwnerName, out var moduleInfo)) {
+            if(!ModuleInfo.TryParse(compositeModuleFullName, out var moduleInfo)) {
                 return false;
             }
             if((moduleInfo.Version != null) || (moduleInfo.Origin != null)) {
                 return false;
             }
-            moduleOwner = moduleInfo.Owner;
+            moduleNamespace = moduleInfo.Namespace;
             moduleName = moduleInfo.Name;
             return true;
         }

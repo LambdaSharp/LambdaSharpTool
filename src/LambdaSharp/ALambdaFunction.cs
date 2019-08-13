@@ -68,9 +68,9 @@ namespace LambdaSharp {
             public DateTime Started => _function._started;
 
             /// <summary>
-            /// The owner of the module.
+            /// The namespace of the module.
             /// </summary>
-            public string ModuleOwner => _function._moduleOwner;
+            public string ModuleNamespace => _function._moduleNamespace;
 
             /// <summary>
             /// The name of the module.
@@ -135,8 +135,8 @@ namespace LambdaSharp {
         private static int Invocations;
 
         //--- Class Methods ---
-        private static void ParseModuleString(string moduleInfo, out string moduleOwner, out string moduleName, out string moduleVersion) {
-            moduleOwner = null;
+        private static void ParseModuleString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion) {
+            moduleNamespace = null;
             moduleName = null;
             moduleVersion = null;
             if(moduleInfo == null) {
@@ -151,10 +151,10 @@ namespace LambdaSharp {
                 colon = moduleInfo.Length;
             }
 
-            // extract module owner and module name
+            // extract module namespace and module name
             var dot = moduleInfo.IndexOf('.');
             if(dot >= 0) {
-                moduleOwner = moduleInfo.Substring(0, dot);
+                moduleNamespace = moduleInfo.Substring(0, dot);
                 moduleName = moduleInfo.Substring(dot + 1, colon - dot - 1);
             }
         }
@@ -162,7 +162,7 @@ namespace LambdaSharp {
         //--- Fields ---
         private DateTime _started;
         private string _deadLetterQueueUrl;
-        private string _moduleOwner;
+        private string _moduleNamespace;
         private string _moduleName;
         private string _moduleId;
         private string _moduleVersion;
@@ -428,8 +428,8 @@ namespace LambdaSharp {
             // read configuration from environment variables
             _moduleId = envSource.Read("MODULE_ID");
             var moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleString(moduleInfo, out var moduleOwner, out var moduleName, out var moduleVersion);
-            _moduleOwner = moduleOwner;
+            ParseModuleString(moduleInfo, out var moduleNamespace, out var moduleName, out var moduleVersion);
+            _moduleNamespace = moduleNamespace;
             _moduleName = moduleName;
             _moduleVersion = moduleVersion;
             var deadLetterQueueArn = envSource.Read("DEADLETTERQUEUE");
@@ -459,7 +459,7 @@ namespace LambdaSharp {
             // initialize error/warning reporter
             ErrorReportGenerator = new LambdaErrorReportGenerator(
                 _moduleId,
-                $"{_moduleOwner}.{_moduleName}:{_moduleVersion}",
+                $"{_moduleNamespace}.{_moduleName}:{_moduleVersion}",
                 _functionId,
                 _functionName,
                 framework,

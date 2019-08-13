@@ -28,7 +28,7 @@ namespace LambdaSharp.Tool.Model {
     public class Module {
 
         //--- Properties ---
-        public string Owner { get; set; }
+        public string Namespace { get; set; }
         public string Name { get; set; }
         public VersionInfo Version { get; set; }
         public string Description { get; set; }
@@ -42,7 +42,7 @@ namespace LambdaSharp.Tool.Model {
         public IDictionary<string, string> ResourceTypeNameMappings { get; set; }
 
         //--- Properties ---
-        public ModuleInfo ModuleInfo => new ModuleInfo(Owner, Name, Version, origin: null);
+        public ModuleInfo ModuleInfo => new ModuleInfo(Namespace, Name, Version, origin: null);
 
         //--- Methods ---
         public bool HasPragma(string pragma) => Pragmas?.Contains(pragma) == true;

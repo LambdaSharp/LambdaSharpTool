@@ -13,7 +13,7 @@ In addition, there is a [new documentation site](https://lambdasharp.net) that c
 
 The following change may impact modules created with previous releases.
 
-### λ# Tool
+### λ# CLI
 
 * The `git-sha` is now prefixed with `DIRTY-` if the git checkout contains modified or untracked files.
 

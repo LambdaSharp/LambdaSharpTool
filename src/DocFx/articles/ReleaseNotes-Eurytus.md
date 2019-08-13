@@ -20,7 +20,7 @@ The following change may impact modules created with previous releases.
 
 ### Module Definition
 
-* The top-level `Module` attribute must now contain at least one period (`.`) to denote the _module owner_ and _module name_.
+* The top-level `Module` attribute must now contain at least one period (`.`) to denote the _module namespace_ and _module name_.
 * The `Inputs`, `Outputs`, `Variables`, and `Functions` sections of λ# module have been combined into a single `Items` section to give more organizational freedom.
 * The `Export` definitions have been removed in favor of a special class for `Scope` on items that can be exported.
 * Cross-module references are now grouped into `Using` definitions by module they import from.
@@ -46,7 +46,7 @@ The big change is to run `lash` now instead of `dotnet lash`. It's shorter and w
     * Renamed `--skip-assembly-validation` option to `--no-assembly-validation`
     * Renamed `--cf-output` option to `--cfn-output`
 * Publish process
-    * Modules are now published to a new location in the S3 deployment bucket: `${Module::Owner}/Modules/${Module::Name}/Versions/${Module::Version}`
+    * Modules are now published to a new location in the S3 deployment bucket: `${Module::Namespace}/Modules/${Module::Name}/Versions/${Module::Version}`
     * The λ# manifest is now embedded in the CloudFormation template inside the `Metadata` section under `LambdaSharp::Manifest`.
 * Deploy Process
     * Renamed `--inputs` option to `--parameters` for consistency reasons.
@@ -67,11 +67,11 @@ The big change is to run `lash` now instead of `dotnet lash`. It's shorter and w
 
 ## New λ# Module Features
 
-### Module Owner
+### Module Namespace
 
-The `Module` attribute now specifies both the module owner and the module name. The module owner should be the name of the organization, or individual, to whom the module belongs to. The module owner is used to group related modules in the deployment S3 bucket. The module owner is also a required concept for future compatibility with the [Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/). Everything after the first period is considered to be part of the module name, including additional periods.
+The `Module` attribute now specifies both the module namespace and the module name. The module namespace could be the name of an organization, an individual, or a project the module is part of. The module namespace is used to group related modules in the deployment S3 bucket. Everything after the first period is considered to be part of the module name, including additional periods.
 
-In the following example, `Acme` is the module owner and `Accounting.Reports` is the module name:
+In the following example, `Acme` is the module namespace and `Accounting.Reports` is the module name:
 ```yaml
 Module: Acme.Accounting.Reports
 ```

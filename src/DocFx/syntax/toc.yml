@@ -16,7 +16,7 @@
       href: Module-Secrets.md
 
     - name: Using
-      href: Module-Requires.md
+      href: Module-Using.md
 
 - name: Condition
   href: Module-Condition.md

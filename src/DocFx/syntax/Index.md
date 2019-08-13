@@ -57,8 +57,9 @@ The <code>Items</code> section specifies the items defined in the module, such a
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> attribute specifies the owner and module names. The <code>Module</code> attribute must be formatted as <code>Owner.Name</code>.
-The module owner and name can be retrieved using the <code>!Ref</code> operations with <code>Module::Owner</code> and <code>Module::Name</code>, respectively. The full name can be retrieved using <code>Module::FullName</code>.
+The <code>Module</code> attribute specifies the full name of the module. It must be formatted as <code>Namespace.Name</code>.
+
+The module namespace and name can be retrieved using the <code>!Ref</code> operations with <code>Module::Namespace</code> and <code>Module::Name</code>, respectively. Alternatively, the full name can be retrieved using <code>Module::FullName</code>.
 
 <i>Required:</i> Yes
 
@@ -82,7 +83,7 @@ The <code>Using</code> section specifies λ# modules that are used by this modul
 
 <i>Required:</i> No
 
-<i>Type:</i> List of [Using Definition](Module-Requires.md)
+<i>Type:</i> List of [Using Definition](Module-Using.md)
 </dd>
 
 <dt><code>Secrets</code></dt>

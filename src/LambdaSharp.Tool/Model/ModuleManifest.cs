@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Model {
         //--- Methods ---
         public string GetModuleTemplatePath() => ModuleInfo.GetAssetPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
         public string GetFullName() => ModuleInfo.FullName;
-        public string GetOwner() => ModuleInfo.Owner;
+        public string GetNamespace() => ModuleInfo.Namespace;
         public string GetName() => ModuleInfo.Name;
         public VersionInfo GetVersion() => ModuleInfo.Version;
 

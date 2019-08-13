@@ -47,22 +47,22 @@ namespace LambdaSharp.Tool {
     public class ModuleInfo {
 
         // NOTE: module reference formats:
-        // * Owner.Name
-        // * Owner.Name:*
-        // * Owner.Name:Version
-        // * Owner.Name@Origin
-        // * Owner.Name:*@Bucket
-        // * Owner.Name:Version@Bucket
-        // * Owner.Name:Version@<%MODULE_ORIGIN%>
+        // * Namespace.Name
+        // * Namespace.Name:*
+        // * Namespace.Name:Version
+        // * Namespace.Name@Origin
+        // * Namespace.Name:*@Bucket
+        // * Namespace.Name:Version@Bucket
+        // * Namespace.Name:Version@<%MODULE_ORIGIN%>
 
         //--- Constants ---
         public const string MODULE_ORIGIN_PLACEHOLDER = "<%MODULE_ORIGIN%>";
 
         //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Owner>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Owner}}/${{Module::Name}}/.assets/{filename}");
+        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.assets/{filename}");
 
         public static ModuleInfo Parse(string moduleReference) {
             if(TryParse(moduleReference, out var result)) {
@@ -83,7 +83,7 @@ namespace LambdaSharp.Tool {
                 moduleInfo = null;
                 return false;
             }
-            var owner = GetMatchValue("Owner");
+            var ns = GetMatchValue("Namespace");
             var name = GetMatchValue("Name");
             var origin = GetMatchValue("Origin");
 
@@ -92,7 +92,7 @@ namespace LambdaSharp.Tool {
             var version = ((versionText != null) && (versionText != "*"))
                 ? VersionInfo.Parse(versionText)
                 : null;
-            moduleInfo = new ModuleInfo(owner, name, version, origin);
+            moduleInfo = new ModuleInfo(ns, name, version, origin);
             return true;
 
             // local function
@@ -103,26 +103,26 @@ namespace LambdaSharp.Tool {
         }
 
         //--- Fields ---
-        public readonly string Owner;
+        public readonly string Namespace;
         public readonly string Name;
         public readonly VersionInfo Version;
         public readonly string Origin;
         public readonly string FullName;
 
         //--- Constructors ---
-        public ModuleInfo(string owner, string name, VersionInfo version, string origin) {
-            Owner = owner ?? throw new ArgumentNullException(nameof(owner));
+        public ModuleInfo(string ns, string name, VersionInfo version, string origin) {
+            Namespace = ns ?? throw new ArgumentNullException(nameof(ns));
             Name = name ?? throw new ArgumentNullException(nameof(name));
-            FullName = $"{Owner}.{Name}";
+            FullName = $"{Namespace}.{Name}";
             Version = version;
             Origin = origin;
         }
 
         //--- Properties ---
-        public string VersionPath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Owner}/{Name}/{Version ?? throw new ApplicationException("missing Version information")}";
+        public string VersionPath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Namespace}/{Name}/{Version ?? throw new ApplicationException("missing Version information")}";
 
         //--- Methods ---
-        public string GetAssetPath(string assetName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Owner}/{Name}/.assets/{assetName}";
+        public string GetAssetPath(string assetName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Namespace}/{Name}/.assets/{assetName}";
 
         public string ToPrettyString() {
             var result = new StringBuilder();
@@ -151,10 +151,10 @@ namespace LambdaSharp.Tool {
             return result.ToString();
         }
 
-        public ModuleInfo WithoutVersion() => new ModuleInfo(Owner, Name, version: null, Origin);
-        public ModuleInfo WithVersion(VersionInfo version) => new ModuleInfo(Owner, Name, version ?? throw new ArgumentNullException(nameof(version)), Origin);
-        public ModuleInfo WithoutOrigin() => new ModuleInfo(Owner, Name, Version, origin: null);
-        public ModuleInfo WithOrigin(string origin) => new ModuleInfo(Owner, Name, Version, origin);
+        public ModuleInfo WithoutVersion() => new ModuleInfo(Namespace, Name, version: null, Origin);
+        public ModuleInfo WithVersion(VersionInfo version) => new ModuleInfo(Namespace, Name, version ?? throw new ArgumentNullException(nameof(version)), Origin);
+        public ModuleInfo WithoutOrigin() => new ModuleInfo(Namespace, Name, Version, origin: null);
+        public ModuleInfo WithOrigin(string origin) => new ModuleInfo(Namespace, Name, Version, origin);
     }
 
     public class ModuleInfoConverter : JsonConverter {

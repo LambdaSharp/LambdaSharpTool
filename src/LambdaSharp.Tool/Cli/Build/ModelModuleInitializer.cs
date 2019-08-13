@@ -73,11 +73,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
             _builder.AddVariable(
                 parent: moduleItem,
-                name: "Owner",
-                description: "Module Owner",
+                name: "Namespace",
+                description: "Module Namespace",
                 type: "String",
                 scope: null,
-                value: _builder.Owner,
+                value: _builder.Namespace,
                 allow: null,
                 encryptionContext: null
             );

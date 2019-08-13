@@ -2,7 +2,7 @@
 
 ## Overview
 
-API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the λ# tool.
+API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the λ# CLI.
 
 ## Reading the Request URI
 
@@ -32,7 +32,7 @@ MyResponse GetItems(
 ) { ... }
 ```
 
-Common query string parameters can be captured as a class and easily reused across methods. For example, the following class defines the same query string parameters as in the previous example. The determination if a parameter is required is slightly different, because the λ# tool cannot determine if a property/field initializer is specified. Therefore, it is necessary to use the `JsonProperty` attribute with the `Required` property to specify if a query parameter is required or not.
+Common query string parameters can be captured as a class and easily reused across methods. For example, the following class defines the same query string parameters as in the previous example. The determination if a parameter is required is slightly different, because the λ# CLI cannot determine if a property/field initializer is specified. Therefore, it is necessary to use the `JsonProperty` attribute with the `Required` property to specify if a query parameter is required or not.
 
 ```csharp
 public class FilterOptions {
@@ -91,7 +91,7 @@ class AddAlbumRequest {
 }
 ```
 
-The λ# tool uses [NJsonSchema](https://github.com/RicoSuter/NJsonSchema) to derive a JSON schema from the type definition. The JSON schema is then attached either to the REST API endpoint or WebSocket route to enforce it on the request body, which is always a JSON value.
+The λ# CLI uses [NJsonSchema](https://github.com/RicoSuter/NJsonSchema) to derive a JSON schema from the type definition. The JSON schema is then attached either to the REST API endpoint or WebSocket route to enforce it on the request body, which is always a JSON value.
 
 The `AddAlbumRequest` type produces the following JSON schema.
 

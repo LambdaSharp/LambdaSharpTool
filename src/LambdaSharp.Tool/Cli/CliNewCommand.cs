@@ -130,7 +130,7 @@ namespace LambdaSharp.Tool.Cli {
                             moduleName = settings.PromptString("Enter the module name");
                         }
 
-                        // prepend default owner string
+                        // prepend default namespace string
                         if(!moduleName.Contains('.')) {
                             moduleName = "My." + moduleName;
                         }

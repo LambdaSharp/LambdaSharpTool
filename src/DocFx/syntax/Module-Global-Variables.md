@@ -8,12 +8,12 @@
 |------------------------------|-------------------------------|----------------------------------------------|
 |`Module::DeadLetterQueue`     |Arn&lt;AWS::SQS::Queue&gt;     |Deadletter queue for failed messages
 |`Module::DefaultSecretKey`    |Arn&lt;AWS::KMS::Key&gt;       |Default encryption key for deployment tier
-|`Module::FullName`            |String                         |Module owner and name (e.g. `Owner.Name`)
+|`Module::FullName`            |String                         |Module namespace and name (e.g. `Namespace.Name`)
 |`Module::Id`                  |String                         |CloudFormation stack name
 |`Module::LoggingStream`       |Arn&lt;AWS::Kinesis::Stream&gt;|Kinesis logging stream used by Lambda function logs subscription
 |`Module::LoggingStreamRole`   |Arn&lt;AWS::IAM::Role&gt;      |IAM Role for used by Lambda function log subscription
 |`Module::Name`                |String                         |Module name
-|`Module::Owner`               |String                         |Module owner
+|`Module::Namespace`           |String                         |Module namespace
 |`Module::Role`                |Arn&lt;AWS::IAM::Role&gt;      |IAM Role used by all Lambda functions in the module
 |`Module::Version`             |String                         |Module version
 

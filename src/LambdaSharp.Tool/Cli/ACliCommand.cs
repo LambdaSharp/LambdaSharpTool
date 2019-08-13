@@ -259,7 +259,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
                 if(
                     !ModuleInfo.TryParse(tierModuleInfoText, out var tierModuleInfo)
-                    || (tierModuleInfo.Owner != "LambdaSharp")
+                    || (tierModuleInfo.Namespace != "LambdaSharp")
                     || (tierModuleInfo.Name != "Core")
                 ) {
                     LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.TierName));

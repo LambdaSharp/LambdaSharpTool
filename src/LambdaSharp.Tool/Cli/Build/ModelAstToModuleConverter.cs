@@ -59,14 +59,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                     version = VersionInfo.Parse("0.0");
                 }
 
-                // ensure owner is present
-                if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
-                    LogError("'Module' attribute must have format 'Owner.Name'");
+                // ensure namespace is present
+                if(!module.Module.TryParseModuleFullName(out string moduleNamespace, out var moduleName)) {
+                    LogError("'Module' attribute must have format 'Namespace.Name'");
                 }
 
                 // initialize module
                 _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
-                    Owner = moduleOwner,
+                    Namespace = moduleNamespace,
                     Name = moduleName,
                     Version = version,
                     Description = module.Description

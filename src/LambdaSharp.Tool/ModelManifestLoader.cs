@@ -178,7 +178,7 @@ namespace LambdaSharp.Tool {
                     if(moduleInfo.Version?.IsGreaterThanVersion(latest) ?? false) {
                         break;
                     }
-                    var latestModuleInfo = new ModuleInfo(moduleInfo.Owner, moduleInfo.Name, latest, moduleInfo.Origin);
+                    var latestModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, latest, moduleInfo.Origin);
                     var manifestText = await GetS3ObjectContentsAsync(bucketName, latestModuleInfo.VersionPath);
                     var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
 
@@ -207,7 +207,7 @@ namespace LambdaSharp.Tool {
                 var versions = new List<VersionInfo>();
                 var request = new ListObjectsV2Request {
                     BucketName = bucketName,
-                    Prefix = $"{moduleInfo.Origin ?? Settings.DeploymentBucketName}/{moduleInfo.Owner}/{moduleInfo.Name}/",
+                    Prefix = $"{moduleInfo.Origin ?? Settings.DeploymentBucketName}/{moduleInfo.Namespace}/{moduleInfo.Name}/",
                     Delimiter = "/",
                     MaxKeys = 100,
                     RequestPayer = RequestPayer.Requester
