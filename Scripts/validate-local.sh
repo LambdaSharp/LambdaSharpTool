@@ -10,10 +10,6 @@ cd $LAMBDASHARP
 
 # Setup and validate λ# CLI
 Scripts/install-cli.sh
-if ! (lash | grep -q "LambdaSharp CLI (v${LAMBDASHARP_VERSION})"); then
-    echo "ERROR: MSBUILD output doesn't have the expected version number; expected 'LambdaSharp CLI (v${LAMBDASHARP_VERSION})'"
-    exit 1
-fi
 
 echo "*******************************************"
 echo "*** Update CloudFormation Specification ***"
