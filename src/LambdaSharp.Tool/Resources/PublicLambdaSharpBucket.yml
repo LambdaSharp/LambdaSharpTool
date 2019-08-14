@@ -30,14 +30,12 @@ Resources:
         Version: "2012-10-17"
         Statement:
 
-          - Sid: PublicListBucket
+          - Sid: AnonymousAccess
             Effect: Allow
             Principal: "*"
-            Action: s3:ListBucket
-            Resource: !GetAtt Bucket.Arn
-
-          - Sid: PublicGetObject
-            Effect: Allow
-            Principal: "*"
-            Action: s3:GetObject
-            Resource: !Sub "${Bucket.Arn}/*"
+            Action:
+              - s3:ListBucket
+              - s3:GetObject
+            Resource:
+              - !GetAtt Bucket.Arn
+              - !Sub "${Bucket.Arn}/*"
