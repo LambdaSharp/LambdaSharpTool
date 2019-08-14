@@ -28,7 +28,7 @@ The following change may impact modules created with previous releases.
 * The `Var` definition has been split into two distinct definitions: `Variable` for fixed values and expressions, and `Resource` for existing or new resources.
 * The `CustomResource` definition has been renamed to `ResourceType` and enhanced with a specification about its properties and attributes to enable validation at compilation time.
 * `Function` definitions lost their `VPC` section and `ReservedConcurrency` attribute. Instead, like `Resource` definitions, they have a `Properties` section that can be used to set these, and other settings, directly. This approach is much more future proof.
-* Nesting items has been limited to `Using` and `Namespace` definitions.
+* Nesting items has been limited to `Using` and `Group` definitions.
 * The default value for the `Version` attribute is now `1.0-DEV`.
 
 
@@ -105,7 +105,7 @@ Items:
     Scope: Reporting::Calculator
     Value: !Sub "Hi ${PersonName}"
 
-  - Namespace: Reporting
+  - Group: Reporting
     Items:
 
       - Resource: Bucket
@@ -144,7 +144,7 @@ The following example defines an encrypted parameter called `MySecretParameter`.
 * Delete dynamically created resources when the module is torn down.
 * Delete objects from an S3 bucket so it can be deleted when the module is torn down.
 
-A module finalizer function must be called `Finalizer` and must appear in the top namespace of the module. The module finalizer timeout is always set to the maximum duration of 15 minutes. On invocation, the module finalizer receives the module version to allow it to track upgrades or downgrade scenarios. It also receives the module checksum so it track state for each CloudFormation update.
+A module finalizer function must be called `Finalizer` and must appear in the top-level items of the module. The module finalizer timeout is always set to the maximum duration of 15 minutes. On invocation, the module finalizer receives the module version to allow it to track upgrades or downgrade scenarios. It also receives the module checksum so it track state for each CloudFormation update.
 
 The following example shows how easy it is to define a module finalizer:
 ```yaml
@@ -214,7 +214,7 @@ The following example shows a `Condition` item keying off a `Parameter` and thus
   Properties:
     ImageId: ami-0ff8a91507f77f867
 
-- Namespace: ProductionResources
+- Group: ProductionResources
   Items:
 
     - Condition: Create

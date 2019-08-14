@@ -123,7 +123,7 @@ namespace LambdaSharp.Tool.Model.AST {
             },
 
             // nodes with optional nested items
-            ["Namespace"] = new[] {
+            ["Group"] = new[] {
                 "Items",
                 "Description"
             }
@@ -196,11 +196,11 @@ namespace LambdaSharp.Tool.Model.AST {
         public object Value { get; set; }
 
         /*
-         * Namespace: string
+         * Group: string
          * Description: string
          * Items: list<Item>
          */
-        public string Namespace { get; set; }
+        public string Group { get; set; }
         public IList<ModuleItemNode> Items { get; set; }
 
         /*

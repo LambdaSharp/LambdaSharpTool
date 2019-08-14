@@ -224,11 +224,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             => ConvertItem(null, index, node, new[] {
                 "Condition",
                 "Function",
+                "Group",
                 "Import",
                 "Macro",
                 "Mapping",
                 "Nested",
-                "Namespace",
                 "Package",
                 "Parameter",
                 "Resource",
@@ -315,13 +315,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                     );
                 });
                 break;
-            case "Namespace":
-                AtLocation(node.Namespace, () => {
+            case "Group":
+                AtLocation(node.Group, () => {
 
                     // create namespace item
                     var result = _builder.AddVariable(
                         parent: parent,
-                        name: node.Namespace,
+                        name: node.Group,
                         description: node.Description,
                         type: "String",
                         scope: null,

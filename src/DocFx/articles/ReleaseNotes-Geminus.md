@@ -6,7 +6,7 @@
 
 > TODO:
 > * cannot publish a stable version with DIRTY changes
-> *
+> * renamed 'Namespace:' to 'Group:'
 ```
 Using:
 

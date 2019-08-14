@@ -66,7 +66,7 @@ The <code>Value</code> attribute specifies a boolean expression using the intrin
   Properties:
     ImageId: ami-0ff8a91507f77f867
 
-- Namespace: ProductionResources
+- Group: ProductionResources
   Items:
 
     - Condition: Create

@@ -5,10 +5,10 @@ The `Items` section, in the [λ# Module](Index.md), defines parameters, variable
 __Definitions__
 * [Condition](Module-Condition.md)
 * [Function](Module-Function.md)
+* [Group](Module-Group.md)
 * [Import](Module-Import.md)
 * [Macro](Module-Macro.md)
 * [Mapping](Module-Mapping.md)
-* [Namespace](Module-Namespace.md)
 * [Nested Module](Module-Nested.md)
 * [Package](Module-Package.md)
 * [Parameter](Module-Parameter.md)
