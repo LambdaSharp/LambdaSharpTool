@@ -246,6 +246,9 @@ namespace LambdaSharp.Tool.Cli {
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
                 var existing = await settings.CfnClient.GetStackAsync(stackName, LogError);
                 if(!existing.Success) {
+                    if(!optional) {
+                        LogError($"LambdaSharp tier {settings.TierName} does not exist", new LambdaSharpDeploymentTierSetupException(settings.TierName));
+                    }
                     return false;
                 }
 

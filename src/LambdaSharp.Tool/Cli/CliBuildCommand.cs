@@ -489,7 +489,7 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo moduleVersion
         ) {
             try {
-                if(!await PopulateRuntimeSettingsAsync(settings, optional: true)) {
+                if(!await PopulateRuntimeSettingsAsync(settings)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(
