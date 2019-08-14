@@ -61,4 +61,4 @@ if [ $? -ne 0 ]; then
     exit $?
 fi
 cd ..
-rm -rf TestModule
+rm -rf TestModule-$LAMBDASHARP_TIER
