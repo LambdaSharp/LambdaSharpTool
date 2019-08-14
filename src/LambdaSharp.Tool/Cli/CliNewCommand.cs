@@ -34,16 +34,22 @@ namespace LambdaSharp.Tool.Cli {
     using Tag = Amazon.CloudFormation.Model.Tag;
 
     public enum FunctionType {
+        Unknown,
         Generic,
         ApiGateway,
+        ApiGatewayProxy,
         CustomResource,
         Schedule,
         Queue,
         Topic,
-        WebSocket
+        WebSocket,
+        WebSocketProxy
     }
 
     public class CliNewCommand : ACliCommand {
+
+        //--- Fields ---
+        private IList<string> _functionTypes = typeof(FunctionType).GetEnumNames().OrderBy(value => value).ToArray();
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
@@ -63,8 +69,7 @@ namespace LambdaSharp.Tool.Cli {
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
-                    var functionTypes = typeof(FunctionType).GetEnumNames().OrderBy(value => value).ToList();
-                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", functionTypes).ToLowerInvariant()}; default: prompt)", CommandOptionType.SingleValue);
+                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", _functionTypes).ToLowerInvariant()}; default: prompt)", CommandOptionType.SingleValue);
                     var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
                     var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
@@ -79,15 +84,10 @@ namespace LambdaSharp.Tool.Cli {
                         }
 
                         // get function type
-                        FunctionType functionType;
-                        if(functionTypeOption.HasValue()) {
-                            if(!TryParseEnumOption(functionTypeOption, FunctionType.Generic, FunctionType.Generic, out functionType)) {
+                        if(!TryParseEnumOption(functionTypeOption, FunctionType.Unknown, FunctionType.Unknown, out var functionType)) {
 
-                                // NOTE (2019-08-12, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
-                                return;
-                            }
-                        } else {
-                            functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", functionTypes), ignoreCase: true);
+                            // NOTE (2019-08-12, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                            return;
                         }
                         if(!int.TryParse(functionTimeoutOption.Value() ?? "30", out var functionTimeout)) {
                             LogError("invalid value for --timeout option");
@@ -99,6 +99,7 @@ namespace LambdaSharp.Tool.Cli {
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
+                            settings,
                             functionName,
                             namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
@@ -235,6 +236,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewFunction(
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
@@ -279,6 +281,7 @@ namespace LambdaSharp.Tool.Cli {
             switch(language) {
             case "csharp":
                 NewCSharpFunction(
+                    settings,
                     functionName,
                     rootNamespace,
                     framework,
@@ -292,6 +295,7 @@ namespace LambdaSharp.Tool.Cli {
                 break;
             case "javascript":
                 NewJavascriptFunction(
+                    settings,
                     functionName,
                     rootNamespace,
                     framework,
@@ -299,7 +303,8 @@ namespace LambdaSharp.Tool.Cli {
                     moduleFile,
                     functionMemory,
                     functionTimeout,
-                    projectDirectory
+                    projectDirectory,
+                    functionType
                 );
                 break;
             }
@@ -314,6 +319,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewCSharpFunction(
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
@@ -324,6 +330,9 @@ namespace LambdaSharp.Tool.Cli {
             string projectDirectory,
             FunctionType functionType
         ) {
+            if(functionType == FunctionType.Unknown) {
+                functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", _functionTypes), ignoreCase: true);
+            }
 
             // create function project
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
@@ -354,6 +363,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewJavascriptFunction(
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
@@ -361,8 +371,13 @@ namespace LambdaSharp.Tool.Cli {
             string moduleFile,
             int functionMemory,
             int functionTimeout,
-            string projectDirectory
+            string projectDirectory,
+            FunctionType functionType
         ) {
+            if(functionType != FunctionType.Unknown) {
+                LogError("--type option is not support for javascript functions");
+                return;
+            }
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "index.js");

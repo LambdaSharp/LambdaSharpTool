@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
@@ -9,20 +11,6 @@ using LambdaSharp.ApiGateway;
 
 namespace %%ROOTNAMESPACE%% {
 
-    public class ApiGatewayEndpointRequest {
-
-        //--- Properties ---
-
-        // TO-DO: add endpoint request properties
-    }
-
-    public class ApiGatewayEndpointResponse {
-
-        //--- Properties ---
-
-        // TO-DO: add endpoint response properties
-    }
-
     public class Function : ALambdaApiGatewayFunction {
 
         //--- Methods ---
@@ -31,10 +19,17 @@ namespace %%ROOTNAMESPACE%% {
             // TO-DO: add function initialization and reading configuration settings
         }
 
-        public async Task<ApiGatewayEndpointResponse> ApiGatewayEndpointAsync(ApiGatewayEndpointRequest request) {
+        public override async Task<APIGatewayProxyResponse> ProcessProxyRequestAsync(APIGatewayProxyRequest request) {
 
-            // TO-DO: add business logic for API Gateway resource endpoint
-            return new ApiGatewayEndpointResponse { };
+            // TO-DO: add business logic for API Gateway proxy request handling
+
+            return new APIGatewayProxyResponse {
+                Body = "Ok",
+                Headers = new Dictionary<string, string> {
+                    ["Content-Type"] = "text/plain"
+                },
+                StatusCode = 200
+            };
         }
     }
 }
