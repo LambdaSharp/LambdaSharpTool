@@ -8,17 +8,12 @@ fi
 
 cd $LAMBDASHARP
 
-# Setup λ# in Contributor Mode
-
-# if ! (dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force | grep -q "LambdaSharp CLI (v${LAMBDASHARP_VERSION})"); then
-#     echo "ERROR: MSBUILD output doesn't have the expected version number; expected 'LambdaSharp CLI (v${LAMBDASHARP_VERSION})'"
-#     exit 1
-# fi
-
-lash() {
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- $*
-}
-
+# Setup and validate λ# CLI
+Scripts/install-cli.sh
+if ! (lash | grep -q "LambdaSharp CLI (v${LAMBDASHARP_VERSION})"); then
+    echo "ERROR: MSBUILD output doesn't have the expected version number; expected 'LambdaSharp CLI (v${LAMBDASHARP_VERSION})'"
+    exit 1
+fi
 
 echo "*******************************************"
 echo "*** Update CloudFormation Specification ***"
@@ -151,50 +146,4 @@ echo "*****************************"
 echo "*** Deploy Default Module ***"
 echo "*****************************"
 
-# mkdir Test$SUFFIX
-mkdir tmp
-cd tmp
-mkdir Test$SUFFIX
-cd Test$SUFFIX
-lash new module MyModule
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type apigateway MyApiGatewayFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type customresource MyCustomResourceFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type generic MyGenericFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type queue MyQueueFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type topic MyTopicFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type schedule MyScheduleFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --type websocket MyWebSocketFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --language javascript MyJavascriptFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash deploy
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-cd ..
-rm -rf Test$SUFFIX
+Scripts/test-new-module.sh

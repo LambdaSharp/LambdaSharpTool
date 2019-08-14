@@ -10,7 +10,7 @@ unset LAMBDASHARP_VERSION_SUFFIX
 if [ -z "$1" ]; then
 
     # run everything
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- info \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
         --tier Test \
         --aws-region us-east-1 \
@@ -123,7 +123,7 @@ else
 
     # run requested test
     rm $LAMBDASHARP/Tests/Modules/Results/$testfile.json > /dev/null 2>&1
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- deploy \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/$testfile.json \
