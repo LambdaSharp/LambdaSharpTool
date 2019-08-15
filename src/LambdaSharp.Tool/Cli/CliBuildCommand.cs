@@ -521,7 +521,7 @@ namespace LambdaSharp.Tool.Cli {
                 return false;
             }
             if(moduleInfo.Origin == settings.DeploymentBucketName) {
-                LogWarn($"skipping importing {moduleInfo} because origin matches deployment bucket");
+                LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
                 return true;
             }
             return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish);

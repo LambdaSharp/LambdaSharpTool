@@ -343,7 +343,7 @@ namespace LambdaSharp.Tool.Cli {
                     return false;
                 }
 
-                // reset tier version if core module was deployed
+                // reset tier version if core module was deployed; this will force the tier settings to be refetched
                 if(isLambdaSharpCoreModule) {
                     settings.TierVersion = null;
                 }

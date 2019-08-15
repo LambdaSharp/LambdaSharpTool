@@ -198,7 +198,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // copy check-summed module assets (guaranteed immutable)
                 foreach(var asset in dependency.Manifest.Assets) {
-                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.GetAssetPath(asset));
+                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, asset);
                 }
 
                 // copy version manifest
@@ -287,7 +287,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // check if this object was uploaded locally and therefore should not be replaced
                 if(existing.Metadata[AMAZON_METADATA_ORIGIN] == Settings.DeploymentBucketName) {
-                    LogWarn($"skipping importing 's3://{sourceBucket}/{key}' because it was published locally");
+                    LogWarn($"skipping import of 's3://{sourceBucket}/{key}' because it was published locally");
                     return false;
                 }
             } catch { }
@@ -303,7 +303,12 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
                 // capture the origin of this object
                 request.Metadata[AMAZON_METADATA_ORIGIN] = sourceBucket;
-                await Settings.S3Client.CopyObjectAsync(request);
+                try {
+                    await Settings.S3Client.CopyObjectAsync(request);
+                } catch(AmazonS3Exception) {
+                    LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket");
+                    return true;
+                }
                  _changesDetected = true;
                 return true;
            }
