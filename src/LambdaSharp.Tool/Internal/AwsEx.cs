@@ -259,6 +259,7 @@ namespace LambdaSharp.Tool.Internal {
                 case "UPDATE_FAILED":
                 case "DELETE_FAILED":
                 case "UPDATE_ROLLBACK_FAILED":
+                case "UPDATE_ROLLBACK_IN_PROGRESS":
                     if(evt.ResourceStatusReason != "Resource creation cancelled") {
                         logError?.Invoke($"{evt.ResourceStatus} {TranslateLogicalIdToFullName(evt.LogicalResourceId)} [{TranslateResourceTypeToFullName(evt.ResourceType)}]: {evt.ResourceStatusReason}", /*Exception*/ null);
                     }

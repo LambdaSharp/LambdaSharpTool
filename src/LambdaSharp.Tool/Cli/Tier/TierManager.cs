@@ -84,8 +84,14 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 Console.WriteLine();
 
                 // compute the width of every column by getting the max string length of the column name and all possible values for the column
+                if(Settings.UseAnsiConsole) {
+                    Console.Write(AnsiTerminal.BrightWhite);
+                }
                 foreach(var column in columnsWithWidth) {
                     Console.Write(column.ColumnTitle.PadRight(column.ColumnWidth));
+                }
+                if(Settings.UseAnsiConsole) {
+                    Console.Write(AnsiTerminal.Reset);
                 }
                 Console.WriteLine();
                 foreach(var summary in moduleDetails) {

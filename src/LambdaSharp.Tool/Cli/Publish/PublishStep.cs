@@ -176,11 +176,16 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // import module
+            var imported = false;
             foreach(var asset in manifest.Assets) {
-                await ImportS3Object(moduleInfo.Origin, asset, replace: forcePublish);
+                imported = imported | await ImportS3Object(moduleInfo.Origin, asset, replace: forcePublish);
             }
-            await ImportS3Object(moduleInfo.Origin, moduleInfo.VersionPath, replace: forcePublish || moduleInfo.Version.IsPreRelease);
-            Console.WriteLine($"=> Imported {moduleInfo}");
+            imported = imported | await ImportS3Object(moduleInfo.Origin, moduleInfo.VersionPath, replace: forcePublish || moduleInfo.Version.IsPreRelease);
+            if(imported) {
+                Console.WriteLine($"=> Imported {moduleInfo}");
+            } else {
+                Console.WriteLine($"=> Nothing to do");
+            }
             return true;
         }
 
@@ -307,7 +312,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     await Settings.S3Client.CopyObjectAsync(request);
                 } catch(AmazonS3Exception) {
                     LogError($"unable to copy 's3://{sourceBucket}/{key}' to deployment bucket");
-                    return true;
+                    return false;
                 }
                  _changesDetected = true;
                 return true;
