@@ -94,29 +94,28 @@ namespace LambdaSharp.Finalizer {
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessDeleteResourceAsync(Request<FinalizerProperties> request) {
 
-            // check if old naming scheme is used for the physical id of the finalizer
-            if(request.PhysicalResourceId != FINALIZER_PHYSICAL_ID) {
+            // NOTE (2019-07-11, bjorg): in 0.7, the physical id was changed from being based on the module hash (checksum), to
+            //  a constant identifier. Changing the physical id of a custom resource causes CloudFormation to perform
+            //  a replacement operation, which deletes the old custom resource. That would cause the finalizer to perform
+            //  its clean-up operation when the stack is not being deleted. Instead, we need to check if the stack itself
+            //  is being deleted to confirm the proper invocation of the finalizer.
 
-                // NOTE (2019-07-11, bjorg): in 0.7, the physical id was changed from being based on the module hash (checksum), to
-                //  a constant identifier. Changing the physical id of a custom resource causes CloudFormation to perform
-                //  a replacement operation, which deletes the old custom resource. That would cause the finalizer to perform
-                //  its clean-up operation when the stack is not being deleted. Instead, we need to check if the stack itself
-                //  is being deleted to confirm the proper invocation of the finalizer.
+            // NOTE (2019-08-16, bjorg): the logic was updated to always check for a delete. This allows a Finalizer to be
+            //  removed in a CloudFormation stack update operation without triggering the delete logic.
 
-                // fetch status of stack to confirm this is a delete operation
-                try {
-                    var stack = (await new AmazonCloudFormationClient().DescribeStacksAsync(new DescribeStacksRequest {
-                        StackName = request.StackId
-                    })).Stacks.FirstOrDefault();
-                    if((stack != null) && (stack.StackStatus != "DELETE_IN_PROGRESS")) {
+            // fetch status of stack to confirm this is a delete operation
+            try {
+                var stack = (await new AmazonCloudFormationClient().DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = request.StackId
+                })).Stacks.FirstOrDefault();
+                if((stack != null) && (stack.StackStatus != "DELETE_IN_PROGRESS")) {
 
-                        // ignore finalizer delete if stack is not being deleted
-                        LogInfo("skipping finalizer delete, because the stack is not being deleted");
-                        return new Response<FinalizerAttributes>();
-                    }
-                } catch(Exception e) {
-                    LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId);
+                    // ignore finalizer delete if stack is not being deleted
+                    LogInfo("skipping finalizer delete, because the stack is not being deleted");
+                    return new Response<FinalizerAttributes>();
                 }
+            } catch(Exception e) {
+                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId);
             }
             await DeleteDeployment(request.ResourceProperties);
             return new Response<FinalizerAttributes>();
