@@ -51,7 +51,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists
+            bool deployOnlyIfExists,
+            bool allowLambdaSharpCoreUpgrade
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -91,10 +92,15 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 } else if(tierToToolVersionComparison < 0) {
 
                     // tool version is more recent; check if user wants to upgrade tier
-                    Console.WriteLine($"LambdaSharp Tier is out of date");
-                    var upgrade = Settings.UseAnsiConsole
-                        ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
-                        : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                    bool upgrade;
+                    if(!allowLambdaSharpCoreUpgrade) {
+                        Console.WriteLine($"LambdaSharp Tier is out of date");
+                        upgrade = Settings.UseAnsiConsole
+                            ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
+                            : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
+                    } else {
+                        upgrade = true;
+                    }
                     if(!upgrade) {
                         return false;
                     }

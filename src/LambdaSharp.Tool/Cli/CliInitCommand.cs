@@ -55,6 +55,7 @@ namespace LambdaSharp.Tool.Cli {
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
+                var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core when prompted", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -97,7 +98,8 @@ namespace LambdaSharp.Tool.Cli {
                         promptAllParametersOption.HasValue(),
                         xRayTracingLevel,
                         coreServices,
-                        existingS3BucketName
+                        existingS3BucketName,
+                        allowUpgradeOption.HasValue()
                     );
                 });
             });
@@ -115,7 +117,8 @@ namespace LambdaSharp.Tool.Cli {
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
             CoreServices coreServices,
-            string existingS3BucketName
+            string existingS3BucketName,
+            bool allowUpgrade
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -366,7 +369,8 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     xRayTracingLevel: xRayTracingLevel,
-                    deployOnlyIfExists: !isLambdaSharpCoreModule
+                    deployOnlyIfExists: !isLambdaSharpCoreModule,
+                    allowLambdaSharpCoreUpgrade: isLambdaSharpCoreModule && allowUpgrade
                 )) {
                     return false;
                 }
