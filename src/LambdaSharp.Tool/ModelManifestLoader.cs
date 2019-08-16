@@ -100,7 +100,7 @@ namespace LambdaSharp.Tool {
             return manifest;
         }
 
-        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport) {
+        public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError) {
             LogInfoVerbose($"=> Resolving module {moduleInfo}");
 
             // check if module can be found in the deployment bucket
@@ -147,7 +147,9 @@ namespace LambdaSharp.Tool {
                 var versionConstraint = (moduleInfo.Version != null)
                     ? $"v{moduleInfo.Version} or later"
                     : "any version";
-                LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                if(showError) {
+                    LogError($"could not find module '{moduleInfo}' ({versionConstraint})");
+                }
                 return null;
             }
             LogInfoVerbose($"=> Selected module {moduleInfo.WithVersion(result.Version)} from {result.Origin}");
@@ -265,10 +267,10 @@ namespace LambdaSharp.Tool {
                     } else {
 
                         // resolve dependencies for dependency module
-                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, dependency.Type, allowImport);
+                        var dependencyModuleLocation = await ResolveInfoToLocationAsync(dependency.ModuleInfo, dependency.Type, allowImport, showError: true);
                         if(dependencyModuleLocation == null) {
 
-                            // error has already been reported
+                            // nothing to do; loader already emitted an error
                             continue;
                         }
 

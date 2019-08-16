@@ -231,15 +231,16 @@ namespace LambdaSharp.Tool.Cli {
             }
         failed:
             var pairs = Enum.GetValues(typeof(T)).Cast<int>().Zip(Enum.GetNames(typeof(T)).Cast<string>(), (value, name) => $"{value}={name.ToLowerInvariant()}");
-            LogError($"value for {option.LongName} must be one of {string.Join(", ", pairs)}");
+            LogError($"value for --{option.LongName} must be one of {string.Join(", ", pairs)}");
             result = defaultvalue;
             return false;
         }
 
-        protected async Task<bool> PopulateRuntimeSettingsAsync(Settings settings, bool optional = false) {
+        protected async Task<bool> PopulateRuntimeSettingsAsync(Settings settings, bool optional = false, bool force = false) {
             if(
                 (settings.DeploymentBucketName == null)
                 || (settings.TierVersion == null)
+                || force
             ) {
 
                 // attempt to find an existing core module

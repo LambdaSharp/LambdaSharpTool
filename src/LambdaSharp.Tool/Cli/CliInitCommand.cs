@@ -75,6 +75,13 @@ namespace LambdaSharp.Tool.Cli {
                         return;
                     }
 
+                    // set initialization parameters
+                    var existingS3BucketName = existingS3BucketNameOption.Value();
+                    if(quickStartOption.HasValue()) {
+                        coreServices = CoreServices.Disabled;
+                        existingS3BucketName = "";
+                    }
+
                     // determine if we want to install modules from a local check-out
                     await Init(
                         settings,
@@ -89,9 +96,8 @@ namespace LambdaSharp.Tool.Cli {
                         forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
                         xRayTracingLevel,
-                        quickStartOption.HasValue(),
                         coreServices,
-                        existingS3BucketNameOption.Value()
+                        existingS3BucketName
                     );
                 });
             });
@@ -108,24 +114,32 @@ namespace LambdaSharp.Tool.Cli {
             bool forcePublish,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool quickStart,
             CoreServices coreServices,
             string existingS3BucketName
         ) {
+
+            // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
+            //  1. New deployment tier
+            //  2. Updating an existing tier with any configuration changes
+            //  3. Upgrading an existing tier to enable LambdaSharp.Core services
+            //  4. Downgrading an existing tier to disable LambdaSharp.Core services
+
             await PopulateRuntimeSettingsAsync(settings, optional: true);
             if(HasErrors) {
                 return false;
             }
 
-            // check if installation needs to be upgraded
-            var install = (settings.TierVersion == null);
-            var update = false;
-            if(!install) {
+            // check if a new installation is required or an existing
+            var createNewTier = (settings.TierVersion == null);
+            var updateExistingTier = false;
+            if(!createNewTier) {
+
+                // determine if the deployment tier needs to be updated
                 var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.ToolVersion);
                 if(tierToToolVersionComparison == 0) {
 
-                    // versions are identical; nothing to do, unless it's a pre-release, which always need to be updated
-                    update = settings.ToolVersion.IsPreRelease;
+                    // versions are identical; nothing to do, unless it's a pre-release, which always needs to be updated
+                    updateExistingTier = settings.ToolVersion.IsPreRelease;
                 } else if(tierToToolVersionComparison > 0) {
 
                     // tier is newer; tool needs to get updated
@@ -134,20 +148,30 @@ namespace LambdaSharp.Tool.Cli {
                 } else if(tierToToolVersionComparison < 0) {
 
                     // tier is older; let's only upgrade it if we can
-                    update = true;
+                    updateExistingTier = true;
                 } else if(!forceDeploy) {
                     LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
                 } else {
 
                     // force deploy it is!
-                    update = true;
+                    updateExistingTier = true;
                 }
             }
 
             // check if bootstrap tier needs to be installed or upgraded
             Dictionary<string, string> parameters = null;
-            if(install || (update && (settings.CoreServices == CoreServices.Disabled))) {
+            if(
+                createNewTier
+                || (updateExistingTier && (
+
+                    // tier is running with disabled core services
+                    (settings.CoreServices == CoreServices.Disabled)
+
+                    // tier is running with enabled core services, but needs to be downgraded to disabled
+                    || ((settings.CoreServices != CoreServices.Disabled) && (coreServices == CoreServices.Disabled))
+                ))
+            ) {
 
                 // initialize stack with seed CloudFormation template
                 var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
@@ -156,7 +180,7 @@ namespace LambdaSharp.Tool.Cli {
                 });
 
                 // check if bootstrap template is being updated or installed
-                if(install) {
+                if(createNewTier) {
                     Console.WriteLine($"Creating LambdaSharp tier");
                 } else {
                     Console.WriteLine($"Updating LambdaSharp tier");
@@ -173,12 +197,6 @@ namespace LambdaSharp.Tool.Cli {
                 var bootstrapParameters = new Dictionary<string, string>(parameters) {
                     ["TierName"] = settings.Tier
                 };
-
-                // check if safe default should be assumed for quickly setting up an environment
-                if(quickStart) {
-                    bootstrapParameters["CoreServices"] = CoreServices.Disabled.ToString();
-                    bootstrapParameters["ExistingDeploymentBucket"] = "";
-                }
 
                 // check if command line options were provided to set template parameters
                 if((coreServices == CoreServices.Enabled) || (coreServices == CoreServices.Disabled)) {
@@ -200,7 +218,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // create/update cloudformation stack
-                if(install) {
+                if(createNewTier) {
                     Console.WriteLine($"=> Stack creation initiated for {stackName}");
                     var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                         StackName = stackName,
@@ -242,7 +260,7 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine("=> No stack update required");
                     }
                 }
-                await PopulateRuntimeSettingsAsync(settings);
+                await PopulateRuntimeSettingsAsync(settings, force: true);
                 if(HasErrors) {
                     return false;
                 }
@@ -262,7 +280,7 @@ namespace LambdaSharp.Tool.Cli {
                 "LambdaSharp.Twitter.Query"
             };
 
-            // check if the module must be built and published first
+            // check if the module must be built and published first (only applicable when running lash in contributor mode)
             var buildPublishDeployCommand = new CliBuildPublishDeployCommand();
             if(lambdaSharpPath != null) {
                 Console.WriteLine($"Building LambdaSharp modules");
@@ -299,6 +317,16 @@ namespace LambdaSharp.Tool.Cli {
                         return false;
                     }
                 }
+            } else {
+
+                // explicitly import the LambdaSharp.Core module (if it wasn't built locally)
+                if(!await buildPublishDeployCommand.ImportStepAsync(
+                    settings,
+                    ModuleInfo.Parse($"LambdaSharp.Core:{version}@lambdasharp"),
+                    forcePublish: false
+                )) {
+                    return false;
+                }
             }
 
             // check if operating services need to be installed/updated
@@ -306,9 +334,9 @@ namespace LambdaSharp.Tool.Cli {
                 return true;
             }
             Console.WriteLine();
-            if(install) {
+            if(createNewTier) {
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
-            } else if(update) {
+            } else if(updateExistingTier) {
                 Console.WriteLine($"Updating deployment tier '{settings.TierName}'");
             } else {
                 return true;

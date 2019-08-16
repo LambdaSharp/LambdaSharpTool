@@ -155,10 +155,10 @@ namespace LambdaSharp.Tool.Cli.Publish {
             }
 
             // find manifest for module to import
-            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: true);
+            var moduleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: true, showError: true);
             if(moduleLocation == null) {
 
-                // error has already been reported
+                // nothing to do; loader already emitted an error
                 return false;
             }
             var manifest = await _loader.LoadManifestFromLocationAsync(moduleLocation);
