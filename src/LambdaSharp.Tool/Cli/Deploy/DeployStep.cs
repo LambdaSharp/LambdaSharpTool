@@ -135,18 +135,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     return false;
                 }
 
-                // check if module should be run with core services
-                if(
-                    (Settings.CoreServices == CoreServices.Enabled)
-                    && manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
-                    && !deployParameters.Any(p => p.ParameterKey == "LambdaSharpCoreServices")
-                ) {
-                    deployParameters.Add(new CloudFormationParameter {
-                        ParameterKey = "LambdaSharpCoreServices",
-                        ParameterValue = Settings.CoreServices.ToString()
-                    });
-                }
-
                 // check if module supports AWS X-Ray for tracing
                 if(
                     manifest.GetAllParameters().Any(p => p.Name == "XRayTracing")
@@ -303,6 +291,18 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         };
                     }
                 }
+            }
+
+            // check if LambdaSharp.Core services should be enabled by default
+            if(
+                (Settings.CoreServices == CoreServices.Enabled)
+                && manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
+                && !stackParameters.Any(p => p.Value.ParameterKey == "LambdaSharpCoreServices")
+            ) {
+                stackParameters.Add("LambdaSharpCoreServices", new CloudFormationParameter {
+                    ParameterKey = "LambdaSharpCoreServices",
+                    ParameterValue = Settings.CoreServices.ToString()
+                });
             }
             return stackParameters.Values.ToList();
 
