@@ -49,7 +49,10 @@ namespace LambdaSharp.Tool.Cli {
     public class CliNewCommand : ACliCommand {
 
         //--- Fields ---
-        private IList<string> _functionTypes = typeof(FunctionType).GetEnumNames().OrderBy(value => value).ToArray();
+        private IList<string> _functionTypes = typeof(FunctionType).GetEnumNames()
+            .Where(value => value != FunctionType.Unknown.ToString())
+            .OrderBy(value => value)
+            .ToArray();
 
         //--- Methods --
         public void Register(CommandLineApplication app) {

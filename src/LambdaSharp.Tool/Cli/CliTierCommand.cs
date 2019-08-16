@@ -41,25 +41,28 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("coreservices", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Enable/disable LambdaSharp.Core services for all modules in tier";
-                    var enableOption = subCmd.Option("--enable", "(optional) Enable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
-                    var disableOption = subCmd.Option("--disable", "(optional) Disable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
+                    var enabledOption = subCmd.Option("--enabled", "(optional) Enable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
+                    var disabledOption = subCmd.Option("--disabled", "(optional) Disable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
 
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
                         var settings = await initSettingsCallback();
-                        if(enableOption.HasValue() && disableOption.HasValue()) {
-                            LogError("--enable and --disable options are mutually exclusive");
+                        if(settings == null) {
                             return;
                         }
-                        bool? enable = null;
-                        if(enableOption.HasValue()) {
-                            enable = true;
-                        } else if(disableOption.HasValue()) {
-                            enable = false;
+                        if(enabledOption.HasValue() && disabledOption.HasValue()) {
+                            LogError("--enabled and --disabled options are mutually exclusive");
+                            return;
                         }
-                        await UpdateCoreServicesAsync(settings, enable);
+                        bool? enabled = null;
+                        if(enabledOption.HasValue()) {
+                            enabled = true;
+                        } else if(disabledOption.HasValue()) {
+                            enabled = false;
+                        }
+                        await UpdateCoreServicesAsync(settings, enabled);
                     });
                 });
 
@@ -70,7 +73,7 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task UpdateCoreServicesAsync(Settings settings, bool? enable) {
+        private async Task UpdateCoreServicesAsync(Settings settings, bool? enabled) {
             if(!await PopulateRuntimeSettingsAsync(settings)) {
                 return;
             }
@@ -86,17 +89,17 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // validate that all modules in tier can enable/disable core services
-            if(enable.HasValue) {
+            if(enabled.HasValue) {
                 foreach(var summary in moduleDetails.Where(s => s.CoreServices == null)) {
                     LogError($"${summary.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
                 }
             }
-            if(!enable.HasValue || HasErrors) {
+            if(!enabled.HasValue || HasErrors) {
                 return;
             }
 
             // update core services for each affected root module
-            var coreServicesParameter = enable.Value ? "Enabled" : "Disabled";
+            var coreServicesParameter = enabled.Value ? "Enabled" : "Disabled";
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter
             };

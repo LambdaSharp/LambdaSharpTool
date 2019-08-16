@@ -6,13 +6,13 @@ The `tier coreservices` command is used to show and updates the λ# Core Service
 
 <dl>
 
-<dt><code>--enable</code></dt>
+<dt><code>--enabled</code></dt>
 <dd>
 
 (optional) Enable LambdaSharp.Core services for all modules
 </dd>
 
-<dt><code>--disable</code></dt>
+<dt><code>--disabled</code></dt>
 <dd>
 
 (optional) Disable LambdaSharp.Core services for all modules
