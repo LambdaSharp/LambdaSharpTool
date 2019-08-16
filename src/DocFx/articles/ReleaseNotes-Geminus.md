@@ -146,7 +146,7 @@ Done (finished: 8/16/2019 10:20:18 AM; duration: 00:00:32.5327433)
 
 ## Misc
 
-*
+* `lash tier coreservices --enabled` was `--enable` before
 
 ## Upgrade Procedure
 
