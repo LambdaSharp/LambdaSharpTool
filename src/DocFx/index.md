@@ -2,7 +2,7 @@
 
 # LambdaSharp (v[!include[LAMBDASHARP_VERSION](version.txt)]) - Serverless .NET on AWS
 
-**[Read what's new in the 0.6 "Favorinus" release.](~/articles/ReleaseNotes-Favorinus.md)**
+**[Read what's new in the 0.7.0 "Geminus" release.](~/articles/ReleaseNotes-Geminus.md)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
@@ -22,14 +22,9 @@ The λ# CLI is installed as a .NET Global Tool.
 dotnet tool install -g LambdaSharp.Tool
 ```
 
-Once installed, the λ# CLI needs to be configured.
+Once installed, a deployment tier must be initialized.
 ```bash
-lash config
-```
-
-Finally, a deployment tier must be initialized with the λ# Core.
-```bash
-lash init --tier Sandbox
+lash init --quick-start
 ```
 
 ## Deploy a λ# Module
@@ -41,7 +36,7 @@ Creating modules with Lambda functions and deploying them only requires a few st
 lash new module MySampleModule
 
 # Add a function to the λ# module
-lash new function MyFunction
+lash new function MyFunction --type generic
 
 # Deploy the λ# module
 lash deploy
@@ -50,7 +45,7 @@ lash deploy
 The λ# CLI uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
 
 ```yaml
-Module: MySampleModule
+Module: My.SampleModule
 Items:
 
  - Function: MyFunction
