@@ -37,6 +37,7 @@ namespace LambdaSharp.Tool.Internal {
         public object ResponseSchema { get; set; }
         public string ResponseSchemaName { get; set; }
         public string Error { get; set; }
+        public string StackTrace { get; set; }
 
         //--- Methods ---
         public string GetRequestSchemaName() {
