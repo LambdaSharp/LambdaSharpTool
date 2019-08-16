@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
 using Amazon.APIGateway;
@@ -87,6 +88,9 @@ namespace LambdaSharp.Tool.Cli {
                     awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
                     awsAccountId = awsAccountId ?? response.Account;
                     awsUserArn = awsUserArn ?? response.Arn;
+                } catch(HttpRequestException e) when(e.Message == "No such host is known") {
+                    LogError("an Internet connection is required to determine the AWS Account Id and Region");
+                    return null;
                 } catch(Exception e) {
                     LogError("unable to determine the AWS Account Id and Region", e);
                     return null;
