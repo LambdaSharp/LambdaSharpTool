@@ -86,6 +86,10 @@ Done (finished: 8/16/2019 10:20:18 AM; duration: 00:00:32.5327433)
 
 ---
 
+> TODO
+> lash new function Finalizer
+> ALambdaFunction.Info.DeploymentBucketName
+
 ## Removed Module::DefaultSecretKey
 
 ## Minimal Deployment Tier
@@ -154,5 +158,7 @@ Done (finished: 8/16/2019 10:20:18 AM; duration: 00:00:32.5327433)
 * ensure that the deployment tier and all deployed modules have been upgraded to v0.6.0.3
 * run `lash tier coreservices --disable` to disable LambdaSharp.Core services foo all deployed modules
 * install λ# CLI v0.7.0
-* run `lash init` to upgrade the deployment tier
+* run `lash init --allow-upgrade` to upgrade the deployment tier
 * run `lash tier coreservices --enabled` to enable LambdaSharp.Core services
+
+* added `--allow-upgrade` option to `lash init`
