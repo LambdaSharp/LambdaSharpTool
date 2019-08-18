@@ -43,7 +43,8 @@ namespace LambdaSharp.Tool.Cli {
         Queue,
         Topic,
         WebSocket,
-        WebSocketProxy
+        WebSocketProxy,
+        Finalizer
     }
 
     public class CliNewCommand : ACliCommand {
@@ -333,7 +334,13 @@ namespace LambdaSharp.Tool.Cli {
             string projectDirectory,
             FunctionType functionType
         ) {
-            if(functionType == FunctionType.Unknown) {
+            if(functionName == "Finalizer") {
+
+                // always of type finalizer
+                functionType = FunctionType.Finalizer;
+            } else if(functionType == FunctionType.Unknown) {
+
+                // prompt for function type
                 functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", _functionTypes), ignoreCase: true);
             }
 

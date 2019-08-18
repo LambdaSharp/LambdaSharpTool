@@ -52,6 +52,10 @@ lash new function --type websocketproxy MyWebSocketProxyFunction
 if [ $? -ne 0 ]; then
     exit $?
 fi
+lash new function Finalizer
+if [ $? -ne 0 ]; then
+    exit $?
+fi
 lash new function --language javascript MyJavascriptFunction
 if [ $? -ne 0 ]; then
     exit $?

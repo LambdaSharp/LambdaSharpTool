@@ -595,8 +595,10 @@ namespace LambdaSharp.Tool.Cli {
                     var schema = await JsonSchema4.FromTypeAsync(messageType, new JsonSchemaGeneratorSettings {
                         FlattenInheritanceHierarchy = true,
 
+#pragma warning disable CS0618
                         // we prefer enums to be handled as strings (NOTE: trying to set this in SerializerSettings causes an NRE in JsonSchema4FromTypeAsync call)
                         DefaultEnumHandling = EnumHandling.String
+#pragma warning restore CS0618
                     });
 
                     // NOTE (2019-04-03, bjorg): we need to allow additional properties, because Swagger doesn't support: "additionalProperties": false
