@@ -1579,6 +1579,10 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "ExcludeVerboseContent": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "FieldLogLevel": {
           "PrimitiveType": "String",
           "Required": false
@@ -16536,6 +16540,38 @@
         }
       }
     },
+    "AWS::SageMaker::Workteam.CognitoMemberDefinition": {
+      "Properties": {
+        "CognitoClientId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CognitoUserGroup": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CognitoUserPool": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::SageMaker::Workteam.MemberDefinition": {
+      "Properties": {
+        "CognitoMemberDefinition": {
+          "Required": true,
+          "Type": "CognitoMemberDefinition"
+        }
+      }
+    },
+    "AWS::SageMaker::Workteam.NotificationConfiguration": {
+      "Properties": {
+        "NotificationTopicArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::SecretsManager::RotationSchedule.RotationRules": {
       "Properties": {
         "AutomaticallyAfterDays": {
@@ -17714,7 +17750,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "5.1.0",
+  "ResourceSpecificationVersion": "5.2.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -22070,8 +22106,16 @@
     "AWS::DMS::ReplicationTask": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-dms-replicationtask.html",
       "Properties": {
+        "CdcStartPosition": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "CdcStartTime": {
           "PrimitiveType": "Double",
+          "Required": false
+        },
+        "CdcStopPosition": {
+          "PrimitiveType": "String",
           "Required": false
         },
         "MigrationType": {
@@ -30737,6 +30781,38 @@
           "ItemType": "NotebookInstanceLifecycleHook",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::SageMaker::Workteam": {
+      "Attributes": {
+        "WorkteamName": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-workteam.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MemberDefinitions": {
+          "ItemType": "MemberDefinition",
+          "Required": false,
+          "Type": "List"
+        },
+        "NotificationConfiguration": {
+          "Required": false,
+          "Type": "NotificationConfiguration"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
+        "WorkteamName": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
