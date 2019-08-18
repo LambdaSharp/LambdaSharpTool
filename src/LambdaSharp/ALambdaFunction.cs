@@ -101,6 +101,11 @@ namespace LambdaSharp {
             /// The URL of the dead-letter queue for the AWS Lambda function. This value can be <c>null</c> if the module has no dead-letter queue.
             /// </summary>
             public string DeadLetterQueueUrl => _function._deadLetterQueueUrl;
+
+            /// <summary>
+            /// The S3 bucket name where the module assets are located.
+            /// </summary>
+            public string DeploymentBucketName => _function._deploymentBucketName;
         }
 
         /// <summary>
@@ -161,6 +166,7 @@ namespace LambdaSharp {
 
         //--- Fields ---
         private DateTime _started;
+        private string _deploymentBucketName;
         private string _deadLetterQueueUrl;
         private string _moduleNamespace;
         private string _moduleName;
@@ -432,6 +438,7 @@ namespace LambdaSharp {
             _moduleNamespace = moduleNamespace;
             _moduleName = moduleName;
             _moduleVersion = moduleVersion;
+            _deploymentBucketName = envSource.Read("DEPLOYMENTBUCKETNAME");
             var deadLetterQueueArn = envSource.Read("DEADLETTERQUEUE");
             if(deadLetterQueueArn != null) {
                 _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(deadLetterQueueArn);
@@ -443,6 +450,7 @@ namespace LambdaSharp {
             LogInfo($"MODULE_INFO = {moduleInfo}");
             LogInfo($"FUNCTION_NAME = {_functionName}");
             LogInfo($"FUNCTION_ID = {_functionId}");
+            LogInfo($"DEPLOYMENTBUCKETNAME = {_deploymentBucketName}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
 
             // read optional git-info file

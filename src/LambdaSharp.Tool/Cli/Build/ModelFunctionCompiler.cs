@@ -48,6 +48,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(functions.Any()) {
 
+                // grant read access to deployment bucket
+                _builder.AddGrant(
+                    name: "DeploymentBucket",
+                    awsType: null,
+                    reference: FnSub($"arn:aws:s3:::${{DeploymentBucketName}}/{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.assets/*"),
+                    allow: "s3:GetObject",
+                    condition: null
+                );
+
                 // add functions
                 foreach(var function in functions) {
                     AddFunctionSources(function);
