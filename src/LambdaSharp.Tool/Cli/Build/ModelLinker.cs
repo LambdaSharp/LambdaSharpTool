@@ -20,12 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using Humidifier;
 using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;

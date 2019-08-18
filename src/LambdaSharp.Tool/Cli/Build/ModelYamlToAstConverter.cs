@@ -18,9 +18,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model.AST;
 using YamlDotNet.Core;

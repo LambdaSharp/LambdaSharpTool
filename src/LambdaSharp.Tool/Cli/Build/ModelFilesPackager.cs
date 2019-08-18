@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;

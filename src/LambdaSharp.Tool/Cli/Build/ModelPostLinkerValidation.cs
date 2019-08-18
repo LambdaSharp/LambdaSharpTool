@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Linq;
 using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Cli.Build {

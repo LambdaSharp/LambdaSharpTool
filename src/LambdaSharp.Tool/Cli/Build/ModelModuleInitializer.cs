@@ -16,16 +16,10 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
-using System.Text;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using LambdaSharp.Tool.Model.AST;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Cli.Build {
     using static ModelFunctions;
