@@ -87,6 +87,29 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
+        public static VersionInfo FindLatestMatchingVersion(IEnumerable<VersionInfo> versionInfos, VersionInfo minVersion, Predicate<VersionInfo> validate) {
+            var candidates = new List<VersionInfo>(versionInfos);
+            while(candidates.Any()) {
+
+                // find latest version
+                var candidate = VersionInfo.Max(candidates);
+                candidates.Remove(candidate);
+
+                // check if latest version meets minimum version constraint
+                if(minVersion?.IsGreaterThanVersion(candidate) ?? false) {
+                    continue;
+                }
+
+                // validate candidate
+                if(validate?.Invoke(candidate) ?? true) {
+                    return candidate;
+                }
+            }
+
+            // not match found
+            return null;
+        }
+
         //--- Fields ---
         public readonly int Major;
         public readonly int Minor;
@@ -267,7 +290,7 @@ namespace LambdaSharp.Tool {
         }
 
         public bool IsCoreServicesCompatible(VersionInfo info) {
-            return (Major == info.Major) && ((Major != 0) || (Minor == info.Minor));
+            return (Major == info.Major) && ((Major != 0) || (Minor == info.Minor)) && (Suffix == info.Suffix);
         }
     }
 

@@ -173,29 +173,19 @@ namespace LambdaSharp.Tool {
                 }
 
                 // attempt to identify the newest module version compatible with the tool
-                while(found.Any()) {
-                    var latest = VersionInfo.Max(found, strict: true);
-
-                    // check if latest version meets minimum version constraint
-                    if(moduleInfo.Version?.IsGreaterThanVersion(latest) ?? false) {
-                        break;
-                    }
-                    var latestModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, latest, moduleInfo.Origin);
-                    var manifestText = await GetS3ObjectContentsAsync(bucketName, latestModuleInfo.VersionPath);
-                    var manifest = JsonConvert.DeserializeObject<ModuleManifest>(manifestText);
+                ModuleManifest manifest = null;
+                var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidate => {
+                    var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidate, moduleInfo.Origin);
+                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).Result;
+                    manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    if(manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion)) {
-                        return (Origin: bucketName, Version: latest, Manifest: manifest);
-                    }
-
-                    // remove latest version since it didn't meet the constraints
-                    found.Remove(latest);
-                }
-                return (Origin: bucketName, Version: null, Manifest: null);
+                    return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
+                });
+                return (Origin: bucketName, Version: match, Manifest: manifest);
             }
 
-            async Task<List<VersionInfo>> FindModuleVersionsAsync(string bucketName) {
+            async Task<IEnumerable<VersionInfo>> FindModuleVersionsAsync(string bucketName) {
 
                 // get bucket region specific S3 client
                 var s3Client = await GetS3ClientByBucketNameAsync(bucketName);

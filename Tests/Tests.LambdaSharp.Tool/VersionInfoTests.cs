@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using FluentAssertions;
 using LambdaSharp.Tool;
 using Xunit;
@@ -224,6 +225,114 @@ namespace Tests.LambdaSharp.Tool {
 
             // assert
             result.Should().Be(true);
+        }
+
+        [Fact]
+        public void FindLatestMatchingVersionWithPreReleases() {
+
+            // arrange
+            var versions = new List<VersionInfo> {
+                VersionInfo.Parse("0.7.0-wip"),
+                VersionInfo.Parse("0.7.0-rc4"),
+                VersionInfo.Parse("0.7.0-rc5"),
+                VersionInfo.Parse("0.7.0-rc6"),
+                VersionInfo.Parse("0.7.0"),
+                VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.2"),
+                VersionInfo.Parse("0.8.0")
+            };
+            var toolVersion = VersionInfo.Parse("0.7.0-rc6");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                versions,
+                minVersion: null,
+                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+            ).CompareToVersion(VersionInfo.Parse("0.7.0-rc6"));
+
+            // assert
+            result.Should().Be(0);
+        }
+
+        [Fact]
+        public void FindLatestMatchingVersionWithPreReleasesAndMinVersion() {
+
+            // arrange
+            var versions = new List<VersionInfo> {
+                VersionInfo.Parse("0.7.0-wip"),
+                VersionInfo.Parse("0.7.0-rc4"),
+                VersionInfo.Parse("0.7.0-rc5"),
+                VersionInfo.Parse("0.7.0-rc6"),
+                VersionInfo.Parse("0.7.0"),
+                VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.2"),
+                VersionInfo.Parse("0.8.0")
+            };
+            var toolVersion = VersionInfo.Parse("0.7.0-rc6");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                versions,
+                minVersion: VersionInfo.Parse("0.7.0-rc5"),
+                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+            ).CompareToVersion(VersionInfo.Parse("0.7.0-rc6"));
+
+            // assert
+            result.Should().Be(0);
+        }
+
+        [Fact]
+        public void FindLatestMatchingVersion() {
+
+            // arrange
+            var versions = new List<VersionInfo> {
+                VersionInfo.Parse("0.7.0-wip"),
+                VersionInfo.Parse("0.7.0-rc4"),
+                VersionInfo.Parse("0.7.0-rc5"),
+                VersionInfo.Parse("0.7.0-rc6"),
+                VersionInfo.Parse("0.7.0"),
+                VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.2"),
+                VersionInfo.Parse("0.8.0")
+            };
+            var toolVersion = VersionInfo.Parse("0.7.1");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                versions,
+                minVersion: null,
+                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+            ).CompareToVersion(VersionInfo.Parse("0.7.2"));
+
+            // assert
+            result.Should().Be(0);
+        }
+
+        [Fact]
+        public void FindLatestMatchingVersionWithMinVersion() {
+
+            // arrange
+            var versions = new List<VersionInfo> {
+                VersionInfo.Parse("0.7.0-wip"),
+                VersionInfo.Parse("0.7.0-rc4"),
+                VersionInfo.Parse("0.7.0-rc5"),
+                VersionInfo.Parse("0.7.0-rc6"),
+                VersionInfo.Parse("0.7.0"),
+                VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.2"),
+                VersionInfo.Parse("0.8.0")
+            };
+            var toolVersion = VersionInfo.Parse("0.7.1");
+
+            // act
+            var result = VersionInfo.FindLatestMatchingVersion(
+                versions,
+                minVersion: VersionInfo.Parse("0.7.0"),
+                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+            ).CompareToVersion(VersionInfo.Parse("0.7.2"));
+
+            // assert
+            result.Should().Be(0);
         }
 
         private void IsLessThan(string left, string right) {
