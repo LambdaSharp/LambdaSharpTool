@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D892F8577B42CDE252AD6AEB6522BE6E"
+      "Default": "8A3F70AF07840E5500866D22804528E3"
     }
   },
   "Resources": {
@@ -129,6 +129,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -272,6 +275,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGatewayInvoke/.assets/*"
+                  }
                 }
               ]
             },
@@ -771,7 +784,7 @@
       "Value": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "D892F8577B42CDE252AD6AEB6522BE6E"
+      "Value": "8A3F70AF07840E5500866D22804528E3"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1004,7 +1017,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.ApiGatewayInvoke:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "D892F8577B42CDE252AD6AEB6522BE6E",
+      "TemplateChecksum": "8A3F70AF07840E5500866D22804528E3",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

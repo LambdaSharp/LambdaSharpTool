@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6656184FBF94F22637A9E385AAB75820"
+      "Default": "376888FEB6BCA3CBDDA4046733316B07"
     }
   },
   "Resources": {
@@ -134,6 +134,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -280,6 +283,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.SlackCommand/.assets/*"
+                  }
                 }
               ]
             },
@@ -664,7 +677,7 @@
       "Value": "LambdaSharp.Sample.SlackCommand:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "6656184FBF94F22637A9E385AAB75820"
+      "Value": "376888FEB6BCA3CBDDA4046733316B07"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -908,7 +921,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "6656184FBF94F22637A9E385AAB75820",
+      "TemplateChecksum": "376888FEB6BCA3CBDDA4046733316B07",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

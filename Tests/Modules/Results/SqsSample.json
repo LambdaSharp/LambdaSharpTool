@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2B45C3E600051A23320BE24B1DC65DA3"
+      "Default": "F93554E35FFCF38B9E39DB1E2FCA849E"
     }
   },
   "Resources": {
@@ -137,6 +137,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.Sqs:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -320,6 +323,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Sqs/.assets/*"
+                  }
                 }
               ]
             },
@@ -599,7 +612,7 @@
       "Value": "LambdaSharp.Sample.Sqs:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "2B45C3E600051A23320BE24B1DC65DA3"
+      "Value": "F93554E35FFCF38B9E39DB1E2FCA849E"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -832,7 +845,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
-      "TemplateChecksum": "2B45C3E600051A23320BE24B1DC65DA3",
+      "TemplateChecksum": "F93554E35FFCF38B9E39DB1E2FCA849E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

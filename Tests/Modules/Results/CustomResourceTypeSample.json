@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E3CDDCA099312885EAA3B8D1DBE8F32A"
+      "Default": "E46D0C7C44D018B9FB7AE790165B76E1"
     }
   },
   "Resources": {
@@ -129,6 +129,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -272,6 +275,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.CustomResourceType/.assets/*"
+                  }
                 }
               ]
             },
@@ -533,7 +546,7 @@
       "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "E3CDDCA099312885EAA3B8D1DBE8F32A"
+      "Value": "E46D0C7C44D018B9FB7AE790165B76E1"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -766,7 +779,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "E3CDDCA099312885EAA3B8D1DBE8F32A",
+      "TemplateChecksum": "E46D0C7C44D018B9FB7AE790165B76E1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DFF14B196B6317B06ACC751DBAE1BCE0"
+      "Default": "9444D04046DA8A645956F7C6C466FFE8"
     }
   },
   "Resources": {
@@ -135,6 +135,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.Kinesis:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -293,6 +296,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Kinesis/.assets/*"
+                  }
                 }
               ]
             },
@@ -557,7 +570,7 @@
       "Value": "LambdaSharp.Sample.Kinesis:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "DFF14B196B6317B06ACC751DBAE1BCE0"
+      "Value": "9444D04046DA8A645956F7C6C466FFE8"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -790,7 +803,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "DFF14B196B6317B06ACC751DBAE1BCE0",
+      "TemplateChecksum": "9444D04046DA8A645956F7C6C466FFE8",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

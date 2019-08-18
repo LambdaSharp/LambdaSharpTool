@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7224D4625A356A4F4D84D53C1D770B8B"
+      "Default": "A29918694DCDD69EA68F778157D1282C"
     }
   },
   "Resources": {
@@ -238,6 +238,9 @@
             "MODULE_INFO": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
             "LAMBDA_NAME": "NotifyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -416,6 +419,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.TwitterNotifier/.assets/*"
+                  }
                 }
               ]
             },
@@ -700,7 +713,7 @@
       "Value": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "7224D4625A356A4F4D84D53C1D770B8B"
+      "Value": "A29918694DCDD69EA68F778157D1282C"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -990,7 +1003,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "7224D4625A356A4F4D84D53C1D770B8B",
+      "TemplateChecksum": "A29918694DCDD69EA68F778157D1282C",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

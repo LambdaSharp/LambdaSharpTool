@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8E78610E89B63CC0E1AAD3031E29C156"
+      "Default": "0B69CC69B0CF96223F2ECDE1AFA704AA"
     }
   },
   "Resources": {
@@ -150,6 +150,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -345,6 +348,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.DynamoDB/.assets/*"
+                  }
                 }
               ]
             },
@@ -609,7 +622,7 @@
       "Value": "LambdaSharp.Sample.DynamoDB:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "8E78610E89B63CC0E1AAD3031E29C156"
+      "Value": "0B69CC69B0CF96223F2ECDE1AFA704AA"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -842,7 +855,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "8E78610E89B63CC0E1AAD3031E29C156",
+      "TemplateChecksum": "0B69CC69B0CF96223F2ECDE1AFA704AA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

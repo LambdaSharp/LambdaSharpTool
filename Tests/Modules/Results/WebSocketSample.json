@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "09D7D05352A53221DC6E0F57346DFF78"
+      "Default": "B147D8767D0F2E80B4C666A19BA58692"
     }
   },
   "Resources": {
@@ -145,6 +145,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "ConnectionFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -303,6 +306,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "MessageFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -509,6 +515,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.assets/*"
+                  }
                 },
                 {
                   "Sid": "WebSocketConnections",
@@ -1083,7 +1099,7 @@
       "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "09D7D05352A53221DC6E0F57346DFF78"
+      "Value": "B147D8767D0F2E80B4C666A19BA58692"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1315,7 +1331,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "09D7D05352A53221DC6E0F57346DFF78",
+      "TemplateChecksum": "B147D8767D0F2E80B4C666A19BA58692",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

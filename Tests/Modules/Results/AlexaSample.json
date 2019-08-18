@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "029A4C19B170D258E60788746CCBC2FF"
+      "Default": "F608C47E4565CF67FD5EE3A20412D6C1"
     }
   },
   "Resources": {
@@ -134,6 +134,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.Alexa:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -277,6 +280,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.assets/*"
+                  }
                 }
               ]
             },
@@ -548,7 +561,7 @@
       "Value": "LambdaSharp.Sample.Alexa:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "029A4C19B170D258E60788746CCBC2FF"
+      "Value": "F608C47E4565CF67FD5EE3A20412D6C1"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -800,7 +813,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
       "Description": "A sample module using an Alexa skill",
-      "TemplateChecksum": "029A4C19B170D258E60788746CCBC2FF",
+      "TemplateChecksum": "F608C47E4565CF67FD5EE3A20412D6C1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

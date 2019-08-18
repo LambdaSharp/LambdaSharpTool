@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4B5760595E3E06E20C16DEE66033D45C"
+      "Default": "69AD0F6AB67E872018F7E1CA468A667A"
     }
   },
   "Resources": {
@@ -134,6 +134,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -295,6 +298,16 @@
                     "ec2:DescribeNetworkInterfaces"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.VpcFunction/.assets/*"
+                  }
                 }
               ]
             },
@@ -542,7 +555,7 @@
       "Value": "LambdaSharp.Sample.VpcFunction:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "4B5760595E3E06E20C16DEE66033D45C"
+      "Value": "69AD0F6AB67E872018F7E1CA468A667A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -784,7 +797,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.VpcFunction:1.0-DEV",
       "Description": "A sample module defining a Lambda function in VPC",
-      "TemplateChecksum": "4B5760595E3E06E20C16DEE66033D45C",
+      "TemplateChecksum": "69AD0F6AB67E872018F7E1CA468A667A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

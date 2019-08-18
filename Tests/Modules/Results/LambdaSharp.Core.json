@@ -84,7 +84,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D2DA756BF6AFA955A0282AA76BBF47A6"
+      "Default": "B5107A7C7C19F44D0906A5599F54894E"
     }
   },
   "Resources": {
@@ -219,6 +219,9 @@
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
             "LAMBDA_NAME": "ProcessLogEvents",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "DeadLetterQueueIsBlank",
@@ -362,6 +365,9 @@
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
             "LAMBDA_NAME": "RegistrationFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "DeadLetterQueueIsBlank",
@@ -466,6 +472,9 @@
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "STR_CORESECRETSKEY": {
               "Fn::If": [
                 "CoreSecretsKeyIsBlank",
@@ -804,69 +813,11 @@
                   "Sid": "DeploymentBucket",
                   "Effect": "Allow",
                   "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
+                    "s3:GetObject"
                   ],
-                  "Resource": [
-                    {
-                      "Fn::If": [
-                        "CreateDeploymentBucket",
-                        {
-                          "Fn::GetAtt": [
-                            "DeploymentBucketResource",
-                            "Arn"
-                          ]
-                        },
-                        {
-                          "Ref": "ExistingDeploymentBucket"
-                        }
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::If": [
-                              "CreateDeploymentBucket",
-                              {
-                                "Fn::GetAtt": [
-                                  "DeploymentBucketResource",
-                                  "Arn"
-                                ]
-                              },
-                              {
-                                "Ref": "ExistingDeploymentBucket"
-                              }
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/*"
+                  }
                 },
                 {
                   "Sid": "DeadLetterQueue",
@@ -1112,7 +1063,7 @@
       "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "D2DA756BF6AFA955A0282AA76BBF47A6"
+      "Value": "B5107A7C7C19F44D0906A5599F54894E"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1301,7 +1252,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "D2DA756BF6AFA955A0282AA76BBF47A6",
+      "TemplateChecksum": "B5107A7C7C19F44D0906A5599F54894E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

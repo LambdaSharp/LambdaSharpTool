@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D914074BCBDA33DA489AD94D32B9E1F5"
+      "Default": "78F612A7B011DC921D4E143CB4C65DF0"
     }
   },
   "Resources": {
@@ -147,6 +147,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.Macro:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -290,6 +293,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Macro/.assets/*"
+                  }
                 }
               ]
             },
@@ -537,7 +550,7 @@
       "Value": "LambdaSharp.Sample.Macro:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "D914074BCBDA33DA489AD94D32B9E1F5"
+      "Value": "78F612A7B011DC921D4E143CB4C65DF0"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -770,7 +783,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "D914074BCBDA33DA489AD94D32B9E1F5",
+      "TemplateChecksum": "78F612A7B011DC921D4E143CB4C65DF0",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

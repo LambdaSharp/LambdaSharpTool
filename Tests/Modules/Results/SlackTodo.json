@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1BBE16A33B4AB66D152B3DBC567FAB92"
+      "Default": "0748E76C56038591AC010411ABE1F707"
     }
   },
   "Resources": {
@@ -152,6 +152,9 @@
             "MODULE_INFO": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
             "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -358,6 +361,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.assets/*"
+                  }
                 }
               ]
             },
@@ -753,7 +766,7 @@
       "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1BBE16A33B4AB66D152B3DBC567FAB92"
+      "Value": "0748E76C56038591AC010411ABE1F707"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -997,7 +1010,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "1BBE16A33B4AB66D152B3DBC567FAB92",
+      "TemplateChecksum": "0748E76C56038591AC010411ABE1F707",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

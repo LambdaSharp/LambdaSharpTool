@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3DE2E28A235FEE21085EF0ED72F5E6D4"
+      "Default": "F548D4043CBC501398DA362BCC7B739A"
     }
   },
   "Resources": {
@@ -133,6 +133,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.Sns:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -286,6 +289,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Sns/.assets/*"
+                  }
                 }
               ]
             },
@@ -565,7 +578,7 @@
       "Value": "LambdaSharp.Sample.Sns:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "3DE2E28A235FEE21085EF0ED72F5E6D4"
+      "Value": "F548D4043CBC501398DA362BCC7B739A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -798,7 +811,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "3DE2E28A235FEE21085EF0ED72F5E6D4",
+      "TemplateChecksum": "F548D4043CBC501398DA362BCC7B739A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

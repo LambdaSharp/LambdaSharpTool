@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8BEF988D9D484DF38694BC76213E62F7"
+      "Default": "2EFD024616AE36D9E7AFE7F8C3C987CB"
     }
   },
   "Resources": {
@@ -129,6 +129,9 @@
             "MODULE_INFO": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -272,6 +275,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ScheduledEvent/.assets/*"
+                  }
                 }
               ]
             },
@@ -648,7 +661,7 @@
       "Value": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "8BEF988D9D484DF38694BC76213E62F7"
+      "Value": "2EFD024616AE36D9E7AFE7F8C3C987CB"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -881,7 +894,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
-      "TemplateChecksum": "8BEF988D9D484DF38694BC76213E62F7",
+      "TemplateChecksum": "2EFD024616AE36D9E7AFE7F8C3C987CB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

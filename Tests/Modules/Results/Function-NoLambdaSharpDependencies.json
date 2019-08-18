@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F5ACDD6F8F421B5D3884371C15EF6D3A"
+      "Default": "C0489F84B1BC4111CAA9CD8D23DBC2DE"
     }
   },
   "Resources": {
@@ -68,6 +68,9 @@
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "STR_MODULE_ROLE_SECRETSPOLICY": {
               "Fn::If": [
                 "ModuleRoleSecretsPolicyCondition",
@@ -162,6 +165,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucket",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.assets/*"
+                  }
                 }
               ]
             },
@@ -259,7 +272,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "F5ACDD6F8F421B5D3884371C15EF6D3A"
+      "Value": "C0489F84B1BC4111CAA9CD8D23DBC2DE"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -371,7 +384,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "F5ACDD6F8F421B5D3884371C15EF6D3A",
+      "TemplateChecksum": "C0489F84B1BC4111CAA9CD8D23DBC2DE",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
