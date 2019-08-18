@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export LAMBDASHARP_VERSION_PREFIX=0.7.0
-export LAMBDASHARP_VERSION_SUFFIX=rc6
+export LAMBDASHARP_VERSION_SUFFIX=rc7
 
 # create full version text
 if [ -z "$LAMBDASHARP_VERSION_SUFFIX" ]; then
