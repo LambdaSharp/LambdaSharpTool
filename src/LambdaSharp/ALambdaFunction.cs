@@ -506,8 +506,8 @@ namespace LambdaSharp {
             // check if a dead-letter queue is configured
             if(!string.IsNullOrEmpty(_deadLetterQueueUrl)) {
                 await Provider.SendMessageToQueueAsync(_deadLetterQueueUrl, message, new[] {
-                    new KeyValuePair<string, string>("FailedMessageOrigin", origin.ToString()),
-                    new KeyValuePair<string, string>("FailedFunctionArn", CurrentContext.InvokedFunctionArn)
+                    new KeyValuePair<string, string>("LambdaSharp.FailedMessageOrigin", origin.ToString()),
+                    new KeyValuePair<string, string>("LambdaSharp.FailedFunctionArn", CurrentContext.InvokedFunctionArn)
                 });
             } else {
 

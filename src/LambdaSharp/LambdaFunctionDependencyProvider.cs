@@ -126,6 +126,7 @@ namespace LambdaSharp {
                 QueueUrl = deadLetterQueueUrl,
                 MessageBody = message,
                 MessageAttributes = messageAttributes?.ToDictionary(kv => kv.Key, kv => new MessageAttributeValue {
+                    DataType = "String",
                     StringValue = kv.Value
                 }) ?? new Dictionary<string, MessageAttributeValue>()
             });
