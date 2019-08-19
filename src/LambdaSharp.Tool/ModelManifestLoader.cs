@@ -343,14 +343,24 @@ namespace LambdaSharp.Tool {
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
-                && metadata.TryGetValue("LambdaSharp::NameMappings", out var nameMappingsToken)
             ) {
-                var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
-                if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
-                    return nameMappings;
+                if(metadata.TryGetValue("LambdaSharp::NameMappings", out var nameMappingsToken)) {
+                    var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
+                    if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
+                        return nameMappings;
+                    }
+                    LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                    return null;
+                } else if(metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)) {
+
+                    // check if the name mappings are in the old manifest format (pre v0.7)
+                    var nameMappings = manifestToken.ToObject<ModuleNameMappings>();
+                    if((nameMappings.Version != null) && (nameMappings.ResourceNameMappings != null) && (nameMappings.TypeNameMappings != null)) {
+                        return nameMappings;
+                    }
+                    LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                    return null;
                 }
-                LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
-                return null;
             }
             LogError("CloudFormation file does not contain LambdaSharp name mappings");
             return null;
