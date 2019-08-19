@@ -11,7 +11,7 @@ On creation, the contents of the source zip package are copied to the destinatio
 ```yaml
 Using:
 
-  - Module: LambdaSharp.S3.IO:0.5
+  - Module: LambdaSharp.S3.IO:0.5@lambdasharp
 ```
 
 ## Syntax
