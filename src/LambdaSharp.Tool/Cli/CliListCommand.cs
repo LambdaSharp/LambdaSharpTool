@@ -46,7 +46,9 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task List(Settings settings) {
-            await PopulateRuntimeSettingsAsync(settings);
+            if(!await PopulateRuntimeSettingsAsync(settings, requireBucketName: false, requireVersionCheck: false, requireCoreServices: false)) {
+                return;
+            }
 
             // gather module details
             var tierManager = new TierManager(settings);
