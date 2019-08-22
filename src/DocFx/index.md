@@ -8,10 +8,6 @@
 
 The objective of λ# is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
 
-## Give a Star! :star:
-
-If you like or are using this project, please [give it a star on GitHub](https://github.com/LambdaSharp/LambdaSharpTool). Thanks!
-
 ![λ# CLI](images/LashAnsiColor-WIP.gif)
 
 ## Install λ# CLI
