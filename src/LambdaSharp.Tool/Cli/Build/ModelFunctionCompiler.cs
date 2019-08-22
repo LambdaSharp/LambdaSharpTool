@@ -50,7 +50,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // grant read access to deployment bucket
                 _builder.AddGrant(
-                    name: "DeploymentBucket",
+                    name: "DeploymentBucketReadOnly",
                     awsType: null,
                     reference: FnSub($"arn:aws:s3:::${{DeploymentBucketName}}/{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.assets/*"),
                     allow: "s3:GetObject",
