@@ -72,7 +72,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"LambdaSharp Deployment Tier");
             Console.WriteLine($"    Name: {settings.TierName}");
             Console.WriteLine($"    Version: {settings.TierVersion?.ToString() ?? "<NOT SET>"}");
-            Console.WriteLine($"    Core Services: {settings.CoreServices}");
+            Console.WriteLine($"    Core Services: {((settings.CoreServices != CoreServices.Undefined) ? settings.CoreServices.ToString() : "<NOT SET>")}");
             Console.WriteLine($"    Deployment S3 Bucket: {settings.DeploymentBucketName ?? "<NOT SET>"}");
             if(apiGatewayAccount.Arn == null) {
                 Console.WriteLine($"    API Gateway Role: <NOT SET>");
