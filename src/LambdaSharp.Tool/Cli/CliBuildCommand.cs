@@ -489,7 +489,7 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo moduleVersion
         ) {
             try {
-                if(!await PopulateRuntimeSettingsAsync(settings)) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(
@@ -509,7 +509,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task<ModuleInfo> PublishStepAsync(Settings settings, bool forcePublish, string moduleOrigin) {
-            if(!await PopulateRuntimeSettingsAsync(settings)) {
+            if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return null;
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
@@ -517,7 +517,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish) {
-            if(!await PopulateRuntimeSettingsAsync(settings)) {
+            if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return false;
             }
             if(moduleInfo.Origin == settings.DeploymentBucketName) {
@@ -541,7 +541,7 @@ namespace LambdaSharp.Tool.Cli {
             bool deployOnlyIfExists
         ) {
             try {
-                if(!await PopulateRuntimeSettingsAsync(settings)) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                     return false;
                 }
                 if(HasErrors) {

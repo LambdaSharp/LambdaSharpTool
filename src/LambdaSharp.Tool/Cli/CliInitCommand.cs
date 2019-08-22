@@ -127,18 +127,25 @@ namespace LambdaSharp.Tool.Cli {
             //  3. Upgrading an existing tier to enable LambdaSharp.Core services
             //  4. Downgrading an existing tier to disable LambdaSharp.Core services
 
-            await PopulateRuntimeSettingsAsync(
+            // read the current deployment tier settings if possible
+            await PopulateDeploymentTierSettingsAsync(
                 settings,
+
+                // bucket name and core services settings may be missing for deployment tier v0.6 or earlier
                 requireBucketName: false,
-                requireVersionCheck: false,
                 requireCoreServices: false,
+
+                // version is more explicitly checked below
+                requireVersionCheck: false,
+
+                // deployment tier may not exist yet
                 optional: true
             );
             if(HasErrors) {
                 return false;
             }
 
-            // check if a new installation is required or an existing
+            // check if a new installation is required
             var createNewTier = (settings.TierVersion == null);
             var updateExistingTier = false;
             if(!createNewTier) {
@@ -159,8 +166,8 @@ namespace LambdaSharp.Tool.Cli {
                     // tier is older; let's only upgrade it if requested
                     updateExistingTier = true;
 
-                    // tool version is more recent; check if user wants to upgrade tier
-                    if(!allowUpgrade) {
+                    // tool version is more recent; if it's a minor update, proceed without prompting, otherwise ask user to confirm upgrade
+                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.ToolVersion) && !allowUpgrade) {
                         Console.WriteLine($"LambdaSharp Tier is out of date");
                         updateExistingTier = Settings.UseAnsiConsole
                             ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?{AnsiTerminal.Reset}", false)
@@ -178,6 +185,8 @@ namespace LambdaSharp.Tool.Cli {
                     updateExistingTier = true;
                 }
             }
+
+            // TODO (2019-08-22, borg): disable core services in deployed modules if necessary
 
             // check if bootstrap tier needs to be installed or upgraded
             Dictionary<string, string> parameters = null;
@@ -281,7 +290,7 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine("=> No stack update required");
                     }
                 }
-                await PopulateRuntimeSettingsAsync(settings, force: true);
+                await PopulateDeploymentTierSettingsAsync(settings, force: true);
                 if(HasErrors) {
                     return false;
                 }
@@ -397,6 +406,8 @@ namespace LambdaSharp.Tool.Cli {
                     settings.TierVersion = null;
                 }
             }
+
+            // TODO (2019-08-22, borg): enable core services in deployed modules if necessary
             return true;
         }
 

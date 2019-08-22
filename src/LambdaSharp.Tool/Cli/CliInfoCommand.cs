@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Cli {
             string gitBranch,
             bool showSensitive
         ) {
-            await PopulateRuntimeSettingsAsync(settings, optional: true);
+            await PopulateDeploymentTierSettingsAsync(settings, optional: true);
             var apiGatewayAccount = await DetermineMissingApiGatewayRolePolicies(settings);
             var lambdaAccount = await GetLambdaAccountDetails(settings);
 

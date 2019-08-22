@@ -46,7 +46,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task List(Settings settings) {
-            if(!await PopulateRuntimeSettingsAsync(settings, requireBucketName: false, requireVersionCheck: false, requireCoreServices: false)) {
+            if(!await PopulateDeploymentTierSettingsAsync(settings, requireBucketName: false, requireCoreServices: false, requireVersionCheck: false)) {
                 return;
             }
 

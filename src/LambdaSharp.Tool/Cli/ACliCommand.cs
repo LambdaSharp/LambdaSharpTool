@@ -240,11 +240,11 @@ namespace LambdaSharp.Tool.Cli {
             return false;
         }
 
-        protected async Task<bool> PopulateRuntimeSettingsAsync(
+        protected async Task<bool> PopulateDeploymentTierSettingsAsync(
             Settings settings,
             bool requireBucketName = true,
-            bool requireVersionCheck = true,
             bool requireCoreServices = true,
+            bool requireVersionCheck = true,
             bool optional = false,
             bool force = false
         ) {
