@@ -466,8 +466,7 @@ namespace LambdaSharp.Tool.Cli {
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
                                 xRayTracingLevel,
-                                deployOnlyIfExists: false,
-                                allowLambdaSharpCoreUpgrade: false
+                                deployOnlyIfExists: false
                             )) {
                                 break;
                             }
@@ -539,8 +538,7 @@ namespace LambdaSharp.Tool.Cli {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists,
-            bool allowLambdaSharpCoreUpgrade
+            bool deployOnlyIfExists
         ) {
             try {
                 if(!await PopulateRuntimeSettingsAsync(settings)) {
@@ -561,8 +559,7 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy,
                     promptAllParameters,
                     xRayTracingLevel,
-                    deployOnlyIfExists,
-                    allowLambdaSharpCoreUpgrade
+                    deployOnlyIfExists
                 );
             } catch(Exception e) {
                 LogError(e);

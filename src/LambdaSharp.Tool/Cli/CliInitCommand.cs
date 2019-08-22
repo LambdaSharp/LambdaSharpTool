@@ -127,7 +127,13 @@ namespace LambdaSharp.Tool.Cli {
             //  3. Upgrading an existing tier to enable LambdaSharp.Core services
             //  4. Downgrading an existing tier to disable LambdaSharp.Core services
 
-            await PopulateRuntimeSettingsAsync(settings, optional: true);
+            await PopulateRuntimeSettingsAsync(
+                settings,
+                requireBucketName: false,
+                requireVersionCheck: false,
+                requireCoreServices: false,
+                optional: true
+            );
             if(HasErrors) {
                 return false;
             }
@@ -142,7 +148,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(tierToToolVersionComparison == 0) {
 
                     // versions are identical; nothing to do, unless it's a pre-release, which always needs to be updated
-                    updateExistingTier = settings.ToolVersion.IsPreRelease;
+                    updateExistingTier = settings.ToolVersion.IsPreRelease || forceDeploy;
                 } else if(tierToToolVersionComparison > 0) {
 
                     // tier is newer; tool needs to get updated
@@ -150,8 +156,19 @@ namespace LambdaSharp.Tool.Cli {
                     return false;
                 } else if(tierToToolVersionComparison < 0) {
 
-                    // tier is older; let's only upgrade it if we can
+                    // tier is older; let's only upgrade it if requested
                     updateExistingTier = true;
+
+                    // tool version is more recent; check if user wants to upgrade tier
+                    if(!allowUpgrade) {
+                        Console.WriteLine($"LambdaSharp Tier is out of date");
+                        updateExistingTier = Settings.UseAnsiConsole
+                            ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?{AnsiTerminal.Reset}", false)
+                            : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?", false);
+                    }
+                    if(!updateExistingTier) {
+                        return false;
+                    }
                 } else if(!forceDeploy) {
                     LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
@@ -168,8 +185,9 @@ namespace LambdaSharp.Tool.Cli {
                 createNewTier
                 || (updateExistingTier && (
 
-                    // tier is running with disabled core services
+                    // tier is running with disabled (or never enabled) core services
                     (settings.CoreServices == CoreServices.Disabled)
+                    || (settings.CoreServices == CoreServices.Undefined)
 
                     // tier is running with enabled core services, but needs to be downgraded to disabled
                     || ((settings.CoreServices != CoreServices.Disabled) && (coreServices == CoreServices.Disabled))
@@ -369,8 +387,7 @@ namespace LambdaSharp.Tool.Cli {
                     forceDeploy: forceDeploy,
                     promptAllParameters: promptAllParameters,
                     xRayTracingLevel: xRayTracingLevel,
-                    deployOnlyIfExists: !isLambdaSharpCoreModule,
-                    allowLambdaSharpCoreUpgrade: isLambdaSharpCoreModule && allowUpgrade
+                    deployOnlyIfExists: !isLambdaSharpCoreModule
                 )) {
                     return false;
                 }

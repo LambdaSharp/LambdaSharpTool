@@ -240,7 +240,14 @@ namespace LambdaSharp.Tool.Cli {
             return false;
         }
 
-        protected async Task<bool> PopulateRuntimeSettingsAsync(Settings settings, bool optional = false, bool force = false) {
+        protected async Task<bool> PopulateRuntimeSettingsAsync(
+            Settings settings,
+            bool requireBucketName = true,
+            bool requireVersionCheck = true,
+            bool requireCoreServices = true,
+            bool optional = false,
+            bool force = false
+        ) {
             if(
                 (settings.DeploymentBucketName == null)
                 || (settings.TierVersion == null)
@@ -250,7 +257,7 @@ namespace LambdaSharp.Tool.Cli {
                 // attempt to find an existing core module
                 var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
                 var existing = await settings.CfnClient.GetStackAsync(stackName, LogError);
-                if(!existing.Success) {
+                if(existing.Stack == null) {
                     if(!optional) {
                         LogError($"LambdaSharp tier {settings.TierName} does not exist", new LambdaSharpDeploymentTierSetupException(settings.TierName));
                     }
@@ -258,60 +265,72 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // validate module information
+                var result = true;
                 var tierModuleInfoText = existing.Stack?.GetModuleVersionText();
                 if(tierModuleInfoText == null) {
-                    if(!optional) {
+                    if(!optional && result) {
                         LogError($"Could not find LambdaSharp tier information for {stackName}");
                     }
-                    return false;
+                    result = false;
                 }
+
+                // read deployment S3 bucket name
+                var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
+                if((tierModuleBucketArnParts == null) && requireBucketName) {
+                    if(!optional && result) {
+                        LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                    }
+                    result = false;
+                }
+                if(tierModuleBucketArnParts != null) {
+                    if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
+                        LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                        result = false;
+                    }
+                }
+
+                // do some sanity checks
                 if(
                     !ModuleInfo.TryParse(tierModuleInfoText, out var tierModuleInfo)
                     || (tierModuleInfo.Namespace != "LambdaSharp")
                     || (tierModuleInfo.Name != "Core")
                 ) {
                     LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.TierName));
-                    return false;
+                    result = false;
                 }
-                settings.TierVersion = tierModuleInfo.Version;
 
                 // check if tier and tool versions are compatible
-                if(!optional) {
+                if(!optional && (tierModuleInfo != null) && requireVersionCheck) {
                     var tierToToolVersionComparison = tierModuleInfo.Version.CompareToVersion(settings.ToolVersion);
                     if(tierToToolVersionComparison == 0) {
 
                         // versions are identical; nothing to do
                     } else if(tierToToolVersionComparison < 0) {
                         LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                        return false;
+                        result = false;
                     } else if(tierToToolVersionComparison > 0) {
 
                         // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
                     } else {
                         LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
-                        return false;
+                        result = false;
                     }
                 }
 
-                // read deployment S3 bucket name
-                var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
-                if(tierModuleBucketArnParts == null) {
-                    LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                    return false;
-                }
-                if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
-                    LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                    return false;
-                }
-                settings.DeploymentBucketName = tierModuleBucketArnParts[5];
-
                 // read tier mode
                 var coreServicesModeText = GetStackOutput("CoreServices");
-                if(!Enum.TryParse<CoreServices>(coreServicesModeText, true, out var coreServicesMode)) {
-                    LogError("unable to parse CoreServices output value from stack");
-                    return false;
+                if(!Enum.TryParse<CoreServices>(coreServicesModeText, true, out var coreServicesMode) && requireCoreServices) {
+                    if(!optional && result) {
+                        LogError("unable to parse CoreServices output value from stack");
+                    }
+                    result = false;
                 }
+
+                // initialize settings
+                settings.DeploymentBucketName = tierModuleBucketArnParts?[5];
+                settings.TierVersion = tierModuleInfo?.Version;
                 settings.CoreServices = coreServicesMode;
+                return result;
 
                 // local functions
                 string GetStackOutput(string key) => existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;

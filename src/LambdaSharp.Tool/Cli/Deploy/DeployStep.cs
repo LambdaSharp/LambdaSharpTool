@@ -51,8 +51,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             bool forceDeploy,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
-            bool deployOnlyIfExists,
-            bool allowLambdaSharpCoreUpgrade
+            bool deployOnlyIfExists
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
@@ -72,43 +71,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             var manifest = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
             if(manifest == null) {
                 return false;
-            }
-
-            // check that the LambdaSharp Core & CLI versions match
-            if(!forceDeploy && (manifest.GetFullName() == "LambdaSharp.Core")) {
-                var tierToToolVersionComparison = Settings.TierVersion.CompareToVersion(Settings.ToolVersion);
-
-                // core module has special rules for updates
-                if(tierToToolVersionComparison == null) {
-
-                    // tool version and tier version cannot be compared
-                    LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion}); use --force-deploy to proceed anyway");
-                    return false;
-                } else if(tierToToolVersionComparison > 0) {
-
-                    // tier version is more recent; inform user to upgrade tool
-                    LogError($"LambdaSharp tool is not compatible (tool: {Settings.ToolVersion}, tier: {Settings.TierVersion})", new LambdaSharpToolOutOfDateException(Settings.TierVersion));
-                    return false;
-                } else if(tierToToolVersionComparison < 0) {
-
-                    // tool version is more recent; check if user wants to upgrade tier
-                    bool upgrade;
-                    if(!allowLambdaSharpCoreUpgrade) {
-                        Console.WriteLine($"LambdaSharp Tier is out of date");
-                        upgrade = Settings.UseAnsiConsole
-                            ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?{AnsiTerminal.Reset}", false)
-                            : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.TierName}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
-                    } else {
-                        upgrade = true;
-                    }
-                    if(!upgrade) {
-                        return false;
-                    }
-                } else if(!Settings.ToolVersion.IsPreRelease && (Settings.CoreServices != CoreServices.Bootstrap)) {
-
-                    // unless tool version is a pre-release or LambdaSharp.Core is bootstrapping; there is nothing to do
-                    return true;
-                }
             }
 
             // deploy module
