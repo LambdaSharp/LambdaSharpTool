@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         private async Task UpdateCoreServicesAsync(Settings settings, bool? enabled) {
-            if(!await PopulateRuntimeSettingsAsync(settings)) {
+            if(!await PopulateRuntimeSettingsAsync(settings, requireBucketName: false, requireVersionCheck: false, requireCoreServices: false)) {
                 return;
             }
 
