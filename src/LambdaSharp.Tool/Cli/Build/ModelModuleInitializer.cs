@@ -386,11 +386,18 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // add decryption function for secret parameters and values
+            var decryptSecretFunctionEnvironment = new Dictionary<string, object> {
+                ["MODULE_ROLE_SECRETSPOLICY"] = FnIf(
+                    "Module::Role::SecretsPolicy::Condition",
+                    FnRef("Module::Role::SecretsPolicy"),
+                    FnRef("AWS::NoValue")
+                )
+            };
             _builder.AddInlineFunction(
                 parent: moduleItem,
                 name: "DecryptSecretFunction",
                 description: "Module secret decryption function",
-                environment: null,
+                environment: decryptSecretFunctionEnvironment,
                 sources: null,
                 condition: null,
                 pragmas: new[] {

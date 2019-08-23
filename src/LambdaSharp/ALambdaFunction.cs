@@ -579,7 +579,7 @@ namespace LambdaSharp {
         protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId, Dictionary<string, string> encryptionContext = null) {
             return Convert.ToBase64String(await Provider.EncryptSecretAsync(
                 Encoding.UTF8.GetBytes(text),
-                encryptionKeyId,
+                encryptionKeyId ?? throw new ArgumentNullException(encryptionKeyId),
                 encryptionContext
             ));
         }
