@@ -52,27 +52,11 @@ Disable colored ANSI terminal output
 
 ## Examples
 
-### Encrypt command line argument using the default LambdaSharp secrets key
-
-__Using PowerShell/Bash:__
-```bash
-lash encrypt --tier Sandbox "My private API key"
-```
-
-Output:
-```
-LambdaSharp CLI (v0.5) - Encrypt Value
-
-AQICAHh7n6rans2ZnBXULLCW2KSdUUy7RTem4YuI0CcwDz0FoQGkGadrZzSIDzll+mhZDv4PAAAAcDBuBgkqhkiG9w0BBwagYTBfAgEAMFoGCSqGSIb3DQEHATAeBglghkgBZQMEAS4wEQQMPVWgBIicHN7OoJ8cAgEQgC1Lv5Z54jaH9xrYGFgLOfZ1CUTV5KLsFUex50bNBZZlIWNzIJ7Tb+OkHcVF7gs=
-
-Done (finished: 1/18/2019 1:19:29 PM; duration: 00:00:00.9495032)
-```
-
 ### Encrypt file using a specific key
 
 __Using PowerShell/Bash:__
 ```bash
-lash encrypt --key alias/Sandbox-LambdaSharpDefaultSecretKey --tier Sandbox < api-key.txt
+lash encrypt --key alias/MySecretKey --tier Sandbox < api-key.txt
 ```
 
 Output:
