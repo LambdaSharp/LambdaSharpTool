@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CF06A782561660154A0FC9F1BD3B4DD8"
+      "Default": "FCAB38811B81BB2C1E0E3D5BE7930C5E"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "CF06A782561660154A0FC9F1BD3B4DD8"
+      "Value": "FCAB38811B81BB2C1E0E3D5BE7930C5E"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -162,7 +162,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "CF06A782561660154A0FC9F1BD3B4DD8",
+      "TemplateChecksum": "FCAB38811B81BB2C1E0E3D5BE7930C5E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -192,7 +192,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C65FE6B147AAA091E9EF79B61DC7813A"
+      "Default": "908D883704970646CD6D7741D59410AA"
     }
   },
   "Resources": {
@@ -132,7 +132,7 @@
         "SourceBucket": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.IO/.assets/WebsiteContents-DRYRUN.zip",
+        "SourceKey": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.IO/.artifacts/WebsiteContents-DRYRUN.zip",
         "DestinationBucket": {
           "Ref": "WebsiteBucket"
         },
@@ -175,7 +175,7 @@
       "Value": "LambdaSharp.Sample.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "C65FE6B147AAA091E9EF79B61DC7813A"
+      "Value": "908D883704970646CD6D7741D59410AA"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -274,7 +274,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.S3.IO:1.0-DEV",
       "Description": "Showcase how to write files to an S3 bucket",
-      "TemplateChecksum": "C65FE6B147AAA091E9EF79B61DC7813A",
+      "TemplateChecksum": "908D883704970646CD6D7741D59410AA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -321,7 +321,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

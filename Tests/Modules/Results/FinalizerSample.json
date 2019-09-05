@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3C8031CBDCA011FF56F5E9FAFAB551FF"
+      "Default": "651810B5E9CD54157C1B667C82A81A0B"
     }
   },
   "Resources": {
@@ -68,7 +68,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.assets/Finalizer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.artifacts/Finalizer-DRYRUN.zip"
         },
         "Description": "This function is invoked once all other resources have been created/updated (v1.0-DEV)",
         "Environment": {
@@ -283,13 +283,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.artifacts/*"
                   }
                 }
               ]
@@ -422,7 +422,7 @@
       "Value": "LambdaSharp.Sample.Finalizer:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "3C8031CBDCA011FF56F5E9FAFAB551FF"
+      "Value": "651810B5E9CD54157C1B667C82A81A0B"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -579,7 +579,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Finalizer:1.0-DEV",
       "Description": "A sample module with a finalizer function",
-      "TemplateChecksum": "3C8031CBDCA011FF56F5E9FAFAB551FF",
+      "TemplateChecksum": "651810B5E9CD54157C1B667C82A81A0B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -634,7 +634,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

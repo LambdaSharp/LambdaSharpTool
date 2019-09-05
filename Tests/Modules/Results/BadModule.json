@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CEF6C0DA938E33C43F0069F7F11B8423"
+      "Default": "1B3560117E1511BB49DD1F69815EDDFC"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/NearTimeout-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/NearTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -231,7 +231,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/NearOutOfMemory-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/NearOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -384,7 +384,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailBadEntryPoint-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailBadEntryPoint-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -537,7 +537,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailError-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -690,7 +690,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailTimeout-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailTimeout-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -843,7 +843,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailOutOfMemory-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailOutOfMemory-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -996,7 +996,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/FailConstructor-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/FailConstructor-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1149,7 +1149,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsBadSyntax-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/JsBadSyntax-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1302,7 +1302,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsError-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/JsError-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1455,7 +1455,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/JsThrow-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/JsThrow-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -1654,13 +1654,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/BadModule/.artifacts/*"
                   }
                 }
               ]
@@ -2953,7 +2953,7 @@
       "Value": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "CEF6C0DA938E33C43F0069F7F11B8423"
+      "Value": "1B3560117E1511BB49DD1F69815EDDFC"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -3186,7 +3186,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "CEF6C0DA938E33C43F0069F7F11B8423",
+      "TemplateChecksum": "1B3560117E1511BB49DD1F69815EDDFC",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -3259,7 +3259,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

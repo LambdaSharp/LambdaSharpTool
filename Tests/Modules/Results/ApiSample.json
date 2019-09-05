@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F4A552F0861885564BCEB0CAE385A778"
+      "Default": "E0401750A871BAB304E8EBBBF06A4DDA"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -277,13 +277,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.artifacts/*"
                   }
                 }
               ]
@@ -773,7 +773,7 @@
       "Value": "LambdaSharp.Sample.ApiGateway:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "F4A552F0861885564BCEB0CAE385A778"
+      "Value": "E0401750A871BAB304E8EBBBF06A4DDA"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1006,7 +1006,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "F4A552F0861885564BCEB0CAE385A778",
+      "TemplateChecksum": "E0401750A871BAB304E8EBBBF06A4DDA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1079,7 +1079,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

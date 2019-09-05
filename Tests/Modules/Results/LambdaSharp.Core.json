@@ -84,7 +84,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B5107A7C7C19F44D0906A5599F54894E"
+      "Default": "1809D71277C112163BB286C1B81505ED"
     }
   },
   "Resources": {
@@ -192,7 +192,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/ProcessLogEvents-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -338,7 +338,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/RegistrationFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/RegistrationFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -453,192 +453,6 @@
         },
         "RetentionInDays": 30
       }
-    },
-    "Finalizer": {
-      "Type": "AWS::Lambda::Function",
-      "Properties": {
-        "Code": {
-          "S3Bucket": {
-            "Ref": "DeploymentBucketName"
-          },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/Finalizer-DRYRUN.zip"
-        },
-        "Description": "Clean-up resources on tear down (v1.0-DEV)",
-        "Environment": {
-          "Variables": {
-            "MODULE_ID": {
-              "Ref": "AWS::StackName"
-            },
-            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
-            "LAMBDA_NAME": "Finalizer",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
-            "DEPLOYMENTBUCKETNAME": {
-              "Ref": "DeploymentBucketName"
-            },
-            "STR_CORESECRETSKEY": {
-              "Fn::If": [
-                "CoreSecretsKeyIsBlank",
-                {
-                  "Fn::GetAtt": [
-                    "CoreSecretsKeyResource",
-                    "Arn"
-                  ]
-                },
-                {
-                  "Ref": "CoreSecretsKey"
-                }
-              ]
-            },
-            "STR_REGISTRATIONTABLE": {
-              "Fn::GetAtt": [
-                "RegistrationTable",
-                "Arn"
-              ]
-            },
-            "STR_DEPLOYMENTBUCKET": {
-              "Fn::If": [
-                "CreateDeploymentBucket",
-                {
-                  "Fn::GetAtt": [
-                    "DeploymentBucketResource",
-                    "Arn"
-                  ]
-                },
-                {
-                  "Ref": "ExistingDeploymentBucket"
-                }
-              ]
-            },
-            "STR_MODULE_ROLE_SECRETSPOLICY": {
-              "Fn::If": [
-                "ModuleRoleSecretsPolicyCondition",
-                {
-                  "Ref": "ModuleRoleSecretsPolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            }
-          }
-        },
-        "Handler": "Finalizer::LambdaSharp.Core.Finalizer.Function::FunctionHandlerAsync",
-        "MemorySize": "256",
-        "Role": {
-          "Fn::GetAtt": [
-            "ModuleRole",
-            "Arn"
-          ]
-        },
-        "Runtime": "dotnetcore2.1",
-        "Timeout": 900,
-        "TracingConfig": {
-          "Mode": {
-            "Fn::If": [
-              "XRayIsEnabled",
-              "Active",
-              "PassThrough"
-            ]
-          }
-        }
-      }
-    },
-    "FinalizerInvocation": {
-      "Type": "Custom::ModuleFinalizer",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::GetAtt": [
-            "Finalizer",
-            "Arn"
-          ]
-        },
-        "ResourceType": "Module::Finalizer",
-        "DeploymentChecksum": {
-          "Ref": "DeploymentChecksum"
-        },
-        "ModuleVersion": "1.0-DEV",
-        "DependsOn": [
-          {
-            "Fn::If": [
-              "DeadLetterQueueIsBlank",
-              {
-                "Ref": "DeadLetterQueueResource"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "LoggingStreamIsBlank",
-              {
-                "Ref": "LoggingStreamResource"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "CoreSecretsKeyIsBlank",
-              {
-                "Ref": "CoreSecretsKeyResource"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "CreateDeploymentBucket",
-              {
-                "Ref": "DeploymentBucketResource"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "CreateDeploymentBucket",
-              {
-                "Ref": "DeploymentBucketPolicy"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          },
-          {
-            "Fn::If": [
-              "ModuleRoleSecretsPolicyCondition",
-              {
-                "Ref": "ModuleRoleSecretsPolicy"
-              },
-              {
-                "Ref": "AWS::NoValue"
-              }
-            ]
-          }
-        ]
-      },
-      "DependsOn": [
-        "ErrorReportTopic",
-        "Finalizer",
-        "LoggingStreamRole",
-        "ModuleRole",
-        "ProcessLogEvents",
-        "ProcessLogEventsLogGroup",
-        "ProcessLogEventsSource1EventMapping",
-        "RegistrationFunction",
-        "RegistrationFunctionLogGroup",
-        "RegistrationTable",
-        "UsageReportTopic"
-      ]
     },
     "DeploymentBucketResource": {
       "Type": "AWS::S3::Bucket",
@@ -813,11 +627,69 @@
                   "Sid": "DeploymentBucket",
                   "Effect": "Allow",
                   "Action": [
-                    "s3:GetObject"
+                    "s3:AbortMultipartUpload",
+                    "s3:CreateBucket",
+                    "s3:DeleteObject",
+                    "s3:DeleteObjectTagging",
+                    "s3:DeleteObjectVersion",
+                    "s3:DeleteObjectVersionTagging",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:GetObjectAcl",
+                    "s3:GetObjectTagging",
+                    "s3:GetObjectTorrent",
+                    "s3:GetObjectVersion",
+                    "s3:GetObjectVersionAcl",
+                    "s3:GetObjectVersionTagging",
+                    "s3:GetObjectVersionTorrent",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:ListMultipartUploadParts",
+                    "s3:PutObject",
+                    "s3:PutObjectAcl",
+                    "s3:PutObjectTagging",
+                    "s3:PutObjectVersionAcl",
+                    "s3:PutObjectVersionTagging",
+                    "s3:RestoreObject"
                   ],
-                  "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Core/.assets/*"
-                  }
+                  "Resource": [
+                    {
+                      "Fn::If": [
+                        "CreateDeploymentBucket",
+                        {
+                          "Fn::GetAtt": [
+                            "DeploymentBucketResource",
+                            "Arn"
+                          ]
+                        },
+                        {
+                          "Ref": "ExistingDeploymentBucket"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Join": [
+                        "",
+                        [
+                          {
+                            "Fn::If": [
+                              "CreateDeploymentBucket",
+                              {
+                                "Fn::GetAtt": [
+                                  "DeploymentBucketResource",
+                                  "Arn"
+                                ]
+                              },
+                              {
+                                "Ref": "ExistingDeploymentBucket"
+                              }
+                            ]
+                          },
+                          "/*"
+                        ]
+                      ]
+                    }
+                  ]
                 },
                 {
                   "Sid": "DeadLetterQueue",
@@ -870,6 +742,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucketReadOnly",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/*"
+                  }
                 }
               ]
             },
@@ -1063,7 +945,7 @@
       "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B5107A7C7C19F44D0906A5599F54894E"
+      "Value": "1809D71277C112163BB286C1B81505ED"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1252,7 +1134,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "B5107A7C7C19F44D0906A5599F54894E",
+      "TemplateChecksum": "1809D71277C112163BB286C1B81505ED",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1352,7 +1234,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [],
       "ResourceTypes": [
         {
@@ -1486,14 +1368,11 @@
         "CoreSecretsKeyResource": "CoreSecretsKey::Resource",
         "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
         "RegistrationFunctionLogGroup": "RegistrationFunction::LogGroup",
-        "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
         "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping"
       },
-      "TypeNameMappings": {
-        "Custom::ModuleFinalizer": "Module::Finalizer"
-      }
+      "TypeNameMappings": {}
     }
   }
 }

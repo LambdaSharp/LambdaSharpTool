@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B11105FE4BBA31007867DFE03F401C35"
+      "Default": "BF3C410E73DAABBC47A739D616CE285B"
     }
   },
   "Resources": {
@@ -82,7 +82,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/S3.Subscriber/.assets/ResourceHandler-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/S3.Subscriber/.artifacts/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -316,13 +316,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/S3.Subscriber/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/S3.Subscriber/.artifacts/*"
                   }
                 }
               ]
@@ -613,7 +613,7 @@
       "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B11105FE4BBA31007867DFE03F401C35"
+      "Value": "BF3C410E73DAABBC47A739D616CE285B"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -846,7 +846,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "B11105FE4BBA31007867DFE03F401C35",
+      "TemplateChecksum": "BF3C410E73DAABBC47A739D616CE285B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -919,7 +919,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

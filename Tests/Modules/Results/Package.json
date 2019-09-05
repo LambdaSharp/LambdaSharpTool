@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8CB67967B8C832832AF79829110F677A"
+      "Default": "601EB056A5303E97393EFE9B829EB6AB"
     }
   },
   "Resources": {
@@ -91,7 +91,7 @@
         "SourceBucketName": {
           "Ref": "DeploymentBucketName"
         },
-        "SourceKey": "<%MODULE_ORIGIN%>/Test/TestModule/.assets/FilesPackage-DRYRUN.zip"
+        "SourceKey": "<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/FilesPackage-DRYRUN.zip"
       }
     },
     "Function": {
@@ -101,7 +101,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/Test/TestModule/.assets/Function-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -336,13 +336,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
                   }
                 }
               ]
@@ -591,7 +591,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "8CB67967B8C832832AF79829110F677A"
+      "Value": "601EB056A5303E97393EFE9B829EB6AB"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -824,7 +824,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "8CB67967B8C832832AF79829110F677A",
+      "TemplateChecksum": "601EB056A5303E97393EFE9B829EB6AB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -897,7 +897,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

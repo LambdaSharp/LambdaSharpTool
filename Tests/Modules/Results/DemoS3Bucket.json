@@ -35,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B8A44F315C94D970DA326CACC7B3A8E1"
+      "Default": "4DA7474B996886155A578FFF93EBA963"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
       "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B8A44F315C94D970DA326CACC7B3A8E1"
+      "Value": "4DA7474B996886155A578FFF93EBA963"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -161,7 +161,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Bucket:1.0-DEV",
-      "TemplateChecksum": "B8A44F315C94D970DA326CACC7B3A8E1",
+      "TemplateChecksum": "4DA7474B996886155A578FFF93EBA963",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -191,7 +191,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

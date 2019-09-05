@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "BB3280ADFD8E5007DB615519522F7064"
+      "Default": "4182EFE0BBDE19F77250F000DDBDAEEA"
     }
   },
   "Resources": {
@@ -86,7 +86,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -389,13 +389,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.artifacts/*"
                   }
                 }
               ]
@@ -757,7 +757,7 @@
       "Value": "LambdaSharp.Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "BB3280ADFD8E5007DB615519522F7064"
+      "Value": "4182EFE0BBDE19F77250F000DDBDAEEA"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -990,7 +990,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "BB3280ADFD8E5007DB615519522F7064",
+      "TemplateChecksum": "4182EFE0BBDE19F77250F000DDBDAEEA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1063,7 +1063,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

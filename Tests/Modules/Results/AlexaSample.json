@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F608C47E4565CF67FD5EE3A20412D6C1"
+      "Default": "DADD822FE2E9B79D25269F4DE52E5E97"
     }
   },
   "Resources": {
@@ -83,7 +83,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.assets/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -282,13 +282,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.artifacts/*"
                   }
                 }
               ]
@@ -561,7 +561,7 @@
       "Value": "LambdaSharp.Sample.Alexa:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "F608C47E4565CF67FD5EE3A20412D6C1"
+      "Value": "DADD822FE2E9B79D25269F4DE52E5E97"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -813,7 +813,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
       "Description": "A sample module using an Alexa skill",
-      "TemplateChecksum": "F608C47E4565CF67FD5EE3A20412D6C1",
+      "TemplateChecksum": "DADD822FE2E9B79D25269F4DE52E5E97",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -896,7 +896,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

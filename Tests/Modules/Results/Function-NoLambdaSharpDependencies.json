@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C0489F84B1BC4111CAA9CD8D23DBC2DE"
+      "Default": "DB145A0C23108B2E5D6C72A03AB58481"
     }
   },
   "Resources": {
@@ -57,7 +57,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/Test/TestModule/.assets/Function-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/Function-DRYRUN.zip"
         },
         "Description": "My function (v1.0-DEV)",
         "Environment": {
@@ -167,13 +167,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
                   }
                 }
               ]
@@ -272,7 +272,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "C0489F84B1BC4111CAA9CD8D23DBC2DE"
+      "Value": "DB145A0C23108B2E5D6C72A03AB58481"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -384,7 +384,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "C0489F84B1BC4111CAA9CD8D23DBC2DE",
+      "TemplateChecksum": "DB145A0C23108B2E5D6C72A03AB58481",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -425,7 +425,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

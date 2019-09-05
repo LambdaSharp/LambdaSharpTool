@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DC5C18CBC623801ECE77B3028EA5D764"
+      "Default": "68AB78FAE85E9E8180EA9FFA7C3E7BD6"
     }
   },
   "Resources": {
@@ -138,7 +138,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Twitter.Query/.assets/QueryFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Twitter.Query/.artifacts/QueryFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -433,13 +433,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Twitter.Query/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Twitter.Query/.artifacts/*"
                   }
                 }
               ]
@@ -744,7 +744,7 @@
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "DC5C18CBC623801ECE77B3028EA5D764"
+      "Value": "68AB78FAE85E9E8180EA9FFA7C3E7BD6"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1015,7 +1015,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "DC5C18CBC623801ECE77B3028EA5D764",
+      "TemplateChecksum": "68AB78FAE85E9E8180EA9FFA7C3E7BD6",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1139,7 +1139,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

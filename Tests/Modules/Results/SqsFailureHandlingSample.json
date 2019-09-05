@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A9C8376E89F90CEF9D16C6033D6B9D80"
+      "Default": "658A744BB3F2D66732339F1EC7C5B03A"
     }
   },
   "Resources": {
@@ -97,7 +97,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.assets/SqsProducer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/SqsProducer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -256,7 +256,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.assets/SqsConsumer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/SqsConsumer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -483,13 +483,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/*"
                   }
                 }
               ]
@@ -870,7 +870,7 @@
       "Value": "LambdaSharp.Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "A9C8376E89F90CEF9D16C6033D6B9D80"
+      "Value": "658A744BB3F2D66732339F1EC7C5B03A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1103,7 +1103,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "A9C8376E89F90CEF9D16C6033D6B9D80",
+      "TemplateChecksum": "658A744BB3F2D66732339F1EC7C5B03A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1176,7 +1176,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",

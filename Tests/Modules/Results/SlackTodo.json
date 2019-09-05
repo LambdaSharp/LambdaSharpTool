@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0748E76C56038591AC010411ABE1F707"
+      "Default": "CFE3D7513F4E40CE773EB5C4C0BC15FB"
     }
   },
   "Resources": {
@@ -101,7 +101,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.assets/SlackCommand-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.artifacts/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -363,13 +363,13 @@
                   "Resource": "*"
                 },
                 {
-                  "Sid": "DeploymentBucket",
+                  "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.assets/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.artifacts/*"
                   }
                 }
               ]
@@ -766,7 +766,7 @@
       "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "0748E76C56038591AC010411ABE1F707"
+      "Value": "CFE3D7513F4E40CE773EB5C4C0BC15FB"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1010,7 +1010,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "0748E76C56038591AC010411ABE1F707",
+      "TemplateChecksum": "CFE3D7513F4E40CE773EB5C4C0BC15FB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1093,7 +1093,7 @@
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
-      "Assets": [],
+      "Artifacts": [],
       "Dependencies": [
         {
           "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
