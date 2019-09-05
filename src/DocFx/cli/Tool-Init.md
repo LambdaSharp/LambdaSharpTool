@@ -86,6 +86,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)
 </dd>
 
+<dt><code>--allow-upgrade</code></dt>
+<dd>
+
+(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)
+</dd>
+
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
 
