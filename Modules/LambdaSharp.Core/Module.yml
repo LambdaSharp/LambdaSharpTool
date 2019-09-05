@@ -253,12 +253,6 @@ Items:
         Description: Registration ID
         Type: String
 
-  # Module Finalizer
-  - Function: Finalizer
-    Description: Clean-up resources on tear down
-    Memory: 256
-    Timeout: 900
-
   #######################
   # Bootstrap Resources #
   #######################
@@ -302,7 +296,7 @@ Items:
 
   - Resource: DeploymentBucket
     Description: S3 bucket for published modules (ARN)
-    Scope: public, Finalizer
+    Scope: public
     Value: !If
       - CreateDeploymentBucket
       - !GetAtt DeploymentBucketResource.Arn
