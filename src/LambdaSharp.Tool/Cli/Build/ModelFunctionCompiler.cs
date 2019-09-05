@@ -836,6 +836,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     HttpMethod = source.HttpMethod,
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
+                    AuthorizerId = source.AuthorizerId,
+                    AuthorizationScopes =  source.AuthorizationScopes,
                     ResourceId = parentId,
                     RestApiId = restApiId,
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
@@ -856,6 +858,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     HttpMethod = source.HttpMethod,
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
+                    AuthorizerId = source.AuthorizerId,
+                    AuthorizationScopes =  source.AuthorizationScopes,
                     ResourceId = parentId,
                     RestApiId = restApiId,
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
