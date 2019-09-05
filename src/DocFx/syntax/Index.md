@@ -12,7 +12,7 @@ Parameters, variables, and resources can be shared with other modules by making 
 
 Functions can be wired up to respond to various event sources, such as SQS, SNS, API Gateway, or even Slack Commands. Functions can be implemented using C# or Javascript.
 
-The λ# CLI `build` command compiles the module into a CloudFormation template. The `publish` command uploads the assets to the deployment bucket. Finally, the `deploy` command creates/updates a CloudFormation stack.
+The λ# CLI `build` command compiles the module into a CloudFormation template. The `publish` command uploads the artifacts to the deployment bucket. Finally, the `deploy` command creates/updates a CloudFormation stack.
 
 ## Syntax
 

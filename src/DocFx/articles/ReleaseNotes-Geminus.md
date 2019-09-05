@@ -4,7 +4,7 @@
 
 ## What's New
 
-This release focuses on making it easy to share modules with others and streamlining the creation and upgrading of λ# deployment tiers. Prior to this release, λ# modules had to be made available in an S3 bucket for each region used by a deployment tier. In 0.7.0, the λ# CLI now automatically imports modules and their assets into the S3 bucket of the deployment tier, regardless of the origin region. This new behavior also safeguards against disruption should the original λ# module become unavailable at a later date since a copy is maintained in the deployment bucket. To further enhance deployment consistency, external modules are only imported during the publishing phase. The deployment phase relies entirely on the modules available in the S3 bucket of the deployment tier.
+This release focuses on making it easy to share modules with others and streamlining the creation and upgrading of λ# deployment tiers. Prior to this release, λ# modules had to be made available in an S3 bucket for each region used by a deployment tier. In 0.7.0, the λ# CLI now automatically imports modules and their artifacts into the S3 bucket of the deployment tier, regardless of the origin region. This new behavior also safeguards against disruption should the original λ# module become unavailable at a later date since a copy is maintained in the deployment bucket. To further enhance deployment consistency, external modules are only imported during the publishing phase. The deployment phase relies entirely on the modules available in the S3 bucket of the deployment tier.
 
 ### Upgrade Procedure from v0.6.1 to v0.7.0
 
@@ -69,9 +69,9 @@ The `lash build` command has two new options for advanced use cases. First, is t
 
 ### Publish Command
 
-The `lash publish` command has a new option to override the module origin information using `--module-origin`. By default, the module origin for a newly published module is the name of the deployment bucket. However, it may be sometimes necessary to publish a new version of a module that originated from somewhere else, such as deploying an urgent fix. With the `--module-origin` option, it is possible to publish a module into the S3 bucket of the deployment tier, while making it look like it was imported. As a result, all subsequent deployments will resolve their dependencies to this new module. The imported module and its assets are annotated with a metadata field (`x-amz-meta-lambdasharp-origin`) that describes their true origin.
+The `lash publish` command has a new option to override the module origin information using `--module-origin`. By default, the module origin for a newly published module is the name of the deployment bucket. However, it may be sometimes necessary to publish a new version of a module that originated from somewhere else, such as deploying an urgent fix. With the `--module-origin` option, it is possible to publish a module into the S3 bucket of the deployment tier, while making it look like it was imported. As a result, all subsequent deployments will resolve their dependencies to this new module. The imported module and its artifacts are annotated with a metadata field (`x-amz-meta-lambdasharp-origin`) that describes their true origin.
 
-The `lash publish` command is responsible for uploading the module assets to the deployment bucket, as well as importing all dependencies. Modules from a foreign origin can also be imported explicitly by this command.
+The `lash publish` command is responsible for uploading the module artifacts to the deployment bucket, as well as importing all dependencies. Modules from a foreign origin can also be imported explicitly by this command.
 
 __Using PowerShell/Bash:__
 ```bash
@@ -86,7 +86,7 @@ LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
 Done (finished: 8/16/2019 10:27:01 AM; duration: 00:00:04.5205374)
 ```
 
-To accommodate combining modules from various origins in a single S3 deployment bucket, the structure of the S3 keys had to be revisited. All published/imported modules and their assets now have the following prefix `{Module::Origin}/{Module::Namespace}/{Module::Name}`, which ensures there will never be any conflicts, since S3 bucket names (i.e. the module origin) is guaranteed to be globally unique. The module manifest--which describes the parameters, resource type definitions, dependencies, and assets--is located at `{Module::Origin}/{Module::Namespace}/{Module::Name}/{Module::Version}`. The module assets, across all versions, are located at `{Origin}/{ModulePrefix}/{ModuleSuffix}/.assets/`.
+To accommodate combining modules from various origins in a single S3 deployment bucket, the structure of the S3 keys had to be revisited. All published/imported modules and their artifacts now have the following prefix `{Module::Origin}/{Module::Namespace}/{Module::Name}`, which ensures there will never be any conflicts, since S3 bucket names (i.e. the module origin) is guaranteed to be globally unique. The module manifest--which describes the parameters, resource type definitions, dependencies, and artifacts--is located at `{Module::Origin}/{Module::Namespace}/{Module::Name}/{Module::Version}`. The module artifacts, across all versions, are located at `{Origin}/{ModulePrefix}/{ModuleSuffix}/.artifacts/`.
 
 ### Deploy Command
 

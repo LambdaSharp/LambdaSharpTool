@@ -424,7 +424,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // set the module variable to the final package name
-            _builder.AddAsset($"{function.FullName}::PackageName", package);
+            _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
         private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
@@ -542,7 +542,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(!_existingPackages.Remove(package)) {
                 CreatePackage(package, gitSha, gitBranch, buildFolder);
             }
-            _builder.AddAsset($"{function.FullName}::PackageName", package);
+            _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
         private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {

@@ -71,7 +71,7 @@ lash build
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
-(optional) Generate output assets without deploying (0=everything, 1=cloudformation)
+(optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)
 </dd>
 
 <dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>

@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool {
             foreach(var error in _errors) {
                 var builder = new StringBuilder();
                 if(UseAnsiConsole) {
-                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.Yellow);
+                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.BrightYellow);
                 }
                 if(error.Error) {
                     builder.Append("ERROR: " + error.Message);
@@ -170,7 +170,7 @@ namespace LambdaSharp.Tool {
             }
         }
 
-        private static void WriteAnsiLine(string text, string ansiColor) {
+        public static void WriteAnsiLine(string text, string ansiColor) {
             if(UseAnsiConsole) {
                 Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
             } else {

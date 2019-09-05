@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Model {
         private Dictionary<string, AModuleItem> _itemsByFullName;
         private List<AModuleItem> _items;
         private IList<Humidifier.Statement> _resourceStatements = new List<Humidifier.Statement>();
-        private IList<string> _assets;
+        private IList<string> _artifacts;
         private IDictionary<string, ModuleBuilderDependency> _dependencies;
         private IList<ModuleManifestResourceType> _customResourceTypes;
         private IList<string> _macroNames;
@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Model {
             _secrets = new List<object>(module.Secrets ?? new object[0]);
             _items = new List<AModuleItem>(module.Items ?? new AModuleItem[0]);
             _itemsByFullName = _items.ToDictionary(item => item.FullName);
-            _assets = new List<string>(module.Assets ?? new string[0]);
+            _artifacts = new List<string>(module.Artifacts ?? new string[0]);
             _dependencies = (module.Dependencies != null)
                 ? new Dictionary<string, ModuleBuilderDependency>(module.Dependencies)
                 : new Dictionary<string, ModuleBuilderDependency>();
@@ -164,11 +164,11 @@ namespace LambdaSharp.Tool.Model {
             }
         }
 
-        public void AddAsset(string fullName, string asset) {
-            _assets.Add(Path.GetRelativePath(Settings.OutputDirectory, asset));
+        public void AddArtifact(string fullName, string artifact) {
+            _artifacts.Add(Path.GetRelativePath(Settings.OutputDirectory, artifact));
 
-            // update item with the name of the asset
-            GetItem(fullName).Reference = Path.GetFileName(asset);
+            // update item with the name of the artifact
+            GetItem(fullName).Reference = Path.GetFileName(artifact);
         }
 
         public async Task<ModuleBuilderDependency> AddDependencyAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType) {
@@ -844,7 +844,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = ModuleInfo.GetModuleAssetExpression($"${{{packageName.FullName}}}");
+            package.Reference = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
             return package;
         }
 
@@ -953,7 +953,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = ModuleInfo.GetModuleAssetExpression($"${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
 
             // check if function is a finalizer
             var isFinalizer = (parent == null) && (name == "Finalizer");
@@ -1209,7 +1209,7 @@ namespace LambdaSharp.Tool.Model {
                 Pragmas = _pragmas,
                 Secrets = _secrets,
                 Items = _items,
-                Assets = _assets.OrderBy(value => value).ToList(),
+                Artifacts = _artifacts.OrderBy(value => value).ToList(),
                 Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
                 CustomResourceTypes = _customResourceTypes.OrderBy(resourceType => resourceType.Type).ToList(),
                 MacroNames = _macroNames.OrderBy(value => value).ToList(),

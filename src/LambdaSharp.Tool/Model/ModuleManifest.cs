@@ -52,13 +52,13 @@ namespace LambdaSharp.Tool.Model {
         public VersionInfo CoreServicesVersion { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
         public ModuleManifestGitInfo Git { get; set; }
-        public IList<string> Assets { get; set; } = new List<string>();
+        public IList<string> Artifacts { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
 
         //--- Methods ---
-        public string GetModuleTemplatePath() => ModuleInfo.GetAssetPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
+        public string GetModuleTemplatePath() => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
         public string GetFullName() => ModuleInfo.FullName;
         public string GetNamespace() => ModuleInfo.Namespace;
         public string GetName() => ModuleInfo.Name;

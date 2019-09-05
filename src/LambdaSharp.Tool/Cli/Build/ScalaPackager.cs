@@ -144,7 +144,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // decompress project zip into temporary folder so we can add the 'GITSHAFILE' files
-            builder.AddAsset($"{function.FullName}::PackageName", package);
+            builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
     }
 }

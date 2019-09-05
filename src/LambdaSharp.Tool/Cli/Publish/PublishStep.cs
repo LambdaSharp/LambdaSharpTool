@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             Console.WriteLine($"Publishing module: {manifest.GetFullName()}");
 
             // verify that all files referenced by manifest exist (NOTE: source file was already checked)
-            foreach(var file in manifest.Assets) {
+            foreach(var file in manifest.Artifacts) {
                 var filepath = Path.Combine(Settings.OutputDirectory, file);
                 if(!File.Exists(filepath)) {
                     LogError($"could not find: '{filepath}'");
@@ -113,9 +113,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 return null;
             }
 
-            // upload assets
-            for(var i = 0; i < manifest.Assets.Count; ++i) {
-                await UploadPackageAsync(manifest, manifest.Assets[i], "asset");
+            // upload artifacts
+            for(var i = 0; i < manifest.Artifacts.Count; ++i) {
+                await UploadArtifactAsync(manifest, manifest.Artifacts[i], "artifact");
             }
 
             // upload CloudFormation template
@@ -135,9 +135,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
                 await _transferUtility.UploadAsync(request);
             } else {
-
-                // NOTE: this message should never appear since we already do a similar check earlier
-                Console.WriteLine($"=> No changes found to upload");
+                Settings.WriteAnsiLine($"=> No changes found to upload", AnsiTerminal.BrightBlack);
             }
             return manifest.ModuleInfo;
         }
@@ -177,8 +175,8 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // import module
             var imported = false;
-            foreach(var asset in manifest.Assets) {
-                imported = imported | await ImportS3Object(moduleInfo.Origin, asset, replace: forcePublish);
+            foreach(var artifact in manifest.Artifacts) {
+                imported = imported | await ImportS3Object(moduleInfo.Origin, artifact, replace: forcePublish);
             }
             imported = imported | await ImportS3Object(moduleInfo.Origin, moduleInfo.VersionPath, replace: forcePublish || moduleInfo.Version.IsPreRelease);
             if(imported) {
@@ -201,15 +199,15 @@ namespace LambdaSharp.Tool.Cli.Publish {
             foreach(var dependency in dependencies.Where(dependency => dependency.ModuleLocation.SourceBucketName != Settings.DeploymentBucketName)) {
                 var imported = false;
 
-                // copy check-summed module assets (guaranteed immutable)
-                foreach(var asset in dependency.Manifest.Assets) {
-                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, asset);
+                // copy check-summed module artifacts (guaranteed immutable)
+                foreach(var artifact in dependency.Manifest.Artifacts) {
+                    imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, artifact);
                 }
 
                 // copy version manifest
                 imported = imported | await ImportS3Object(dependency.ModuleLocation.ModuleInfo.Origin, dependency.ModuleLocation.ModuleInfo.VersionPath, replace: dependency.ModuleLocation.ModuleInfo.Version.IsPreRelease);
 
-                // show message if any assets were imported
+                // show message if any artifacts were imported
                 if(imported) {
                     Console.WriteLine($"=> Imported {dependency.ModuleLocation.ModuleInfo}");
                 }
@@ -220,14 +218,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
         private async Task<string> UploadTemplateFileAsync(ModuleManifest manifest, string description) {
             var moduleInfo = manifest.ModuleInfo;
 
-            // rewrite assets in manifest to have an absolute path
-            manifest.Assets = manifest.Assets
-                .OrderBy(asset => asset)
-                .Select(asset => moduleInfo.GetAssetPath(asset)).ToList();
+            // rewrite artifacts in manifest to have an absolute path
+            manifest.Artifacts = manifest.Artifacts
+                .OrderBy(artifact => artifact)
+                .Select(artifact => moduleInfo.GetArtifactPath(artifact)).ToList();
 
-            // add template to list of assets
+            // add template to list of artifacts
             var destinationKey = manifest.GetModuleTemplatePath();
-            manifest.Assets.Insert(0, destinationKey);
+            manifest.Artifacts.Insert(0, destinationKey);
 
             // update cloudformation template with manifest and minify it
             var template = File.ReadAllText(SourceFilename)
@@ -257,11 +255,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
             return destinationKey;
         }
 
-        private async Task<string> UploadPackageAsync(ModuleManifest manifest, string relativeFilePath, string description) {
+        private async Task<string> UploadArtifactAsync(ModuleManifest manifest, string relativeFilePath, string description) {
             var filePath = Path.Combine(Settings.OutputDirectory, relativeFilePath);
 
             // only upload files that don't exist
-            var destinationKey = manifest.ModuleInfo.GetAssetPath(Path.GetFileName(filePath));
+            var destinationKey = manifest.ModuleInfo.GetArtifactPath(Path.GetFileName(filePath));
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
                 Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
                 var request = new TransferUtilityUploadRequest {

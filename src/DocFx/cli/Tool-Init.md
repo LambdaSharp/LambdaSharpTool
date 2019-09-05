@@ -41,7 +41,7 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 <dt><code>--force-publish</code></dt>
 <dd>
 
-(optional) Publish modules and their assets even when no changes were detected
+(optional) Publish modules and their artifacts even when no changes were detected
 </dd>
 
 <dt><code>--force-deploy</code></dt>

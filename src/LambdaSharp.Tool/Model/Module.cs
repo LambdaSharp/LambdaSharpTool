@@ -35,7 +35,7 @@ namespace LambdaSharp.Tool.Model {
         public IEnumerable<object> Pragmas { get; set; }
         public IEnumerable<object> Secrets { get; set; }
         public IEnumerable<AModuleItem> Items { get; set; }
-        public IEnumerable<string> Assets { get; set; }
+        public IEnumerable<string> Artifacts { get; set; }
         public IEnumerable<KeyValuePair<string, ModuleBuilderDependency>> Dependencies { get; set; }
         public IEnumerable<ModuleManifestResourceType> CustomResourceTypes { get; set; }
         public IEnumerable<string> MacroNames { get; set; }

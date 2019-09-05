@@ -47,7 +47,7 @@ lash new function MyFunction
 lash deploy
 ```
 
-The λ# CLI uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
+The λ# CLI uses a YAML file to compile the C# projects, upload artifacts, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
 
 ```yaml
 Module: MySampleModule

@@ -100,7 +100,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             ConstraintDescription = input.Parameter.ConstraintDescription
                         }).ToList()
                     }).ToList(),
-                Assets = module.Assets.ToList(),
+                Artifacts = module.Artifacts.ToList(),
                 Dependencies = module.Dependencies
                     .Select(dependency => new ModuleManifestDependency {
                         ModuleInfo = dependency.Value.ModuleLocation.ModuleInfo,

@@ -168,7 +168,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }
                 }
-                _builder.AddAsset($"{parameter.FullName}::PackageName", package);
+                _builder.AddArtifact($"{parameter.FullName}::PackageName", package);
             });
         }
     }

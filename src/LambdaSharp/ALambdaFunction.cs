@@ -103,7 +103,7 @@ namespace LambdaSharp {
             public string DeadLetterQueueUrl => _function._deadLetterQueueUrl;
 
             /// <summary>
-            /// The S3 bucket name where the module assets are located.
+            /// The S3 bucket name where the module artifacts are located.
             /// </summary>
             public string DeploymentBucketName => _function._deploymentBucketName;
         }

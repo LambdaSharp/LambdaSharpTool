@@ -32,7 +32,7 @@ namespace LambdaSharp.Tool {
 
     public enum DryRunLevel {
 
-        // compile module, build assets, publish module
+        // compile module, build artifacts, publish module
         Everything,
 
         // compile module

@@ -51,7 +51,7 @@ namespace LambdaSharp.Tool.Internal {
         };
 
         private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
-            ["CREATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["CREATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["CREATE_FAILED"] = AnsiTerminal.Red,
             ["CREATE_COMPLETE"] = AnsiTerminal.Green,
 
@@ -59,13 +59,13 @@ namespace LambdaSharp.Tool.Internal {
             ["ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
 
-            ["DELETE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["DELETE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["DELETE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
 
-            ["UPDATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
-            ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_COMPLETE"] = AnsiTerminal.Green,
 
             ["UPDATE_ROLLBACK_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,

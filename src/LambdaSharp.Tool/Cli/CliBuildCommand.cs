@@ -56,10 +56,10 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--cfn-output <PATH>", "(optional) Output location for generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
 
         public static CommandOption AddDryRunOption(CommandLineApplication cmd)
-            => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
+            => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
 
         public static CommandOption AddForcePublishOption(CommandLineApplication cmd)
-            => cmd.Option("--force-publish", "(optional) Publish modules and their assets even when no changes were detected", CommandOptionType.NoValue);
+            => cmd.Option("--force-publish", "(optional) Publish modules and their artifacts even when no changes were detected", CommandOptionType.NoValue);
 
         public static CommandOption AddModuleVersionOption(CommandLineApplication cmd)
             => cmd.Option("--module-version", "(optional) Override the module version", CommandOptionType.SingleValue);
@@ -187,7 +187,7 @@ namespace LambdaSharp.Tool.Cli {
                 var moduleOriginOption = cmd.Option("--module-origin", "(optional) Set alternative module origin when publishing", CommandOptionType.SingleValue);
 
                 // build options
-                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module definition/folder (default: Module.yml)", multipleValues: true);
+                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
                 var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
@@ -313,7 +313,7 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Deploy LambdaSharp module";
 
                 // deploy options
-                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module definition/folder (default: Module.yml)", multipleValues: true);
+                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to artifacts folder, or module definition/folder (default: Module.yml)", multipleValues: true);
                 var alternativeNameOption = cmd.Option("--name <NAME>", "(optional) Specify an alternative module name for the deployment (default: module name)", CommandOptionType.SingleValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);

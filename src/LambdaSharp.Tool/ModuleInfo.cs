@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool {
 
         //--- Properties ---
         public string ModuleTemplateUrl => $"https://{SourceBucketName}.s3.amazonaws.com/{ModuleTemplateKey}";
-        public string ModuleTemplateKey => ModuleInfo.GetAssetPath($"cloudformation_{ModuleInfo.FullName}_{Hash}.json");
+        public string ModuleTemplateKey => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{Hash}.json");
 
         //--- Constructors ---
         public ModuleLocation(string sourceBucketName, ModuleInfo moduleInfo, string hash) {
@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleAssetExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.assets/{filename}");
+        public static object GetModuleArtifactExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
         public static ModuleInfo Parse(string moduleReference) {
             if(TryParse(moduleReference, out var result)) {
@@ -122,7 +122,7 @@ namespace LambdaSharp.Tool {
         public string VersionPath => $"{Origin ?? throw new ApplicationException("missing Origin information")}/{Namespace}/{Name}/{Version ?? throw new ApplicationException("missing Version information")}";
 
         //--- Methods ---
-        public string GetAssetPath(string assetName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Namespace}/{Name}/.assets/{assetName}";
+        public string GetArtifactPath(string artifactName) => $"{Origin ?? MODULE_ORIGIN_PLACEHOLDER}/{Namespace}/{Name}/.artifacts/{artifactName}";
 
         public string ToPrettyString() {
             var result = new StringBuilder();
