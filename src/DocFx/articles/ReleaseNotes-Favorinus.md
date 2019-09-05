@@ -1,4 +1,4 @@
-# λ# - Favorinus (v0.6.0.3) - 2019-07-01
+# λ# - Favorinus (v0.6.1) - 2019-09-05
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
@@ -184,6 +184,11 @@ The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayF
 
 
 ## Releases
+
+### (v0.6.1) - 2019-09-05
+
+* Removed automatic dependency `DefaultSecretKey` to enable streamlined upgrade to v0.7.0.
+* Fixed a JSON schema issue when using `enum` property type.
 
 ### (v0.6.0.3) - 2019-07-01
 
