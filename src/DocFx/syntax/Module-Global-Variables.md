@@ -7,7 +7,6 @@
 |Variable                      |Type                           |Definition                                    |
 |------------------------------|-------------------------------|----------------------------------------------|
 |`Module::DeadLetterQueue`     |Arn&lt;AWS::SQS::Queue&gt;     |Deadletter queue for failed messages
-|`Module::DefaultSecretKey`    |Arn&lt;AWS::KMS::Key&gt;       |Default encryption key for deployment tier
 |`Module::FullName`            |String                         |Module owner and name (e.g. `Owner.Name`)
 |`Module::Id`                  |String                         |CloudFormation stack name
 |`Module::LoggingStream`       |Arn&lt;AWS::Kinesis::Stream&gt;|Kinesis logging stream used by Lambda function logs subscription

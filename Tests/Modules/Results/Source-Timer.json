@@ -47,13 +47,6 @@
       "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
       "Default": "$LambdaSharp-Core::LoggingStreamRole"
     },
-    "LambdaSharpCoreDefaultSecretKey": {
-      "Type": "String",
-      "Description": "Cross-module reference for LambdaSharp.Core::DefaultSecretKey",
-      "AllowedPattern": "^.+$",
-      "ConstraintDescription": "must either be a cross-module reference or a non-empty value",
-      "Default": "$LambdaSharp-Core::DefaultSecretKey"
-    },
     "DeploymentBucketName": {
       "Type": "String",
       "Description": "Deployment S3 Bucket Name"
@@ -74,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3D39259D10D5F999ACCF408CAD8EEC65"
+      "Default": "3935A9EC701721A3DB5804CFB589AA1A"
     }
   },
   "Resources": {
@@ -174,60 +167,11 @@
                 }
               ]
             },
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "UseCoreServices",
-                {
-                  "Fn::If": [
-                    "LambdaSharpCoreDefaultSecretKeyIsImported",
-                    {
-                      "Fn::ImportValue": {
-                        "Fn::Sub": [
-                          "${DeploymentPrefix}${Import}",
-                          {
-                            "Import": {
-                              "Fn::Select": [
-                                "1",
-                                {
-                                  "Fn::Split": [
-                                    "$",
-                                    {
-                                      "Ref": "LambdaSharpCoreDefaultSecretKey"
-                                    }
-                                  ]
-                                }
-                              ]
-                            }
-                          }
-                        ]
-                      }
-                    },
-                    {
-                      "Ref": "LambdaSharpCoreDefaultSecretKey"
-                    }
-                  ]
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            },
             "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
               "Fn::If": [
                 "UseCoreServices",
                 {
                   "Ref": "ModuleRoleDeadLetterQueuePolicy"
-                },
-                {
-                  "Ref": "AWS::NoValue"
-                }
-              ]
-            },
-            "STR_MODULE_ROLE_DEFAULTSECRETKEYPOLICY": {
-              "Fn::If": [
-                "UseCoreServices",
-                {
-                  "Ref": "ModuleRoleDefaultSecretKeyPolicy"
                 },
                 {
                   "Ref": "AWS::NoValue"
@@ -384,71 +328,6 @@
         },
         "PolicyName": {
           "Fn::Sub": "${AWS::StackName}ModuleRoleDeadLetterQueue"
-        },
-        "Roles": [
-          {
-            "Ref": "ModuleRole"
-          }
-        ]
-      }
-    },
-    "ModuleRoleDefaultSecretKeyPolicy": {
-      "Type": "AWS::IAM::Policy",
-      "Condition": "UseCoreServices",
-      "Properties": {
-        "PolicyDocument": {
-          "Version": "2012-10-17",
-          "Statement": [
-            {
-              "Sid": "DefaultSecretKey",
-              "Effect": "Allow",
-              "Action": [
-                "kms:Decrypt",
-                "kms:Encrypt"
-              ],
-              "Resource": {
-                "Fn::If": [
-                  "UseCoreServices",
-                  {
-                    "Fn::If": [
-                      "LambdaSharpCoreDefaultSecretKeyIsImported",
-                      {
-                        "Fn::ImportValue": {
-                          "Fn::Sub": [
-                            "${DeploymentPrefix}${Import}",
-                            {
-                              "Import": {
-                                "Fn::Select": [
-                                  "1",
-                                  {
-                                    "Fn::Split": [
-                                      "$",
-                                      {
-                                        "Ref": "LambdaSharpCoreDefaultSecretKey"
-                                      }
-                                    ]
-                                  }
-                                ]
-                              }
-                            }
-                          ]
-                        }
-                      },
-                      {
-                        "Ref": "LambdaSharpCoreDefaultSecretKey"
-                      }
-                    ]
-                  },
-                  {
-                    "Ref": "AWS::NoValue"
-                  }
-                ]
-              }
-            }
-          ]
-        },
-        "PolicyName": {
-          "Fn::Sub": "${AWS::StackName}ModuleRoleDefaultSecretKey"
         },
         "Roles": [
           {
@@ -673,7 +552,7 @@
       "Value": "Test.TestModule:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.3"
+      "Value": "0.6.1"
     }
   },
   "Conditions": {
@@ -799,40 +678,6 @@
         }
       ]
     },
-    "LambdaSharpCoreDefaultSecretKeyIsImported": {
-      "Fn::And": [
-        {
-          "Fn::Not": [
-            {
-              "Fn::Equals": [
-                {
-                  "Ref": "LambdaSharpCoreDefaultSecretKey"
-                },
-                ""
-              ]
-            }
-          ]
-        },
-        {
-          "Fn::Equals": [
-            {
-              "Fn::Select": [
-                "0",
-                {
-                  "Fn::Split": [
-                    "$",
-                    {
-                      "Ref": "LambdaSharpCoreDefaultSecretKey"
-                    }
-                  ]
-                }
-              ]
-            },
-            ""
-          ]
-        }
-      ]
-    },
     "ModuleRoleSecretsPolicyCondition": {
       "Fn::Not": [
         {
@@ -866,9 +711,6 @@
         },
         "LambdaSharpCoreLoggingStreamRole": {
           "default": "LoggingStreamRole [String]"
-        },
-        "LambdaSharpCoreDefaultSecretKey": {
-          "default": "DefaultSecretKey [String]"
         },
         "DeploymentBucketName": {
           "default": "Deployment S3 bucket name [String]"
@@ -904,8 +746,7 @@
           "Parameters": [
             "LambdaSharpCoreDeadLetterQueue",
             "LambdaSharpCoreLoggingStream",
-            "LambdaSharpCoreLoggingStreamRole",
-            "LambdaSharpCoreDefaultSecretKey"
+            "LambdaSharpCoreLoggingStreamRole"
           ]
         },
         {
@@ -972,19 +813,12 @@
               "Label": "LoggingStreamRole",
               "Default": "$LambdaSharp-Core::LoggingStreamRole",
               "Import": "LambdaSharp.Core::LoggingStreamRole"
-            },
-            {
-              "Name": "LambdaSharpCoreDefaultSecretKey",
-              "Type": "String",
-              "Label": "DefaultSecretKey",
-              "Default": "$LambdaSharp-Core::DefaultSecretKey",
-              "Import": "LambdaSharp.Core::DefaultSecretKey"
             }
           ]
         }
       ],
       "RuntimeCheck": true,
-      "Hash": "3D39259D10D5F999ACCF408CAD8EEC65",
+      "Hash": "3935A9EC701721A3DB5804CFB589AA1A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
@@ -992,14 +826,13 @@
       "Dependencies": [
         {
           "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6"
+          "MinVersion": "0.6.1"
         }
       ],
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
-        "ModuleRoleDefaultSecretKeyPolicy": "Module::Role::DefaultSecretKeyPolicy",
         "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration",
         "FunctionRegistration": "Function::Registration",

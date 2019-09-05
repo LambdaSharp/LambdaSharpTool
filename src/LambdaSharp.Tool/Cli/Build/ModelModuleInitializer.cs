@@ -331,20 +331,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     module: "LambdaSharp.Core",
                     encryptionContext: null
                 );
-                _builder.AddImport(
-                    parent: lambdasharp,
-                    name: "DefaultSecretKey",
-                    description: null,
-
-                    // TODO (2018-12-01, bjorg): consider using 'AWS::KMS::Key'
-                    type: "String",
-                    scope: null,
-
-                    // NOTE (2018-12-11, bjorg): we grant decryption access later as part of a bulk permissioning operation
-                    allow: null,
-                    module: "LambdaSharp.Core",
-                    encryptionContext: null
-                );
             }
 
             // add module variables
@@ -393,29 +379,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     encryptionContext: null
                 );
             }
-            var hasDefaultSecretKey = TryGetModuleVariable("DefaultSecretKey", out var defaultSecretKeyVariable, out var defaultSecretKeyCondition);
-            if(hasDefaultSecretKey) {
-                _builder.AddVariable(
-                    parent: moduleItem,
-                    name: "DefaultSecretKey",
-                    description: "Module Default Secret Key (ARN)",
-                    type: "String",
-                    scope: null,
-                    value: defaultSecretKeyVariable,
-                    allow: null,
-                    encryptionContext: null
-                );
-                _builder.AddGrant(
-                    name: "DefaultSecretKey",
-                    awsType: null,
-                    reference: FnRef("Module::DefaultSecretKey"),
-                    allow: new[] {
-                        "kms:Decrypt",
-                        "kms:Encrypt"
-                    },
-                    condition: defaultSecretKeyCondition
-                );
-            }
 
             // add KMS permissions for secrets in module
             if(_builder.Secrets.Any()) {
@@ -439,13 +402,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     FnRef("AWS::NoValue")
                 )
             };
-            if(hasDefaultSecretKey && (defaultSecretKeyCondition != null)) {
-                decryptSecretFunctionEnvironment["MODULE_ROLE_DEFAULTSECRETKEYPOLICY"] = FnIf(
-                    defaultSecretKeyCondition,
-                    FnRef("Module::Role::DefaultSecretKeyPolicy"),
-                    FnRef("AWS::NoValue")
-                );
-            }
             _builder.AddInlineFunction(
                 parent: moduleItem,
                 name: "DecryptSecretFunction",

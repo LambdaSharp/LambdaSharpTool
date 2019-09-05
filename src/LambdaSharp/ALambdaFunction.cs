@@ -106,11 +106,6 @@ namespace LambdaSharp {
             /// The URL of the dead-letter queue for the AWS Lambda function. This value can be <c>null</c> if the module has no dead-letter queue.
             /// </summary>
             public string DeadLetterQueueUrl => _function._deadLetterQueueUrl;
-
-            /// <summary>
-            /// The KMS key ID of the module default secret key. This value can be <c>null</c> if the module has no default secrete key.
-            /// </summary>
-            public string DefaultSecretKeyId => _function._defaultSecretKeyId;
         }
 
         /// <summary>
@@ -172,7 +167,6 @@ namespace LambdaSharp {
         //--- Fields ---
         private DateTime _started;
         private string _deadLetterQueueUrl;
-        private string _defaultSecretKeyId;
         private string _moduleOwner;
         private string _moduleName;
         private string _moduleId;
@@ -447,7 +441,6 @@ namespace LambdaSharp {
             if(deadLetterQueueArn != null) {
                 _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(deadLetterQueueArn);
             }
-            _defaultSecretKeyId = envSource.Read("DEFAULTSECRETKEY");
             _functionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
             _functionName = envSource.Read("LAMBDA_NAME");
             var framework = envSource.Read("LAMBDA_RUNTIME");
@@ -456,7 +449,6 @@ namespace LambdaSharp {
             LogInfo($"FUNCTION_NAME = {_functionName}");
             LogInfo($"FUNCTION_ID = {_functionId}");
             LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
-            LogInfo($"DEFAULTSECRETKEY = {_defaultSecretKeyId ?? "NONE"}");
 
             // read optional git-info file
             string gitSha = null;
@@ -469,9 +461,6 @@ namespace LambdaSharp {
                 LogInfo($"GIT-BRANCH = {gitBranch ?? "NONE"}");
             }
 
-            // convert environment variables to lambda parameters
-            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
-
             // initialize error/warning reporter
             ErrorReportGenerator = new LambdaErrorReportGenerator(
                 _moduleId,
@@ -482,6 +471,9 @@ namespace LambdaSharp {
                 gitSha,
                 gitBranch
             );
+
+            // convert environment variables to lambda parameters
+            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
         }
 
         /// <summary>
@@ -581,10 +573,10 @@ namespace LambdaSharp {
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId = null, Dictionary<string, string> encryptionContext = null) {
+        protected async Task<string> EncryptSecretAsync(string text, string encryptionKeyId, Dictionary<string, string> encryptionContext = null) {
             return Convert.ToBase64String(await Provider.EncryptSecretAsync(
                 Encoding.UTF8.GetBytes(text),
-                encryptionKeyId ?? _defaultSecretKeyId,
+                encryptionKeyId ?? throw new ArgumentNullException(encryptionKeyId),
                 encryptionContext
             ));
         }

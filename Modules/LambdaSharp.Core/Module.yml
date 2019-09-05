@@ -27,7 +27,6 @@ Pragmas:
       Module::DeadLetterQueue: !Ref DeadLetterQueue
       Module::LoggingStream: !Ref LoggingStream
       Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
-      Module::DefaultSecretKey: !Ref DefaultSecretKey
 
 Items:
 
@@ -69,11 +68,14 @@ Items:
     MinValue: 1
 
   - Parameter: DefaultSecretKey
-    Scope: public
+    Scope: public, Registration
     Section: LambdaSharp Tier Settings
     Label: Default secret key for functions (leave blank to create a new encryption key)
     Description: Default Secret Key (ARN)
     Type: AWS::KMS::Key
+    Allow:
+      - kms:Decrypt
+      - kms:Encrypt
     Default: ""
     Properties:
       Description: Default encryption/decryption key for LambdaSharp modules
