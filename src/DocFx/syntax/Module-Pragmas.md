@@ -14,7 +14,6 @@ Pragmas are used to change the default processing behavior of the λ# CLI. They 
 |Key                                         |Definition                                                               |Default                                |
 |--------------------------------------------|-------------------------------------------------------------------------|---------------------------------------|
 |`Module::DeadLetterQueue`                   |Expression for determining the module dead-letter queue.                 |`!Ref LambdaSharp::DeadLetterQueue`    |
-|`Module::DefaultSecretKey`                  |Expression for determining the module KMS key.                           |`!Ref LambdaSharp::DefaultSecretKey`   |
 |`Module::LoggingStream`                     |Expression for determining the module logging stream.                    |`!Ref LambdaSharp::LoggingStream`      |
 |`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.               |`!Ref LambdaSharp::LoggingStreamRole`  |
 |`Module::LogRetentionInDays`                |Expression for determining the number days log entries are retained for. |`30`                                   |

@@ -82,6 +82,7 @@ namespace LambdaSharp.Core.Registration {
         private RegistrationTable _registrations;
         private RollbarClient _rollbarClient;
         private string _rollbarProjectPrefix;
+        private string _defaultSecretKey;
 
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
@@ -93,6 +94,7 @@ namespace LambdaSharp.Core.Registration {
                 message => LogInfo(message)
             );
             _rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
+            _defaultSecretKey = config.ReadText("DefaultSecretKey");
         }
 
         public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
@@ -112,7 +114,7 @@ namespace LambdaSharp.Core.Registration {
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
                         var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
                         owner.RollbarProjectId = project.Id;
-                        owner.RollbarAccessToken = await EncryptSecretAsync(token);
+                        owner.RollbarAccessToken = await EncryptSecretAsync(token, _defaultSecretKey);
                     }
 
                     // create owner record

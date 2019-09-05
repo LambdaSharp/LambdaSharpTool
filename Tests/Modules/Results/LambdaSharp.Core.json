@@ -88,7 +88,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "94161F3FF7F68FAC329D3CF12C57B0CE"
+      "Default": "49130D500732E108F76C452971084084"
     }
   },
   "Resources": {
@@ -260,20 +260,6 @@
                 }
               ]
             },
-            "DEFAULTSECRETKEY": {
-              "Fn::If": [
-                "DefaultSecretKeyIsBlank",
-                {
-                  "Fn::GetAtt": [
-                    "DefaultSecretKeyResource",
-                    "Arn"
-                  ]
-                },
-                {
-                  "Ref": "DefaultSecretKey"
-                }
-              ]
-            },
             "STR_ERRORREPORTTOPIC": {
               "Ref": "ErrorReportTopic"
             },
@@ -407,7 +393,7 @@
                 }
               ]
             },
-            "DEFAULTSECRETKEY": {
+            "STR_DEFAULTSECRETKEY": {
               "Fn::If": [
                 "DefaultSecretKeyIsBlank",
                 {
@@ -524,6 +510,28 @@
                   }
                 },
                 {
+                  "Sid": "DefaultSecretKeyResource",
+                  "Effect": "Allow",
+                  "Action": [
+                    "kms:Decrypt",
+                    "kms:Encrypt"
+                  ],
+                  "Resource": {
+                    "Fn::If": [
+                      "DefaultSecretKeyIsBlank",
+                      {
+                        "Fn::GetAtt": [
+                          "DefaultSecretKeyResource",
+                          "Arn"
+                        ]
+                      },
+                      {
+                        "Ref": "DefaultSecretKey"
+                      }
+                    ]
+                  }
+                },
+                {
                   "Sid": "RegistrationTopic",
                   "Effect": "Allow",
                   "Action": [
@@ -624,28 +632,6 @@
                       },
                       {
                         "Ref": "DeadLetterQueue"
-                      }
-                    ]
-                  }
-                },
-                {
-                  "Sid": "DefaultSecretKey",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kms:Decrypt",
-                    "kms:Encrypt"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "DefaultSecretKeyIsBlank",
-                      {
-                        "Fn::GetAtt": [
-                          "DefaultSecretKeyResource",
-                          "Arn"
-                        ]
-                      },
-                      {
-                        "Ref": "DefaultSecretKey"
                       }
                     ]
                   }
@@ -777,7 +763,7 @@
       "Value": "LambdaSharp.Core:1.0-DEV"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.0.3"
+      "Value": "0.6.1"
     },
     "DeadLetterQueue": {
       "Value": {
@@ -1118,7 +1104,7 @@
         }
       ],
       "RuntimeCheck": false,
-      "Hash": "94161F3FF7F68FAC329D3CF12C57B0CE",
+      "Hash": "49130D500732E108F76C452971084084",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"

@@ -106,9 +106,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         if(function.HasDeadLetterQueue && _builder.TryGetItem("Module::DeadLetterQueue", out var _))  {
                             environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
                         }
-                        if(_builder.TryGetItem("Module::DefaultSecretKey", out var _)) {
-                            environment["DEFAULTSECRETKEY"] = FnRef("Module::DefaultSecretKey");
-                        }
 
                         // add all items scoped to this function
                         foreach(var scopeItem in builder.Items.Where(e => e.Scope.Contains(function.FullName))) {

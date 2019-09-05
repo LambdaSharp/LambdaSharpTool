@@ -595,11 +595,21 @@ namespace LambdaSharp.Tool.Cli {
                     && (messageType.FullName != "Amazon.Lambda.APIGatewayEvents.APIGatewayProxyResponse")
                 ) {
                     var schema = await JsonSchema4.FromTypeAsync(messageType, new JsonSchemaGeneratorSettings {
-                        FlattenInheritanceHierarchy = true
+                        FlattenInheritanceHierarchy = true,
+
+#pragma warning disable CS0618
+                        // we prefer enums to be handled as strings (NOTE: trying to set this in SerializerSettings causes an NRE in JsonSchema4FromTypeAsync call)
+                        DefaultEnumHandling = EnumHandling.String
+#pragma warning restore CS0618
                     });
 
                     // NOTE (2019-04-03, bjorg): we need to allow additional properties, because Swagger doesn't support: "additionalProperties": false
                     schema.AllowAdditionalProperties = true;
+
+                    // NOTE (2019-08-16, bjorg): don't emit "x-enumNames" as it is not supported by API Gateway
+                    foreach(var definition in schema.Definitions) {
+                        definition.Value.EnumerationNames = null;
+                    }
 
                     return Tuple.Create((JToken)JObject.Parse(schema.ToJson()), "application/json");
                 }
