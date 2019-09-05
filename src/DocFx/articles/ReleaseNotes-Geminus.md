@@ -6,6 +6,18 @@
 
 This release focuses on making it easy to share modules with others and streamlining the creation and upgrading of λ# deployment tiers. Prior to this release, λ# modules had to be made available in an S3 bucket for each region used by a deployment tier. In 0.7.0, the λ# CLI now automatically imports modules and their assets into the S3 bucket of the deployment tier, regardless of the origin region. This new behavior also safeguards against disruption should the original λ# module become unavailable at a later date since a copy is maintained in the deployment bucket. To further enhance deployment consistency, external modules are only imported during the publishing phase. The deployment phase relies entirely on the modules available in the S3 bucket of the deployment tier.
 
+### Upgrade Procedure from v0.6.1 to v0.7.0
+
+1. Ensure all modules are deployed with v0.6.1 or later
+1. Upgrade λ# CLI to v0.7.0
+    1. `dotnet tool uninstall -g LambdaSharp.Tool`
+    1. `dotnet tool install -g LambdaSharp.Tool`
+1. Upgrade λ# Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
+    1. `lash init --tier Sandbox --allow-upgrade`
+1. Delete the λ# CLI profile CloudFormation stack if the CLI profile is not used by any other deployment tiers
+    1. Locate the λ# CLI profile stack in the AWS Console (starts with `LambdaSharpTool-`)
+    1. Empty the associated S3 bucket named _DeploymentBucket_
+    1. Delete the CloudFormation stack
 
 ## BREAKING CHANGES
 
@@ -160,36 +172,3 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * Added [`LambdaSharp.CustomResource.Request<TProperties>.StackId`](xref:LambdaSharp.CustomResource.Request`1.StackId) property to custom resource request to uniquely identify the CloudFormation stack from which the request originated.
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
-
-
-
-
-
-
-
-
-
-
-
-
----
-
- > TODO: missing
-
-## Upgrade Procedure
-
-* ensure all modules are deployed with v0.6.0.3
-* `lash tier coreservices --disable`
-* `aws cloudformation delete-stack --stack-name $LAMBDASHARP_TIER-LambdaSharp-Core`
-* `dotnet tool uninstall -g lambdasharp.tool`
-* `dotnet tool install -g lambdasharp.tool --version 0.7.0-rc7`
-* `lash tier coreservices --enabled`
-
-* ensure that λ# CLI v0.6.0.3 is installed
-* ensure that the deployment tier and all deployed modules have been upgraded to v0.6.0.3
-* run `lash tier coreservices --disable` to disable LambdaSharp.Core services foo all deployed modules
-* install λ# CLI v0.7.0
-* run `lash init --allow-upgrade` to upgrade the deployment tier
-* run `lash tier coreservices --enabled` to enable LambdaSharp.Core services
-
-* added `--allow-upgrade` option to `lash init`
