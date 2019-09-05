@@ -34,7 +34,11 @@ using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool {
 
-    public class LambdaSharpDeploymentTierSetupException : Exception {
+    public class LambdaSharpException : Exception {
+
+    }
+
+    public class LambdaSharpDeploymentTierSetupException : LambdaSharpException {
 
         //--- Fields ---
         public readonly string TierName;
@@ -45,7 +49,7 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    public class LambdaSharpToolOutOfDateException : Exception {
+    public class LambdaSharpToolOutOfDateException : LambdaSharpException {
 
         //--- Fields ---
         public readonly VersionInfo Version;
@@ -56,7 +60,7 @@ namespace LambdaSharp.Tool {
         }
     }
 
-    public class LambdaSharpDeploymentTierOutOfDateException : Exception {
+    public class LambdaSharpDeploymentTierOutOfDateException : LambdaSharpException {
 
         //--- Fields ---
         public readonly string TierName;
@@ -105,7 +109,8 @@ namespace LambdaSharp.Tool {
                 } else {
                     builder.Append("WARNING: " + error.Message);
                 }
-                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                var hasException = (error.Exception != null) && !(error.Exception is LambdaSharpException);
+                if(hasException && (VerboseLevel >= VerboseLevel.Exceptions)) {
                     builder.AppendLine();
                     if(error.Exception is AggregateException aggregateException) {
                         foreach(var innerException in aggregateException.Flatten().InnerExceptions) {
@@ -115,7 +120,7 @@ namespace LambdaSharp.Tool {
                         builder.Append(error.Exception.ToString());
                     }
                 } else {
-                    suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
+                    suppressedStacktrace = suppressedStacktrace || hasException;
                 }
                 if(UseAnsiConsole) {
                     builder.Append(AnsiTerminal.Reset);

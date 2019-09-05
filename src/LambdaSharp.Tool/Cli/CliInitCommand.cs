@@ -25,7 +25,6 @@ using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
-using LambdaSharp.Tool.Cli.Tier;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -223,6 +222,7 @@ namespace LambdaSharp.Tool.Cli {
                 "LambdaSharp.Twitter.Query"
             };
 
+
             // check if the module must be built and published first (only applicable when running lash in contributor mode)
             var buildPublishDeployCommand = new CliBuildPublishDeployCommand();
             if(lambdaSharpPath != null) {
@@ -374,9 +374,11 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // disable core services in all deployed modules
-                await tierCommand.UpdateCoreServicesAsync(settings, enabled: false, showModules: false);
-                if(HasErrors) {
-                    return false;
+                if(!createNewTier) {
+                    await tierCommand.UpdateCoreServicesAsync(settings, enabled: false, showModules: false);
+                    if(HasErrors) {
+                        return false;
+                    }
                 }
 
                 // create/update cloudformation stack
