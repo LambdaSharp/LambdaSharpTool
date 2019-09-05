@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(disabledOption.HasValue()) {
                             enabled = false;
                         }
-                        await UpdateCoreServicesAsync(settings, enabled);
+                        await UpdateCoreServicesAsync(settings, enabled, showModules: true);
                     });
                 });
 
@@ -73,15 +73,19 @@ namespace LambdaSharp.Tool.Cli {
             });
         }
 
-        private async Task UpdateCoreServicesAsync(Settings settings, bool? enabled) {
+        public async Task UpdateCoreServicesAsync(Settings settings, bool? enabled, bool showModules) {
             if(!await PopulateDeploymentTierSettingsAsync(settings, requireBucketName: false, requireCoreServices: false, requireVersionCheck: false)) {
                 return;
             }
 
             // gather module details
             var tierManager = new TierManager(settings);
-            var moduleDetails = (await tierManager.GetModuleDetailsAsync()).OrderBy(module => module.ModuleDeploymentName);
-            ShowModuleDetails(tierManager, moduleDetails);
+            var moduleDetails = (await tierManager.GetModuleDetailsAsync())
+                .OrderBy(details => details.ModuleDeploymentName)
+                .ToList();
+            if(showModules) {
+                ShowModuleDetails(tierManager, moduleDetails);
+            }
 
             // check if tier has any stacks
             if(!moduleDetails.Any()) {
@@ -90,8 +94,12 @@ namespace LambdaSharp.Tool.Cli {
 
             // validate that all modules in tier can enable/disable core services
             if(enabled.HasValue) {
-                foreach(var summary in moduleDetails.Where(s => s.CoreServices == null)) {
-                    LogError($"${summary.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
+                foreach(var details in moduleDetails) {
+                    if(details.CoreServices == null) {
+                        LogError($"${details.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
+                    } else if(!enabled.Value && details.HasDefaultSecretKeyParameter) {
+                        LogError($"${details.ModuleDeploymentName} cannot disable LambdaSharp.Core services, because it depends on DefaultSecretKey");
+                    }
                 }
             }
             if(!enabled.HasValue || HasErrors) {
@@ -100,18 +108,26 @@ namespace LambdaSharp.Tool.Cli {
 
             // update core services for each affected root module
             var coreServicesParameter = enabled.Value ? "Enabled" : "Disabled";
+            var modulesToUpdate = moduleDetails
+                .Where(module => module.CoreServices != coreServicesParameter)
+                .Where(module => module.IsRoot)
+                .ToList();
+            if(!modulesToUpdate.Any()) {
+                return;
+            }
+            Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier '{settings.TierName}'");
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter
             };
-            foreach(var module in moduleDetails
-                .Where(module => (module.CoreServices != coreServicesParameter))
-                .Where(module => module.IsRoot)
-            ) {
+            foreach(var module in modulesToUpdate) {
                 await UpdateStackParameters(settings, module, parameters);
             }
+            Console.WriteLine();
 
             // show updated state
-            ShowModuleDetails(tierManager, await tierManager.GetModuleDetailsAsync());
+            if(showModules) {
+                ShowModuleDetails(tierManager, await tierManager.GetModuleDetailsAsync());
+            }
         }
 
         private async Task<List<Change>> WaitForChangeSetAsync(Settings settings, string changeSetId) {

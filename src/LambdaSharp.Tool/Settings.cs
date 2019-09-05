@@ -30,6 +30,7 @@ using Amazon.KeyManagementService;
 using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool {
 
@@ -291,6 +292,12 @@ namespace LambdaSharp.Tool {
                     return choices[choice - 1];
                 }
             }
+        }
+
+        public bool PromptYesNo(string message, bool defaultAnswer) {
+            return Settings.UseAnsiConsole
+                ? Prompt.GetYesNo($"{PromptColor}|=> {message}{AnsiTerminal.Reset}", defaultAnswer)
+                : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
         }
     }
 }

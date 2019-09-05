@@ -33,5 +33,6 @@ namespace LambdaSharp.Tool.Cli.Tier {
         public string ModuleReference { get; set; }
         public string CoreServices { get; set; }
         public bool IsRoot { get; set; }
+        public bool HasDefaultSecretKeyParameter { get; set; }
     }
 }

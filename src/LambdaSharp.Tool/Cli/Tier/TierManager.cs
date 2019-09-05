@@ -61,6 +61,7 @@ namespace LambdaSharp.Tool.Cli.Tier {
                 CoreServices = stack.Parameters
                     .FirstOrDefault(parameter => parameter.ParameterKey == "LambdaSharpCoreServices")
                     ?.ParameterValue,
+                HasDefaultSecretKeyParameter = stack.Parameters.Any(parameter => parameter.ParameterKey == "LambdaSharpCoreDefaultSecretKey"),
                 IsRoot = stack.RootId == null
             })
                 .Where(module => !module.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))

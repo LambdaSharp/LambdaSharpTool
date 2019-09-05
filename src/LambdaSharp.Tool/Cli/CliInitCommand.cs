@@ -25,6 +25,7 @@ using Amazon.APIGateway.Model;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
+using LambdaSharp.Tool.Cli.Tier;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 
@@ -55,7 +56,7 @@ namespace LambdaSharp.Tool.Cli {
                 var localOption = cmd.Option("--local <PATH>", "(optional) Provide a path to a local check-out of the LambdaSharp modules (default: LAMBDASHARP environment variable)", CommandOptionType.SingleValue);
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core when prompted", CommandOptionType.NoValue);
+                var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -169,9 +170,7 @@ namespace LambdaSharp.Tool.Cli {
                     // tool version is more recent; if it's a minor update, proceed without prompting, otherwise ask user to confirm upgrade
                     if(!settings.TierVersion.IsCoreServicesCompatible(settings.ToolVersion) && !allowUpgrade) {
                         Console.WriteLine($"LambdaSharp Tier is out of date");
-                        updateExistingTier = Settings.UseAnsiConsole
-                            ? Prompt.GetYesNo($"{AnsiTerminal.BrightBlue}|=> Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?{AnsiTerminal.Reset}", false)
-                            : Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?", false);
+                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?", defaultAnswer: false);
                     }
                     if(!updateExistingTier) {
                         return false;
@@ -186,112 +185,26 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
 
-            // TODO (2019-08-22, borg): disable core services in deployed modules if necessary
-
-            // check if bootstrap tier needs to be installed or upgraded
+            // check if deployment tier with disabled core services needs to be installed
             Dictionary<string, string> parameters = null;
+            var tierCommand = new CliTierCommand();
             if(
                 createNewTier
                 || (updateExistingTier && (
 
-                    // tier is running with disabled (or never enabled) core services
-                    (settings.CoreServices == CoreServices.Disabled)
-                    || (settings.CoreServices == CoreServices.Undefined)
+                    // deployment tier doesn't have core services (pre-0.7); so the bootstrap stack needs to be installed first
+                    (settings.CoreServices == CoreServices.Undefined)
 
-                    // tier is running with enabled core services, but needs to be downgraded to disabled
+                    // deployment tier is running with disabled core services; just check if the boostrap stack needs to be updated
+                    || (settings.CoreServices == CoreServices.Disabled)
+
+                    // deployment tier is running with enabled core services, but needs to be downgraded to disabled
                     || ((settings.CoreServices != CoreServices.Disabled) && (coreServices == CoreServices.Disabled))
                 ))
             ) {
 
-                // initialize stack with seed CloudFormation template
-                var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
-                    ["VERSION"] = settings.ToolVersion.ToString(),
-                    ["CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
-                });
-
-                // check if bootstrap template is being updated or installed
-                if(createNewTier) {
-                    Console.WriteLine($"Creating LambdaSharp tier");
-                } else {
-                    Console.WriteLine($"Updating LambdaSharp tier");
-                }
-
-                // create lambdasharp CLI bootstrap stack
-                var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
-                parameters = (parametersFilename != null)
-                    ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
-                    : new Dictionary<string, string>();
-                if(HasErrors) {
-                    return false;
-                }
-                var bootstrapParameters = new Dictionary<string, string>(parameters) {
-                    ["TierName"] = settings.Tier
-                };
-
-                // check if command line options were provided to set template parameters
-                if((coreServices == CoreServices.Enabled) || (coreServices == CoreServices.Disabled)) {
-                    bootstrapParameters["CoreServices"] = coreServices.ToString();
-                }
-                if(existingS3BucketName != null) {
-                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName;
-                }
-
-                // prompt for missing parameters
-                var templateParameters = await PromptMissingTemplateParameters(
-                    settings,
-                    stackName,
-                    bootstrapParameters,
-                    template
-                );
-                if(HasErrors) {
-                    return false;
-                }
-
-                // create/update cloudformation stack
-                if(createNewTier) {
-                    Console.WriteLine($"=> Stack creation initiated for {stackName}");
-                    var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
-                        StackName = stackName,
-                        Capabilities = new List<string> { },
-                        OnFailure = OnFailure.DELETE,
-                        Parameters = templateParameters,
-                        EnableTerminationProtection = protectStack,
-                        TemplateBody = template,
-                        Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
-                    });
-                    var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
-                    if(created.Success) {
-                        Console.WriteLine("=> Stack creation finished");
-                    } else {
-                        Console.WriteLine("=> Stack creation FAILED");
-                        return false;
-                    }
-                } else {
-                    Console.WriteLine($"=> Stack update initiated for {stackName}");
-                    try {
-                        var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
-                        var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
-                            StackName = stackName,
-                            Capabilities = new List<string> { },
-                            Parameters = templateParameters,
-                            TemplateBody = template,
-                            Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
-                        });
-                        var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, logError: LogError);
-                        if(created.Success) {
-                            Console.WriteLine("=> Stack update finished");
-                        } else {
-                            Console.WriteLine("=> Stack update FAILED");
-                            return false;
-                        }
-                    } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
-
-                        // this error is thrown when no required updates where found
-                        Console.WriteLine("=> No stack update required");
-                    }
-                }
-                await PopulateDeploymentTierSettingsAsync(settings, force: true);
-                if(HasErrors) {
+                // deploy bootstrap stack with disabled core services
+                if(!await DeployCoreServicesDisabledTemplate()) {
                     return false;
                 }
             }
@@ -407,8 +320,111 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
 
-            // TODO (2019-08-22, borg): enable core services in deployed modules if necessary
-            return true;
+            // check if core services need to be enabled for deployed modules
+            if(settings.CoreServices == CoreServices.Enabled) {
+                await tierCommand.UpdateCoreServicesAsync(settings, enabled: true, showModules: false);
+            }
+            return !HasErrors;
+
+            // local function
+            async Task<bool> DeployCoreServicesDisabledTemplate() {
+
+                // initialize stack with seed CloudFormation template
+                var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
+                    ["VERSION"] = settings.ToolVersion.ToString(),
+                    ["CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
+                });
+
+                // check if bootstrap template is being updated or installed
+                if(createNewTier) {
+                    Console.WriteLine($"Creating LambdaSharp tier");
+                } else {
+                    Console.WriteLine($"Updating LambdaSharp tier");
+                }
+
+                // create lambdasharp CLI bootstrap stack
+                var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
+                parameters = (parametersFilename != null)
+                    ? CliBuildPublishDeployCommand.ReadInputParametersFiles(settings, parametersFilename)
+                    : new Dictionary<string, string>();
+                if(HasErrors) {
+                    return false;
+                }
+                var bootstrapParameters = new Dictionary<string, string>(parameters) {
+                    ["TierName"] = settings.Tier
+                };
+
+                // check if command line options were provided to set template parameters
+                if((coreServices == CoreServices.Enabled) || (coreServices == CoreServices.Disabled)) {
+                    bootstrapParameters["CoreServices"] = coreServices.ToString();
+                }
+                if(existingS3BucketName != null) {
+                    bootstrapParameters["ExistingDeploymentBucket"] = existingS3BucketName;
+                }
+
+                // prompt for missing parameters
+                var templateParameters = await PromptMissingTemplateParameters(
+                    settings,
+                    stackName,
+                    bootstrapParameters,
+                    template
+                );
+                if(HasErrors) {
+                    return false;
+                }
+
+                // disable core services in all deployed modules
+                await tierCommand.UpdateCoreServicesAsync(settings, enabled: false, showModules: false);
+                if(HasErrors) {
+                    return false;
+                }
+
+                // create/update cloudformation stack
+                if(createNewTier) {
+                    Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                    var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                        StackName = stackName,
+                        Capabilities = new List<string> { },
+                        OnFailure = OnFailure.DELETE,
+                        Parameters = templateParameters,
+                        EnableTerminationProtection = protectStack,
+                        TemplateBody = template,
+                        Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
+                    });
+                    var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
+                    if(created.Success) {
+                        Console.WriteLine("=> Stack creation finished");
+                    } else {
+                        Console.WriteLine("=> Stack creation FAILED");
+                        return false;
+                    }
+                } else {
+                    Console.WriteLine($"=> Stack update initiated for {stackName}");
+                    try {
+                        var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
+                        var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
+                            StackName = stackName,
+                            Capabilities = new List<string> { },
+                            Parameters = templateParameters,
+                            TemplateBody = template,
+                            Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
+                        });
+                        var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, logError: LogError);
+                        if(created.Success) {
+                            Console.WriteLine("=> Stack update finished");
+                        } else {
+                            Console.WriteLine("=> Stack update FAILED");
+                            return false;
+                        }
+                    } catch(AmazonCloudFormationException e) when(e.Message == "No updates are to be performed.") {
+
+                        // this error is thrown when no required updates where found
+                        Console.WriteLine("=> No stack update required");
+                    }
+                }
+                await PopulateDeploymentTierSettingsAsync(settings, force: true);
+                return !HasErrors;
+            }
         }
 
         private async Task<List<Parameter>> PromptMissingTemplateParameters(
