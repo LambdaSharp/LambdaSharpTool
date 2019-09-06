@@ -28,7 +28,7 @@ using LambdaSharp.SimpleNotificationService;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace LambdaSharp.Demo.TwitterNotifier.NotifyFunction {
+namespace Demo.TwitterNotifier.NotifyFunction {
 
     public class Tweet {
 

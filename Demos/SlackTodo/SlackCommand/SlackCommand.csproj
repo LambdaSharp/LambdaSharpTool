@@ -4,7 +4,7 @@
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <NoWarn>CS1998</NoWarn>
-    <RootNamespace>LambdaSharp.Demo.SlackTodo</RootNamespace>
+    <RootNamespace>Demo.SlackTodo</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
   </PropertyGroup>
   <ItemGroup>

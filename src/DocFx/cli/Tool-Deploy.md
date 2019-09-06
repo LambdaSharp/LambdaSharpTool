@@ -177,16 +177,16 @@ LambdaSharp CLI (v0.7.0) - Deploy LambdaSharp module
 Readying module for deployment tier 'Sandbox'
 
 Reading module: Module.yml
-Compiling: LambdaSharp.Demo.SlackTodo (v1.0-DEV)
+Compiling: Demo.SlackTodo (v1.0-DEV)
 => Building function SlackCommand [netcoreapp2.1, Release]
 => Module compilation done: bin\cloudformation.json
-Publishing module: LambdaSharp.Demo.SlackTodo
-=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_LambdaSharp.Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
-=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_LambdaSharp.Demo.SlackTodo_939992254E194760372083264D08D795.json
-Resolving module reference: LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
+Resolving module reference: Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => Validating module for deployment tier
 
-Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
+Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
 => Stack create initiated for Sandbox-LambdaSharp-Demo-SlackTodo [CAPABILITY_IAM]
 CREATE_COMPLETE    AWS::CloudFormation::Stack             Sandbox-LambdaSharp-Demo-SlackTodo
 CREATE_COMPLETE    AWS::DynamoDB::Table                   TaskTable
@@ -199,7 +199,7 @@ CREATE_COMPLETE    AWS::ApiGateway::Stage                 Module::RestApi::Stage
 Stack output values:
 => LambdaSharpTier = Sandbox
 => LambdaSharpTool = 0.7.0
-=> Module = LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+=> Module = Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => ModuleChecksum = 442684F838E5B6717B0EF0E74334062F
 => SlackApiPath: Slack Command URL = https://lr0iaacgoc.execute-api.us-west-2.amazonaws.com/LATEST/slack
 
@@ -218,13 +218,13 @@ Output:
 LambdaSharp CLI (v0.7.0) - Deploy LambdaSharp module
 Readying module for deployment tier 'Sandbox'
 
-Publishing module: LambdaSharp.Demo.SlackTodo
-=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_LambdaSharp.Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
-=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_LambdaSharp.Demo.SlackTodo_939992254E194760372083264D08D795.json
-Resolving module reference: LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
+Resolving module reference: Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => Validating module for deployment tier
 
-Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
+Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
 => Stack create initiated for Sandbox-LambdaSharp-Demo-SlackTodo [CAPABILITY_IAM]
 CREATE_COMPLETE    AWS::CloudFormation::Stack             Sandbox-LambdaSharp-Demo-SlackTodo
 CREATE_COMPLETE    AWS::DynamoDB::Table                   TaskTable
@@ -237,7 +237,7 @@ CREATE_COMPLETE    AWS::ApiGateway::Stage                 Module::RestApi::Stage
 Stack output values:
 => LambdaSharpTier = Sandbox
 => LambdaSharpTool = 0.7.0
-=> Module = LambdaSharp.Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+=> Module = Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => ModuleChecksum = 442684F838E5B6717B0EF0E74334062F
 => SlackApiPath: Slack Command URL = https://lr0iaacgoc.execute-api.us-west-2.amazonaws.com/LATEST/slack
 

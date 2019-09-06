@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Demo.SlackTodo
+Module: Demo.SlackTodo
 Description: Manage a personal To-Do list from Slack
 Items:
 

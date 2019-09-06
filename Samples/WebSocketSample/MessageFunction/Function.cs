@@ -17,23 +17,20 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
-using Amazon.DynamoDBv2.Model;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;
 using LambdaSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using LambdaSharp.Demo.WebSocketsChat.Common;
+using Demo.WebSocketsChat.Common;
 using LambdaSharp.ApiGateway;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

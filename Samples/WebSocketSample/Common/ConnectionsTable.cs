@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-namespace LambdaSharp.Demo.WebSocketsChat.Common {
+namespace Demo.WebSocketsChat.Common {
 
     public class ConnectionsTable {
 

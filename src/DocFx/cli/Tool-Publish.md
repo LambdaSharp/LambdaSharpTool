@@ -110,12 +110,12 @@ Output:
 LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
 
 Reading module: Module.yml
-Compiling: LambdaSharp.Demo.SlackTodo (v1.0-DEV)
+Compiling: Demo.SlackTodo (v1.0-DEV)
 => Building function SlackCommand [netcoreapp2.1, Release]
 => Module compilation done: bin\cloudformation.json
-Publishing module: LambdaSharp.Demo.SlackTodo
-=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_LambdaSharp.Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
-=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_LambdaSharp.Demo.SlackTodo_939992254E194760372083264D08D795.json
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
 
 Done (finished: 9/5/2019 1:07:28 PM; duration: 00:00:11.1692368)
 ```
@@ -130,9 +130,9 @@ lash publish bin/cloudformation.json
 Output:
 ```
 LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
-Publishing module: LambdaSharp.Demo.SlackTodo
-=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_LambdaSharp.Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
-=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_LambdaSharp.Demo.SlackTodo_939992254E194760372083264D08D795.json
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
 
 Done (finished: 9/5/2019 1:07:28 PM; duration: 00:00:11.1692368)
 ```

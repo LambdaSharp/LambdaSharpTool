@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Demo.TwitterNotifier
+Module: Demo.TwitterNotifier
 Description: Listen for specific tweets and publish to an email address via SNS topic
 Items:
 
