@@ -524,8 +524,7 @@ namespace LambdaSharp.Tool.Model {
 
                     // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
 
-                    // NOTE (2019-01-30, bjorg): macro invocations don't allow dynamic names using !Sub, so must be global
-                    Name = macroName,
+                    Name = FnSub($"${{DeploymentPrefix}}{macroName}"),
                     Description = description,
                     FunctionName = FnRef(handler)
                 },
