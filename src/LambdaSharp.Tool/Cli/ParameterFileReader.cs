@@ -117,6 +117,8 @@ namespace LambdaSharp.Tool.Cli {
                     case "!GetParam": {
                             if(node is Scalar scalar) {
 
+                                // NOTE: !GetParam parameterKey
+
                                 // deserialize single parameter
                                 INodeDeserializer nested = new ScalarNodeDeserializer();
                                 if(nested.Deserialize(reader, expectedType, nestedObjectDeserializer, out value) && (value is string parameterKey)) {
@@ -134,7 +136,7 @@ namespace LambdaSharp.Tool.Cli {
                                 }
                             } else if(node is SequenceStart sequenceStart) {
 
-                                // TODO: this needs to be tested
+                                // NOTE: !GetParam [ parameterKey, encryptionKey ]
 
                                 // deserialize single parameter
                                 INodeDeserializer nested = new CollectionNodeDeserializer(new DefaultObjectFactory());
@@ -158,7 +160,7 @@ namespace LambdaSharp.Tool.Cli {
                                     }
                                     return true;
                                 } else {
-                                    LogError("invalid expression for !GetConfig", null);
+                                    LogError("invalid expression for !GetParam [ parameterKey, encryptionKey ]", null);
                                 }
                             } else {
                                 LogError("invalid expression for !GetParam", null);

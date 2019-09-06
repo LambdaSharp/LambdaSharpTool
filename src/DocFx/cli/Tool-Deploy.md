@@ -313,12 +313,16 @@ The name of an environment variable.
 
 #### !GetParam
 
-The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html).
+The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html) and optionally encrypts it using a KMS key.
 
 
 ##### Syntax
 ```yaml
 !GetParam parameter-store-path
+```
+-OR-
+```yaml
+!GetParam [ parameter-store-path, encryption-key-id ]
 ```
 
 ##### Parameters
@@ -328,7 +332,12 @@ The `!GetParam` function reads a value from the [AWS Parameter Store](https://d
 <dd>
 The path to a value in the <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html">AWS Parameter Store</a>.
 
-If the value is stored as a SecureString, it is automatically decrypted when retrieved and re-encrypted with the <code>DefaultSecretsKey</code> for the deployment tier.
+If the value is stored as a SecureString, it is automatically decrypted when retrieved and passed as plain text, unless an <code>encryption-key-id</code> is provided.
+</dd>
+
+<dt><code>encryption-key-id</code></dt>
+<dd>
+The <a href="https://docs.aws.amazon.com/kms/latest/developerguide/overview.html">AWS Key Management Service</a> key ARN or alias to use for encrypting the value from the parameter store.
 </dd>
 
 </dl>
