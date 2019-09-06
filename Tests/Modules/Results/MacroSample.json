@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7C48BE3EC8F2301E96838186D2E6DF60"
+      "Default": "6770FA1A05BB7323CB3D417F5FBACB14"
     }
   },
   "Resources": {
@@ -77,7 +77,9 @@
         "FunctionName": {
           "Ref": "MyFunction"
         },
-        "Name": "StringToUpper"
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}StringToUpper"
+        }
       }
     },
     "MacrosStringToLower": {
@@ -86,7 +88,9 @@
         "FunctionName": {
           "Ref": "MyFunction"
         },
-        "Name": "StringToLower"
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}StringToLower"
+        }
       }
     },
     "MyFunction": {
@@ -550,7 +554,7 @@
       "Value": "LambdaSharp.Sample.Macro:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "7C48BE3EC8F2301E96838186D2E6DF60"
+      "Value": "6770FA1A05BB7323CB3D417F5FBACB14"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -783,7 +787,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "7C48BE3EC8F2301E96838186D2E6DF60",
+      "TemplateChecksum": "6770FA1A05BB7323CB3D417F5FBACB14",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

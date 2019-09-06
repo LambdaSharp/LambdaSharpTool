@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "F89838BAB79D74791F4D704895C9EFFA"
+      "Default": "827415DE78262E16A837F9A6B41EE359"
     }
   },
   "Resources": {
@@ -78,7 +78,9 @@
         "FunctionName": {
           "Ref": "Function"
         },
-        "Name": "MyMacro"
+        "Name": {
+          "Fn::Sub": "${DeploymentPrefix}MyMacro"
+        }
       }
     },
     "Function": {
@@ -542,7 +544,7 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "F89838BAB79D74791F4D704895C9EFFA"
+      "Value": "827415DE78262E16A837F9A6B41EE359"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -775,7 +777,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "F89838BAB79D74791F4D704895C9EFFA",
+      "TemplateChecksum": "827415DE78262E16A837F9A6B41EE359",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
