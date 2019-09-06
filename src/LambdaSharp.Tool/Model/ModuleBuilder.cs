@@ -761,7 +761,7 @@ namespace LambdaSharp.Tool.Model {
 
                         // inherit dependencies from nested module
                         foreach(var manifestDependency in manifest.Dependencies) {
-                            AddDependencyAsync(manifestDependency.ModuleInfo, dependency.Type).Wait();
+                            AddDependencyAsync(manifestDependency.ModuleInfo, manifestDependency.Type).Wait();
                         }
 
                         // inherit import parameters that are not provided by the declaration
@@ -1397,19 +1397,23 @@ namespace LambdaSharp.Tool.Model {
 
         private bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
             var matches = _dependencies
-                .Select(kv => kv.Value.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == resourceTypeName))
-                .Where(foundResourceType => foundResourceType != null)
+                .Where(kv => kv.Value.Type == ModuleManifestDependencyType.Shared)
+                .Select(kv => new {
+                    Found = kv.Value.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == resourceTypeName),
+                    From = kv.Key
+                })
+                .Where(foundResourceType => foundResourceType.Found != null)
                 .ToArray();
             switch(matches.Length) {
             case 0:
                 resourceType = null;
                 return false;
             case 1:
-                resourceType = matches[0];
+                resourceType = matches[0].Found;
                 return true;
             default:
-                LogWarn($"ambiguous resource type '{resourceTypeName}'");
-                resourceType = matches[0];
+                LogWarn($"ambiguous resource type '{resourceTypeName}' [{string.Join(", ", matches.Select(t => t.From))}]");
+                resourceType = matches[0].Found;
                 return true;
             }
         }
