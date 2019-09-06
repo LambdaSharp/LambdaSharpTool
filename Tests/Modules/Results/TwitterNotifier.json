@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "7B42FADF73239C59688CD74EE4DD21A1"
+      "Default": "807420DC18FB052A764DAB1B364CA994"
     }
   },
   "Resources": {
@@ -188,7 +188,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.TwitterNotifier/.artifacts/NotifyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Demo/TwitterNotifier/.artifacts/NotifyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -235,7 +235,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
+            "MODULE_INFO": "Demo.TwitterNotifier:1.0-DEV",
             "LAMBDA_NAME": "NotifyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -315,7 +315,7 @@
             }
           }
         },
-        "Handler": "NotifyFunction::LambdaSharp.Demo.TwitterNotifier.NotifyFunction.Function::FunctionHandlerAsync",
+        "Handler": "NotifyFunction::Demo.TwitterNotifier.NotifyFunction.Function::FunctionHandlerAsync",
         "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
@@ -427,7 +427,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.TwitterNotifier/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/TwitterNotifier/.artifacts/*"
                   }
                 }
               ]
@@ -548,7 +548,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
+        "Module": "Demo.TwitterNotifier:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -710,10 +710,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "7B42FADF73239C59688CD74EE4DD21A1"
+      "Value": "807420DC18FB052A764DAB1B364CA994"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1001,9 +1001,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Demo.TwitterNotifier:1.0-DEV",
+      "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "7B42FADF73239C59688CD74EE4DD21A1",
+      "TemplateChecksum": "807420DC18FB052A764DAB1B364CA994",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

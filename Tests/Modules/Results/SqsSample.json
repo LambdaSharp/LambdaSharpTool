@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A49163604C74A18F95F76D20E25FE179"
+      "Default": "BE3D61C93B638A1B6E3C5986F0832EBD"
     }
   },
   "Resources": {
@@ -86,7 +86,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Sqs/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Sqs/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -134,7 +134,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.Sqs:1.0-DEV",
+            "MODULE_INFO": "Sample.Sqs:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -331,7 +331,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Sqs/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Sqs/.artifacts/*"
                   }
                 }
               ]
@@ -452,7 +452,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
+        "Module": "Sample.Sqs:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -609,10 +609,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Sqs:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Sqs:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "A49163604C74A18F95F76D20E25FE179"
+      "Value": "BE3D61C93B638A1B6E3C5986F0832EBD"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -843,9 +843,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.Sqs:1.0-DEV",
+      "Module": "Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
-      "TemplateChecksum": "A49163604C74A18F95F76D20E25FE179",
+      "TemplateChecksum": "BE3D61C93B638A1B6E3C5986F0832EBD",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

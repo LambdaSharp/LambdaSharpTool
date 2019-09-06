@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4182EFE0BBDE19F77250F000DDBDAEEA"
+      "Default": "DBA9086CCFEA7776AEF4E4BA0BDF8E31"
     }
   },
   "Resources": {
@@ -86,7 +86,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -134,7 +134,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
+            "MODULE_INFO": "Sample.S3.Subscription:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -395,7 +395,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.S3.Subscription/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/*"
                   }
                 }
               ]
@@ -516,7 +516,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
+        "Module": "Sample.S3.Subscription:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -754,10 +754,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "4182EFE0BBDE19F77250F000DDBDAEEA"
+      "Value": "DBA9086CCFEA7776AEF4E4BA0BDF8E31"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -988,9 +988,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.S3.Subscription:1.0-DEV",
+      "Module": "Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "4182EFE0BBDE19F77250F000DDBDAEEA",
+      "TemplateChecksum": "DBA9086CCFEA7776AEF4E4BA0BDF8E31",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

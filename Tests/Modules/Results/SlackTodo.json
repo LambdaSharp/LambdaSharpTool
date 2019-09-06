@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CFE3D7513F4E40CE773EB5C4C0BC15FB"
+      "Default": "009A8F4F6E3FA3C3F566A1E9886B0600"
     }
   },
   "Resources": {
@@ -101,7 +101,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.artifacts/SlackCommand-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Demo/SlackTodo/.artifacts/SlackCommand-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -149,7 +149,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
+            "MODULE_INFO": "Demo.SlackTodo:1.0-DEV",
             "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -226,7 +226,7 @@
             }
           }
         },
-        "Handler": "SlackCommand::LambdaSharp.Demo.SlackTodo.Function::FunctionHandlerAsync",
+        "Handler": "SlackCommand::Demo.SlackTodo.Function::FunctionHandlerAsync",
         "MemorySize": "128",
         "Role": {
           "Fn::GetAtt": [
@@ -369,7 +369,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Demo.SlackTodo/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Demo/SlackTodo/.artifacts/*"
                   }
                 }
               ]
@@ -490,7 +490,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
+        "Module": "Demo.SlackTodo:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -763,10 +763,10 @@
       "Description": "Slack Command URL"
     },
     "Module": {
-      "Value": "LambdaSharp.Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "CFE3D7513F4E40CE773EB5C4C0BC15FB"
+      "Value": "009A8F4F6E3FA3C3F566A1E9886B0600"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1008,9 +1008,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Demo.SlackTodo:1.0-DEV",
+      "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "CFE3D7513F4E40CE773EB5C4C0BC15FB",
+      "TemplateChecksum": "009A8F4F6E3FA3C3F566A1E9886B0600",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

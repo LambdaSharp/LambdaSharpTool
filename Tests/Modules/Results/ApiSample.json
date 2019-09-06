@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E0401750A871BAB304E8EBBBF06A4DDA"
+      "Default": "9ED3F7C35B54BF98F5B01BC487FC551C"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/ApiGateway/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -126,7 +126,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.ApiGateway:1.0-DEV",
+            "MODULE_INFO": "Sample.ApiGateway:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -283,7 +283,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ApiGateway/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ApiGateway/.artifacts/*"
                   }
                 }
               ]
@@ -404,7 +404,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.ApiGateway:1.0-DEV",
+        "Module": "Sample.ApiGateway:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -770,10 +770,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.ApiGateway:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.ApiGateway:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "E0401750A871BAB304E8EBBBF06A4DDA"
+      "Value": "9ED3F7C35B54BF98F5B01BC487FC551C"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1004,9 +1004,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.ApiGateway:1.0-DEV",
+      "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "E0401750A871BAB304E8EBBBF06A4DDA",
+      "TemplateChecksum": "9ED3F7C35B54BF98F5B01BC487FC551C",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

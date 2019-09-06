@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AAA0283A4EC358ECC48392AC796D6DF4"
+      "Default": "C7AE60F0D946986EC38F9A6F688C8C16"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.CustomResourceType/.artifacts/ResourceHandler-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/CustomResourceType/.artifacts/ResourceHandler-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -126,7 +126,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
+            "MODULE_INFO": "Sample.CustomResourceType:1.0-DEV",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -283,7 +283,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.CustomResourceType/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/CustomResourceType/.artifacts/*"
                   }
                 }
               ]
@@ -404,7 +404,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
+        "Module": "Sample.CustomResourceType:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -543,10 +543,10 @@
       "Description": "Definition for MyNamespace::MyResource resource"
     },
     "Module": {
-      "Value": "LambdaSharp.Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "AAA0283A4EC358ECC48392AC796D6DF4"
+      "Value": "C7AE60F0D946986EC38F9A6F688C8C16"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -777,9 +777,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.CustomResourceType:1.0-DEV",
+      "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "AAA0283A4EC358ECC48392AC796D6DF4",
+      "TemplateChecksum": "C7AE60F0D946986EC38F9A6F688C8C16",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

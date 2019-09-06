@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DADD822FE2E9B79D25269F4DE52E5E97"
+      "Default": "11996F68C6AFE180CC7E2606F34A1E9A"
     }
   },
   "Resources": {
@@ -83,7 +83,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Alexa/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -131,7 +131,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.Alexa:1.0-DEV",
+            "MODULE_INFO": "Sample.Alexa:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -288,7 +288,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Alexa/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Alexa/.artifacts/*"
                   }
                 }
               ]
@@ -409,7 +409,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
+        "Module": "Sample.Alexa:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -558,10 +558,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Alexa:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Alexa:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "DADD822FE2E9B79D25269F4DE52E5E97"
+      "Value": "11996F68C6AFE180CC7E2606F34A1E9A"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -811,9 +811,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.Alexa:1.0-DEV",
+      "Module": "Sample.Alexa:1.0-DEV",
       "Description": "A sample module using an Alexa skill",
-      "TemplateChecksum": "DADD822FE2E9B79D25269F4DE52E5E97",
+      "TemplateChecksum": "11996F68C6AFE180CC7E2606F34A1E9A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

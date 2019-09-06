@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A5C7D85229432B73B894DA6597475785"
+      "Default": "8EE40D401317D5E3E5479ED5FAE6ADBA"
     }
   },
   "Resources": {
@@ -84,7 +84,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Kinesis/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Kinesis/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -132,7 +132,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.Kinesis:1.0-DEV",
+            "MODULE_INFO": "Sample.Kinesis:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -304,7 +304,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Kinesis/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Kinesis/.artifacts/*"
                   }
                 }
               ]
@@ -425,7 +425,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
+        "Module": "Sample.Kinesis:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -567,10 +567,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Kinesis:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Kinesis:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "A5C7D85229432B73B894DA6597475785"
+      "Value": "8EE40D401317D5E3E5479ED5FAE6ADBA"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -801,9 +801,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.Kinesis:1.0-DEV",
+      "Module": "Sample.Kinesis:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "A5C7D85229432B73B894DA6597475785",
+      "TemplateChecksum": "8EE40D401317D5E3E5479ED5FAE6ADBA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

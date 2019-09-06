@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "658A744BB3F2D66732339F1EC7C5B03A"
+      "Default": "31B24FEC8A7AFE9BDC461244207125BD"
     }
   },
   "Resources": {
@@ -97,7 +97,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/SqsProducer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/SqsHandler/.artifacts/SqsProducer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -145,7 +145,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
+            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsProducer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -256,7 +256,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/SqsConsumer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/SqsHandler/.artifacts/SqsConsumer-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -304,7 +304,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
+            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsConsumer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -489,7 +489,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.SqsHandler/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/SqsHandler/.artifacts/*"
                   }
                 }
               ]
@@ -610,7 +610,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
+        "Module": "Sample.SqsHandler:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -867,10 +867,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "658A744BB3F2D66732339F1EC7C5B03A"
+      "Value": "31B24FEC8A7AFE9BDC461244207125BD"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1101,9 +1101,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.SqsHandler:1.0-DEV",
+      "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "658A744BB3F2D66732339F1EC7C5B03A",
+      "TemplateChecksum": "31B24FEC8A7AFE9BDC461244207125BD",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

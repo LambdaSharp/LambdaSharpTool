@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "417C7C5FB063DCCDC5BEDD1B7D947F10"
+      "Default": "44CB1F669173BCBCA6D3862F02F39E6D"
     }
   },
   "Resources": {
@@ -95,7 +95,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.artifacts/ConnectionFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/WebSockets/.artifacts/ConnectionFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -142,7 +142,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+            "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "ConnectionFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -256,7 +256,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.artifacts/MessageFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/WebSockets/.artifacts/MessageFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -303,7 +303,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+            "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "MessageFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -523,7 +523,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.WebSockets/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/WebSockets/.artifacts/*"
                   }
                 },
                 {
@@ -654,7 +654,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
+        "Module": "Sample.WebSockets:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -1096,10 +1096,10 @@
       "Description": "WebSocket URL"
     },
     "Module": {
-      "Value": "LambdaSharp.Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "417C7C5FB063DCCDC5BEDD1B7D947F10"
+      "Value": "44CB1F669173BCBCA6D3862F02F39E6D"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -1330,8 +1330,8 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "417C7C5FB063DCCDC5BEDD1B7D947F10",
+      "Module": "Sample.WebSockets:1.0-DEV",
+      "TemplateChecksum": "44CB1F669173BCBCA6D3862F02F39E6D",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

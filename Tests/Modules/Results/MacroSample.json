@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6770FA1A05BB7323CB3D417F5FBACB14"
+      "Default": "AAD79D675392C2351D931D739428B414"
     }
   },
   "Resources": {
@@ -100,7 +100,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Macro/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Macro/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -148,7 +148,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.Macro:1.0-DEV",
+            "MODULE_INFO": "Sample.Macro:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -305,7 +305,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Macro/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Macro/.artifacts/*"
                   }
                 }
               ]
@@ -426,7 +426,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
+        "Module": "Sample.Macro:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -551,10 +551,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Macro:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Macro:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "6770FA1A05BB7323CB3D417F5FBACB14"
+      "Value": "AAD79D675392C2351D931D739428B414"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -785,9 +785,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.Macro:1.0-DEV",
+      "Module": "Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "6770FA1A05BB7323CB3D417F5FBACB14",
+      "TemplateChecksum": "AAD79D675392C2351D931D739428B414",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

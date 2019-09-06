@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5813B1DF1E5E21DB955E94173F5DED0D"
+      "Default": "602057D65566CDFCC43358DC3FB8C27E"
     }
   },
   "Resources": {
@@ -99,7 +99,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.DynamoDB/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/DynamoDB/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -147,7 +147,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
+            "MODULE_INFO": "Sample.DynamoDB:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -356,7 +356,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.DynamoDB/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/DynamoDB/.artifacts/*"
                   }
                 }
               ]
@@ -477,7 +477,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
+        "Module": "Sample.DynamoDB:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -619,10 +619,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.DynamoDB:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.DynamoDB:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "5813B1DF1E5E21DB955E94173F5DED0D"
+      "Value": "602057D65566CDFCC43358DC3FB8C27E"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -853,9 +853,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.DynamoDB:1.0-DEV",
+      "Module": "Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "5813B1DF1E5E21DB955E94173F5DED0D",
+      "TemplateChecksum": "602057D65566CDFCC43358DC3FB8C27E",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

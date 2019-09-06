@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "92E11430B45A4B3496CF1E3F04210721"
+      "Default": "EDE5F8E3F694ED820B85D0629A8EA30D"
     }
   },
   "Resources": {
@@ -83,7 +83,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.SlackCommand/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/SlackCommand/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -131,7 +131,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
+            "MODULE_INFO": "Sample.SlackCommand:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -291,7 +291,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.SlackCommand/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/SlackCommand/.artifacts/*"
                   }
                 }
               ]
@@ -412,7 +412,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
+        "Module": "Sample.SlackCommand:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -674,10 +674,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.SlackCommand:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.SlackCommand:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "92E11430B45A4B3496CF1E3F04210721"
+      "Value": "EDE5F8E3F694ED820B85D0629A8EA30D"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -919,9 +919,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.SlackCommand:1.0-DEV",
+      "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "92E11430B45A4B3496CF1E3F04210721",
+      "TemplateChecksum": "EDE5F8E3F694ED820B85D0629A8EA30D",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

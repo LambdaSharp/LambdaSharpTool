@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "30002406F5EC44A7BF58229806B31C8A"
+      "Default": "95E8EE2CAFD61F4C3C65304D616F2C29"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.ScheduledEvent/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/ScheduledEvent/.artifacts/MyFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -126,7 +126,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
+            "MODULE_INFO": "Sample.ScheduledEvent:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -283,7 +283,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.ScheduledEvent/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/ScheduledEvent/.artifacts/*"
                   }
                 }
               ]
@@ -404,7 +404,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
+        "Module": "Sample.ScheduledEvent:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -658,10 +658,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.ScheduledEvent:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "30002406F5EC44A7BF58229806B31C8A"
+      "Value": "95E8EE2CAFD61F4C3C65304D616F2C29"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -892,9 +892,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.ScheduledEvent:1.0-DEV",
+      "Module": "Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
-      "TemplateChecksum": "30002406F5EC44A7BF58229806B31C8A",
+      "TemplateChecksum": "95E8EE2CAFD61F4C3C65304D616F2C29",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

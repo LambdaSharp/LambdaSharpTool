@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "651810B5E9CD54157C1B667C82A81A0B"
+      "Default": "923D4D9D44EB2127A684A387F807A7EE"
     }
   },
   "Resources": {
@@ -68,7 +68,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.artifacts/Finalizer-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Finalizer/.artifacts/Finalizer-DRYRUN.zip"
         },
         "Description": "This function is invoked once all other resources have been created/updated (v1.0-DEV)",
         "Environment": {
@@ -76,7 +76,7 @@
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Sample.Finalizer:1.0-DEV",
+            "MODULE_INFO": "Sample.Finalizer:1.0-DEV",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
             "DEPLOYMENTBUCKETNAME": {
@@ -289,7 +289,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/LambdaSharp/Sample.Finalizer/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Finalizer/.artifacts/*"
                   }
                 }
               ]
@@ -410,7 +410,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Sample.Finalizer:1.0-DEV",
+        "Module": "Sample.Finalizer:1.0-DEV",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -419,10 +419,10 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "LambdaSharp.Sample.Finalizer:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Finalizer:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "651810B5E9CD54157C1B667C82A81A0B"
+      "Value": "923D4D9D44EB2127A684A387F807A7EE"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0"
@@ -577,9 +577,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "LambdaSharp.Sample.Finalizer:1.0-DEV",
+      "Module": "Sample.Finalizer:1.0-DEV",
       "Description": "A sample module with a finalizer function",
-      "TemplateChecksum": "651810B5E9CD54157C1B667C82A81A0B",
+      "TemplateChecksum": "923D4D9D44EB2127A684A387F807A7EE",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
