@@ -23,7 +23,7 @@ The following module definition does the following:
 1. Finally, it registers the bucket with the `LambdaSharp::S3::EmptyBucket` so that the bucket is emptied automatically when the module is torn down.
 
 ```yaml
-Module: LambdaSharp.Sample.S3.IO
+Module: Sample.S3.IO
 Description: Showcase how to write files to an S3 bucket
 Using:
 

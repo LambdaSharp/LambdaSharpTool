@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Sample.Sns
+Module: Sample.Sns
 Description: A sample module using an SNS topic
 Items:
 

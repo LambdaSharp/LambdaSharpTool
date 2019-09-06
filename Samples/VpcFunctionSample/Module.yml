@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Sample.VpcFunction
+Module: Sample.VpcFunction
 Description: A sample module defining a Lambda function in VPC
 Items:
 

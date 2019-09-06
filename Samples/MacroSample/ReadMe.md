@@ -11,7 +11,7 @@ Creating a function that is invoked by a CloudFormation macro is straightforward
 **NOTE:** Support for CloudFormation Macros in λ# is still experimental.
 
 ```yaml
-Module: LambdaSharp.Sample.Macro
+Module: Sample.Macro
 Description: A sample module defining CloudFormation macros
 Items:
 

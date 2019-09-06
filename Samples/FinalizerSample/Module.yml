@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Sample.Finalizer
+Module: Sample.Finalizer
 Description: A sample module with a finalizer function
 Items:
 

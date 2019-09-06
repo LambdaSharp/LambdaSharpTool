@@ -9,7 +9,7 @@ Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/arti
 An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources for each function using the `AWS_PROXY` integration.
 
 ```yaml
-Module: LambdaSharp.Sample.ApiGateway
+Module: Sample.ApiGateway
 Description: A sample module integrating with API Gateway
 Items:
 

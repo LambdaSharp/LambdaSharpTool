@@ -13,7 +13,7 @@ Optionally, the `Sqs` attribute can specify the maximum number of messages to re
 > **NOTE**: Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 
 ```yaml
-Module: LambdaSharp.Sample.Sqs
+Module: Sample.Sqs
 Description: A sample module using SQS queues
 Items:
 

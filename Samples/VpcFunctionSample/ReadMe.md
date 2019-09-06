@@ -11,7 +11,7 @@ Functions, like resources, have a `Properties` section that can be used to fine 
 For additional details about what can be set in the `Properties` section see the [`AWS::Lambda::Function` type documentation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-lambda-function.html).
 
 ```yaml
-Module: LambdaSharp.Sample.VpcFunction
+Module: Sample.VpcFunction
 Description: A sample module using function in VPC
 Items:
 

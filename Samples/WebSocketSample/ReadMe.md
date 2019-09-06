@@ -9,7 +9,7 @@ Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/arti
 An WebSocket end-point is automatically created for the module when a function has a `WebSocket` attribute in its `Sources` section. The `WebSocket` attribute hold the route key, which corresponds by default to the `action` field of the received message. In addition, the `Invoke` attribute specifies the method to invoke in the Lambda function for this WebSocket route. During compilation, the λ# CLI creates all required resources for each function and validates that the specified methods exist.
 
 ```yaml
-Module: LambdaSharp.Sample.WebSockets
+Module: Sample.WebSockets
 Items:
 
   - Function: ConnectionFunction
