@@ -2,7 +2,7 @@
 
 # LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the 0.6 "Favorinus" release.](https://lambdasharp.net/articles/ReleaseNotes-Favorinus.html)**
+**[Read what's new in the 0.7.0 "Geminus" release.](https://lambdasharp.net/articles/ReleaseNotes-Geminus.html)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 

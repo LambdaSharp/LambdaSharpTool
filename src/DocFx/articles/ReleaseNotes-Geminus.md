@@ -1,4 +1,4 @@
-# λ# - Geminus (v0.7) - 2019-06-26
+# λ# - Geminus (v0.7) - 2019-09-06
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -50,7 +50,7 @@ A few Lambda related error messages have been rephrased to make it clearer they 
 
 * `ALambdaFunction.InfoStruct.ModuleOwner` has been renamed to `ALambdaFunction.InfoStruct.ModuleNamespace`
 * `ALambdaFunction.DefaultSecretKeyId` has been removed
-* The physical ID returned by [`ALambdaFinalizerFunction`](xref:ALambdaFinalizerFunction) is now a constant (`Finalizer:Module`) instead of being based on the checksum of the original template. The latter proved too risky, because it could accidentally trigger a CloudFormation delete resource event when not expected.
+* The physical ID returned by [`ALambdaFinalizerFunction`](xref:LambdaSharp.Finalizer.ALambdaFinalizerFunction) is now a constant (`Finalizer:Module`) instead of being based on the checksum of the original template. The latter proved too risky, because it could accidentally trigger a CloudFormation delete resource event when not expected.
 
 
 ## New λ# CLI Features
@@ -167,8 +167,8 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## New λ# Assembly Features
 
-* Added [`ALambdaFunction.DeploymentBucketName`](xref:LambdaSharp.ALambdaSharpFunction.DeploymentBucketName) property to read the S3 bucket name used to deploy the Lambda function.
-* Added [`ALambdaCustomResourceFunction.Abort(string)`](xref:LambdaSharp.CustomResource.ALambdaCustomResourceFunction.Abort(string)) method to abort the creation or update of a custom resource. `Abort()` will cause CloudFormation to respond with a failure code and showing the provided message.
+* Added [`ALambdaFunction.DeploymentBucketName`](xref:LambdaSharp.ALambdaFunction.FunctionInfo.DeploymentBucketName) property to read the S3 bucket name used to deploy the Lambda function.
+* Added [`ALambdaCustomResourceFunction.Abort(string)`](xref:LambdaSharp.CustomResource.ALambdaCustomResourceFunction`2.Abort(System.String)) method to abort the creation or update of a custom resource. `Abort()` will cause CloudFormation to respond with a failure code and showing the provided message.
 * Added [`LambdaSharp.CustomResource.Request<TProperties>.StackId`](xref:LambdaSharp.CustomResource.Request`1.StackId) property to custom resource request to uniquely identify the CloudFormation stack from which the request originated.
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 

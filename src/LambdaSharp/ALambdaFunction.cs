@@ -50,15 +50,15 @@ namespace LambdaSharp {
         }
 
         /// <summary>
-        /// The <see cref="InfoStruct"/> struct exposes the function initialization settings.
+        /// The <see cref="FunctionInfo"/> struct exposes the function initialization settings.
         /// </summary>
-        protected struct InfoStruct {
+        protected struct FunctionInfo {
 
             //--- Fields ---
             private ALambdaFunction _function;
 
             //--- Constructors ---
-            internal InfoStruct(ALambdaFunction function) => _function = function;
+            internal FunctionInfo(ALambdaFunction function) => _function = function;
 
             //--- Properties ---
 
@@ -229,8 +229,8 @@ namespace LambdaSharp {
         /// <summary>
         /// Retrieve the Lambda function initialization settings.
         /// </summary>
-        /// <value>The <see cref="InfoStruct"/> value.</value>
-        protected InfoStruct Info => new InfoStruct(this);
+        /// <value>The <see cref="FunctionInfo"/> value.</value>
+        protected FunctionInfo Info => new FunctionInfo(this);
 
         /// <summary>
         /// Retrieve the <see cref="ErrorReportGenerator"/> instance used to generate error reports.
