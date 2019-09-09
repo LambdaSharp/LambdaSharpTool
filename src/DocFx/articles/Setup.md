@@ -81,7 +81,7 @@ CREATE_COMPLETE    AWS::S3::Bucket               DeploymentBucketResource
 Done (finished: 8/15/2019 2:53:45 PM; duration: 00:00:33.2020715)
 ```
 
-## Optional: Enable LambdaSharp.Core Services
+## (Optional) Enable LambdaSharp.Core Services
 
 The LambdaSharp.Core services provide functionality for tracking errors across deployed modules and are recommended for testing, staging, and production deployment tiers. An existing deployment tier can easily be updated to enable or disable the LambdaSharp.Core services.
 
@@ -90,7 +90,7 @@ __Using PowerShell/Bash:__
 lash init --core-services enabled
 ```
 
-## Optional: Define Environment Variables
+## (Optional) Define Environment Variables
 
 The following environment variables are checked when their corresponding options are omitted from the λ# command line.
 * `LAMBDASHARP_TIER`: Replaces the need for the `--tier` option.
@@ -106,7 +106,7 @@ __Using Bash:__
 export LAMBDASHARP_TIER=Sandbox
 ```
 
-## Optional: Customize LambdaSharp Core Settings
+## (Optional) Customize LambdaSharp Core Settings
 
 The following λ# Core module settings can be adjusted in the AWS console by updating the deployed CloudFormation stack.
 
@@ -115,11 +115,11 @@ The following λ# Core module settings can be adjusted in the AWS console by upd
 |`LoggingStreamRetentionPeriod`|How long logging stream entries are kept before they are lost|24|
 |`LoggingStreamShardCount`|Number of Kinesis shards for the logging streams|1|
 
-## Optional: Subscribe to `ErrorReportTopic` Topic
+## (Optional) Subscribe to `ErrorReportTopic` Topic
 
 The λ# Core module analyzes the output of all deployed functions. When an issue occurs, the Core module sends a notification on the SNS `ErrorReportTopic`.
 
-## Optional: Setup Rollbar Integration
+## (Optional) Setup Rollbar Integration
 
 The λ# Core module can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the λ# Core module needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 

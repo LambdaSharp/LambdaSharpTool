@@ -8,7 +8,7 @@
 
 The objective of λ# is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
 
-![λ# CLI](images/LashAnsiColor-WIP.gif)
+![λ# CLI](~/images/LashAnsiColor-WIP.gif)
 
 ## Install λ# CLI
 
