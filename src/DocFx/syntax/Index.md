@@ -109,3 +109,14 @@ The module version can be accessed as a variable in <code>!Sub</code> operations
 </dd>
 
 </dl>
+
+## Intrinsic Functions
+
+[CloudFormation intrinsic functions](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference.html) are supported in item definitions where values can be specified. In addition, λ# modules can use the `!Include` pre-processor directive to include plain text files as strings or YAML files as nested objects. The `!Include` directive can be used anywhere in a YAML file.
+
+___Example___
+```yaml
+Module: My.Module
+Items:
+  - !Include MyFirstItem
+```
