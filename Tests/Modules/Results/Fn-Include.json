@@ -1,0 +1,224 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "LambdaSharp CloudFormation Test (v1.0-DEV)",
+  "Parameters": {
+    "Secrets": {
+      "Type": "String",
+      "Description": "Secret Keys (ARNs)",
+      "Default": ""
+    },
+    "LambdaSharpCoreServices": {
+      "Type": "String",
+      "Description": "Use LambdaSharp.Core Services",
+      "AllowedValues": [
+        "Disabled",
+        "Enabled"
+      ],
+      "Default": "Disabled"
+    },
+    "DeploymentBucketName": {
+      "Type": "String",
+      "Description": "Deployment S3 Bucket Name"
+    },
+    "DeploymentPrefix": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix"
+    },
+    "DeploymentPrefixLowercase": {
+      "Type": "String",
+      "Description": "Deployment Tier Prefix (lowercase)"
+    },
+    "DeploymentRoot": {
+      "Type": "String",
+      "Description": "Root Stack Name",
+      "Default": ""
+    },
+    "DeploymentChecksum": {
+      "Type": "String",
+      "Description": "Deployment Checksum",
+      "Default": "596046FD3CAD028FA0F3C2634D214BF4"
+    }
+  },
+  "Resources": {
+    "MyResource1": {
+      "Type": "Custom::Handler",
+      "Properties": {
+        "Text": "This is a plain text file."
+      }
+    },
+    "MyResource2": {
+      "Type": "Custom::Handler",
+      "Properties": {
+        "Object": {
+          "Name": "Foo",
+          "Value": "Bar"
+        }
+      }
+    },
+    "MyIncludedResource": {
+      "Type": "Custom::Handler",
+      "Properties": {
+        "Text": "This is a plain text file.",
+        "Object": {
+          "Name": "Foo",
+          "Value": "Bar"
+        }
+      }
+    },
+    "ModuleRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationModule",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Module"
+          }
+        },
+        "ResourceType": "LambdaSharp::Registration::Module",
+        "Module": "Test.TestModule:1.0-DEV",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
+        }
+      }
+    }
+  },
+  "Outputs": {
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "596046FD3CAD028FA0F3C2634D214BF4"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  "Conditions": {
+    "UseCoreServices": {
+      "Fn::Equals": [
+        {
+          "Ref": "LambdaSharpCoreServices"
+        },
+        "Enabled"
+      ]
+    }
+  },
+  "Metadata": {
+    "AWS::CloudFormation::Interface": {
+      "ParameterLabels": {
+        "Secrets": {
+          "default": "Comma-separated list of additional KMS secret keys [String]"
+        },
+        "LambdaSharpCoreServices": {
+          "default": "Integrate with LambdaSharp.Core services [String]"
+        },
+        "DeploymentBucketName": {
+          "default": "Deployment S3 bucket name [String]"
+        },
+        "DeploymentPrefix": {
+          "default": "Deployment tier prefix [String]"
+        },
+        "DeploymentPrefixLowercase": {
+          "default": "Deployment tier prefix (lowercase) [String]"
+        },
+        "DeploymentRoot": {
+          "default": "Root stack name for nested deployments, blank otherwise [String]"
+        },
+        "DeploymentChecksum": {
+          "default": "CloudFormation template MD5 checksum [String]"
+        }
+      },
+      "ParameterGroups": [
+        {
+          "Label": {
+            "default": "LambdaSharp Module Options"
+          },
+          "Parameters": [
+            "Secrets",
+            "LambdaSharpCoreServices"
+          ]
+        },
+        {
+          "Label": {
+            "default": "LambdaSharp Deployment Settings (DO NOT MODIFY)"
+          },
+          "Parameters": [
+            "DeploymentBucketName",
+            "DeploymentPrefix",
+            "DeploymentPrefixLowercase",
+            "DeploymentRoot",
+            "DeploymentChecksum"
+          ]
+        }
+      ]
+    },
+    "LambdaSharp::Manifest": {
+      "Version": "2019-07-04",
+      "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "596046FD3CAD028FA0F3C2634D214BF4",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "0.7.0",
+      "ParameterSections": [
+        {
+          "Title": "LambdaSharp Module Options",
+          "Parameters": [
+            {
+              "Name": "Secrets",
+              "Type": "String",
+              "Label": "Comma-separated list of additional KMS secret keys",
+              "Default": ""
+            },
+            {
+              "Name": "LambdaSharpCoreServices",
+              "Type": "String",
+              "Label": "Integrate with LambdaSharp.Core services",
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
+            }
+          ]
+        }
+      ],
+      "Git": {
+        "Branch": "test-branch",
+        "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
+      },
+      "Artifacts": [],
+      "Dependencies": [
+        {
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
+        }
+      ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
+      "ResourceNameMappings": {
+        "ModuleRegistration": "Module::Registration"
+      },
+      "TypeNameMappings": {
+        "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module"
+      }
+    }
+  }
+}

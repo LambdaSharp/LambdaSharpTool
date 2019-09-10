@@ -189,7 +189,7 @@ namespace LambdaSharp.Tool.Cli {
                 try {
                     return ReadYamlFile();
                 } catch(YamlDotNet.Core.YamlException e) {
-                    LogError($"parsing error near {e.Message}");
+                    LogError($"parsing error near {e.Message}", e);
                 } catch(Exception e) {
                     LogError(e);
                 }
