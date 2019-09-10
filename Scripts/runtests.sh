@@ -52,6 +52,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Tests/Modules/Fn-FindInMap.yml \
         $LAMBDASHARP/Tests/Modules/Fn-GetAtt.yml \
         $LAMBDASHARP/Tests/Modules/Fn-GetAZs.yml \
+        $LAMBDASHARP/Tests/Modules/Fn-Include.yml \
         $LAMBDASHARP/Tests/Modules/Fn-ImportValue.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Join.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Ref.yml \

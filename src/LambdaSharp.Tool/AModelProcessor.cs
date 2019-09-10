@@ -39,17 +39,17 @@ namespace LambdaSharp.Tool {
 
         //--- Fields ---
         private readonly Settings _settings;
-        private string _sourceFilename;
+        private List<string> _sourceFilenames = new List<string>();
 
         //--- Constructors ---
         protected AModelProcessor(Settings settings, string sourceFilename) {
             _settings = settings ?? throw new ArgumentNullException(nameof(settings));
-            _sourceFilename = sourceFilename;
+            _sourceFilenames.Add(sourceFilename);
         }
 
         //--- Properties ---
         public Settings Settings => _settings;
-        public string SourceFilename => _sourceFilename;
+        public string SourceFilename => _sourceFilenames.Last();
         public bool HasErrors => Settings.HasErrors;
 
         //--- Methods ---
@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool {
                 // exception already has location; don't re-wrap it
                 throw;
             } catch(Exception e) {
-                throw new ModelLocationException(LocationPath, _sourceFilename, e);
+                throw new ModelLocationException(LocationPath, SourceFilename, e);
             } finally {
                 _locations.Pop();
             }
@@ -77,9 +77,18 @@ namespace LambdaSharp.Tool {
                 // exception already has location; don't re-wrap it
                 throw;
             } catch(Exception e) {
-                throw new ModelLocationException(LocationPath, _sourceFilename, e);
+                throw new ModelLocationException(LocationPath, SourceFilename, e);
             } finally {
                 _locations.Pop();
+            }
+        }
+
+        protected void InSourceFile(string sourceFilename, Action action) {
+            try {
+                _sourceFilenames.Add(sourceFilename);
+                action();
+            } finally {
+                _sourceFilenames.RemoveAt(_sourceFilenames.Count - 1);
             }
         }
 
@@ -95,8 +104,8 @@ namespace LambdaSharp.Tool {
             if(_locations.Any()) {
                 text.Append($" @ {LocationPath}");
             }
-            if(_sourceFilename != null) {
-                text.Append($" [{_sourceFilename}]");
+            if(SourceFilename != null) {
+                text.Append($" [{SourceFilename}]");
             }
             Settings.LogWarn(text.ToString());
         }
@@ -107,8 +116,8 @@ namespace LambdaSharp.Tool {
             if(_locations.Any()) {
                 text.Append($" @ {LocationPath}");
             }
-            if(_sourceFilename != null) {
-                text.Append($" [{_sourceFilename}]");
+            if(SourceFilename != null) {
+                text.Append($" [{SourceFilename}]");
             }
             Settings.LogError(text.ToString(), exception);
         }

@@ -1,0 +1,17 @@
+Module: Test.TestModule
+Description: LambdaSharp CloudFormation Test
+Items:
+
+  - Resource: MyResource1
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Text: !Include Includes/plaintext.txt
+
+  - Resource: MyResource2
+    Description: A CloudFormation dummy resource
+    Type: Custom::Handler
+    Properties:
+      Object: !Include Includes/structure.yml
+
+  - !Include Includes/item.yml

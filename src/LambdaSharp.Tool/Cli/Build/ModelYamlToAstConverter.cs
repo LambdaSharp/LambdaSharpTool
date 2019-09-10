@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model.AST;
@@ -68,9 +69,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Build()
                     .Deserialize<ModuleNode>(yamlParser);
             } catch(YamlDotNet.Core.YamlException e) {
-                LogError($"parsing error near {e.Message}");
+                LogError($"parsing error near {e.Message}", e);
             } catch(Exception e) {
-                LogError(e);
+                LogError($"parse error: {e.Message}", e);
             }
             return null;
         }
@@ -86,7 +87,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Build()
                     .Deserialize<ModuleNode>(source);
             } catch(YamlDotNet.Core.YamlException e) {
-                LogError($"parsing error near {e.Message}");
+                LogError($"parsing error near {e.Message}", e);
             } catch(Exception e) {
                 LogError($"parse error: {e.Message}", e);
             }
@@ -98,12 +99,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             // replace choice branches with their respective choices
             return new YamlDocument {
                 Start = inputDocument.Start,
-                Values = ResolveChoices(inputDocument.Values),
+                Values = Preprocess(inputDocument.Values),
                 End = inputDocument.End
             };
         }
 
-        private List<AYamlValue> ResolveChoices(List<AYamlValue> inputValues) {
+        private List<AYamlValue> Preprocess(List<AYamlValue> inputValues) {
             if(_selector == null) {
                 return inputValues;
             }
@@ -111,7 +112,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             var counter = 0;
             foreach(var inputValue in inputValues) {
                 AtLocation($"{counter++}", () => {
-                    var outputValue = ResolveChoices(inputValue);
+                    var outputValue = Preprocess(inputValue);
                     if(outputValue != null) {
                         outputValues.Add(outputValue);
                     }
@@ -120,7 +121,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             return outputValues;
         }
 
-        private AYamlValue ResolveChoices(AYamlValue inputValue) {
+        private AYamlValue Preprocess(AYamlValue inputValue) {
             switch(inputValue) {
             case YamlMap inputMap: {
                     var outputMap = new YamlMap {
@@ -144,7 +145,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             ) {
                                 choice = Tuple.Create(
                                     inputEntry.Key.Scalar.Value,
-                                    AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value))
+                                    AtLocation(inputEntry.Key.Scalar.Value, () => Preprocess(inputEntry.Value))
                                 );
                             }
                         } else {
@@ -152,7 +153,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             // add the entry to the output map
                             outputMap.Entries.Add(new KeyValuePair<YamlScalar, AYamlValue>(
                                 inputEntry.Key,
-                                AtLocation(inputEntry.Key.Scalar.Value, () => ResolveChoices(inputEntry.Value))
+                                AtLocation(inputEntry.Key.Scalar.Value, () => Preprocess(inputEntry.Value))
                             ));
                         }
                     }
@@ -179,11 +180,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return outputMap;
                 }
             case YamlScalar inputScalar:
+                if(inputScalar.Scalar.Tag == "!Include") {
+                    return Include(inputScalar.Scalar.Value);
+                }
                 return inputScalar;
             case YamlSequence inputSequence:
                 return new YamlSequence {
                     Start = inputSequence.Start,
-                    Values = ResolveChoices(inputSequence.Values),
+                    Values = Preprocess(inputSequence.Values),
                     End = inputSequence.End
                 };
             default:
@@ -191,5 +195,40 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return inputValue;
             }
         }
-    }
+
+        private AYamlValue Include(string filePath)  {
+            var sourceFile = Path.Combine(Path.GetDirectoryName(SourceFilename), filePath);
+
+            // read include contents
+            string contents = null;
+            try {
+                contents = File.ReadAllText(sourceFile);
+            } catch(FileNotFoundException) {
+                LogError($"could not find '{sourceFile}'");
+            } catch(IOException) {
+                LogError($"invalid !Include value '{sourceFile}'");
+            } catch(ArgumentException) {
+                LogError($"invalid !Include value '{sourceFile}'");
+            }
+            AYamlValue result = new YamlScalar(new Scalar("<BAD>"));
+            if(contents != null) {
+
+                // check if YAML conversion is required
+                if(Path.GetExtension(sourceFile).ToLowerInvariant() != ".yml") {
+                    return new YamlScalar(new Scalar(contents));
+                }
+                InSourceFile(sourceFile, () => {
+                    try {
+                        var includeStream = YamlParser.Parse(contents);
+                        result = Preprocess(includeStream.Documents.First()).Values.First();
+                    } catch(YamlDotNet.Core.YamlException e) {
+                        LogError($"parsing error near {e.Message}", e);
+                    } catch(Exception e) {
+                        LogError($"parse error: {e.Message}", e);
+                    }
+                });
+            }
+            return result;
+        }
+   }
 }
