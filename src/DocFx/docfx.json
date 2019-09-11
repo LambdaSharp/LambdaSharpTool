@@ -82,7 +82,7 @@
       "_disableContribution": true,
       "_enableNewTab": true,
       "_description": "Building serverless applications with .NET on AWS",
-      "_keywords": "software development, aws, serverless, lambda, dotnet, dotnetcore, .net, .net core",
+      "_keywords": "lambdasharp, aws, serverless, dotnet, dotnetcore",
       "_baseUrl": "https://lambdasharp.net/"
     },
     "fileMetadataFiles": [],
