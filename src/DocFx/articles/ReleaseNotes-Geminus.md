@@ -172,3 +172,12 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * Added [`LambdaSharp.CustomResource.Request<TProperties>.StackId`](xref:LambdaSharp.CustomResource.Request`1.StackId) property to custom resource request to uniquely identify the CloudFormation stack from which the request originated.
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
+## Releases
+
+### (v0.7.0.1) - 2019-09-11
+
+#### Fixes
+* Fixed an issue with enabling/disabling core services in a deployment tier.
+
+#### Updated Documentation
+* Added metadata to HTML pages.
