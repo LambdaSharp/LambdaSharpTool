@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Cli {
                         allowDataLossOption.HasValue(),
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
-                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version,
+                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCompatibleCoreServicesVersion(),
                         usePublishedOption.HasValue()
                             ? null
                             : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
@@ -151,15 +151,21 @@ namespace LambdaSharp.Tool.Cli {
             if(!createNewTier) {
 
                 // determine if the deployment tier needs to be updated
-                var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.ToolVersion);
+                var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.CoreServicesVersion);
                 if(tierToToolVersionComparison == 0) {
 
-                    // versions are identical; nothing to do, unless it's a pre-release, which always needs to be updated
-                    updateExistingTier = settings.ToolVersion.IsPreRelease || forceDeploy;
+                    // versions are identical; nothing to do, unless we're forced to update
+                    updateExistingTier = forceDeploy
+
+                        // it's a pre-release, which always needs to be updated
+                        || settings.CoreServicesVersion.IsPreRelease
+
+                        // deployment tier is running core services state is different from requested state
+                        || (settings.CoreServices != coreServices);
                 } else if(tierToToolVersionComparison > 0) {
 
                     // tier is newer; tool needs to get updated
-                    LogError($"LambdaSharp tool is out of date (tool: {settings.ToolVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
+                    LogError($"LambdaSharp tool is out of date (tool: {settings.CoreServicesVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
                     return false;
                 } else if(tierToToolVersionComparison < 0) {
 
@@ -167,15 +173,15 @@ namespace LambdaSharp.Tool.Cli {
                     updateExistingTier = true;
 
                     // tool version is more recent; if it's a minor update, proceed without prompting, otherwise ask user to confirm upgrade
-                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.ToolVersion) && !allowUpgrade) {
+                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.CoreServicesVersion) && !allowUpgrade) {
                         Console.WriteLine($"LambdaSharp Tier is out of date");
-                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.ToolVersion}?", defaultAnswer: false);
+                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.CoreServicesVersion}?", defaultAnswer: false);
                     }
                     if(!updateExistingTier) {
                         return false;
                     }
                 } else if(!forceDeploy) {
-                    LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
+                    LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.CoreServicesVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
                 } else {
 
@@ -195,10 +201,11 @@ namespace LambdaSharp.Tool.Cli {
                     (settings.CoreServices == CoreServices.Undefined)
 
                     // deployment tier is running with disabled core services; just check if the boostrap stack needs to be updated
+                    || (settings.CoreServices == CoreServices.Bootstrap)
                     || (settings.CoreServices == CoreServices.Disabled)
 
-                    // deployment tier is running with enabled core services, but needs to be downgraded to disabled
-                    || ((settings.CoreServices != CoreServices.Disabled) && (coreServices == CoreServices.Disabled))
+                    // deployment tier core services need to be disabled
+                    || (coreServices == CoreServices.Disabled)
                 ))
             ) {
 
@@ -221,7 +228,6 @@ namespace LambdaSharp.Tool.Cli {
                 "LambdaSharp.S3.Subscriber",
                 "LambdaSharp.Twitter.Query"
             };
-
 
             // check if the module must be built and published first (only applicable when running lash in contributor mode)
             var buildPublishDeployCommand = new CliBuildPublishDeployCommand();
@@ -273,13 +279,14 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if operating services need to be installed/updated
-            if(settings.CoreServices == CoreServices.Disabled) {
+            if(coreServices == CoreServices.Disabled) {
                 return true;
             }
-            Console.WriteLine();
             if(createNewTier) {
+                Console.WriteLine();
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
             } else if(updateExistingTier) {
+                Console.WriteLine();
                 Console.WriteLine($"Updating deployment tier '{settings.TierName}'");
             } else {
                 return true;
@@ -316,7 +323,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // reset tier version if core module was deployed; this will force the tier settings to be refetched
                 if(isLambdaSharpCoreModule) {
-                    settings.TierVersion = null;
+                    await PopulateDeploymentTierSettingsAsync(settings, force: true);
                 }
             }
 
@@ -331,7 +338,8 @@ namespace LambdaSharp.Tool.Cli {
 
                 // initialize stack with seed CloudFormation template
                 var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
-                    ["VERSION"] = settings.ToolVersion.ToString(),
+                    ["CORE-VERSION"] = settings.CoreServicesVersion.ToString(),
+                    ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
                     ["CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
                 });
 

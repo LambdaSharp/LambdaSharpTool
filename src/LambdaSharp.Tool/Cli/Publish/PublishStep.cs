@@ -148,8 +148,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 && !(moduleInfo.Version?.IsPreRelease ?? false)
                 && await Settings.S3Client.DoesS3ObjectExistAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath)
             ) {
-                LogError($"{moduleInfo} has already been imported");
-                return false;
+                return true;
             }
 
             // find manifest for module to import
