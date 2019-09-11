@@ -1,3 +1,8 @@
+---
+title: LambdaSharp ResourceType - Property Declaration
+description: LambdaSharp YAML syntax for custom resource type properties
+keywords: custom resource, resource type, property, declaration, syntax, yaml, cloudformation
+---
 # Property Definition
 
 The property definition specifies the name and type for a resource type property.

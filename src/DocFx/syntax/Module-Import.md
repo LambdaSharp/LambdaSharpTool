@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Import Declaration
+description: LambdaSharp YAML syntax for cross-module import references
+keywords: cross-module, module, import, declaration, reference, syntax, yaml, cloudformation
+---
 # Import Definition
 
 The `Import` definition is used to create a cross-module reference. By default, these references are resolved by CloudFormation at deployment time. However, they can also be redirected to a different module or be given a specific value instead. This capability allows for a default behavior that is mostly convenient, while enabling modules to be re-wired to import values from other modules, or to be given specific values for testing or legacy purposes.

@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Resource - Pragmas Section
+description: LambdaSharp resource configuration pragmas
+keywords: resource, pragma, section, configuration, syntax, yaml, cloudformation
+---
 # Resource Pragmas
 
 Pragmas are used to change the default processing behavior of the λ# CLI. They are generally only required for very specific situations.

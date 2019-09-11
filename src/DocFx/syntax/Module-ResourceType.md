@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - ResourceType Declaration
+description: LambdaSharp YAML syntax for custom resource types
+keywords: custom resource, resource type, lambda, declaration, syntax, yaml, cloudformation
+---
 # Resource Type
 
 The `ResourceType` definition is used to register a new resource type for a deployment tier. The handler for the resource type can either be an SNS topic or a Lambda function. Once deployed, the resource type is available to all subsequent module deployments.

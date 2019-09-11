@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Resource Declaration
+description: LambdaSharp YAML syntax for generic CloudFormation resources
+keywords: resource, declaration, syntax, yaml, cloudformation
+---
 # Resource
 
 The `Resource` definition is used to create new resources and/or specify access for the Lambda function in the module to existing resources.

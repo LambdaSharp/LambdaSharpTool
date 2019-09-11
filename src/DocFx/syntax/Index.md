@@ -1,3 +1,7 @@
+---
+description: LambdaSharp YAML syntax for modules
+keywords: module, syntax, yaml, cloudformation
+---
 ![λ#](~/images/Model.png)
 
 # LambdaSharp Module Syntax

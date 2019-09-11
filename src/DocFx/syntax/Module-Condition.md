@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Condition Declaration
+description: LambdaSharp YAML syntax for CloudFormation conditions
+keywords: condition, declaration, syntax, yaml, cloudformation
+---
 # Condition
 
 The `Condition` definition specifies a statement that defines the circumstances under which entities are created or configured.

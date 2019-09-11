@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Using Section
+description: LambdaSharp module Using section
+keywords: module, using, section, configuration, syntax, yaml, cloudformation
+---
 # Using
 
 The `Using` section, in the [λ# Module](Index.md), lists modules that the current module uses. During deployment, the λ# CLI checks if the used modules are present. If not, it will attempt to find and deploy them, resolving their dependencies recursively.

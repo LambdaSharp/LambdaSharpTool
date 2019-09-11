@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Global Variables Reference
+description: LambdaSharp module global variables reference
+keywords: module, global, variable, reference, syntax, yaml, cloudformation
+---
 # LambdaSharp Module - Global Variables
 
 λ# modules have variables and resources defined implicitly as part of their definition.

@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module/Group - Items Section
+description: LambdaSharp module/group Items section
+keywords: module, group, item, section, definition, syntax, yaml, cloudformation
+---
 # LambdaSharp Module - Items
 
 The `Items` section, in the [λ# Module](Index.md), defines parameters, variables, resources, functions, etc.

@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Function - CloudWatch Scheduled Events Event Source Declaration
+description: LambdaSharp YAML syntax for Amazon CloudWatch Scheduled Events event source
+keywords: amazon, cloudwatch, schedule, events, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # Schedule Source
 
 See [CloudWatch Schedule Event sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ScheduleSample/) for an example of how to use the CloudWatch Schedule Event source.

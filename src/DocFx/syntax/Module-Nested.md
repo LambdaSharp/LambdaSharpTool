@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Module - Nested Module Declaration
+description: LambdaSharp YAML syntax for nested modules
+keywords: nested, declaration, module, syntax, yaml, cloudformation
+---
 # Nested Module
 
 The `Module` definition specifies the creation of a nested module. Nested modules inherit the same λ# configuration as their parent module, except for the `Secrets` parameter, which must be passed on explicitly.

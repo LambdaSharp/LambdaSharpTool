@@ -1,3 +1,8 @@
+---
+title: LambdaSharp Function - Pragmas Section
+description: LambdaSharp function configuration pragmas
+keywords: function, pragma, section, configuration, syntax, yaml, cloudformation
+---
 # Function Pragmas
 
 Pragmas are used to change the default processing behavior of the λ# CLI. They are generally only required for very specific situations.
@@ -9,3 +14,15 @@ Pragmas are used to change the default processing behavior of the λ# CLI. They 
 |`no-function-registration`             |Don't create a function registration|
 |`no-handler-validation`                |Don't validate if the Lambda function handler can be found in the compiled assembly|
 |`no-wildcard-scoped-variables`         |Don't include function in wildcard (`*`) scopes|
+
+## Example
+
+### A Lambda function with pragmas
+
+```yaml
+- Function: MyFunction
+  Memory: 128
+  Timeout: 15
+  Pragmas:
+    - no-dead-letter-queue
+```
