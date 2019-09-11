@@ -8,9 +8,9 @@ CloudFormation stacks created by the λ# CLI have termination protection enabled
 
 The `deploy` command takes an optional argument. The argument can either be the name of a published module with an optional version constraint, a path to a manifest file, a path to a module definition, or a path to a folder containing a `Module.yml` file.
 
-If the argument refers to a manifest file, the `deploy` command invokes `publish` command to upload the module and its assets to the deployment bucket.
+If the argument refers to a manifest file, the `deploy` command invokes `publish` command to upload the module and its artifacts to the deployment bucket.
 
-If the argument refers to a module definition, the `deploy` command invokes the `build` command to compile the module and all its assets, followed by the `publish` command to upload all built assets.
+If the argument refers to a module definition, the `deploy` command invokes the `build` command to compile the module and all its artifacts, followed by the `publish` command to upload all built artifacts.
 
 ## Options
 
@@ -67,7 +67,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--force-publish</code></dt>
 <dd>
 
-(optional) Publish modules and their assets even when no changes were detected
+(optional) Publish modules and their artifacts even when no changes were detected
 </dd>
 
 <dt><code>--no-assembly-validation</code></dt>
@@ -115,7 +115,7 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
-(optional) Generate output assets without deploying (0=everything, 1=cloudformation)
+(optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)
 </dd>
 
 <dt><code>--cfn-output &lt;FILE&gt;</code></dt>
@@ -173,78 +173,75 @@ lash deploy
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Deploy LambdaSharp module
+LambdaSharp CLI (v0.7.0) - Deploy LambdaSharp module
 Readying module for deployment tier 'Sandbox'
 
 Reading module: Module.yml
-Compiling: LambdaSharp.Demo.SlackTodo (v1.0-DEV)
-=> Building function RecordMessage [netcoreapp2.1, Release]
+Compiling: Demo.SlackTodo (v1.0-DEV)
 => Building function SlackCommand [netcoreapp2.1, Release]
-=> Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
-Publishing module: LambdaSharp.Demo
-=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
-=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
-=> Uploading template: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
-Resolving module reference: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Versions/1.0-DEV/cloudformation.json
+=> Module compilation done: bin\cloudformation.json
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
+Resolving module reference: Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => Validating module for deployment tier
 
-Deploying stack: Sandbox-LambdaSharp-Demo [LambdaSharp.Demo:1.0-DEV]
-=> Stack create initiated for Sandbox-LambdaSharp-Demo [CAPABILITY_IAM]
-REVIEW_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo (User Initiated)
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo (User Initiated)
-CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         NotifyRecorderTopic
-CREATE_IN_PROGRESS                  AWS::DynamoDB::Table                                    MessageTable
-CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         NotifyRecorderTopic (Resource creation Initiated)
+Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
+=> Stack create initiated for Sandbox-LambdaSharp-Demo-SlackTodo [CAPABILITY_IAM]
+CREATE_COMPLETE    AWS::CloudFormation::Stack             Sandbox-LambdaSharp-Demo-SlackTodo
+CREATE_COMPLETE    AWS::DynamoDB::Table                   TaskTable
+CREATE_COMPLETE    AWS::ApiGateway::RestApi               Module::RestApi
 ...
-CREATE_COMPLETE                     AWS::ApiGateway::UsagePlan                              UsagePlan
-CREATE_IN_PROGRESS                  LambdaSharp::Registration::Function                     SlackCommand::Registration (Resource creation Initiated)
-CREATE_COMPLETE                     LambdaSharp::Registration::Function                     SlackCommand::Registration
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo
+CREATE_COMPLETE    AWS::Logs::SubscriptionFilter          SlackCommand::LogGroupSubscription
+CREATE_COMPLETE    AWS::ApiGateway::Deployment            Module::RestApi::Deployment48BDBB7F2CFECB525DA5E89C8DF7A0E7
+CREATE_COMPLETE    AWS::ApiGateway::Stage                 Module::RestApi::Stage
 => Stack create finished
 Stack output values:
-=> Module: LambdaSharp.Demo:1.0-DEV
-=> The topic for recording messages: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Demo-NotifyRecorderTopic-69KFERDLAQIW
+=> LambdaSharpTier = Sandbox
+=> LambdaSharpTool = 0.7.0
+=> Module = Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+=> ModuleChecksum = 442684F838E5B6717B0EF0E74334062F
+=> SlackApiPath: Slack Command URL = https://lr0iaacgoc.execute-api.us-west-2.amazonaws.com/LATEST/slack
 
-Done (finished: 1/17/2019 4:12:13 PM; duration: 00:02:23.5535481)
+Done (finished: 9/5/2019 1:43:03 PM; duration: 00:01:55.6433420)
 ```
 
 ### Deploy a published module
 
 __Using PowerShell/Bash:__
 ```bash
-lash deploy Demo/bin/cloudformation.json
+lash deploy bin/cloudformation.json
 ```
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Deploy LambdaSharp module
+LambdaSharp CLI (v0.7.0) - Deploy LambdaSharp module
 Readying module for deployment tier 'Sandbox'
 
-Publishing module: LambdaSharp.Demo
-=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_RecordMessage_8A0A4D0DA5B090BD33D779EF16FE7470.zip
-=> Uploading asset: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/function_SlackCommand_30C238770176A7AE6955A519FC6A283A.zip
-=> Uploading template: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Assets/cloudformation_v1.0-DEV_A556D13161D90F32959CDE5EC121B7D0.json
-Resolving module reference: s3://lambdasharp-bucket-name/LambdaSharp/Modules/Demo/Versions/1.0-DEV/cloudformation.json
+Publishing module: Demo.SlackTodo
+=> Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip
+=> Uploading template: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/cloudformation_Demo.SlackTodo_939992254E194760372083264D08D795.json
+Resolving module reference: Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
 => Validating module for deployment tier
 
-Deploying stack: Sandbox-LambdaSharp-Demo [LambdaSharp.Demo:1.0-DEV]
-=> Stack create initiated for Sandbox-LambdaSharp-Demo [CAPABILITY_IAM]
-REVIEW_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo (User Initiated)
-CREATE_IN_PROGRESS                  AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo (User Initiated)
-CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         NotifyRecorderTopic
-CREATE_IN_PROGRESS                  AWS::DynamoDB::Table                                    MessageTable
-CREATE_IN_PROGRESS                  AWS::SNS::Topic                                         NotifyRecorderTopic (Resource creation Initiated)
+Deploying stack: Sandbox-LambdaSharp-Demo-SlackTodo [Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name]
+=> Stack create initiated for Sandbox-LambdaSharp-Demo-SlackTodo [CAPABILITY_IAM]
+CREATE_COMPLETE    AWS::CloudFormation::Stack             Sandbox-LambdaSharp-Demo-SlackTodo
+CREATE_COMPLETE    AWS::DynamoDB::Table                   TaskTable
+CREATE_COMPLETE    AWS::ApiGateway::RestApi               Module::RestApi
 ...
-CREATE_COMPLETE                     AWS::ApiGateway::UsagePlan                              UsagePlan
-CREATE_IN_PROGRESS                  LambdaSharp::Registration::Function                     SlackCommand::Registration (Resource creation Initiated)
-CREATE_COMPLETE                     LambdaSharp::Registration::Function                     SlackCommand::Registration
-CREATE_COMPLETE                     AWS::CloudFormation::Stack                              Sandbox-LambdaSharp-Demo
+CREATE_COMPLETE    AWS::Logs::SubscriptionFilter          SlackCommand::LogGroupSubscription
+CREATE_COMPLETE    AWS::ApiGateway::Deployment            Module::RestApi::Deployment48BDBB7F2CFECB525DA5E89C8DF7A0E7
+CREATE_COMPLETE    AWS::ApiGateway::Stage                 Module::RestApi::Stage
 => Stack create finished
 Stack output values:
-=> Module: LambdaSharp.Demo:1.0-DEV
-=> The topic for recording messages: arn:aws:sns:us-east-1:123456789012:Sandbox-LambdaSharp-Demo-NotifyRecorderTopic-69KFERDLAQIW
+=> LambdaSharpTier = Sandbox
+=> LambdaSharpTool = 0.7.0
+=> Module = Demo.SlackTodo:1.0-DEV@lambdasharp-bucket-name
+=> ModuleChecksum = 442684F838E5B6717B0EF0E74334062F
+=> SlackApiPath: Slack Command URL = https://lr0iaacgoc.execute-api.us-west-2.amazonaws.com/LATEST/slack
 
-Done (finished: 1/17/2019 4:12:13 PM; duration: 00:02:23.5535481)
+Done (finished: 9/5/2019 1:43:03 PM; duration: 00:01:55.6433420)
 ```
 
 ### Deploy a module with a parameters file
@@ -316,12 +313,16 @@ The name of an environment variable.
 
 #### !GetParam
 
-The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html).
+The `!GetParam` function reads a value from the [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html) and optionally encrypts it using a KMS key.
 
 
 ##### Syntax
 ```yaml
 !GetParam parameter-store-path
+```
+-OR-
+```yaml
+!GetParam [ parameter-store-path, encryption-key-id ]
 ```
 
 ##### Parameters
@@ -331,7 +332,12 @@ The `!GetParam` function reads a value from the [AWS Parameter Store](https://d
 <dd>
 The path to a value in the <a href="https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-paramstore.html">AWS Parameter Store</a>.
 
-If the value is stored as a SecureString, it is automatically decrypted when retrieved and re-encrypted with the <code>DefaultSecretsKey</code> for the deployment tier.
+If the value is stored as a SecureString, it is automatically decrypted when retrieved and passed as plain text, unless an <code>encryption-key-id</code> is provided.
+</dd>
+
+<dt><code>encryption-key-id</code></dt>
+<dd>
+The <a href="https://docs.aws.amazon.com/kms/latest/developerguide/overview.html">AWS Key Management Service</a> key ARN or alias to use for encrypting the value from the parameter store.
 </dd>
 
 </dl>

@@ -35,7 +35,7 @@ Items:
       - !Ref SourceResourceParameter
       - literal value
 
-  - Namespace: SourceParameterCollection
+  - Group: SourceParameterCollection
     Description: Description for collection parameter
     Items:
 
@@ -52,7 +52,7 @@ Items:
         Properties:
           DisplayName: !Ref SourceValueParameter
 
-  - Namespace: SampleParameterCollection
+  - Group: SampleParameterCollection
     Description: Description for collection parameter
     Items:
 
@@ -101,7 +101,7 @@ Items:
         Scope: all
         Value: !Ref SingleResourceVariable
 
-  - Namespace: OtherParameterCollection
+  - Group: OtherParameterCollection
     Description: Description for collection parameter
     Items:
 

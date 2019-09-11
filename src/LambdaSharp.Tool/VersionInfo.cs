@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,130 +18,141 @@
 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool {
 
     [JsonConverter(typeof(VersionInfoConverter))]
-    public class VersionInfo : IComparable<VersionInfo>, IEquatable<VersionInfo> {
+    public class VersionInfo {
 
         //--- Class Methods ---
         public static VersionInfo Parse(string text) {
             var index = text.IndexOf('-');
+            Version version;
+            string suffix;
             if(index < 0) {
-                return new VersionInfo(Version.Parse(text), "");
+                version = Version.Parse(text);
+                suffix = "";
             } else {
-                return new VersionInfo(Version.Parse(text.Substring(0, index)), text.Substring(index).TrimEnd('*'));
+                version = Version.Parse(text.Substring(0, index));
+                suffix = text.Substring(index).TrimEnd('*');
             }
+            return new VersionInfo(
+                version.Major,
+                version.Minor,
+                (version.Build != -1) ? (int?)version.Build : null,
+                (version.Revision != -1) ? (int?)version.Revision : null,
+                suffix
+            );
         }
 
         public static bool TryParse(string text, out VersionInfo version) {
-            try {
-                version = Parse(text);
-                return true;
-            } catch {
+            var index = text.IndexOf('-');
+            string prefix;
+            string suffix;
+            if(index < 0) {
+                prefix = text;
+                suffix = "";
+            } else {
+                prefix = text.Substring(0, index);
+                suffix = text.Substring(index).TrimEnd('*');
+            }
+            if(!Version.TryParse(prefix, out var prefixVersion)) {
                 version = null;
                 return false;
             }
+            version = new VersionInfo(
+                prefixVersion.Major,
+                prefixVersion.Minor,
+                (prefixVersion.Build != -1) ? (int?)prefixVersion.Build : null,
+                (prefixVersion.Revision != -1) ? (int?)prefixVersion.Revision : null,
+                suffix
+            );
+            return true;
         }
 
-        public static bool operator < (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) < 0;
-
-        public static bool operator > (VersionInfo left, VersionInfo right)
-            => left.CompareTo(right) > 0;
-
-        public static bool operator == (VersionInfo left, VersionInfo right) {
-            if(ReferenceEquals(left, right)) {
-                return true;
+        public static VersionInfo Max(IEnumerable<VersionInfo> versionInfos, bool strict = false) {
+            if(!versionInfos.Any()) {
+                return null;
             }
-            if(ReferenceEquals(left, null)) {
-                return false;
+            var result = versionInfos.First();
+            foreach(var current in versionInfos.Skip(1)) {
+                if(current.IsGreaterThanVersion(result, strict)) {
+                    result = current;
+                }
             }
-            if(ReferenceEquals(right, null)) {
-                return false;
-            }
-            return left.CompareTo(right) == 0;
+            return result;
         }
 
-        public static bool operator != (VersionInfo left, VersionInfo right) {
-            if(ReferenceEquals(left, right)) {
-                return false;
+        public static VersionInfo FindLatestMatchingVersion(IEnumerable<VersionInfo> versionInfos, VersionInfo minVersion, Predicate<VersionInfo> validate) {
+            var candidates = new List<VersionInfo>(versionInfos);
+            while(candidates.Any()) {
+
+                // find latest version
+                var candidate = VersionInfo.Max(candidates);
+                candidates.Remove(candidate);
+
+                // check if latest version meets minimum version constraint
+                if(minVersion?.IsGreaterThanVersion(candidate) ?? false) {
+                    continue;
+                }
+
+                // validate candidate
+                if(validate?.Invoke(candidate) ?? true) {
+                    return candidate;
+                }
             }
-            if(ReferenceEquals(left, null)) {
-                return true;
-            }
-            if(ReferenceEquals(right, null)) {
-                return true;
-            }
-            return left.CompareTo(right) != 0;
+
+            // not match found
+            return null;
         }
 
         //--- Fields ---
-        public readonly Version Version;
+        public readonly int Major;
+        public readonly int Minor;
+        public readonly int? Patch;
+        public readonly int? PatchRevision;
         public readonly string Suffix;
 
         //--- Constructors ---
-        private VersionInfo(Version version, string suffix) {
-            Version = version ?? throw new ArgumentNullException(nameof(version));
+        private VersionInfo(int major, int minor, int? patch, int? patchMinor, string suffix) {
+            Major = major;
+            Minor = minor;
+            Patch = patch;
+            PatchRevision = patchMinor;
             Suffix = suffix ?? throw new ArgumentNullException(nameof(suffix));
+            if(PatchRevision.HasValue && !Patch.HasValue) {
+                throw new ArgumentException($"{nameof(Patch)} must have a value when {nameof(PatchRevision)} has a value");
+            }
         }
 
         //--- Properties ---
-        public int Major => Version.Major;
-        public int Minor => Version.Minor;
         public bool IsPreRelease => Suffix.Length > 0;
+        public bool HasFloatingConstraints => !Patch.HasValue || !PatchRevision.HasValue;
 
         //--- Methods ---
-        public override string ToString() => Version.ToString() + Suffix;
-
-        public bool Equals(VersionInfo other) {
-            if(ReferenceEquals(null, other)) {
-                return false;
+        public override string ToString() {
+            var result = new StringBuilder();
+            result.Append(Major);
+            result.Append('.');
+            result.Append(Minor);
+            if(PatchRevision.HasValue) {
+                result.Append('.');
+                result.Append(Patch);
+                result.Append('.');
+                result.Append(PatchRevision);
+            } else if(Patch.HasValue || (Major == 0)) {
+                result.Append('.');
+                result.Append(Patch ?? 0);
             }
-            if(ReferenceEquals(this, other)) {
-                return true;
-            }
-            return CompareTo(other) == 0;
+            result.Append(Suffix);
+            return result.ToString();
         }
 
-        public override bool Equals(object obj){
-            if(ReferenceEquals(null, obj)) {
-                return false;
-            }
-            if(ReferenceEquals(this, obj)) {
-                return true;
-            }
-            if(obj.GetType() != GetType()) {
-                return false;
-            }
-            return Equals(obj as VersionInfo);
-	    }
-
-        public override int GetHashCode()
-            => Version.GetHashCode() ^ Suffix.GetHashCode();
-
-        public int CompareTo(VersionInfo other) {
-            if(object.ReferenceEquals(other, null)) {
-                throw new ArgumentNullException(nameof(other));
-            }
-            var result = Version.CompareTo(other.Version);
-            if(result != 0) {
-                return result;
-            }
-
-            // a suffix indicates a pre-release version, but cannot be compared otherwise
-            if((Suffix == "") && (other.Suffix != "")) {
-                return 1;
-            }
-            if((Suffix != "") && (other.Suffix == "")) {
-                return -1;
-            }
-            return 0;
-        }
-
-        // TODO (2019-06-23, bjorg): remove once merged into v0.7
-        public bool IsCompatibleWith(VersionInfo other) => IsAssemblyCompatibleWith(other);
+        public override int GetHashCode() => (Major << 16) ^ (Minor << 8) ^ ((Patch ?? 0) << 4) ^ (PatchRevision ?? 0)  ^ Suffix.GetHashCode();
 
         public bool IsAssemblyCompatibleWith(VersionInfo other) {
             if(Suffix != other.Suffix) {
@@ -153,56 +161,102 @@ namespace LambdaSharp.Tool {
             if(Major != other.Major) {
                 return false;
             }
-            if(Version.Major != 0) {
+            if(Major != 0) {
                 return Minor == other.Minor;
             }
 
-            // when Major version is 0, we rely on Minor and Build to match
-            return ((Minor == other.Minor) && (Math.Max(0, Version.Build) == Math.Max(0, other.Version.Build)));
+            // when Major version is 0, we rely on Minor and Patch to match
+            return ((Minor == other.Minor) && (Patch == other.Patch));
         }
 
-        public int? CompareToVersion(VersionInfo other) {
+        public int? CompareToVersion(VersionInfo other, bool strict = false) {
             if(object.ReferenceEquals(other, null)) {
-                throw new ArgumentNullException(nameof(other));
+                return null;
             }
+            if(strict) {
 
-            // version number dominates other comparisions
-            var result = Version.CompareTo(other.Version);
-            if(result != 0) {
-                return result;
-            }
-
-            // a suffix indicates a pre-release version, which is always less than the stable version
-            if((Suffix == "") && (other.Suffix != "")) {
-                return 1;
-            }
-            if((Suffix != "") && (other.Suffix == "")) {
-                return -1;
-            }
-            if(Suffix == other.Suffix) {
+                // suffixes must match to be comparable in strict mode
+                if(Suffix != other.Suffix) {
+                    return null;
+                }
+                var result = Major - other.Major;
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = Minor - other.Minor;
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = (Patch ?? 0) - (other.Patch ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = (PatchRevision ?? 0) - (other.PatchRevision ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
                 return 0;
-            }
+            } else {
 
-            // check if the suffixes have a trailing number that can be compared
-            var shortestLength = Math.Min(Suffix.Length, other.Suffix.Length);
-            var i = 1;
-            for(; (i < shortestLength) && char.IsLetter(Suffix[i]) && (Suffix[i] == other.Suffix[i]); ++i);
-            if(
-                int.TryParse(Suffix.Substring(i, Suffix.Length - i), out var leftSuffixValue)
-                && int.TryParse(other.Suffix.Substring(i, other.Suffix.Length - i), out var rightSuffixVersion)
-            ) {
-                if(leftSuffixValue > rightSuffixVersion) {
+                // version number dominates other comparisions
+                var result = Major - other.Major;
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = Minor - other.Minor;
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = (Patch ?? 0) - (other.Patch ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
+                result = (PatchRevision ?? 0) - (other.PatchRevision ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
+
+                // a suffix indicates a pre-release version, which is always less than the stable version
+                if((Suffix == "") && (other.Suffix != "")) {
                     return 1;
                 }
-                if(leftSuffixValue < rightSuffixVersion) {
+                if((Suffix != "") && (other.Suffix == "")) {
                     return -1;
                 }
-                return 0;
+                if(Suffix == other.Suffix) {
+                    return 0;
+                }
+
+                // check if the suffixes have a trailing number that can be compared
+                var shortestLength = Math.Min(Suffix.Length, other.Suffix.Length);
+                var i = 1;
+                for(; (i < shortestLength) && char.IsLetter(Suffix[i]) && (Suffix[i] == other.Suffix[i]); ++i);
+                if(
+                    int.TryParse(Suffix.Substring(i, Suffix.Length - i), out var leftSuffixValue)
+                    && int.TryParse(other.Suffix.Substring(i, other.Suffix.Length - i), out var rightSuffixVersion)
+                ) {
+                    if(leftSuffixValue > rightSuffixVersion) {
+                        return 1;
+                    }
+                    if(leftSuffixValue < rightSuffixVersion) {
+                        return -1;
+                    }
+                    return 0;
+                }
             }
 
             // versions cannot be compared
             return null;
+
+            // local functions
+            int Sign(int value) => (value < 0) ? -1 : ((value > 0) ? 1 : 0);
         }
+
+        public bool IsLessThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) < 0;
+        public bool IsLessOrEqualThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) <= 0;
+        public bool IsGreaterThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) > 0;
+        public bool IsGreaterOrEqualThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) >= 0;
+        public bool IsEqualToVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) == 0;
 
         public string GetWildcardVersion() {
             if(IsPreRelease) {
@@ -213,23 +267,30 @@ namespace LambdaSharp.Tool {
             if(Major == 0) {
 
                 // when Major version is 0, the build number is relevant
-                return $"{Major}.{Minor}.{Math.Max(0, Version.Build)}.*";
+                return $"{Major}.{Minor}.{Patch ?? 0}.*";
             }
             return $"{Major}.{Minor}.*";
         }
 
-        public VersionInfo GetCompatibleBaseVersion() {
-            if(IsPreRelease) {
-
-                // NOTE (2019-02-19, bjorg): for pre-release version, the base version is this version
-                return this;
-            }
-            if((Major == 0) && (Version.Build > 0)) {
+        public VersionInfo GetCompatibleCoreServicesVersion() {
+            if(Major == 0) {
 
                 // when Major version is 0, the build number is relevant
-                return new VersionInfo(new Version(Major, Minor, Version.Build), suffix: "");
+                return new VersionInfo(Major, Minor, Patch, patchMinor: null, Suffix);
             }
-            return new VersionInfo(new Version(Major, Minor), suffix: "");
+            return new VersionInfo(Major, Minor, patch: null, patchMinor: null, Suffix);
+        }
+
+        public bool MatchesConstraint(VersionInfo versionConstraint) {
+            return (Major == versionConstraint.Major)
+                && (Minor == versionConstraint.Minor)
+                && (Suffix == versionConstraint.Suffix)
+                && (!versionConstraint.Patch.HasValue || (Patch == versionConstraint.Patch))
+                && (!versionConstraint.PatchRevision.HasValue || (PatchRevision == versionConstraint.PatchRevision));
+        }
+
+        public bool IsCoreServicesCompatible(VersionInfo info) {
+            return (Major == info.Major) && ((Major != 0) || (Minor == info.Minor)) && (Suffix == info.Suffix);
         }
     }
 

@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -72,6 +69,16 @@ namespace LambdaSharp.CustomResource {
         /// following characters: <c>_@-</c>.
         /// </summary>
         public string ResourceType { get; set; }
+
+        /// <summary>
+        /// The Amazon Resource Name (ARN) that identifies the stack that
+        /// contains the custom resource.
+        ///
+        /// Combining the StackId with the RequestId forms a value that you
+        /// can use to uniquely identify a request on a particular custom
+        /// resource.
+        /// </summary>
+        public string StackId { get; set; }
 
         /// <summary>
         /// The template developer-chosen name (logical ID) of the custom

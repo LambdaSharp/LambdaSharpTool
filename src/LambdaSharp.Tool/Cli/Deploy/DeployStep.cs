@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,29 +18,18 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.CloudFormation;
-using Amazon.CloudFormation.Model;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
+using Amazon.S3.Model;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
     using CloudFormationParameter = Amazon.CloudFormation.Model.Parameter;
 
     public class DeployStep : AModelProcessor {
-
-        //--- Types ---
-        private class DependencyRecord {
-
-            //--- Properties ---
-            public string Owner { get; set; }
-            public ModuleManifest Manifest { get; set; }
-            public ModuleLocation Location { get; set; }
-        }
 
 
         //--- Fields ---
@@ -64,64 +50,32 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
-            bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
             Console.WriteLine($"Resolving module reference: {moduleReference}");
 
             // determine location of cloudformation template from module key
-            var location = await _loader.LocateAsync(moduleReference);
-            if(location == null) {
-                LogError($"unable to resolve: {moduleReference}");
+            if(!ModuleInfo.TryParse(moduleReference, out var moduleInfo)) {
+                LogError($"invalid module reference: {moduleReference}");
                 return false;
+            }
+            var foundModuleLocation = await _loader.ResolveInfoToLocationAsync(moduleInfo, ModuleManifestDependencyType.Root, allowImport: false, showError: !deployOnlyIfExists);
+            if(foundModuleLocation == null) {
+
+                // nothing to do; loader already emitted an error
+                return deployOnlyIfExists;
             }
 
             // download module manifest
-            var manifest = await _loader.LoadFromS3Async(location.ModuleBucketName, location.TemplatePath);
+            var manifest = await _loader.LoadManifestFromLocationAsync(foundModuleLocation);
             if(manifest == null) {
                 return false;
             }
 
-            // check that the LambdaSharp Core & CLI versions match
-            if(!forceDeploy) {
-                if(Settings.TierVersion == null) {
-
-                    // core module doesn't expect a deployment tier to exist
-                    if(manifest.RuntimeCheck) {
-                        LogError("could not determine the LambdaSharp tier version; use --force-deploy to proceed anyway", new LambdaSharpDeploymentTierSetupException(Settings.Tier));
-                        return false;
-                    }
-                } else if(manifest.GetFullName() == "LambdaSharp.Core") {
-
-                    // core module has special rules for updates
-                    if(Settings.ToolVersion < Settings.TierVersion) {
-
-                        // tool version is older than tier; most likely a user error
-                        LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) has older version than Tier (v{Settings.TierVersion}); use --force-deploy to proceed anyway");
-                        return false;
-                    } else if(Settings.ToolVersion > Settings.TierVersion) {
-
-                        // allow upgrading Tier when tool version is more recent
-                        Console.WriteLine($"LambdaSharp Tier appears to be out of date");
-                        var upgrade = Prompt.GetYesNo($"|=> Do you want to upgrade LambdaSharp Tier '{Settings.Tier}' from v{Settings.TierVersion} to v{Settings.ToolVersion}?", false);
-                        if(!upgrade) {
-                            return false;
-                        }
-                    } else {
-
-                        // nothing to do
-                        return true;
-                    }
-                } else if(!Settings.ToolVersion.IsCompatibleWith(Settings.TierVersion)) {
-                    LogError($"LambdaSharp CLI (v{Settings.ToolVersion}) and Tier (v{Settings.TierVersion}) versions do not match; use --force-deploy to proceed anyway");
-                    return false;
-                }
-            }
-
             // deploy module
             if(dryRun == null) {
-                var stackName = ToStackName(manifest.GetFullName(), instanceName);
+                var stackName = Settings.GetStackName(manifest.GetFullName(), instanceName);
 
                 // check version of previously deployed module
                 CloudFormationStack existing = null;
@@ -144,36 +98,26 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // prompt for missing parameters
-                var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters, promptsAsErrors);
+                var deployParameters = PromptModuleParameters(manifest, existing, parameters, promptAllParameters);
                 if(HasErrors) {
                     return false;
-                }
-
-                // enable LambdaSharp.Core services by default
-                if(
-                    manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
-                    && !deployParameters.Any(p => p.ParameterKey == "LambdaSharpCoreServices")
-                ) {
-                    deployParameters.Add(new CloudFormationParameter {
-                        ParameterKey = "LambdaSharpCoreServices",
-                        ParameterValue = "Enabled"
-                    });
                 }
 
                 // check if module supports AWS X-Ray for tracing
                 if(
                     manifest.GetAllParameters().Any(p => p.Name == "XRayTracing")
-                    && !deployParameters.Any(p => (p.ParameterKey == "XRayTracing") && !p.UsePreviousValue)
+                    && !deployParameters.Any(p => p.ParameterKey == "XRayTracing")
                 ) {
-                    deployParameters.RemoveAll(p => p.ParameterKey == "XRayTracing");
                     deployParameters.Add(new CloudFormationParameter {
                         ParameterKey = "XRayTracing",
                         ParameterValue = xRayTracingLevel.ToString()
                     });
                 }
 
-                // discover and deploy module dependencies
-                var dependencies = await DiscoverDependenciesAsync(manifest);
+                // discover shard module dependencies and prompt for missing parameters
+                var dependencies = (await _loader.DiscoverAllDependenciesAsync(manifest, checkExisting: true, allowImport: false))
+                    .Where(dependency => dependency.Type == ModuleManifestDependencyType.Shared)
+                    .ToList();
                 if(HasErrors) {
                     return false;
                 }
@@ -182,19 +126,22 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         ModuleFullName = dependency.Manifest.GetFullName(),
                         Parameters = PromptModuleParameters(
                             dependency.Manifest,
-                            promptAll: promptAllParameters,
-                            promptsAsErrors: promptsAsErrors
+                            promptAll: promptAllParameters
                         )
                     })
                     .ToDictionary(t => t.ModuleFullName, t => t.Parameters);
                 if(HasErrors) {
                     return false;
                 }
+
+                // deploy module dependencies
                 foreach(var dependency in dependencies) {
-                    if(!await new ModelUpdater(Settings, dependency.Location.ToModuleReference()).DeployChangeSetAsync(
+                    var dependencyLocation = new ModuleLocation(Settings.DeploymentBucketName, dependency.ModuleLocation.ModuleInfo, dependency.ModuleLocation.Hash);
+                    if(!await new ModelUpdater(Settings, SourceFilename).DeployChangeSetAsync(
                         dependency.Manifest,
-                        dependency.Location,
-                        ToStackName(dependency.Manifest.GetFullName()),
+                        await _loader.GetNameMappingsFromLocationAsync(dependencyLocation),
+                        dependencyLocation,
+                        Settings.GetStackName(dependency.Manifest.GetFullName()),
                         allowDataLoos,
                         protectStack,
                         dependenciesParameters[dependency.Manifest.GetFullName()]
@@ -204,9 +151,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
 
                 // deploy module
+                var moduleLocation = new ModuleLocation(Settings.DeploymentBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
                 return await new ModelUpdater(Settings, moduleReference).DeployChangeSetAsync(
                     manifest,
-                    location,
+                    await _loader.GetNameMappingsFromLocationAsync(moduleLocation),
+                    moduleLocation,
                     stackName,
                     allowDataLoos,
                     protectStack,
@@ -217,192 +166,39 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
-            try {
 
-                // check if the module was already deployed
-                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = stackName
-                });
-
-                // make sure the stack is in a stable state (not updating and not failed)
-                var existing = describe.Stacks.FirstOrDefault();
-                switch(existing?.StackStatus) {
-                case null:
-                case "CREATE_COMPLETE":
-                case "ROLLBACK_COMPLETE":
-                case "UPDATE_COMPLETE":
-                case "UPDATE_ROLLBACK_COMPLETE":
-
-                    // we're good to go
-                    break;
-                default:
-                    LogError($"deployed module is not in a valid state; module deployment must be complete and successful (Status: {existing?.StackStatus})");
-                    return (false, existing);
-                }
-
-                // validate existing module deployment
-                var deployedOutputs = existing?.Outputs;
-                var deployed = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                if(!deployed.TryParseModuleDescriptor(
-                    out string deployedOwner,
-                    out string deployedName,
-                    out VersionInfo deployedVersion,
-                    out string _
-                )) {
-                    LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                var deployedFullName = $"{deployedOwner}.{deployedName}";
-                if(deployedFullName != manifest.GetFullName()) {
-                    LogError($"deployed module name ({deployedFullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                if(deployedVersion > manifest.GetVersion()) {
-                    LogError($"deployed module version (v{deployedVersion}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
-                    return (false, existing);
-                }
-                return (true, existing);
-            } catch(AmazonCloudFormationException) {
-
-                // stack doesn't exist
+            // check if the module was already deployed
+            var existing = await Settings.CfnClient.GetStackAsync(stackName, LogError);
+            if(existing.Stack == null) {
+                return (existing.Success, existing.Stack);
             }
-            return (true, null);
-        }
 
-        private async Task<IEnumerable<(ModuleManifest Manifest, ModuleLocation Location)>> DiscoverDependenciesAsync(ModuleManifest manifest) {
-            var deployments = new List<DependencyRecord>();
-            var existing = new List<DependencyRecord>();
-            var inProgress = new List<DependencyRecord>();
-
-            // create a topological sort of dependencies
-            await Recurse(manifest);
-            return deployments.Select(tuple => (tuple.Manifest, tuple.Location)).ToList();
-
-            // local functions
-            async Task Recurse(ModuleManifest current) {
-                foreach(var dependency in current.Dependencies) {
-
-                    // check if we have already discovered this dependency
-                    if(IsDependencyInList(current.GetFullName(), dependency, existing) || IsDependencyInList(current.GetFullName(), dependency, deployments))  {
-                        continue;
-                    }
-
-                    // check if this dependency needs to be deployed
-                    var deployed = await FindExistingDependencyAsync(dependency);
-                    if(deployed != null) {
-                        existing.Add(new DependencyRecord {
-                            Location = deployed
-                        });
-                    } else if(inProgress.Any(d => d.Manifest.GetFullName() == dependency.ModuleFullName)) {
-
-                        // circular dependency detected
-                        LogError($"circular dependency detected: {string.Join(" -> ", inProgress.Select(d => d.Manifest.GetFullName()))}");
-                        return;
-                    } else {
-                        dependency.ModuleFullName.TryParseModuleOwnerName(out string moduleOwner, out var moduleName);
-
-                        // resolve dependencies for dependency module
-                        var dependencyLocation = await _loader.LocateAsync(moduleOwner, moduleName, dependency.MinVersion, dependency.MaxVersion, dependency.BucketName);
-                        if(dependencyLocation == null) {
-
-                            // error has already been reported
-                            continue;
-                        }
-
-                        // load manifest of dependency and add its dependencies
-                        var dependencyManifest = await _loader.LoadFromS3Async(dependencyLocation.ModuleBucketName, dependencyLocation.TemplatePath);
-                        if(dependencyManifest == null) {
-
-                            // error has already been reported
-                            continue;
-                        }
-                        var nestedDependency = new DependencyRecord {
-                            Owner = current.Module,
-                            Manifest = dependencyManifest,
-                            Location = dependencyLocation
-                        };
-
-                        // keep marker for in-progress resolutions so that circular errors can be detected
-                        inProgress.Add(nestedDependency);
-                        await Recurse(dependencyManifest);
-                        inProgress.Remove(nestedDependency);
-
-                        // append dependency now that all nested dependencies have been resolved
-                        Console.WriteLine($"=> Resolved dependency '{dependency.ModuleFullName}' to module reference: {dependencyLocation}");
-                        deployments.Add(nestedDependency);
-                    }
-                }
+            // validate existing module deployment
+            var deployed = existing.Stack?.GetModuleVersionText();
+            if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
+                LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
             }
-        }
-
-        private bool IsDependencyInList(string fullName, ModuleManifestDependency dependency, IEnumerable<DependencyRecord> modules) {
-            var deployed = modules.FirstOrDefault(module => module.Location.ModuleFullName == dependency.ModuleFullName);
-            if(deployed == null) {
-                return false;
+            if(deployedModuleInfo.FullName != manifest.GetFullName()) {
+                LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
             }
-            var deployedOwner = (deployed.Owner == null)
-                ? "existing module"
-                : $"module '{deployed.Owner}'";
-
-            // confirm that the dependency version is in a valid range
-            var deployedVersion = deployed.Location.ModuleVersion;
-            if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires max version v{dependency.MaxVersion}, but {deployedOwner} uses v{deployedVersion})");
+            var versionComparison = deployedModuleInfo.Version.CompareToVersion(manifest.GetVersion());
+            if(versionComparison > 0) {
+                LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
+            } else if(versionComparison == null) {
+                LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                return (false, existing.Stack);
             }
-            if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                LogError($"version conflict for module '{dependency.ModuleFullName}': module '{fullName}' requires min version v{dependency.MinVersion}, but {deployedOwner} uses v{deployedVersion})");
-            }
-            return true;
-        }
-
-        private async Task<ModuleLocation> FindExistingDependencyAsync(ModuleManifestDependency dependency) {
-            try {
-                var describe = await Settings.CfnClient.DescribeStacksAsync(new DescribeStacksRequest {
-                    StackName = ToStackName(dependency.ModuleFullName)
-                });
-                var deployedOutputs = describe.Stacks.FirstOrDefault()?.Outputs;
-                var deployedInfo = deployedOutputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
-                var success = deployedInfo.TryParseModuleDescriptor(
-                    out string deployedOwner,
-                    out string deployedName,
-                    out VersionInfo deployedVersion,
-                    out string deployedBucketName
-                );
-                var deployed = new ModuleLocation(deployedOwner, deployedName, deployedVersion, deployedBucketName);
-                if(!success) {
-                    LogError($"unable to retrieve information of the deployed dependent module");
-                    return deployed;
-                }
-
-                // confirm that the module name matches
-                if(deployed.ModuleFullName != dependency.ModuleFullName) {
-                    LogError($"deployed dependent module name ({deployed.ModuleFullName}) does not match {dependency.ModuleFullName}");
-                    return deployed;
-                }
-
-                // confirm that the module version is in a valid range
-                if((dependency.MaxVersion != null) && (deployedVersion > dependency.MaxVersion)) {
-                    LogError($"deployed dependent module version (v{deployedVersion}) is newer than max version constraint v{dependency.MaxVersion}");
-                    return deployed;
-                }
-                if((dependency.MinVersion != null) && (deployedVersion < dependency.MinVersion)) {
-                    LogError($"deployed dependent module version (v{deployedVersion}) is older than min version constraint v{dependency.MinVersion}");
-                    return deployed;
-                }
-                return deployed;
-            } catch(AmazonCloudFormationException) {
-
-                // stack doesn't exist
-                return null;
-            }
+            return (true, existing.Stack);
         }
 
         private List<CloudFormationParameter> PromptModuleParameters(
             ModuleManifest manifest,
             CloudFormationStack existing = null,
             Dictionary<string, string> parameters = null,
-            bool promptAll = false,
-            bool promptsAsErrors = false
+            bool promptAll = false
         ) {
             var stackParameters = new Dictionary<string, CloudFormationParameter>();
 
@@ -437,17 +233,44 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 // only list parameter sections that contain a parameter that requires a prompt
                 foreach(var parameterGroup in manifest.ParameterSections.Where(group => group.Parameters.Any(RequiresPrompt))) {
                     Console.WriteLine();
-                    Console.WriteLine($"*** {parameterGroup.Title.ToUpper()} ***");
+                    Settings.PromptLabel(parameterGroup.Title.ToUpper());
 
                     // only prompt for required parameters
                     foreach(var parameter in parameterGroup.Parameters.Where(RequiresPrompt)) {
-                        var enteredValue = PromptString(parameter, parameter.Default) ?? "";
+
+                        // check if parameter is multiple choice
+                        string enteredValue;
+                        if(parameter.AllowedValues?.Any() ?? false) {
+                            var message = parameter.Name;
+                            if(parameter.Label != null) {
+                                message += $": {parameter.Label}";
+                            }
+                            enteredValue = Settings.PromptChoice(message, parameter.AllowedValues);
+                        } else {
+                            var message = $"{parameter.Name} [{parameter.Type}]";
+                            if(parameter.Label != null) {
+                                message += $": {parameter.Label}";
+                            }
+                            enteredValue = Settings.PromptString(message, parameter.Default, parameter.AllowedPattern, parameter.ConstraintDescription) ?? "";
+                        }
                         stackParameters[parameter.Name] = new CloudFormationParameter {
                             ParameterKey = parameter.Name,
                             ParameterValue = enteredValue
                         };
                     }
                 }
+            }
+
+            // check if LambdaSharp.Core services should be enabled by default
+            if(
+                (Settings.CoreServices == CoreServices.Enabled)
+                && manifest.GetAllParameters().Any(p => p.Name == "LambdaSharpCoreServices")
+                && !stackParameters.Any(p => p.Value.ParameterKey == "LambdaSharpCoreServices")
+            ) {
+                stackParameters.Add("LambdaSharpCoreServices", new CloudFormationParameter {
+                    ParameterKey = "LambdaSharpCoreServices",
+                    ParameterValue = Settings.CoreServices.ToString()
+                });
             }
             return stackParameters.Values.ToList();
 
@@ -468,41 +291,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     // no prompt since parameter has a default value
                     return false;
                 }
-                if(promptsAsErrors) {
+                if(Settings.PromptsAsErrors) {
                     LogError($"{manifest.GetFullName()} requires value for parameter '{parameter.Name}'");
                     return false;
                 }
                 return true;
             }
-
-            string PromptString(ModuleManifestParameter parameter, string defaultValue = null) {
-                var prompt = $"|=> {parameter.Name} [{parameter.Type}]:";
-                if(parameter.Label != null) {
-                    prompt += $" {parameter.Label}:";
-                }
-                if(!string.IsNullOrEmpty(defaultValue)) {
-                    prompt = $"{prompt} [{defaultValue}]";
-                }
-                Console.Write(prompt);
-                Console.Write(' ');
-                SetCursorVisible(true);
-                var resp = Console.ReadLine();
-                SetCursorVisible(false);
-                if(!string.IsNullOrEmpty(resp)) {
-                    return resp;
-                }
-                return defaultValue;
-
-                // local functions
-                void SetCursorVisible(bool visible) {
-                    try {
-                        Console.CursorVisible = visible;
-                    } catch { }
-                }
-            }
         }
-
-        private string ToStackName(string moduleName, string instanceName = null)
-            => $"{Settings.Tier}-{instanceName ?? moduleName.Replace(".", "-")}";
-    }
+   }
 }

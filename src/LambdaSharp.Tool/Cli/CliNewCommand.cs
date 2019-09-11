@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,15 +20,40 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Model;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
+using Amazon.S3;
+using Amazon.S3.Model;
+using LambdaSharp.Tool.Internal;
+using System.Threading.Tasks;
 
 namespace LambdaSharp.Tool.Cli {
+    using Tag = Amazon.CloudFormation.Model.Tag;
+
+    public enum FunctionType {
+        Unknown,
+        Generic,
+        ApiGateway,
+        ApiGatewayProxy,
+        CustomResource,
+        Schedule,
+        Queue,
+        Topic,
+        WebSocket,
+        WebSocketProxy,
+        Finalizer
+    }
 
     public class CliNewCommand : ACliCommand {
+
+        //--- Fields ---
+        private IList<string> _functionTypes = typeof(FunctionType).GetEnumNames()
+            .Where(value => value != FunctionType.Unknown.ToString())
+            .OrderBy(value => value)
+            .ToArray();
 
         //--- Methods --
         public void Register(CommandLineApplication app) {
@@ -49,56 +71,48 @@ namespace LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
                     var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
-                    var inputFileOption = cmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
+                    var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
-                    var useProjectReferenceOption = subCmd.Option("--use-project-reference", "(optional) Reference LambdaSharp libraries using a project reference (default behavior when LAMBDASHARP environment variable is set)", CommandOptionType.NoValue);
-                    var useNugetReferenceOption = subCmd.Option("--use-nuget-reference", "(optional) Reference LambdaSharp libraries using nuget references", CommandOptionType.NoValue);
+                    var functionTypeOption = subCmd.Option("--type|-t <TYPE>", $"(optional) Function type (one of: {string.Join(", ", _functionTypes).ToLowerInvariant()}; default: prompt)", CommandOptionType.SingleValue);
+                    var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
+                    var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
-                        var lambdasharpDirectory = Environment.GetEnvironmentVariable("LAMBDASHARP");
-
-                        // validate project vs. nuget reference options
-                        bool useProjectReference;
-                        if(useProjectReferenceOption.HasValue() && useNugetReferenceOption.HasValue()) {
-                            LogError("cannot use --use-project-reference and --use-nuget-reference at the same time");
-                            return;
-                        }
-                        if(useProjectReferenceOption.HasValue()) {
-                            if(lambdasharpDirectory == null) {
-                                LogError("missing LAMBDASHARP environment variable");
-                                return;
-                            }
-                            useProjectReference = true;
-                        } else if(useNugetReferenceOption.HasValue()) {
-                            useProjectReference = false;
-                        } else if(lambdasharpDirectory != null) {
-                            useProjectReference = true;
-                        } else {
-                            useProjectReference = false;
-                        }
-
-                        // TODO (2018-09-13, bjorg): allow following settings to be configurable via command line options
-                        var functionMemory = 256;
-                        var functionTimeout = 30;
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        var settings = new Settings { };
 
                         // get function name
                         var functionName = nameArgument.Value;
                         while(string.IsNullOrEmpty(functionName)) {
-                            functionName = Prompt.GetString("|=> Enter the function name:");
+                            functionName = settings.PromptString("Enter the function name");
+                        }
+
+                        // get function type
+                        if(!TryParseEnumOption(functionTypeOption, FunctionType.Unknown, FunctionType.Unknown, out var functionType)) {
+
+                            // NOTE (2019-08-12, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+                            return;
+                        }
+                        if(!int.TryParse(functionTimeoutOption.Value() ?? "30", out var functionTimeout)) {
+                            LogError("invalid value for --timeout option");
+                            return;
+                        }
+                        if(!int.TryParse(functionMemoryOption.Value() ?? "256", out var functionMemory)) {
+                            LogError("invalid value for --memory option");
+                            return;
                         }
                         var workingDirectory = Path.GetFullPath(directoryOption.Value() ?? Directory.GetCurrentDirectory());
                         NewFunction(
-                            lambdasharpDirectory,
+                            settings,
                             functionName,
                             namespaceOption.Value(),
                             frameworkOption.Value() ?? "netcoreapp2.1",
-                            useProjectReference,
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",
                             functionMemory,
-                            functionTimeout
+                            functionTimeout,
+                            functionType
                         );
                     });
                 });
@@ -112,15 +126,16 @@ namespace LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        var settings = new Settings { };
 
                         // get the module name
                         var moduleName = nameArgument.Value;
                         while(string.IsNullOrEmpty(moduleName)) {
-                            moduleName = Prompt.GetString("|=> Enter the module name:");
+                            moduleName = settings.PromptString("Enter the module name");
                         }
 
-                        // prepend default owner string
+                        // prepend default namespace string
                         if(!moduleName.Contains('.')) {
                             moduleName = "My." + moduleName;
                         }
@@ -140,24 +155,63 @@ namespace LambdaSharp.Tool.Cli {
 
                     // sub-command options
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        var settings = new Settings { };
 
                         // get the resource name
                         var name = nameArgument.Value;
                         while(string.IsNullOrEmpty(name)) {
-                            name = Prompt.GetString("|=> Enter the resource name:");
+                            name = settings.PromptString("Enter the resource name");
                         }
 
                         // get the resource type
                         var type = typeArgument.Value;
                         while(string.IsNullOrEmpty(type)) {
-                            type = Prompt.GetString("|=> Enter the resource type:");
+                            type = settings.PromptString("Enter the resource type");
                         }
                         NewResource(
                             moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),
                             resourceName: name,
                             resourceTypeName: type
                         );
+                    });
+                });
+
+                // bucket sub-command
+                cmd.Command("bucket", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
+
+                    // sub-command options
+                    subCmd.OnExecute(async () => {
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+
+                        // initialize AWS profile
+                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+
+                        // initialize settings instance
+                        var settings = new Settings {
+                            CfnClient = new AmazonCloudFormationClient(),
+                            S3Client = new AmazonS3Client(),
+                            AwsRegion = awsAccount.Region,
+                            AwsAccountId = awsAccount.AccountId,
+                            AwsUserArn = awsAccount.UserArn
+                        };
+
+                        // get the resource name
+                        var bucketName = nameArgument.Value;
+                        while(string.IsNullOrEmpty(bucketName)) {
+                            bucketName = settings.PromptString("Enter the S3 bucket name");
+                        }
+                        await NewBucket(settings, bucketName);
+                        Console.WriteLine();
+                        if(Settings.UseAnsiConsole) {
+                            Console.WriteLine($"=> S3 Bucket ARN: {AnsiTerminal.Green}arn:aws:s3:::{bucketName}{AnsiTerminal.Reset}");
+                        } else {
+                            Console.WriteLine($"=> S3 Bucket ARN: arn:aws:s3:::{bucketName}");
+                        }
                     });
                 });
 
@@ -192,16 +246,16 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewFunction(
-            string lambdasharpDirectory,
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             string language,
             int functionMemory,
-            int functionTimeout
+            int functionTimeout,
+            FunctionType functionType
         ) {
 
             // parse yaml module definition
@@ -237,30 +291,30 @@ namespace LambdaSharp.Tool.Cli {
             switch(language) {
             case "csharp":
                 NewCSharpFunction(
-                    lambdasharpDirectory,
+                    settings,
                     functionName,
                     rootNamespace,
                     framework,
-                    useProjectReference,
                     workingDirectory,
                     moduleFile,
                     functionMemory,
                     functionTimeout,
-                    projectDirectory
+                    projectDirectory,
+                    functionType
                 );
                 break;
             case "javascript":
                 NewJavascriptFunction(
-                    lambdasharpDirectory,
+                    settings,
                     functionName,
                     rootNamespace,
                     framework,
-                    useProjectReference,
                     workingDirectory,
                     moduleFile,
                     functionMemory,
                     functionTimeout,
-                    projectDirectory
+                    projectDirectory,
+                    functionType
                 );
                 break;
             }
@@ -275,35 +329,36 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewCSharpFunction(
-            string lambdasharpDirectory,
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             int functionMemory,
             int functionTimeout,
-            string projectDirectory
+            string projectDirectory,
+            FunctionType functionType
         ) {
+            if(functionName == "Finalizer") {
+
+                // always of type finalizer
+                functionType = FunctionType.Finalizer;
+            } else if(functionType == FunctionType.Unknown) {
+
+                // prompt for function type
+                functionType = Enum.Parse<FunctionType>(settings.PromptChoice("Select function type", _functionTypes), ignoreCase: true);
+            }
 
             // create function project
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_PROJECT"] = useProjectReference
-                    ? Path.GetRelativePath(projectDirectory, Path.Combine(lambdasharpDirectory, "src", "LambdaSharp", "LambdaSharp.csproj"))
-                    : "(not used)",
                 ["LAMBDASHARP_VERSION"] = Version.GetWildcardVersion()
             };
             try {
-                var projectContents = ReadResource(
-                    useProjectReference
-                        ? "NewCSharpFunctionProjectLocal.xml"
-                        : "NewCSharpFunctionProjectNuget.xml",
-                    substitutions
-                );
+                var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
                 File.WriteAllText(projectFile, projectContents);
                 Console.WriteLine($"Created project file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), projectFile)}");
             } catch(Exception e) {
@@ -313,7 +368,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "Function.cs");
-            var functionContents = ReadResource("NewCSharpFunction.txt", substitutions);
+            var functionContents = ReadResource($"NewCSharpFunction-{functionType}.txt", substitutions);
             try {
                 File.WriteAllText(functionFile, functionContents);
                 Console.WriteLine($"Created function file: {Path.GetRelativePath(Directory.GetCurrentDirectory(), functionFile)}");
@@ -324,17 +379,21 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public void NewJavascriptFunction(
-            string lambdasharpDirectory,
+            Settings settings,
             string functionName,
             string rootNamespace,
             string framework,
-            bool useProjectReference,
             string workingDirectory,
             string moduleFile,
             int functionMemory,
             int functionTimeout,
-            string projectDirectory
+            string projectDirectory,
+            FunctionType functionType
         ) {
+            if(functionType != FunctionType.Unknown) {
+                LogError("--type option is not support for javascript functions");
+                return;
+            }
 
             // create function source code
             var functionFile = Path.Combine(projectDirectory, "index.js");
@@ -456,6 +515,48 @@ namespace LambdaSharp.Tool.Cli {
                     }
                 }
             }
+        }
+
+        public async Task NewBucket(Settings settings, string bucketName) {
+
+            // create bucket using template
+            var template = ReadResource("PublicLambdaSharpBucket.yml");
+            var stackName = $"PublicLambdaSharpBucket-{bucketName}";
+            var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
+                StackName = stackName,
+                Capabilities = new List<string> { },
+                OnFailure = OnFailure.DELETE,
+                Parameters = new List<Parameter> {
+                    new Parameter {
+                        ParameterKey = "BucketName",
+                        ParameterValue = bucketName
+                    }
+                },
+                TemplateBody = template,
+                Tags = new List<Tag> {
+                    new Tag {
+                        Key = "LambdaSharp:PublicBucket",
+                        Value = bucketName
+                    },
+                    new Tag {
+                        Key = "LambdaSharp:DeployedBy",
+                        Value = settings.AwsUserArn.Split(':').Last()
+                    }
+                }
+            });
+            var created = await settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId: null, logError: LogError);
+            if(created.Success) {
+                Console.WriteLine("=> Stack creation finished");
+            } else {
+                Console.WriteLine("=> Stack creation FAILED");
+                return;
+            }
+
+            // update bucket to require requester pays
+            Console.WriteLine($"=> Updating S3 Bucket for Requester Pays access");
+            await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
+                Payer = "Requester"
+            });
         }
 
         private void InsertModuleItemsLines(string moduleFile, IEnumerable<string> lines) {

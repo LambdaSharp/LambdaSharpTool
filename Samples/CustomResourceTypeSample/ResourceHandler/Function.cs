@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp;
@@ -34,14 +30,14 @@ namespace CustomResourceSample.ResourceHandler {
 
         //--- Properties ---
 
-        // TO-DO: add request resource properties
+        // TO-DO: add expected custom resource properties
     }
 
     public class ResourceAttributes {
 
         //--- Properties ---
 
-        // TO-DO: add response resource attributes
+        // TO-DO: add returned custom resource attributes
     }
 
     public class Function : ALambdaCustomResourceFunction<ResourceProperties, ResourceAttributes> {
@@ -52,43 +48,37 @@ namespace CustomResourceSample.ResourceHandler {
 
         public override async Task<Response<ResourceAttributes>> ProcessCreateResourceAsync(Request<ResourceProperties> request) {
 
-            // TO-DO: create resource using configuration settings from request properties
+            // TO-DO: create custom resource using resource properties from request
 
             return new Response<ResourceAttributes> {
 
-                // assign a physical resource ID to the custom resource
+                // TO-DO: assign a physical resource ID for custom resource
                 PhysicalResourceId = "MyResource:123",
 
-                // set response properties
-                Attributes = new ResourceAttributes {
-
-                    // TO-DO: set response attributes
-                }
+                // TO-DO: set response attributes
+                Attributes = new ResourceAttributes { }
             };
         }
 
         public override async Task<Response<ResourceAttributes>> ProcessDeleteResourceAsync(Request<ResourceProperties> request) {
 
-            // TO-DO: delete resource using information from request properties
+            // TO-DO: delete custom resource identified by PhysicalResourceId in request
 
             return new Response<ResourceAttributes>();
         }
 
         public override async Task<Response<ResourceAttributes>> ProcessUpdateResourceAsync(Request<ResourceProperties> request) {
 
-            // TO-DO: update resource using configuration settings from request properties
+            // TO-DO: update custom resource using resource properties from request
 
             return new Response<ResourceAttributes> {
 
-                // optionally assign a new physical resource ID to the custom resource
+                // TO-DO: optionally assign a new physical resource ID to trigger deletion of the previous custom resource
                 PhysicalResourceId = "MyResource:123",
 
-                // set updated response properties
-                Attributes = new ResourceAttributes {
-
-                    // TO-DO: set response attributes
-                }
-            };
+                // TO-DO: set response attributes
+                Attributes = new ResourceAttributes { }
+           };
         }
     }
 }

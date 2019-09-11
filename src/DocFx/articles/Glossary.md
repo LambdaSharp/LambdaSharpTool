@@ -2,10 +2,16 @@
 
 <dl>
 
-<dt><b>Asset</b></dt>
+<dt><b>Artifact</b></dt>
 <dd>
 
 A file that is part of the published module.
+</dd>
+
+<dt><b>Asset</b></dt>
+<dd>
+
+Deprecated, use <i>Artifact</i> instead. A file that is part of the published module.
 </dd>
 
 <dt><b>Attribute</b></dt>

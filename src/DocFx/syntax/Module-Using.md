@@ -26,7 +26,7 @@ The <code>Description</code> attribute specifies the description for the module 
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> attribute specifies the full name of the required module, its version, and origin. The format of the source must be <code>Owner.Name[:Version][@BucketName]</code>. Parts in brackets (<code>[]</code>) are optional. Without a version specifier, λ# uses the latest version it can find. Without an origin bucket name, λ# uses the configured deployment bucket. Compilation fails if the λ# CLI cannot find a published module that matches the criteria.
+The <code>Module</code> attribute specifies the full name of the required module with an optional version and origin. The format must be <code>Namespace.Name[:Version][@Origin]</code>. Parts in brackets (<code>[ ]</code>) are optional. Without a version specifier, λ# uses the latest version it can find that is compatible with the λ# CLI. Without an origin, λ# uses the deployment bucket name of the active deployment tier as origin. Compilation fails if the λ# CLI cannot find a published module that matches the criteria.
 
 <i>Required</i>: Yes
 

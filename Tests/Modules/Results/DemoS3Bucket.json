@@ -35,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4EAABC41BE528E04CFB88E94D91DD400"
+      "Default": "4DA7474B996886155A578FFF93EBA963"
     }
   },
   "Resources": {
@@ -61,12 +61,6 @@
     }
   },
   "Outputs": {
-    "Module": {
-      "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV"
-    },
-    "LambdaSharpTool": {
-      "Value": "0.6.1"
-    },
     "Bucket": {
       "Value": {
         "Fn::GetAtt": [
@@ -78,6 +72,30 @@
         "Name": {
           "Fn::Sub": "${AWS::StackName}::Bucket"
         }
+      }
+    },
+    "Module": {
+      "Value": "LambdaSharp.DemoS3Bucket:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "4DA7474B996886155A578FFF93EBA963"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
       }
     }
   },
@@ -141,8 +159,11 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Bucket:1.0-DEV",
+      "TemplateChecksum": "4DA7474B996886155A578FFF93EBA963",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -157,29 +178,36 @@
               "Name": "LambdaSharpCoreServices",
               "Type": "String",
               "Label": "Integrate with LambdaSharp.Core services",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "4EAABC41BE528E04CFB88E94D91DD400",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1"
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "Bucket",
           "Type": "AWS::S3::Bucket"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

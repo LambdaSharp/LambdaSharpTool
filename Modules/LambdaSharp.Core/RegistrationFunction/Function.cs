@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +31,7 @@ using LambdaSharp.Exceptions;
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
-namespace LambdaSharp.Core.Registration {
+namespace LambdaSharp.Core.RegistrationFunction {
 
     public class RegistrationResourceProperties {
 
@@ -82,7 +79,7 @@ namespace LambdaSharp.Core.Registration {
         private RegistrationTable _registrations;
         private RollbarClient _rollbarClient;
         private string _rollbarProjectPrefix;
-        private string _defaultSecretKey;
+        private string _coreSecretsKey;
 
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
@@ -94,7 +91,7 @@ namespace LambdaSharp.Core.Registration {
                 message => LogInfo(message)
             );
             _rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
-            _defaultSecretKey = config.ReadText("DefaultSecretKey");
+            _coreSecretsKey = config.ReadText("CoreSecretsKey");
         }
 
         public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
@@ -114,7 +111,7 @@ namespace LambdaSharp.Core.Registration {
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
                         var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
                         owner.RollbarProjectId = project.Id;
-                        owner.RollbarAccessToken = await EncryptSecretAsync(token, _defaultSecretKey);
+                        owner.RollbarAccessToken = await EncryptSecretAsync(token, _coreSecretsKey);
                     }
 
                     // create owner record

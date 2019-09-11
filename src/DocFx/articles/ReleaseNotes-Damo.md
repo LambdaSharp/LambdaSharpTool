@@ -442,7 +442,7 @@ The λ# runtime is now a top-level CloudFormation stack with supporting modules 
 
 The newest runtime module is the `Registrar`, which is responsible for registering modules and functions. Upon registration, function logs are centrally processed to detect warnings and errors.
 
-The `Registrar` can optionally be configured to integrate with [Rollbar](https://rollbar.com/mindtouch/nexus-indexer/) to create tracking projects on module deployment.
+The `Registrar` can optionally be configured to integrate with [Rollbar](https://rollbar.com) to create tracking projects on module deployment.
 
 See the λ# CLI & Runtime documentation for more details.
 

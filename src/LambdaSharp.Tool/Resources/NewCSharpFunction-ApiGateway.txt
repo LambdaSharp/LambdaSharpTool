@@ -1,0 +1,40 @@
+using System;
+using System.Threading.Tasks;
+using Amazon.Lambda.Core;
+using LambdaSharp;
+using LambdaSharp.ApiGateway;
+
+// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
+[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
+
+namespace %%ROOTNAMESPACE%% {
+
+    public class ApiGatewayEndpointRequest {
+
+        //--- Properties ---
+
+        // TO-DO: add endpoint request properties
+    }
+
+    public class ApiGatewayEndpointResponse {
+
+        //--- Properties ---
+
+        // TO-DO: add endpoint response properties
+    }
+
+    public class Function : ALambdaApiGatewayFunction {
+
+        //--- Methods ---
+        public override async Task InitializeAsync(LambdaConfig config) {
+
+            // TO-DO: add function initialization and reading configuration settings
+        }
+
+        public async Task<ApiGatewayEndpointResponse> ApiGatewayEndpointAsync(ApiGatewayEndpointRequest request) {
+
+            // TO-DO: add business logic for API Gateway resource endpoint
+            return new ApiGatewayEndpointResponse { };
+        }
+    }
+}

@@ -10,7 +10,7 @@ unset LAMBDASHARP_VERSION_SUFFIX
 if [ -z "$1" ]; then
 
     # run everything
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- info \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- info \
         --verbose:exceptions \
         --tier Test \
         --aws-region us-east-1 \
@@ -18,9 +18,7 @@ if [ -z "$1" ]; then
         --aws-user-arn arn:aws:iam::123456789012:user/test-user \
         --tier-version $LAMBDASHARP_VERSION_PREFIX \
         --cli-version $LAMBDASHARP_VERSION_PREFIX \
-        --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name
+        --deployment-bucket-name lambdasharp-bucket-name
 
     if [ $? -ne 0 ]; then
         exit $?
@@ -40,9 +38,8 @@ if [ -z "$1" ]; then
         --tier-version $LAMBDASHARP_VERSION_PREFIX \
         --cli-version $LAMBDASHARP_VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
-        --module-bucket-names registered-bucket-name,lambdasharp-bucket-name \
         --no-dependency-validation \
+        --module-build-date 20190809150000 \
         $LAMBDASHARP/Tests/Modules/Empty.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoLambdaSharpDependencies.yml \
         $LAMBDASHARP/Tests/Modules/Empty-NoModuleRegistration.yml \
@@ -55,6 +52,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Tests/Modules/Fn-FindInMap.yml \
         $LAMBDASHARP/Tests/Modules/Fn-GetAtt.yml \
         $LAMBDASHARP/Tests/Modules/Fn-GetAZs.yml \
+        $LAMBDASHARP/Tests/Modules/Fn-Include.yml \
         $LAMBDASHARP/Tests/Modules/Fn-ImportValue.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Join.yml \
         $LAMBDASHARP/Tests/Modules/Fn-Ref.yml \
@@ -126,7 +124,7 @@ else
 
     # run requested test
     rm $LAMBDASHARP/Tests/Modules/Results/$testfile.json > /dev/null 2>&1
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- deploy \
+    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --force -- deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/$testfile.json \
@@ -138,7 +136,7 @@ else
         --tier-version $LAMBDASHARP_VERSION_PREFIX \
         --cli-version $LAMBDASHARP_VERSION_PREFIX \
         --deployment-bucket-name lambdasharp-bucket-name \
-        --deployment-notifications-topic  arn:aws:sns:us-east-1:123456789012:LambdaSharp-DeploymentNotificationTopic \
         --no-dependency-validation \
+        --module-build-date 20190809150000 \
         $LAMBDASHARP/Tests/Modules/$1
 fi

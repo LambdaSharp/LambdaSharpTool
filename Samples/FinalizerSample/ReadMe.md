@@ -13,7 +13,7 @@ The `Finalizer` is useful to clean resources before CloudFormation attempts to d
 In this example, the `Finalizer` is used to delete all objects from an S3 bucket. Once deleted, the function returns, which allows CloudFormation to continue its clean-up operations, including deleting the S3 bucket.
 
 ```yaml
-Module: LambdaSharp.Sample.Finalizer
+Module: Sample.Finalizer
 Description: A sample module with a finalizer function
 Items:
 

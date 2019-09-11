@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,14 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Core;
 using LambdaSharp.ApiGateway.Internal;
-using LambdaSharp.ConfigSource;
 using LambdaSharp.Logger;
 
 namespace LambdaSharp.ApiGateway {
@@ -271,7 +263,7 @@ namespace LambdaSharp.ApiGateway {
             => throw new ApiGatewayAbortException(response);
 
         /// <summary>
-        /// The <see cref="AbortBadRequest(string)"/> stops request the request processing with a <c>400 - Bad Request</c> response.
+        /// The <see cref="AbortBadRequest(string)"/> stops the request processing with a <c>400 - Bad Request</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
@@ -288,7 +280,7 @@ namespace LambdaSharp.ApiGateway {
             => Abort(CreateResponse(400, message));
 
         /// <summary>
-        /// The <see cref="AbortForbidden(string)"/> stops request the request processing with a <c>403 - Forbidden</c> response.
+        /// The <see cref="AbortForbidden(string)"/> stops the request processing with a <c>403 - Forbidden</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned
@@ -305,7 +297,7 @@ namespace LambdaSharp.ApiGateway {
             => Abort(CreateResponse(403, message));
 
         /// <summary>
-        /// The <see cref="AbortNotFound(string)"/> stops request the request processing with a <c>404 - Not Found</c> response.
+        /// The <see cref="AbortNotFound(string)"/> stops the request processing with a <c>404 - Not Found</c> response.
         /// </summary>
         /// <remarks>
         /// This method never returns as the abort exception is thrown immediately. The <see cref="Exception"/> instance is shown as returned

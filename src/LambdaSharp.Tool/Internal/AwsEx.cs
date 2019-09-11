@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,14 +18,22 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
+using Amazon.S3;
+using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Internal {
+
+    public delegate void LogErrorDelegate(string messages, Exception exception);
+    public delegate void LogWarnDelegate(string messages);
 
     internal static class AwsEx {
 
@@ -46,7 +51,7 @@ namespace LambdaSharp.Tool.Internal {
         };
 
         private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
-            ["CREATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["CREATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["CREATE_FAILED"] = AnsiTerminal.Red,
             ["CREATE_COMPLETE"] = AnsiTerminal.Green,
 
@@ -54,13 +59,13 @@ namespace LambdaSharp.Tool.Internal {
             ["ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
 
-            ["DELETE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["DELETE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["DELETE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
 
-            ["UPDATE_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
-            ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.Yellow,
+            ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_COMPLETE"] = AnsiTerminal.Green,
 
             ["UPDATE_ROLLBACK_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
@@ -111,15 +116,15 @@ namespace LambdaSharp.Tool.Internal {
         public static async Task<(Stack Stack, bool Success)> TrackStackUpdateAsync(
             this IAmazonCloudFormation cfnClient,
             string stackName,
+            string stackId,
             string mostRecentStackEventId,
-            IDictionary<string, string> resourceNameMappings = null,
-            IDictionary<string, string> typeNameMappings = null,
-            Action<string, Exception> logError = null
+            ModuleNameMappings nameMappings = null,
+            LogErrorDelegate logError = null
         ) {
             var seenEventIds = new HashSet<string>();
             var foundMostRecentStackEvent = (mostRecentStackEventId == null);
             var request = new DescribeStackEventsRequest {
-                StackName = stackName
+                StackName = stackId ?? stackName
             };
             var eventList = new List<StackEvent>();
             var ansiLinesPrinted = 0;
@@ -173,6 +178,9 @@ namespace LambdaSharp.Tool.Internal {
                 }
                 RenderEvents();
             }
+            if(!success) {
+                return (Stack: null, Success: false);
+            }
 
             // describe stack and report any output values
             var description = await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
@@ -183,13 +191,13 @@ namespace LambdaSharp.Tool.Internal {
             // local function
             string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                resourceNameMappings?.TryGetValue(logicalId, out fullName);
+                nameMappings?.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
             }
 
             string TranslateResourceTypeToFullName(string awsType) {
                 var fullName = awsType;
-                typeNameMappings?.TryGetValue(awsType, out fullName);
+                nameMappings?.TypeNameMappings?.TryGetValue(awsType, out fullName);
                 return fullName ?? awsType;
             }
 
@@ -251,6 +259,7 @@ namespace LambdaSharp.Tool.Internal {
                 case "UPDATE_FAILED":
                 case "DELETE_FAILED":
                 case "UPDATE_ROLLBACK_FAILED":
+                case "UPDATE_ROLLBACK_IN_PROGRESS":
                     if(evt.ResourceStatusReason != "Resource creation cancelled") {
                         logError?.Invoke($"{evt.ResourceStatus} {TranslateLogicalIdToFullName(evt.LogicalResourceId)} [{TranslateResourceTypeToFullName(evt.ResourceType)}]: {evt.ResourceStatusReason}", /*Exception*/ null);
                     }
@@ -265,5 +274,66 @@ namespace LambdaSharp.Tool.Internal {
         public static bool IsSuccessfulFinalStackEvent(this StackEvent evt)
             => (evt.ResourceType == "AWS::CloudFormation::Stack")
                 && ((evt.ResourceStatus == "CREATE_COMPLETE") || (evt.ResourceStatus == "UPDATE_COMPLETE"));
-   }
+
+        public static async Task<(bool Success, Stack Stack)> GetStackAsync(this IAmazonCloudFormation cfnClient, string stackName, LogErrorDelegate logError) {
+            Stack stack = null;
+            try {
+                var describe = await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = stackName
+                });
+
+                // make sure the stack is in a stable state (not updating and not failed)
+                stack = describe.Stacks.FirstOrDefault();
+                switch(stack?.StackStatus) {
+                case null:
+                case "CREATE_COMPLETE":
+                case "ROLLBACK_COMPLETE":
+                case "UPDATE_COMPLETE":
+                case "UPDATE_ROLLBACK_COMPLETE":
+
+                    // we're good to go
+                    break;
+                default:
+                    logError?.Invoke($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})", null);
+                    return (false, null);
+                }
+            } catch(AmazonCloudFormationException) {
+
+                // stack not found; nothing to do
+            }
+            return (true, stack);
+        }
+
+        public static async Task<string> GetS3ObjectContents(this IAmazonS3 s3Client, string bucketName, string key) {
+            try {
+                var response = await s3Client.GetObjectAsync(new GetObjectRequest {
+                    BucketName = bucketName,
+                    Key = key,
+                    RequestPayer = RequestPayer.Requester
+                });
+                using(var stream = new MemoryStream()) {
+                    await response.ResponseStream.CopyToAsync(stream);
+                    return Encoding.UTF8.GetString(stream.ToArray());
+                }
+            } catch(AmazonS3Exception) {
+                return null;
+            }
+        }
+
+        public static async Task<bool> DoesS3ObjectExistAsync(this IAmazonS3 s3Client, string bucketName, string key) {
+            try {
+                await s3Client.GetObjectMetadataAsync(new GetObjectMetadataRequest {
+                    BucketName = bucketName,
+                    Key = key,
+                    RequestPayer = RequestPayer.Requester
+                });
+            } catch {
+                return false;
+            }
+            return true;
+        }
+
+        public static string GetModuleVersionText(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+        public static string GetModuleManifestChecksum(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "ModuleChecksum")?.OutputValue;
+    }
 }

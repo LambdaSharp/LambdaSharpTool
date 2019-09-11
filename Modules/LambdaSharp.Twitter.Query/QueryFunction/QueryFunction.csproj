@@ -13,7 +13,7 @@
     <PackageReference Include="AWSSDK.Comprehend" Version="3.3.103.9" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.101.4" />
     <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.3" />
-    <PackageReference Include="TweetinviAPI" Version="4.0.0" />
+    <PackageReference Include="TweetinviAPI" Version="4.0.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\LambdaSharp\LambdaSharp.csproj" />

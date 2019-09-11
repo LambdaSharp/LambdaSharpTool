@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,12 +82,31 @@ namespace LambdaSharpS3Subscriber.ResourceHandler {
                 BucketName = bucketName
             });
             Add(config.LambdaFunctionConfigurations, properties);
-            await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
-                BucketName = bucketName,
-                LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
-                QueueConfigurations = config.QueueConfigurations,
-                TopicConfigurations = config.TopicConfigurations
-            });
+
+            // attempt to update bucket notification configuration
+            var attempts = 0;
+            const int MAX_ATTEMPTS = 3;
+            var backOff = TimeSpan.FromSeconds(5);
+        again:
+            try {
+                await _s3Client.PutBucketNotificationAsync(new PutBucketNotificationRequest {
+                    BucketName = bucketName,
+                    LambdaFunctionConfigurations = config.LambdaFunctionConfigurations,
+                    QueueConfigurations = config.QueueConfigurations,
+                    TopicConfigurations = config.TopicConfigurations
+                });
+            } catch(AmazonS3Exception e) when(
+                (e.Message == "A conflicting conditional operation is currently in progress against this resource. Please try again.")
+                && (attempts < MAX_ATTEMPTS)
+            ) {
+
+                // NOTE (2019-09-06, bjorg): encountered this error during a test run on a newly created bucket; it seems preventable with
+                //  exponential back off, but it's not clear why it happened in the first place
+                ++attempts;
+                await Task.Delay(backOff);
+                backOff = backOff * 2;
+                goto again;
+            }
             return new Response<S3SubscriptionAttributes> {
                 PhysicalResourceId = $"s3subscription:{bucketName}:{properties.Function}",
                 Attributes = new S3SubscriptionAttributes {

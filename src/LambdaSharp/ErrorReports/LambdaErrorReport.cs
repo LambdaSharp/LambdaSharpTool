@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,12 +49,12 @@ namespace LambdaSharp.ErrorReports {
         // Origin
 
         /// <summary>
-        /// The <see cref="Module"/> property describes the LambdaSharp module name and version.
+        /// The <see cref="Module"/> property describes the LambdaSharp module name, version, and origin.
         /// </summary>
         /// <value>The LambdaSharp module name and version.</value>
         /// <example>
         /// Sample module name and version:
-        /// <code>My.AcmeModule:1.0-Dev</code>
+        /// <code>My.AcmeModule:1.0-Dev@origin</code>
         /// </example>
         public string Module { get; set; }
 

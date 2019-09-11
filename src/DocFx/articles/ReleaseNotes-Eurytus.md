@@ -20,7 +20,7 @@ The following change may impact modules created with previous releases.
 
 ### Module Definition
 
-* The top-level `Module` attribute must now contain at least one period (`.`) to denote the _module owner_ and _module name_.
+* The top-level `Module` attribute must now contain at least one period (`.`) to denote the _module namespace_ and _module name_.
 * The `Inputs`, `Outputs`, `Variables`, and `Functions` sections of λ# module have been combined into a single `Items` section to give more organizational freedom.
 * The `Export` definitions have been removed in favor of a special class for `Scope` on items that can be exported.
 * Cross-module references are now grouped into `Using` definitions by module they import from.
@@ -28,7 +28,7 @@ The following change may impact modules created with previous releases.
 * The `Var` definition has been split into two distinct definitions: `Variable` for fixed values and expressions, and `Resource` for existing or new resources.
 * The `CustomResource` definition has been renamed to `ResourceType` and enhanced with a specification about its properties and attributes to enable validation at compilation time.
 * `Function` definitions lost their `VPC` section and `ReservedConcurrency` attribute. Instead, like `Resource` definitions, they have a `Properties` section that can be used to set these, and other settings, directly. This approach is much more future proof.
-* Nesting items has been limited to `Using` and `Namespace` definitions.
+* Nesting items has been limited to `Using` and `Group` definitions.
 * The default value for the `Version` attribute is now `1.0-DEV`.
 
 
@@ -46,7 +46,7 @@ The big change is to run `lash` now instead of `dotnet lash`. It's shorter and w
     * Renamed `--skip-assembly-validation` option to `--no-assembly-validation`
     * Renamed `--cf-output` option to `--cfn-output`
 * Publish process
-    * Modules are now published to a new location in the S3 deployment bucket: `${Module::Owner}/Modules/${Module::Name}/Versions/${Module::Version}`
+    * Modules are now published to a new location in the S3 deployment bucket: `${Module::Namespace}/Modules/${Module::Name}/Versions/${Module::Version}`
     * The λ# manifest is now embedded in the CloudFormation template inside the `Metadata` section under `LambdaSharp::Manifest`.
 * Deploy Process
     * Renamed `--inputs` option to `--parameters` for consistency reasons.
@@ -67,11 +67,11 @@ The big change is to run `lash` now instead of `dotnet lash`. It's shorter and w
 
 ## New λ# Module Features
 
-### Module Owner
+### Module Namespace
 
-The `Module` attribute now specifies both the module owner and the module name. The module owner should be the name of the organization, or individual, to whom the module belongs to. The module owner is used to group related modules in the deployment S3 bucket. The module owner is also a required concept for future compatibility with the [Serverless Application Repository](https://aws.amazon.com/serverless/serverlessrepo/). Everything after the first period is considered to be part of the module name, including additional periods.
+The `Module` attribute now specifies both the module namespace and the module name. The module namespace could be the name of an organization, an individual, or a project the module is part of. The module namespace is used to group related modules in the deployment S3 bucket. Everything after the first period is considered to be part of the module name, including additional periods.
 
-In the following example, `Acme` is the module owner and `Accounting.Reports` is the module name:
+In the following example, `Acme` is the module namespace and `Accounting.Reports` is the module name:
 ```yaml
 Module: Acme.Accounting.Reports
 ```
@@ -105,7 +105,7 @@ Items:
     Scope: Reporting::Calculator
     Value: !Sub "Hi ${PersonName}"
 
-  - Namespace: Reporting
+  - Group: Reporting
     Items:
 
       - Resource: Bucket
@@ -144,7 +144,7 @@ The following example defines an encrypted parameter called `MySecretParameter`.
 * Delete dynamically created resources when the module is torn down.
 * Delete objects from an S3 bucket so it can be deleted when the module is torn down.
 
-A module finalizer function must be called `Finalizer` and must appear in the top namespace of the module. The module finalizer timeout is always set to the maximum duration of 15 minutes. On invocation, the module finalizer receives the module version to allow it to track upgrades or downgrade scenarios. It also receives the module checksum so it track state for each CloudFormation update.
+A module finalizer function must be called `Finalizer` and must appear in the top-level items of the module. The module finalizer timeout is always set to the maximum duration of 15 minutes. On invocation, the module finalizer receives the module version to allow it to track upgrades or downgrade scenarios. It also receives the module checksum so it track state for each CloudFormation update.
 
 The following example shows how easy it is to define a module finalizer:
 ```yaml
@@ -214,7 +214,7 @@ The following example shows a `Condition` item keying off a `Parameter` and thus
   Properties:
     ImageId: ami-0ff8a91507f77f867
 
-- Namespace: ProductionResources
+- Group: ProductionResources
   Items:
 
     - Condition: Create

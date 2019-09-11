@@ -1,5 +1,4 @@
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp;
@@ -26,7 +25,10 @@ namespace %%ROOTNAMESPACE%% {
     public class Function : ALambdaFunction<FunctionRequest, FunctionResponse> {
 
         //--- Methods ---
-        public override async Task InitializeAsync(LambdaConfig config) { }
+        public override async Task InitializeAsync(LambdaConfig config) {
+
+            // TO-DO: add function initialization and reading configuration settings
+        }
 
         public override async Task<FunctionResponse> ProcessMessageAsync(FunctionRequest request) {
 

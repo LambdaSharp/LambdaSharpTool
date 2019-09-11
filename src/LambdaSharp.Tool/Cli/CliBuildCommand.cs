@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,26 +17,14 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
-using Amazon.SimpleSystemsManagement;
-using Humidifier.Json;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Cli.Deploy;
 using LambdaSharp.Tool.Cli.Publish;
-using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -71,13 +56,16 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--cfn-output <PATH>", "(optional) Output location for generated CloudFormation template file (default: bin/cloudformation.json)", CommandOptionType.SingleValue);
 
         public static CommandOption AddDryRunOption(CommandLineApplication cmd)
-            => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output assets without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
+            => cmd.Option("--dryrun:<LEVEL>", "(optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)", CommandOptionType.SingleOrNoValue);
 
         public static CommandOption AddForcePublishOption(CommandLineApplication cmd)
-            => cmd.Option("--force-publish", "(optional) Publish modules and their assets even when no changes were detected", CommandOptionType.NoValue);
+            => cmd.Option("--force-publish", "(optional) Publish modules and their artifacts even when no changes were detected", CommandOptionType.NoValue);
 
         public static CommandOption AddModuleVersionOption(CommandLineApplication cmd)
             => cmd.Option("--module-version", "(optional) Override the module version", CommandOptionType.SingleValue);
+
+        public static CommandOption AddModuleBuildDateOption(CommandLineApplication cmd)
+            => cmd.Option("--module-build-date", "(optional) Override module build date [yyyyMMddHHmmss]", CommandOptionType.SingleValue);
 
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
@@ -109,10 +97,11 @@ namespace LambdaSharp.Tool.Cli {
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -144,6 +133,15 @@ namespace LambdaSharp.Tool.Cli {
                             LogError("--module-version is not a valid version number");
                             return;
                         }
+                    }
+
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
                     }
 
                     // run build step
@@ -186,9 +184,10 @@ namespace LambdaSharp.Tool.Cli {
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
+                var moduleOriginOption = cmd.Option("--module-origin", "(optional) Set alternative module origin when publishing", CommandOptionType.SingleValue);
 
                 // build options
-                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to assets folder or module definition/folder (default: Module.yml)", multipleValues: true);
+                var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
                 var skipDependencyValidationOption = AddSkipDependencyValidationOption(cmd);
                 var buildConfigurationOption = AddBuildConfigurationOption(cmd);
@@ -198,10 +197,11 @@ namespace LambdaSharp.Tool.Cli {
                 var selectorOption = AddSelectorOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: false);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
@@ -235,9 +235,19 @@ namespace LambdaSharp.Tool.Cli {
                         }
                     }
 
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
+                    }
+
                     // run build & publish steps
                     foreach(var argument in arguments) {
                         string moduleSource = null;
+                        ModuleInfo moduleInfo = null;
                         if(Directory.Exists(argument)) {
 
                             // check if argument is pointing to a folder containing a cloudformation file
@@ -252,6 +262,11 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
+                        } else if(ModuleInfo.TryParse(argument, out moduleInfo)) {
+                            if(moduleInfo.Origin == null) {
+                                LogError($"missing module origin for '{moduleInfo}'");
+                                break;
+                            }
                         } else {
                             LogError($"unrecognized argument: {argument}");
                             break;
@@ -278,8 +293,14 @@ namespace LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(await PublishStepAsync(settings, forcePublishOption.HasValue()) == null) {
-                                break;
+                            if(moduleSource != null) {
+                                if(await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOriginOption.Value()) == null) {
+                                    break;
+                                }
+                            } else if(moduleInfo != null) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -292,7 +313,7 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Deploy LambdaSharp module";
 
                 // deploy options
-                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to assets folder, or module definition/folder (default: Module.yml)", multipleValues: true);
+                var publishedModulesArgument = cmd.Argument("<NAME>", "(optional) Published module name, or path to artifacts folder, or module definition/folder (default: Module.yml)", multipleValues: true);
                 var alternativeNameOption = cmd.Option("--name <NAME>", "(optional) Specify an alternative module name for the deployment (default: module name)", CommandOptionType.SingleValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
                 var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
@@ -300,7 +321,6 @@ namespace LambdaSharp.Tool.Cli {
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
-                var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
@@ -314,6 +334,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputDirectoryOption = AddOutputPathOption(cmd);
                 var selectorOption = AddSelectorOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
+                var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -349,7 +370,7 @@ namespace LambdaSharp.Tool.Cli {
                     var arguments = publishedModulesArgument.Values.Any()
                         ? publishedModulesArgument.Values
                         : new List<string> { Directory.GetCurrentDirectory() };
-                    Console.WriteLine($"Readying module for deployment tier '{settings.Tier}'");
+                    Console.WriteLine($"Readying module for deployment tier '{settings.TierName}'");
 
                     // check if a module version number is supplied
                     VersionInfo moduleVersion = null;
@@ -360,9 +381,27 @@ namespace LambdaSharp.Tool.Cli {
                         }
                     }
 
+                    // check if a module build time is supplied
+                    if(moduleBuildDateOption.HasValue()) {
+                        if(!DateTime.TryParseExact(moduleBuildDateOption.Value(), "yyyyMMddHHmmss", System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.AssumeUniversal | System.Globalization.DateTimeStyles.AdjustToUniversal, out var moduleBuildDate)) {
+                            LogError("--module-build-date is not a valid date-time");
+                            return;
+                        }
+                        settings.UtcNow = moduleBuildDate;
+                    }
+
+                    // read optional parameters file
+                    var parameters = new Dictionary<string, string>();
+                    if(parametersFileOption.HasValue()) {
+                        parameters = ReadInputParametersFiles(settings, parametersFileOption.Value());
+                    }
+                    if(HasErrors) {
+                        return;
+                    }
+
                     // run build, publish, and deploy steps
                     foreach(var argument in arguments) {
-                        string moduleReference = null;
+                        ModuleInfo moduleInfo = null;
                         string moduleSource = null;
                         if(Directory.Exists(argument)) {
 
@@ -378,9 +417,7 @@ namespace LambdaSharp.Tool.Cli {
                         } else if(Path.GetFileName(argument) == "cloudformation.json") {
                             settings.WorkingDirectory = Path.GetDirectoryName(argument);
                             settings.OutputDirectory = settings.WorkingDirectory;
-                        } else if(argument.TryParseModuleDescriptor(out _, out _, out _, out _)) {
-                            moduleReference = argument;
-                        } else {
+                        } else if(!ModuleInfo.TryParse(argument, out moduleInfo)) {
                             LogError($"unrecognized argument: {argument}");
                             break;
                         }
@@ -406,23 +443,28 @@ namespace LambdaSharp.Tool.Cli {
                             }
                         }
                         if(dryRun == null) {
-                            if(moduleReference == null) {
-                                moduleReference = await PublishStepAsync(settings, forcePublishOption.HasValue());
-                                if(moduleReference == null) {
+
+                            // check if module needs to be published or imported first
+                            if(moduleInfo == null) {
+                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOrigin: null);
+                                if(moduleInfo == null) {
+                                    break;
+                                }
+                            } else if(moduleInfo.Origin != null) {
+                                if(!await ImportStepAsync(settings, moduleInfo, forcePublishOption.HasValue())) {
                                     break;
                                 }
                             }
                             if(!await DeployStepAsync(
                                 settings,
                                 dryRun,
-                                moduleReference,
+                                moduleInfo.ToString(),
                                 alternativeNameOption.Value(),
                                 allowDataLossOption.HasValue(),
                                 protectStackOption.HasValue(),
-                                parametersFileOption.Value(),
+                                parameters,
                                 forceDeployOption.HasValue(),
                                 promptAllParametersOption.HasValue(),
-                                promptsAsErrorsOption.HasValue(),
                                 xRayTracingLevel,
                                 deployOnlyIfExists: false
                             )) {
@@ -447,8 +489,7 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo moduleVersion
         ) {
             try {
-                await PopulateToolSettingsAsync(settings, optional: true);
-                if(HasErrors) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(
@@ -467,13 +508,23 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task<string> PublishStepAsync(Settings settings, bool forcePublish) {
-            await PopulateToolSettingsAsync(settings);
-            if(HasErrors) {
+        public async Task<ModuleInfo> PublishStepAsync(Settings settings, bool forcePublish, string moduleOrigin) {
+            if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                 return null;
             }
             var cloudformationFile = Path.Combine(settings.OutputDirectory, "cloudformation.json");
-            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish);
+            return await new PublishStep(settings, cloudformationFile).DoAsync(cloudformationFile, forcePublish, moduleOrigin);
+        }
+
+        public async Task<bool> ImportStepAsync(Settings settings, ModuleInfo moduleInfo, bool forcePublish) {
+            if(!await PopulateDeploymentTierSettingsAsync(settings)) {
+                return false;
+            }
+            if(moduleInfo.Origin == settings.DeploymentBucketName) {
+                LogWarn($"skipping import of {moduleInfo} because origin matches deployment bucket");
+                return true;
+            }
+            return await new PublishStep(settings, moduleInfo.ToString()).DoImportAsync(moduleInfo, forcePublish);
         }
 
         public async Task<bool> DeployStepAsync(
@@ -483,31 +534,21 @@ namespace LambdaSharp.Tool.Cli {
             string instanceName,
             bool allowDataLoos,
             bool protectStack,
-            string parametersFilename,
+            Dictionary<string, string> parameters,
             bool forceDeploy,
             bool promptAllParameters,
-            bool promptsAsErrors,
             XRayTracingLevel xRayTracingLevel,
             bool deployOnlyIfExists
         ) {
             try {
-                await PopulateToolSettingsAsync(settings);
-                if(HasErrors) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
                     return false;
                 }
-                await PopulateRuntimeSettingsAsync(settings);
                 if(HasErrors) {
                     return false;
                 }
 
                 // reading module parameters
-                var parameters = new Dictionary<string, string>();
-                if(parametersFilename != null) {
-                    parameters = ReadInputParametersFiles(settings, parametersFilename);
-                }
-                if(HasErrors) {
-                    return false;
-                }
                 return await new DeployStep(settings, moduleReference).DoAsync(
                     dryRun,
                     moduleReference,
@@ -517,7 +558,6 @@ namespace LambdaSharp.Tool.Cli {
                     parameters,
                     forceDeploy,
                     promptAllParameters,
-                    promptsAsErrors,
                     xRayTracingLevel,
                     deployOnlyIfExists
                 );

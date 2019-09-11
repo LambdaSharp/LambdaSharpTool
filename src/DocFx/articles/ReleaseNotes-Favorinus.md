@@ -13,7 +13,7 @@ In addition, there is a [new documentation site](https://lambdasharp.net) that c
 
 The following change may impact modules created with previous releases.
 
-### λ# Tool
+### λ# CLI
 
 * The `git-sha` is now prefixed with `DIRTY-` if the git checkout contains modified or untracked files.
 
@@ -122,11 +122,9 @@ In addition, the captured git-sha is now prepended with `DIRTY-` when there are 
 
 The `--force-publish` option was modified to publish all assets even even when the checksums match.
 
-
 ### Deploy Command
 
 All CloudFormation stacks are now tagged with `LambdaSharp:DeployedBy` to capture the identity of who deployed the stack.
-
 
 ### New Command
 
@@ -183,6 +181,7 @@ The `init` command was improved to detect previous versions of a deployment tier
 This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1) as base class for processing messages from SQS queues.
 
 The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction) was also enhanced to provide support for target methods invocations.
+
 
 ## Releases
 

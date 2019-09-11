@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +18,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
-using Amazon.S3.Transfer;
 using LambdaSharp.Tool.Model;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
@@ -61,7 +55,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         //--- Methods ---
         public async Task<bool> DeployChangeSetAsync(
             ModuleManifest manifest,
-            ModuleLocation location,
+            ModuleNameMappings nameMappings,
+            ModuleLocation moduleLocation,
             string stackName,
             bool allowDataLoss,
             bool protectStack,
@@ -71,30 +66,27 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // check if cloudformation stack already exists and is in a final state
             Console.WriteLine();
-            Console.WriteLine($"Deploying stack: {stackName} [{location.ModuleFullName}:{location.ModuleVersion}]");
+            Console.WriteLine($"Deploying stack: {stackName} [{moduleLocation.ModuleInfo}]");
             var mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
 
-            // set optional notification topics for cloudformation operations
-            var notificationArns =  new List<string>();
-            if(Settings.DeploymentNotificationsTopic != null) {
-                notificationArns.Add(Settings.DeploymentNotificationsTopic);
+            // validate template (must have been copied to deployment bucket at this stage)
+            if(moduleLocation.SourceBucketName != Settings.DeploymentBucketName) {
+                LogError($"module source must match the deployment tier S3 bucket (EXPECTED: {Settings.DeploymentBucketName}, FOUND: {moduleLocation.SourceBucketName})");
+                return false;
             }
-
-            // validate template
-            var templateUrl = $"https://{location.ModuleBucketName}.s3.amazonaws.com/{location.TemplatePath}";
             ValidateTemplateResponse validation;
             try {
                 validation = await Settings.CfnClient.ValidateTemplateAsync(new ValidateTemplateRequest  {
-                    TemplateURL = templateUrl
+                    TemplateURL = moduleLocation.ModuleTemplateUrl
                 });
             } catch(AmazonCloudFormationException e) {
-                LogError(e.Message);
+                LogError($"{e.Message} (url: {moduleLocation.ModuleTemplateUrl})");
                 return false;
             }
 
             // create change-set
             var success = false;
-            var changeSetName = $"{location.ModuleFullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
+            var changeSetName = $"{moduleLocation.ModuleInfo.FullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
             var updateOrCreate = (mostRecentStackEventId != null) ? "update" : "create";
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
@@ -104,42 +96,24 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 Capabilities = validation.Capabilities,
                 ChangeSetName = changeSetName,
                 ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {location.ModuleFullName} (v{location.ModuleVersion})",
-                NotificationARNs = notificationArns,
+                Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
                 Parameters = new List<CloudFormationParameter>(parameters) {
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefix",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier + "-")
+                        ParameterValue = Settings.TierPrefix
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentPrefixLowercase",
-                        ParameterValue = string.IsNullOrEmpty(Settings.Tier) ? "" : (Settings.Tier.ToLowerInvariant() + "-")
+                        ParameterValue = Settings.TierPrefix.ToLowerInvariant()
                     },
                     new CloudFormationParameter {
                         ParameterKey = "DeploymentBucketName",
-                        ParameterValue = location.ModuleBucketName ?? ""
+                        ParameterValue = Settings.DeploymentBucketName
                     }
                 },
                 StackName = stackName,
-                TemplateURL = templateUrl,
-                Tags = new List<Tag> {
-                    new Tag {
-                        Key = "LambdaSharp:Tier",
-                        Value = Settings.Tier
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:Module",
-                        Value = location.ModuleFullName
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:RootStack",
-                        Value = stackName
-                    },
-                    new Tag {
-                        Key = "LambdaSharp:DeployedBy",
-                        Value = Settings.AwsUserArn.Split(':').Last()
-                    }
-                }
+                TemplateURL = moduleLocation.ModuleTemplateUrl,
+                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
             });
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);
@@ -169,7 +143,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, mostRecentStackEventId, manifest.ResourceNameMappings, manifest.TypeNameMappings, logError: LogError);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
@@ -209,7 +183,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             // local function
             string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                manifest.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
+                nameMappings?.ResourceNameMappings.TryGetValue(logicalId, out fullName);
                 return fullName ?? logicalId;
             }
         }

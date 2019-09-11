@@ -320,7 +320,6 @@ Parameters that correspond to existing parameters in Systems Manager Parameter S
   Description: A topic ARN
   Type: AWS::SNS::Topic
   Allow: Publish
-  Default: ""
   Properties:
     DisplayName: New topic display name
 ```

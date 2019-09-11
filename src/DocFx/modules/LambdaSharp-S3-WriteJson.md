@@ -9,7 +9,7 @@ On creation and update, the <code>Contents</code> property is serialized into a 
 ```yaml
 Using:
 
-  - Module: LambdaSharp.S3.IO:0.5
+  - Module: LambdaSharp.S3.IO:0.5@lambdasharp
 ```
 
 ## Syntax

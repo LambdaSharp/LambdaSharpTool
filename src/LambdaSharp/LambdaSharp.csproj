@@ -8,16 +8,16 @@
     <PackageId>LambdaSharp</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
-    <Title>MindTouch λ#</Title>
+    <Title>LambdaSharp (λ#)</Title>
     <Description>A serverless framework for rapid application development on AWS Lambda</Description>
-    <Company>MindTouch, Inc.</Company>
-    <Copyright>Copyright (C) 2018-2019 MindTouch, Inc.</Copyright>
-    <Authors>Bjorg;Onema;DerekRobbins;MindTouch</Authors>
+    <Company>LambdaSharp</Company>
+    <Copyright>Copyright (C) 2018-2019</Copyright>
+    <Authors>Bjorg</Authors>
 
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
-    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;MindTouch;Serverless</PackageTags>
+    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.2.0" />
@@ -25,6 +25,7 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0" />
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.100.14" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.101" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.100.14" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.5.1" />

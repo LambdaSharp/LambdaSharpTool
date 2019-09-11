@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +20,6 @@ using System;
 using System.Diagnostics;
 using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli;
-using LambdaSharp.Tool.Cli.Tier;
 
 namespace LambdaSharp.Tool {
 
@@ -36,7 +32,7 @@ namespace LambdaSharp.Tool {
 
     public enum DryRunLevel {
 
-        // compile module, build assets, publish module
+        // compile module, build artifacts, publish module
         Everything,
 
         // compile module
@@ -64,7 +60,6 @@ namespace LambdaSharp.Tool {
             app.HelpOption();
 
             // register commands
-            new CliConfigCommand().Register(app);
             new CliInitCommand().Register(app);
             new CliTierCommand().Register(app);
             new CliInfoCommand().Register(app);

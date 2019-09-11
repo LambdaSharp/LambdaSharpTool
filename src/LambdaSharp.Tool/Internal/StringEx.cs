@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +27,6 @@ using System.Text.RegularExpressions;
 namespace LambdaSharp.Tool.Internal {
 
     internal static class StringEx {
-
-        //--- Class Fields ---
-        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<ModuleOwner>\w+)\.(?<ModuleName>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<BucketName>\w+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Extension Methods ---
         public static string ToMD5Hash(this string text) {
@@ -82,83 +76,18 @@ namespace LambdaSharp.Tool.Internal {
             return char.ToUpperInvariant(identifier[0]) + ((identifier.Length > 1) ? identifier.Substring(1) : "");
         }
 
-        public static bool TryParseModuleOwnerName(this string compositeModuleOwnerName, out string moduleOwner, out string moduleName) {
-            moduleOwner = "<BAD>";
+        public static bool TryParseModuleFullName(this string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
+            moduleNamespace = "<BAD>";
             moduleName = "<BAD>";
-            if(compositeModuleOwnerName == null) {
+            if(!ModuleInfo.TryParse(compositeModuleFullName, out var moduleInfo)) {
                 return false;
             }
-            var moduleOwnerAndName = compositeModuleOwnerName.Split(".", 2);
-            if(
-                (moduleOwnerAndName.Length != 2)
-                || (moduleOwnerAndName[0].Length == 0)
-                || (moduleOwnerAndName[1].Length == 0)
-            ) {
+            if((moduleInfo.Version != null) || (moduleInfo.Origin != null)) {
                 return false;
             }
-            moduleOwner = moduleOwnerAndName[0];
-            moduleName = moduleOwnerAndName[1];
+            moduleNamespace = moduleInfo.Namespace;
+            moduleName = moduleInfo.Name;
             return true;
-        }
-
-        public static bool TryParseModuleDescriptor(
-            this string moduleReference,
-            out string moduleOwner,
-            out string moduleName,
-            out VersionInfo moduleVersion,
-            out string moduleBucketName
-        ) {
-            if(moduleReference == null) {
-                moduleOwner = "<BAD>";
-                moduleName = "<BAD>";
-                moduleVersion = VersionInfo.Parse("0.0");
-                moduleBucketName = "<BAD>";
-                return false;
-            }
-            if(moduleReference.StartsWith("s3://", StringComparison.Ordinal)) {
-                var uri = new Uri(moduleReference);
-
-                // absolute path always starts with '/', which needs to be removed
-                var pathSegments = uri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries).ToList();
-                if((pathSegments.Count < 5) || (pathSegments[1] != "Modules") || (pathSegments[3] != "Versions")) {
-                    moduleOwner = "<BAD>";
-                    moduleName = "<BAD>";
-                    moduleVersion = VersionInfo.Parse("0.0");
-                    moduleBucketName = "<BAD>";
-                    return false;
-                }
-                moduleOwner = pathSegments[0];
-                moduleName = pathSegments[2];
-                moduleVersion = VersionInfo.Parse(pathSegments[4]);
-                moduleBucketName = uri.Host;
-                return true;
-            }
-
-            // try parsing module reference
-            var match = ModuleKeyPattern.Match(moduleReference);
-            if(!match.Success) {
-                    moduleOwner = "<BAD>";
-                    moduleName = "<BAD>";
-                    moduleVersion = VersionInfo.Parse("0.0");
-                    moduleBucketName = "<BAD>";
-                return false;
-            }
-            moduleOwner = GetMatchValue("ModuleOwner");
-            moduleName = GetMatchValue("ModuleName");
-            moduleBucketName = GetMatchValue("BucketName");
-
-            // parse optional version
-            var requestedVersionText = GetMatchValue("Version");
-            moduleVersion = ((requestedVersionText != null) && (requestedVersionText != "*"))
-                ? VersionInfo.Parse(requestedVersionText)
-                : null;
-            return true;
-
-            // local function
-            string GetMatchValue(string groupName) {
-                var group = match.Groups[groupName];
-                return group.Success ? group.Value : null;
-            }
         }
 
         public static string ComputeHashForFiles(

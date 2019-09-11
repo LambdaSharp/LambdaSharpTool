@@ -47,7 +47,10 @@
 - name: Releases
   items:
 
-    - name: Favorinus (v0.6.0.3)
+    - name: Geminus (v0.7.0)
+      href: ReleaseNotes-Geminus.md
+
+    - name: Favorinus (v0.6.1)
       href: ReleaseNotes-Favorinus.md
 
     - name: Eurytus (v0.5.0.3)
