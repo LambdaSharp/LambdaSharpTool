@@ -2,3 +2,5 @@ User-agent: *
 Disallow: /fonts/
 Disallow: /images/
 Disallow: /styles/
+
+Sitemap: https://lambdasharp.net/sitemap.xml
