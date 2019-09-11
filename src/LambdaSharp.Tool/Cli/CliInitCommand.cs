@@ -193,6 +193,7 @@ namespace LambdaSharp.Tool.Cli {
             // check if deployment tier with disabled core services needs to be installed
             Dictionary<string, string> parameters = null;
             var tierCommand = new CliTierCommand();
+            var updated = false;
             if(
                 createNewTier
                 || (updateExistingTier && (
@@ -213,6 +214,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(!await DeployCoreServicesDisabledTemplate()) {
                     return false;
                 }
+                updated = true;
             }
 
             // check if API Gateway role needs to be set or updated
@@ -279,7 +281,11 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if operating services need to be installed/updated
-            if(coreServices == CoreServices.Disabled) {
+            if(settings.CoreServices == CoreServices.Disabled) {
+                if(!updated) {
+                    Console.WriteLine();
+                    Console.WriteLine("No updates required");
+                }
                 return true;
             }
             if(createNewTier) {
@@ -289,6 +295,10 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine();
                 Console.WriteLine($"Updating deployment tier '{settings.TierName}'");
             } else {
+                if(!updated) {
+                    Console.WriteLine();
+                    Console.WriteLine("No update required");
+                }
                 return true;
             }
 
