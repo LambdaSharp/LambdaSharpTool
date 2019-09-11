@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -76,7 +73,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             _provider = new MockDependencyProvider(output);
             _logic = new Logic(_provider);
             _owner = new OwnerMetaData {
-                Module = "Test.Module:1.0",
+                Module = "Test.Module:1.0@origin",
                 ModuleId = "ModuleId",
                 FunctionId = "ModuleName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
@@ -92,7 +89,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
         //--- Methods ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
@@ -115,7 +112,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             var success = _logic.ProgressLogEntryAsync(_owner, "2018-10-11T07:00:40.906Z 546933ad-cd23-11e8-bb5d-7f3682cfa000 Task timed out after 15.02 seconds", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Task timed out after 15.02 seconds");
+            _provider.ErrorReport.Message.Should().Be("Lambda timed out after 15.02 seconds");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("546933ad-cd23-11e8-bb5d-7f3682cfa000");
         }
@@ -125,7 +122,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             var success = _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", "1539238963679").Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Process exited before completing request");
+            _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }
@@ -159,14 +156,14 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
 
             CommonErrorReportAsserts(usageReportCheck: false);
-            _provider.ErrorReport.Message.Should().Be("Process ran out of memory (Max: 128 MB)");
+            _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
-            _provider.ErrorReport.Module.Should().Be("Test.Module:1.0");
+            _provider.ErrorReport.Module.Should().Be("Test.Module:1.0@origin");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
             _provider.ErrorReport.FunctionId.Should().Be("ModuleName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");

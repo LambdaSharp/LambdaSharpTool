@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,12 +33,12 @@ namespace LambdaSharp.Tool.Cli {
             app.Command("encrypt", cmd => {
                 cmd.HelpOption();
                 cmd.Description = "Encrypt Value";
-                var keyOption = cmd.Option("--key <KEY-ID>", "(optional) Specify encryption key ID or alias to use (default: use default deployment tier key)", CommandOptionType.SingleValue);
-                var decryptOption = cmd.Option("--decrypt", "(optional) Decrypt value before encrypting it", CommandOptionType.NoValue);
+                var keyOption = cmd.Option("--key <KEY-ID>", "Specify encryption key ID or alias to use", CommandOptionType.SingleValue);
+                var decryptOption = cmd.Option("--decrypt", "(optional) Decrypt value before encrypting it.", CommandOptionType.NoValue);
                 var valueArgument = cmd.Argument("<VALUE>", "Value to encrypt");
 
                 // command options
-                var initSettingsCallback = CreateSettingsInitializer(cmd, requireDeploymentTier: true);
+                var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     var settings = await initSettingsCallback();
@@ -52,11 +49,8 @@ namespace LambdaSharp.Tool.Cli {
                     // either use an explicitly provided key ID or use the default key for the deployment
                     var keyId = keyOption.Value();
                     if(keyId == null) {
-                        if(settings.Tier == null) {
-                            LogError("must provide a key id with --key");
-                            return;
-                        }
-                        keyId = $"alias/{settings.Tier}-LambdaSharpDefaultSecretKey";
+                        LogError("must provide a key ARN or alias with --key");
+                        return;
                     }
 
                     // if no argument is provided, read text from standard in

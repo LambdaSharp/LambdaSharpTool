@@ -58,7 +58,8 @@
       {
         "files": [
           "images/**",
-          "favicon.ico"
+          "favicon.ico",
+          "robots.txt"
         ]
       }
     ],
@@ -79,7 +80,10 @@
       "_appLogoPath": "images/LambdaSharpLogo.svg",
       "_appTitle": "λ# - Serverless .NET for AWS",
       "_disableContribution": true,
-      "_enableNewTab": true
+      "_enableNewTab": true,
+      "_description": "Building serverless applications with .NET on AWS",
+      "_keywords": "software development, aws, serverless, lambda, dotnet, dotnetcore, .net, .net core",
+      "_baseUrl": "https://lambdasharp.net/"
     },
     "fileMetadataFiles": [],
     "template": [
@@ -91,6 +95,19 @@
     "noLangKeyword": false,
     "keepFileLink": false,
     "cleanupCacheHistory": false,
-    "disableGitFeatures": false
+    "disableGitFeatures": false,
+    "sitemap":{
+      "baseUrl": "https://lambdasharp.net/",
+      "priority": 0.5,
+      "changefreq": "monthly",
+      "fileOptions": {
+        "**/index.md": {
+          "priority": 0.8
+        },
+        "sdk/**.yml": {
+          "priority": 0.3
+        }
+      }
+    }
   }
 }

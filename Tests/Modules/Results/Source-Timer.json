@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3935A9EC701721A3DB5804CFB589AA1A"
+      "Default": "54C0F673E1070A04DEB1F676F4A292CE"
     }
   },
   "Resources": {
@@ -78,7 +78,7 @@
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "Test/Modules/TestModule/Assets/Function-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/Function-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -129,6 +129,9 @@
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
             "DEADLETTERQUEUE": {
               "Fn::If": [
                 "UseCoreServices",
@@ -252,6 +255,16 @@
                   "Resource": "arn:aws:logs:*:*:*"
                 },
                 {
+                  "Sid": "CloudFormation",
+                  "Effect": "Allow",
+                  "Action": [
+                    "cloudformation:DescribeStacks"
+                  ],
+                  "Resource": {
+                    "Ref": "AWS::StackId"
+                  }
+                },
+                {
                   "Sid": "AWSXRay",
                   "Effect": "Allow",
                   "Action": [
@@ -262,6 +275,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "DeploymentBucketReadOnly",
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:GetObject"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Test/TestModule/.artifacts/*"
+                  }
                 }
               ]
             },
@@ -549,10 +572,28 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "54C0F673E1070A04DEB1F676F4A292CE"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.1"
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Conditions": {
@@ -764,8 +805,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "54C0F673E1070A04DEB1F676F4A292CE",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -780,13 +825,22 @@
               "Name": "XRayTracing",
               "Type": "String",
               "Label": "Enable AWS X-Ray tracing mode for module resources",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "RootModule",
+                "AllModules"
+              ]
             },
             {
               "Name": "LambdaSharpCoreServices",
               "Type": "String",
               "Label": "Integrate with LambdaSharp.Core services",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         },
@@ -798,37 +852,47 @@
               "Type": "String",
               "Label": "DeadLetterQueue",
               "Default": "$LambdaSharp-Core::DeadLetterQueue",
-              "Import": "LambdaSharp.Core::DeadLetterQueue"
+              "Import": "LambdaSharp.Core::DeadLetterQueue",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
             },
             {
               "Name": "LambdaSharpCoreLoggingStream",
               "Type": "String",
               "Label": "LoggingStream",
               "Default": "$LambdaSharp-Core::LoggingStream",
-              "Import": "LambdaSharp.Core::LoggingStream"
+              "Import": "LambdaSharp.Core::LoggingStream",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
             },
             {
               "Name": "LambdaSharpCoreLoggingStreamRole",
               "Type": "String",
               "Label": "LoggingStreamRole",
               "Default": "$LambdaSharp-Core::LoggingStreamRole",
-              "Import": "LambdaSharp.Core::LoggingStreamRole"
+              "Import": "LambdaSharp.Core::LoggingStreamRole",
+              "AllowedPattern": "^.+$",
+              "ConstraintDescription": "must either be a cross-module reference or a non-empty value"
             }
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "3935A9EC701721A3DB5804CFB589AA1A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1"
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "FunctionLogGroup": "Function::LogGroup",
         "ModuleRole": "Module::Role",

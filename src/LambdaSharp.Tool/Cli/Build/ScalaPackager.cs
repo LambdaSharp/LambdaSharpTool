@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +120,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // rename function package with hash
-            var package = Path.Combine(outputDirectory, $"function_{function.Name}_{hash}.jar");
+            var package = Path.Combine(outputDirectory, $"function_{builder.FullName}_{function.LogicalId}_{hash}.jar");
             if(!existingPackages.Remove(package)) {
                 File.Move(scalaOutputJar, package);
 
@@ -147,7 +144,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // decompress project zip into temporary folder so we can add the 'GITSHAFILE' files
-            builder.AddAsset($"{function.FullName}::PackageName", package);
+            builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
     }
 }

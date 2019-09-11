@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.IO.Compression;
-using System.Security.Cryptography;
 using System.Text;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
@@ -129,7 +125,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // compute hash for all files
                 var fileValueToFileKey = parameter.Files.ToDictionary(kv => kv.Value, kv => kv.Key);
                 var hash = parameter.Files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
-                var package = Path.Combine(Settings.OutputDirectory, $"package_{parameter.FullName.Replace("::", "-")}_{hash}.zip");
+                var package = Path.Combine(Settings.OutputDirectory, $"package_{_builder.FullName}_{parameter.LogicalId}_{hash}.zip");
 
                 // only build package if it doesn't exist
                 if(!_existingPackages.Remove(package)) {
@@ -172,7 +168,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }
                 }
-                _builder.AddAsset($"{parameter.FullName}::PackageName", package);
+                _builder.AddArtifact($"{parameter.FullName}::PackageName", package);
             });
         }
     }

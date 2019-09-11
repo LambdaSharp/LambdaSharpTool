@@ -13,7 +13,7 @@ In order to have a more efficient way to process the sqs messages with lambda us
 > **NOTE**: Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 
 ```yaml
-Module: LambdaSharp.Sample.SqsHandler
+Module: Sample.SqsHandler
 Description: Module description
 Items:
 

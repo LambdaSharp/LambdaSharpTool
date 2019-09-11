@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3E94A98793785976F78E784DFA5642AF"
+      "Default": "715937FA3A63C957D457C761C1E3BA70"
     }
   },
   "Resources": {
@@ -67,10 +67,28 @@
   },
   "Outputs": {
     "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "715937FA3A63C957D457C761C1E3BA70"
     },
     "LambdaSharpTool": {
-      "Value": "0.6.1"
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
+      }
     }
   },
   "Conditions": {
@@ -133,8 +151,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "715937FA3A63C957D457C761C1E3BA70",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -149,23 +171,31 @@
               "Name": "LambdaSharpCoreServices",
               "Type": "String",
               "Label": "Integrate with LambdaSharp.Core services",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "3E94A98793785976F78E784DFA5642AF",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1"
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
+      "Outputs": []
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

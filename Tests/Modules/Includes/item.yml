@@ -1,0 +1,6 @@
+Resource: MyIncludedResource
+Description: A CloudFormation dummy resource
+Type: Custom::Handler
+Properties:
+  Text: !Include plaintext.txt
+  Object: !Include structure.yml

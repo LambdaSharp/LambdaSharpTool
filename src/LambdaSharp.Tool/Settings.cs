@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,36 +21,61 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using Amazon.APIGateway;
 using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement;
 using Amazon.KeyManagementService;
+using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
-using LambdaSharp.Tool.Model;
+using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool {
 
-    public class LambdaSharpDeploymentTierSetupException : Exception {
+    public class LambdaSharpException : Exception {
+
+    }
+
+    public class LambdaSharpDeploymentTierSetupException : LambdaSharpException {
 
         //--- Fields ---
-        public readonly string Tier;
+        public readonly string TierName;
 
         //--- Constructors ---
-        public LambdaSharpDeploymentTierSetupException(string tier) : base() {
-            Tier = tier ?? throw new ArgumentNullException(nameof(tier));
+        public LambdaSharpDeploymentTierSetupException(string tierName) : base() {
+            TierName = tierName ?? throw new ArgumentNullException(nameof(tierName));
         }
     }
 
-    public class LambdaSharpToolConfigException : Exception {
+    public class LambdaSharpToolOutOfDateException : LambdaSharpException {
 
         //--- Fields ---
-        public readonly string Profile;
+        public readonly VersionInfo Version;
 
         //--- Constructors ---
-        public LambdaSharpToolConfigException(string profile) : base() {
-            Profile = profile ?? throw new ArgumentNullException(nameof(profile));
+        public LambdaSharpToolOutOfDateException(VersionInfo version) : base() {
+            Version = version ?? throw new ArgumentNullException(nameof(version));
         }
+    }
+
+    public class LambdaSharpDeploymentTierOutOfDateException : LambdaSharpException {
+
+        //--- Fields ---
+        public readonly string TierName;
+
+        //--- Constructors ---
+        public LambdaSharpDeploymentTierOutOfDateException(string tierName) : base() {
+            TierName = tierName ?? throw new ArgumentNullException(nameof(tierName));
+        }
+    }
+
+    public enum CoreServices {
+        Undefined,
+        Disabled,
+        Bootstrap,
+        Enabled
     }
 
     public class Settings {
@@ -65,6 +87,8 @@ namespace LambdaSharp.Tool {
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static bool UseAnsiConsole = true;
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
+        private static string PromptColor = AnsiTerminal.Cyan;
+        private static string LabelColor = AnsiTerminal.BrightCyan;
 
         //--- Class Properties ---
         public static int ErrorCount => _errors.Count(entry => entry.Error);
@@ -78,18 +102,25 @@ namespace LambdaSharp.Tool {
             foreach(var error in _errors) {
                 var builder = new StringBuilder();
                 if(UseAnsiConsole) {
-                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.Yellow);
+                    builder.Append(error.Error ? AnsiTerminal.Red : AnsiTerminal.BrightYellow);
                 }
                 if(error.Error) {
                     builder.Append("ERROR: " + error.Message);
                 } else {
                     builder.Append("WARNING: " + error.Message);
                 }
-                if((error.Exception != null) && (VerboseLevel >= VerboseLevel.Exceptions)) {
+                var hasException = (error.Exception != null) && !(error.Exception is LambdaSharpException);
+                if(hasException && (VerboseLevel >= VerboseLevel.Exceptions)) {
                     builder.AppendLine();
-                    builder.Append(error.Exception.ToString());
+                    if(error.Exception is AggregateException aggregateException) {
+                        foreach(var innerException in aggregateException.Flatten().InnerExceptions) {
+                            builder.Append(innerException.ToString());
+                        }
+                    } else {
+                        builder.Append(error.Exception.ToString());
+                    }
                 } else {
-                    suppressedStacktrace = suppressedStacktrace || (error.Exception != null);
+                    suppressedStacktrace = suppressedStacktrace || hasException;
                 }
                 if(UseAnsiConsole) {
                     builder.Append(AnsiTerminal.Reset);
@@ -104,17 +135,22 @@ namespace LambdaSharp.Tool {
             }
 
             // check if the errors are due to missing configuration or initialization steps
-            var configException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolConfigException>().FirstOrDefault();
-            if(configException != null) {
+            var toolException = _errors.Select(error => error.Exception).OfType<LambdaSharpToolOutOfDateException>().FirstOrDefault();
+            if(toolException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} config' to configure LambdaSharp CLI for profile '{configException.Profile}'");
+                WriteAnsiLine($"IMPORTANT: run 'dotnet tool update LambdaSharp.Tool --global --version {toolException.Version}' to update the '{Lash}' command", AnsiTerminal.BrightWhite);
                 return;
             }
             var setupException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierSetupException>().FirstOrDefault();
             if(setupException != null) {
                 Console.WriteLine();
-                Console.WriteLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.Tier}'");
+                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to create a new LambdaSharp deployment tier '{setupException.TierName}'", AnsiTerminal.BrightWhite);
                 return;
+            }
+            var tierException = _errors.Select(error => error.Exception).OfType<LambdaSharpDeploymentTierOutOfDateException>().FirstOrDefault();
+            if(tierException != null) {
+                Console.WriteLine();
+                WriteAnsiLine($"IMPORTANT: run '{Lash} init' to upgrade the LambdaSharp deployment tier '{tierException.TierName}'", AnsiTerminal.BrightWhite);
             }
         }
 
@@ -127,27 +163,146 @@ namespace LambdaSharp.Tool {
         public static void LogError(Exception exception)
             => LogError($"internal error: {exception.Message}", exception);
 
+        public static void LogInfo(string message) {
+            if(VerboseLevel > Tool.VerboseLevel.Quiet) {
+                Console.WriteLine(message);
+            }
+        }
+
+        public static void LogInfoVerbose(string message) {
+            if(VerboseLevel >= Tool.VerboseLevel.Detailed) {
+                Console.WriteLine(message);
+            }
+        }
+
+        public static void WriteAnsiLine(string text, string ansiColor) {
+            if(UseAnsiConsole) {
+                Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine(text);
+            }
+        }
+
+        private static void WriteAnsi(string text, string ansiColor) {
+            if(UseAnsiConsole) {
+                Console.Write($"{ansiColor}{text}{AnsiTerminal.Reset}");
+            } else {
+                Console.Write(text);
+            }
+        }
+
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
-        public string ToolProfile { get; set; }
-        public bool ToolProfileExplicitlyProvided { get; set; }
         public string Tier { get; set; }
+        public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
+        public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
+        public CoreServices CoreServices { get; set; }
         public VersionInfo TierVersion { get; set; }
-        public string TierDefaultSecretKey { get; set; }
         public string AwsRegion { get; set; }
         public string AwsAccountId { get; set; }
         public string AwsUserArn { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string DeploymentNotificationsTopic { get; set; }
-        public IEnumerable<string> ModuleBucketNames { get; set; }
         public IAmazonSimpleSystemsManagement SsmClient { get; set; }
         public IAmazonCloudFormation CfnClient { get; set; }
         public IAmazonKeyManagementService KmsClient { get; set; }
         public IAmazonS3 S3Client { get; set; }
         public IAmazonAPIGateway ApiGatewayClient { get; set; }
         public IAmazonIdentityManagementService IamClient { get; set; }
+        public IAmazonLambda LambdaClient { get; set; }
         public string WorkingDirectory { get; set; }
         public string OutputDirectory { get; set; }
         public bool NoDependencyValidation { get; set; }
+        public bool PromptsAsErrors { get; set; }
+        public DateTime UtcNow { get; set; }
+
+        //--- Constructors ---
+        public Settings() {
+            var now = DateTime.UtcNow;
+            now = new DateTime(now.Ticks - (now.Ticks % TimeSpan.TicksPerSecond), now.Kind);
+            UtcNow = now;
+        }
+
+        //--- Methods ---
+        public List<Tag> GetCloudFormationStackTags(string moduleName, string stackName)
+            => new List<Tag> {
+                new Tag {
+                    Key = "LambdaSharp:Tier",
+                    Value = string.IsNullOrEmpty(Tier) ? "-" : Tier
+                },
+                new Tag {
+                    Key = "LambdaSharp:Module",
+                    Value = moduleName
+                },
+                new Tag {
+                    Key = "LambdaSharp:RootStack",
+                    Value = stackName
+                },
+                new Tag {
+                    Key = "LambdaSharp:DeployedBy",
+                    Value = AwsUserArn.Split(':').Last()
+                }
+            };
+
+        public string GetStackName(string moduleName, string instanceName = null)
+            => $"{TierPrefix}{instanceName ?? moduleName.Replace(".", "-")}";
+
+        public string PromptString(string message, string defaultValue = null)
+            => PromptString(message, defaultValue, pattern: null, constraintDescription: null);
+
+        public string PromptString(string message, string defaultValue, string pattern, string constraintDescription) {
+            if(PromptsAsErrors) {
+                LogError($"prompt was attempted for \"{message}\"");
+                return defaultValue;
+            }
+            var prompt = $"|=> {message}: ";
+            if(!string.IsNullOrEmpty(defaultValue)) {
+                prompt += $"[{defaultValue}] ";
+            }
+        again:
+            WriteAnsi(prompt, PromptColor);
+            SetCursorVisible(true);
+            var result = Console.ReadLine();
+            SetCursorVisible(false);
+            if((pattern != null) && !Regex.IsMatch(result, pattern)) {
+                WriteAnsiLine(constraintDescription ?? $"Value must match regular expression pattern: {pattern}", PromptColor);
+                goto again;
+            }
+            return string.IsNullOrEmpty(result)
+                ? defaultValue
+                : result;
+
+            // local functions
+            void SetCursorVisible(bool visible) {
+                try {
+                    Console.CursorVisible = visible;
+                } catch { }
+            }
+        }
+
+        public void PromptLabel(string message) => WriteAnsiLine($"*** {message} ***", LabelColor);
+
+        public string PromptChoice(string message, IList<string> choices) {
+            if(PromptsAsErrors) {
+                LogError($"prompt was attempted for \"{message}\"");
+                return choices.FirstOrDefault();
+            }
+            WriteAnsiLine($"{message}:", PromptColor);
+            var choiceCount = choices.Count;
+            for(var i = 0; i < choiceCount; ++i) {
+                WriteAnsiLine($"{i + 1}. {choices[i]}", PromptColor);
+            }
+            while(true) {
+                var enteredValue = PromptString($"Enter a choice", pattern: null, constraintDescription: null, defaultValue: null);
+                if(int.TryParse(enteredValue, out var choice) && (choice >= 1) && (choice <= choiceCount)) {
+                    return choices[choice - 1];
+                }
+            }
+        }
+
+        public bool PromptYesNo(string message, bool defaultAnswer) {
+            return Settings.UseAnsiConsole
+                ? Prompt.GetYesNo($"{PromptColor}|=> {message}{AnsiTerminal.Reset}", defaultAnswer)
+                : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
+        }
     }
 }

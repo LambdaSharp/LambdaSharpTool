@@ -4,9 +4,6 @@
 - name: Build
   href: Tool-Build.md
 
-- name: Config
-  href: Tool-Config.md
-
 - name: Deploy
   href: Tool-Deploy.md
 

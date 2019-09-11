@@ -13,6 +13,7 @@
     <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.5.0"/>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="%%LAMBDASHARP_PROJECT%%"/>
+    <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="%%LAMBDASHARP_VERSION%%"/>
+    <ProjectReference Condition="'$(LAMBDASHARP)'!=''" Include="$(LAMBDASHARP)/src/LambdaSharp/LambdaSharp.csproj" />
   </ItemGroup>
 </Project>

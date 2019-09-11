@@ -8,12 +8,8 @@ fi
 
 cd $LAMBDASHARP
 
-# Setup λ# in Contributor Mode
-
-lash() {
-    dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj -- $*
-}
-
+# Setup and validate λ# CLI
+Scripts/install-cli.sh
 
 echo "*******************************************"
 echo "*** Update CloudFormation Specification ***"
@@ -81,18 +77,15 @@ echo "*************************"
 cd $LAMBDASHARP
 SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 4 | head -n 1)
 LAMBDASHARP_TIER=TestContrib$SUFFIX
-LAMBDASHARP_PROFILE=TestProfile$SUFFIX
 
-lash config \
-    --cli-profile $LAMBDASHARP_PROFILE \
+lash init \
+    --core-services enabled \
     --existing-s3-bucket-name="" \
-    --requested-s3-bucket-name="" \
-    --cloudformation-notifications-topic=""
-
-lash init
+    --parameters $LAMBDASHARP/Scripts/lash-init-parameters.yml
 if [ $? -ne 0 ]; then
     exit $?
 fi
+
 
 echo "*********************"
 echo "*** Build Samples ***"
@@ -149,26 +142,4 @@ echo "*****************************"
 echo "*** Deploy Default Module ***"
 echo "*****************************"
 
-# mkdir Test$SUFFIX
-mkdir tmp
-cd tmp
-mkdir Test$SUFFIX
-cd Test$SUFFIX
-lash new module MyModule
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function MyFirstFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash new function --language javascript MySecondFunction
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-lash deploy
-if [ $? -ne 0 ]; then
-    exit $?
-fi
-cd ..
-rm -rf Test$SUFFIX
+Scripts/test-new-module.sh

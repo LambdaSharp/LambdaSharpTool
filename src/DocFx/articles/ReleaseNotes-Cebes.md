@@ -28,11 +28,11 @@ This release introduces a custom resource to handle subscribing to S3 bucket not
 
 The name of the deployment tier environment variable was changed to `LAMBDASHARP_TIER`. The `LAMBDASHARP_PROFILE` was added to allow selecting a different, default AWS profile for λ# deployments.
 
-## New λ# Tool Features
+## New λ# CLI Features
 
 ### Updated `New` Command
 
-The λ# tool has a new command to create a new module file. This command creates a `Module.yml` file in the current directory.
+The λ# CLI has a new command to create a new module file. This command creates a `Module.yml` file in the current directory.
 
 To invoke the new command:
 ```bash
@@ -48,7 +48,7 @@ Additionally, the `new function` command now updates the `Module.yml` file by ad
 
 ### Artifact Output Directory
 
-The λ# tool now generates all artifacts in a dedicated output directory. By default, the output directory is called `bin` and co-located with the input `Module.yml` file.
+The λ# CLI now generates all artifacts in a dedicated output directory. By default, the output directory is called `bin` and co-located with the input `Module.yml` file.
 
 The location of the output directory can be overwritten with the `--output` option.
 
@@ -58,7 +58,7 @@ lash deploy --output MyOutputFolder
 
 ### Validate λ# Assembly References
 
-The λ# tool now checks the version of all λ# assembly references in the function project files. If an assembly version mismatch is found, an error is emitted and deployment operation is cancelled. This behavior can be suppressed with the `--skip-assembly-validation` option.
+The λ# CLI now checks the version of all λ# assembly references in the function project files. If an assembly version mismatch is found, an error is emitted and deployment operation is cancelled. This behavior can be suppressed with the `--skip-assembly-validation` option.
 
 ```bash
 lash deploy --skip-assembly-validation

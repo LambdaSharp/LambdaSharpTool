@@ -71,7 +71,7 @@ lash build
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
-(optional) Generate output assets without deploying (0=everything, 1=cloudformation)
+(optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)
 </dd>
 
 <dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
@@ -114,7 +114,7 @@ Output:
 LambdaSharp CLI (v0.5) - Build LambdaSharp module
 
 Reading module: Module.yml
-Compiling: LambdaSharp.Demo.SlackTodo (v1.0-DEV)
+Compiling: Demo.SlackTodo (v1.0-DEV)
 => Building function RecordMessage [netcoreapp2.1, Release]
 => Building function SlackCommand [netcoreapp2.1, Release]
 => Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
@@ -134,7 +134,7 @@ Output:
 LambdaSharp CLI (v0.5) - Build LambdaSharp module
 
 Reading module: Module.yml
-Compiling: LambdaSharp.Demo.SlackTodo (v1.0-DEV)
+Compiling: Demo.SlackTodo (v1.0-DEV)
 => Building function RecordMessage [netcoreapp2.1, Release]
 => Building function SlackCommand [netcoreapp2.1, Release]
 => Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json

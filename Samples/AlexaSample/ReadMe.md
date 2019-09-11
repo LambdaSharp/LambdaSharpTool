@@ -11,7 +11,7 @@ Creating a function that is invoked by an [Alexa Skill](https://developer.amazon
 Optionally, the `Alexa` attribute can specify an Alexa Skill ID to restrict invocation to a specific Alexa Skill.
 
 ```yaml
-Module: LambdaSharp.Sample.Alexa
+Module: Sample.Alexa
 Description: A sample module using an Alexa skill
 Items:
 

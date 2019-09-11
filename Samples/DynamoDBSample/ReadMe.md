@@ -11,7 +11,7 @@ Creating a function that is invoked by a DynamoDB stream requires two steps. Fir
 Optionally, the `DynamoDB` attribute can specify the maximum number of messages to read from the DynamoDB stream using `BatchSize`.
 
 ```yaml
-Module: LambdaSharp.Sample.DynamoDB
+Module: Sample.DynamoDB
 Description: A sample module using Kinesis streams
 Items:
 

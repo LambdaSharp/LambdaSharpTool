@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,79 +19,50 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Internal;
-using YamlDotNet.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool.Model {
+
+    public class ModuleNameMappings {
+
+        //--- Constants ---
+        public const string CurrentVersion = "2019-07-04";
+
+
+        //--- Properties ---
+        public string Version { get; set; } = CurrentVersion;
+        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
+    }
 
     public class ModuleManifest {
 
         //--- Constants ---
-        public const string CurrentVersion = "2018-12-31";
+        public const string CurrentVersion = "2019-07-04";
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-        public string Module { get; set; }
+
+        [JsonProperty("Module")]
+        public ModuleInfo ModuleInfo { get; set; }
+        public string Description { get; set; }
+        public string TemplateChecksum { get; set; }
+        public DateTime Date { get; set; }
+        public VersionInfo CoreServicesVersion { get; set; }
         public IList<ModuleManifestParameterSection> ParameterSections { get; set; } = new List<ModuleManifestParameterSection>();
-        public bool RuntimeCheck { get; set; }
-        public string Hash { get; set; }
         public ModuleManifestGitInfo Git { get; set; }
-        public IList<string> Assets { get; set; } = new List<string>();
+        public IList<string> Artifacts { get; set; } = new List<string>();
         public IList<ModuleManifestDependency> Dependencies { get; set; } = new List<ModuleManifestDependency>();
         public IList<ModuleManifestResourceType> ResourceTypes { get; set; } = new List<ModuleManifestResourceType>();
         public IList<ModuleManifestOutput> Outputs { get; set; } = new List<ModuleManifestOutput>();
-        public IList<ModuleManifestMacro> Macros { get; set; } = new List<ModuleManifestMacro>();
-        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
-        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
 
         //--- Methods ---
-        public string GetFullName() {
-            if(!Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string moduleName,
-                out VersionInfo _,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
-            return $"{moduleOwner}.{moduleName}";
-        }
-
-        public string GetOwner() {
-            if(!Module.TryParseModuleDescriptor(
-                out string moduleOwner,
-                out string _,
-                out VersionInfo _,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleOwner;
-        }
-
-        public string GetName() {
-            if(!Module.TryParseModuleDescriptor(
-                out string _,
-                out string moduleName,
-                out VersionInfo _,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleName;
-        }
-
-        public VersionInfo GetVersion() {
-            if(!Module.TryParseModuleDescriptor(
-                out string _,
-                out string _,
-                out VersionInfo moduleVersion,
-                out string _
-            )) {
-                throw new ApplicationException("invalid module info");
-            }
-            return moduleVersion;
-        }
+        public string GetModuleTemplatePath() => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
+        public string GetFullName() => ModuleInfo.FullName;
+        public string GetNamespace() => ModuleInfo.Namespace;
+        public string GetName() => ModuleInfo.Name;
+        public VersionInfo GetVersion() => ModuleInfo.Version;
 
         public IEnumerable<ModuleManifestParameter> GetAllParameters()
             => ParameterSections.SelectMany(section => section.Parameters);
@@ -139,13 +107,19 @@ namespace LambdaSharp.Tool.Model {
         public string Name { get; set; }
     }
 
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum ModuleManifestDependencyType {
+        Unknown,
+        Root,
+        Nested,
+        Shared
+    }
+
     public class ModuleManifestDependency {
 
         //--- Properties ---
-        public string ModuleFullName { get; set; }
-        public VersionInfo MinVersion { get; set; }
-        public VersionInfo MaxVersion { get; set; }
-        public string BucketName { get; set; }
+        public ModuleInfo ModuleInfo { get; set; }
+        public ModuleManifestDependencyType Type { get; set; }
     }
 
     public class ModuleManifestParameterSection {
@@ -163,5 +137,8 @@ namespace LambdaSharp.Tool.Model {
         public string Label { get; set; }
         public string Default { get; set; }
         public string Import { get; set; }
+        public List<string> AllowedValues { get; set; }
+        public string AllowedPattern { get; set; }
+        public string ConstraintDescription { get; set; }
     }
 }

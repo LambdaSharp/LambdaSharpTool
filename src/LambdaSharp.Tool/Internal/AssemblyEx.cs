@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -30,7 +28,7 @@ namespace LambdaSharp.Tool.Internal {
         //--- Extension Methods ---
         public static string ReadManifestResource(this Assembly assembly, string resourceName, bool convertLineEndings = true) {
             using(var resource = assembly.GetManifestResourceStream(resourceName))
-            using(var reader = new StreamReader(resource, Encoding.UTF8)) {
+            using(var reader = new StreamReader(resource ?? throw new ApplicationException($"unable to locate embedded resource: '{resourceName}'"), Encoding.UTF8)) {
                 var result = reader.ReadToEnd();
                 if(convertLineEndings) {
                     result = result.Replace("\r", "");

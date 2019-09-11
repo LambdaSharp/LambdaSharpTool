@@ -1,9 +1,6 @@
-# MindTouch λ#
-# Copyright (C) 2018-2019 MindTouch, Inc.
-# www.mindtouch.com  oss@mindtouch.com
-#
-# For community documentation and downloads visit mindtouch.com;
-# please review the licensing section.
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2019
+# lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,7 +17,6 @@
 Module: LambdaSharp.Core
 Description: LambdaSharp Core Resources and Services
 Pragmas:
-  - no-core-version-check
   - no-lambdasharp-dependencies
   - no-module-registration
   - Overrides:
@@ -37,7 +33,7 @@ Items:
     Label: Dead letter queue for functions (leave blank to create a new queue)
     Description: Dead Letter Queue (ARN)
     Type: AWS::SQS::Queue
-    Default: ""
+    Properties: { }
 
   - Parameter: LoggingStream
     Scope: public
@@ -45,7 +41,6 @@ Items:
     Label: Logging Kinesis stream for functions (leave blank to create a new stream)
     Description: Logging Stream (ARN)
     Type: AWS::Kinesis::Stream
-    Default: ""
     Allow: Subscribe
     Properties:
       RetentionPeriodHours: !Ref LoggingStreamRetentionPeriodHours
@@ -67,22 +62,22 @@ Items:
     Default: 1
     MinValue: 1
 
-  - Parameter: DefaultSecretKey
-    Scope: public, Registration
+  - Parameter: CoreSecretsKey
+    Scope: all
     Section: LambdaSharp Tier Settings
-    Label: Default secret key for functions (leave blank to create a new encryption key)
-    Description: Default Secret Key (ARN)
+    Label: KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key)
+    Description: Encryption Key (ARN)
     Type: AWS::KMS::Key
+    AllowedPattern: '(arn:aws:kms:.*)?'
+    ConstraintDescription: Must be a valid KMS Key ARN or left blank
     Allow:
       - kms:Decrypt
       - kms:Encrypt
-    Default: ""
     Properties:
-      Description: Default encryption/decryption key for LambdaSharp modules
-      EnableKeyRotation: !Ref DefaultSecretKeyRotationEnabled
+      Description: !Sub "LambdaSharp.Core encryption key for ${AWS::StackName}"
       KeyPolicy:
         Version: 2012-10-17
-        Id: !Sub "${AWS::StackName}ModuleDefaultSecretKeyPolicy"
+        Id: !Sub "${AWS::StackName}CoreSecretsKeyPolicy"
         Statement:
           - Effect: Allow
             Principal:
@@ -91,26 +86,10 @@ Items:
               - kms:*
             Resource: "*"
 
-  - Resource: DefaultSecretKeyAlias
-    Description: Alias for default secrets key
-    Type: AWS::KMS::Alias
-    Properties:
-      AliasName: !Sub "alias/${DeploymentPrefix}LambdaSharpDefaultSecretKey"
-      TargetKeyId: !Ref DefaultSecretKey
-
-  - Parameter: DefaultSecretKeyRotationEnabled
-    Section: LambdaSharp Tier Settings
-    Label: Enabled rotating KMS key automatically every 365 days
-    Description: Default key rotation enabled
-    Default: false
-    AllowedValues:
-      - true
-      - false
-
   # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
   - Resource: LoggingStreamRole
     Scope: public
-    Description: Role used by CloudWatch logs to write to the Kinesis stream
+    Description: CloudWatch Logs Role for writing to logging stream (ARN)
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -134,41 +113,36 @@ Items:
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
     Section: Rollbar Settings
-    Label: Account-level token for read operations (keep blank to disable Rollbar integration)
+    Label: Account-level token for read operations (leave blank to disable Rollbar integration)
     Description: Read Access Token
     Type: Secret
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarWriteAccessToken
     Section: Rollbar Settings
-    Label: Account-level token for write operations (keep blank to disable Rollbar integration)
+    Label: Account-level token for write operations (leave blank to disable Rollbar integration)
     Description: Write Access Token
     Type: Secret
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
     Label: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
     Description: Project Prefix
-    Scope: Registration
+    Scope: RegistrationFunction
     Default: ""
 
   # CloudWatch Log Events Processing
   - Function: ProcessLogEvents
     Description: Process log events from all LambdaSharp module functions
-    Memory: 128
+    Memory: 256
     Timeout: 30
     Sources:
       - Kinesis: LoggingStream
 
   # Module & Function Registrations
-  - Resource: RegistrationTopic
-    Description: Custom resource topic for registering LambdaSharp modules
-    Type: AWS::SNS::Topic
-    Allow: Subscribe
-
   - Resource: ErrorReportTopic
     Scope: public
     Description: SNS topic for LambdaSharp module errors
@@ -197,16 +171,14 @@ Items:
         - AttributeName: Id
           KeyType: HASH
 
-  - Function: Registration
+  - Function: RegistrationFunction
     Description: Register LambdaSharp modules and functions
-    Memory: 128
+    Memory: 256
     Timeout: 30
-    Sources:
-      - Topic: RegistrationTopic
 
   - ResourceType: LambdaSharp::Registration::Module
-    Description: Resource type for LambdaSharp module registrations
-    Handler: RegistrationTopic
+    Description: Custom resource type for module registrations
+    Handler: RegistrationFunction
     Properties:
 
       - Name: ModuleId
@@ -226,8 +198,8 @@ Items:
         Type: String
 
   - ResourceType: LambdaSharp::Registration::Function
-    Description: Resource type for LambdaSharp function registrations
-    Handler: RegistrationTopic
+    Description: Custom resource type for function registrations
+    Handler: RegistrationFunction
     Properties:
 
       - Name: ModuleId
@@ -280,3 +252,54 @@ Items:
       - Name: Registration
         Description: Registration ID
         Type: String
+
+  #######################
+  # Bootstrap Resources #
+  #######################
+
+  # IMPORTANT: must EXACTLY match resources from 'LambdaSharpToolConfig.yml'
+
+  - Variable: CoreServices
+    Scope: public
+    Description: Flag indicating if operating services are deployed (String)
+    Value: Enabled
+
+  # S3 Deployment Bucket
+  - Parameter: ExistingDeploymentBucket
+    Section: LambdaSharp Deployment Settings
+    Label: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
+    Description: ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket)
+    Type: String
+    AllowedPattern: '(arn:aws:s3:.*)?'
+    ConstraintDescription: Must be a valid S3 ARN (all lowercase) or left blank
+
+  - Condition: CreateDeploymentBucket
+    Value: !Equals [ !Ref ExistingDeploymentBucket, "" ]
+
+  - Resource: DeploymentBucketResource
+    Type: AWS::S3::Bucket
+    If: CreateDeploymentBucket
+
+  - Resource: DeploymentBucketPolicy
+    Type: AWS::S3::BucketPolicy
+    If: CreateDeploymentBucket
+    Properties:
+      Bucket: !Ref DeploymentBucketResource
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: serverlessrepo.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "${DeploymentBucketResource.Arn}/*"
+
+  - Resource: DeploymentBucket
+    Description: S3 bucket for published modules (ARN)
+    Scope: public
+    Value: !If
+      - CreateDeploymentBucket
+      - !GetAtt DeploymentBucketResource.Arn
+      - !Ref ExistingDeploymentBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite

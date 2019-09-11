@@ -2,7 +2,7 @@ Module: Test.TestModule
 Description: LambdaSharp CloudFormation Test
 Items:
 
-  - Namespace: Maps
+  - Group: Maps
     Items:
 
     - Mapping: RegionMap

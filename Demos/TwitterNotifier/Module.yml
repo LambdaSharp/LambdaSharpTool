@@ -1,9 +1,6 @@
-# MindTouch λ#
-# Copyright (C) 2018-2019 MindTouch, Inc.
-# www.mindtouch.com  oss@mindtouch.com
-#
-# For community documentation and downloads visit mindtouch.com;
-# please review the licensing section.
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2019
+# lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.Demo.TwitterNotifier
+Module: Demo.TwitterNotifier
 Description: Listen for specific tweets and publish to an email address via SNS topic
 Items:
 
@@ -70,13 +67,14 @@ Items:
 
   # Resources
   - Nested: TwitterNotify
-    Module: LambdaSharp.Twitter.Query:0.6.0.3
+    Module: LambdaSharp.Twitter.Query:0.7@lambdasharp
     Parameters:
       TwitterApiKey: !Ref TwitterApiKey
       TwitterApiSecretKey: !Ref TwitterApiSecretKey
       TwitterQuery: !Ref TwitterQuery
       TwitterLanguageFilter: !Ref TwitterLanguageFilter
       TwitterSentimentFilter: !Ref TwitterSentimentFilter
+      Secrets: !Ref Secrets
 
   - Resource: TwitterNotifyTopic
     Type: AWS::SNS::Topic

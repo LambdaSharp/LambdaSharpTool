@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "02B562C788E942540ABF0DA74711F52A"
+      "Default": "7D8C8A6C30B0972B82619B24A1331175"
     }
   },
   "Resources": {
@@ -58,12 +58,6 @@
     }
   },
   "Outputs": {
-    "Module": {
-      "Value": "Test.TestModule:1.0-DEV"
-    },
-    "LambdaSharpTool": {
-      "Value": "0.6.1"
-    },
     "SimpleValue": {
       "Value": "this is a value",
       "Export": {
@@ -88,6 +82,30 @@
         "Name": {
           "Fn::Sub": "${AWS::StackName}::OutputExpressionValue"
         }
+      }
+    },
+    "Module": {
+      "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
+    },
+    "ModuleChecksum": {
+      "Value": "7D8C8A6C30B0972B82619B24A1331175"
+    },
+    "LambdaSharpTool": {
+      "Value": "0.7.0"
+    },
+    "LambdaSharpTier": {
+      "Value": {
+        "Fn::Select": [
+          "0",
+          {
+            "Fn::Split": [
+              "-",
+              {
+                "Ref": "DeploymentPrefix"
+              }
+            ]
+          }
+        ]
       }
     }
   },
@@ -151,8 +169,12 @@
       ]
     },
     "LambdaSharp::Manifest": {
-      "Version": "2018-12-31",
+      "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
+      "Description": "LambdaSharp CloudFormation Test",
+      "TemplateChecksum": "7D8C8A6C30B0972B82619B24A1331175",
+      "Date": "2019-08-09T15:00:00Z",
+      "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -167,23 +189,27 @@
               "Name": "LambdaSharpCoreServices",
               "Type": "String",
               "Label": "Integrate with LambdaSharp.Core services",
-              "Default": "Disabled"
+              "Default": "Disabled",
+              "AllowedValues": [
+                "Disabled",
+                "Enabled"
+              ]
             }
           ]
         }
       ],
-      "RuntimeCheck": true,
-      "Hash": "02B562C788E942540ABF0DA74711F52A",
       "Git": {
         "Branch": "test-branch",
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
+      "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleFullName": "LambdaSharp.Core",
-          "MinVersion": "0.6.1"
+          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
+          "Type": "Shared"
         }
       ],
+      "ResourceTypes": [],
       "Outputs": [
         {
           "Name": "ManyValues",
@@ -199,7 +225,10 @@
           "Description": "SimpleValue description",
           "Type": "String"
         }
-      ],
+      ]
+    },
+    "LambdaSharp::NameMappings": {
+      "Version": "2019-07-04",
       "ResourceNameMappings": {
         "ModuleRegistration": "Module::Registration"
       },

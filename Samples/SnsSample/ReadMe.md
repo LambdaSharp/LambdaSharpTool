@@ -11,7 +11,7 @@ Creating a function that is invoked by an SNS topics requires two steps. First, 
 Lambda functions require the `sns:Subscribe` permission on the SNS topic. Either request it explicitly or use a [resource permission shorthand](../src/LambdaSharp.Tool/Resources/IAM-Mappings.yml) instead.
 
 ```yaml
-Module: LambdaSharp.Sample.Sns
+Module: Sample.Sns
 Description: A sample module using an SNS topic
 Items:
 

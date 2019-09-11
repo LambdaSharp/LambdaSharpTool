@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,6 +100,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         //--- Constructors ---
         public ModelFunctionPackager(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
+        //--- Methods ---
         public void Package(
             ModuleBuilder builder,
             bool noCompile,
@@ -238,7 +236,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // compile function project
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
-            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_temporary.zip");
+            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             var obsoleteNodes = csproj.DescendantNodes()
@@ -271,7 +269,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false)
                     ?? Enumerable.Empty<XElement>();
                 foreach(var include in includes) {
-                    var expectedVersion = VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
+                    var expectedVersion = (Settings.ToolVersion.Major == 0)
+                        ? VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}.{Settings.ToolVersion.Patch ?? 0}{Settings.ToolVersion.Suffix}")
+                        : VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
                     var library = include.Attribute("Include").Value;
                     var libraryVersionText = include.Attribute("Version")?.Value;
                     if(libraryVersionText == null) {
@@ -400,7 +400,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // rename function package with hash
-            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
             if(!_existingPackages.Remove(package)) {
                 File.Move(temporaryPackage, package);
 
@@ -424,7 +424,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // set the module variable to the final package name
-            _builder.AddAsset($"{function.FullName}::PackageName", package);
+            _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
         private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
@@ -435,7 +435,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             return ProcessLauncher.Execute(
                 dotNetExe,
-                new[] { "lambda", "package", "-c", buildConfiguration, "-f", targetFramework, "-o", outputPackagePath },
+                new[] {
+                    "lambda", "package",
+                    "--configuration", buildConfiguration,
+                    "--framework", targetFramework,
+                    "--output-package", outputPackagePath,
+                    "--disable-interactive", "true"
+                },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
             );
@@ -487,7 +493,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 _dotnetLambdaToolVersionValid = true;
                 return true;
             }
-            if(version.CompareTo(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION)) < 0) {
+            if(version.IsLessThanVersion(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION), strict: true)) {
 
                 // attempt to install the AWS Lambda Tools extension
                 if(!ProcessLauncher.Execute(
@@ -532,11 +538,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
             var buildFolder = Path.GetDirectoryName(function.Project);
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
-            var package = Path.Combine(Settings.OutputDirectory, $"function_{function.Name}_{hash}.zip");
+            var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
             if(!_existingPackages.Remove(package)) {
                 CreatePackage(package, gitSha, gitBranch, buildFolder);
             }
-            _builder.AddAsset($"{function.FullName}::PackageName", package);
+            _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
         private void CreatePackage(string package, string gitSha, string gitBranch, string folder) {
@@ -687,7 +693,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build invocation arguments
-            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{function.LogicalId}.json");
+            string schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
             _existingPackages.Remove(schemaFile);
             var arguments = new[] {
                 "util", "create-invoke-methods-schema",

@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +22,6 @@ using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using LambdaSharp.Tool.Model.AST;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -51,6 +47,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder = builder;
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(functions.Any()) {
+
+                // grant read access to deployment bucket
+                _builder.AddGrant(
+                    name: "DeploymentBucketReadOnly",
+                    awsType: null,
+                    reference: FnSub($"arn:aws:s3:::${{DeploymentBucketName}}/{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/*"),
+                    allow: "s3:GetObject",
+                    condition: null
+                );
 
                 // add functions
                 foreach(var function in functions) {
@@ -1007,7 +1012,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     _restApiRoutes.Add((Function: function, Source: apiGatewaySource));
                     break;
                 case S3Source s3Source:
-                    _builder.AddDependency("LambdaSharp.S3.Subscriber", Settings.ToolVersion.GetCompatibleBaseVersion(), maxVersion: null, bucketName: null);
+                    _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "S3.Subscriber", Settings.ToolVersion.GetCompatibleCoreServicesVersion(), "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
                     Enumerate(s3Source.Bucket, (suffix, arn) => {
                         var permission = _builder.AddResource(
                             parent: function,

@@ -2,7 +2,7 @@
 
 # LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the 0.6 "Favorinus" release.](https://lambdasharp.net/articles/ReleaseNotes-Favorinus.html)**
+**[Read what's new in the 0.7.0 "Geminus" release.](https://lambdasharp.net/articles/ReleaseNotes-Geminus.html)**
 
 λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
@@ -47,7 +47,7 @@ lash new function MyFunction
 lash deploy
 ```
 
-The λ# CLI uses a YAML file to compile the C# projects, upload assets, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
+The λ# CLI uses a YAML file to compile the C# projects, upload artifacts, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
 
 ```yaml
 Module: MySampleModule
@@ -130,7 +130,7 @@ namespace MySampleModule.MyFunction {
 
 ## License
 
-> Copyright (c) 2018,2019 MindTouch
+> Copyright (c) 2018-2019 LambdaSharp (λ#)
 >
 > Licensed under the Apache License, Version 2.0 (the "License");
 > you may not use this file except in compliance with the License.

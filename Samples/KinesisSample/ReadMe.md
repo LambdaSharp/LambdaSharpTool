@@ -11,7 +11,7 @@ Creating a function that is invoked by a Kinesis stream requires two steps. Firs
 Optionally, the `Kinesis` attribute can specify the maximum number of messages to read from Kinesis using `BatchSize`.
 
 ```yaml
-Module: LambdaSharp.Sample.Kinesis
+Module: Sample.Kinesis
 Description: A sample module using Kinesis streams
 Items:
 

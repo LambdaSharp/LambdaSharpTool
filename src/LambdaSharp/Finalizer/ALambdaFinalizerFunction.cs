@@ -1,10 +1,7 @@
 /*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +16,11 @@
  * limitations under the License.
  */
 
+using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.Lambda.Core;
 using LambdaSharp.CustomResource;
 
@@ -32,6 +33,9 @@ namespace LambdaSharp.Finalizer {
     /// LambdaSharp module.
     /// </summary>
     public abstract class ALambdaFinalizerFunction : ALambdaCustomResourceFunction<FinalizerProperties, FinalizerAttributes> {
+
+        //--- Constants ---
+        private const string FINALIZER_PHYSICAL_ID = "Finalizer:Module";
 
         //--- Constructors ---
 
@@ -79,7 +83,7 @@ namespace LambdaSharp.Finalizer {
         public override sealed async Task<Response<FinalizerAttributes>> ProcessCreateResourceAsync(Request<FinalizerProperties> request) {
             await CreateDeployment(request.ResourceProperties);
             return new Response<FinalizerAttributes> {
-                PhysicalResourceId = $"Finalizer:{request.ResourceProperties.DeploymentChecksum}",
+                PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()
             };
         }
@@ -89,6 +93,30 @@ namespace LambdaSharp.Finalizer {
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessDeleteResourceAsync(Request<FinalizerProperties> request) {
+
+            // NOTE (2019-07-11, bjorg): in 0.7, the physical id was changed from being based on the module hash (checksum), to
+            //  a constant identifier. Changing the physical id of a custom resource causes CloudFormation to perform
+            //  a replacement operation, which deletes the old custom resource. That would cause the finalizer to perform
+            //  its clean-up operation when the stack is not being deleted. Instead, we need to check if the stack itself
+            //  is being deleted to confirm the proper invocation of the finalizer.
+
+            // NOTE (2019-08-16, bjorg): the logic was updated to always check for a delete. This allows a Finalizer to be
+            //  removed in a CloudFormation stack update operation without triggering the delete logic.
+
+            // fetch status of stack to confirm this is a delete operation
+            try {
+                var stack = (await new AmazonCloudFormationClient().DescribeStacksAsync(new DescribeStacksRequest {
+                    StackName = request.StackId
+                })).Stacks.FirstOrDefault();
+                if((stack != null) && (stack.StackStatus != "DELETE_IN_PROGRESS")) {
+
+                    // ignore finalizer delete if stack is not being deleted
+                    LogInfo("skipping finalizer delete, because the stack is not being deleted");
+                    return new Response<FinalizerAttributes>();
+                }
+            } catch(Exception e) {
+                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId);
+            }
             await DeleteDeployment(request.ResourceProperties);
             return new Response<FinalizerAttributes>();
         }
@@ -100,7 +128,7 @@ namespace LambdaSharp.Finalizer {
         public override sealed async Task<Response<FinalizerAttributes>> ProcessUpdateResourceAsync(Request<FinalizerProperties> request) {
             await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
             return new Response<FinalizerAttributes> {
-                PhysicalResourceId = $"Finalizer:{request.OldResourceProperties.DeploymentChecksum}",
+                PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()
             };
         }

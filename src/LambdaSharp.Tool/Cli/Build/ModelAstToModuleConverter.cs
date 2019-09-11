@@ -1,10 +1,7 @@
 ﻿/*
- * MindTouch λ#
- * Copyright (C) 2018-2019 MindTouch, Inc.
- * www.mindtouch.com  oss@mindtouch.com
- *
- * For community documentation and downloads visit mindtouch.com;
- * please review the licensing section.
+ * LambdaSharp (λ#)
+ * Copyright (C) 2018-2019
+ * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using LambdaSharp.Tool.Internal;
@@ -62,14 +58,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                     version = VersionInfo.Parse("0.0");
                 }
 
-                // ensure owner is present
-                if(!module.Module.TryParseModuleOwnerName(out string moduleOwner, out var moduleName)) {
-                    LogError("'Module' attribute must have format 'Owner.Name'");
+                // ensure namespace is present
+                if(!module.Module.TryParseModuleFullName(out string moduleNamespace, out var moduleName)) {
+                    LogError("'Module' attribute must have format 'Namespace.Name'");
                 }
 
                 // initialize module
                 _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
-                    Owner = moduleOwner,
+                    Namespace = moduleNamespace,
                     Name = moduleName,
                     Version = version,
                     Description = module.Description
@@ -110,16 +106,11 @@ namespace LambdaSharp.Tool.Cli.Build {
 
         private void ConvertUsing(int index, ModuleDependencyNode dependency) {
             AtLocation($"{index}", () => {
-                if(!dependency.Module.TryParseModuleDescriptor(out var moduleOwner, out var moduleName, out var moduleVersion, out var moduleBucketName)) {
+                if(!ModuleInfo.TryParse(dependency.Module, out var moduleInfo)) {
                     LogError("invalid module reference format");
                     return;
                 }
-                _builder.AddDependency(
-                    moduleFullName: $"{moduleOwner}.{moduleName}",
-                    minVersion: moduleVersion,
-                    maxVersion: null,
-                    bucketName: moduleBucketName
-                );
+                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
             });
         }
 
@@ -232,11 +223,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             => ConvertItem(null, index, node, new[] {
                 "Condition",
                 "Function",
+                "Group",
                 "Import",
                 "Macro",
                 "Mapping",
                 "Nested",
-                "Namespace",
                 "Package",
                 "Parameter",
                 "Resource",
@@ -251,7 +242,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 AtLocation(node.Parameter, () => {
 
                     // validation
-                    Validate((node.Default != null) || (node.Properties == null), "'Properties' section cannot be used unless the 'Default' attribute is set");
                     if(node.Properties != null) {
                         Validate(node.Type != null, "'Type' attribute is required");
                     }
@@ -324,13 +314,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                     );
                 });
                 break;
-            case "Namespace":
-                AtLocation(node.Namespace, () => {
+            case "Group":
+                AtLocation(node.Group, () => {
 
                     // create namespace item
                     var result = _builder.AddVariable(
                         parent: parent,
-                        name: node.Namespace,
+                        name: node.Group,
                         description: node.Description,
                         type: "String",
                         scope: null,
@@ -399,29 +389,20 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Module == null) {
                         LogError("missing 'Module' attribute");
-                    } else if(!node.Module.TryParseModuleDescriptor(
-                        out string moduleOwner,
-                        out string moduleName,
-                        out VersionInfo moduleVersion,
-                        out string moduleBucketName
-                    )) {
+                    } else if(!ModuleInfo.TryParse(node.Module, out var moduleInfo)) {
                         LogError("invalid value for 'Module' attribute");
                     } else {
 
                         // create nested module item
-                        _builder.AddModule(
+                        _builder.AddNestedModule(
                             parent: parent,
                             name: node.Nested,
                             description: node.Description,
-                            moduleOwner: moduleOwner,
-                            moduleName: moduleName,
-                            moduleVersion: moduleVersion,
-                            moduleBucketName: moduleBucketName,
+                            moduleInfo: moduleInfo,
                             scope: ConvertScope(node.Scope),
                             dependsOn: node.DependsOn,
                             parameters: node.Parameters
                         );
-
                     }
                 });
                 break;
@@ -926,8 +907,9 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private IDictionary<string, object> ParseToDictionary(string location, object value) {
-            var result = new Dictionary<string, object>();
+            Dictionary<string, object> result = null;
             if(value != null) {
+                result = new Dictionary<string, object>();
                 AtLocation(location, () => {
                     if(value is IDictionary dictionary) {
                         foreach(DictionaryEntry entry in dictionary) {

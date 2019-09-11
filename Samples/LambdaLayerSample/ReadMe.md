@@ -9,7 +9,7 @@ Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/arti
 Use a `Package` definition to compress your local files and have them published by the λ# CLI. Then create a `AWS::Lambda::LayerVersion` referencing the published zip package. Finally, use the `Properties` section on the Lambda function to attach the Lambda layer to the function.
 
 ```yaml
-Module: LambdaSharp.Sample.LambdaLayer
+Module: Sample.LambdaLayer
 Description: A sample module defining a Lambda function with a Lambda Layer
 Items:
 
