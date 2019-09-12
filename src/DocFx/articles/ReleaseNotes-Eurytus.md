@@ -1,4 +1,8 @@
-# λ# - Eurytus (v0.5.0.3) - 2019-03-08
+---
+description: Release notes for LambdaSharp "Eurytus" (v0.5)
+keywords: release, notes, eurytus
+---
+# LambdaSharp "Eurytus" Release (v0.5.0.3) - 2019-03-08
 
 > Eurytus was an eminent Pythagorean philosopher. He was a disciple of Philolaus, and Diogenes Laërtius mentions him among the teachers of Plato, though this statement is very doubtful. [(Wikipedia)](https://en.wikipedia.org/wiki/Eurytus_(Pythagorean))
 
@@ -32,13 +36,13 @@ The following change may impact modules created with previous releases.
 * The default value for the `Version` attribute is now `1.0-DEV`.
 
 
-### λ# Runtime
+### LambdaSharp Runtime
 
 * The _λ# Runtime_ has been renamed to _λ# Core_. The previous terminology caused too much confusion with the AWS Lambda runtime.
 * The λ# Core is deployed as a single module without using nested modules. This decreases the deployment time.
 
 
-### λ# CLI
+### LambdaSharp CLI
 
 The big change is to run `lash` now instead of `dotnet lash`. It's shorter and works just as well!
 
@@ -53,7 +57,7 @@ The big change is to run `lash` now instead of `dotnet lash`. It's shorter and w
     * Removed `--input` option.
 
 
-### λ# Assemblies
+### LambdaSharp Assemblies
 
 * Assemblies
     * Merged `MindTouch.LambdaSharp.CustomResource` assembly into the `MindTouch.LambdaSharp` assembly.

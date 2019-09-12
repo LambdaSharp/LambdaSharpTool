@@ -1,4 +1,8 @@
-# λ# - Cebes (v0.3) - 2018-09-19
+---
+description: Release notes for LambdaSharp "Cebes" (v0.3)
+keywords: release, notes, cebes
+---
+# LambdaSharp "Cebes" Release (v0.3) - 2018-09-19
 
 > Cebes was a disciple of Socrates and Philolaus, and a friend of Simmias of Thebes. He is one of the speakers in the Phaedo of Plato, in which he is represented as an earnest seeker after virtue and truth, keen in argument and cautious in decision. Xenophon says he was a member of Socrates' inner circle, and a frequent visitor to the hetaera, Theodote, in Athens.[1] He is also mentioned by Plato in the Crito and Epistle XIII. [(Wikipedia)](https://en.wikipedia.org/wiki/Cebes)
 
@@ -24,7 +28,7 @@ lash deploy Deploy.yml
 
 This release introduces a custom resource to handle subscribing to S3 bucket notifications. In previous releases, it was only possible to subscribe to S3 notifications for S3 buckets that were created in the same λ# module. With the addition of the `S3Subscriber` custom resource, it now possible to subscribe to both new and existing S3 buckets. However, this change is not backwards compatible with how previous implementation handled S3 bucket subscriptions and requires the old S3 bucket to be deleted.
 
-### λ# Environment Variable
+### LambdaSharp Environment Variable
 
 The name of the deployment tier environment variable was changed to `LAMBDASHARP_TIER`. The `LAMBDASHARP_PROFILE` was added to allow selecting a different, default AWS profile for λ# deployments.
 

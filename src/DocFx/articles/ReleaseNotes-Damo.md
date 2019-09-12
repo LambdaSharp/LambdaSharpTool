@@ -1,4 +1,8 @@
-# λ# - Damo (v0.4.0.4) - 2019-01-11
+---
+description: Release notes for LambdaSharp "Damo" (v0.4)
+keywords: release, notes, damo
+---
+# LambdaSharp "Damo" Release (v0.4.0.4) - 2019-01-11
 
 > Damo was a Pythagorean philosopher said by many to have been the daughter of Pythagoras and Theano. [(Wikipedia)](https://en.wikipedia.org/wiki/Damo_(philosopher))
 
@@ -29,14 +33,14 @@ With the addition of new sections to the module definition, and with an eye towa
 * A package resource is now specified with the `Package` attribute, followed by its variable name.
 * The macro function source was replaced in favor of a macro definition in the `Outputs` section.
 
-### λ# Tool
+### LambdaSharp Tool
 
 * The λ# Tool has been renamed to λ# CLI.
 * Function folders no longer need to be prefixed with the module name. They will still be found for backwards compatibility, but the new recommended naming is to just use the function name as the folder name.
 * With the introduction of `--cli-profile` there was the need to rename `--profile` to `--aws-profile` to avoid ambiguity.
 * The role of the pre-processor has been greatly reduced to make generated CloudFormation templates more portable. As such, support for variable substitutions using the moustache (`{{ }}`) notation has been removed. Conditional inclusion is still supported, but since it is done at the pre-processor level, the benefits are no longer available after the build phase is complete. To select which conditional inclusions to keep, use the new `--selector` option with the `build` command. For convenience, the `deploy` command defaults to using the `--tier` option value as selector, if no selector is provided. This makes running the `deploy` command very similar to what it was in the past.
 
-### λ# Assemblies
+### LambdaSharp Assemblies
 
 * CloudFormation resources are now always resolved to the ARN of the created resource. Previously, created resources were resolved using the `!Ref` operation, which varies by resource type. This change was necessary to homogenize CloudFormation resources with resource references found in module parameters and cross-module references. For convenience, the `AwsConverters` class contains methods for extracting resource names from S3/SQS/DynamoDB/etc. ARNs.
 * The `ALambdaFunction<TRequest>` base class was removed in favor of `ALambdaFunction<TRequest, TResponse>`.
@@ -438,7 +442,7 @@ The Alexa source definition now allows expressions when setting the Alexa Skill 
 
 The λ# runtime is now a top-level CloudFormation stack with supporting modules deployed as nested stacks.
 
-### λ# Registrar
+### LambdaSharp Registrar
 
 The newest runtime module is the `Registrar`, which is responsible for registering modules and functions. Upon registration, function logs are centrally processed to detect warnings and errors.
 

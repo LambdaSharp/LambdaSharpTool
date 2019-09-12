@@ -1,4 +1,4 @@
-# λ# - Favorinus (v0.6.1) - 2019-09-05
+# LambdaSharp - Favorinus (v0.6.1) - 2019-09-05
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)
 
@@ -13,11 +13,11 @@ In addition, there is a [new documentation site](https://lambdasharp.net) that c
 
 The following change may impact modules created with previous releases.
 
-### λ# CLI
+### LambdaSharp CLI
 
 * The `git-sha` is now prefixed with `DIRTY-` if the git checkout contains modified or untracked files.
 
-### λ# Assemblies
+### LambdaSharp Assemblies
 
 The λ# dependencies were updated to `Amazon.Lambda.Core v1.1.0` and `Amazon.Lambda.Serialization.Json v1.5.0`. All projects need their dependencies updated to reflect this change. Otherwise, a compilation error will occur.
 
