@@ -150,6 +150,11 @@ namespace LambdaSharp.Tool.Cli {
             var updateExistingTier = false;
             if(!createNewTier) {
 
+                // if core services state is not requested, inherit current state
+                if(coreServices == CoreServices.Undefined) {
+                    coreServices = settings.CoreServices;
+                }
+
                 // determine if the deployment tier needs to be updated
                 var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.CoreServicesVersion);
                 if(tierToToolVersionComparison == 0) {
@@ -190,7 +195,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
 
-            // check if deployment tier with disabled core services needs to be installed
+            // check if deployment tier with disabled core services needs to be created/updated
             Dictionary<string, string> parameters = null;
             var tierCommand = new CliTierCommand();
             var updated = false;
@@ -200,10 +205,6 @@ namespace LambdaSharp.Tool.Cli {
 
                     // deployment tier doesn't have core services (pre-0.7); so the bootstrap stack needs to be installed first
                     (settings.CoreServices == CoreServices.Undefined)
-
-                    // deployment tier is running with disabled core services; just check if the boostrap stack needs to be updated
-                    || (settings.CoreServices == CoreServices.Bootstrap)
-                    || (settings.CoreServices == CoreServices.Disabled)
 
                     // deployment tier core services need to be disabled
                     || (coreServices == CoreServices.Disabled)
@@ -280,14 +281,16 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
 
-            // check if operating services need to be installed/updated
-            if(settings.CoreServices == CoreServices.Disabled) {
+            // check if core services do not need to be updated further
+            if(coreServices == CoreServices.Disabled) {
                 if(!updated) {
                     Console.WriteLine();
-                    Console.WriteLine("No updates required");
+                    Console.WriteLine("No update required");
                 }
                 return true;
             }
+
+            // check if operating services need to be installed/updated
             if(createNewTier) {
                 Console.WriteLine();
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
@@ -387,6 +390,15 @@ namespace LambdaSharp.Tool.Cli {
                     bootstrapParameters,
                     template
                 );
+                if(coreServices == CoreServices.Undefined) {
+
+                    // determine wanted core services state from template parameters
+                    var coreServicesValue = templateParameters.First(parameter => parameter.ParameterKey == "CoreServices")?.ParameterValue;
+                    if(!Enum.TryParse<CoreServices>(coreServicesValue, ignoreCase: true, out coreServices)) {
+                        LogError($"unable to parse CoreServices value from template parameters (found: '{coreServicesValue}')");
+                        return false;
+                    }
+                }
                 if(HasErrors) {
                     return false;
                 }
