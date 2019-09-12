@@ -78,10 +78,10 @@
     "globalMetadata": {
       "_appFaviconPath": "favicon.ico",
       "_appLogoPath": "images/LambdaSharpLogo.svg",
-      "_appTitle": "λ# - Serverless .NET for AWS",
+      "_appTitle": "LambdaSharp - Serverless .NET for AWS",
       "_disableContribution": true,
       "_enableNewTab": true,
-      "_description": "Building serverless applications with .NET on AWS",
+      "_description": "Build serverless applications with .NET on AWS",
       "_keywords": "lambdasharp, aws, serverless, dotnet, dotnetcore",
       "_baseUrl": "https://lambdasharp.net/"
     },

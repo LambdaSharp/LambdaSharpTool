@@ -1,3 +1,9 @@
+---
+title: LambdaSharp - Serverless .NET for AWS
+noAppTitle: true
+description: Build serverless applications with .NET on AWS
+keywords: welcome, overview, getting started
+---
 ![λ#](~/images/LambdaSharpLogo.png)
 
 # LambdaSharp (v[!include[LAMBDASHARP_VERSION](version.txt)]) - Serverless .NET on AWS

@@ -12,13 +12,13 @@
   <meta charset="utf-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
   <meta name="viewport" content="width=device-width" />
-  <meta name="title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}" />
+  <meta name="title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{^noAppTitle}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}{{/noAppTitle}}" />
   {{#description}}<meta name="description" content="{{description}}" />{{/description}}{{^description}}{{#_description}}<meta name="description" content="{{_description}}" />{{/_description}}{{/description}}
   <meta name="keywords" content="{{#keywords}}{{keywords}}, {{_keywords}}{{/keywords}}{{^keywords}}{{_keywords}}{{/keywords}}" />
   <meta name="generator" content="docfx {{_docfxVersion}}" />
   <meta name="robots" content="index,follow" />
 
-  <meta property="og:title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}" />
+  <meta property="og:title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{^noAppTitle}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}{{/noAppTitle}}" />
   <meta property="og:site_name" content="{{_appTitle}}" />
   <meta property="og:type" content="article" />
   <meta property="og:locale" content="en_US" />
@@ -27,7 +27,7 @@
   {{#description}}<meta property="og:description" content="{{description}}" />{{/description}}{{^description}}{{#_description}}<meta property="og:description" content="{{_description}}" />{{/_description}}{{/description}}
 
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}" />
+  <meta name="twitter:title" content="{{#title}}{{title}}{{/title}}{{^title}}{{>partials/title}}{{/title}}{{^noAppTitle}}{{#_appTitle}} | {{_appTitle}}{{/_appTitle}}{{/noAppTitle}}" />
   <meta name="twitter:site" content="@lambdasharp" />
   {{#description}}<meta name="twitter:description" content="{{description}}" />{{/description}}{{^description}}{{#_description}}<meta name="twitter:description" content="{{_description}}" />{{/_description}}{{/description}}
   <meta name="twitter:image" content="{{_baseUrl}}images/LambdaSharpBadge.png" />
