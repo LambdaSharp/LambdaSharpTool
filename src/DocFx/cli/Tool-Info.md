@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - Info Command
+description: Show information about LambdaSharp deployment tier
+keywords: cli, show, info, information, deployment, tier
+---
 # Show Information
 
 The `info` command is used to show information about the current CLI profile, λ# environment, and installed command line tools.

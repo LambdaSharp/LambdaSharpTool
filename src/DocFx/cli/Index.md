@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI Commands
+description: List of commands in LambdaSharp CLI
+keywords: cli, command, overview
+---
 ![λ#](~/images/CLI.png)
 
 # LambdaSharp Command Line

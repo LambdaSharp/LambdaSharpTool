@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - Init Command
+description: Create or update a LambdaSharp deployment tier
+keywords: cli, create, update, deployment, tier
+---
 # Initialize Deployment Tier
 
 The `init` command is used to both create a new deployment tier and update an existing one. The resources required for a new deployment tier will be created unless provided.

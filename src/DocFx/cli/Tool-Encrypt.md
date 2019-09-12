@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - Encrypt Command
+description: Encrypt a plaintext value using a KMS key
+keywords: cli, encrypt, kms, security
+---
 # Encrypt Text
 
 The `encrypt` command is used to encrypt sensitive information using a managed encryption key. The encryption key is selected by using the `--key` option.

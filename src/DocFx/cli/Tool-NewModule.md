@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI New Command - Create a Module
+description: Create a new LambdaSharp module
+keywords: cli, new, create, module
+---
 # Create New Module File
 
 The `new module` command is used to create a new module definition.

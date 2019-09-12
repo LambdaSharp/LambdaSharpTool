@@ -1,4 +1,9 @@
-# Show/Update λ# Core Services configuration
+---
+title: LambdaSharp CLI Tier Command - Show Core Services Status
+description: Show and update the LambdaSharp core services state for deployed modules
+keywords: cli, core services, status, update, enable, disable
+---
+# Show/Update λ# Core Services Status for Deploy Modules
 
 The `tier coreservices` command is used to show and updates the λ# Core Services configuration for deployed modules in a deployment tier.
 

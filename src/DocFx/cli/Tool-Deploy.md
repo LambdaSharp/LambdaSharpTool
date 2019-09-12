@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - Deploy Command
+description: Deploy a published LambdaSharp module to a deployment tier
+keywords: cli, build, publish, deploy, deployment, tier, module
+---
 # Deploy Module
 
 The `deploy` command is used to deploy a published module.

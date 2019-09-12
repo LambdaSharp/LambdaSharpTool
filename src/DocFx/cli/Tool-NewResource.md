@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI New Command - Add CloudFormation Resource to Module
+description: Add a CloudFormation resource to a LambdaSharp module
+keywords: cli, new, create, cloudformation, resource, module
+---
 # Add New Resource to Module File
 
 The `new resource` command is used to add a resource to an existing module. The command creates a `Resource` item and generates a skeleton definition using the CloudFormation specification. Required properties are annotated with a corresponding comment. The value of the attributes are the expected type (e.g. `String`, `Json`, etc.).

@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI New Command - Add Lambda Function to Module
+description: Add a Lambda function to a LambdaSharp module
+keywords: cli, new, create, lambda, module
+---
 # Add New Function to Module File
 
 The `new function` command is used to add a function to an existing module. The command can either create a C# or a Javascript function using the `--language` option.
