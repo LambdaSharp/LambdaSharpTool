@@ -3,6 +3,7 @@ title: LambdaSharp::S3::Unzip - LambdaSharp.S3.IO Module
 description: Documentation for LambdaSharp::S3::Unzip resource type
 keywords: module, s3, io, documentation, resource, type, properties, attributes, unzip, package
 ---
+
 # LambdaSharp::S3::Unzip
 
 The `LambdaSharp::S3::Unzip` type creates a resource that unzips a [`Package` item](~/syntax/Module-Package.md) and copies its contents to an S3 bucket.

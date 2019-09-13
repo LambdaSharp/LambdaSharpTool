@@ -3,6 +3,7 @@ title: LambdaSharp::S3::EmptyBucket - LambdaSharp.S3.IO Module
 description: Documentation for LambdaSharp::S3::EmptyBucket resource type
 keywords: module, s3, io, documentation, resource, type, properties, attributes, empty, bucket
 ---
+
 # LambdaSharp::S3::EmptyBucket
 
 The `LambdaSharp::S3::EmptyBucket` type creates a resource that empties the attached S3 bucket when the resource is deleted.
