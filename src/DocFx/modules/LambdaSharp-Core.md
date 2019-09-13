@@ -1,3 +1,8 @@
+---
+title: LambdaSharp.Core - LambdaSharp Module
+description: Documentation for LambdaSharp.Core module
+keywords: module, core, documentation, overview
+---
 # Module: LambdaSharp.Core
 _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 

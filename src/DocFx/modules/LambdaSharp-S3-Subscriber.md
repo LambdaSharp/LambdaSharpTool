@@ -1,3 +1,8 @@
+---
+title: LambdaSharp.S3.Subscriber - LambdaSharp Module
+description: Documentation for LambdaSharp.S3.Subscriber module
+keywords: module, s3, bucket, subscription, notification, documentation, overview
+---
 # Module: LambdaSharp.S3.Subscriber
 _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 

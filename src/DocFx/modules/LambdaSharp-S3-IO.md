@@ -1,3 +1,8 @@
+---
+title: LambdaSharp.S3.IO - LambdaSharp Module
+description: Documentation for LambdaSharp.S3.IO module
+keywords: module, s3, io, documentation, overview
+---
 # Module: LambdaSharp.S3.IO
 _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 

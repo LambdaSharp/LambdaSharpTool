@@ -1,3 +1,8 @@
+---
+title: LambdaSharp::S3::WriteJson - LambdaSharp.S3.IO Module
+description: Documentation for LambdaSharp::S3::WriteJson resource type
+keywords: module, s3, io, documentation, resource, type, properties, attributes, write, json
+---
 # LambdaSharp::S3::WriteJson
 
 The `LambdaSharp::S3::WriteJson` type creates a resource that writes a JSON file to an S3 bucket.
