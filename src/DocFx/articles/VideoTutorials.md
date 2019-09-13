@@ -1,3 +1,9 @@
+---
+title: LambdaSharp Video Tutorials
+description: List of video tutorials to get started with LambdaSharp
+keywords: video, tutorial, getting started, overview
+---
+
 # Video Tutorials
 
 ## Getting Started

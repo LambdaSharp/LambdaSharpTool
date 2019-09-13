@@ -1,3 +1,9 @@
+---
+title: LambdaSharp "Favorinus" Release (v0.6)
+description: Release notes for LambdaSharp "Favorinus" (v0.6)
+keywords: release, notes, favorinus
+---
+
 # LambdaSharp - Favorinus (v0.6.1) - 2019-09-05
 
 > Favorinus had extensive knowledge, combined with great oratorical powers, that raised him to eminence both in Athens and in Rome. He lived on close terms with Plutarch, with Herodes Atticus, to whom he bequeathed his library in Rome, with Demetrius the Cynic, Cornelius Fronto, Aulus Gellius, and with the emperor Hadrian. [(Wikipedia)](https://en.wikipedia.org/wiki/Favorinus)

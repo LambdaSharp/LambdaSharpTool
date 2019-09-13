@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp "Brontinus" Release (v0.2)
 description: Release notes for LambdaSharp "Brontinus" (v0.2)
 keywords: release, notes, brontinus
 ---

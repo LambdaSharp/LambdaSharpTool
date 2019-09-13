@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp "Damo" Release (v0.4)
 description: Release notes for LambdaSharp "Damo" (v0.4)
 keywords: release, notes, damo
 ---

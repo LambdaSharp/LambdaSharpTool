@@ -1,3 +1,9 @@
+---
+title: LambdaSharp Samples
+description: List of LambdaSharp samples
+keywords: tutorial, sample, example, getting started, overview
+---
+
 # LambdaSharp Samples
 
 ## REST API using API Gateway V1

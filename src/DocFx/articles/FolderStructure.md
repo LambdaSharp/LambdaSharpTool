@@ -1,3 +1,9 @@
+---
+title: LambdaSharp Folder Structure
+description: Overview of typical LambdaSharp folder structure
+keywords: overview, folder, files, structure, layout
+---
+
 # Folder Structure
 
 LambdaSharp modules must follow a consistent folder organization. The root folder must contain the `Module.yml` file. Each function listed in the `Module.yml` must have a corresponding folder the naming convention `{FunctionName}`. The .NET Core projects file (`.csproj`) for each function must be contained within the sub-folder and be named with the same naming convention. (e.g. `{FunctionName}.csproj`).

@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp "Eurytus" Release (v0.5)
 description: Release notes for LambdaSharp "Eurytus" (v0.5)
 keywords: release, notes, eurytus
 ---

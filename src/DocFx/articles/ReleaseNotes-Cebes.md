@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp "Cebes" Release (v0.3)
 description: Release notes for LambdaSharp "Cebes" (v0.3)
 keywords: release, notes, cebes
 ---

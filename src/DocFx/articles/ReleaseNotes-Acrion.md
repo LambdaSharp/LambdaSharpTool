@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp "Acrion" Release (v0.1)
 description: Release notes for LambdaSharp "Acrion" (v0.1)
 keywords: release, notes, acrion
 ---

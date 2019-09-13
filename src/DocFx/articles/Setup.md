@@ -1,3 +1,9 @@
+---
+title: Setup LambdaSharp
+description: Getting started with LambdaSharp
+keywords: video, tutorial, getting started, overview, setup, install
+---
+
 ![λ#](~/images/LambdaSharpLogo.png)
 
 # Setup LambdaSharp

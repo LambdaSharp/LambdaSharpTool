@@ -1,3 +1,9 @@
+---
+title: LambdaSharp Glossary
+description: Glossary of LambdaSharp terminology
+keywords: glossary, definition, terminology, terms, keywords
+---
+
 # Glossary
 
 <dl>

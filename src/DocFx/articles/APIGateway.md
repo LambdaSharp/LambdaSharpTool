@@ -1,8 +1,13 @@
+---
+title: API Gateway for .NET - LambdaSharp
+description: Documentation on configuring API Gateway with LambdaSharp
+keywords: overview, api, gateway, aws, amazon, configuration, validation, security
+---
 # API Gateway for .NET
 
 ## Overview
 
-API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the LambdaSharp CLI.
+API Gateway enables Lambda functions to act as REST API endpoints. API Gateway provides a publicly accessible end-point that can be used by other services to interact with Lambda functions. In addition, API Gateway can be configured to automatically deny requests with missing parameters or incorrect payloads before they reach the Lambda function. This capability avoids unnecessary Lambda compute time and comes at no additional cost. Furthermore, the complexity of coordinating the API Gateway endpoint validation with the implementation is fully automated by the LambdaSharp CLI.
 
 ## Reading the Request URI
 
