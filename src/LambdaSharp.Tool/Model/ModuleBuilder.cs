@@ -712,7 +712,7 @@ namespace LambdaSharp.Tool.Model {
             var stack = new Humidifier.CloudFormation.Stack {
                 NotificationARNs = FnRef("AWS::NotificationARNs"),
                 Parameters = moduleParameters,
-                Tags = new List<Humidifier.Tag> {
+                Tags = {
                     new Humidifier.Tag {
                         Key = "LambdaSharp:Module",
                         Value = moduleInfo.FullName
@@ -1119,7 +1119,7 @@ namespace LambdaSharp.Tool.Model {
                         PolicyName = FnSub($"${{AWS::StackName}}ModuleRole{name}"),
                         PolicyDocument = new Humidifier.PolicyDocument {
                             Version = "2012-10-17",
-                            Statement = new List<Humidifier.Statement> {
+                            Statement = {
                                 new Humidifier.Statement {
                                     Sid = name.ToIdentifier(),
                                     Effect = "Allow",

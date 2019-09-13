@@ -84,6 +84,13 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 return false;
             }
 
+            // verify if we we need to remove the old CloudFormation notification ARNs that were created by LambdaSharp config before v0.7
+            List<string> notificationARNs = null;
+            if(mostRecentStackEventId != null) {
+                var deployedModule = await Settings.CfnClient.GetStackAsync(stackName, LogError);
+                notificationARNs = deployedModule.Stack.NotificationARNs.Where(arn => !arn.Contains(":LambdaSharpTool-")).ToList();
+            }
+
             // create change-set
             var success = false;
             var changeSetName = $"{moduleLocation.ModuleInfo.FullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
@@ -113,7 +120,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 },
                 StackName = stackName,
                 TemplateURL = moduleLocation.ModuleTemplateUrl,
-                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
+                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName),
+                NotificationARNs = notificationARNs
             });
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);
