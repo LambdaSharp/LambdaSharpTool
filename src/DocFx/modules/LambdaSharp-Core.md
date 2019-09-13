@@ -8,7 +8,7 @@ _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 
 ## Overview
 
-The `LambdaSharp.Core` module defines the core resources and resource types for deploying λ# modules. This module is included automatically by all λ# modules.
+The `LambdaSharp.Core` module defines the core resources and resource types for deploying LambdaSharp modules. This module is included automatically by all LambdaSharp modules.
 
 ## Resource Types
 1. [LambdaSharp::Registration::Module](LambdaSharp-Registration-Module.md)
@@ -64,7 +64,7 @@ The <code>LoggingStreamShardCount</code> parameter sets the number of Kinesis sh
 
 ### Rollbar Settings
 
-The following settings are required to use the [Rollbar](https://rollbar.com/) integration for the λ# Core module.
+The following settings are required to use the [Rollbar](https://rollbar.com/) integration for the LambdaSharp Core module.
 
 <dl>
 

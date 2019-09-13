@@ -5,7 +5,7 @@ keywords: amazon, api gateway, event source, declaration, lambda, syntax, yaml, 
 ---
 # API Gateway Source
 
-The λ# CLI uses the [API Gateway Lambda Proxy Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy) to invoke Lambda functions from API Gateway. See [API Gateway sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ApiSample/) for an example of how to use the API Gateway source.
+The LambdaSharp CLI uses the [API Gateway Lambda Proxy Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy) to invoke Lambda functions from API Gateway. See [API Gateway sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ApiSample/) for an example of how to use the API Gateway source.
 
 ## Syntax
 

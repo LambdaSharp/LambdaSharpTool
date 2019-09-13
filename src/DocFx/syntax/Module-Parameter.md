@@ -5,7 +5,7 @@ keywords: parameter, declaration, syntax, yaml, cloudformation
 ---
 # Parameter
 
-The `Parameter` definition specifies a value that is supplied at module deployment time either by the λ# CLI or a parent module. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
+The `Parameter` definition specifies a value that is supplied at module deployment time either by the LambdaSharp CLI or a parent module. Module parameters can be modified subsequently by updating the CloudFormation stack in the AWS console.
 
 ## Syntax
 
@@ -43,7 +43,7 @@ EncryptionContext:
 <dt><code>Allow</code></dt>
 <dd>
 
-The <code>Allow</code> attribute can be either a comma-separated, single string value, or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="https://github.com/LambdaSharp/LambdaSharpTool/tree/master/src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
+The <code>Allow</code> attribute can be either a comma-separated, single string value, or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a LambdaSharp shorthand (see <a href="https://github.com/LambdaSharp/LambdaSharpTool/tree/master/src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">LambdaSharp Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after LambdaSharp shorthand resolution, are removed.
 
 <i>Required</i>: No
 
@@ -93,7 +93,7 @@ The <code>Default</code> attribute specifies a value to use when no value is pro
 <dt><code>DefaultAttribute</code></dt>
 <dd>
 
-The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the λ# CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
+The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the LambdaSharp CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
 
 <i>Required</i>: No
 
@@ -241,7 +241,7 @@ The <code>Type</code> attribute specifies the data type for the parameter. When 
 
 <i>Type</i>: String
 
-The following parameter types are supported by CloudFormation. When using other AWS resource types, λ# automatically declares them as <code>String</code> type.
+The following parameter types are supported by CloudFormation. When using other AWS resource types, LambdaSharp automatically declares them as <code>String</code> type.
 
 <dl>
 

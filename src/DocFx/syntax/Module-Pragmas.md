@@ -5,11 +5,11 @@ keywords: module, pragma, section, configuration, syntax, yaml, cloudformation
 ---
 # Module Pragmas
 
-Pragmas are used to change the default processing behavior of the λ# CLI. They are generally only required for very specific situations.
+Pragmas are used to change the default processing behavior of the LambdaSharp CLI. They are generally only required for very specific situations.
 
 |Pragma                                 |Definition                           |
 |---------------------------------------|-------------------------------------|
-|`no-lambdasharp-dependencies`          |Don't reference λ# Core resources (DLQ, Logging Stream, etc.)|
+|`no-lambdasharp-dependencies`          |Don't reference LambdaSharp Core resources (DLQ, Logging Stream, etc.)|
 |`no-module-registration`               |Don't create a module registration|
 |`Overrides`                            |Override default values for built-in declarations|
 |`sam-transform`                        |Add SAM template transform to CloudFormation output|

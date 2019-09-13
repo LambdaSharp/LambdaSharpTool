@@ -11,7 +11,7 @@ The following standard LambdaSharp modules are available to all modules.
 
 ## LambdaSharp.Core
 
-This the [LambdaSharp.Core](LambdaSharp-Core.md) module for a λ# deployment tier. It is automatically included with every module.
+This the [LambdaSharp.Core](LambdaSharp-Core.md) module for a LambdaSharp deployment tier. It is automatically included with every module.
 
 ## LambdaSharp.S3.IO
 

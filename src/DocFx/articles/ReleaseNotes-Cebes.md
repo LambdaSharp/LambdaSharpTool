@@ -12,7 +12,7 @@ The following change may impact modules you have created using previous releases
 
 ### Bootstrap
 
-The bootstrap procedure has been updated to include a new custom resource to handle S3 bucket subscriptions (see below). The new bootstrap procedure must be run to update the λ# environment.
+The bootstrap procedure has been updated to include a new custom resource to handle S3 bucket subscriptions (see below). The new bootstrap procedure must be run to update the LambdaSharp environment.
 
 ### Default Module Filename
 
@@ -26,17 +26,17 @@ lash deploy Deploy.yml
 
 ### S3 Bucket Notifications as Lambda Source
 
-This release introduces a custom resource to handle subscribing to S3 bucket notifications. In previous releases, it was only possible to subscribe to S3 notifications for S3 buckets that were created in the same λ# module. With the addition of the `S3Subscriber` custom resource, it now possible to subscribe to both new and existing S3 buckets. However, this change is not backwards compatible with how previous implementation handled S3 bucket subscriptions and requires the old S3 bucket to be deleted.
+This release introduces a custom resource to handle subscribing to S3 bucket notifications. In previous releases, it was only possible to subscribe to S3 notifications for S3 buckets that were created in the same LambdaSharp module. With the addition of the `S3Subscriber` custom resource, it now possible to subscribe to both new and existing S3 buckets. However, this change is not backwards compatible with how previous implementation handled S3 bucket subscriptions and requires the old S3 bucket to be deleted.
 
 ### LambdaSharp Environment Variable
 
-The name of the deployment tier environment variable was changed to `LAMBDASHARP_TIER`. The `LAMBDASHARP_PROFILE` was added to allow selecting a different, default AWS profile for λ# deployments.
+The name of the deployment tier environment variable was changed to `LAMBDASHARP_TIER`. The `LAMBDASHARP_PROFILE` was added to allow selecting a different, default AWS profile for LambdaSharp deployments.
 
-## New λ# CLI Features
+## New LambdaSharp CLI Features
 
 ### Updated `New` Command
 
-The λ# CLI has a new command to create a new module file. This command creates a `Module.yml` file in the current directory.
+The LambdaSharp CLI has a new command to create a new module file. This command creates a `Module.yml` file in the current directory.
 
 To invoke the new command:
 ```bash
@@ -52,7 +52,7 @@ Additionally, the `new function` command now updates the `Module.yml` file by ad
 
 ### Artifact Output Directory
 
-The λ# CLI now generates all artifacts in a dedicated output directory. By default, the output directory is called `bin` and co-located with the input `Module.yml` file.
+The LambdaSharp CLI now generates all artifacts in a dedicated output directory. By default, the output directory is called `bin` and co-located with the input `Module.yml` file.
 
 The location of the output directory can be overwritten with the `--output` option.
 
@@ -60,9 +60,9 @@ The location of the output directory can be overwritten with the `--output` opti
 lash deploy --output MyOutputFolder
 ```
 
-### Validate λ# Assembly References
+### Validate LambdaSharp Assembly References
 
-The λ# CLI now checks the version of all λ# assembly references in the function project files. If an assembly version mismatch is found, an error is emitted and deployment operation is cancelled. This behavior can be suppressed with the `--skip-assembly-validation` option.
+The LambdaSharp CLI now checks the version of all LambdaSharp assembly references in the function project files. If an assembly version mismatch is found, an error is emitted and deployment operation is cancelled. This behavior can be suppressed with the `--skip-assembly-validation` option.
 
 ```bash
 lash deploy --skip-assembly-validation
@@ -74,7 +74,7 @@ To validate assembly references without deploying, use the `--dryrun` option.
 lash deploy --dryrun
 ```
 
-## New λ# Module Features
+## New LambdaSharp Module Features
 
 ### Short-Form CloudFormation Intrinsic Functions
 
@@ -215,7 +215,7 @@ public override Task InitializeAsync(LambdaConfig config) {
 
 This release includes experimental support for creating [CloudFormation Macros](https://aws.amazon.com/blogs/aws/cloudformation-macros/). See [CloudFormation Macro](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/MacroSample/) sample.
 
-Note that while macros can be defined by a λ# module, they cannot be invoked by a λ# module, because they require CloudFormation stack updates to use change sets, which is not yet supported.
+Note that while macros can be defined by a LambdaSharp module, they cannot be invoked by a LambdaSharp module, because they require CloudFormation stack updates to use change sets, which is not yet supported.
 
 
 The following function definition creates a new macro called `{{Tier}}-MyMacro` that can be invoked by other CloudFormation change sets.

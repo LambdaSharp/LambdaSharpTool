@@ -4,9 +4,9 @@
 
 ## What's New
 
-This release focuses on API Gateway, both for REST APIs and WebSockets. After building the Lambda functions, λ# analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, λ# will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, λ# allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
+This release focuses on API Gateway, both for REST APIs and WebSockets. After building the Lambda functions, LambdaSharp analyzes the compiled assemblies to enhance the API Gateway rout definitions in CloudFormation. For example, LambdaSharp will extract the JSON schema from the target methods to create request validation rules for API Gateway. This enables API Gateway to block requests before they reach the Lambda function. In addition, LambdaSharp allows checks if the target method returns a response. If not, API Gateway will be configured to invoke the Lambda function asynchronously, providing much faster response times.
 
-In addition, there is a [new documentation site](https://lambdasharp.net) that covers all aspects of λ#, including the base classes, modules, and syntax.
+In addition, there is a [new documentation site](https://lambdasharp.net) that covers all aspects of LambdaSharp, including the base classes, modules, and syntax.
 
 
 ## BREAKING CHANGES
@@ -19,7 +19,7 @@ The following change may impact modules created with previous releases.
 
 ### LambdaSharp Assemblies
 
-The λ# dependencies were updated to `Amazon.Lambda.Core v1.1.0` and `Amazon.Lambda.Serialization.Json v1.5.0`. All projects need their dependencies updated to reflect this change. Otherwise, a compilation error will occur.
+The LambdaSharp dependencies were updated to `Amazon.Lambda.Core v1.1.0` and `Amazon.Lambda.Serialization.Json v1.5.0`. All projects need their dependencies updated to reflect this change. Otherwise, a compilation error will occur.
 
 The `LambdaSharp.dll` assembly was refactored for consistency. Classes are now organized into the following namespaces:
 * `LambdaSharp`: Common base classes, such as [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) and [LambdaConfig](xref:LambdaSharp.LambdaConfig).
@@ -40,11 +40,11 @@ Other functional changes include:
 * Methods starting with `HandleXYZ` were renamed to `ProcessXYZ` for consistency.
 
 
-## New λ# Module Features
+## New LambdaSharp Module Features
 
 ### API Gateway .NET
 
-The `Api` event-source now supports specifying a target invocation method using the `Invoke` attribute. At compile time, λ# CLI verifies that the target method exists in the compiled assembly. In addition, λ# generates the request/response JSON schema models for the method and uses them to configure API Gateway. If the method has either `void` or `Task` as return type, λ# will configure the lambda function as an asynchronous invocation in API Gateway. Note, for this behavior to take effect, the Lambda function must derive from `ALambdaApiGatewayFunction`.
+The `Api` event-source now supports specifying a target invocation method using the `Invoke` attribute. At compile time, LambdaSharp CLI verifies that the target method exists in the compiled assembly. In addition, LambdaSharp generates the request/response JSON schema models for the method and uses them to configure API Gateway. If the method has either `void` or `Task` as return type, LambdaSharp will configure the lambda function as an asynchronous invocation in API Gateway. Note, for this behavior to take effect, the Lambda function must derive from `ALambdaApiGatewayFunction`.
 
 ```yaml
 - Function: MyFunction
@@ -77,7 +77,7 @@ public AddItemResponse AddItem(AddItemRequest request) {
 
 ### WebSockets .NET
 
-A new `WebSocket` event-source is now supported. Similar to the `Api` event-source, `WebSocket` supports specifying a target invocation method using the `Invoke` attribute. At compile time, λ# CLI verifies that the target method exists in the compiled assembly. In addition, λ# generates the request/response JSON schema models for the method and uses them to configure API Gateway v2. If the method has either `void` or `Task` as return type, λ# will configure the lambda function as an asynchronous invocation in API Gateway v2. Otherwise, it will be configured for bidirectional communication. Note, for this behavior to take effect, the Lambda function must derive from `ALambdaApiGatewayFunction`.
+A new `WebSocket` event-source is now supported. Similar to the `Api` event-source, `WebSocket` supports specifying a target invocation method using the `Invoke` attribute. At compile time, LambdaSharp CLI verifies that the target method exists in the compiled assembly. In addition, LambdaSharp generates the request/response JSON schema models for the method and uses them to configure API Gateway v2. If the method has either `void` or `Task` as return type, LambdaSharp will configure the lambda function as an asynchronous invocation in API Gateway v2. Otherwise, it will be configured for bidirectional communication. Note, for this behavior to take effect, the Lambda function must derive from `ALambdaApiGatewayFunction`.
 
 ```yaml
 - Function: MessageFunction
@@ -110,7 +110,7 @@ public Task SendMessageAsync(Message request) {
 The API Gateway CloudWatch log is now created--and therefore, deleted--by CloudFormation.
 
 
-## New λ# CLI Features
+## New LambdaSharp CLI Features
 
 ### Build Command
 
@@ -176,7 +176,7 @@ Done (finished: 4/5/2019 3:36:10 PM; duration: 00:00:01.4137682)
 The `init` command was improved to detect previous versions of a deployment tier and prompt for perform an upgrade operation, similar to the `config` command.
 
 
-## New λ# Assembly Features
+## New LambdaSharp Assembly Features
 
 This release adds [`ALambdaQueueFunction<T>`](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1) as base class for processing messages from SQS queues.
 
@@ -204,9 +204,9 @@ The [`ALambdaApiGatewayFunction`](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayF
 ### (v0.6.0.2) - 2019-06-26
 
 #### New Features
-* Modules are now compiled with a new `LambdaSharpCoreServices` parameter that controls if a module binds to λ# Core Services.
-* Added `lash tier coreservices` command to enable/disable the use of λ# Core Services in deployed modules.
-* Added standard module output parameter `LambdaSharpTool` that captures the version of the λ# CLI used to build the module.
+* Modules are now compiled with a new `LambdaSharpCoreServices` parameter that controls if a module binds to LambdaSharp Core Services.
+* Added `lash tier coreservices` command to enable/disable the use of LambdaSharp Core Services in deployed modules.
+* Added standard module output parameter `LambdaSharpTool` that captures the version of the LambdaSharp CLI used to build the module.
 
 #### Fixes
 * Fixed an issue where exceptions thrown in pending tasks submitted using `ALambdaFunction.RunTask()` did not cause the Lambda function to fail.

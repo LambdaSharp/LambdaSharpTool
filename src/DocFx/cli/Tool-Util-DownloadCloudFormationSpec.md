@@ -5,7 +5,7 @@ keywords: cli, cloudformation, download
 ---
 # Download CloudFormation Types Specification
 
-The `util download-cloudformation-spec` is used by λ# contributors to download the latest CloudFormation specification. The downloaded file is automatically processed, compressed, and saved in the `$LAMBDASHARP/src/LambdaSharp.Tool/Resources` folder.
+The `util download-cloudformation-spec` is used by LambdaSharp contributors to download the latest CloudFormation specification. The downloaded file is automatically processed, compressed, and saved in the `$LAMBDASHARP/src/LambdaSharp.Tool/Resources` folder.
 
 **NOTE:** this command is does not work unless the `LAMBDASHARP` environment variable is defined.
 

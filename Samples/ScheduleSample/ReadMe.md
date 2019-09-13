@@ -2,7 +2,7 @@
 
 # LambdaSharp Scheduled Event Source
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
@@ -51,7 +51,7 @@ public class Function : ALambdaScheduleFunction {
 
 ## Reference
 
-The λ# CLI creates a CloudWatch Events rule for each schedule expression. The `Name` value, when provided, is injected using an input transformer. This allows the receiving code to differentiate invocations across different events.
+The LambdaSharp CLI creates a CloudWatch Events rule for each schedule expression. The `Name` value, when provided, is injected using an input transformer. This allows the receiving code to differentiate invocations across different events.
 
 ```csharp
 public class LambdaScheduleEvent {

@@ -5,7 +5,7 @@ keywords: module, global, variable, reference, syntax, yaml, cloudformation
 ---
 # LambdaSharp Module - Global Variables
 
-λ# modules have variables and resources defined implicitly as part of their definition.
+LambdaSharp modules have variables and resources defined implicitly as part of their definition.
 
 ## Module Variables
 
@@ -47,7 +47,7 @@ The following resources and variables are defined when a module contains a funct
 
 ## Module Deployment Variables
 
-The following variables are set by λ# CLI when deploying a module.
+The following variables are set by LambdaSharp CLI when deploying a module.
 
 |Variable                      |Type                           |Definition                                    |
 |------------------------------|-------------------------------|----------------------------------------------|

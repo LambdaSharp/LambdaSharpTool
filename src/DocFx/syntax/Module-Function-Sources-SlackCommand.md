@@ -5,7 +5,7 @@ keywords: slack, event source, declaration, lambda, syntax, yaml, cloudformation
 ---
 # Slack Command Source
 
-For Slack commands, the λ# CLI deploys an asynchronous API Gateway endpoint that avoids timeout errors due to slow Lambda functions. See [Slack Command sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/SlackCommandSample/) for an example of how to use the Slack Command source.
+For Slack commands, the LambdaSharp CLI deploys an asynchronous API Gateway endpoint that avoids timeout errors due to slow Lambda functions. See [Slack Command sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/SlackCommandSample/) for an example of how to use the Slack Command source.
 
 ## Syntax
 

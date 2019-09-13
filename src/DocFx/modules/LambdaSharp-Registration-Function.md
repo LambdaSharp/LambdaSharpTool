@@ -9,7 +9,7 @@ The `LambdaSharp::Registration::Function` type creates a new or updates an exist
 
 ## Using
 
-> **NOTE:** the λ# CLI automatically adds the required `Using` statement to all modules.
+> **NOTE:** the LambdaSharp CLI automatically adds the required `Using` statement to all modules.
 
 ```yaml
 Using:

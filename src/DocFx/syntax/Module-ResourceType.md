@@ -28,7 +28,7 @@ Attributes:
 <dt><code>Attributes</code></dt>
 <dd>
 
-The <code>Attributes</code> section specifies the attributes returned by the resource type. The λ# CLI uses this information to validate access to attributes on a resource of this resource type.
+The <code>Attributes</code> section specifies the attributes returned by the resource type. The LambdaSharp CLI uses this information to validate access to attributes on a resource of this resource type.
 
 <i>Required</i>: Yes
 
@@ -68,7 +68,7 @@ The <code>ResourceType</code> attribute specifies the name of the resource type.
 <dt><code>Properties</code></dt>
 <dd>
 
-The <code>Properties</code> section specifies the properties required by the resource type. The λ# CLI uses this information to validate the initialization of a resource using this resource type.
+The <code>Properties</code> section specifies the properties required by the resource type. The LambdaSharp CLI uses this information to validate the initialization of a resource using this resource type.
 
 <i>Required</i>: Yes
 

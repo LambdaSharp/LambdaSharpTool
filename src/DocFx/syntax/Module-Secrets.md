@@ -5,7 +5,7 @@ keywords: module, secret, section, kms, configuration, syntax, yaml, cloudformat
 ---
 # Secrets
 
-The `Secrets` section, in the [λ# Module](Index.md), lists which KMS keys can be used to decrypt parameter values. The module IAM role will get the `mks:Decrypt` permission to use these keys.
+The `Secrets` section, in the [LambdaSharp Module](Index.md), lists which KMS keys can be used to decrypt parameter values. The module IAM role will get the `mks:Decrypt` permission to use these keys.
 
 **NOTE:** it is strongly recommended to use the `Secrets` module parameter instead of the `Secrets` module section. The latter hard-codes the KMS keys that can be used by the module, which may be convenient for prototyping, but reduces the flexibility for deploying the module in different environments.
 

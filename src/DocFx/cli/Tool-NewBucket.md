@@ -5,7 +5,7 @@ keywords: cli, cloudformation, public, sharing, s3, bucket, module
 ---
 # Create New Public S3 Bucket
 
-The `new bucket` command is used to create a new public S3 bucket for sharing λ# modules. The bucket is configured to be publicly accessible, but requires the [requester to pay](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) for all data transfer. This ensures that the owner of the S3 bucket only pays for the storage of shared λ# modules.
+The `new bucket` command is used to create a new public S3 bucket for sharing LambdaSharp modules. The bucket is configured to be publicly accessible, but requires the [requester to pay](https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html) for all data transfer. This ensures that the owner of the S3 bucket only pays for the storage of shared LambdaSharp modules.
 
 ## Arguments
 
@@ -39,7 +39,7 @@ lash new bucket my-lambdasharp-bucket
 
 ## Examples
 
-### Create a new public S3 bucket for sharing λ# modules
+### Create a new public S3 bucket for sharing LambdaSharp modules
 
 __Using PowerShell/Bash:__
 ```bash
