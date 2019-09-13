@@ -1,6 +1,11 @@
+---
+title: Event Sources Section - Function
+description: LambdaSharp AWS Lambda event sources
+keywords: lambda, event source, section, syntax, yaml, cloudformation
+---
 # Function Sources Section
 
-The `Sources` section lists the event source for a [LambdaSharp function](Module-Function.md). The type of payload received by the invocation varies by source type. See the [λ# Samples](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/) for how the handle the various sources.
+The `Sources` section lists the event source for a [LambdaSharp function](Module-Function.md). The type of payload received by the invocation varies by source type. See the [LambdaSharp Samples](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/) for how the handle the various sources.
 
 __Definitions__
 * [Alexa Source](Module-Function-Sources-Alexa.md)

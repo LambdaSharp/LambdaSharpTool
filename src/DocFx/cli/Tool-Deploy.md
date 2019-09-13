@@ -1,8 +1,13 @@
+---
+title: LambdaSharp CLI - Deploy Command
+description: Deploy a published LambdaSharp module to a deployment tier
+keywords: cli, build, publish, deploy, deployment, tier, module
+---
 # Deploy Module
 
 The `deploy` command is used to deploy a published module.
 
-CloudFormation stacks created by the λ# CLI have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are replaced.
+CloudFormation stacks created by the LambdaSharp CLI have termination protection enabled when deployed with the `--protect` option. In addition, subsequent updates cannot delete or replace data resources unless the `--allow-data-loss` option is passed in. This behavior is to reduce the risk of accidental data loss when CloudFormation resources are replaced.
 
 ## Arguments
 

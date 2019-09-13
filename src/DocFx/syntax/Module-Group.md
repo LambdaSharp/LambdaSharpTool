@@ -1,3 +1,8 @@
+---
+title: Group Declaration - Module
+description: LambdaSharp YAML syntax for module item groups
+keywords: module, group, declaration, syntax, yaml, cloudformation
+---
 # Group
 
 The `Group` definition creates a group of nested items. Groups are useful for organizing related definitions together.

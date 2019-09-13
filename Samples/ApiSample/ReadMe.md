@@ -2,11 +2,11 @@
 
 # LambdaSharp API Gateway Source
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
-An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The λ# CLI creates all required resources for each function using the `AWS_PROXY` integration.
+An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. The LambdaSharp CLI creates all required resources for each function using the `AWS_PROXY` integration.
 
 ```yaml
 Module: Sample.ApiGateway

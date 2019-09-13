@@ -1,6 +1,11 @@
+---
+title: Nested Module Declaration - Module
+description: LambdaSharp YAML syntax for nested modules
+keywords: nested, declaration, module, syntax, yaml, cloudformation
+---
 # Nested Module
 
-The `Module` definition specifies the creation of a nested module. Nested modules inherit the same λ# configuration as their parent module, except for the `Secrets` parameter, which must be passed on explicitly.
+The `Module` definition specifies the creation of a nested module. Nested modules inherit the same LambdaSharp configuration as their parent module, except for the `Secrets` parameter, which must be passed on explicitly.
 
 Nested module should **never** be updated directly. Instead, all updates must be triggered by their parent module. Updating a nested module directly can cause it to be in an unexpected state that will prevent the parent module from upating in the future.
 
@@ -43,7 +48,7 @@ The <code>Description</code> attribute specifies the nested module description.
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> attribute specifies the full name of the required module with an optional version and origin. The format must be <code>Namespace.Name[:Version][@Origin]</code>. Parts in brackets (<code>[ ]</code>) are optional. Without a version specifier, λ# uses the latest version it can find that is compatible with the λ# CLI. Without an origin, λ# uses the deployment bucket name of the active deployment tier as origin. Compilation fails if the λ# CLI cannot find a published module that matches the criteria.
+The <code>Module</code> attribute specifies the full name of the required module with an optional version and origin. The format must be <code>Namespace.Name[:Version][@Origin]</code>. Parts in brackets (<code>[ ]</code>) are optional. Without a version specifier, LambdaSharp uses the latest version it can find that is compatible with the LambdaSharp CLI. Without an origin, LambdaSharp uses the deployment bucket name of the active deployment tier as origin. Compilation fails if the LambdaSharp CLI cannot find a published module that matches the criteria.
 
 <i>Required</i>: Yes
 
@@ -63,7 +68,7 @@ The <code>Nested</code> attribute specifies the item name. The name must start w
 <dt><code>Parameters</code></dt>
 <dd>
 
-The <code>Parameters</code> section specifies the parameters for the nested module. The λ# deployment parameters, such as <code>DeploymentBucketName</code> and <code>DeploymentPrefix</code>, are automatically provided and don't need to be specified.
+The <code>Parameters</code> section specifies the parameters for the nested module. The LambdaSharp deployment parameters, such as <code>DeploymentBucketName</code> and <code>DeploymentPrefix</code>, are automatically provided and don't need to be specified.
 
 <i>Required</i>: No
 

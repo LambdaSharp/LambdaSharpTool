@@ -2,11 +2,11 @@
 
 # LambdaSharp API Gateway Source with Method Invocation
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
-An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. In addition, the `Invoke` attribute specifies the method to invoke in the Lambda function for this API entry-point. During compilation, the λ# CLI creates all required resources for each function and validates that the specified methods exist.
+An API Gateway instance is automatically created for the module when a function has an `Api` attribute in its `Sources` section. The `Api` attribute value is composed of two parts: the HTTP method and the request path. In addition, the `Invoke` attribute specifies the method to invoke in the Lambda function for this API entry-point. During compilation, the LambdaSharp CLI creates all required resources for each function and validates that the specified methods exist.
 
 ```yaml
 Module: Sample.ApiGatewayInvoke

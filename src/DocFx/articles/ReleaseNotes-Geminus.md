@@ -1,34 +1,40 @@
-# λ# - Geminus (v0.7) - 2019-09-06
+---
+title: LambdaSharp "Geminus" Release (v0.7)
+description: Release notes for LambdaSharp "Geminus" (v0.7)
+keywords: release, notes, geminus
+---
+
+# LambdaSharp "Geminus" Release (v0.7.0.1) - 2019-09-12
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
 ## What's New
 
-This release focuses on making it easy to share modules with others and streamlining the creation and upgrading of λ# deployment tiers. Prior to this release, λ# modules had to be made available in an S3 bucket for each region used by a deployment tier. In 0.7.0, the λ# CLI now automatically imports modules and their artifacts into the S3 bucket of the deployment tier, regardless of the origin region. This new behavior also safeguards against disruption should the original λ# module become unavailable at a later date since a copy is maintained in the deployment bucket. To further enhance deployment consistency, external modules are only imported during the publishing phase. The deployment phase relies entirely on the modules available in the S3 bucket of the deployment tier.
+This release focuses on making it easy to share modules with others and streamlining the creation and upgrading of LambdaSharp deployment tiers. Prior to this release, LambdaSharp modules had to be made available in an S3 bucket for each region used by a deployment tier. In 0.7.0, the LambdaSharp CLI now automatically imports modules and their artifacts into the S3 bucket of the deployment tier, regardless of the origin region. This new behavior also safeguards against disruption should the original LambdaSharp module become unavailable at a later date since a copy is maintained in the deployment bucket. To further enhance deployment consistency, external modules are only imported during the publishing phase. The deployment phase relies entirely on the modules available in the S3 bucket of the deployment tier.
 
 ### Upgrade Procedure from v0.6.1 to v0.7.0
 
 1. Ensure all modules are deployed with v0.6.1 or later
-1. Upgrade λ# CLI to v0.7.0
+1. Upgrade LambdaSharp CLI to v0.7.0
     1. `dotnet tool uninstall -g LambdaSharp.Tool`
     1. `dotnet tool install -g LambdaSharp.Tool`
-1. Upgrade λ# Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
+1. Upgrade LambdaSharp Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
     1. `lash init --tier Sandbox --allow-upgrade`
-1. Delete the λ# CLI profile CloudFormation stack if the CLI profile is not used by any other deployment tiers
-    1. Locate the λ# CLI profile stack in the AWS Console (starts with `LambdaSharpTool-`)
+1. Delete the LambdaSharp CLI profile CloudFormation stack if the CLI profile is not used by any other deployment tiers
+    1. Locate the LambdaSharp CLI profile stack in the AWS Console (starts with `LambdaSharpTool-`)
     1. Empty the associated S3 bucket named _DeploymentBucket_
     1. Delete the CloudFormation stack
 
 ## BREAKING CHANGES
 
-### λ# Module
+### LambdaSharp Module
 
 * The `Namespace:` declaration has been renamed to [`Group:`](~/syntax/Module-Group.md).
 * Module references in `Using:` and `Nested:` declarations now require an origin suffix. For example, `LambdaSharp.S3.IO:0.5` must now be written as `LambdaSharp.S3.IO:0.5@lambdasharp`.
 
-### λ# Core Services
+### LambdaSharp Core Services
 
-The `DefaultSecretKey` was removed from λ# Core Services. While it was convenient, it introduced a hard relationship between the KMS key and the lifecycle of the λ# Core Services. The better approach is to entrust the account owner with managing the KMS lifecycle. In addition, it was also a monthly recurring cost item, which was unnecessary when not required.
+The `DefaultSecretKey` was removed from LambdaSharp Core Services. While it was convenient, it introduced a hard relationship between the KMS key and the lifecycle of the LambdaSharp Core Services. The better approach is to entrust the account owner with managing the KMS lifecycle. In addition, it was also a monthly recurring cost item, which was unnecessary when not required.
 
 A few Lambda related error messages have been rephrased to make it clearer they related to the execution of Lambda functions.
 * `Task timed out after 15.02 seconds` is now `Lambda timed out after 15.02 seconds`
@@ -36,32 +42,32 @@ A few Lambda related error messages have been rephrased to make it clearer they 
 * `Process ran out of memory (Max: 128 MB)` is now `Lambda ran out of memory (Max: 128 MB)`
 * `Process nearing execution limits (Memory 80.12 %, Duration: 91.23 %)` is now `Lambda nearing execution limits (Memory 80.12 %, Duration: 91.23 %)`
 
-### λ# CLI
+### LambdaSharp CLI
 
 * The `lash config` command has been removed. Its functionality has been integrated into the `lash init` command to streamline the setup process, resulting in a single deployment tier stack.
 * The concept of the CLI profile is gone. Therefore the `--cli-profile` option is no longer supported.
-* With support of resolving λ# modules from third-party S3 buckets by using the `@origin` suffix on module names, there is no need to pre-register S3 buckets anymore, which makes the `--module-bucket-names` obsolete.
+* With support of resolving LambdaSharp modules from third-party S3 buckets by using the `@origin` suffix on module names, there is no need to pre-register S3 buckets anymore, which makes the `--module-bucket-names` obsolete.
 * The deployment tier does not support the SNS topic for CloudFormation updates, which means the `--deployment-notifications-topic` option is no longer supported.
-* The λ# CLI will now fail to publish a stable version of a module when the `git-sha` is prefixed with `DIRTY-`, which indicate uncommitted local changes.  This behavior can be overwritten with `--force-publish`.
-* The `.csproj` file generated by `lash new function` can now dynamically support contributor mode (i.e. using a local λ# git checkout), which makes the `--use-project-reference` and `--use-nuget-reference` obsolete.
+* The LambdaSharp CLI will now fail to publish a stable version of a module when the `git-sha` is prefixed with `DIRTY-`, which indicate uncommitted local changes.  This behavior can be overwritten with `--force-publish`.
+* The `.csproj` file generated by `lash new function` can now dynamically support contributor mode (i.e. using a local LambdaSharp git checkout), which makes the `--use-project-reference` and `--use-nuget-reference` obsolete.
 * The options for `lash tier coreservices` were changed from `--enable` to `--enabled` and from `--disable` to `--disabled` to make them consistent with the `lash init` command.
 
-### λ# Assemblies
+### LambdaSharp Assemblies
 
 * `ALambdaFunction.InfoStruct.ModuleOwner` has been renamed to `ALambdaFunction.InfoStruct.ModuleNamespace`
 * `ALambdaFunction.DefaultSecretKeyId` has been removed
 * The physical ID returned by [`ALambdaFinalizerFunction`](xref:LambdaSharp.Finalizer.ALambdaFinalizerFunction) is now a constant (`Finalizer:Module`) instead of being based on the checksum of the original template. The latter proved too risky, because it could accidentally trigger a CloudFormation delete resource event when not expected.
 
 
-## New λ# CLI Features
+## New LambdaSharp CLI Features
 
 ### Init Command
 
 The `lash init` command has been redesigned to streamline the setup and configuration of a deployment tier.
 
-Running `lash init --quick-start` will create a new deployment tier without any prompts. The newly created tier has no λ# Core Services, which means it sets up quickly and at no monthly cost. In addition, an empty deployment tier name is now supported, which means using the `--tier` option--or the `LAMBDASHARP_TIER` environment variable--is now optional.
+Running `lash init --quick-start` will create a new deployment tier without any prompts. The newly created tier has no LambdaSharp Core Services, which means it sets up quickly and at no monthly cost. In addition, an empty deployment tier name is now supported, which means using the `--tier` option--or the `LAMBDASHARP_TIER` environment variable--is now optional.
 
-The deployment tier can be upgraded to use λ# Core Services by running `lash init --core-services enabled`. Similarly, a deployment tier can also be downgraded by running `lash init --core-services disabled` assuming none of the deployed modules rely on them. Otherwise, first run the `lash tier coreservices --disabled` command.
+The deployment tier can be upgraded to use LambdaSharp Core Services by running `lash init --core-services enabled`. Similarly, a deployment tier can also be downgraded by running `lash init --core-services disabled` assuming none of the deployed modules rely on them. Otherwise, first run the `lash tier coreservices --disabled` command.
 
 ### Build Command
 
@@ -96,9 +102,9 @@ Additionally, _AWS X-Ray_ is now supported for Lambda functions, AWS SDK calls, 
 
 ### New Function Command
 
-The `lash new function` command has been enhanced with types for C# functions. It can now create the scaffolding for functions to handle API Gateway, custom CloudFormation resources, SQS queues, scheduled CloudWatch events, SNS topics, WebSocket, module finalizer, and generic requests by using the `--type` option. If no type is provided, the λ# CLI will prompt for one. In addition, the `--memory` and `--timeout` options have been added. When omitted, they default to 256 (MB) and 30 (seconds), respectively.
+The `lash new function` command has been enhanced with types for C# functions. It can now create the scaffolding for functions to handle API Gateway, custom CloudFormation resources, SQS queues, scheduled CloudWatch events, SNS topics, WebSocket, module finalizer, and generic requests by using the `--type` option. If no type is provided, the LambdaSharp CLI will prompt for one. In addition, the `--memory` and `--timeout` options have been added. When omitted, they default to 256 (MB) and 30 (seconds), respectively.
 
-The generated `.csproj` file was updated to make it easier for contributors to deploy modules with their latest local changes by conditionally referencing the λ# nuget package or local λ# project depending on the `LAMBDASHARP` environment variable. This behavior was achieved by using conditionals in the `.csproj` file.
+The generated `.csproj` file was updated to make it easier for contributors to deploy modules with their latest local changes by conditionally referencing the LambdaSharp nuget package or local LambdaSharp project depending on the `LAMBDASHARP` environment variable. This behavior was achieved by using conditionals in the `.csproj` file.
 ```xml
 <ItemGroup>
 <PackageReference Condition="'$(LAMBDASHARP)'==''" Include="LambdaSharp" Version="0.7.0.*"/>
@@ -108,7 +114,7 @@ The generated `.csproj` file was updated to make it easier for contributors to d
 
 ### New Bucket Command
 
-The `lash new bucket` command is used to create a new public S3 bucket configured to require requestors to pay for data transfer. This is the recommended configuration when publicly sharing λ# modules so the owner of the bucket only pays for the storage and not its access, which could become expensive for a popular module. Once the bucket is created, it can be used with a deployment tier to enable publishing to it.
+The `lash new bucket` command is used to create a new public S3 bucket configured to require requestors to pay for data transfer. This is the recommended configuration when publicly sharing LambdaSharp modules so the owner of the bucket only pays for the storage and not its access, which could become expensive for a popular module. Once the bucket is created, it can be used with a deployment tier to enable publishing to it.
 
 __Using PowerShell/Bash:__
 ```bash
@@ -129,7 +135,7 @@ Done (finished: 8/16/2019 10:20:18 AM; duration: 00:00:32.5327433)
 
 ### Info Command
 
-The `lash info` command now shows if λ# Core Services are enabled for the deployment tier. In addition, it will also show how much Lambda storage is used and how much Lambda reserved capacity is used by the AWS account.
+The `lash info` command now shows if LambdaSharp Core Services are enabled for the deployment tier. In addition, it will also show how much Lambda storage is used and how much Lambda reserved capacity is used by the AWS account.
 
 __Using PowerShell/Bash:__
 ```bash
@@ -165,10 +171,19 @@ Done (finished: 8/20/2019 12:27:29 PM; duration: 00:00:04.9603515)
 
 The `lash encrypt` command now has a support for decrypting an encrypted secret before encrypting it by supplying the `--decrypt` option. This option makes it possible to decrypt an existing secret and re-encrypt it using a different KMS key without having to decrypt it manually first.
 
-## New λ# Assembly Features
+## New LambdaSharp Assembly Features
 
 * Added [`ALambdaFunction.DeploymentBucketName`](xref:LambdaSharp.ALambdaFunction.FunctionInfo.DeploymentBucketName) property to read the S3 bucket name used to deploy the Lambda function.
 * Added [`ALambdaCustomResourceFunction.Abort(string)`](xref:LambdaSharp.CustomResource.ALambdaCustomResourceFunction`2.Abort(System.String)) method to abort the creation or update of a custom resource. `Abort()` will cause CloudFormation to respond with a failure code and showing the provided message.
 * Added [`LambdaSharp.CustomResource.Request<TProperties>.StackId`](xref:LambdaSharp.CustomResource.Request`1.StackId) property to custom resource request to uniquely identify the CloudFormation stack from which the request originated.
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
+## Releases
+
+### (v0.7.0.1) - 2019-09-12
+
+#### Fixes
+* Fixed an issue with enabling/disabling core services in a deployment tier.
+
+#### Updated Documentation
+* Added metadata to HTML pages.

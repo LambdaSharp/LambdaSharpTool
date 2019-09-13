@@ -1,3 +1,8 @@
+---
+title: Attribute Declaration - ResourceType
+description: LambdaSharp YAML syntax for custom resource type attributes
+keywords: custom resource, resource type, attribute, declaration, syntax, yaml, cloudformation
+---
 # Attribute Definition
 
 The attribute definition specifies the name and type for a resource type attribute.

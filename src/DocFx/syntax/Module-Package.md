@@ -1,6 +1,11 @@
+---
+title: Package Declaration - Module
+description: LambdaSharp YAML syntax for artifact packages
+keywords: artifact, package, declaration, zip, executable, elf, syntax, yaml, cloudformation
+---
 # Package
 
-The package definition creates a compressed zip package from a local path. The zip package is then uploaded to the deployment S3 bucket during the λ# CLI publish step.
+The package definition creates a compressed zip package from a local path. The zip package is then uploaded to the deployment S3 bucket during the LambdaSharp CLI publish step. All items in the zip package are given read-write permissions, unless the item has a Linux executable with an [ELF header](https://en.wikipedia.org/wiki/Executable_and_Linkable_Format), in which case the item is given read-and-execute permission (see [GifMaker Sample](https://github.com/LambdaSharp/GifMaker-Sample)).
 
 ## Syntax
 

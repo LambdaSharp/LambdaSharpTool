@@ -1,3 +1,9 @@
+---
+title: LambdaSharp Glossary
+description: Glossary of LambdaSharp terminology
+keywords: glossary, definition, terminology, terms, keywords
+---
+
 # Glossary
 
 <dl>
@@ -23,7 +29,7 @@ A YAML mapping for a single value or list of values.
 <dt><b>Build Process</b></dt>
 <dd>
 
-The process by which the λ# CLI converts the source YAML module file into a CloudFormation JSON template file. The contents of the source are analyzed during the build process to detect errors, such as missing properties required to initialize a resource or references to undefined variables.
+The process by which the LambdaSharp CLI converts the source YAML module file into a CloudFormation JSON template file. The contents of the source are analyzed during the build process to detect errors, such as missing properties required to initialize a resource or references to undefined variables.
 </dd>
 
 <dt><b>Core</b></dt>
@@ -41,7 +47,7 @@ A value imported from another module using <code>!ImportValue</code> where the s
 <dt><b>Deployment Process</b></dt>
 <dd>
 
-The process by which the λ# CLI creates a CloudFormation stack from a CloudFormation template that was created from a λ# module. The deployment process checks for dependencies and installs them if needed. During the deployment process, the λ# CLI uses interactive prompts for obtain values for missing parameters. In addition, the λ# CLI supplies required parameters, such as the deployment bucket name and deployment tier prefix to launch the CloudFormation stack.
+The process by which the LambdaSharp CLI creates a CloudFormation stack from a CloudFormation template that was created from a LambdaSharp module. The deployment process checks for dependencies and installs them if needed. During the deployment process, the LambdaSharp CLI uses interactive prompts for obtain values for missing parameters. In addition, the LambdaSharp CLI supplies required parameters, such as the deployment bucket name and deployment tier prefix to launch the CloudFormation stack.
 </dd>
 
 <dt><b>Deployment Tier</b></dt>
@@ -59,7 +65,7 @@ A deployment tier is used to isolate deployments from each other on a single AWS
 <dt><b>Module Definition</b></dt>
 <dd>
 
-A module is a CloudFormation template that follows the λ# conventions. λ# is a compiler that translates the higher-level λ# constructs into plain CloudFormation declarations. Only templates that follow the compiler conventions are called modules.
+A module is a CloudFormation template that follows the LambdaSharp conventions. LambdaSharp is a compiler that translates the higher-level LambdaSharp constructs into plain CloudFormation declarations. Only templates that follow the compiler conventions are called modules.
 </dd>
 
 <dt><b>Resource Type</b></dt>

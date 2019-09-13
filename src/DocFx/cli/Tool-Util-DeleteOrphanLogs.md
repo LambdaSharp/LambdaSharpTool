@@ -1,6 +1,11 @@
+---
+title: LambdaSharp CLI Util Command - Delete Orphaned CloudWatch Logs
+description: Delete CloudWatch logs created by deleted Lambda functions, API Gateway, and WebSocket instances
+keywords: cli, lambda, api gateway, websocket, cloudwatch, logs, delete, cleanup, clean-up
+---
 # Delete Orphaned Lambda and API Gateway V1/V2 CloudWatch Logs Command
 
-The `util delete-orphan-logs` command is used to delete CloudWatch log groups that were created by Lambda functions and API Gateway V1/V2 instances which no longer exist. Note, λ# modules always clean up their Lambda and API Gateway V1/V2 logs. However, if you have been experimenting with Lambda or API Gateway V1/V2 in the past, you may have a lot of CloudWatch logs that are lingering for no reason. This command will take care of them.
+The `util delete-orphan-logs` command is used to delete CloudWatch log groups that were created by Lambda functions and API Gateway V1/V2 instances which no longer exist. Note, LambdaSharp modules always clean up their Lambda and API Gateway V1/V2 logs. However, if you have been experimenting with Lambda or API Gateway V1/V2 in the past, you may have a lot of CloudWatch logs that are lingering for no reason. This command will take care of them.
 
 ## Options
 

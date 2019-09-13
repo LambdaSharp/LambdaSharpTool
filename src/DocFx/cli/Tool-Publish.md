@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - Publish Command
+description: Publish a LambdaSharp module to a deployment tier
+keywords: cli, build, publish, deployment, tier, module
+---
 # Publish Module
 
 The `publish` command is used to upload the compiled module and its artifacts to the deployment bucket.

@@ -1,3 +1,8 @@
+---
+title: Variable Declaration - Module
+description: LambdaSharp YAML syntax for module variables
+keywords: variable, declaration, syntax, yaml, cloudformation
+---
 # Variable
 
 The `Variable` definition specifies a literal value or an expression. Variables are inlined during compilation. They can be used by other variables, resources, and functions. Variables, like resources, can be scoped to functions or to be public.

@@ -1,6 +1,11 @@
+---
+title: LambdaSharp CLI Util Command - Create JSON Schema from .NET Methods
+description: Generate JSON Schema via reflection of .NET methods invoked by API Gateway or WebSocket event sources
+keywords: cli, json, schema, api gateway, websocket
+---
 # Create JSON Schema for API Gateway Methods
 
-The `util create-invoke-methods-schema` command is used to create JSON schema definitions for methods in a given assembly. This command is invoked automatically by λ# during compilation when a module specifies target methods for `Api` or `WebSocket` routes.
+The `util create-invoke-methods-schema` command is used to create JSON schema definitions for methods in a given assembly. This command is invoked automatically by LambdaSharp during compilation when a module specifies target methods for `Api` or `WebSocket` routes.
 
 ## Options
 

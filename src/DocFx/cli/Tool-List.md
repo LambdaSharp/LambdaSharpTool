@@ -1,3 +1,8 @@
+---
+title: LambdaSharp CLI - List Command
+description: List deployed LambdaSharp modules in a deployment tier
+keywords: cli, list, module, deployment, tier
+---
 # List Deployed Modules
 
 The `list` command is used to list all deployed modules on a deployment tier.

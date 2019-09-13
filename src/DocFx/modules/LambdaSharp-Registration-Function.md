@@ -1,10 +1,16 @@
+---
+title: LambdaSharp::Registration::Function - LambdaSharp.Core Module
+description: Documentation for LambdaSharp::Registration::Function resource type
+keywords: module, core, documentation, function, registration, resource, type, properties, attributes
+---
+
 # LambdaSharp::Registration::Function
 
 The `LambdaSharp::Registration::Function` type creates a new or updates an existing function registration.
 
 ## Using
 
-> **NOTE:** the λ# CLI automatically adds the required `Using` statement to all modules.
+> **NOTE:** the LambdaSharp CLI automatically adds the required `Using` statement to all modules.
 
 ```yaml
 Using:

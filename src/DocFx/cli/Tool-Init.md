@@ -1,8 +1,13 @@
+---
+title: LambdaSharp CLI - Init Command
+description: Create or update a LambdaSharp deployment tier
+keywords: cli, create, update, deployment, tier
+---
 # Initialize Deployment Tier
 
 The `init` command is used to both create a new deployment tier and update an existing one. The resources required for a new deployment tier will be created unless provided.
 
-The `--quick-start` option minimizes the setup time by disabling the core services and assuming safe defaults for all prompts. This option is useful for learning about λ# and getting started quickly. However, **DO NOT** use this option in production or test environments!
+The `--quick-start` option minimizes the setup time by disabling the core services and assuming safe defaults for all prompts. This option is useful for learning about LambdaSharp and getting started quickly. However, **DO NOT** use this option in production or test environments!
 
 ## Options
 
@@ -151,6 +156,6 @@ CREATE_COMPLETE    AWS::S3::Bucket               DeploymentBucketResource
 Done (finished: 7/15/2019 10:20:09 AM; duration: 00:01:14.0338861)
 ```
 
-## For λ# Contributors
-The `init` command builds and deploys the local LambdaSharp.Core module when the `LAMBDASHARP` environment variable is set. To force `init` to use the published λ# Core module instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
+## For LambdaSharp Contributors
+The `init` command builds and deploys the local LambdaSharp.Core module when the `LAMBDASHARP` environment variable is set. To force `init` to use the published LambdaSharp Core module instead, append the `--use-published` option. Alternatively, the `--local` option can be used to provide the location of a local check-out of the LambdaSharpTool source tree.
 
