@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Resource - Pragmas Section
+title: Pragmas Section - Resource
 description: LambdaSharp resource configuration pragmas
 keywords: resource, pragma, section, configuration, syntax, yaml, cloudformation
 ---

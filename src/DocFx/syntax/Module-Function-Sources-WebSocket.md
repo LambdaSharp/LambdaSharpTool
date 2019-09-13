@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - WebSocket Event Source Declaration
+title: WebSocket Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Amazon WebSocket (API Gateway V2) event source
 keywords: amazon, api gateway, websocket, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

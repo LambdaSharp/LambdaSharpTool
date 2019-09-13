@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Resource Declaration
+title: Resource Declaration - Module
 description: LambdaSharp YAML syntax for generic CloudFormation resources
 keywords: resource, declaration, syntax, yaml, cloudformation
 ---

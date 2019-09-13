@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - ResourceType Declaration
+title: ResourceType Declaration - Module
 description: LambdaSharp YAML syntax for custom resource types
 keywords: custom resource, resource type, lambda, declaration, syntax, yaml, cloudformation
 ---

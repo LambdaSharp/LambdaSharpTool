@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - DynamoDB Stream Event Source Declaration
+title: DynamoDB Stream Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Amazon DynamoDB stream event source
 keywords: amazon, dynamodb, stream, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

@@ -1,4 +1,5 @@
 ---
+title: LambdaSharp Module Syntax
 description: LambdaSharp YAML syntax for modules
 keywords: module, syntax, yaml, cloudformation
 ---

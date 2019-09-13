@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Pragmas Section
+title: Pragmas Section - Module
 description: LambdaSharp module configuration pragmas
 keywords: module, pragma, section, configuration, syntax, yaml, cloudformation
 ---

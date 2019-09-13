@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Global Variables Reference
+title: Global Variables Reference - Module
 description: LambdaSharp module global variables reference
 keywords: module, global, variable, reference, syntax, yaml, cloudformation
 ---

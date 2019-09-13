@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Mapping Declaration
+title: Mapping Declaration - Module
 description: LambdaSharp YAML syntax for CloudFormation mappings
 keywords: mapping, declaration, syntax, yaml, cloudformation
 ---

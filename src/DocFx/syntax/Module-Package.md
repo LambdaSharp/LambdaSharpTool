@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Package Declaration
+title: Package Declaration - Module
 description: LambdaSharp YAML syntax for artifact packages
 keywords: artifact, package, declaration, zip, executable, elf, syntax, yaml, cloudformation
 ---

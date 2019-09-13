@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Macro Declaration
+title: Macro Declaration - Module
 description: LambdaSharp YAML syntax for CloudFormation macros
 keywords: macro, lambda, declaration, syntax, yaml, cloudformation
 ---

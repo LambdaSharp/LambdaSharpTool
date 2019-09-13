@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - Pragmas Section
+title: Pragmas Section - Function
 description: LambdaSharp function configuration pragmas
 keywords: function, pragma, section, configuration, syntax, yaml, cloudformation
 ---

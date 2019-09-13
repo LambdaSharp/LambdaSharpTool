@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Secrets Section
+title: Secrets Section - Module
 description: LambdaSharp module Secrets section
 keywords: module, secret, section, kms, configuration, syntax, yaml, cloudformation
 ---

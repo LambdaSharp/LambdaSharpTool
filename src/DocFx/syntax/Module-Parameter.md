@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Parameter Declaration
+title: Parameter Declaration - Module
 description: LambdaSharp YAML syntax for CloudFormation parameters
 keywords: parameter, declaration, syntax, yaml, cloudformation
 ---

@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - API Gateway Event Source Declaration
+title: API Gateway Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Amazon API Gateway event source
 keywords: amazon, api gateway, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

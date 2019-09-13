@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - Alexa Event Source Declaration
+title: Alexa Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Amazon Alexa event source
 keywords: amazon, alexa, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

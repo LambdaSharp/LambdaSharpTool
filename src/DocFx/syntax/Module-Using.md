@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Using Section
+title: Using Section - Module
 description: LambdaSharp module Using section
 keywords: module, using, section, configuration, syntax, yaml, cloudformation
 ---

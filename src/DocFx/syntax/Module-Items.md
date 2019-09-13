@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module/Group - Items Section
+title: Items Section - Module/Group
 description: LambdaSharp module/group Items section
 keywords: module, group, item, section, definition, syntax, yaml, cloudformation
 ---

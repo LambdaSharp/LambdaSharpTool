@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Condition Declaration
+title: Condition Declaration - Module
 description: LambdaSharp YAML syntax for CloudFormation conditions
 keywords: condition, declaration, syntax, yaml, cloudformation
 ---

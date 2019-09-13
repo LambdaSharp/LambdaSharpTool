@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - Event Sources Section
+title: Event Sources Section - Function
 description: LambdaSharp AWS Lambda event sources
 keywords: lambda, event source, section, syntax, yaml, cloudformation
 ---

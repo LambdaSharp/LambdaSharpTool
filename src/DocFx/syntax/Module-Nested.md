@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Nested Module Declaration
+title: Nested Module Declaration - Module
 description: LambdaSharp YAML syntax for nested modules
 keywords: nested, declaration, module, syntax, yaml, cloudformation
 ---

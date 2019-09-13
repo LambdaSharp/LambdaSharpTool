@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Import Declaration
+title: Import Declaration - Module
 description: LambdaSharp YAML syntax for cross-module import references
 keywords: cross-module, module, import, declaration, reference, syntax, yaml, cloudformation
 ---

@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - S3 Notification Event Source Declaration
+title: S3 Notification Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Amazon S3 notification event source
 keywords: amazon, s3, notification, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

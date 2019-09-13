@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Function - Slack Event Source Declaration
+title: Slack Event Source Declaration - Function
 description: LambdaSharp YAML syntax for Slack event source
 keywords: slack, event source, declaration, lambda, syntax, yaml, cloudformation
 ---

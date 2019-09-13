@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Function Declaration
+title: Function Declaration - Module
 description: LambdaSharp YAML syntax for Lambda functions
 keywords: lambda, function, declaration, syntax, yaml, cloudformation
 ---

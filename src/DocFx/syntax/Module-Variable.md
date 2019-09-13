@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Module - Variable Declaration
+title: Variable Declaration - Module
 description: LambdaSharp YAML syntax for module variables
 keywords: variable, declaration, syntax, yaml, cloudformation
 ---
