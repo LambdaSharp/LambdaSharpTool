@@ -1,3 +1,8 @@
+---
+title: Alexa Event Source Declaration - Function
+description: LambdaSharp YAML syntax for Amazon Alexa event source
+keywords: amazon, alexa, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # Alexa Source
 
 See [Alexa sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/AlexaSample/) for an example of how to use an Alexa skill as source.

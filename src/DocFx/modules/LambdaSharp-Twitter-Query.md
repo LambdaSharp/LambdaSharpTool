@@ -1,3 +1,9 @@
+---
+title: LambdaSharp.Twitter.Query - LambdaSharp Module
+description: Documentation for LambdaSharp.Twitter.Query module
+keywords: module, twitter, query, documentation, overview
+---
+
 # Module: LambdaSharp.Twitter.Query
 _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 

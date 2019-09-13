@@ -2,13 +2,13 @@
 
 # LambdaSharp CloudFormation Macro Definition
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
 Creating a function that is invoked by a CloudFormation macro is straightforward. First, define the function in the `Items` section that will be invoked by the macro. Second, create the macro definition using the `Macro` attribute and specify the function as its handler. Note that a single Lambda function can handle multiple CloudFormation macros.
 
-**NOTE:** Support for CloudFormation Macros in λ# is still experimental.
+**NOTE:** Support for CloudFormation Macros in LambdaSharp is still experimental.
 
 ```yaml
 Module: Sample.Macro

@@ -1,3 +1,8 @@
+---
+title: Mapping Declaration - Module
+description: LambdaSharp YAML syntax for CloudFormation mappings
+keywords: mapping, declaration, syntax, yaml, cloudformation
+---
 # Mapping
 
 The `Mapping` definition specifies a section that matches a key to a corresponding set of named values. For example, to set values based on a region, create a mapping that uses the region name as a key and contains the values for each specific region. The [`!FindInMap`](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-findinmap.html) intrinsic function is used to retrieve values in a map.

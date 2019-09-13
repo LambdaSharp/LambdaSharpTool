@@ -1,10 +1,16 @@
+---
+title: LambdaSharp::S3::Subscription - LambdaSharp.S3.Subscriber Module
+description: Documentation for LambdaSharp::S3::Subscription resource type
+keywords: module, documentation, resource, type, properties, attributes, s3, subscription, notification
+---
+
 # LambdaSharp::S3::Subscription
 
-The `LambdaSharp.S3.Subscriber` module defines the `LambdaSharp::S3::Subscription` resource type, which is automatically used by the λ# CLI to subscribe Lambda functions to S3 events.
+The `LambdaSharp.S3.Subscriber` module defines the `LambdaSharp::S3::Subscription` resource type, which is automatically used by the LambdaSharp CLI to subscribe Lambda functions to S3 events.
 
 ## Using
 
-> **NOTE:** the λ# CLI automatically adds the required `Using` statement when a Lambda function subscribes to S3 events.
+> **NOTE:** the LambdaSharp CLI automatically adds the required `Using` statement when a Lambda function subscribes to S3 events.
 
 ```yaml
 Using:

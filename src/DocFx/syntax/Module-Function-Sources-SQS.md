@@ -1,3 +1,8 @@
+---
+title: SQS Queue Event Source Declaration - Function
+description: LambdaSharp YAML syntax for Amazon SQS Queue event source
+keywords: amazon, sqs, queue, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # SQS Source
 
 See [SQS Queue sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/SqsSample/) for an example of how to use the SQS Queue source.

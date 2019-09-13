@@ -9,7 +9,7 @@ This module runs a Twitter search query every hour and sends any found tweets to
 
 ## Prerequisite
 
-1. The [λ# CLI](https://github.com/LambdaSharp/LambdaSharpTool)
+1. The [LambdaSharp CLI](https://github.com/LambdaSharp/LambdaSharpTool)
 1. Twitter developer account with a Consumer Key (API Key) and a Consumer Secret (API Secret). [See setup instructions here.](https://developer.twitter.com/en/docs/basics/getting-started)
 
 ## Parameters

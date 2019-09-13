@@ -2,11 +2,11 @@
 
 # LambdaSharp - Serverless .NET on AWS
 
-**[Read what's new in the 0.7.0 "Geminus" release.](https://lambdasharp.net/articles/ReleaseNotes-Geminus.html)**
+**[Read what's new in the v0.7.0 "Geminus" release.](https://lambdasharp.net/articles/ReleaseNotes-Geminus.html)**
 
-λ# is a command line tool and a framework for serverless application development. λ# uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
+LambdaSharp is a command line tool and a framework for serverless application development. LambdaSharp uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 
-The objective of λ# is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
+The objective of LambdaSharp is to accelerate the development pace of serverless solutions while helping developers adhere consistently to best practices to create scalable, observable, and modular systems.
 
 ## Give a Star! :star:
 
@@ -14,40 +14,35 @@ If you like or are using this project, please give it a star. Make sure to also 
 
 ![λ# CLI](src/DocFx/images/LashAnsiColor-WIP.gif)
 
-## Install λ# CLI
+## Install LambdaSharp CLI
 
-The λ# CLI is installed as a .NET Global Tool.
+The LambdaSharp CLI is installed as a .NET Global Tool.
 
 ```bash
 dotnet tool install -g LambdaSharp.Tool
 ```
 
-Once installed, the λ# CLI needs to be configured.
+Once installed, a deployment tier must be initialized.
 ```bash
-lash config
+lash init --quick-start
 ```
 
-Finally, a deployment tier must be initialized with the λ# Core.
-```bash
-lash init --tier Sandbox
-```
-
-## Deploy a λ# Module
+## Deploy a LambdaSharp Module
 
 Creating modules with Lambda functions and deploying them only requires a few steps.
 
 ```bash
-# Create a new λ# module
+# Create a new LambdaSharp module
 lash new module MySampleModule
 
-# Add a function to the λ# module
-lash new function MyFunction
+# Add a function to the LambdaSharp module
+lash new function MyFunction --type generic
 
-# Deploy the λ# module
+# Deploy the LambdaSharp module
 lash deploy
 ```
 
-The λ# CLI uses a YAML file to compile the C# projects, upload artifacts, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
+The LambdaSharp CLI uses a YAML file to compile the C# projects, upload artifacts, and deploy the CloudFormation stack in one step. The YAML file describes the entire module including the inputs, outputs, variables, resources, and functions.
 
 ```yaml
 Module: MySampleModule
@@ -93,30 +88,26 @@ namespace MySampleModule.MyFunction {
 
 ### Getting Started
 
-1. [Setup λ#](https://lambdasharp.net/articles/Setup.html)
+1. [Setup LambdaSharp](https://lambdasharp.net/articles/Setup.html)
 
 ### Articles
 
-1. [λ# — A Compiler for CloudFormation](https://medium.com/mindtouch-engineering/%CE%BB-a-compiler-for-cloudformation-b35744e49d6c)
-1. [λ# — v0.5 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-news-0-5-rc1-released-906bdfc059a)
-1. [λ# — v0.5.0.1 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-1-release-notes-f07966ace1c5)
-1. [λ# — v0.5.0.2 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-2-release-notes-69458b35bddd)
-1. [λ# — v0.5.0.3 Release Notes](https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-3-release-notes-9d27082609c5)
-1. [λ# — Constructors/Destructors for CloudFormation](https://medium.com/mindtouch-engineering/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
+1. [LambdaSharp — A Compiler for CloudFormation](https://medium.com/mindtouch-engineering/%CE%BB-a-compiler-for-cloudformation-b35744e49d6c)
+1. [LambdaSharp — Constructors/Destructors for CloudFormation](https://medium.com/mindtouch-engineering/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
 
 ### Samples
 
 1. [Create a Static Website with CloudFormation](https://github.com/LambdaSharp/StaticWebsite-Sample)
 1. [Create Animated GIFs from Videos with AWS Lambda](https://github.com/LambdaSharp/GifMaker-Sample)
 1. [Create a Web Chat with API Gateway WebSockets](https://github.com/LambdaSharp/WebSocketsChat-Sample)
-1. [Misc. λ# Samples](Samples/)
+1. [Misc. LambdaSharp Samples](Samples/)
 
 ### References
 
-1. [λ# CLI Reference](https://lambdasharp.net/cli/Index.html)
-1. [λ# .NET SDK Reference](https://lambdasharp.net/sdk/Index.html)
-1. [λ# Syntax Reference](https://lambdasharp.net/syntax/Index.html)
-1. [λ# Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
+1. [LambdaSharp CLI Reference](https://lambdasharp.net/cli/Index.html)
+1. [LambdaSharp .NET SDK Reference](https://lambdasharp.net/sdk/Index.html)
+1. [LambdaSharp Syntax Reference](https://lambdasharp.net/syntax/Index.html)
+1. [LambdaSharp Module IAM Short-hands](src/LambdaSharp.Tool/Resources/IAM-Mappings.yml)
 1. Modules
     1. [LambdaSharp.Core](https://lambdasharp.net/modules/LambdaSharp-Core.html)
     1. [LambdaSharp.S3.IO](https://lambdasharp.net/modules/LambdaSharp-S3-IO.html)

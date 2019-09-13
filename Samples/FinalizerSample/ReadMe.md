@@ -2,11 +2,11 @@
 
 # LambdaSharp Module Finalizer
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
-A λ# module can have a `Finalizer` function that is invoked as the last step of a CloudFormation stack creation and the first step of a CloudFormation stack deletion.
+A LambdaSharp module can have a `Finalizer` function that is invoked as the last step of a CloudFormation stack creation and the first step of a CloudFormation stack deletion.
 
 The `Finalizer` is useful to clean resources before CloudFormation attempts to delete them. Similarly, it can also be used to delete resources that were created dynamically during the lifetime of the module.
 

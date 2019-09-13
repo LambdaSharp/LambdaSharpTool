@@ -1,3 +1,8 @@
+---
+title: Resource Declaration - Module
+description: LambdaSharp YAML syntax for generic CloudFormation resources
+keywords: resource, declaration, syntax, yaml, cloudformation
+---
 # Resource
 
 The `Resource` definition is used to create new resources and/or specify access for the Lambda function in the module to existing resources.
@@ -28,7 +33,7 @@ DependsOn:
 <dt><code>Allow</code></dt>
 <dd>
 
-The <code>Allow</code> attribute can be either a comma-separated, single string value, or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a λ# shorthand (see <a href="https://github.com/LambdaSharp/LambdaSharpTool/tree/master/src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">λ# Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after λ# shorthand resolution, are removed.
+The <code>Allow</code> attribute can be either a comma-separated, single string value, or a list of string values. String values that contain a colon (<code>:</code>) are interpreted as IAM permission and used as is (e.g. <code>dynamodb:GetItem</code>, <code>s3:GetObject*</code>, etc.). Otherwise, the value is interpreted as a LambdaSharp shorthand (see <a href="https://github.com/LambdaSharp/LambdaSharpTool/tree/master/src/LambdaSharp.Tool/Resources/IAM-Mappings.yml">LambdaSharp Shorthand by Resource Type</a>). Both notations can be used simultaneously within a single <code>Allow</code> section. Duplicate IAM permissions, after LambdaSharp shorthand resolution, are removed.
 
 <i>Required</i>: No
 
@@ -38,7 +43,7 @@ The <code>Allow</code> attribute can be either a comma-separated, single string 
 <dt><code>DefaultAttribute</code></dt>
 <dd>
 
-The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the λ# CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
+The <code>DefaultAttribute</code> attribute specifies the resource attribute to use when exporting the resource from the module or to a Lambda function. By default, the LambdaSharp CLI automatically selects the <code>Arn</code> attribute when available. Otherwise, it uses the return value of a <code>!Ref</code> expressions. This behavior can be overwritten by specifying a <code>DefaultAttribute</code> attribute.
 
 <i>Required</i>: No. Not valid when the resource is explicitly referenced by the <code>Value</code> attribute.
 
@@ -122,7 +127,7 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 
 The <code>Type</code> attribute identifies the AWS resource type that is being created or referenced. For example, <code>AWS::SNS::Topic</code> declares an SNS topic. For a list of all resource types, see <a href="https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html">AWS Resource Types Reference</a>.
 
-<i>Required</i>: Conditional. The <code>Type</code> attribute is required for new resources and when using the λ# shorthand notation in the <code>Allow</code> attribute. The <code>Type</code> attribute can be omitted for referenced resources that only list native IAM permissions in their <code>Allow</code> attribute.
+<i>Required</i>: Conditional. The <code>Type</code> attribute is required for new resources and when using the LambdaSharp shorthand notation in the <code>Allow</code> attribute. The <code>Type</code> attribute can be omitted for referenced resources that only list native IAM permissions in their <code>Allow</code> attribute.
 
 <i>Type</i>: String
 </dd>

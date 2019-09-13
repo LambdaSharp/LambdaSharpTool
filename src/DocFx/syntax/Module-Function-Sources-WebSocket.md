@@ -1,6 +1,11 @@
+---
+title: WebSocket Event Source Declaration - Function
+description: LambdaSharp YAML syntax for Amazon WebSocket (API Gateway V2) event source
+keywords: amazon, api gateway, websocket, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # WebSocket Source
 
-The λ# CLI uses the [API Gateway Lambda Proxy Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy) to invoke Lambda functions from API Gateway. See [Web Socket sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/WebSocketSample/) for an example of how to use the WebSocket source.
+The LambdaSharp CLI uses the [API Gateway Lambda Proxy Integration](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-create-api-as-simple-proxy) to invoke Lambda functions from API Gateway. See [Web Socket sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/WebSocketSample/) for an example of how to use the WebSocket source.
 
 ## Syntax
 

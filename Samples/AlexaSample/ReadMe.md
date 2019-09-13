@@ -2,7 +2,7 @@
 
 # LambdaSharp Alexa Skill Source
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
@@ -60,7 +60,7 @@ public class Function : ALambdaFunction<SkillRequest, SkillResponse> {
 
 ## Reference
 
-The λ# CLI automatically creates the required permissions to allow the Alexa skill to invoke the Lambda function. The `EventSourceToken` attribute is omitted if the `Alexa` attribute is set to `"*"` in the module definition.
+The LambdaSharp CLI automatically creates the required permissions to allow the Alexa skill to invoke the Lambda function. The `EventSourceToken` attribute is omitted if the `Alexa` attribute is set to `"*"` in the module definition.
 
 Thw following YAML shows the permission granted to the Alexa service.
 

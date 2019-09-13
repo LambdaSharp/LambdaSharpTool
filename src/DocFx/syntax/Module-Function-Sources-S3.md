@@ -1,3 +1,8 @@
+---
+title: S3 Notification Event Source Declaration - Function
+description: LambdaSharp YAML syntax for Amazon S3 notification event source
+keywords: amazon, s3, notification, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # S3 Source
 
 See [S3 Bucket sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/S3Sample/) for an example of how to use the S3 Bucket source.

@@ -1,3 +1,8 @@
+---
+title: Macro Declaration - Module
+description: LambdaSharp YAML syntax for CloudFormation macros
+keywords: macro, lambda, declaration, syntax, yaml, cloudformation
+---
 # Macro
 
 The `Macro` definition registers a [CloudFormation Macro](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/template-macros.html) for the deployment tier. The handler must be a Lambda function. Once deployed, the macro is available to all subsequent module deployments.

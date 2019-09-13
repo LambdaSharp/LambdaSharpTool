@@ -1,3 +1,8 @@
+---
+title: Kinesis Stream Event Source Declaration - Function
+description: LambdaSharp YAML syntax for AWS Kinesis stream event source
+keywords: kinesis, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # Kinesis Stream Source
 
 See [Kinesis Stream sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/KinesisSample/) for an example of how to use the Kinesis Stream source.

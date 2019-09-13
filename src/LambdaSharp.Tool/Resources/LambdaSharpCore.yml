@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 AWSTemplateFormatVersion: 2010-09-09
-Description: LambdaSharp Core Resources (v%%VERSION%%)
+Description: LambdaSharp Core Resources (v%%CORE-VERSION%%)
 
 ##############
 # Parameters #
@@ -75,7 +75,7 @@ Resources:
 Outputs:
 
   Module:
-    Value: "LambdaSharp.Core:%%VERSION%%@lambdasharp"
+    Value: "LambdaSharp.Core:%%CORE-VERSION%%@lambdasharp"
 
   ModuleChecksum:
     Value: "%%CHECKSUM%%"
@@ -97,4 +97,4 @@ Outputs:
     Value: !Ref TierName
 
   LambdaSharpTool:
-    Value: "%%VERSION%%"
+    Value: "%%TOOL-VERSION%%"

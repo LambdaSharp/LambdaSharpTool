@@ -2,13 +2,13 @@
 
 # LambdaSharp SQS Queue Failure Handling Sample
 
-Before you begin, make sure to [setup your λ# CLI](https://lambdasharp.net/articles/Setup.html).
+Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 ## Module Definition
 
 Creating a function that is triggered by an SQS event and only re-tries failed messages that are marked as retriable, sends non-retriable messages
 directly to the dead-letter-queue, and prevents failure for an entire batch of messages is not possible with lambda out of the box.
-In order to have a more efficient way to process the sqs messages with lambda use the `ALambdaQeuefunction`.
+In order to have a more efficient way to process the sqs messages with lambda use the `ALambdaQueueFunction`.
 
 > **NOTE**: Beware the Lambda function timeout must be less than the SQS message visibility timeout, otherwise the deployment will fail.
 

@@ -1,3 +1,8 @@
+---
+title: SNS Topic Event Source Declaration - Function
+description: LambdaSharp YAML syntax for Amazon SNS Topic event source
+keywords: amazon, sns, topic, event source, declaration, lambda, syntax, yaml, cloudformation
+---
 # SNS Topic Source
 
 See [SNS Topic sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/SnsSample/) for an example of how to use the SNS Topic source.

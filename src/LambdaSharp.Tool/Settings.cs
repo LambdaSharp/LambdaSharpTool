@@ -193,6 +193,7 @@ namespace LambdaSharp.Tool {
 
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
+        public VersionInfo CoreServicesVersion => ToolVersion.GetCompatibleCoreServicesVersion();
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");

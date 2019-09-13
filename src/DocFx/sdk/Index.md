@@ -1,3 +1,8 @@
+---
+title: LambdaSharp SDK
+description: LambdaSharp SDK Overview
+keywords: sdk, overview, getting started, project, base class
+---
 ![λ#](~/images/SDK.png)
 
 # LambdaSharp SDK
@@ -6,7 +11,7 @@ The LambdaSharp assembly is automatically added when you use `lash` to add a fun
 
 ## Creating a LambdaSharp Project
 
-Create a folder for your first λ# module and open it your favorite terminal application.
+Create a folder for your first LambdaSharp module and open it your favorite terminal application.
 
 Run the following command to create a `Module.yml` file in the current folder.
 ```bash

@@ -1,6 +1,11 @@
+---
+title: Using Section - Module
+description: LambdaSharp module Using section
+keywords: module, using, section, configuration, syntax, yaml, cloudformation
+---
 # Using
 
-The `Using` section, in the [λ# Module](Index.md), lists modules that the current module uses. During deployment, the λ# CLI checks if the used modules are present. If not, it will attempt to find and deploy them, resolving their dependencies recursively.
+The `Using` section, in the [LambdaSharp Module](Index.md), lists modules that the current module uses. During deployment, the LambdaSharp CLI checks if the used modules are present. If not, it will attempt to find and deploy them, resolving their dependencies recursively.
 
 ## Syntax
 
@@ -26,7 +31,7 @@ The <code>Description</code> attribute specifies the description for the module 
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> attribute specifies the full name of the required module with an optional version and origin. The format must be <code>Namespace.Name[:Version][@Origin]</code>. Parts in brackets (<code>[ ]</code>) are optional. Without a version specifier, λ# uses the latest version it can find that is compatible with the λ# CLI. Without an origin, λ# uses the deployment bucket name of the active deployment tier as origin. Compilation fails if the λ# CLI cannot find a published module that matches the criteria.
+The <code>Module</code> attribute specifies the full name of the required module with an optional version and origin. The format must be <code>Namespace.Name[:Version][@Origin]</code>. Parts in brackets (<code>[ ]</code>) are optional. Without a version specifier, LambdaSharp uses the latest version it can find that is compatible with the LambdaSharp CLI. Without an origin, LambdaSharp uses the deployment bucket name of the active deployment tier as origin. Compilation fails if the LambdaSharp CLI cannot find a published module that matches the criteria.
 
 <i>Required</i>: Yes
 

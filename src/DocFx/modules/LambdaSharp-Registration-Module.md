@@ -1,10 +1,16 @@
+---
+title: LambdaSharp::Registration::Module - LambdaSharp.Core Module
+description: Documentation for LambdaSharp::Registration::Module resource type
+keywords: module, core, documentation, registration, resource, type, properties, attributes
+---
+
 # LambdaSharp::Registration::Module
 
 The `LambdaSharp::Registration::Module` type creates a new or updates an existing module registration. The registration is used to combine the logs from the module functions into a single module report.
 
 ## Using
 
-> **NOTE:** the λ# CLI automatically adds the required `Using` statement to all modules.
+> **NOTE:** the LambdaSharp CLI automatically adds the required `Using` statement to all modules.
 
 ```yaml
 Using:
