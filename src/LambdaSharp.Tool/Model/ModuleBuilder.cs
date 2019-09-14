@@ -712,7 +712,7 @@ namespace LambdaSharp.Tool.Model {
             var stack = new Humidifier.CloudFormation.Stack {
                 NotificationARNs = FnRef("AWS::NotificationARNs"),
                 Parameters = moduleParameters,
-                Tags = {
+                Tags = new List<Humidifier.Tag> {
                     new Humidifier.Tag {
                         Key = "LambdaSharp:Module",
                         Value = moduleInfo.FullName
