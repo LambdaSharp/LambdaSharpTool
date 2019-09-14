@@ -416,7 +416,7 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine($"=> Stack creation initiated for {stackName}");
                     var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                         StackName = stackName,
-                        Capabilities = { },
+                        Capabilities = new List<string> { },
                         OnFailure = OnFailure.DELETE,
                         Parameters = templateParameters,
                         EnableTerminationProtection = protectStack,
@@ -436,7 +436,7 @@ namespace LambdaSharp.Tool.Cli {
                         var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
                         var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
                             StackName = stackName,
-                            Capabilities = { },
+                            Capabilities = new List<string> { },
                             Parameters = templateParameters,
                             TemplateBody = template,
                             Tags = settings.GetCloudFormationStackTags("LambdaSharp.Core", stackName)
