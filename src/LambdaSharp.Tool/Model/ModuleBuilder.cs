@@ -1119,7 +1119,7 @@ namespace LambdaSharp.Tool.Model {
                         PolicyName = FnSub($"${{AWS::StackName}}ModuleRole{name}"),
                         PolicyDocument = new Humidifier.PolicyDocument {
                             Version = "2012-10-17",
-                            Statement = {
+                            Statement = new List<Humidifier.Statement> {
                                 new Humidifier.Statement {
                                     Sid = name.ToIdentifier(),
                                     Effect = "Allow",
