@@ -184,6 +184,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 #### Fixes
 * Fixed an issue with legacy CloudFormation notification topics.
+* Fixed an issue with build failing to abort after finding a type error during `util create-invoke-methods-schema` invocation.
 
 ### (v0.7.0.1) - 2019-09-12
 
