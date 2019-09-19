@@ -15,7 +15,7 @@ A finalizer can be used to initialize a database, such as a DynamoDB table, as p
 ## Use Case 2: Emptying a Resource
 A finalizer can be used to prepare a resource for deletion, such as an S3 bucket. A common and frustrating experience is a failed CloudFormation stack deletion because of a non-empty S3 bucket. With a finalizer, the contents can be purged before the bucket is deleted.
 
-> Note: emptying an S3 bucket is such a common use case that it is captured as a new resource type in the [`LambdaSharp.S3.IO` module](~/modues/LambdaSharp-S3-IO.md) (see [LambdaSharp::S3::EmptyBucket](~/modules/LambdaSharp-S3-EmptyBucket.md) resource for more details).
+> Note: emptying an S3 bucket is such a common use case that it is captured as a new resource type in the [`LambdaSharp.S3.IO` module](~/modules/LambdaSharp-S3-IO.md) (see [LambdaSharp::S3::EmptyBucket](~/modules/LambdaSharp-S3-EmptyBucket.md) resource for more details).
 
 ## Use Case 3: Clean-up of Dynamic Resources
 A finalizer is crucial for CloudFormation stacks which create additional resources as part of their operation. Without a finalizer, a CloudFormation stack would otherwise leak resources when deleted.

@@ -1,6 +1,9 @@
 - name: Setup
   href: Setup.md
 
+- name: Why LambdaSharp?
+  href: WhyLambdaSharp.md
+
 - name: Video Tutorials
   href: VideoTutorials.md
 
@@ -25,27 +28,6 @@
 
     - name: Misc. λ# Samples
       href: https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ReadMe.md
-
-- name: Blog Posts
-  items:
-
-    - name: A Compiler for CloudFormation
-      href: https://medium.com/mindtouch-engineering/%CE%BB-a-compiler-for-cloudformation-b35744e49d6c
-
-    - name: Constructors/Destructors for CloudFormation
-      href: https://medium.com/mindtouch-engineering/constructors-destructors-for-cloudformation-stacks-233de1b1fcca
-
-    - name: v0.5 Release
-      href: https://medium.com/mindtouch-engineering/%CE%BB-news-0-5-rc1-released-906bdfc059a
-
-    - name: v0.5.0.1 Release
-      href: https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-1-release-notes-f07966ace1c5
-
-    - name: v0.5.0.2 Release
-      href: https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-2-release-notes-69458b35bddd
-
-    - name: v0.5.0.3 Release
-      href: https://medium.com/mindtouch-engineering/%CE%BB-v0-5-0-3-release-notes-9d27082609c5
 
 - name: Releases
   items:
