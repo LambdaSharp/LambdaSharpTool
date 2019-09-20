@@ -92,8 +92,8 @@ namespace MySampleModule.MyFunction {
 
 ### Articles
 
-1. [LambdaSharp — A Compiler for CloudFormation](https://medium.com/mindtouch-engineering/%CE%BB-a-compiler-for-cloudformation-b35744e49d6c)
-1. [LambdaSharp — Constructors/Destructors for CloudFormation](https://medium.com/mindtouch-engineering/constructors-destructors-for-cloudformation-stacks-233de1b1fcca)
+1. [Why LambdaSharp?](https://lambdasharp.net/articles/WhyLambdaSharp.html)
+1. [Constructors/Destructors for CloudFormation](https://lambdasharp.net/articles/Finalizer.html)
 
 ### Samples
 

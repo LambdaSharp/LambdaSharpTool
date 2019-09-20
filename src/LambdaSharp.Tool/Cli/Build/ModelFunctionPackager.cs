@@ -707,6 +707,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // check if lambdasharp is installed or if we need to run it using dotnet
             var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
+            bool success;
             if(lambdaSharpFolder == null) {
 
                 // check if lash executable exists (it should since we're running)
@@ -715,7 +716,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("failed to find the \"lash\" executable in path.");
                     return false;
                 }
-                var success = ProcessLauncher.Execute(
+                success = ProcessLauncher.Execute(
                     lash,
                     arguments,
                     Settings.WorkingDirectory,
@@ -729,7 +730,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("failed to find the \"dotnet\" executable in path.");
                     return false;
                 }
-                var success = ProcessLauncher.Execute(
+                success = ProcessLauncher.Execute(
                     dotNetExe,
                     new[] {
                         "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
@@ -737,6 +738,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     Settings.WorkingDirectory,
                     Settings.VerboseLevel >= VerboseLevel.Detailed
                 );
+            }
+            if(!success) {
+                return false;
             }
             try {
                 var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile)).ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));

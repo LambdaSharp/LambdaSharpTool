@@ -84,6 +84,36 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 return false;
             }
 
+            // verify if we need to remove the old CloudFormation notification ARNs that were created by LambdaSharp config before v0.7
+            List<string> notificationARNs = null;
+            if(mostRecentStackEventId != null) {
+
+                // NOTE (2019-09-19, bjorg): this is a HACK to remove the old notification ARNs, because doing it part
+                //  of the change set is not working for some reason.
+                var deployedModule = await Settings.CfnClient.GetStackAsync(stackName, LogError);
+                notificationARNs = deployedModule.Stack.NotificationARNs.Where(arn => !arn.Contains(":LambdaSharpTool-")).ToList();
+                if(notificationARNs.Count != deployedModule.Stack.NotificationARNs.Count) {
+                    Console.WriteLine("=> Removing legacy stack notification ARN");
+                    var update = await Settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
+                        StackName = stackName,
+                        UsePreviousTemplate = true,
+                        Parameters = deployedModule.Stack.Parameters.Select(param => new CloudFormationParameter {
+                            ParameterKey = param.ParameterKey,
+                            UsePreviousValue = true
+                        }).ToList(),
+                        NotificationARNs = notificationARNs,
+                        Capabilities = validation.Capabilities
+                    });
+                    var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, LogError);
+                    if(!outcome.Success) {
+                        LogError("failed to remove legacy stack notification ARN; remove manually and try again");
+                        return false;
+                    }
+                    mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
+                    Console.WriteLine("=> Legacy stack notification ARN has been removed");
+                }
+            }
+
             // create change-set
             var success = false;
             var changeSetName = $"{moduleLocation.ModuleInfo.FullName.Replace(".", "-")}-{now:yyyy-MM-dd-hh-mm-ss}";
@@ -92,29 +122,35 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
                 : "";
             Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
-            var response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
-                Capabilities = validation.Capabilities,
-                ChangeSetName = changeSetName,
-                ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
-                Parameters = new List<CloudFormationParameter>(parameters) {
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentPrefix",
-                        ParameterValue = Settings.TierPrefix
+            CreateChangeSetResponse response;
+            try {
+                response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
+                    Capabilities = validation.Capabilities,
+                    ChangeSetName = changeSetName,
+                    ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
+                    Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
+                    Parameters = new List<CloudFormationParameter>(parameters) {
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentPrefix",
+                            ParameterValue = Settings.TierPrefix
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentPrefixLowercase",
+                            ParameterValue = Settings.TierPrefix.ToLowerInvariant()
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentBucketName",
+                            ParameterValue = Settings.DeploymentBucketName
+                        }
                     },
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentPrefixLowercase",
-                        ParameterValue = Settings.TierPrefix.ToLowerInvariant()
-                    },
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentBucketName",
-                        ParameterValue = Settings.DeploymentBucketName
-                    }
-                },
-                StackName = stackName,
-                TemplateURL = moduleLocation.ModuleTemplateUrl,
-                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
-            });
+                    StackName = stackName,
+                    TemplateURL = moduleLocation.ModuleTemplateUrl,
+                    Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
+                });
+            } catch(AmazonCloudFormationException e) {
+                LogError($"cloudformation change-set failed: {e.Message}");
+                return false;
+            }
             try {
                 var changes = await WaitForChangeSetAsync(response.Id);
                 if(changes == null) {
