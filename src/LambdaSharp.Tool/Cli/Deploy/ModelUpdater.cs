@@ -101,7 +101,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                             ParameterKey = param.ParameterKey,
                             UsePreviousValue = true
                         }).ToList(),
-                        NotificationARNs = notificationARNs
+                        NotificationARNs = notificationARNs,
+                        Capabilities = validation.Capabilities
                     });
                     var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, LogError);
                     if(!outcome.Success) {
@@ -110,7 +111,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
                     mostRecentStackEventId = await Settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
                     Console.WriteLine("=> Legacy stack notification ARN has been removed");
-                    Console.WriteLine();
                 }
             }
 
