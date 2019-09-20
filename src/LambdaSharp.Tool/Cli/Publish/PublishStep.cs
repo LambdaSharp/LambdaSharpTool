@@ -137,6 +137,12 @@ namespace LambdaSharp.Tool.Cli.Publish {
             } else {
                 Settings.WriteAnsiLine($"=> No changes found to upload", AnsiTerminal.BrightBlack);
             }
+            Console.WriteLine();
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Published: {AnsiTerminal.Green}{manifest.ModuleInfo}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"=> Published: {manifest.ModuleInfo}");
+            }
             return manifest.ModuleInfo;
         }
 
@@ -248,8 +254,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     Key = destinationKey
                 };
                 request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
-                await _transferUtility.UploadAsync(request);
-                _changesDetected = true;
+                try {
+                    await _transferUtility.UploadAsync(request);
+                    _changesDetected = true;
+                } catch(AmazonS3Exception e) when(e.Message == "The XML you provided was not well-formed or did not validate against our published schema") {
+
+                    // NOTE (2019-09-14, bjorg): this exception can occur on slow/unreliable networks
+                    LogError("unable to upload template due to a network error");
+                }
             }
             return destinationKey;
         }
@@ -267,8 +279,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     Key = destinationKey
                 };
                 request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
-                await _transferUtility.UploadAsync(request);
-                _changesDetected = true;
+                try {
+                    await _transferUtility.UploadAsync(request);
+                    _changesDetected = true;
+                } catch(AmazonS3Exception e) when(e.Message == "The XML you provided was not well-formed or did not validate against our published schema") {
+
+                    // NOTE (2019-09-14, bjorg): this exception can occur on slow/unreliable networks
+                    LogError($"unable to upload {description} due to a network error");
+                }
             }
             return destinationKey;
         }

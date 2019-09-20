@@ -570,8 +570,7 @@ namespace LambdaSharp.Tool.Cli {
                     (messageType == typeof(string))
                     || messageType.IsValueType
                 ) {
-                    LogError($"{methodReference} has unsupported type {parameterName}");
-                    return null;
+                    throw new ProcessTargetInvocationException($"{methodReference} has unsupported type {parameterName}");
                 }
 
                 // check if request/response type is inside 'Task<T>'
