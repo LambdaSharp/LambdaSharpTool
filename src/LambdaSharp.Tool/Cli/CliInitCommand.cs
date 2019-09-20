@@ -150,9 +150,16 @@ namespace LambdaSharp.Tool.Cli {
             var updateExistingTier = false;
             if(!createNewTier) {
 
-                // if core services state is not requested, inherit current state
+                // check if core services state was not specified
                 if(coreServices == CoreServices.Undefined) {
+
+                    // inherit current state
                     coreServices = settings.CoreServices;
+                }
+
+                // always upgrade Bootstrap state to Enabled, since the former is a transitional state only
+                if(coreServices == CoreServices.Bootstrap) {
+                    coreServices = CoreServices.Enabled;
                 }
 
                 // determine if the deployment tier needs to be updated
