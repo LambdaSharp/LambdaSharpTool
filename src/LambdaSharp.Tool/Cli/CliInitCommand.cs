@@ -299,7 +299,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // check if operating services need to be installed/updated
             if(createNewTier) {
-                Console.WriteLine();
+            Console.WriteLine();
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
             } else if(updateExistingTier) {
                 Console.WriteLine();
