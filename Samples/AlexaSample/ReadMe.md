@@ -70,6 +70,6 @@ FunctionAlexaPermission:
   Properties:
     Action: lambda:InvokeFunction
     EventSourceToken: !Ref AlexaSkillID
-    FunctionName: !GetAtt Function.Arn
+    FunctionName: !Ref Function
     Principal: alexa-appkit.amazon.com
 ```

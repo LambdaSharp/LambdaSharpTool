@@ -791,7 +791,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     resource: new Humidifier.Lambda.Permission {
                         Action = "lambda:InvokeFunction",
-                        FunctionName = FnGetAtt(route.Function.FullName, "Arn"),
+                        FunctionName = FnRef(route.Function.FullName),
                         Principal = "apigateway.amazonaws.com",
                         SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{route.Source.HttpMethod}/{string.Join("/", route.Source.Path)}")
                     },
@@ -938,7 +938,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "sns.amazonaws.com",
                                 SourceArn = arn
                             },
@@ -997,7 +997,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "events.amazonaws.com",
                                 SourceArn = FnGetAtt(schedule.FullName, "Arn")
                             },
@@ -1021,7 +1021,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "s3.amazonaws.com",
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn
@@ -1123,7 +1123,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "alexa-appkit.amazon.com",
                                 EventSourceToken = eventSourceToken
                             },
