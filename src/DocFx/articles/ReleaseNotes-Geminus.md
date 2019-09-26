@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.2) - 2019-09-20
+# LambdaSharp "Geminus" Release (v0.7.0.3) - TBD
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,7 +180,11 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.3) - TBD
+
 ### (v0.7.0.2) - 2019-09-20
+* Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
+* Use function name instead of ARN b/c of 64 character limit
 
 #### Fixes
 * Fixed an issue with legacy CloudFormation notification topics.
