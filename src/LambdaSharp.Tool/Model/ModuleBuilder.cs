@@ -954,6 +954,22 @@ namespace LambdaSharp.Tool.Model {
             );
             function.Function.Code.S3Key = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
 
+            // create function log-group with retention window
+            AddResource(
+                parent: function,
+                name: "LogGroup",
+                description: null,
+                scope: null,
+                resource: new Humidifier.Logs.LogGroup {
+                    LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
+                    RetentionInDays = FnRef("Module::LogRetentionInDays")
+                },
+                resourceExportAttribute: null,
+                dependsOn: null,
+                condition: condition,
+                pragmas: null
+            );
+
             // check if function is a finalizer
             var isFinalizer = (parent == null) && (name == "Finalizer");
             if(isFinalizer) {
@@ -978,23 +994,6 @@ namespace LambdaSharp.Tool.Model {
                         ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
                         ["ModuleVersion"] = Version.ToString()
                     }),
-                    resourceExportAttribute: null,
-                    dependsOn: null,
-                    condition: condition,
-                    pragmas: null
-                );
-            } else {
-
-                // create function log-group with retention window
-                AddResource(
-                    parent: function,
-                    name: "LogGroup",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.Logs.LogGroup {
-                        LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
-                        RetentionInDays = FnRef("Module::LogRetentionInDays")
-                    },
                     resourceExportAttribute: null,
                     dependsOn: null,
                     condition: condition,

@@ -181,10 +181,11 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 ## Releases
 
 ### (v0.7.0.3) - TBD
+* Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
+* Use function name instead of ARN b/c of 64 character limit.
+* Create LogGroup for `Finalizer` function.
 
 ### (v0.7.0.2) - 2019-09-20
-* Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
-* Use function name instead of ARN b/c of 64 character limit
 
 #### Fixes
 * Fixed an issue with legacy CloudFormation notification topics.
