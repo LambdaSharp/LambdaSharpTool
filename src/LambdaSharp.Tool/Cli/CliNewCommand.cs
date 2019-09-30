@@ -344,6 +344,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // always of type finalizer
                 functionType = FunctionType.Finalizer;
+                functionTimeout = 900;
             } else if(functionType == FunctionType.Unknown) {
 
                 // prompt for function type
