@@ -8,7 +8,7 @@
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
     <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
     <Title>LambdaSharp (λ#) Slack</Title>
-    <Description>A serverless framework for rapid application development of Slack integrations</Description>
+    <Description>Serverless .NET for AWS - Slack Integration</Description>
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2019</Copyright>
     <Authors>Bjorg</Authors>
