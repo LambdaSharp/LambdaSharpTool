@@ -31,8 +31,8 @@ namespace LambdaSharp.Tool.Model.AST {
                 "OperationName",
                 "ApiKeyRequired",
                 "AuthorizationType",
-                "AuthorizerId",
                 "AuthorizationScopes",
+                "AuthorizerId",
                 "Invoke"
             },
             ["Schedule"] = new[] {
@@ -67,8 +67,8 @@ namespace LambdaSharp.Tool.Model.AST {
                 "OperationName",
                 "ApiKeyRequired",
                 "AuthorizationType",
-                "AuthorizerId",
                 "AuthorizationScopes",
+                "AuthorizerId",
                 "Invoke"
             }
         };

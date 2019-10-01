@@ -297,9 +297,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["ApiId"] = FnRef(webSocket.FullName),
                         ["RouteKey"] = webSocketRoute.Source.RouteKey,
                         ["ApiKeyRequired"] = webSocketRoute.Source.ApiKeyRequired,
-                        ["AuthorizerId"] = webSocketRoute.Source.AuthorizerId,
                         ["AuthorizationType"] = webSocketRoute.Source.AuthorizationType ?? "NONE",
                         ["AuthorizationScopes"] =  webSocketRoute.Source.AuthorizationScopes,
+                        ["AuthorizerId"] = webSocketRoute.Source.AuthorizerId,
                         ["OperationName"] = webSocketRoute.Source.OperationName,
                         ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                     };
