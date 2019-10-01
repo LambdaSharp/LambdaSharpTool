@@ -184,6 +184,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
 * Use function name instead of ARN b/c of 64 character limit.
 * Create LogGroup for `Finalizer` function.
+* Fixed issue where nested types caused issues for WebSocket models.
 
 ### (v0.7.0.2) - 2019-09-20
 
