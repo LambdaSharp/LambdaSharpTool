@@ -125,28 +125,28 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             CreateChangeSetResponse response;
             try {
                 response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
-                Capabilities = validation.Capabilities,
-                ChangeSetName = changeSetName,
-                ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
-                Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
-                Parameters = new List<CloudFormationParameter>(parameters) {
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentPrefix",
-                        ParameterValue = Settings.TierPrefix
+                    Capabilities = validation.Capabilities,
+                    ChangeSetName = changeSetName,
+                    ChangeSetType = (mostRecentStackEventId != null) ? ChangeSetType.UPDATE : ChangeSetType.CREATE,
+                    Description = $"Stack {updateOrCreate} {moduleLocation.ModuleInfo.FullName} (v{moduleLocation.ModuleInfo.Version})",
+                    Parameters = new List<CloudFormationParameter>(parameters) {
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentPrefix",
+                            ParameterValue = Settings.TierPrefix
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentPrefixLowercase",
+                            ParameterValue = Settings.TierPrefix.ToLowerInvariant()
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentBucketName",
+                            ParameterValue = Settings.DeploymentBucketName
+                        }
                     },
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentPrefixLowercase",
-                        ParameterValue = Settings.TierPrefix.ToLowerInvariant()
-                    },
-                    new CloudFormationParameter {
-                        ParameterKey = "DeploymentBucketName",
-                        ParameterValue = Settings.DeploymentBucketName
-                    }
-                },
-                StackName = stackName,
-                TemplateURL = moduleLocation.ModuleTemplateUrl,
-                Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
-            });
+                    StackName = stackName,
+                    TemplateURL = moduleLocation.ModuleTemplateUrl,
+                    Tags = Settings.GetCloudFormationStackTags(moduleLocation.ModuleInfo.FullName, stackName)
+                });
             } catch(AmazonCloudFormationException e) {
                 LogError($"cloudformation change-set failed: {e.Message}");
                 return false;
