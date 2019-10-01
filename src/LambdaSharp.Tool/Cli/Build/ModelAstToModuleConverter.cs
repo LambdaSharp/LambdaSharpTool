@@ -155,6 +155,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Path = path,
                         Integration = integration,
                         OperationName = source.OperationName,
+                        AuthorizerId = source.AuthorizerId,
+                        AuthorizationScopes =  source.AuthorizationScopes,
                         ApiKeyRequired = source.ApiKeyRequired,
                         Invoke = source.Invoke
                     };
