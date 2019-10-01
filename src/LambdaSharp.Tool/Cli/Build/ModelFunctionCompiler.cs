@@ -296,7 +296,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var routeResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::Route") {
                         ["ApiId"] = FnRef(webSocket.FullName),
                         ["RouteKey"] = webSocketRoute.Source.RouteKey,
-                        ["AuthorizationType"] = "NONE",
+                        ["ApiKeyRequired"] = webSocketRoute.Source.ApiKeyRequired,
+                        ["AuthorizerId"] = webSocketRoute.Source.AuthorizerId,
+                        ["AuthorizationType"] = webSocketRoute.Source.AuthorizationType ?? "NONE",
+                        ["AuthorizationScopes"] =  webSocketRoute.Source.AuthorizationScopes,
                         ["OperationName"] = webSocketRoute.Source.OperationName,
                         ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                     };
@@ -832,12 +835,12 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(FunctionItem function, RestApiSource source) {
                 return new Humidifier.ApiGateway.Method {
-                    AuthorizationType = "NONE",
                     HttpMethod = source.HttpMethod,
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
-                    AuthorizerId = source.AuthorizerId,
+                    AuthorizationType = source.AuthorizationType ?? "NONE",
                     AuthorizationScopes =  source.AuthorizationScopes,
+                    AuthorizerId = source.AuthorizerId,
                     ResourceId = parentId,
                     RestApiId = restApiId,
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
@@ -858,8 +861,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                     HttpMethod = source.HttpMethod,
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
-                    AuthorizerId = source.AuthorizerId,
-                    AuthorizationScopes =  source.AuthorizationScopes,
                     ResourceId = parentId,
                     RestApiId = restApiId,
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {

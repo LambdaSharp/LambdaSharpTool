@@ -66,9 +66,10 @@ namespace LambdaSharp.Tool.Model {
         public string[] Path { get; set; }
         public ApiGatewaySourceIntegration Integration { get; set; }
         public string OperationName { get; set; }
-        public object AuthorizerId { get; set; }
-        public string[] AuthorizationScopes { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string AuthorizationType { get; set; }
+        public string[] AuthorizationScopes { get; set; }
+        public object AuthorizerId { get; set; }
         public string Invoke { get; set; }
         public string RequestContentType { get; set; }
         public object RequestSchema { get; set; }
@@ -88,6 +89,9 @@ namespace LambdaSharp.Tool.Model {
         public string RouteKey { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string AuthorizationType { get; set; }
+        public object AuthorizerId { get; set; }
+        public string[] AuthorizationScopes { get; set; }
         public string Invoke { get; set; }
         public string RequestContentType { get; set; }
         public object RequestSchema { get; set; }

@@ -155,9 +155,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Path = path,
                         Integration = integration,
                         OperationName = source.OperationName,
-                        AuthorizerId = source.AuthorizerId,
-                        AuthorizationScopes =  source.AuthorizationScopes,
                         ApiKeyRequired = source.ApiKeyRequired,
+                        AuthorizationType = source.AuthorizationType,
+                        AuthorizationScopes =  source.AuthorizationScopes,
+                        AuthorizerId = source.AuthorizerId,
                         Invoke = source.Invoke
                     };
                 });
@@ -215,6 +216,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     RouteKey = source.WebSocket.Trim(),
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
+                    AuthorizationType = source.AuthorizationType,
+                    AuthorizationScopes =  source.AuthorizationScopes,
+                    AuthorizerId = source.AuthorizerId,
                     Invoke = source.Invoke
                 });
             }
