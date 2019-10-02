@@ -192,6 +192,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * Fixed issue where nested types caused issues for WebSocket models.
 * `lash new function` now defaults to 900 seconds timeout when adding a `Finalizer` definition to a module.
 * Fixed issue where `ApiKeyRequired` was not properly set for WebSocket sources.
+* Improved heuristic for identifying if a legacy CloudFormation stack belongs to the deployment tier.
 
 ### (v0.7.0.2) - 2019-09-20
 
