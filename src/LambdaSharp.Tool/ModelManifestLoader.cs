@@ -327,7 +327,7 @@ namespace LambdaSharp.Tool {
                 if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
                     LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
                 } else if(!deployedModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
+                    LogError($"deployed dependent module {dependency.ModuleInfo.FullName} (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
                 }
                 return result;
             }
