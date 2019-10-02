@@ -38,13 +38,27 @@ namespace LambdaSharp.Tool.Cli.Tier {
             do {
                 var response = await Settings.CfnClient.DescribeStacksAsync(request);
                 stacks.AddRange(response.Stacks.Where(summary => {
+                    var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
+
+                    // if the stack doesn't have the 'LambdaSharpTier' output value, we need a different heuristic
+                    if(lambdaSharpTier == null) {
+
+                        // NOTE (2019-09-19, bjorg): for legacy stacks without the 'LambdaSharpTier' output value, we check
+                        //  for the presence of the 'Secrets' and 'DeploymentBucketName' parameters to determine if the stack
+                        //  was deployed by the LambdaSharp.Tool
+                        if(
+                            summary.Parameters.Any(parameter => parameter.ParameterKey == "Secrets")
+                            && summary.Parameters.Any(parameter => parameter.ParameterKey == "DeploymentBucketName")
+                        ) {
+
+                            // check if the stack is prefixed with the deployment tier name
+                            return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
+                        }
+                        return false;
+                    }
 
                     // NOTE (2019-06-18, bjorg): empty string output values are returned as `null` values; so we need to first detect
                     //  if an output key exists and then default to empty string when it is null to properly compare it.
-                    var lambdaSharpTier = summary.Outputs.FirstOrDefault(output => output.OutputKey == "LambdaSharpTier");
-                    if(lambdaSharpTier == null) {
-                        return (prefix.Length > 0) && summary.StackName.StartsWith(prefix, StringComparison.Ordinal);
-                    }
                     return (lambdaSharpTier.OutputValue ?? "") == Settings.Tier;
                 }));
                 request.NextToken = response.NextToken;
