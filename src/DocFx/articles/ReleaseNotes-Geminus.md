@@ -199,6 +199,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * Fixed `lash new function Finalizer` to default to 900 seconds timeout.
     * Fixed issue where `ApiKeyRequired` was not properly set for WebSocket sources.
     * Improved heuristic for identifying if a legacy CloudFormation stack belongs to the deployment tier.
+    * Generate a single Lambda permission resource per REST API/WebSocket to Lambda function combination to avoid exceeding the resource policy size limit.
 * `LambdaSharp.S3.IO` Module
     * Fixed an issue with empty zip packages.
 * LambdaSharp Assemblies
