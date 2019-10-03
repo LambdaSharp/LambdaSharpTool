@@ -71,7 +71,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "003113AC2B49B5FBEB2C013B23905587"
+      "Default": "03603DACB46E7BD1FC8C2E4B2FB7E206"
     }
   },
   "Resources": {
@@ -535,10 +535,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "alexa-appkit.amazon.com"
       }
@@ -549,10 +546,7 @@
         "Action": "lambda:InvokeFunction",
         "EventSourceToken": "amzn1.ask.skill.xxxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "alexa-appkit.amazon.com"
       }
@@ -573,10 +567,7 @@
           ]
         },
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "alexa-appkit.amazon.com"
       }
@@ -587,10 +578,10 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "003113AC2B49B5FBEB2C013B23905587"
+      "Value": "03603DACB46E7BD1FC8C2E4B2FB7E206"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -836,7 +827,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "003113AC2B49B5FBEB2C013B23905587",
+      "TemplateChecksum": "03603DACB46E7BD1FC8C2E4B2FB7E206",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -920,12 +911,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "602057D65566CDFCC43358DC3FB8C27E"
+      "Default": "1EA7AB164F158A1A98137205BE9C2165"
     }
   },
   "Resources": {
@@ -622,10 +622,10 @@
       "Value": "Sample.DynamoDB:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "602057D65566CDFCC43358DC3FB8C27E"
+      "Value": "1EA7AB164F158A1A98137205BE9C2165"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -855,7 +855,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "602057D65566CDFCC43358DC3FB8C27E",
+      "TemplateChecksum": "1EA7AB164F158A1A98137205BE9C2165",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -929,12 +929,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },

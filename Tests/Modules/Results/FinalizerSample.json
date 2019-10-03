@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "923D4D9D44EB2127A684A387F807A7EE"
+      "Default": "C9BF4F986D6E471407079B7029E7C967"
     }
   },
   "Resources": {
@@ -133,6 +133,15 @@
         }
       }
     },
+    "FinalizerLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${Finalizer}"
+        },
+        "RetentionInDays": 30
+      }
+    },
     "FinalizerInvocation": {
       "Type": "Custom::ModuleFinalizer",
       "Properties": {
@@ -174,6 +183,7 @@
       },
       "DependsOn": [
         "Finalizer",
+        "FinalizerLogGroup",
         "ModuleRole",
         "MyBucket"
       ]
@@ -422,10 +432,10 @@
       "Value": "Sample.Finalizer:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "923D4D9D44EB2127A684A387F807A7EE"
+      "Value": "C9BF4F986D6E471407079B7029E7C967"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -579,7 +589,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.Finalizer:1.0-DEV",
       "Description": "A sample module with a finalizer function",
-      "TemplateChecksum": "923D4D9D44EB2127A684A387F807A7EE",
+      "TemplateChecksum": "C9BF4F986D6E471407079B7029E7C967",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -635,18 +645,14 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },
     "LambdaSharp::NameMappings": {
       "Version": "2019-07-04",
       "ResourceNameMappings": {
+        "FinalizerLogGroup": "Finalizer::LogGroup",
         "FinalizerInvocation": "Finalizer::Invocation",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4CFF72A94B7FF2129C54BFEEB26D53F7"
+      "Default": "DE479BBCF880F91B629B4D2914579DC6"
     }
   },
   "Resources": {
@@ -577,10 +577,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -614,10 +611,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -663,10 +657,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -701,10 +692,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -739,10 +727,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -813,10 +798,10 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "4CFF72A94B7FF2129C54BFEEB26D53F7"
+      "Value": "DE479BBCF880F91B629B4D2914579DC6"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1046,7 +1031,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "4CFF72A94B7FF2129C54BFEEB26D53F7",
+      "TemplateChecksum": "DE479BBCF880F91B629B4D2914579DC6",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1120,12 +1105,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },

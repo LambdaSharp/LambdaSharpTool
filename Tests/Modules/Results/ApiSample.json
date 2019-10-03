@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9ED3F7C35B54BF98F5B01BC487FC551C"
+      "Default": "B4A16002AB275DAD062C4E688C9CFAA1"
     }
   },
   "Resources": {
@@ -577,10 +577,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -614,10 +611,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -663,10 +657,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -700,10 +691,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
@@ -773,10 +761,10 @@
       "Value": "Sample.ApiGateway:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "9ED3F7C35B54BF98F5B01BC487FC551C"
+      "Value": "B4A16002AB275DAD062C4E688C9CFAA1"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1006,7 +994,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "9ED3F7C35B54BF98F5B01BC487FC551C",
+      "TemplateChecksum": "B4A16002AB275DAD062C4E688C9CFAA1",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1080,12 +1068,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },
