@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "68AB78FAE85E9E8180EA9FFA7C3E7BD6"
+      "Default": "A6CCBCE0442555AC34FE509E9E6E30D2"
     }
   },
   "Resources": {
@@ -713,10 +713,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "QueryFunction",
-            "Arn"
-          ]
+          "Ref": "QueryFunction"
         },
         "Principal": "events.amazonaws.com",
         "SourceArn": {
@@ -744,10 +741,10 @@
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "68AB78FAE85E9E8180EA9FFA7C3E7BD6"
+      "Value": "A6CCBCE0442555AC34FE509E9E6E30D2"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1015,7 +1012,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "68AB78FAE85E9E8180EA9FFA7C3E7BD6",
+      "TemplateChecksum": "A6CCBCE0442555AC34FE509E9E6E30D2",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1140,12 +1137,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": [
         {

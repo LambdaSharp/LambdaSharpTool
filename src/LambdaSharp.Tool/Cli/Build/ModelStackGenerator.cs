@@ -102,6 +102,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }).ToList(),
                 Artifacts = module.Artifacts.ToList(),
                 Dependencies = module.Dependencies
+
+                    // no need to store LambdaSharp.Core dependency since the manifest already has a CoreServicesVersion property
+                    .Where(dependency => dependency.Value.ModuleLocation.ModuleInfo.FullName != "LambdaSharp.Core")
                     .Select(dependency => new ModuleManifestDependency {
                         ModuleInfo = dependency.Value.ModuleLocation.ModuleInfo,
                         Type = dependency.Value.Type

@@ -30,6 +30,9 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Integration",
                 "OperationName",
                 "ApiKeyRequired",
+                "AuthorizationType",
+                "AuthorizationScopes",
+                "AuthorizerId",
                 "Invoke"
             },
             ["Schedule"] = new[] {
@@ -63,6 +66,9 @@ namespace LambdaSharp.Tool.Model.AST {
             ["WebSocket"] = new[] {
                 "OperationName",
                 "ApiKeyRequired",
+                "AuthorizationType",
+                "AuthorizationScopes",
+                "AuthorizerId",
                 "Invoke"
             }
         };
@@ -74,6 +80,9 @@ namespace LambdaSharp.Tool.Model.AST {
         public string Integration { get; set; }
         public string OperationName { get; set; }
         public bool? ApiKeyRequired { get; set; }
+        public string AuthorizationType { get; set; }
+        public string[] AuthorizationScopes { get; set; }
+        public object AuthorizerId { get; set; }
         public string Invoke { get; set; }
 
         // CloudWatch Schedule Event Source
@@ -114,6 +123,9 @@ namespace LambdaSharp.Tool.Model.AST {
         public string WebSocket { get; set; }
         // public string OperationName { get; set; }
         // public bool? ApiKeyRequired { get; set; }
+        // public string AuthorizationType { get; set; }
+        // public string[] AuthorizationScopes { get; set; }
+        // public object AuthorizerId { get; set; }
         // public string Invoke { get; set; }
    }
 }

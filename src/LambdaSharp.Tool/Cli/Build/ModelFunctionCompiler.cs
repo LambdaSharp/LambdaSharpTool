@@ -296,7 +296,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var routeResource = new Humidifier.CustomResource("AWS::ApiGatewayV2::Route") {
                         ["ApiId"] = FnRef(webSocket.FullName),
                         ["RouteKey"] = webSocketRoute.Source.RouteKey,
-                        ["AuthorizationType"] = "NONE",
+                        ["ApiKeyRequired"] = webSocketRoute.Source.ApiKeyRequired,
+                        ["AuthorizationType"] = webSocketRoute.Source.AuthorizationType ?? "NONE",
+                        ["AuthorizationScopes"] =  webSocketRoute.Source.AuthorizationScopes,
+                        ["AuthorizerId"] = webSocketRoute.Source.AuthorizerId,
                         ["OperationName"] = webSocketRoute.Source.OperationName,
                         ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                     };
@@ -455,23 +458,27 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }
 
-                    // add lambda invocation permission resource
-                    _builder.AddResource(
-                        parent: webSocketRoute.Function,
-                        name: routeName + "Permission",
-                        description: $"WebSocket invocation permission for '{webSocketRoute.Source.RouteKey}'",
-                        scope: null,
-                        resource: new Humidifier.Lambda.Permission {
-                            Action = "lambda:InvokeFunction",
-                            FunctionName = FnRef(webSocketRoute.Function.FullName),
-                            Principal = "apigateway.amazonaws.com",
-                            SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::WebSocket}}/LATEST/{webSocketRoute.Source.RouteKey}")
-                        },
-                        resourceExportAttribute: null,
-                        dependsOn: null,
-                        condition: webSocketRoute.Function.Condition,
-                        pragmas: null
-                    );
+                    // check if a lambda permission for the WebSocket already exists for this function
+                    if(!_builder.TryGetItem($"{webSocketRoute.Function.FullName}::WebSocketPermission", out var _)) {
+
+                        // add lambda invocation permission resource
+                        _builder.AddResource(
+                            parent: webSocketRoute.Function,
+                            name: "WebSocketPermission",
+                            description: "WebSocket invocation permission",
+                            scope: null,
+                            resource: new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                FunctionName = FnRef(webSocketRoute.Function.FullName),
+                                Principal = "apigateway.amazonaws.com",
+                                SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::WebSocket}/LATEST/*")
+                            },
+                            resourceExportAttribute: null,
+                            dependsOn: null,
+                            condition: webSocketRoute.Function.Condition,
+                            pragmas: null
+                        );
+                    }
                 }
             }
 
@@ -783,23 +790,27 @@ namespace LambdaSharp.Tool.Cli.Build {
                     throw new ApplicationException($"unrecognized request response type: {route.Source.ResponseSchema} [{route.Source.ResponseSchema.GetType()}]");
                 }
 
-                // add permission to API method to invoke lambda
-                _builder.AddResource(
-                    parent: method,
-                    name: "Permission",
-                    description: null,
-                    scope: null,
-                    resource: new Humidifier.Lambda.Permission {
-                        Action = "lambda:InvokeFunction",
-                        FunctionName = FnGetAtt(route.Function.FullName, "Arn"),
-                        Principal = "apigateway.amazonaws.com",
-                        SourceArn = FnSub($"arn:aws:execute-api:${{AWS::Region}}:${{AWS::AccountId}}:${{Module::RestApi}}/LATEST/{route.Source.HttpMethod}/{string.Join("/", route.Source.Path)}")
-                    },
-                    resourceExportAttribute: null,
-                    dependsOn: null,
-                    condition: route.Function.Condition,
-                    pragmas: null
-                );
+                // check if a lambda permission for the REST API already exists for this function
+                if(!_builder.TryGetItem($"{route.Function.FullName}::RestApiPermission", out var _)) {
+
+                    // add permission to API method to invoke lambda
+                    _builder.AddResource(
+                        parent: route.Function,
+                        name: "RestApiPermission",
+                        description: "RestApi invocation permission",
+                        scope: null,
+                        resource: new Humidifier.Lambda.Permission {
+                            Action = "lambda:InvokeFunction",
+                            FunctionName = FnRef(route.Function.FullName),
+                            Principal = "apigateway.amazonaws.com",
+                            SourceArn = FnSub("arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${Module::RestApi}/LATEST/*")
+                        },
+                        resourceExportAttribute: null,
+                        dependsOn: null,
+                        condition: route.Function.Condition,
+                        pragmas: null
+                    );
+                }
             }
 
             // find sub-routes and group common sub-route prefix
@@ -832,10 +843,12 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(FunctionItem function, RestApiSource source) {
                 return new Humidifier.ApiGateway.Method {
-                    AuthorizationType = "NONE",
                     HttpMethod = source.HttpMethod,
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
+                    AuthorizationType = source.AuthorizationType ?? "NONE",
+                    AuthorizationScopes =  source.AuthorizationScopes,
+                    AuthorizerId = source.AuthorizerId,
                     ResourceId = parentId,
                     RestApiId = restApiId,
                     Integration = new Humidifier.ApiGateway.MethodTypes.Integration {
@@ -938,7 +951,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "sns.amazonaws.com",
                                 SourceArn = arn
                             },
@@ -997,7 +1010,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "events.amazonaws.com",
                                 SourceArn = FnGetAtt(schedule.FullName, "Arn")
                             },
@@ -1021,7 +1034,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "s3.amazonaws.com",
                                 SourceAccount = FnRef("AWS::AccountId"),
                                 SourceArn = arn
@@ -1123,7 +1136,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             scope: null,
                             resource: new Humidifier.Lambda.Permission {
                                 Action = "lambda:InvokeFunction",
-                                FunctionName = FnGetAtt(function.FullName, "Arn"),
+                                FunctionName = FnRef(function.FullName),
                                 Principal = "alexa-appkit.amazon.com",
                                 EventSourceToken = eventSourceToken
                             },

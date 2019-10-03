@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "4CFF72A94B7FF2129C54BFEEB26D53F7"
+      "Default": "218A90D69DE064F0CC6454B34701B46F"
     }
   },
   "Resources": {
@@ -572,19 +572,16 @@
         }
       }
     },
-    "ModuleRestApiItemsResourceGETPermission": {
+    "FunctionRestApiPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -606,22 +603,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        }
-      }
-    },
-    "ModuleRestApiItemsResourcePOSTPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/items"
         }
       }
     },
@@ -658,22 +639,6 @@
         }
       }
     },
-    "ModuleRestApiItemsResourceIdResourceGETPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items/{id}"
-        }
-      }
-    },
     "ModuleRestApiItemsResourceIdResourcePUT": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -696,22 +661,6 @@
         }
       }
     },
-    "ModuleRestApiItemsResourceIdResourcePUTPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/PUT/items/{id}"
-        }
-      }
-    },
     "ModuleRestApiItemsResourceIdResourceDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -731,22 +680,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        }
-      }
-    },
-    "ModuleRestApiItemsResourceIdResourceDELETEPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/DELETE/items/{id}"
         }
       }
     },
@@ -813,10 +746,10 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "4CFF72A94B7FF2129C54BFEEB26D53F7"
+      "Value": "218A90D69DE064F0CC6454B34701B46F"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1046,7 +979,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "4CFF72A94B7FF2129C54BFEEB26D53F7",
+      "TemplateChecksum": "218A90D69DE064F0CC6454B34701B46F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1120,12 +1053,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },
@@ -1142,16 +1070,12 @@
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiItemsResource": "Module::RestApi::ItemsResource",
         "ModuleRestApiItemsResourceGET": "Module::RestApi::ItemsResource::GET",
-        "ModuleRestApiItemsResourceGETPermission": "Module::RestApi::ItemsResource::GET::Permission",
+        "FunctionRestApiPermission": "Function::RestApiPermission",
         "ModuleRestApiItemsResourcePOST": "Module::RestApi::ItemsResource::POST",
-        "ModuleRestApiItemsResourcePOSTPermission": "Module::RestApi::ItemsResource::POST::Permission",
         "ModuleRestApiItemsResourceIdResource": "Module::RestApi::ItemsResource::IdResource",
         "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
-        "ModuleRestApiItemsResourceIdResourceGETPermission": "Module::RestApi::ItemsResource::IdResource::GET::Permission",
         "ModuleRestApiItemsResourceIdResourcePUT": "Module::RestApi::ItemsResource::IdResource::PUT",
-        "ModuleRestApiItemsResourceIdResourcePUTPermission": "Module::RestApi::ItemsResource::IdResource::PUT::Permission",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
-        "ModuleRestApiItemsResourceIdResourceDELETEPermission": "Module::RestApi::ItemsResource::IdResource::DELETE::Permission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
         "ModuleRestApiDeployment205C4114DCC4EBCDF14064D1920931CE": "Module::RestApi::Deployment205C4114DCC4EBCDF14064D1920931CE",
         "ModuleRestApiStage": "Module::RestApi::Stage"

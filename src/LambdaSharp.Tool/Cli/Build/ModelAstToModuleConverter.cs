@@ -110,6 +110,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("invalid module reference format");
                     return;
                 }
+                if(moduleInfo.Origin == null) {
+
+                    // default to deployment bucket as origin
+                    moduleInfo = moduleInfo.WithOrigin(Settings.DeploymentBucketName);
+                }
                 _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
             });
         }
@@ -156,6 +161,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                         Integration = integration,
                         OperationName = source.OperationName,
                         ApiKeyRequired = source.ApiKeyRequired,
+                        AuthorizationType = source.AuthorizationType,
+                        AuthorizationScopes =  source.AuthorizationScopes,
+                        AuthorizerId = source.AuthorizerId,
                         Invoke = source.Invoke
                     };
                 });
@@ -213,6 +221,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     RouteKey = source.WebSocket.Trim(),
                     OperationName = source.OperationName,
                     ApiKeyRequired = source.ApiKeyRequired,
+                    AuthorizationType = source.AuthorizationType,
+                    AuthorizationScopes =  source.AuthorizationScopes,
+                    AuthorizerId = source.AuthorizerId,
                     Invoke = source.Invoke
                 });
             }
@@ -389,9 +400,25 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Module == null) {
                         LogError("missing 'Module' attribute");
-                    } else if(!ModuleInfo.TryParse(node.Module, out var moduleInfo)) {
-                        LogError("invalid value for 'Module' attribute");
-                    } else {
+                        return;
+                    }
+
+                    // parse module information
+                    var moduleInfo = AtLocation("Module", () => {
+                        if(!ModuleInfo.TryParse(node.Module, out var innerModuleInfo)) {
+                            LogError("invalid module reference format");
+                            return null;
+                        }
+                        if(innerModuleInfo.Origin == null) {
+
+                            // default to deployment bucket as origin
+                            innerModuleInfo = innerModuleInfo.WithOrigin(Settings.DeploymentBucketName);
+                        }
+                        return innerModuleInfo;
+                    });
+
+                    // create nested module definition
+                    if(moduleInfo != null) {
 
                         // create nested module item
                         _builder.AddNestedModule(

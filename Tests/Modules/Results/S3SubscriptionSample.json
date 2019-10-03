@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DBA9086CCFEA7776AEF4E4BA0BDF8E31"
+      "Default": "7FF6E7337527BA3057A390B27D29E271"
     }
   },
   "Resources": {
@@ -643,10 +643,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "s3.amazonaws.com",
         "SourceAccount": {
@@ -698,10 +695,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "s3.amazonaws.com",
         "SourceAccount": {
@@ -757,10 +751,10 @@
       "Value": "Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "DBA9086CCFEA7776AEF4E4BA0BDF8E31"
+      "Value": "7FF6E7337527BA3057A390B27D29E271"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -990,7 +984,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "DBA9086CCFEA7776AEF4E4BA0BDF8E31",
+      "TemplateChecksum": "7FF6E7337527BA3057A390B27D29E271",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1065,10 +1059,6 @@
       },
       "Artifacts": [],
       "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        },
         {
           "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.0@lambdasharp",
           "Type": "Shared"

@@ -13,6 +13,10 @@ The LambdaSharp CLI uses the [API Gateway Lambda Proxy Integration](https://docs
 WebSocket: String
 OperationName: String
 ApiKeyRequired: Boolean
+AuthorizationType: String
+AuthorizationScopes:
+  - String
+AuthorizerId: String
 Invoke: String
 ```
 
@@ -41,6 +45,36 @@ The <code>ApiKeyRequired</code> attribute indicates whether the route requires c
 <i>Required</i>: No
 
 <i>Type</i>: Boolean
+</dd>
+
+<dt><code>AuthorizationType</code></dt>
+<dd>
+
+The <code>AuthorizationType</code> attribute indicates the authorization type for the route. Valid values are <code>NONE</code> for open access, <code>AWS_IAM</code> for using AWS IAM permissions, and <code>CUSTOM</code> for using a Lambda authorizer.
+
+<i>Required</i>: No (Default: <code>NONE</code>)
+
+<i>Type</i>: String
+</dd>
+
+<dt><code>AuthorizationScopes</code></dt>
+<dd>
+
+The <code>AuthorizationScopes</code> attribute holds the authorization scopes supported by this route.
+
+<i>Required</i>: No
+
+<i>Type</i>: List of String
+</dd>
+
+<dt><code>AuthorizerId</code></dt>
+<dd>
+
+The <code>AuthorizerId</code> attribute holds the identifier of the <code>Authorizer</code> resource associated with this route.
+
+<i>Required</i>: Conditional (Required when <code>AuthorizerType</code> is <code>CUSTOM</code>)
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>Invoke</code></dt>

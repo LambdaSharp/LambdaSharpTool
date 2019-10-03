@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "BF3C410E73DAABBC47A739D616CE285B"
+      "Default": "C03F63E188FE00AE07FDF422F2EE58CD"
     }
   },
   "Resources": {
@@ -585,10 +585,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "ResourceHandler",
-            "Arn"
-          ]
+          "Ref": "ResourceHandler"
         },
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
@@ -613,10 +610,10 @@
       "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "BF3C410E73DAABBC47A739D616CE285B"
+      "Value": "C03F63E188FE00AE07FDF422F2EE58CD"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -846,7 +843,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "BF3C410E73DAABBC47A739D616CE285B",
+      "TemplateChecksum": "C03F63E188FE00AE07FDF422F2EE58CD",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -920,12 +917,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::S3::Subscription",

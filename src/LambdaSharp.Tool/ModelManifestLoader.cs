@@ -327,7 +327,7 @@ namespace LambdaSharp.Tool {
                 if(deployedModuleInfo.FullName != dependency.ModuleInfo.FullName) {
                     LogError($"deployed dependent module name ({deployedModuleInfo.FullName}) does not match {dependency.ModuleInfo.FullName}");
                 } else if(!deployedModuleInfo.Version.MatchesConstraint(dependency.ModuleInfo.Version)) {
-                    LogError($"deployed dependent module version (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
+                    LogError($"deployed dependent module {dependency.ModuleInfo.FullName} (v{deployedModuleInfo.Version}) is not compatible with v{dependency.ModuleInfo.Version}");
                 }
                 return result;
             }
@@ -412,13 +412,13 @@ namespace LambdaSharp.Tool {
 
             // check if bucket exists
             if(headResponse.StatusCode == HttpStatusCode.NotFound) {
-                LogWarn($"could not find '{bucketName}'");
+                LogWarn($"could not find '{bucketName}' bucket");
                 return null;
             }
 
             // check for region header of bucket
             if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
-                LogWarn($"could not detect region for '{bucketName}'");
+                LogWarn($"could not detect region for '{bucketName}' bucket");
                 return null;
             }
 

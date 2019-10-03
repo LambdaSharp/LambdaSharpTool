@@ -170,6 +170,7 @@ namespace LambdaSharp.Tool.Cli {
                             type = settings.PromptString("Enter the resource type");
                         }
                         NewResource(
+                            settings,
                             moduleFile: Path.Combine(Directory.GetCurrentDirectory(), "Module.yml"),
                             resourceName: name,
                             resourceTypeName: type
@@ -344,6 +345,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // always of type finalizer
                 functionType = FunctionType.Finalizer;
+                functionTimeout = 900;
             } else if(functionType == FunctionType.Unknown) {
 
                 // prompt for function type
@@ -407,7 +409,7 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public void NewResource(string moduleFile, string resourceName, string resourceTypeName) {
+        public void NewResource(Settings settings, string moduleFile, string resourceName, string resourceTypeName) {
 
             // determine if we have a precise resource type match
             var matches = ResourceMapping.CloudformationSpec.ResourceTypes
@@ -417,16 +419,36 @@ namespace LambdaSharp.Tool.Cli {
             // check if we have an exact match
             if(!matches.TryGetValue(resourceTypeName, out var resourceType)) {
                 if(matches.Count == 0) {
+
+                    // no match, error out
                     LogError($"unable to find a match for '{resourceTypeName}'");
-                } else {
+                    return;
+                } else if(matches.Count == 1) {
+
+                    // not an exact match, but still unambiguous
+                    resourceTypeName = matches.First().Key;
+                    resourceType = matches.First().Value;
+                } else if(matches.Count < 10) {
+
+                    // a few multiple matches, let's prompt to disambiguate
+                    var choices = matches.OrderBy(item => item.Key)
+                        .Select(kv => kv.Key)
+                        .ToList();
                     Console.WriteLine();
-                    Console.WriteLine($"Found partial matches for '{resourceTypeName}'");
-                    foreach(var key in matches.OrderBy(item => item.Key)) {
-                        Console.WriteLine($"    {key}");
+                    resourceTypeName = settings.PromptChoice($"Select resource type", choices);
+                    Console.WriteLine();
+                    resourceType = matches[resourceTypeName];
+                } else {
+
+                    // too many matches, error out
+                    Console.WriteLine();
+                    Console.WriteLine($"Found too many partial matches for '{resourceTypeName}'");
+                    foreach(var kv in matches.OrderBy(item => item.Key)) {
+                        Console.WriteLine($"    {kv.Key}");
                     }
                     LogError($"unable to find exact match for '{resourceTypeName}'");
+                    return;
                 }
-                return;
             } else {
                 resourceType = matches.First().Value;
             }

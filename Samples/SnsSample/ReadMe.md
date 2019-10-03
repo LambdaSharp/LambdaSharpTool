@@ -79,7 +79,7 @@ FunctionTopicSnsPermission:
   Type: AWS::Lambda::Permission
   Properties:
     Action: lambda:InvokeFunction
-    FunctionName: !GetAtt Function.Arn
+    FunctionName: !Ref Function
     Principal: sns.amazonaws.com
     SourceArn: !Ref Topic
 ```

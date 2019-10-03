@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "35FA93C35FA961A587ABBECDADC4F926"
+      "Default": "EC2F6C5CB939AEAA0F410BD75F4D6565"
     }
   },
   "Resources": {
@@ -694,10 +694,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "S3Writer",
-            "Arn"
-          ]
+          "Ref": "S3Writer"
         },
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
@@ -744,10 +741,10 @@
       "Value": "LambdaSharp.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "35FA93C35FA961A587ABBECDADC4F926"
+      "Value": "EC2F6C5CB939AEAA0F410BD75F4D6565"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -977,7 +974,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.IO:1.0-DEV",
       "Description": "LambdaSharp S3 Utility Module",
-      "TemplateChecksum": "35FA93C35FA961A587ABBECDADC4F926",
+      "TemplateChecksum": "EC2F6C5CB939AEAA0F410BD75F4D6565",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1051,12 +1048,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::S3::EmptyBucket",

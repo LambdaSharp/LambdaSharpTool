@@ -17,13 +17,13 @@ $LAMBDASHARP/Scripts/install-cli.sh
 # update deployment tier
 lash init \
     --allow-upgrade \
-    --tier=Public \
+    --tier=Release \
     --aws-profile=lambdasharp \
     --force-publish
 
 # publish LambdaSharp standard modules
 lash publish \
-    --tier=Public \
+    --tier=Release \
     --aws-profile=lambdasharp \
     --verbose:exceptions \
     --force-publish \
