@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.3) - TBD
+# LambdaSharp "Geminus" Release (v0.7.0.3) - 2019-10-03
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,17 +180,18 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
-### (v0.7.0.3) - TBD
+### (v0.7.0.3) - 2019-10-03
 
 #### New Features
 * Added support for `AuthorizationType`, `AuthorizationScopes`, and `AuthorizerId` to REST API and WebSocket sources.
+* Enhanced `lash new resource` to proceed with unambiguous resource type matches or prompt to disambiguate.
 
 #### Fixes
 * Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
 * Use function name for Lambda permissions instead of ARN b/c of 64 character limit.
-* Create LogGroup for `Finalizer` function.
+* Fixed missing CloudWatch log group for `Finalizer` function.
 * Fixed issue where nested types caused issues for WebSocket models.
-* `lash new function` now defaults to 900 seconds timeout when adding a `Finalizer` definition to a module.
+* Fixed `lash new function Finalizer` to default to 900 seconds timeout.
 * Fixed issue where `ApiKeyRequired` was not properly set for WebSocket sources.
 * Improved heuristic for identifying if a legacy CloudFormation stack belongs to the deployment tier.
 
