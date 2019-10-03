@@ -36,7 +36,7 @@ The <code>DeadLetterQueue</code> parameter sets the Dead letter queue for functi
 
 The <code>LoggingStream</code> parameter sets the Logging Kinesis stream for functions or creates a new stream if left blank.
 
-<i>Required</i>: No (Default: create new AWS::Kinesis::Stream)
+<i>Required</i>: No (Default: Create new AWS::Kinesis::Stream)
 
 <i>Type:</i> AWS::Kinesis::Stream
 </dd>

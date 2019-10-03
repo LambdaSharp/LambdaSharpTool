@@ -1029,6 +1029,18 @@
         }
       }
     },
+    "AWS::AppMesh::Route.Duration": {
+      "Properties": {
+        "Unit": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
     "AWS::AppMesh::Route.HeaderMatchMethod": {
       "Properties": {
         "Exact": {
@@ -1053,6 +1065,28 @@
         }
       }
     },
+    "AWS::AppMesh::Route.HttpRetryPolicy": {
+      "Properties": {
+        "HttpRetryEvents": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "MaxRetries": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "PerRetryTimeout": {
+          "Required": true,
+          "Type": "Duration"
+        },
+        "TcpRetryEvents": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::AppMesh::Route.HttpRoute": {
       "Properties": {
         "Action": {
@@ -1062,6 +1096,10 @@
         "Match": {
           "Required": true,
           "Type": "HttpRouteMatch"
+        },
+        "RetryPolicy": {
+          "Required": false,
+          "Type": "HttpRetryPolicy"
         }
       }
     },
@@ -4864,6 +4902,14 @@
         }
       }
     },
+    "AWS::Config::RemediationConfiguration.ExecutionControls": {
+      "Properties": {
+        "SsmControls": {
+          "Required": false,
+          "Type": "SsmControls"
+        }
+      }
+    },
     "AWS::Config::RemediationConfiguration.RemediationParameterValue": {
       "Properties": {
         "ResourceValue": {
@@ -4880,6 +4926,18 @@
       "Properties": {
         "Value": {
           "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Config::RemediationConfiguration.SsmControls": {
+      "Properties": {
+        "ConcurrentExecutionRatePercentage": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "ErrorPercentage": {
+          "PrimitiveType": "Integer",
           "Required": false
         }
       }
@@ -9800,6 +9858,14 @@
         }
       }
     },
+    "AWS::Glue::Job.NotificationProperty": {
+      "Properties": {
+        "NotifyDelayAfter": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
     "AWS::Glue::MLTransform.FindMatchesParameters": {
       "Properties": {
         "AccuracyCostTradeoff": {
@@ -10220,18 +10286,38 @@
           "PrimitiveType": "Json",
           "Required": false
         },
+        "CrawlerName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "JobName": {
           "PrimitiveType": "String",
           "Required": false
         },
+        "NotificationProperty": {
+          "Required": false,
+          "Type": "NotificationProperty"
+        },
         "SecurityConfiguration": {
           "PrimitiveType": "String",
+          "Required": false
+        },
+        "Timeout": {
+          "PrimitiveType": "Integer",
           "Required": false
         }
       }
     },
     "AWS::Glue::Trigger.Condition": {
       "Properties": {
+        "CrawlerName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "CrawlState": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "JobName": {
           "PrimitiveType": "String",
           "Required": false
@@ -10242,6 +10328,14 @@
         },
         "State": {
           "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Glue::Trigger.NotificationProperty": {
+      "Properties": {
+        "NotifyDelayAfter": {
+          "PrimitiveType": "Integer",
           "Required": false
         }
       }
@@ -16778,6 +16872,22 @@
         }
       }
     },
+    "AWS::SageMaker::CodeRepository.GitConfig": {
+      "Properties": {
+        "Branch": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RepositoryUrl": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SecretArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::SageMaker::EndpointConfig.ProductionVariant": {
       "Properties": {
         "AcceleratorType": {
@@ -18058,7 +18168,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "6.0.0",
+  "ResourceSpecificationVersion": "6.2.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -21926,9 +22036,21 @@
     "AWS::Config::RemediationConfiguration": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-config-remediationconfiguration.html",
       "Properties": {
+        "Automatic": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "ConfigRuleName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "ExecutionControls": {
+          "Required": false,
+          "Type": "ExecutionControls"
+        },
+        "MaximumAutomaticAttempts": {
+          "PrimitiveType": "Integer",
+          "Required": false
         },
         "Parameters": {
           "PrimitiveType": "Json",
@@ -21936,6 +22058,10 @@
         },
         "ResourceType": {
           "PrimitiveType": "String",
+          "Required": false
+        },
+        "RetryAttemptSeconds": {
+          "PrimitiveType": "Integer",
           "Required": false
         },
         "TargetId": {
@@ -22528,6 +22654,11 @@
         "DBSubnetGroupName": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "EnableCloudwatchLogsExports": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
         },
         "EngineVersion": {
           "PrimitiveType": "String",
@@ -26027,6 +26158,10 @@
     "AWS::Glue::DevEndpoint": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-glue-devendpoint.html",
       "Properties": {
+        "Arguments": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
         "EndpointName": {
           "PrimitiveType": "String",
           "Required": false
@@ -26039,7 +26174,15 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "GlueVersion": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "NumberOfNodes": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "NumberOfWorkers": {
           "PrimitiveType": "Integer",
           "Required": false
         },
@@ -26066,6 +26209,10 @@
         },
         "Tags": {
           "PrimitiveType": "Json",
+          "Required": false
+        },
+        "WorkerType": {
+          "PrimitiveType": "String",
           "Required": false
         }
       }
@@ -26117,6 +26264,10 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "NotificationProperty": {
+          "Required": false,
+          "Type": "NotificationProperty"
+        },
         "NumberOfWorkers": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -26131,6 +26282,10 @@
         },
         "Tags": {
           "PrimitiveType": "Json",
+          "Required": false
+        },
+        "Timeout": {
+          "PrimitiveType": "Integer",
           "Required": false
         },
         "WorkerType": {
@@ -26259,6 +26414,10 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "StartOnCreation": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "Tags": {
           "PrimitiveType": "Json",
           "Required": false
@@ -26266,6 +26425,31 @@
         "Type": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "WorkflowName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Glue::Workflow": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-glue-workflow.html",
+      "Properties": {
+        "DefaultRunProperties": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -29666,6 +29850,28 @@
         }
       }
     },
+    "AWS::QLDB::Ledger": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-qldb-ledger.html",
+      "Properties": {
+        "DeletionProtection": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PermissionsMode": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::RAM::ResourceShare": {
       "Attributes": {
         "Arn": {
@@ -30997,6 +31203,24 @@
         "PolicyDocument": {
           "PrimitiveType": "Json",
           "Required": true
+        }
+      }
+    },
+    "AWS::SageMaker::CodeRepository": {
+      "Attributes": {
+        "CodeRepositoryName": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-sagemaker-coderepository.html",
+      "Properties": {
+        "CodeRepositoryName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GitConfig": {
+          "Required": true,
+          "Type": "GitConfig"
         }
       }
     },

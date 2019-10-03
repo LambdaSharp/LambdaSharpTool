@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8FF1D1CE5516EACCBEDF9976E9502030"
+      "Default": "CF21853C67B0ACFCA4A8401EE94D6951"
     }
   },
   "Resources": {
@@ -550,10 +550,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Function",
-            "Arn"
-          ]
+          "Ref": "Function"
         },
         "Principal": "sns.amazonaws.com",
         "SourceArn": {
@@ -592,10 +589,10 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "8FF1D1CE5516EACCBEDF9976E9502030"
+      "Value": "CF21853C67B0ACFCA4A8401EE94D6951"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -825,7 +822,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "8FF1D1CE5516EACCBEDF9976E9502030",
+      "TemplateChecksum": "CF21853C67B0ACFCA4A8401EE94D6951",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -899,12 +896,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [
         {
           "Type": "TestModule::MyCustomLambdaResource",

@@ -602,12 +602,16 @@ namespace LambdaSharp.Tool.Cli {
 
                     // NOTE (2019-04-03, bjorg): we need to allow additional properties, because Swagger doesn't support: "additionalProperties": false
                     schema.AllowAdditionalProperties = true;
+                    foreach(var definition in schema.Definitions) {
+                        definition.Value.AllowAdditionalProperties = true;
+                    }
 
                     // NOTE (2019-08-16, bjorg): don't emit "x-enumNames" as it is not supported by API Gateway
                     foreach(var definition in schema.Definitions) {
                         definition.Value.EnumerationNames = null;
                     }
 
+                    // return JSON schema document
                     return Tuple.Create((JToken)JObject.Parse(schema.ToJson()), "application/json");
                 }
                 return Tuple.Create(JToken.FromObject("Proxy"), (string)null);

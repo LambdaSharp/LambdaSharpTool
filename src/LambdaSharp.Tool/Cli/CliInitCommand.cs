@@ -365,9 +365,9 @@ namespace LambdaSharp.Tool.Cli {
 
                 // check if bootstrap template is being updated or installed
                 if(createNewTier) {
-                    Console.WriteLine($"Creating LambdaSharp tier");
+                    Console.WriteLine($"Creating LambdaSharp tier '{settings.TierName}'");
                 } else {
-                    Console.WriteLine($"Updating LambdaSharp tier");
+                    Console.WriteLine($"Updating LambdaSharp tier '{settings.TierName}'");
                 }
 
                 // create lambdasharp CLI bootstrap stack

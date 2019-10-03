@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "009A8F4F6E3FA3C3F566A1E9886B0600"
+      "Default": "D55C0DD5CA9BB406D4777E825239D01B"
     }
   },
   "Resources": {
@@ -680,19 +680,16 @@
         }
       }
     },
-    "ModuleRestApiSlackResourcePOSTPermission": {
+    "SlackCommandRestApiPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "SlackCommand",
-            "Arn"
-          ]
+          "Ref": "SlackCommand"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/slack"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -766,10 +763,10 @@
       "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "009A8F4F6E3FA3C3F566A1E9886B0600"
+      "Value": "D55C0DD5CA9BB406D4777E825239D01B"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1010,7 +1007,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "009A8F4F6E3FA3C3F566A1E9886B0600",
+      "TemplateChecksum": "D55C0DD5CA9BB406D4777E825239D01B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1094,12 +1091,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": [
         {
@@ -1122,7 +1114,7 @@
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
-        "ModuleRestApiSlackResourcePOSTPermission": "Module::RestApi::SlackResource::POST::Permission",
+        "SlackCommandRestApiPermission": "SlackCommand::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
         "ModuleRestApiDeployment48BDBB7F2CFECB525DA5E89C8DF7A0E7": "Module::RestApi::Deployment48BDBB7F2CFECB525DA5E89C8DF7A0E7",
         "ModuleRestApiStage": "Module::RestApi::Stage"

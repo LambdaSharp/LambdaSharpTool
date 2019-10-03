@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C7AE60F0D946986EC38F9A6F688C8C16"
+      "Default": "8E83D1ED984F095BB2B2B4AF85F350DA"
     }
   },
   "Resources": {
@@ -546,10 +546,10 @@
       "Value": "Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "C7AE60F0D946986EC38F9A6F688C8C16"
+      "Value": "8E83D1ED984F095BB2B2B4AF85F350DA"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -779,7 +779,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "C7AE60F0D946986EC38F9A6F688C8C16",
+      "TemplateChecksum": "8E83D1ED984F095BB2B2B4AF85F350DA",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -853,12 +853,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [
         {
           "Type": "MyNamespace::MyResource",

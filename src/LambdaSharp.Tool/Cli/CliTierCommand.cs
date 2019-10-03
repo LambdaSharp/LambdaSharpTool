@@ -96,9 +96,9 @@ namespace LambdaSharp.Tool.Cli {
             if(enabled.HasValue) {
                 foreach(var details in moduleDetails) {
                     if(details.CoreServices == null) {
-                        LogError($"${details.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
+                        LogError($"{details.ModuleDeploymentName} does not support enabling/disabling LambdaSharp.Core services");
                     } else if(!enabled.Value && details.HasDefaultSecretKeyParameter) {
-                        LogError($"${details.ModuleDeploymentName} cannot disable LambdaSharp.Core services, because it depends on DefaultSecretKey");
+                        LogError($"{details.ModuleDeploymentName} cannot disable LambdaSharp.Core services, because it depends on DefaultSecretKey");
                     }
                 }
             }

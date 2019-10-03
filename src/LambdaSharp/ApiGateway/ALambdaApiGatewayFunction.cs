@@ -153,7 +153,7 @@ namespace LambdaSharp.ApiGateway {
             } catch(ApiGatewayAsyncEndpointException e) {
 
                 // exception was raised by an asynchronous endpoint; the failure needs to be recorded for playback
-                LogError(e);
+                LogError(e, $"async route '{signature}' threw {e.GetType()}");
                 await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, SerializeJson(request), e);
                 return CreateInvocationExceptionResponse(request, e.InnerException);
             } catch(ApiGatewayInvocationTargetParameterException e) {

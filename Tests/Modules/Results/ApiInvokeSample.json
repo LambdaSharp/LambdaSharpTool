@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1CDC6B8C0E46EE77C31DB1A75C7CAFE8"
+      "Default": "38F0B6BD16A39B7DE22C4F47385DF0A2"
     }
   },
   "Resources": {
@@ -572,19 +572,16 @@
         }
       }
     },
-    "ModuleRestApiItemsResourceGETPermission": {
+    "MyFunctionRestApiPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
+          "Ref": "MyFunction"
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -606,22 +603,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        }
-      }
-    },
-    "ModuleRestApiItemsResourcePOSTPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/items"
         }
       }
     },
@@ -658,22 +639,6 @@
         }
       }
     },
-    "ModuleRestApiItemsResourceIdResourceGETPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/GET/items/{id}"
-        }
-      }
-    },
     "ModuleRestApiItemsResourceIdResourceDELETE": {
       "Type": "AWS::ApiGateway::Method",
       "Properties": {
@@ -692,22 +657,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        }
-      }
-    },
-    "ModuleRestApiItemsResourceIdResourceDELETEPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/DELETE/items/{id}"
         }
       }
     },
@@ -784,10 +733,10 @@
       "Value": "Sample.ApiGatewayInvoke:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1CDC6B8C0E46EE77C31DB1A75C7CAFE8"
+      "Value": "38F0B6BD16A39B7DE22C4F47385DF0A2"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1017,7 +966,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGatewayInvoke:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "1CDC6B8C0E46EE77C31DB1A75C7CAFE8",
+      "TemplateChecksum": "38F0B6BD16A39B7DE22C4F47385DF0A2",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1091,12 +1040,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": [
         {
@@ -1119,14 +1063,11 @@
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiItemsResource": "Module::RestApi::ItemsResource",
         "ModuleRestApiItemsResourceGET": "Module::RestApi::ItemsResource::GET",
-        "ModuleRestApiItemsResourceGETPermission": "Module::RestApi::ItemsResource::GET::Permission",
+        "MyFunctionRestApiPermission": "MyFunction::RestApiPermission",
         "ModuleRestApiItemsResourcePOST": "Module::RestApi::ItemsResource::POST",
-        "ModuleRestApiItemsResourcePOSTPermission": "Module::RestApi::ItemsResource::POST::Permission",
         "ModuleRestApiItemsResourceIdResource": "Module::RestApi::ItemsResource::IdResource",
         "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
-        "ModuleRestApiItemsResourceIdResourceGETPermission": "Module::RestApi::ItemsResource::IdResource::GET::Permission",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
-        "ModuleRestApiItemsResourceIdResourceDELETEPermission": "Module::RestApi::ItemsResource::IdResource::DELETE::Permission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
         "ModuleRestApiDeployment67FCB84688ECF145AAC6952FD0792CC9": "Module::RestApi::Deployment67FCB84688ECF145AAC6952FD0792CC9",
         "ModuleRestApiStage": "Module::RestApi::Stage"

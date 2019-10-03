@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "22F682FE86D1DDC2D2663B6C3C08CFD9"
+      "Default": "2EB660DCD19F606FEC57FB94264210CF"
     }
   },
   "Resources": {
@@ -613,10 +613,7 @@
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Fn::GetAtt": [
-            "Subscriber",
-            "Arn"
-          ]
+          "Ref": "Subscriber"
         },
         "Principal": "s3.amazonaws.com",
         "SourceAccount": {
@@ -717,10 +714,10 @@
       "Value": "LambdaSharp.DemoS3Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "22F682FE86D1DDC2D2663B6C3C08CFD9"
+      "Value": "2EB660DCD19F606FEC57FB94264210CF"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -994,7 +991,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "22F682FE86D1DDC2D2663B6C3C08CFD9",
+      "TemplateChecksum": "2EB660DCD19F606FEC57FB94264210CF",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1083,10 +1080,6 @@
       },
       "Artifacts": [],
       "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        },
         {
           "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.0@lambdasharp",
           "Type": "Shared"

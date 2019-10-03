@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "BE3D61C93B638A1B6E3C5986F0832EBD"
+      "Default": "B3A39525BF182B02B8D47F0E74524517"
     }
   },
   "Resources": {
@@ -612,10 +612,10 @@
       "Value": "Sample.Sqs:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "BE3D61C93B638A1B6E3C5986F0832EBD"
+      "Value": "B3A39525BF182B02B8D47F0E74524517"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -845,7 +845,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
-      "TemplateChecksum": "BE3D61C93B638A1B6E3C5986F0832EBD",
+      "TemplateChecksum": "B3A39525BF182B02B8D47F0E74524517",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -919,12 +919,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },

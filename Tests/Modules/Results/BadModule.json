@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1B3560117E1511BB49DD1F69815EDDFC"
+      "Default": "3E0DC41103038664AC27C9AA559042CE"
     }
   },
   "Resources": {
@@ -2953,10 +2953,10 @@
       "Value": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1B3560117E1511BB49DD1F69815EDDFC"
+      "Value": "3E0DC41103038664AC27C9AA559042CE"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0"
+      "Value": "0.7.0.3"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3186,7 +3186,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "1B3560117E1511BB49DD1F69815EDDFC",
+      "TemplateChecksum": "3E0DC41103038664AC27C9AA559042CE",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -3260,12 +3260,7 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.Core:0.7.0@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },
