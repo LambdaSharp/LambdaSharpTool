@@ -412,13 +412,13 @@ namespace LambdaSharp.Tool {
 
             // check if bucket exists
             if(headResponse.StatusCode == HttpStatusCode.NotFound) {
-                LogWarn($"could not find '{bucketName}'");
+                LogWarn($"could not find '{bucketName}' bucket");
                 return null;
             }
 
             // check for region header of bucket
             if(!headResponse.Headers.TryGetValues("x-amz-bucket-region", out var values) || !values.Any()) {
-                LogWarn($"could not detect region for '{bucketName}'");
+                LogWarn($"could not detect region for '{bucketName}' bucket");
                 return null;
             }
 
