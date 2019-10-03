@@ -27,7 +27,7 @@ This release focuses on making it easy to share modules with others and streamli
 
 ## BREAKING CHANGES
 
-### LambdaSharp Module
+### LambdaSharp Module Syntax
 
 * The `Namespace:` declaration has been renamed to [`Group:`](~/syntax/Module-Group.md).
 * Module references in `Using:` and `Nested:` declarations now require an origin suffix. For example, `LambdaSharp.S3.IO:0.5` must now be written as `LambdaSharp.S3.IO:0.5@lambdasharp`.
@@ -183,17 +183,25 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 ### (v0.7.0.3) - 2019-10-03
 
 #### New Features
-* Added support for `AuthorizationType`, `AuthorizationScopes`, and `AuthorizerId` to REST API and WebSocket sources.
-* Enhanced `lash new resource` to proceed with unambiguous resource type matches or prompt to disambiguate.
+
+* LambdaSharp Module Syntax
+    * Added support for `AuthorizationType`, `AuthorizationScopes`, and `AuthorizerId` to REST API and WebSocket sources.
+* LambdaSharp CLI
+    * Enhanced `lash new resource` to proceed with unambiguous resource type matches or prompt to disambiguate.
 
 #### Fixes
-* Added log comment when logging exception in asynchronous API Gateway endpoint invocation.
-* Use function name for Lambda permissions instead of ARN b/c of 64 character limit.
-* Fixed missing CloudWatch log group for `Finalizer` function.
-* Fixed issue where nested types caused issues for WebSocket models.
-* Fixed `lash new function Finalizer` to default to 900 seconds timeout.
-* Fixed issue where `ApiKeyRequired` was not properly set for WebSocket sources.
-* Improved heuristic for identifying if a legacy CloudFormation stack belongs to the deployment tier.
+
+* LambdaSharp CLI
+    * Use function name for Lambda permissions instead of ARN b/c of 64 character limit.
+    * Fixed missing CloudWatch log group for `Finalizer` function.
+    * Fixed issue where nested types caused issues for WebSocket models.
+    * Fixed `lash new function Finalizer` to default to 900 seconds timeout.
+    * Fixed issue where `ApiKeyRequired` was not properly set for WebSocket sources.
+    * Improved heuristic for identifying if a legacy CloudFormation stack belongs to the deployment tier.
+* `LambdaSharp.S3.IO` Module
+    * Fixed an issue with empty zip packages.
+* LambdaSharp Assemblies
+    * Added missing log comment when logging exception in asynchronous API Gateway endpoint invocation.
 
 ### (v0.7.0.2) - 2019-09-20
 
