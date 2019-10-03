@@ -110,7 +110,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     LogError("invalid module reference format");
                     return;
                 }
-                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
+                if(moduleInfo.Origin == null) {
+                    LogError($"missing origin information for '{moduleInfo}'");
+                } else {
+                    _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
+                }
             });
         }
 
@@ -395,9 +399,24 @@ namespace LambdaSharp.Tool.Cli.Build {
                     // validation
                     if(node.Module == null) {
                         LogError("missing 'Module' attribute");
-                    } else if(!ModuleInfo.TryParse(node.Module, out var moduleInfo)) {
-                        LogError("invalid value for 'Module' attribute");
-                    } else {
+                        return;
+                    }
+
+                    // parse module information
+                    var moduleInfo = AtLocation("Module", () => {
+                        if(!ModuleInfo.TryParse(node.Module, out var innerModuleInfo)) {
+                            LogError("invalid module reference format");
+                            return null;
+                        }
+                        if(innerModuleInfo.Origin == null) {
+                            LogError($"missing origin information for '{innerModuleInfo}'");
+                            return null;
+                        }
+                        return innerModuleInfo;
+                    });
+
+                    // create nested module definition
+                    if(moduleInfo != null) {
 
                         // create nested module item
                         _builder.AddNestedModule(
