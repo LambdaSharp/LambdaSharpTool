@@ -237,9 +237,11 @@ namespace LambdaSharp.S3.IO.S3Writer {
                     using(var stream = entry.Open())
                     using(var reader = new StreamReader(stream)) {
                         var manifest = await reader.ReadToEndAsync();
-                        foreach(var line in manifest.Split('\n')) {
-                            var columns = line.Split('\t');
-                            fileEntries.Add(columns[0], columns[1]);
+                        if(!string.IsNullOrWhiteSpace(manifest)) {
+                            foreach(var line in manifest.Split('\n')) {
+                                var columns = line.Split('\t');
+                                fileEntries.Add(columns[0], columns[1]);
+                            }
                         }
                     }
                 }
