@@ -17,7 +17,7 @@ $LAMBDASHARP/Scripts/install-cli.sh
 # update deployment tier
 lash init \
     --allow-upgrade \
-    --tier=Release \
+    --tier=Public \
     --aws-profile=lambdasharp \
     --force-publish
 
