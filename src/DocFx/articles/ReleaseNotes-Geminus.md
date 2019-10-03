@@ -186,6 +186,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 * LambdaSharp Module Syntax
     * Added support for `AuthorizationType`, `AuthorizationScopes`, and `AuthorizerId` to REST API and WebSocket sources.
+    * Update CloudFormation spec to v6.2.0.
 * LambdaSharp CLI
     * Enhanced `lash new resource` to proceed with unambiguous resource type matches or prompt to disambiguate.
 
