@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9EA69E17F574C8887A4694D29F285DD9"
+      "Default": "AD39C23EF11002A787F265B6AF35D824"
     }
   },
   "Resources": {
@@ -930,7 +930,7 @@
         }
       }
     },
-    "ConnectionFunctionConnectPermission": {
+    "ConnectionFunctionWebSocketPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -939,7 +939,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$connect"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
         }
       }
     },
@@ -953,19 +953,6 @@
         "AuthorizationType": "NONE",
         "Target": {
           "Fn::Sub": "integrations/${ConnectionFunctionWebSocketIntegration}"
-        }
-      }
-    },
-    "ConnectionFunctionDisconnectPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Ref": "ConnectionFunction"
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$disconnect"
         }
       }
     },
@@ -996,7 +983,7 @@
         }
       }
     },
-    "MessageFunctionDefaultPermission": {
+    "MessageFunctionWebSocketPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -1005,7 +992,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/$default"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/*"
         }
       }
     },
@@ -1019,19 +1006,6 @@
         "AuthorizationType": "NONE",
         "Target": {
           "Fn::Sub": "integrations/${MessageFunctionWebSocketIntegration}"
-        }
-      }
-    },
-    "MessageFunctionSendPermission": {
-      "Type": "AWS::Lambda::Permission",
-      "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Ref": "MessageFunction"
-        },
-        "Principal": "apigateway.amazonaws.com",
-        "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleWebSocket}/LATEST/send"
         }
       }
     },
@@ -1099,7 +1073,7 @@
       "Value": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "9EA69E17F574C8887A4694D29F285DD9"
+      "Value": "AD39C23EF11002A787F265B6AF35D824"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0.3"
@@ -1331,7 +1305,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "9EA69E17F574C8887A4694D29F285DD9",
+      "TemplateChecksum": "AD39C23EF11002A787F265B6AF35D824",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1431,14 +1405,12 @@
         "ModuleWebSocket": "Module::WebSocket",
         "ConnectionFunctionWebSocketIntegration": "ConnectionFunction::WebSocketIntegration",
         "ConnectionFunctionConnectRoute": "ConnectionFunction::ConnectRoute",
-        "ConnectionFunctionConnectPermission": "ConnectionFunction::ConnectPermission",
+        "ConnectionFunctionWebSocketPermission": "ConnectionFunction::WebSocketPermission",
         "ConnectionFunctionDisconnectRoute": "ConnectionFunction::DisconnectRoute",
-        "ConnectionFunctionDisconnectPermission": "ConnectionFunction::DisconnectPermission",
         "MessageFunctionWebSocketIntegration": "MessageFunction::WebSocketIntegration",
         "MessageFunctionDefaultRoute": "MessageFunction::DefaultRoute",
-        "MessageFunctionDefaultPermission": "MessageFunction::DefaultPermission",
+        "MessageFunctionWebSocketPermission": "MessageFunction::WebSocketPermission",
         "MessageFunctionSendRoute": "MessageFunction::SendRoute",
-        "MessageFunctionSendPermission": "MessageFunction::SendPermission",
         "ModuleWebSocketDeployment0157CF5BCA5B2B4803CEE311823612E7": "Module::WebSocket::Deployment0157CF5BCA5B2B4803CEE311823612E7",
         "ModuleWebSocketLogGroup": "Module::WebSocket::LogGroup",
         "ModuleWebSocketStage": "Module::WebSocket::Stage"

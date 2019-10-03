@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "466CE535139D3DFF0505037D9F9D526A"
+      "Default": "79C1242C15DC2F17B8D46EE145B17C49"
     }
   },
   "Resources": {
@@ -602,7 +602,7 @@
         }
       }
     },
-    "ModuleRestApiSlackResourcePOSTPermission": {
+    "MyFunctionRestApiPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -611,7 +611,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/slack"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -674,7 +674,7 @@
       "Value": "Sample.SlackCommand:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "466CE535139D3DFF0505037D9F9D526A"
+      "Value": "79C1242C15DC2F17B8D46EE145B17C49"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0.3"
@@ -918,7 +918,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "466CE535139D3DFF0505037D9F9D526A",
+      "TemplateChecksum": "79C1242C15DC2F17B8D46EE145B17C49",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1019,7 +1019,7 @@
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
-        "ModuleRestApiSlackResourcePOSTPermission": "Module::RestApi::SlackResource::POST::Permission",
+        "MyFunctionRestApiPermission": "MyFunction::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
         "ModuleRestApiDeployment3E4F6D4D3C41C8DBB568516EEDA1A515": "Module::RestApi::Deployment3E4F6D4D3C41C8DBB568516EEDA1A515",
         "ModuleRestApiStage": "Module::RestApi::Stage"

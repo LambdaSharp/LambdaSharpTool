@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B626DEE52CF73019F3D93D15CDA57082"
+      "Default": "D55C0DD5CA9BB406D4777E825239D01B"
     }
   },
   "Resources": {
@@ -680,7 +680,7 @@
         }
       }
     },
-    "ModuleRestApiSlackResourcePOSTPermission": {
+    "SlackCommandRestApiPermission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
@@ -689,7 +689,7 @@
         },
         "Principal": "apigateway.amazonaws.com",
         "SourceArn": {
-          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/POST/slack"
+          "Fn::Sub": "arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ModuleRestApi}/LATEST/*"
         }
       }
     },
@@ -763,7 +763,7 @@
       "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B626DEE52CF73019F3D93D15CDA57082"
+      "Value": "D55C0DD5CA9BB406D4777E825239D01B"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0.3"
@@ -1007,7 +1007,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "B626DEE52CF73019F3D93D15CDA57082",
+      "TemplateChecksum": "D55C0DD5CA9BB406D4777E825239D01B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1114,7 +1114,7 @@
         "ModuleRestApi": "Module::RestApi",
         "ModuleRestApiSlackResource": "Module::RestApi::SlackResource",
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
-        "ModuleRestApiSlackResourcePOSTPermission": "Module::RestApi::SlackResource::POST::Permission",
+        "SlackCommandRestApiPermission": "SlackCommand::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
         "ModuleRestApiDeployment48BDBB7F2CFECB525DA5E89C8DF7A0E7": "Module::RestApi::Deployment48BDBB7F2CFECB525DA5E89C8DF7A0E7",
         "ModuleRestApiStage": "Module::RestApi::Stage"
