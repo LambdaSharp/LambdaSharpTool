@@ -111,10 +111,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return;
                 }
                 if(moduleInfo.Origin == null) {
-                    LogError($"missing origin information for '{moduleInfo}'");
-                } else {
-                    _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
+
+                    // default to deployment bucket as origin
+                    moduleInfo = moduleInfo.WithOrigin(Settings.DeploymentBucketName);
                 }
+                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
             });
         }
 
@@ -409,8 +410,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                             return null;
                         }
                         if(innerModuleInfo.Origin == null) {
-                            LogError($"missing origin information for '{innerModuleInfo}'");
-                            return null;
+
+                            // default to deployment bucket as origin
+                            innerModuleInfo = innerModuleInfo.WithOrigin(Settings.DeploymentBucketName);
                         }
                         return innerModuleInfo;
                     });
