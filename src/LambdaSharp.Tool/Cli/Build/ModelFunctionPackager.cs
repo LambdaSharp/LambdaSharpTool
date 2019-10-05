@@ -107,7 +107,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             _builder = builder;
 
@@ -144,7 +145,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         noAssemblyValidation,
                         gitSha,
                         gitBranch,
-                        buildConfiguration
+                        buildConfiguration,
+                        forceBuild
                     );
                 });
             }
@@ -163,7 +165,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             switch(Path.GetExtension(function.Project).ToLowerInvariant()) {
             case "":
@@ -177,7 +180,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     noAssemblyValidation,
                     gitSha,
                     gitBranch,
-                    buildConfiguration
+                    buildConfiguration,
+                    forceBuild
                 );
                 break;
             case ".js":
@@ -217,13 +221,38 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             function.Language = "csharp";
 
             // check if AWS Lambda Tools extension is installed
             if(!CheckDotNetLambdaToolIsInstalled()) {
                 return;
+            }
+
+            // check if a function package already exists
+            if(!forceBuild) {
+                var functionPackage = _existingPackages.FirstOrDefault(p =>
+                    Path.GetFileName(p).StartsWith($"function_{_builder.FullName}_{function.LogicalId}_", StringComparison.Ordinal)
+                    && p.EndsWith(".zip", StringComparison.Ordinal)
+                );
+                if(functionPackage != null) {
+
+                    // find all files used to create the function package
+                    var files = new HashSet<string>();
+                    AddProjectFiles(files, function.Project);
+
+                    // check if any of the files has been modified more recently than hte function package
+                    var functionPackageDate = File.GetLastWriteTime(functionPackage);
+                    if(!files.Any(file => File.GetLastWriteTime(file) > functionPackageDate)) {
+                        Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
+
+                        // keep the existing package
+                        _existingPackages.Remove(functionPackage);
+                        return;
+                    }
+                }
             }
 
             // read settings from project file
@@ -235,14 +264,13 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // compile function project
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-            var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
-            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
+            var projectDirectory = Path.GetFullPath(Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project)));
+            var temporaryPackage = Path.GetFullPath(Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip"));
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
-            var obsoleteNodes = csproj.DescendantNodes()
-                .Where(node =>
-                    (node is XElement element)
-                    && (element.Name == "DotNetCliToolReference")
+            var obsoleteNodes = csproj.Descendants()
+                .Where(element =>
+                    (element.Name == "DotNetCliToolReference")
                     && ((string)element.Attribute("Include") == "Amazon.Lambda.Tools")
                 )
                 .ToList();
@@ -425,6 +453,69 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // set the module variable to the final package name
             _builder.AddArtifact($"{function.FullName}::PackageName", package);
+        }
+
+        private void AddProjectFiles(HashSet<string> files, string project) {
+
+            // skip project if project file doesn't exist or has already been added
+            if(!File.Exists(project) || files.Contains(project)) {
+                return;
+            }
+            files.Add(project);
+
+            // enumerate all files in project folder
+            var projectFolder = Path.GetDirectoryName(project);
+            AddFiles(projectFolder, SearchOption.AllDirectories);
+            files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "bin"))));
+            files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "obj"))));
+
+            // analyze project for references
+            var csproj = XDocument.Load(project, LoadOptions.PreserveWhitespace);
+
+            // recurse into referenced projects
+            foreach(var projectReference in csproj.Descendants("ProjectReference")) {
+                AddProjectFiles(files, Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(projectReference.Attribute("Include").Value))));
+            }
+
+            // add compile file references
+            foreach(var compile in csproj.Descendants("Compile")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(compile.Attribute("Include").Value))));
+            }
+
+            // add content file references
+            foreach(var content in csproj.Descendants("Content")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(content.Attribute("Include").Value))));
+            }
+
+            // added embedded resources
+            foreach(var embeddedResource in csproj.Descendants("EmbeddedResource")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(embeddedResource.Attribute("Include").Value))));
+            }
+
+            // local function
+            void AddFileReferences(string path) {
+                if(path.EndsWith("**")) {
+                    AddFiles(Path.GetDirectoryName(path), SearchOption.AllDirectories);
+                } else if(path.EndsWith("*")) {
+                    AddFiles(Path.GetDirectoryName(path), SearchOption.TopDirectoryOnly);
+                } else if(File.Exists(path)) {
+                    files.Add(path);
+                }
+            }
+
+            void AddFiles(string folder, SearchOption option) {
+                if(Directory.Exists(folder)) {
+                    foreach(var file in Directory.GetFiles(folder, "*.*", option)) {
+                        files.Add(file);
+                    }
+                }
+            }
+
+            string ResolveFilePath(string path) => Regex.Replace(path, @"\$\((?!\!)[^\)]+\)", match => {
+                var matchText = match.ToString();
+                var name = matchText.Substring(2, matchText.Length - 3).Trim();
+                return Environment.GetEnvironmentVariable(name) ?? matchText;
+            });
         }
 
         private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {

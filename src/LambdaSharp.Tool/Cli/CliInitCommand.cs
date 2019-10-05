@@ -56,6 +56,7 @@ namespace LambdaSharp.Tool.Cli {
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)", CommandOptionType.NoValue);
+                var forceBuildOption = cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -99,7 +100,8 @@ namespace LambdaSharp.Tool.Cli {
                         xRayTracingLevel,
                         coreServices,
                         existingS3BucketName,
-                        allowUpgradeOption.HasValue()
+                        allowUpgradeOption.HasValue(),
+                        forceBuildOption.HasValue()
                     );
                 });
             });
@@ -118,7 +120,8 @@ namespace LambdaSharp.Tool.Cli {
             XRayTracingLevel xRayTracingLevel,
             CoreServices coreServices,
             string existingS3BucketName,
-            bool allowUpgrade
+            bool allowUpgrade,
+            bool forceBuild
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -265,7 +268,8 @@ namespace LambdaSharp.Tool.Cli {
                         buildConfiguration: "Release",
                         selector: null,
                         moduleSource: moduleSource,
-                        moduleVersion: moduleVersion
+                        moduleVersion: moduleVersion,
+                        forceBuild
                     )) {
                         return false;
                     }
