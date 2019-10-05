@@ -296,7 +296,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
                 _builder.AddImport(
                     parent: lambdasharp,
@@ -308,7 +309,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
                 _builder.AddImport(
                     parent: lambdasharp,
@@ -320,7 +322,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
             }
 
