@@ -180,6 +180,13 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.4) - TBD
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Nested modules with imports no longer cause the parent module to take a dependency on the imported value.
+
 ### (v0.7.0.3) - 2019-10-03
 
 #### New Features

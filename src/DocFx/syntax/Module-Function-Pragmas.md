@@ -15,7 +15,7 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`no-handler-validation`                |Don't validate if the Lambda function handler can be found in the compiled assembly|
 |`no-wildcard-scoped-variables`         |Don't include function in wildcard (`*`) scopes|
 
-## Example
+## Examples
 
 ### A Lambda function with pragmas
 
