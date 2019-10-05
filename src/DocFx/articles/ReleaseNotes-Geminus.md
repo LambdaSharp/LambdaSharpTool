@@ -182,6 +182,11 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ### (v0.7.0.4) - TBD
 
+#### New Features
+
+* LambdaSharp CLI
+    * `lash build` now checks if an existing function package is up to date and therefore compilation can be skipped.
+
 #### Fixes
 
 * LambdaSharp CLI
