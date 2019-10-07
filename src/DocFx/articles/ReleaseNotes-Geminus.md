@@ -190,7 +190,9 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 #### Fixes
 
 * LambdaSharp CLI
-    * Nested modules with imports no longer cause the parent module to take a dependency on the imported value.
+    * Fixed parent module dependency on imports belonging to a nested module.
+* LambdaSharp SDK
+    * Fixed an issue where an exception being reported more than once with a different severity level caused a duplicate-key exception.
 
 ### (v0.7.0.3) - 2019-10-03
 
