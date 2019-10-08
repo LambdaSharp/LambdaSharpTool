@@ -186,6 +186,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 * LambdaSharp CLI
     * `lash build` now checks if an existing function package is up to date and therefore compilation can be skipped.
+    * (experimental) Cache information about deployment tier, AWS profile, and found manifests locally to reduce network latencies (requires `LAMBDASHARP_FEATURE_CACHING` environment variable to be set to `true`)
 
 #### Fixes
 

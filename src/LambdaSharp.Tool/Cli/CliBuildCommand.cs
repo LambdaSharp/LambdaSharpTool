@@ -499,7 +499,7 @@ namespace LambdaSharp.Tool.Cli {
             bool forceBuild
         ) {
             try {
-                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings, allowCaching: true)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(

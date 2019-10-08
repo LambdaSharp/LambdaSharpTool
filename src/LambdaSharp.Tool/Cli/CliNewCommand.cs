@@ -190,7 +190,7 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // initialize AWS profile
-                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value(), allowCaching: true);
 
                         // initialize settings instance
                         var settings = new Settings {

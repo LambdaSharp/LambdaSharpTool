@@ -228,7 +228,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile);
+            await InitializeAwsProfile(awsProfile, allowCaching: true);
             var logsClient = new AmazonCloudWatchLogsClient();
 
             // delete orphaned logs

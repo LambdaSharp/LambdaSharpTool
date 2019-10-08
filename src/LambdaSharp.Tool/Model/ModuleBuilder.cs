@@ -213,14 +213,14 @@ namespace LambdaSharp.Tool.Model {
             if(!Settings.NoDependencyValidation) {
                 dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
-                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true)
+                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true, allowCaching: true)
                 };
                 if(dependency.ModuleLocation == null) {
 
                     // nothing to do; loader already emitted an error
                     return null;
                 }
-                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
+                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation, allowCaching: true);
                 if(dependency.Manifest == null) {
 
                     // nothing to do; loader already emitted an error
