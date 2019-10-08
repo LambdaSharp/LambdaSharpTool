@@ -2701,6 +2701,10 @@
           "Required": false,
           "Type": "CostTypes"
         },
+        "PlannedBudgetLimits": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
         "TimePeriod": {
           "Required": false,
           "Type": "TimePeriod"
@@ -4691,6 +4695,145 @@
         "UserDataShared": {
           "PrimitiveType": "Boolean",
           "Required": false
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolDomain.CustomDomainConfigType": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolResourceServer.ResourceServerScopeType": {
+      "Properties": {
+        "ScopeDescription": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ScopeName": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.AccountTakeoverActionsType": {
+      "Properties": {
+        "HighAction": {
+          "Required": false,
+          "Type": "AccountTakeoverActionType"
+        },
+        "LowAction": {
+          "Required": false,
+          "Type": "AccountTakeoverActionType"
+        },
+        "MediumAction": {
+          "Required": false,
+          "Type": "AccountTakeoverActionType"
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.AccountTakeoverActionType": {
+      "Properties": {
+        "EventAction": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Notify": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.AccountTakeoverRiskConfigurationType": {
+      "Properties": {
+        "Actions": {
+          "Required": true,
+          "Type": "AccountTakeoverActionsType"
+        },
+        "NotifyConfiguration": {
+          "Required": false,
+          "Type": "NotifyConfigurationType"
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.CompromisedCredentialsActionsType": {
+      "Properties": {
+        "EventAction": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.CompromisedCredentialsRiskConfigurationType": {
+      "Properties": {
+        "Actions": {
+          "Required": true,
+          "Type": "CompromisedCredentialsActionsType"
+        },
+        "EventFilter": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.NotifyConfigurationType": {
+      "Properties": {
+        "BlockEmail": {
+          "Required": false,
+          "Type": "NotifyEmailType"
+        },
+        "From": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MfaEmail": {
+          "Required": false,
+          "Type": "NotifyEmailType"
+        },
+        "NoActionEmail": {
+          "Required": false,
+          "Type": "NotifyEmailType"
+        },
+        "ReplyTo": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SourceArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.NotifyEmailType": {
+      "Properties": {
+        "HtmlBody": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Subject": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "TextBody": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment.RiskExceptionConfigurationType": {
+      "Properties": {
+        "BlockedIPRangeList": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "SkippedIPRangeList": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -6803,6 +6946,18 @@
           "ItemType": "TargetGroup",
           "Required": true,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::EC2::TrafficMirrorFilterRule.TrafficMirrorPortRangeRequest": {
+      "Properties": {
+        "FromPort": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "ToPort": {
+          "PrimitiveType": "Integer",
+          "Required": true
         }
       }
     },
@@ -18168,7 +18323,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "6.2.0",
+  "ResourceSpecificationVersion": "6.3.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -21687,6 +21842,11 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "EnabledMfas": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
         "LambdaConfig": {
           "Required": false,
           "Type": "LambdaConfig"
@@ -21820,6 +21980,23 @@
         }
       }
     },
+    "AWS::Cognito::UserPoolDomain": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpooldomain.html",
+      "Properties": {
+        "CustomDomainConfig": {
+          "Required": false,
+          "Type": "CustomDomainConfigType"
+        },
+        "Domain": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "UserPoolId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::Cognito::UserPoolGroup": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolgroup.html",
       "Properties": {
@@ -21836,6 +22013,100 @@
           "Required": false
         },
         "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "UserPoolId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolIdentityProvider": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolidentityprovider.html",
+      "Properties": {
+        "AttributeMapping": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "IdpIdentifiers": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "ProviderDetails": {
+          "PrimitiveType": "Json",
+          "Required": false
+        },
+        "ProviderName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ProviderType": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "UserPoolId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolResourceServer": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolresourceserver.html",
+      "Properties": {
+        "Identifier": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Scopes": {
+          "ItemType": "ResourceServerScopeType",
+          "Required": false,
+          "Type": "List"
+        },
+        "UserPoolId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolRiskConfigurationAttachment": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpoolriskconfigurationattachment.html",
+      "Properties": {
+        "AccountTakeoverRiskConfiguration": {
+          "Required": false,
+          "Type": "AccountTakeoverRiskConfigurationType"
+        },
+        "ClientId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CompromisedCredentialsRiskConfiguration": {
+          "Required": false,
+          "Type": "CompromisedCredentialsRiskConfigurationType"
+        },
+        "RiskExceptionConfiguration": {
+          "Required": false,
+          "Type": "RiskExceptionConfigurationType"
+        },
+        "UserPoolId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cognito::UserPoolUICustomizationAttachment": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cognito-userpooluicustomizationattachment.html",
+      "Properties": {
+        "ClientId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "CSS": {
           "PrimitiveType": "String",
           "Required": false
         },
@@ -23963,6 +24234,130 @@
         }
       }
     },
+    "AWS::EC2::TrafficMirrorFilter": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-trafficmirrorfilter.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "NetworkServices": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::EC2::TrafficMirrorFilterRule": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-trafficmirrorfilterrule.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DestinationCidrBlock": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "DestinationPortRange": {
+          "Required": false,
+          "Type": "TrafficMirrorPortRangeRequest"
+        },
+        "Protocol": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "RuleAction": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RuleNumber": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "SourceCidrBlock": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SourcePortRange": {
+          "Required": false,
+          "Type": "TrafficMirrorPortRangeRequest"
+        },
+        "TrafficDirection": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "TrafficMirrorFilterId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::EC2::TrafficMirrorSession": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-trafficmirrorsession.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "NetworkInterfaceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "PacketLength": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SessionNumber": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
+        "TrafficMirrorFilterId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "TrafficMirrorTargetId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "VirtualNetworkId": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::TrafficMirrorTarget": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-trafficmirrortarget.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "NetworkInterfaceId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "NetworkLoadBalancerArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::EC2::TransitGateway": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-transitgateway.html",
       "Properties": {
@@ -25859,6 +26254,10 @@
         "Condition": {
           "Required": false,
           "Type": "Condition"
+        },
+        "EventBusName": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "Principal": {
           "PrimitiveType": "String",
@@ -29499,11 +29898,20 @@
       }
     },
     "AWS::Pinpoint::App": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-pinpoint-app.html",
       "Properties": {
         "Name": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
@@ -29555,6 +29963,9 @@
     },
     "AWS::Pinpoint::Campaign": {
       "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
         "CampaignId": {
           "PrimitiveType": "String"
         }
@@ -29608,6 +30019,10 @@
         },
         "SegmentVersion": {
           "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
           "Required": false
         },
         "TreatmentDescription": {
@@ -29685,6 +30100,9 @@
     },
     "AWS::Pinpoint::Segment": {
       "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
         "SegmentId": {
           "PrimitiveType": "String"
         }
@@ -29706,6 +30124,10 @@
         "SegmentGroups": {
           "Required": false,
           "Type": "SegmentGroups"
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         }
       }
     },
