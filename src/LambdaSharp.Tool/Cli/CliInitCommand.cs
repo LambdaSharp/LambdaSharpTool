@@ -558,7 +558,7 @@ namespace LambdaSharp.Tool.Cli {
 
         protected async Task CheckApiGatewayRole(Settings settings) {
 
-                // retrieve the CloudWatch/X-Ray role from the API Gateway account
+            // retrieve the CloudWatch/X-Ray role from the API Gateway account
             Console.WriteLine("=> Checking API Gateway role");
             var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
             var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? DEFAULT_API_GATEWAY_ROLE);
