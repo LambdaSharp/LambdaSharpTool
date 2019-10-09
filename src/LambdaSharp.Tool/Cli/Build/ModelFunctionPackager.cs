@@ -250,6 +250,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // keep the existing package
                         _existingPackages.Remove(functionPackage);
+
+                        // set the module variable to the final package name
+                        _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
                         return;
                     }
                 }
