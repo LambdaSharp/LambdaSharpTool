@@ -135,14 +135,12 @@ namespace LambdaSharp.Tool.Model {
                 if(File.GetLastWriteTimeUtc(cloudFormationSpecFile) > embeddedDateTime) {
 
                     // read spec from global folder
-Console.WriteLine("*** using cached spec");
                     CloudformationSpec = JsonConvert.DeserializeObject<CloudFormationSpec>(File.ReadAllText(cloudFormationSpecFile));
                     return;
                 }
             }
 
             // read spec from embedded resource
-Console.WriteLine("*** using embedded spec");
             using(var specResource = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz"))
             using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
             using(var specReader = new StreamReader(specGzipStream)) {
