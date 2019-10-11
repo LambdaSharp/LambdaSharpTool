@@ -121,7 +121,7 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // read CloudFormation specification
-            var cloudFormationSpecFile = Path.Combine(Settings.ToolCacheDirectory, "CloudFormationResourceSpecification.json");
+            var cloudFormationSpecFile = Settings.CloudFormationResourceSpecificationCacheFilePath;
             if(File.Exists(cloudFormationSpecFile)) {
 
                 // read date-time of embedded resource

@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Cli {
                         string destinationJsonLocation;
                         if(lambdaSharpFolder == null) {
                             destinationZipLocation = null;
-                            destinationJsonLocation = Path.Combine(Settings.ToolCacheDirectory, "CloudFormationResourceSpecification.json");
+                            destinationJsonLocation = Settings.CloudFormationResourceSpecificationCacheFilePath;
                         } else {
                             destinationZipLocation = Path.Combine(lambdaSharpFolder, "src", "LambdaSharp.Tool", "Resources", "CloudFormationResourceSpecification.json.gz");
                             destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src", "CloudFormationResourceSpecification.json");
@@ -203,11 +203,13 @@ namespace LambdaSharp.Tool.Cli {
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
             if(destinationJsonLocation != null) {
-                File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented));
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationJsonLocation));
+                await File.WriteAllTextAsync(destinationJsonLocation, json.ToString(Formatting.Indented));
             }
 
             // save compressed file
             if(destinationZipLocation != null) {
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationZipLocation));
                 using(var fileStream = File.OpenWrite(destinationZipLocation))
                 using(var compressionStream = new GZipStream(fileStream, CompressionLevel.Optimal))
                 using(var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text))) {

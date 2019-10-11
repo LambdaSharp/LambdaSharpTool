@@ -85,15 +85,16 @@ namespace LambdaSharp.Tool.Cli {
             try {
 
                 // initialize AWS profile
-                if(awsProfile != null) {
-
-                    // select an alternate AWS profile by setting the AWS_PROFILE environment variable
-                    Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
-                    Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
+                if(awsProfile == null) {
+                    awsProfile = Settings.AwsProfileEnvironmentVariable;
                 }
 
+                // consistently set the AWS profile by setting the AWS_PROFILE/AWS_DEFAULT_PROFILE environment variables
+                Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
+                Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
+
                 // check for  cached AWS profile
-                var cachedProfile = Path.Combine(Settings.ToolCacheDirectory, $"aws-profile.{awsProfile ?? "default"}.json");
+                var cachedProfile = Path.Combine(Settings.AwsProfileCacheDirectory, "profile.json");
                 if(allowCaching && Settings.AllowCaching && File.Exists(cachedProfile) && ((DateTime.UtcNow - File.GetLastWriteTimeUtc(cachedProfile)) < Settings.MaxCacheAge)) {
                     cached = true;
                     return JsonConvert.DeserializeObject<AwsAccountInfo>(await File.ReadAllTextAsync(cachedProfile));
@@ -290,7 +291,7 @@ namespace LambdaSharp.Tool.Cli {
                     || (settings.TierVersion == null)
                     || force
                 ) {
-                    var cachedDeploymentTierSettings = Path.Combine(Settings.ToolCacheDirectory, $"{settings.TierPrefix}tier.json");
+                    var cachedDeploymentTierSettings = Path.Combine(Settings.AwsProfileCacheDirectory, $"{settings.TierPrefix}tier.json");
                     if(!force && allowCaching && Settings.AllowCaching && File.Exists(cachedDeploymentTierSettings)) {
                         var cachedInfo = JsonConvert.DeserializeObject<CachedDeploymentTierSettingsInfo>(await File.ReadAllTextAsync(cachedDeploymentTierSettings));
 

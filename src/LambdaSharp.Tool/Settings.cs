@@ -102,6 +102,11 @@ namespace LambdaSharp.Tool {
         public static int WarningCount => _errors.Count(entry => !entry.Error);
         public static bool HasWarnings => _errors.Any(entry => !entry.Error);
         public static string ToolCacheDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LambdaSharp");
+        public static string AwsProfileCacheDirectory => Path.Combine(ToolCacheDirectory, AwsProfileEnvironmentVariable);
+        public static string AwsProfileEnvironmentVariable = Environment.GetEnvironmentVariable("AWS_PROFILE")
+                ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
+                ?? "default";
+        public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
 
         //--- Class Methods ---
         public static void ShowErrors() {
