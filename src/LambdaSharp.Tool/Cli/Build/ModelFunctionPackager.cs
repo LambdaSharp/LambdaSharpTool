@@ -246,16 +246,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // to skip the build, we both need the function package and the function schema when mappings are present
                 var schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
                 if((functionPackage != null) && (!mappings.Any() || File.Exists(schemaFile))) {
-                    if(mappings.Any()) {
-
-                        // apply function schema to generate REST API and WebSocket models
-                        try {
-                            ApplyInvocationSchemas(function, mappings, schemaFile);
-                        } catch(Exception e) {
-                            LogError("unable to read create-invoke-methods-schema output", e);
-                            return;
-                        }
-                    }
 
                     // find all files used to create the function package
                     var files = new HashSet<string>();
@@ -265,6 +255,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
                     if(!files.Any(file => File.GetLastWriteTime(file) > functionPackageDate)) {
                         Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
+                        if(mappings.Any()) {
+
+                            // apply function schema to generate REST API and WebSocket models
+                            try {
+                                ApplyInvocationSchemas(function, mappings, schemaFile);
+                            } catch(Exception e) {
+                                LogError("unable to read create-invoke-methods-schema output", e);
+                                return;
+                            }
+                        }
 
                         // keep the existing package
                         _existingPackages.Remove(functionPackage);
@@ -285,8 +285,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // compile function project
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
-            var projectDirectory = Path.GetFullPath(Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project)));
-            var temporaryPackage = Path.GetFullPath(Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip"));
+            var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
+            var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             var obsoleteNodes = csproj.Descendants()
@@ -727,7 +727,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         }
 
         private List<ApiGatewayInvocationMapping> ExtractMappings(FunctionItem function) {
-            var handler = function.Function.Handler as string;
 
             // find all REST API and WebSocket mappings function sources
             var mappings = Enumerable.Empty<ApiGatewayInvocationMapping>()
@@ -763,6 +762,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 || (mappingClassName == null)
             ).ToList();
             if(incompleteMappings.Any()) {
+                var handler = function.Function.Handler as string;
                 if(handler == null) {
                     LogError("either function 'Handler' attribute must be specified as a literal value or all invocation methods must be fully qualified");
                     return null;
@@ -873,6 +873,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             IEnumerable<ApiGatewayInvocationMapping> mappings,
             string schemaFile
         ) {
+            _existingPackages.Remove(schemaFile);
             var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
                 .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
             foreach(var mapping in mappings) {
