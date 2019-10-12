@@ -265,7 +265,7 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
-            var module = new ModelYamlToAstConverter(new Settings(), moduleFile).Parse(moduleContents);
+            var module = new ModelYamlToAstConverter(new Settings(), moduleFile).Convert(moduleContents, selector: null);
             if(HasErrors) {
                 return;
             }
