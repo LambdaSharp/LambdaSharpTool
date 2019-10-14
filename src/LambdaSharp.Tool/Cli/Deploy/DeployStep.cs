@@ -95,6 +95,13 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         return true;
                     }
                     existing = updateValidation.ExistingStack;
+
+                    // check if existing stack checksum matches template checksum
+                    var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
+                    if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
+                        Settings.WriteAnsiLine($"=> No changes found to deploy", AnsiTerminal.BrightBlack);
+                        return true;
+                    }
                 }
 
                 // prompt for missing parameters
