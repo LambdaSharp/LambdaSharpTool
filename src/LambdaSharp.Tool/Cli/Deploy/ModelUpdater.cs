@@ -225,7 +225,26 @@ namespace LambdaSharp.Tool.Cli.Deploy {
         }
 
         private void ShowStackResult(CloudFormationStack stack) {
-            var outputs = stack.Outputs;
+            var outputs = stack.Outputs.Where(output => {
+
+                // show everything when verbose level is set to 'Detailed'
+                if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
+                    return true;
+                }
+
+                // omit known outputs
+                switch(output.OutputKey) {
+                case "LambdaSharpTier":
+                case "LambdaSharpTool":
+                case "Module":
+                case "ModuleChecksum":
+
+                    // skip expected outputs
+                    return false;
+                default:
+                    return true;
+                }
+            }).ToList();
             if(outputs.Any()) {
                 Console.WriteLine("Stack output values:");
                 foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
@@ -234,7 +253,8 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         line += $": {output.Description}";
                     }
                     line += $" = {output.OutputValue}";
-                    Console.WriteLine(line);
+                    Settings.WriteAnsiLine(line, AnsiTerminal.Green);
+                    break;
                 }
             }
         }

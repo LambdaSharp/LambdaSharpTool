@@ -188,6 +188,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * `lash build` now checks if an existing function package is up to date and therefore compilation can be skipped.
     * (experimental) Cache information about deployment tier, AWS profile, and found manifests locally to reduce network latencies (requires `LAMBDASHARP_FEATURE_CACHING` environment variable to be set to `true`)
     * `lash util download-cloudformation-spec` now stores the downloaded CloudFormation specification into the application data folder when not running in LambdaSharp contributor mode.
+    * Module output values are now highlighted. Standard module output values (e.g. `ModuleChecksum`) are omitted unless `lash` is run in verbose mode.
 
 #### Fixes
 
