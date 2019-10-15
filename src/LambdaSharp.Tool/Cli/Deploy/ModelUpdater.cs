@@ -254,7 +254,6 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     }
                     line += $" = {output.OutputValue}";
                     Settings.WriteAnsiLine(line, AnsiTerminal.Green);
-                    break;
                 }
             }
         }
