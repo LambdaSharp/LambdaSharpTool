@@ -113,7 +113,7 @@ namespace LambdaSharp.Tool {
         }
 
         public async Task<ModuleLocation> ResolveInfoToLocationAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, bool allowImport, bool showError, bool allowCaching = false) {
-            LogInfoVerbose($"=> Resolving module {moduleInfo}");
+            LogInfoVerbose($"... resolving module {moduleInfo}");
             var stopwatch = Stopwatch.StartNew();
             var cached = false;
             try {
@@ -199,7 +199,7 @@ namespace LambdaSharp.Tool {
                     }
                     return null;
                 }
-                LogInfoVerbose($"=> Selected module {moduleInfo.WithVersion(result.Version)} from {result.Origin}");
+                LogInfoVerbose($"... selected module {moduleInfo.WithVersion(result.Version)} from {result.Origin}");
 
                 // cache found version
                 Directory.CreateDirectory(cachedDirectory);
@@ -270,7 +270,7 @@ namespace LambdaSharp.Tool {
                         break;
                     }
                 } while(request.ContinuationToken != null);
-                LogInfoVerbose($"==> Found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
+                LogInfoVerbose($"... found {versions.Count} version{((versions.Count == 1) ? "" : "s")} in {bucketName} [{s3Client.Config.RegionEndpoint.SystemName}]");
                 return versions;
             }
 
@@ -337,7 +337,7 @@ namespace LambdaSharp.Tool {
                         inProgress.Remove(nestedDependency);
 
                         // append dependency now that all nested dependencies have been resolved
-                        LogInfoVerbose($"=> Resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo}");
+                        LogInfoVerbose($"... resolved dependency '{dependency.ModuleInfo.FullName}' to {dependencyModuleLocation.ModuleInfo}");
                         deployments.Add(nestedDependency);
                     }
                 }

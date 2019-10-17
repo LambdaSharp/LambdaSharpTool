@@ -287,6 +287,21 @@ namespace LambdaSharp.Tool.Cli.Build {
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
+            if(forceBuild) {
+
+                // delete 'bin' and 'obj' folders
+                var projectFolder = Path.GetDirectoryName(function.Project);
+                DeleteDirectory(Path.Combine(projectFolder, "bin"));
+                DeleteDirectory(Path.Combine(projectFolder, "obj"));
+
+                // local functions
+                void DeleteDirectory(string path) {
+                    LogInfoVerbose($"... deleting '{path}'");
+                    try {
+                        Directory.Delete(path, recursive: true);
+                    } catch { }
+                }
+            }
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             var obsoleteNodes = csproj.Descendants()
@@ -360,8 +375,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory)) {
-                LogError("'dotnet lambda package' command failed");
+            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild)) {
+
+                // nothing to do; error was already reported
                 return;
             }
 
@@ -517,13 +533,31 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
+        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory, bool forceBuild) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 LogError("failed to find the \"dotnet\" executable in path.");
                 return false;
             }
-            return ProcessLauncher.Execute(
+
+            // NOTE: with --force-build, we need to explicitly invoke `dotnet build` to pass in the `--no-incremental` and `--force` options;
+            //  we do this to ensure that `dotnet build` doesn't create an invalid executable when environment variables, such as LAMBDASHARP, change between builds.
+            if(forceBuild && !ProcessLauncher.Execute(
+                dotNetExe,
+                new[] {
+                    "build",
+                    "--force",
+                    "--no-incremental",
+                    "--configuration", buildConfiguration,
+                    "--framework", targetFramework
+                },
+                projectDirectory,
+                Settings.VerboseLevel >= VerboseLevel.Detailed
+            )) {
+                LogError("'dotnet build' command failed");
+                return false;
+            }
+            if(!ProcessLauncher.Execute(
                 dotNetExe,
                 new[] {
                     "lambda", "package",
@@ -534,7 +568,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
-            );
+            )) {
+                LogError("'dotnet lambda package' command failed");
+                return false;
+            }
+            return true;
         }
 
         private bool CheckDotNetLambdaToolIsInstalled() {
