@@ -186,9 +186,10 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 * LambdaSharp CLI
     * `lash build` now checks if an existing function package is up to date and therefore compilation can be skipped.
-    * (experimental) Cache information about deployment tier, AWS profile, and found manifests locally to reduce network latencies (requires `LAMBDASHARP_FEATURE_CACHING` environment variable to be set to `true`)
-    * `lash util download-cloudformation-spec` now stores the downloaded CloudFormation specification into the application data folder when not running in LambdaSharp contributor mode.
+    * `lash util download-cloudformation-spec` now stores the downloaded CloudFormation specification into the application data folder when not running in contributor mode, which makes it possible to access new CloudFormation resources without updating `lash`.
     * Module output values are now highlighted. Standard module output values (e.g. `ModuleChecksum`) are omitted unless `lash` is run in verbose mode.
+    * All commands with the `--aws-profile` option now also support `--aws-region` to override the region of the AWS profile.
+    * (experimental) Cache information about deployment tier, AWS profile, and found manifests locally to reduce network latencies (requires `LAMBDASHARP_FEATURE_CACHING` environment variable to be set to `true`)
 
 #### Fixes
 
