@@ -68,11 +68,16 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Delete orphaned Lambda and API Gateway V1/V2 CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
                     var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLogsAsync(dryRunOption.HasValue(), awsProfileOption.Value());
+                        await DeleteOrphanLogsAsync(
+                            dryRunOption.HasValue(),
+                            awsProfileOption.Value(),
+                            awsRegionOption.Value()
+                        );
                     });
                 });
 
@@ -236,11 +241,11 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLogsAsync(bool dryRun, string awsProfile) {
+        public async Task DeleteOrphanLogsAsync(bool dryRun, string awsProfile, string awsRegion) {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile, allowCaching: true);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
             var logsClient = new AmazonCloudWatchLogsClient();
 
             // delete orphaned logs

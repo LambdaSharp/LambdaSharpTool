@@ -23,6 +23,12 @@ The `util delete-orphan-logs` command is used to delete CloudWatch log groups th
 (optional) Use a specific AWS profile from the AWS credentials file
 </dd>
 
+<dt><code>--aws-region &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS region (default: read from AWS profile)
+</dd>
+
 </dl>
 
 ## Examples

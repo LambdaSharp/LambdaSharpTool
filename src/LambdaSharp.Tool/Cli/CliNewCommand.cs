@@ -183,6 +183,7 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.HelpOption();
                     subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
 
                     // sub-command options
@@ -190,7 +191,11 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // initialize AWS profile
-                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value(), allowCaching: true);
+                        var awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsRegion: awsRegionOption.Value(),
+                            allowCaching: true
+                        );
 
                         // initialize settings instance
                         var settings = new Settings {

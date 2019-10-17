@@ -159,6 +159,12 @@ If the argument refers to a module definition, the `deploy` command invokes the 
 (optional) Use a specific AWS profile from the AWS credentials file
 </dd>
 
+<dt><code>--aws-region &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS region (default: read from AWS profile)
+</dd>
+
 <dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
