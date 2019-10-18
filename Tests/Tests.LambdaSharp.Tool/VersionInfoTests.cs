@@ -20,10 +20,17 @@ using System.Collections.Generic;
 using FluentAssertions;
 using LambdaSharp.Tool;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool {
 
     public class VersionInfoTests {
+
+        //--- Fields ---
+        private readonly ITestOutputHelper _output;
+
+        //--- Constructors ---
+        public VersionInfoTests(ITestOutputHelper output) => _output = output;
 
         //--- Methods ---
 
@@ -292,6 +299,8 @@ namespace Tests.LambdaSharp.Tool {
                 VersionInfo.Parse("0.7.0-rc6"),
                 VersionInfo.Parse("0.7.0"),
                 VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.1.1"),
+                VersionInfo.Parse("0.7.1.2"),
                 VersionInfo.Parse("0.7.2"),
                 VersionInfo.Parse("0.8.0")
             };
@@ -302,10 +311,10 @@ namespace Tests.LambdaSharp.Tool {
                 versions,
                 minVersion: null,
                 coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
-            ).CompareToVersion(VersionInfo.Parse("0.7.2"));
+            );
 
             // assert
-            result.Should().Be(0);
+            result.CompareToVersion(VersionInfo.Parse("0.7.1.2")).Should().Be(0);
         }
 
         [Fact]
@@ -319,6 +328,8 @@ namespace Tests.LambdaSharp.Tool {
                 VersionInfo.Parse("0.7.0-rc6"),
                 VersionInfo.Parse("0.7.0"),
                 VersionInfo.Parse("0.7.1"),
+                VersionInfo.Parse("0.7.1.1"),
+                VersionInfo.Parse("0.7.1.2"),
                 VersionInfo.Parse("0.7.2"),
                 VersionInfo.Parse("0.8.0")
             };
@@ -329,10 +340,10 @@ namespace Tests.LambdaSharp.Tool {
                 versions,
                 minVersion: VersionInfo.Parse("0.7.0"),
                 coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
-            ).CompareToVersion(VersionInfo.Parse("0.7.2"));
+            );
 
             // assert
-            result.Should().Be(0);
+            result.CompareToVersion(VersionInfo.Parse("0.7.1.2")).Should().Be(0);
         }
 
         private void IsLessThan(string left, string right) {

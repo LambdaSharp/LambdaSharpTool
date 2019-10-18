@@ -69,22 +69,40 @@ lash new function MyNewFunction
 (optional) Override the module version
 </dd>
 
+<dt><code>--module-build-date &lt;DATE&gt;</code></dt>
+<dd>
+
+(optional) Override module build date [yyyyMMddHHmmss]
+</dd>
+
+<dt><code>--force-build</code></dt>
+<dd>
+
+(optional) Always build function packages
+</dd>
+
 <dt><code>--dryrun[:&lt;LEVEL&gt;]</code></dt>
 <dd>
 
 (optional) Generate output artifacts without deploying (0=everything, 1=cloudformation)
 </dd>
 
-<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
+<dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
 
-(optional) Use a specific LambdaSharp CLI profile (default: Default)
+(optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)
 </dd>
 
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>
 
 (optional) Use a specific AWS profile from the AWS credentials file
+</dd>
+
+<dt><code>--aws-region &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS region (default: read from AWS profile)
 </dd>
 
 <dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>

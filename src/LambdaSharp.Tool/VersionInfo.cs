@@ -258,7 +258,7 @@ namespace LambdaSharp.Tool {
         public bool IsGreaterOrEqualThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) >= 0;
         public bool IsEqualToVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) == 0;
 
-        public string GetWildcardVersion() {
+        public string GetLambdaSharpAssemblyWildcardVersion() {
             if(IsPreRelease) {
 
                 // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
@@ -272,7 +272,7 @@ namespace LambdaSharp.Tool {
             return $"{Major}.{Minor}.*";
         }
 
-        public VersionInfo GetCompatibleCoreServicesVersion() {
+        public VersionInfo GetCoreServicesReferenceVersion() {
             if(Major == 0) {
 
                 // when Major version is 0, the build number is relevant
@@ -289,9 +289,8 @@ namespace LambdaSharp.Tool {
                 && (!versionConstraint.PatchRevision.HasValue || (PatchRevision == versionConstraint.PatchRevision));
         }
 
-        public bool IsCoreServicesCompatible(VersionInfo info) {
-            return (Major == info.Major) && ((Major != 0) || (Minor == info.Minor)) && (Suffix == info.Suffix);
-        }
+        public bool IsCoreServicesCompatible(VersionInfo info)
+            => GetCoreServicesReferenceVersion().IsEqualToVersion(info?.GetCoreServicesReferenceVersion());
     }
 
     public class VersionInfoConverter : JsonConverter {

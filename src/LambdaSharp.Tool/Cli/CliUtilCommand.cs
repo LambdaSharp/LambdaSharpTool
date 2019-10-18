@@ -68,29 +68,37 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Delete orphaned Lambda and API Gateway V1/V2 CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
                     var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        await DeleteOrphanLogsAsync(dryRunOption.HasValue(), awsProfileOption.Value());
+                        await DeleteOrphanLogsAsync(
+                            dryRunOption.HasValue(),
+                            awsProfileOption.Value(),
+                            awsRegionOption.Value()
+                        );
                     });
                 });
 
                 // download cloudformation specification sub-command
                 cmd.Command("download-cloudformation-spec", subCmd => {
                     subCmd.HelpOption();
-                    subCmd.Description = "Download CloudFormation JSON specification to LAMBDASHARP development folder";
+                    subCmd.Description = "Download CloudFormation JSON specification";
                     subCmd.OnExecute(async () => {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // determine destination folder
                         var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
+                        string destinationZipLocation;
+                        string destinationJsonLocation;
                         if(lambdaSharpFolder == null) {
-                            LogError("LAMBDASHARP environment variable is not defined");
-                            return;
+                            destinationZipLocation = null;
+                            destinationJsonLocation = Settings.CloudFormationResourceSpecificationCacheFilePath;
+                        } else {
+                            destinationZipLocation = Path.Combine(lambdaSharpFolder, "src", "LambdaSharp.Tool", "Resources", "CloudFormationResourceSpecification.json.gz");
+                            destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src", "CloudFormationResourceSpecification.json");
                         }
-                        var destinationZipLocation = Path.Combine(lambdaSharpFolder, "src", "LambdaSharp.Tool", "Resources", "CloudFormationResourceSpecification.json.gz");
-                        var destinationJsonLocation = Path.Combine(lambdaSharpFolder, "src", "CloudFormationResourceSpecification.json");
 
                         // run command
                         await RefreshCloudFormationSpecAsync(
@@ -199,17 +207,32 @@ namespace LambdaSharp.Tool.Cli {
             json = OrderFields(json);
             text = json.ToString(Formatting.None);
             Console.WriteLine($"Stripped size: {text.Length:N0}");
-            File.WriteAllText(destinationJsonLocation, json.ToString(Formatting.Indented));
+            if(destinationJsonLocation != null) {
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationJsonLocation));
+                var cloudformationJson = json.ToString(Formatting.Indented);
+                if(File.Exists(destinationJsonLocation) && ((await File.ReadAllTextAsync(destinationJsonLocation)).ToMD5Hash() == cloudformationJson.ToMD5Hash())) {
+
+                    // not changes, nothing else to do
+                    return;
+                }
+                await File.WriteAllTextAsync(destinationJsonLocation, cloudformationJson);
+            }
 
             // save compressed file
-            using(var fileStream = File.OpenWrite(destinationZipLocation)) {
-            using(var compressionStream = new GZipStream(fileStream, CompressionLevel.Optimal))
-            using(var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
-                await memoryStream.CopyToAsync(compressionStream);
+            if(destinationZipLocation != null) {
+                Directory.CreateDirectory(Path.GetDirectoryName(destinationZipLocation));
+                using(var fileStream = File.OpenWrite(destinationZipLocation))
+                using(var compressionStream = new GZipStream(fileStream, CompressionLevel.Optimal))
+                using(var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(text))) {
+                    await memoryStream.CopyToAsync(compressionStream);
+                }
+                var info = new FileInfo(destinationZipLocation);
+                Console.WriteLine($"Stored compressed spec file {destinationZipLocation}");
+                Console.WriteLine($"Compressed file size: {info.Length:N0}");
+
+                // write timestamp when the spec was updated (helps with determining if the embedded or downloaded spec is newer)
+                await File.WriteAllTextAsync($"{destinationZipLocation}.timestamp", DateTime.UtcNow.ToString("u"));
             }
-            var info = new FileInfo(destinationZipLocation);
-            Console.WriteLine($"Stored compressed spec file {destinationZipLocation}");
-            Console.WriteLine($"Compressed file size: {info.Length:N0}");
 
             // local functions
             JObject OrderFields(JObject value) {
@@ -224,11 +247,11 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public async Task DeleteOrphanLogsAsync(bool dryRun, string awsProfile) {
+        public async Task DeleteOrphanLogsAsync(bool dryRun, string awsProfile, string awsRegion) {
             Console.WriteLine();
 
             // initialize AWS profile
-            await InitializeAwsProfile(awsProfile);
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
             var logsClient = new AmazonCloudWatchLogsClient();
 
             // delete orphaned logs

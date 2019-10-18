@@ -131,6 +131,9 @@ namespace LambdaSharp.Tool {
         protected void LogInfoVerbose(string message)
             => Settings.LogInfoVerbose(message);
 
+        protected void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null)
+            => Settings.LogInfoPerformance(message, duration, cached);
+
         protected List<string> ConvertToStringList(object value) {
             var result = new List<string>();
             if(value is string inlineValue) {

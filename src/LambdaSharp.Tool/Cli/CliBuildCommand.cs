@@ -67,6 +67,9 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddModuleBuildDateOption(CommandLineApplication cmd)
             => cmd.Option("--module-build-date", "(optional) Override module build date [yyyyMMddHHmmss]", CommandOptionType.SingleValue);
 
+        public static CommandOption AddForceBuildOption(CommandLineApplication cmd)
+            => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
+
         public static Dictionary<string, string> ReadInputParametersFiles(Settings settings, string filename) {
             if(!File.Exists(filename)) {
                 LogError("cannot find parameters file");
@@ -98,6 +101,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
+                var forceBuildOption = AddForceBuildOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -169,7 +173,8 @@ namespace LambdaSharp.Tool.Cli {
                             buildConfigurationOption.Value() ?? "Release",
                             selectorOption.Value(),
                             moduleSource,
-                            moduleVersion
+                            moduleVersion,
+                            forceBuildOption.HasValue()
                         )) {
                             break;
                         }
@@ -198,6 +203,7 @@ namespace LambdaSharp.Tool.Cli {
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
+                var forceBuildOption = AddForceBuildOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -287,7 +293,8 @@ namespace LambdaSharp.Tool.Cli {
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,
-                                moduleVersion
+                                moduleVersion,
+                                forceBuildOption.HasValue()
                             )) {
                                 break;
                             }
@@ -335,6 +342,7 @@ namespace LambdaSharp.Tool.Cli {
                 var selectorOption = AddSelectorOption(cmd);
                 var moduleVersionOption = AddModuleVersionOption(cmd);
                 var moduleBuildDateOption = AddModuleBuildDateOption(cmd);
+                var forceBuildOption = AddForceBuildOption(cmd);
 
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
@@ -437,7 +445,8 @@ namespace LambdaSharp.Tool.Cli {
                                 buildConfigurationOption.Value() ?? "Release",
                                 selectorOption.Value(),
                                 moduleSource,
-                                moduleVersion
+                                moduleVersion,
+                                forceBuildOption.HasValue()
                             )) {
                                 break;
                             }
@@ -486,10 +495,11 @@ namespace LambdaSharp.Tool.Cli {
             string buildConfiguration,
             string selector,
             string moduleSource,
-            VersionInfo moduleVersion
+            VersionInfo moduleVersion,
+            bool forceBuild
         ) {
             try {
-                if(!await PopulateDeploymentTierSettingsAsync(settings)) {
+                if(!await PopulateDeploymentTierSettingsAsync(settings, allowCaching: true)) {
                     return false;
                 }
                 return await new BuildStep(settings, moduleSource).DoAsync(
@@ -500,7 +510,8 @@ namespace LambdaSharp.Tool.Cli {
                     gitBranch,
                     buildConfiguration,
                     selector,
-                    moduleVersion
+                    moduleVersion,
+                    forceBuild
                 );
             } catch(Exception e) {
                 LogError(e);

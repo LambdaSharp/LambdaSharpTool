@@ -386,7 +386,7 @@ namespace LambdaSharp {
                 }
 
                 // clear function state
-                LogInfo($"invocation completed (reported errors: {_reportedExceptions.Count}:N0)");
+                LogInfo($"invocation completed (reported errors: {_reportedExceptions.Count:N0})");
                 _reportedExceptions.Clear();
                 CurrentContext = null;
 
@@ -765,7 +765,7 @@ namespace LambdaSharp {
                 if(_reportedExceptions.TryGetValue(exception, out var previousLogLevel) && (previousLogLevel >= level)) {
                     return;
                 }
-                _reportedExceptions.Add(exception, level);
+                _reportedExceptions[exception] = level;
 
                 // abort messages are printed, but not reported since they are not logic errors
                 if(exception is LambdaAbortException) {

@@ -26,6 +26,7 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.IdentityManagement.Model;
 using LambdaSharp.Tool.Internal;
+using LambdaSharp.Tool.Model;
 using McMaster.Extensions.CommandLineUtils;
 
 namespace LambdaSharp.Tool.Cli {
@@ -56,6 +57,7 @@ namespace LambdaSharp.Tool.Cli {
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)", CommandOptionType.NoValue);
+                var forceBuildOption = cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
@@ -89,7 +91,7 @@ namespace LambdaSharp.Tool.Cli {
                         allowDataLossOption.HasValue(),
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
-                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCompatibleCoreServicesVersion(),
+                        versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCoreServicesReferenceVersion(),
                         usePublishedOption.HasValue()
                             ? null
                             : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
@@ -99,7 +101,8 @@ namespace LambdaSharp.Tool.Cli {
                         xRayTracingLevel,
                         coreServices,
                         existingS3BucketName,
-                        allowUpgradeOption.HasValue()
+                        allowUpgradeOption.HasValue(),
+                        forceBuildOption.HasValue()
                     );
                 });
             });
@@ -118,7 +121,8 @@ namespace LambdaSharp.Tool.Cli {
             XRayTracingLevel xRayTracingLevel,
             CoreServices coreServices,
             string existingS3BucketName,
-            bool allowUpgrade
+            bool allowUpgrade,
+            bool forceBuild
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -163,21 +167,34 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // determine if the deployment tier needs to be updated
-                var tierToToolVersionComparison = settings.TierVersion.CompareToVersion(settings.CoreServicesVersion);
+                var tierToToolVersionComparison = settings.TierVersion.GetCoreServicesReferenceVersion().CompareToVersion(settings.CoreServicesReferenceVersion);
                 if(tierToToolVersionComparison == 0) {
 
                     // versions are identical; nothing to do, unless we're forced to update
                     updateExistingTier = forceDeploy
 
                         // it's a pre-release, which always needs to be updated
-                        || settings.CoreServicesVersion.IsPreRelease
+                        || settings.ToolVersion.IsPreRelease
 
                         // deployment tier is running core services state is different from requested state
-                        || (settings.CoreServices != coreServices);
+                        || (settings.CoreServices != coreServices)
+                        || await IsNewerCoreModuleVersionAvailable();
+
+                    // local functions
+                    async Task<bool> IsNewerCoreModuleVersionAvailable() {
+                        var latestCoreModuleLocation = await new ModelManifestLoader(settings, "").ResolveInfoToLocationAsync(
+                            new ModuleInfo("LambdaSharp", "Core", settings.CoreServicesReferenceVersion, "lambdasharp"),
+                            ModuleManifestDependencyType.Shared,
+                            allowImport: true,
+                            showError: false
+                        );
+                        var latestCoreModuleVersion = latestCoreModuleLocation?.ModuleInfo.Version;
+                        return settings.TierVersion.IsLessThanVersion(latestCoreModuleVersion);
+                    }
                 } else if(tierToToolVersionComparison > 0) {
 
                     // tier is newer; tool needs to get updated
-                    LogError($"LambdaSharp tool is out of date (tool: {settings.CoreServicesVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
+                    LogError($"LambdaSharp tool is out of date (tool: {settings.ToolVersion}, tier: {settings.TierVersion})", new LambdaSharpToolOutOfDateException(settings.TierVersion));
                     return false;
                 } else if(tierToToolVersionComparison < 0) {
 
@@ -185,15 +202,15 @@ namespace LambdaSharp.Tool.Cli {
                     updateExistingTier = true;
 
                     // tool version is more recent; if it's a minor update, proceed without prompting, otherwise ask user to confirm upgrade
-                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.CoreServicesVersion) && !allowUpgrade) {
+                    if(!settings.TierVersion.IsCoreServicesCompatible(settings.CoreServicesReferenceVersion) && !allowUpgrade) {
                         Console.WriteLine($"LambdaSharp Tier is out of date");
-                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.CoreServicesVersion}?", defaultAnswer: false);
+                        updateExistingTier = settings.PromptYesNo($"Do you want to upgrade LambdaSharp Tier '{settings.TierName}' from v{settings.TierVersion} to v{settings.CoreServicesReferenceVersion}?", defaultAnswer: false);
                     }
                     if(!updateExistingTier) {
                         return false;
                     }
                 } else if(!forceDeploy) {
-                    LogError($"Could not determine if LambdaSharp tool is compatible (tool: {settings.CoreServicesVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
+                    LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
                 } else {
 
@@ -265,7 +282,8 @@ namespace LambdaSharp.Tool.Cli {
                         buildConfiguration: "Release",
                         selector: null,
                         moduleSource: moduleSource,
-                        moduleVersion: moduleVersion
+                        moduleVersion: moduleVersion,
+                        forceBuild
                     )) {
                         return false;
                     }
@@ -282,7 +300,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(!await buildPublishDeployCommand.ImportStepAsync(
                     settings,
                     ModuleInfo.Parse($"LambdaSharp.Core:{version}@lambdasharp"),
-                    forcePublish: false
+                    forcePublish: forcePublish
                 )) {
                     return false;
                 }
@@ -358,7 +376,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // initialize stack with seed CloudFormation template
                 var template = ReadResource("LambdaSharpCore.yml", new Dictionary<string, string> {
-                    ["CORE-VERSION"] = settings.CoreServicesVersion.ToString(),
+                    ["CORE-VERSION"] = settings.CoreServicesReferenceVersion.ToString(),
                     ["TOOL-VERSION"] = settings.ToolVersion.ToString(),
                     ["CHECKSUM"] = settings.ToolVersion.ToString().ToMD5Hash()
                 });
@@ -554,7 +572,7 @@ namespace LambdaSharp.Tool.Cli {
 
         protected async Task CheckApiGatewayRole(Settings settings) {
 
-                // retrieve the CloudWatch/X-Ray role from the API Gateway account
+            // retrieve the CloudWatch/X-Ray role from the API Gateway account
             Console.WriteLine("=> Checking API Gateway role");
             var account = await settings.ApiGatewayClient.GetAccountAsync(new GetAccountRequest());
             var role = await GetOrCreateRole(account.CloudwatchRoleArn?.Split('/').Last() ?? DEFAULT_API_GATEWAY_ROLE);

@@ -97,6 +97,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)
 </dd>
 
+<dt><code>--force-build</code></dt>
+<dd>
+
+(optional) Always build function packages
+</dd>
+
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
 <dd>
 
@@ -113,6 +119,12 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 <dd>
 
 (optional) Use a specific AWS profile from the AWS credentials file
+</dd>
+
+<dt><code>--aws-region &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS region (default: read from AWS profile)
 </dd>
 
 <dt><code>--verbose|-V[:&lt;LEVEL&gt;]</code></dt>

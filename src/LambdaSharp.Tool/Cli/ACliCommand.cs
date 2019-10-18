@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -35,6 +36,7 @@ using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Cli {
 
@@ -44,6 +46,14 @@ namespace LambdaSharp.Tool.Cli {
         public string Region { get; set; }
         public string AccountId { get; set; }
         public string UserArn { get; set; }
+    }
+
+    public class CachedDeploymentTierSettingsInfo {
+
+        //--- Properties ---
+        public string DeploymentBucketName { get; set; }
+        public VersionInfo TierVersion { get; set; }
+        public CoreServices CoreServices { get; set; }
     }
 
     public abstract class ACliCommand : CliBase {
@@ -67,45 +77,63 @@ namespace LambdaSharp.Tool.Cli {
             string awsProfile,
             string awsAccountId = null,
             string awsRegion = null,
-            string awsUserArn = null
+            string awsUserArn = null,
+            bool allowCaching = false
         ) {
+            var stopwatch = Stopwatch.StartNew();
+            var cached = false;
+            try {
 
-            // initialize AWS profile
-            if(awsProfile != null) {
+                // initialize AWS profile
+                if(awsProfile == null) {
+                    awsProfile = Settings.AwsProfileEnvironmentVariable;
+                }
 
-                // select an alternate AWS profile by setting the AWS_PROFILE environment variable
+                // consistently set the AWS profile by setting the AWS_PROFILE/AWS_DEFAULT_PROFILE environment variables
                 Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
                 Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
-            }
 
-            // determine default AWS region
-            if((awsAccountId == null) || (awsRegion == null) || (awsUserArn == null)) {
-
-                // determine AWS region and account
-                try {
-                    var stsClient = new AmazonSecurityTokenServiceClient();
-                    var response = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
-                    awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
-                    awsAccountId = awsAccountId ?? response.Account;
-                    awsUserArn = awsUserArn ?? response.Arn;
-                } catch(HttpRequestException e) when(e.Message == "No such host is known") {
-                    LogError("an Internet connection is required to determine the AWS Account Id and Region");
-                    return null;
-                } catch(Exception e) {
-                    LogError("unable to determine the AWS Account Id and Region", e);
-                    return null;
+                // check for  cached AWS profile
+                var cachedProfile = Path.Combine(Settings.AwsProfileCacheDirectory, "profile.json");
+                if(allowCaching && Settings.AllowCaching && File.Exists(cachedProfile) && ((DateTime.UtcNow - File.GetLastWriteTimeUtc(cachedProfile)) < Settings.MaxCacheAge)) {
+                    cached = true;
+                    return JsonConvert.DeserializeObject<AwsAccountInfo>(await File.ReadAllTextAsync(cachedProfile));
                 }
-            }
 
-            // set AWS region for library and spawned processes
-            AWSConfigs.AWSRegion = awsRegion;
-            Environment.SetEnvironmentVariable("AWS_REGION", awsRegion);
-            Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", awsRegion);
-            return new AwsAccountInfo {
-                Region = awsRegion,
-                AccountId = awsAccountId,
-                UserArn = awsUserArn
-            };
+                // determine default AWS region
+                if((awsAccountId == null) || (awsRegion == null) || (awsUserArn == null)) {
+
+                    // determine AWS region and account
+                    try {
+                        var stsClient = new AmazonSecurityTokenServiceClient();
+                        var response = await stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest());
+                        awsRegion = awsRegion ?? stsClient.Config.RegionEndpoint.SystemName ?? "us-east-1";
+                        awsAccountId = awsAccountId ?? response.Account;
+                        awsUserArn = awsUserArn ?? response.Arn;
+                    } catch(HttpRequestException e) when(e.Message == "No such host is known") {
+                        LogError("an Internet connection is required to determine the AWS Account Id and Region");
+                        return null;
+                    } catch(Exception e) {
+                        LogError("unable to determine the AWS Account Id and Region", e);
+                        return null;
+                    }
+                }
+
+                // set AWS region for library and spawned processes
+                AWSConfigs.AWSRegion = awsRegion;
+                Environment.SetEnvironmentVariable("AWS_REGION", awsRegion);
+                Environment.SetEnvironmentVariable("AWS_DEFAULT_REGION", awsRegion);
+                var result = new AwsAccountInfo {
+                    Region = awsRegion,
+                    AccountId = awsAccountId,
+                    UserArn = awsUserArn
+                };
+                Directory.CreateDirectory(Path.GetDirectoryName(cachedProfile));
+                await File.WriteAllTextAsync(cachedProfile, JsonConvert.SerializeObject(result));
+                return result;
+            } finally {
+                Settings.LogInfoPerformance($"InitializeAwsProfile()", stopwatch.Elapsed, cached);
+            }
         }
 
         protected Func<Task<Settings>> CreateSettingsInitializer(
@@ -113,24 +141,24 @@ namespace LambdaSharp.Tool.Cli {
             bool requireAwsProfile = true
         ) {
             CommandOption awsProfileOption = null;
+            CommandOption awsRegionOption = null;
 
             // add misc options
             var tierOption = AddTierOption(cmd);
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
             var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
-            var awsRegionOption = cmd.Option("--aws-region <NAME>", "(test only) Override AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
             var awsUserArnOption = cmd.Option("--aws-user-arn <ARN>", "(test only) Override AWS user ARN (default: read from AWS profile)", CommandOptionType.SingleValue);
             var toolVersionOption = cmd.Option("--cli-version <VALUE>", "(test only) LambdaSharp CLI version for profile", CommandOptionType.SingleValue);
             var deploymentBucketNameOption = cmd.Option("--deployment-bucket-name <NAME>", "(test only) S3 Bucket name used to deploy modules (default: read from LambdaSharp CLI configuration)", CommandOptionType.SingleValue);
             var tierVersionOption = cmd.Option("--tier-version <VERSION>", "(test only) LambdaSharp tier version (default: read from deployment tier)", CommandOptionType.SingleValue);
             var promptsAsErrorsOption = cmd.Option("--prompts-as-errors", "(optional) Missing parameters cause an error instead of a prompts (use for CI/CD to avoid unattended prompts)", CommandOptionType.NoValue);
-            awsRegionOption.ShowInHelpText = false;
             awsAccountIdOption.ShowInHelpText = false;
             awsUserArnOption.ShowInHelpText = false;
             toolVersionOption.ShowInHelpText = false;
@@ -142,6 +170,9 @@ namespace LambdaSharp.Tool.Cli {
                 if(noAnsiOutputOption.HasValue()) {
                     Settings.UseAnsiConsole = false;
                 }
+
+                // check if experimental caching feature is enabled
+                Settings.AllowCaching = string.Equals((Environment.GetEnvironmentVariable("LAMBDASHARP_FEATURE_CACHING") ?? "false"), "true", StringComparison.OrdinalIgnoreCase);
 
                 // initialize logging level
                 if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
@@ -168,7 +199,10 @@ namespace LambdaSharp.Tool.Cli {
                             awsProfileOption.Value(),
                             awsAccountIdOption.Value(),
                             awsRegionOption.Value(),
-                            awsUserArnOption.Value()
+                            awsUserArnOption.Value(),
+
+                            // TODO (2019-10-08, bjorg): provide option to disable profile caching (or at least force a reset)
+                            allowCaching: true
                         );
 
                         // create AWS clients
@@ -246,96 +280,122 @@ namespace LambdaSharp.Tool.Cli {
             bool requireCoreServices = true,
             bool requireVersionCheck = true,
             bool optional = false,
-            bool force = false
+            bool force = false,
+            bool allowCaching = false
         ) {
-            if(
-                (settings.DeploymentBucketName == null)
-                || (settings.TierVersion == null)
-                || force
-            ) {
-
-                // attempt to find an existing core module
-                var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
-                var existing = await settings.CfnClient.GetStackAsync(stackName, LogError);
-                if(existing.Stack == null) {
-                    if(!optional) {
-                        LogError($"LambdaSharp tier {settings.TierName} does not exist", new LambdaSharpDeploymentTierSetupException(settings.TierName));
-                    }
-                    return false;
-                }
-
-                // validate module information
-                var result = true;
-                var tierModuleInfoText = existing.Stack?.GetModuleVersionText();
-                if(tierModuleInfoText == null) {
-                    if(!optional && result) {
-                        LogError($"Could not find LambdaSharp tier information for {stackName}");
-                    }
-                    result = false;
-                }
-
-                // read deployment S3 bucket name
-                var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
-                if((tierModuleBucketArnParts == null) && requireBucketName) {
-                    if(!optional && result) {
-                        LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                    }
-                    result = false;
-                }
-                if(tierModuleBucketArnParts != null) {
-                    if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
-                        LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                        result = false;
-                    }
-                }
-
-                // do some sanity checks
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var cached = false;
+            try {
                 if(
-                    !ModuleInfo.TryParse(tierModuleInfoText, out var tierModuleInfo)
-                    || (tierModuleInfo.Namespace != "LambdaSharp")
-                    || (tierModuleInfo.Name != "Core")
+                    (settings.DeploymentBucketName == null)
+                    || (settings.TierVersion == null)
+                    || force
                 ) {
-                    LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.TierName));
-                    result = false;
-                }
+                    var cachedDeploymentTierSettings = Path.Combine(Settings.AwsProfileCacheDirectory, $"{settings.TierPrefix}tier.json");
+                    if(!force && allowCaching && Settings.AllowCaching && File.Exists(cachedDeploymentTierSettings)) {
+                        var cachedInfo = JsonConvert.DeserializeObject<CachedDeploymentTierSettingsInfo>(await File.ReadAllTextAsync(cachedDeploymentTierSettings));
 
-                // check if tier and tool versions are compatible
-                if(!optional && (tierModuleInfo != null) && requireVersionCheck) {
-                    var tierToToolVersionComparison = tierModuleInfo.Version.CompareToVersion(settings.CoreServicesVersion);
-                    if(tierToToolVersionComparison == 0) {
+                        // initialize settings
+                        settings.DeploymentBucketName = cachedInfo.DeploymentBucketName;
+                        settings.TierVersion = cachedInfo.TierVersion;
+                        settings.CoreServices = cachedInfo.CoreServices;
+                        cached = true;
+                        return true;
+                    }
 
-                        // versions are identical; nothing to do
-                    } else if(tierToToolVersionComparison < 0) {
-                        LogError($"LambdaSharp tier is not up to date (tool: {settings.CoreServicesVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
-                        result = false;
-                    } else if(tierToToolVersionComparison > 0) {
+                    // attempt to find an existing core module
+                    var stackName = $"{settings.TierPrefix}LambdaSharp-Core";
+                    var existing = await settings.CfnClient.GetStackAsync(stackName, LogError);
+                    if(existing.Stack == null) {
+                        if(!optional) {
+                            LogError($"LambdaSharp tier {settings.TierName} does not exist", new LambdaSharpDeploymentTierSetupException(settings.TierName));
+                        }
+                        return false;
+                    }
 
-                        // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
-                    } else {
-                        LogError($"LambdaSharp tool is not compatible (tool: {settings.CoreServicesVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
+                    // validate module information
+                    var result = true;
+                    var tierModuleInfoText = existing.Stack?.GetModuleVersionText();
+                    if(tierModuleInfoText == null) {
+                        if(!optional && result) {
+                            LogError($"Could not find LambdaSharp tier information for {stackName}");
+                        }
                         result = false;
                     }
-                }
 
-                // read tier mode
-                var coreServicesModeText = GetStackOutput("CoreServices");
-                if(!Enum.TryParse<CoreServices>(coreServicesModeText, true, out var coreServicesMode) && requireCoreServices) {
-                    if(!optional && result) {
-                        LogError("unable to parse CoreServices output value from stack");
+                    // read deployment S3 bucket name
+                    var tierModuleBucketArnParts = GetStackOutput("DeploymentBucket")?.Split(':');
+                    if((tierModuleBucketArnParts == null) && requireBucketName) {
+                        if(!optional && result) {
+                            LogError("could not find 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                        }
+                        result = false;
                     }
-                    result = false;
+                    if(tierModuleBucketArnParts != null) {
+                        if((tierModuleBucketArnParts.Length != 6) || (tierModuleBucketArnParts[0] != "arn") || (tierModuleBucketArnParts[1] != "aws") || (tierModuleBucketArnParts[2] != "s3")) {
+                            LogError("invalid value 'DeploymentBucket' output value for deployment tier settings", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                            result = false;
+                        }
+                    }
+
+                    // do some sanity checks
+                    if(
+                        !ModuleInfo.TryParse(tierModuleInfoText, out var tierModuleInfo)
+                        || (tierModuleInfo.Namespace != "LambdaSharp")
+                        || (tierModuleInfo.Name != "Core")
+                    ) {
+                        LogError("LambdaSharp tier is not configured propertly", new LambdaSharpDeploymentTierSetupException(settings.TierName));
+                        result = false;
+                    }
+
+                    // check if tier and tool versions are compatible
+                    if(!optional && (tierModuleInfo != null) && requireVersionCheck) {
+                        var tierToToolVersionComparison = tierModuleInfo.Version.GetCoreServicesReferenceVersion().CompareToVersion(settings.CoreServicesReferenceVersion);
+                        if(tierToToolVersionComparison == 0) {
+
+                            // versions are identical; nothing to do
+                        } else if(tierToToolVersionComparison < 0) {
+                            LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                            result = false;
+                        } else if(tierToToolVersionComparison > 0) {
+
+                            // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
+                        } else {
+                            LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
+                            result = false;
+                        }
+                    }
+
+                    // read tier mode
+                    var coreServicesModeText = GetStackOutput("CoreServices");
+                    if(!Enum.TryParse<CoreServices>(coreServicesModeText, true, out var coreServicesMode) && requireCoreServices) {
+                        if(!optional && result) {
+                            LogError("unable to parse CoreServices output value from stack");
+                        }
+                        result = false;
+                    }
+
+                    // initialize settings
+                    settings.DeploymentBucketName = tierModuleBucketArnParts?[5];
+                    settings.TierVersion = tierModuleInfo?.Version;
+                    settings.CoreServices = coreServicesMode;
+
+                    // cache deployment tier settings
+                    Directory.CreateDirectory(Path.GetDirectoryName(cachedDeploymentTierSettings));
+                    await File.WriteAllTextAsync(cachedDeploymentTierSettings, JsonConvert.SerializeObject(new CachedDeploymentTierSettingsInfo {
+                        DeploymentBucketName = settings.DeploymentBucketName,
+                        TierVersion = settings.TierVersion,
+                        CoreServices = settings.CoreServices
+                    }));
+                    return result;
+
+                    // local functions
+                    string GetStackOutput(string key) => existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
                 }
-
-                // initialize settings
-                settings.DeploymentBucketName = tierModuleBucketArnParts?[5];
-                settings.TierVersion = tierModuleInfo?.Version;
-                settings.CoreServices = coreServicesMode;
-                return result;
-
-                // local functions
-                string GetStackOutput(string key) => existing.Stack?.Outputs.FirstOrDefault(output => output.OutputKey == key)?.OutputValue;
+                return true;
+            } finally {
+                Settings.LogInfoPerformance($"PopulateDeploymentTierSettingsAsync() for '{settings.TierName}'", stopwatch.Elapsed, cached);
             }
-            return true;
         }
 
         protected string GetGitShaValue(string workingDirectory, bool showWarningOnFailure = true) {

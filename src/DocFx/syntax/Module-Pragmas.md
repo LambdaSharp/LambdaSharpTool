@@ -14,11 +14,21 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`Overrides`                            |Override default values for built-in declarations|
 |`sam-transform`                        |Add SAM template transform to CloudFormation output|
 
-### Overrides Keys
+## Overrides Keys
 |Key                                         |Definition                                                               |Default                                |
 |--------------------------------------------|-------------------------------------------------------------------------|---------------------------------------|
 |`Module::DeadLetterQueue`                   |Expression for determining the module dead-letter queue.                 |`!Ref LambdaSharp::DeadLetterQueue`    |
 |`Module::LoggingStream`                     |Expression for determining the module logging stream.                    |`!Ref LambdaSharp::LoggingStream`      |
 |`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.               |`!Ref LambdaSharp::LoggingStreamRole`  |
 |`Module::LogRetentionInDays`                |Expression for determining the number days log entries are retained for. |`30`                                   |
-|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                          |`"$request.body.action"`               |
+|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                          |`$request.body.action`                 |
+
+### Examples
+
+#### Set the route selection expression for WebSocket
+
+```yaml
+Pragmas:
+  - Overrides:
+      Module::WebSocket.RouteSelectionExpression: $request.body.Action
+```

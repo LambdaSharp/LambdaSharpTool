@@ -31,7 +31,6 @@ using Mono.Cecil;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
-using System.Collections;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -107,7 +106,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             _builder = builder;
 
@@ -144,7 +144,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         noAssemblyValidation,
                         gitSha,
                         gitBranch,
-                        buildConfiguration
+                        buildConfiguration,
+                        forceBuild
                     );
                 });
             }
@@ -163,7 +164,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             switch(Path.GetExtension(function.Project).ToLowerInvariant()) {
             case "":
@@ -177,7 +179,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     noAssemblyValidation,
                     gitSha,
                     gitBranch,
-                    buildConfiguration
+                    buildConfiguration,
+                    forceBuild
                 );
                 break;
             case ".js":
@@ -217,13 +220,60 @@ namespace LambdaSharp.Tool.Cli.Build {
             bool noAssemblyValidation,
             string gitSha,
             string gitBranch,
-            string buildConfiguration
+            string buildConfiguration,
+            bool forceBuild
         ) {
             function.Language = "csharp";
 
             // check if AWS Lambda Tools extension is installed
             if(!CheckDotNetLambdaToolIsInstalled()) {
                 return;
+            }
+
+            // collect sources with invoke methods
+            var mappings = ExtractMappings(function);
+            if(mappings == null) {
+                return;
+            }
+
+            // check if a function package already exists
+            if(!forceBuild) {
+                var functionPackage = _existingPackages.FirstOrDefault(p =>
+                    Path.GetFileName(p).StartsWith($"function_{_builder.FullName}_{function.LogicalId}_", StringComparison.Ordinal)
+                    && p.EndsWith(".zip", StringComparison.Ordinal)
+                );
+
+                // to skip the build, we both need the function package and the function schema when mappings are present
+                var schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
+                if((functionPackage != null) && (!mappings.Any() || File.Exists(schemaFile))) {
+
+                    // find all files used to create the function package
+                    var files = new HashSet<string>();
+                    AddProjectFiles(files, function.Project);
+
+                    // check if any of the files has been modified more recently than hte function package
+                    var functionPackageDate = File.GetLastWriteTime(functionPackage);
+                    if(!files.Any(file => File.GetLastWriteTime(file) > functionPackageDate)) {
+                        Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
+                        if(mappings.Any()) {
+
+                            // apply function schema to generate REST API and WebSocket models
+                            try {
+                                ApplyInvocationSchemas(function, mappings, schemaFile);
+                            } catch(Exception e) {
+                                LogError("unable to read create-invoke-methods-schema output", e);
+                                return;
+                            }
+                        }
+
+                        // keep the existing package
+                        _existingPackages.Remove(functionPackage);
+
+                        // set the module variable to the final package name
+                        _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
+                        return;
+                    }
+                }
             }
 
             // read settings from project file
@@ -237,12 +287,26 @@ namespace LambdaSharp.Tool.Cli.Build {
             Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
+            if(forceBuild) {
+
+                // delete 'bin' and 'obj' folders
+                var projectFolder = Path.GetDirectoryName(function.Project);
+                DeleteDirectory(Path.Combine(projectFolder, "bin"));
+                DeleteDirectory(Path.Combine(projectFolder, "obj"));
+
+                // local functions
+                void DeleteDirectory(string path) {
+                    LogInfoVerbose($"... deleting '{path}'");
+                    try {
+                        Directory.Delete(path, recursive: true);
+                    } catch { }
+                }
+            }
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
-            var obsoleteNodes = csproj.DescendantNodes()
-                .Where(node =>
-                    (node is XElement element)
-                    && (element.Name == "DotNetCliToolReference")
+            var obsoleteNodes = csproj.Descendants()
+                .Where(element =>
+                    (element.Name == "DotNetCliToolReference")
                     && ((string)element.Attribute("Include") == "Amazon.Lambda.Tools")
                 )
                 .ToList();
@@ -311,32 +375,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory)) {
-                LogError("'dotnet lambda package' command failed");
+            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild)) {
+
+                // nothing to do; error was already reported
                 return;
             }
-
-            // collect sources with invoke methods
-            var mappings = Enumerable.Empty<ApiGatewayInvocationMapping>()
-                .Union(function.Sources
-                    .OfType<RestApiSource>()
-                    .Where(source => source.Invoke != null)
-                    .Select(source => new ApiGatewayInvocationMapping {
-                        RestApi = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
-                        Method = source.Invoke,
-                        RestApiSource = source
-                    })
-                )
-                .Union(function.Sources
-                    .OfType<WebSocketSource>()
-                    .Where(source => source.Invoke != null)
-                    .Select(source => new ApiGatewayInvocationMapping {
-                        WebSocket = source.RouteKey,
-                        Method = source.Invoke,
-                        WebSocketSource = source
-                    })
-                )
-                .ToList();
 
             // verify the function handler can be found in the compiled assembly
             var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
@@ -427,13 +470,94 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory) {
+        private void AddProjectFiles(HashSet<string> files, string project) {
+
+            // skip project if project file doesn't exist or has already been added
+            if(!File.Exists(project) || files.Contains(project)) {
+                return;
+            }
+            files.Add(project);
+
+            // enumerate all files in project folder
+            var projectFolder = Path.GetDirectoryName(project);
+            AddFiles(projectFolder, SearchOption.AllDirectories);
+            files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "bin"))));
+            files.RemoveWhere(file => file.StartsWith(Path.GetFullPath(Path.Combine(projectFolder, "obj"))));
+
+            // analyze project for references
+            var csproj = XDocument.Load(project, LoadOptions.PreserveWhitespace);
+
+            // recurse into referenced projects
+            foreach(var projectReference in csproj.Descendants("ProjectReference")) {
+                AddProjectFiles(files, Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(projectReference.Attribute("Include").Value))));
+            }
+
+            // add compile file references
+            foreach(var compile in csproj.Descendants("Compile")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(compile.Attribute("Include").Value))));
+            }
+
+            // add content file references
+            foreach(var content in csproj.Descendants("Content")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(content.Attribute("Include").Value))));
+            }
+
+            // added embedded resources
+            foreach(var embeddedResource in csproj.Descendants("EmbeddedResource")) {
+                AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(embeddedResource.Attribute("Include").Value))));
+            }
+
+            // local function
+            void AddFileReferences(string path) {
+                if(path.EndsWith("**")) {
+                    AddFiles(Path.GetDirectoryName(path), SearchOption.AllDirectories);
+                } else if(path.EndsWith("*")) {
+                    AddFiles(Path.GetDirectoryName(path), SearchOption.TopDirectoryOnly);
+                } else if(File.Exists(path)) {
+                    files.Add(path);
+                }
+            }
+
+            void AddFiles(string folder, SearchOption option) {
+                if(Directory.Exists(folder)) {
+                    foreach(var file in Directory.GetFiles(folder, "*.*", option)) {
+                        files.Add(file);
+                    }
+                }
+            }
+
+            string ResolveFilePath(string path) => Regex.Replace(path, @"\$\((?!\!)[^\)]+\)", match => {
+                var matchText = match.ToString();
+                var name = matchText.Substring(2, matchText.Length - 3).Trim();
+                return Environment.GetEnvironmentVariable(name) ?? matchText;
+            });
+        }
+
+        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory, bool forceBuild) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 LogError("failed to find the \"dotnet\" executable in path.");
                 return false;
             }
-            return ProcessLauncher.Execute(
+
+            // NOTE: with --force-build, we need to explicitly invoke `dotnet build` to pass in the `--no-incremental` and `--force` options;
+            //  we do this to ensure that `dotnet build` doesn't create an invalid executable when environment variables, such as LAMBDASHARP, change between builds.
+            if(forceBuild && !ProcessLauncher.Execute(
+                dotNetExe,
+                new[] {
+                    "build",
+                    "--force",
+                    "--no-incremental",
+                    "--configuration", buildConfiguration,
+                    "--framework", targetFramework
+                },
+                projectDirectory,
+                Settings.VerboseLevel >= VerboseLevel.Detailed
+            )) {
+                LogError("'dotnet build' command failed");
+                return false;
+            }
+            if(!ProcessLauncher.Execute(
                 dotNetExe,
                 new[] {
                     "lambda", "package",
@@ -444,7 +568,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
-            );
+            )) {
+                LogError("'dotnet lambda package' command failed");
+                return false;
+            }
+            return true;
         }
 
         private bool CheckDotNetLambdaToolIsInstalled() {
@@ -636,18 +764,29 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
         }
 
-        private bool LambdaSharpCreateInvocationSchemas(
-            FunctionItem function,
-            string buildFolder,
-            string rootNamespace,
-            string handler,
-            IEnumerable<ApiGatewayInvocationMapping> mappings
-        ) {
+        private List<ApiGatewayInvocationMapping> ExtractMappings(FunctionItem function) {
 
-            // check if there is anything to do
-            if(!mappings.Any()) {
-                return true;
-            }
+            // find all REST API and WebSocket mappings function sources
+            var mappings = Enumerable.Empty<ApiGatewayInvocationMapping>()
+                .Union(function.Sources
+                    .OfType<RestApiSource>()
+                    .Where(source => source.Invoke != null)
+                    .Select(source => new ApiGatewayInvocationMapping {
+                        RestApi = $"{source.HttpMethod}:/{string.Join("/", source.Path)}",
+                        Method = source.Invoke,
+                        RestApiSource = source
+                    })
+                )
+                .Union(function.Sources
+                    .OfType<WebSocketSource>()
+                    .Where(source => source.Invoke != null)
+                    .Select(source => new ApiGatewayInvocationMapping {
+                        WebSocket = source.RouteKey,
+                        Method = source.Invoke,
+                        WebSocketSource = source
+                    })
+                )
+                .ToList();
 
             // check if we have enough information to resolve the invocation methods
             var incompleteMappings = mappings.Where(mapping =>
@@ -661,9 +800,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 || (mappingClassName == null)
             ).ToList();
             if(incompleteMappings.Any()) {
+                var handler = function.Function.Handler as string;
                 if(handler == null) {
                     LogError("either function 'Handler' attribute must be specified as a literal value or all invocation methods must be fully qualified");
-                    return false;
+                    return null;
                 }
 
                 // extract the assembly and class name from the handler
@@ -674,7 +814,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     out var lambdaFunctionEntryPointName
                 )) {
                     LogError("'Handler' attribute has invalid value");
-                    return false;
+                    return null;
                 }
 
                 // set default qualifier to the class name of the function handler
@@ -686,10 +826,25 @@ namespace LambdaSharp.Tool.Cli.Build {
                         out var mappingMethodName
                     )) {
                         LogError("'Invoke' attribute has invalid value");
-                        return false;
+                        return null;
                     }
                     mapping.Method = $"{mappingAssemblyName ?? lambdaFunctionAssemblyName}::{mappingClassName ?? lambdaFunctionClassName}::{mappingMethodName}";
                 }
+            }
+            return mappings;
+        }
+
+        private bool LambdaSharpCreateInvocationSchemas(
+            FunctionItem function,
+            string buildFolder,
+            string rootNamespace,
+            string handler,
+            IEnumerable<ApiGatewayInvocationMapping> mappings
+        ) {
+
+            // check if there is anything to do
+            if(!mappings.Any()) {
+                return true;
             }
 
             // build invocation arguments
@@ -743,87 +898,97 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
             try {
-                var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile)).ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
-                foreach(var mapping in mappings) {
-                    if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
-                        LogError($"failed to resolve method '{mapping.Method}'");
-                        continue;
-                    }
-                    if(invocationTarget.Error != null) {
-                        LogError(invocationTarget.Error);
-                        continue;
-                    }
-
-                    // update mapping information
-                    mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
-                    if(mapping.RestApiSource != null) {
-                        mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
-                        mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
-                        mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                        mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                        mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                        mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                        mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.OperationName;
-
-                        // determine which uri parameters come from the request path vs. the query-string
-                        var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
-                        foreach(var pathParameter in mapping.RestApiSource.Path
-                            .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
-                            .Select(segment => segment.ToIdentifier())
-                            .ToArray()
-                        ) {
-                            if(!uriParameters.Remove(pathParameter)) {
-                                LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
-                            }
-                        }
-
-                        // remaining uri parameters must be supplied as query parameters
-                        if(uriParameters.Any()) {
-                            if(mapping.RestApiSource.QueryStringParameters == null) {
-                                mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
-                            }
-                            foreach(var uriParameter in uriParameters) {
-
-                                // either record new query-string parameter or upgrade requirements for an existing one
-                                if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
-                                    mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
-                                }
-                            }
-                        }
-                    }
-                    if(mapping.WebSocketSource != null) {
-                        mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
-                        mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
-                        mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
-                        mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
-                        mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
-                        mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
-                        mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.OperationName;
-
-                        // check if method defined any uri parameters
-                        var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
-                        if(uriParameters.Any()) {
-
-                            // uri parameters are only valid for $connect route
-                            if(mapping.WebSocketSource.RouteKey == "$connect") {
-
-                                // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
-                                foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
-                                    LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
-                                }
-                            } else {
-                                foreach(var uriParameter in uriParameters) {
-                                    LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
-                                }
-                            }
-                        }
-                    }
-                }
+                ApplyInvocationSchemas(function, mappings, schemaFile);
             } catch(Exception e) {
                 LogError("unable to read create-invoke-methods-schema output", e);
                 return false;
             }
             return true;
+        }
+
+        private void ApplyInvocationSchemas(
+            FunctionItem function,
+            IEnumerable<ApiGatewayInvocationMapping> mappings,
+            string schemaFile
+        ) {
+            _existingPackages.Remove(schemaFile);
+            var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
+                .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
+            foreach(var mapping in mappings) {
+                if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
+                    LogError($"failed to resolve method '{mapping.Method}'");
+                    continue;
+                }
+                if(invocationTarget.Error != null) {
+                    LogError(invocationTarget.Error);
+                    continue;
+                }
+
+                // update mapping information
+                mapping.Method = $"{invocationTarget.Assembly}::{invocationTarget.Type}::{invocationTarget.Method}";
+                if(mapping.RestApiSource != null) {
+                    mapping.RestApiSource.RequestContentType = mapping.RestApiSource.RequestContentType ?? invocationTarget.RequestContentType;
+                    mapping.RestApiSource.RequestSchema = mapping.RestApiSource.RequestSchema ?? invocationTarget.RequestSchema;
+                    mapping.RestApiSource.RequestSchemaName = mapping.RestApiSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                    mapping.RestApiSource.ResponseContentType = mapping.RestApiSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                    mapping.RestApiSource.ResponseSchema = mapping.RestApiSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                    mapping.RestApiSource.ResponseSchemaName = mapping.RestApiSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                    mapping.RestApiSource.OperationName = mapping.RestApiSource.OperationName ?? invocationTarget.OperationName;
+
+                    // determine which uri parameters come from the request path vs. the query-string
+                    var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                    foreach(var pathParameter in mapping.RestApiSource.Path
+                        .Where(segment => segment.StartsWith("{", StringComparison.Ordinal) && segment.EndsWith("}", StringComparison.Ordinal))
+                        .Select(segment => segment.ToIdentifier())
+                        .ToArray()
+                    ) {
+                        if(!uriParameters.Remove(pathParameter)) {
+                            LogError($"path parameter '{pathParameter}' is missing in method declaration '{invocationTarget.Type}::{invocationTarget.Method}'");
+                        }
+                    }
+
+                    // remaining uri parameters must be supplied as query parameters
+                    if(uriParameters.Any()) {
+                        if(mapping.RestApiSource.QueryStringParameters == null) {
+                            mapping.RestApiSource.QueryStringParameters = new Dictionary<string, bool>();
+                        }
+                        foreach(var uriParameter in uriParameters) {
+
+                            // either record new query-string parameter or upgrade requirements for an existing one
+                            if(!mapping.RestApiSource.QueryStringParameters.TryGetValue(uriParameter.Key, out var existingRequiredValue) || !existingRequiredValue) {
+                                mapping.RestApiSource.QueryStringParameters[uriParameter.Key] = uriParameter.Value;
+                            }
+                        }
+                    }
+                }
+                if(mapping.WebSocketSource != null) {
+                    mapping.WebSocketSource.RequestContentType = mapping.WebSocketSource.RequestContentType ?? invocationTarget.RequestContentType;
+                    mapping.WebSocketSource.RequestSchema = mapping.WebSocketSource.RequestSchema ?? invocationTarget.RequestSchema;
+                    mapping.WebSocketSource.RequestSchemaName = mapping.WebSocketSource.RequestSchemaName ?? invocationTarget.RequestSchemaName;
+                    mapping.WebSocketSource.ResponseContentType = mapping.WebSocketSource.ResponseContentType ?? invocationTarget.ResponseContentType;
+                    mapping.WebSocketSource.ResponseSchema = mapping.WebSocketSource.ResponseSchema ?? invocationTarget.ResponseSchema;
+                    mapping.WebSocketSource.ResponseSchemaName = mapping.WebSocketSource.ResponseSchemaName ?? invocationTarget.ResponseSchemaName;
+                    mapping.WebSocketSource.OperationName = mapping.WebSocketSource.OperationName ?? invocationTarget.OperationName;
+
+                    // check if method defined any uri parameters
+                    var uriParameters = new Dictionary<string, bool>(invocationTarget.UriParameters ?? Enumerable.Empty<KeyValuePair<string, bool>>());
+                    if(uriParameters.Any()) {
+
+                        // uri parameters are only valid for $connect route
+                        if(mapping.WebSocketSource.RouteKey == "$connect") {
+
+                            // API Gateway V2 cannot be configured to enforce required parameters; so all parameters must be optional
+                            foreach(var requiredParameter in uriParameters.Where(uriParameter => uriParameter.Value)) {
+                                LogError($"uri parameter '{requiredParameter.Key}' for '{mapping.WebSocketSource.RouteKey}' route must be optional");
+                            }
+                        } else {
+                            foreach(var uriParameter in uriParameters) {
+                                LogError($"'{mapping.WebSocketSource.RouteKey}' route cannot have uri parameter '{uriParameter.Key}'");
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

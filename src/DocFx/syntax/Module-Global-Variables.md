@@ -21,6 +21,17 @@ LambdaSharp modules have variables and resources defined implicitly as part of t
 |`Module::Role`                |Arn&lt;AWS::IAM::Role&gt;      |IAM Role used by all Lambda functions in the module
 |`Module::Version`             |String                         |Module version
 
+**NOTE:**
+Some global variables are dependent on `UseCoreServices` and may not have a value otherwise.
+* `Module::DeadLetterQueue` becomes `AWS::NoValue` when `UseCoreServices` is `true`.
+* `Module::LoggingStream` becomes `AWS::NoValue` when `UseCoreServices` is `true`.
+* `Module::LoggingStreamRole` becomes `AWS::NoValue` when `UseCoreServices` is `true`.
+
+## Module Conditions
+The following conditions are defined in each module.
+* `XRayIsEnabled` is `true` when X-Ray tracing is enabled for the module.
+* `UseCoreServices` is `true` when Core Services are enabled for the module.
+
 ## Module REST API Variables
 
 The following resources and variables are defined when a module contains a function that uses an API Gateway source. Otherwise, these resources and variables are not defined.

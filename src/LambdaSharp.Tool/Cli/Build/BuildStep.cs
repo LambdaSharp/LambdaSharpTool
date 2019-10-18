@@ -36,7 +36,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             string gitBranch,
             string buildConfiguration,
             string selector,
-            VersionInfo moduleVersion
+            VersionInfo moduleVersion,
+            bool forceBuild
         ) {
             if(!File.Exists(SourceFilename)) {
                 LogError($"could not find '{SourceFilename}'");
@@ -87,7 +88,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 noAssemblyValidation: noAssemblyValidation,
                 gitSha: gitSha,
                 gitBranch: gitBranch,
-                buildConfiguration: buildConfiguration
+                buildConfiguration: buildConfiguration,
+                forceBuild: forceBuild
             );
 
             // package all files

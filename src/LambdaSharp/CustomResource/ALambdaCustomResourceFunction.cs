@@ -259,6 +259,7 @@ namespace LambdaSharp.CustomResource {
             CloudFormationResourceResponse<TAttributes> rawResponse
         ) {
             Exception exception = null;
+            var backoff = TimeSpan.FromMilliseconds(100);
 
             // write response to pre-signed S3 URL
             for(var i = 0; i < MAX_SEND_ATTEMPTS; ++i) {
@@ -281,7 +282,8 @@ namespace LambdaSharp.CustomResource {
                 } catch(Exception e) {
                     exception = e;
                     LogErrorAsWarning(e, "writing response to pre-signed S3 URL failed");
-                    await Task.Delay(TimeSpan.FromMilliseconds(100));
+                    await Task.Delay(backoff);
+                    backoff = backoff * 2;
                 }
             }
 
