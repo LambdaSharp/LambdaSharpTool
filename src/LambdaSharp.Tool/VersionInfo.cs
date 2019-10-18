@@ -258,7 +258,7 @@ namespace LambdaSharp.Tool {
         public bool IsGreaterOrEqualThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) >= 0;
         public bool IsEqualToVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) == 0;
 
-        public string GetWildcardVersion() {
+        public string GetLambdaSharpAssemblyWildcardVersion() {
             if(IsPreRelease) {
 
                 // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
