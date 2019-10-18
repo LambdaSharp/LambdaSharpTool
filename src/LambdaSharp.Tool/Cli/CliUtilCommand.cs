@@ -209,7 +209,13 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"Stripped size: {text.Length:N0}");
             if(destinationJsonLocation != null) {
                 Directory.CreateDirectory(Path.GetDirectoryName(destinationJsonLocation));
-                await File.WriteAllTextAsync(destinationJsonLocation, json.ToString(Formatting.Indented));
+                var cloudformationJson = json.ToString(Formatting.Indented);
+                if(File.Exists(destinationJsonLocation) && ((await File.ReadAllTextAsync(destinationJsonLocation)).ToMD5Hash() == cloudformationJson.ToMD5Hash())) {
+
+                    // not changes, nothing else to do
+                    return;
+                }
+                await File.WriteAllTextAsync(destinationJsonLocation, cloudformationJson);
             }
 
             // save compressed file
