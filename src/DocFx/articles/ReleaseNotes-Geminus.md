@@ -196,6 +196,8 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * LambdaSharp CLI
     * Fixed parent module dependency on imports belonging to a nested module.
     * Fixed issue when using `lash new function` on a module an `!Include` statement.
+    * Fixed `lash init` re-prompting all parameters when `--force-deploy` is used.
+    * Fixed `lash init` deploying un-deployed LambdaSharp modules when `--force-deploy` is used.
 * LambdaSharp SDK
     * Fixed an issue where an exception being reported more than once with a different severity level caused a duplicate-key exception.
 
