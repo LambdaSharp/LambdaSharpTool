@@ -2369,6 +2369,10 @@
     },
     "AWS::Batch::ComputeEnvironment.ComputeResources": {
       "Properties": {
+        "AllocationStrategy": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "BidPercentage": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -4412,6 +4416,10 @@
     "AWS::Cognito::IdentityPoolRoleAttachment.RoleMapping": {
       "Properties": {
         "AmbiguousRoleResolution": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "IdentityProvider": {
           "PrimitiveType": "String",
           "Required": false
         },
@@ -6949,7 +6957,7 @@
         }
       }
     },
-    "AWS::EC2::TrafficMirrorFilterRule.TrafficMirrorPortRangeRequest": {
+    "AWS::EC2::TrafficMirrorFilterRule.TrafficMirrorPortRange": {
       "Properties": {
         "FromPort": {
           "PrimitiveType": "Integer",
@@ -9653,6 +9661,35 @@
         }
       }
     },
+    "AWS::FSx::FileSystem.SelfManagedActiveDirectoryConfiguration": {
+      "Properties": {
+        "DnsIps": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "DomainName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "FileSystemAdministratorsGroup": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "OrganizationalUnitDistinguishedName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Password": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "UserName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::FSx::FileSystem.WindowsConfiguration": {
       "Properties": {
         "ActiveDirectoryId": {
@@ -9670,6 +9707,10 @@
         "DailyAutomaticBackupStartTime": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "SelfManagedActiveDirectoryConfiguration": {
+          "Required": false,
+          "Type": "SelfManagedActiveDirectoryConfiguration"
         },
         "ThroughputCapacity": {
           "PrimitiveType": "Integer",
@@ -18323,7 +18364,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "6.3.0",
+  "ResourceSpecificationVersion": "7.1.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -24266,7 +24307,7 @@
         },
         "DestinationPortRange": {
           "Required": false,
-          "Type": "TrafficMirrorPortRangeRequest"
+          "Type": "TrafficMirrorPortRange"
         },
         "Protocol": {
           "PrimitiveType": "Integer",
@@ -24286,7 +24327,7 @@
         },
         "SourcePortRange": {
           "Required": false,
-          "Type": "TrafficMirrorPortRangeRequest"
+          "Type": "TrafficMirrorPortRange"
         },
         "TrafficDirection": {
           "PrimitiveType": "String",
@@ -26244,6 +26285,30 @@
         }
       }
     },
+    "AWS::Events::EventBus": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Name": {
+          "PrimitiveType": "String"
+        },
+        "Policy": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-events-eventbus.html",
+      "Properties": {
+        "EventSourceName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::Events::EventBusPolicy": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-events-eventbuspolicy.html",
       "Properties": {
@@ -26318,7 +26383,7 @@
         },
         "FileSystemType": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         },
         "KmsKeyId": {
           "PrimitiveType": "String",
@@ -26339,7 +26404,7 @@
         },
         "SubnetIds": {
           "PrimitiveItemType": "String",
-          "Required": false,
+          "Required": true,
           "Type": "List"
         },
         "Tags": {
