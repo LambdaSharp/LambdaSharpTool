@@ -350,18 +350,18 @@ namespace LambdaSharp.Tool.Cli {
 
                     // check if tier and tool versions are compatible
                     if(!optional && (tierModuleInfo != null) && requireVersionCheck) {
-                        var tierToToolVersionComparison = tierModuleInfo.Version.CompareToVersion(settings.CoreServicesVersion);
+                        var tierToToolVersionComparison = tierModuleInfo.Version.GetCoreServicesReferenceVersion().CompareToVersion(settings.CoreServicesReferenceVersion);
                         if(tierToToolVersionComparison == 0) {
 
                             // versions are identical; nothing to do
                         } else if(tierToToolVersionComparison < 0) {
-                            LogError($"LambdaSharp tier is not up to date (tool: {settings.CoreServicesVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
+                            LogError($"LambdaSharp tier is not up to date (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpDeploymentTierOutOfDateException(settings.TierName));
                             result = false;
                         } else if(tierToToolVersionComparison > 0) {
 
                             // tier is newer; we expect the tier to be backwards compatible by exposing the same resources as before
                         } else {
-                            LogError($"LambdaSharp tool is not compatible (tool: {settings.CoreServicesVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
+                            LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {tierModuleInfo.Version})", new LambdaSharpToolOutOfDateException(tierModuleInfo.Version));
                             result = false;
                         }
                     }

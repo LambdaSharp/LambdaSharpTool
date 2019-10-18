@@ -140,7 +140,7 @@ namespace LambdaSharp.Tool {
                         manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                         // check if module is compatible with this tool
-                        return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.CoreServicesVersion);
+                        return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
                     });
                     if(manifest != null) {
                         cached = true;
@@ -233,7 +233,7 @@ namespace LambdaSharp.Tool {
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool
-                    return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.CoreServicesVersion);
+                    return manifest.CoreServicesVersion.IsCoreServicesCompatible(Settings.ToolVersion);
                 });
                 return (Origin: bucketName, Version: match, Manifest: manifest);
             }

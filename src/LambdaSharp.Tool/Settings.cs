@@ -211,7 +211,13 @@ namespace LambdaSharp.Tool {
 
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
-        public VersionInfo CoreServicesVersion => ToolVersion.GetCompatibleCoreServicesVersion();
+
+        /// <summary>
+        /// This property determines the reference version for compatibility between the tool, the tier, and the core services.
+        /// The reference version is `Major.Minor`, where `Major` can be a fractional version.
+        /// </summary>
+        public VersionInfo CoreServicesReferenceVersion => ToolVersion.GetCoreServicesReferenceVersion();
+
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");

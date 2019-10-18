@@ -78,25 +78,24 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 var stackName = Settings.GetStackName(manifest.GetFullName(), instanceName);
 
                 // check version of previously deployed module
-                CloudFormationStack existing = null;
+                if(!deployOnlyIfExists) {
+                    Console.WriteLine($"=> Validating module for deployment tier");
+                }
+                var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest, showError: !deployOnlyIfExists);
+                if(!forceDeploy && !updateValidation.Success) {
+                    return false;
+                }
+
+                // check if a previous deployment was found
+                if(deployOnlyIfExists && (updateValidation.ExistingStack == null)) {
+
+                    // nothing to do
+                    return true;
+                }
+                var existing = updateValidation.ExistingStack;
+
+                // check if existing stack checksum matches template checksum
                 if(!forceDeploy) {
-                    if(!deployOnlyIfExists) {
-                        Console.WriteLine($"=> Validating module for deployment tier");
-                    }
-                    var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest);
-                    if(!updateValidation.Success) {
-                        return false;
-                    }
-
-                    // check if a previous deployment was found
-                    if(deployOnlyIfExists && (updateValidation.ExistingStack == null)) {
-
-                        // nothing to do
-                        return true;
-                    }
-                    existing = updateValidation.ExistingStack;
-
-                    // check if existing stack checksum matches template checksum
                     var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
                     if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
                         Settings.WriteAnsiLine($"=> No changes found to deploy", AnsiTerminal.BrightBlack);
@@ -172,7 +171,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             return true;
         }
 
-        private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest) {
+        private async Task<(bool Success, CloudFormationStack ExistingStack)> IsValidModuleUpdateAsync(string stackName, ModuleManifest manifest, bool showError) {
 
             // check if the module was already deployed
             var existing = await Settings.CfnClient.GetStackAsync(stackName, LogError);
@@ -183,19 +182,27 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             // validate existing module deployment
             var deployed = existing.Stack?.GetModuleVersionText();
             if(!ModuleInfo.TryParse(deployed, out var deployedModuleInfo)) {
-                LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
+                if(showError) {
+                    LogError("unable to determine the name of the deployed module; use --force-deploy to proceed anyway");
+                }
                 return (false, existing.Stack);
             }
             if(deployedModuleInfo.FullName != manifest.GetFullName()) {
-                LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                if(showError) {
+                    LogError($"deployed module name ({deployedModuleInfo.FullName}) does not match {manifest.GetFullName()}; use --force-deploy to proceed anyway");
+                }
                 return (false, existing.Stack);
             }
             var versionComparison = deployedModuleInfo.Version.CompareToVersion(manifest.GetVersion());
             if(versionComparison > 0) {
-                LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                if(showError) {
+                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is newer than v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                }
                 return (false, existing.Stack);
             } else if(versionComparison == null) {
-                LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                if(showError) {
+                    LogError($"deployed module version (v{deployedModuleInfo.Version}) is not compatible with v{manifest.GetVersion()}; use --force-deploy to proceed anyway");
+                }
                 return (false, existing.Stack);
             }
             return (true, existing.Stack);
