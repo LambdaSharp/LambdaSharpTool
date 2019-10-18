@@ -7,6 +7,7 @@ fi
 # unset any environment variables we don't want to accidentally inherit
 unset AWS_PROFILE
 unset LAMBDASHARP_TIER
+unset LAMBDASHARP_FEATURE_CACHING
 
 # set the LambdaSharp version
 source $LAMBDASHARP/scripts/set-lash-version.sh
@@ -19,7 +20,8 @@ lash init \
     --allow-upgrade \
     --tier=Release \
     --aws-profile=lambdasharp \
-    --force-publish
+    --force-publish \
+    --force-build
 
 # publish LambdaSharp standard modules
 lash publish \
@@ -27,6 +29,7 @@ lash publish \
     --aws-profile=lambdasharp \
     --verbose:exceptions \
     --force-publish \
+    --force-build \
     --module-version $LAMBDASHARP_VERSION \
     $LAMBDASHARP/Modules/LambdaSharp.Core \
     $LAMBDASHARP/Modules/LambdaSharp.S3.IO \

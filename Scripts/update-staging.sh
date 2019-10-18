@@ -19,7 +19,8 @@ lash init \
     --allow-upgrade \
     --tier=Staging \
     --aws-profile=lambdasharp \
-    --force-publish
+    --force-publish \
+    --force-build
 
 # publish LambdaSharp standard modules
 lash publish \
@@ -27,6 +28,7 @@ lash publish \
     --aws-profile=lambdasharp \
     --verbose:exceptions \
     --force-publish \
+    --force-build \
     --module-version $LAMBDASHARP_VERSION \
     $LAMBDASHARP/Modules/LambdaSharp.Core \
     $LAMBDASHARP/Modules/LambdaSharp.S3.IO \
