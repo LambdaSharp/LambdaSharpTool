@@ -103,7 +103,7 @@ namespace LambdaSharp.Tool.Internal {
 
                 // make sure the stack is not already in an update operation
                 if(!mostRecentStackEvent.IsFinalStackEvent()) {
-                    throw new System.InvalidOperationException("stack appears to be undergoing an update operation");
+                    throw new System.InvalidOperationException($"stack appears to be undergoing an update operation ({mostRecentStackEvent.ResourceStatus})");
                 }
                 return mostRecentStackEvent.EventId;
             } catch(AmazonCloudFormationException) {

@@ -213,14 +213,14 @@ namespace LambdaSharp.Tool.Model {
             if(!Settings.NoDependencyValidation) {
                 dependency = new ModuleBuilderDependency {
                     Type = dependencyType,
-                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true)
+                    ModuleLocation = await loader.ResolveInfoToLocationAsync(moduleInfo, dependencyType, allowImport: true, showError: true, allowCaching: true)
                 };
                 if(dependency.ModuleLocation == null) {
 
                     // nothing to do; loader already emitted an error
                     return null;
                 }
-                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation);
+                dependency.Manifest = await loader.LoadManifestFromLocationAsync(dependency.ModuleLocation, allowCaching: true);
                 if(dependency.Manifest == null) {
 
                     // nothing to do; loader already emitted an error
@@ -283,6 +283,7 @@ namespace LambdaSharp.Tool.Model {
             IDictionary<string, string> encryptionContext,
             IList<object> pragmas
         ) {
+            // TODO (2019-10-04, bjorg): check if parameter already exists
 
             // create input parameter item
             var parameter = new Humidifier.Parameter {
@@ -377,7 +378,8 @@ namespace LambdaSharp.Tool.Model {
             IList<string> scope,
             object allow,
             string module,
-            IDictionary<string, string> encryptionContext
+            IDictionary<string, string> encryptionContext,
+            out string parameterName
         ) {
 
             // extract optional export name from module reference
@@ -425,6 +427,7 @@ namespace LambdaSharp.Tool.Model {
                 parameter: parameter,
                 import: $"{module}::{export}"
             );
+            parameterName = import.ResourceName;
             import.DiscardIfNotReachable = true;
 
             // check if an import parameter for this reference exists already
@@ -776,9 +779,10 @@ namespace LambdaSharp.Tool.Model {
                                 scope: null,
                                 allow: null,
                                 module: nestedImport.Import,
-                                encryptionContext: null
+                                encryptionContext: null,
+                                out var parameterName
                             );
-                            moduleParameters.Add(nestedImport.Name, FnRef(import.FullName));
+                            moduleParameters.Add(nestedImport.Name, FnRef(parameterName));
                         }
 
                         // check if x-ray tracing should be enabled in nested module
@@ -898,7 +902,7 @@ namespace LambdaSharp.Tool.Model {
             }
             if(!definition.ContainsKey("Code")) {
                 definition["Code"] = new Dictionary<string, object> {
-                    ["S3Key"] = "<TBD>",
+                    ["S3Key"] = "<BAD>",
                     ["S3Bucket"] = FnRef("DeploymentBucketName")
                 };
             }

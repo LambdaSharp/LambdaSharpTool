@@ -300,7 +300,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: ConvertScope(node.Scope),
                         allow: node.Allow,
                         module: node.Module ?? "Bad.Module",
-                        encryptionContext: node.EncryptionContext
+                        encryptionContext: node.EncryptionContext,
+                        out var _
                     );
                 });
                 break;

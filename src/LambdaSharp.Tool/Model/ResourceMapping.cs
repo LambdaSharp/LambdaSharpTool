@@ -102,7 +102,7 @@ namespace LambdaSharp.Tool.Model {
                 "AWS::SSM::Parameter::Value<List<String>>",
                 "AWS::SSM::Parameter::Value<CommaDelimitedList>"
             };
-            var awsTypes = new[] {
+            foreach(var awsType in new[] {
                 "AWS::EC2::AvailabilityZone::Name",
                 "AWS::EC2::Image::Id",
                 "AWS::EC2::Instance::Id",
@@ -113,8 +113,7 @@ namespace LambdaSharp.Tool.Model {
                 "AWS::EC2::Volume::Id",
                 "AWS::EC2::VPC::Id",
                 "AWS::Route53::HostedZone::Id"
-            };
-            foreach(var awsType in awsTypes) {
+            }) {
                 _cloudFormationParameterTypes.Add(awsType);
                 _cloudFormationParameterTypes.Add($"List<{awsType}>");
                 _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
@@ -122,6 +121,26 @@ namespace LambdaSharp.Tool.Model {
             }
 
             // read CloudFormation specification
+            var cloudFormationSpecFile = Settings.CloudFormationResourceSpecificationCacheFilePath;
+            if(File.Exists(cloudFormationSpecFile)) {
+
+                // read date-time of embedded resource
+                DateTime embeddedDateTime;
+                using(var specResourceDate = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz.timestamp"))
+                using(var specReaderDate = new StreamReader(specResourceDate)) {
+                    embeddedDateTime = DateTime.Parse(specReaderDate.ReadToEnd()).ToUniversalTime();
+                }
+
+                // check if embedded spec is newer
+                if(File.GetLastWriteTimeUtc(cloudFormationSpecFile) > embeddedDateTime) {
+
+                    // read spec from global folder
+                    CloudformationSpec = JsonConvert.DeserializeObject<CloudFormationSpec>(File.ReadAllText(cloudFormationSpecFile));
+                    return;
+                }
+            }
+
+            // read spec from embedded resource
             using(var specResource = assembly.GetManifestResourceStream("LambdaSharp.Tool.Resources.CloudFormationResourceSpecification.json.gz"))
             using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
             using(var specReader = new StreamReader(specGzipStream)) {

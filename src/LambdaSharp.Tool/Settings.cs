@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -31,6 +32,8 @@ using Amazon.Lambda;
 using Amazon.S3;
 using Amazon.SimpleSystemsManagement;
 using McMaster.Extensions.CommandLineUtils;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool {
 
@@ -71,6 +74,7 @@ namespace LambdaSharp.Tool {
         }
     }
 
+    [JsonConverter(typeof(StringEnumConverter))]
     public enum CoreServices {
         Undefined,
         Disabled,
@@ -86,6 +90,8 @@ namespace LambdaSharp.Tool {
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
         public static bool UseAnsiConsole = true;
+        public static bool AllowCaching = false;
+        public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
         private static string PromptColor = AnsiTerminal.Cyan;
         private static string LabelColor = AnsiTerminal.BrightCyan;
@@ -95,6 +101,12 @@ namespace LambdaSharp.Tool {
         public static bool HasErrors => _errors.Any(entry => entry.Error);
         public static int WarningCount => _errors.Count(entry => !entry.Error);
         public static bool HasWarnings => _errors.Any(entry => !entry.Error);
+        public static string ToolCacheDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LambdaSharp");
+        public static string AwsProfileCacheDirectory => Path.Combine(ToolCacheDirectory, AwsProfileEnvironmentVariable);
+        public static string AwsProfileEnvironmentVariable = Environment.GetEnvironmentVariable("AWS_PROFILE")
+                ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
+                ?? "default";
+        public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
 
         //--- Class Methods ---
         public static void ShowErrors() {
@@ -175,6 +187,12 @@ namespace LambdaSharp.Tool {
             }
         }
 
+        public static void LogInfoPerformance(string message, TimeSpan duration, bool? cached = null) {
+            if(VerboseLevel >= Tool.VerboseLevel.Performance) {
+                Settings.WriteAnsiLine($"TIMING: {message} [duration={duration.TotalSeconds:N2}s{(cached.HasValue ? $", cached={cached.Value.ToString().ToLowerInvariant()}" : "")}]", AnsiTerminal.BrightBlue);
+            }
+        }
+
         public static void WriteAnsiLine(string text, string ansiColor) {
             if(UseAnsiConsole) {
                 Console.WriteLine($"{ansiColor}{text}{AnsiTerminal.Reset}");
@@ -193,7 +211,13 @@ namespace LambdaSharp.Tool {
 
         //--- Properties ---
         public VersionInfo ToolVersion { get; set; }
-        public VersionInfo CoreServicesVersion => ToolVersion.GetCompatibleCoreServicesVersion();
+
+        /// <summary>
+        /// This property determines the reference version for compatibility between the tool, the tier, and the core services.
+        /// The reference version is `Major.Minor`, where `Major` can be a fractional version.
+        /// </summary>
+        public VersionInfo CoreServicesReferenceVersion => ToolVersion.GetCoreServicesReferenceVersion();
+
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;
         public string TierPrefix => string.IsNullOrEmpty(Tier) ? "" : (Tier + "-");
@@ -305,5 +329,7 @@ namespace LambdaSharp.Tool {
                 ? Prompt.GetYesNo($"{PromptColor}|=> {message}{AnsiTerminal.Reset}", defaultAnswer)
                 : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
         }
+
+        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin, moduleInfo.Namespace, moduleInfo.Name);
     }
 }

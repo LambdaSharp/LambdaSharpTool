@@ -27,7 +27,8 @@ namespace LambdaSharp.Tool {
         Quiet,
         Normal,
         Detailed,
-        Exceptions
+        Exceptions,
+        Performance
     }
 
     public enum DryRunLevel {

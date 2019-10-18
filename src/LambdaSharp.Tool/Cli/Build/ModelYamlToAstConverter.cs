@@ -76,24 +76,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             return null;
         }
 
-        public ModuleNode Parse(string source) {
-
-            // parse YAML file into module AST
-            try {
-                return new DeserializerBuilder()
-                    .WithNamingConvention(new PascalCaseNamingConvention())
-                    .WithNodeDeserializer(new CloudFormationFunctionNodeDeserializer())
-                    .WithCloudFormationFunctions()
-                    .Build()
-                    .Deserialize<ModuleNode>(source);
-            } catch(YamlDotNet.Core.YamlException e) {
-                LogError($"parsing error near {e.Message}", e);
-            } catch(Exception e) {
-                LogError($"parse error: {e.Message}", e);
-            }
-            return null;
-        }
-
         private YamlDocument Preprocess(YamlDocument inputDocument) {
 
             // replace choice branches with their respective choices

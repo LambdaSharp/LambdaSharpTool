@@ -183,6 +183,7 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.HelpOption();
                     subCmd.Description = "Create new public S3 bucket for sharing LambdaSharp modules";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
 
                     // sub-command options
@@ -190,7 +191,11 @@ namespace LambdaSharp.Tool.Cli {
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // initialize AWS profile
-                        var awsAccount = await InitializeAwsProfile(awsProfileOption.Value());
+                        var awsAccount = await InitializeAwsProfile(
+                            awsProfileOption.Value(),
+                            awsRegion: awsRegionOption.Value(),
+                            allowCaching: true
+                        );
 
                         // initialize settings instance
                         var settings = new Settings {
@@ -265,7 +270,7 @@ namespace LambdaSharp.Tool.Cli {
                 return;
             }
             var moduleContents = File.ReadAllText(moduleFile);
-            var module = new ModelYamlToAstConverter(new Settings(), moduleFile).Parse(moduleContents);
+            var module = new ModelYamlToAstConverter(new Settings(), moduleFile).Convert(moduleContents, selector: null);
             if(HasErrors) {
                 return;
             }
@@ -357,7 +362,7 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_VERSION"] = Version.GetWildcardVersion()
+                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion()
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);

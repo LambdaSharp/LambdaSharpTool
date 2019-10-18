@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.3) - 2019-10-03
+# LambdaSharp "Geminus" Release (v0.7.0.4) - 2019-10-17
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -179,6 +179,30 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
 ## Releases
+
+### (v0.7.0.4) - 2019-10-17
+
+#### New Features
+
+* LambdaSharp CLI
+    * `lash init` now detects if a new, compatible version of `LambdaSharp.Core` exists when updating a deployment tier.
+    * `lash build` now checks if an existing function package is up to date and therefore compilation can be skipped.
+    * Added `--force-build` option to `build`, `publish`, and `deploy` to rebuild without incremental compilation or caching all projects in a module.
+    * `lash util download-cloudformation-spec` now stores the downloaded CloudFormation specification into the application data folder when not running in contributor mode, which makes it possible to access new CloudFormation resources without updating `lash`.
+    * Module output values are now highlighted. Standard module output values (e.g. `ModuleChecksum`) are omitted unless `lash` is run in verbose mode.
+    * All commands with the `--aws-profile` option now also support `--aws-region` to override the region of the AWS profile.
+    * (experimental) Cache information about deployment tier, AWS profile, and found manifests locally to reduce network latencies (requires `LAMBDASHARP_FEATURE_CACHING` environment variable to be set to `true`)
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed parent module dependency on imports belonging to a nested module.
+    * Fixed issue when using `lash new function` on a module an `!Include` statement.
+    * Fixed `lash init` re-prompting all parameters when `--force-deploy` is used.
+    * Fixed `lash init` deploying un-deployed LambdaSharp modules when `--force-deploy` is used.
+* LambdaSharp SDK
+    * Fixed an issue where an exception being reported more than once with a different severity level caused a duplicate-key exception.
+    * `ALambdaCustomResourceFunction` now uses exponential back-off when writing the invocation result back to pre-signed S3 URL.
 
 ### (v0.7.0.3) - 2019-10-03
 

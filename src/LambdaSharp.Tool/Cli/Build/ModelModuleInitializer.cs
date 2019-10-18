@@ -296,7 +296,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
                 _builder.AddImport(
                     parent: lambdasharp,
@@ -308,7 +309,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
                 _builder.AddImport(
                     parent: lambdasharp,
@@ -320,7 +322,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     module: "LambdaSharp.Core",
-                    encryptionContext: null
+                    encryptionContext: null,
+                    out var _
                 );
             }
 
@@ -602,7 +605,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
+                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
 
                 // create module registration
                 _builder.AddResource(

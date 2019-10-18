@@ -35,6 +35,12 @@ lash new bucket my-lambdasharp-bucket
 (optional) Use a specific AWS profile from the AWS credentials file
 </dd>
 
+<dt><code>--aws-region &lt;NAME&gt;</code></dt>
+<dd>
+
+(optional) Use a specific AWS region (default: read from AWS profile)
+</dd>
+
 </dl>
 
 ## Examples
