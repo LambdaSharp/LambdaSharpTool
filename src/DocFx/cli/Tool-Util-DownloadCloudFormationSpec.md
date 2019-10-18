@@ -40,7 +40,7 @@ LambdaSharp CLI (v0.7.0.4) - Download CloudFormation JSON specification
 Fetching specification from https://d1uauaxba7bl26.cloudfront.net/latest/gzip/CloudFormationResourceSpecification.json
 Original size: 2,417,148
 Stripped size: 549,585
-Stored compressed spec file C:/LambdaSharp/LambdaSharpTool\src\LambdaSharp.Tool\Resources\CloudFormationResourceSpecification.json.gz
+Stored compressed spec file C:\LambdaSharp\LambdaSharpTool\src\LambdaSharp.Tool\Resources\CloudFormationResourceSpecification.json.gz
 Compressed file size: 90,574
 
 Done (finished: 10/8/2019 2:55:38 PM; duration: 00:00:02.6412424)

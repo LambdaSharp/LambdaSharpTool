@@ -902,7 +902,7 @@ namespace LambdaSharp.Tool.Model {
             }
             if(!definition.ContainsKey("Code")) {
                 definition["Code"] = new Dictionary<string, object> {
-                    ["S3Key"] = "<TBD>",
+                    ["S3Key"] = "<BAD>",
                     ["S3Bucket"] = FnRef("DeploymentBucketName")
                 };
             }
