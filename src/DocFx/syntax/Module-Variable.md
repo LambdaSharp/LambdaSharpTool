@@ -59,6 +59,10 @@ The <code>Scope</code> attribute specifies which functions need to have access t
 The <code>Type</code> attribute specifies the variable type. When omitted, the type is <code>String</code>. Encrypted values must have type <code>Secret</code> and can optionally specify an <code>EncryptionContext</code> section. These values can be shared as is, or decrypted, when using the <code>::Plaintext</code> suffix on the their full name.
 
 For example, the decrypted value of a variable called <code>Password</code> with type <code>Secret</code> can be accessed by using <code>!Ref Password::Plaintext</code>.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
 </dd>
 
 <dt><code>Value</code></dt>
