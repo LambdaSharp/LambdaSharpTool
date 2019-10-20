@@ -29,118 +29,237 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class ParameterDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Parameter";
+
+        [SyntaxKeyword]
         public StringLiteral Parameter { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Section { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Label { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Type { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxOptional]
         public BoolLiteral NoEcho { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Default { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral ConstraintDescription { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral AllowedPattern { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> AllowedValues { get; set; }
+
+        [SyntaxOptional]
         public IntLiteral MaxLength { get; set; }
+
+        [SyntaxOptional]
         public IntLiteral MaxValue { get; set; }
+
+        [SyntaxOptional]
         public IntLiteral MinLength { get; set; }
+
+        [SyntaxOptional]
         public IntLiteral MinValue { get; set; }
+
+        [SyntaxOptional]
         public AllowDeclaration Allow { get; set; }
+
+        [SyntaxOptional]
         public PropertiesExpression Properties { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<PragmaExpression> Pragmas { get; set; }
     }
 
     public class ImportDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Import";
+
+        [SyntaxKeyword]
         public StringLiteral Import { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Type { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> AllowedValues { get; set; }
+
+        [SyntaxRequired]
         public StringLiteral Module { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
     }
 
     public class VariableDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Variable";
+
+        [SyntaxKeyword]
         public StringLiteral Variable { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Type { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxRequired]
         public AValueExpression Value { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
     }
 
     public class GroupDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Group";
+
+        [SyntaxKeyword]
         public StringLiteral Group { get; set; }
+
+        [SyntaxRequired]
         public DeclarationList<AItemDeclaration> Items { get; set; }
     }
 
     public class ConditionDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Condition";
+
+        [SyntaxKeyword]
         public StringLiteral Condition { get; set; }
+
+        [SyntaxRequired]
         public AConditionExpression Value { get; set; }
     }
 
     public class ResourceDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Resource";
+
+        [SyntaxKeyword]
         public StringLiteral Resource { get; set; }
+
+        [SyntaxOptional]
         public AConditionExpression If { get; set; } // -OR- name of a condition!
+
+        [SyntaxOptional]
         public StringLiteral Type { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxOptional]
         public AllowDeclaration Allow { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression Value { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> DependsOn { get; set; }
+
+        [SyntaxOptional]
         public PropertiesExpression Properties { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral DefaultAttribute { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<PragmaExpression> Pragmas { get; set; }
     }
 
     public class NestedModuleDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Nested";
+
+        [SyntaxKeyword]
         public StringLiteral Nested { get; set; }
+
+        [SyntaxRequired]
         public ModuleLiteral Module { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> DependsOn { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression Parameters { get; set; }
     }
 
     public class PackageDeclaration : AItemDeclaration {
 
         //--- Properties --
-        public override string Keyword => "Package";
+
+        [SyntaxKeyword]
         public StringLiteral Package { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxRequired]
         public DeclarationList<StringLiteral> Files { get; set; }
     }
 
     public class FunctionDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Function";
+
+        [SyntaxKeyword]
         public StringLiteral Function { get; set; }
+
+        [SyntaxOptional]
         public ScopeExpression Scope { get; set; }
+
+        [SyntaxOptional]
         public AConditionExpression If { get; set; } // -OR- name of a condition!
+
+        [SyntaxRequired]
         public IntLiteral Memory { get; set; }
+
+        [SyntaxRequired]
         public IntLiteral Timeout { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Project { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Runtime { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Language { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Handler { get; set; }
+
+        [SyntaxOptional]
         public VpcExpression Vpc { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression Environment { get; set; }
+
+        [SyntaxOptional]
         public PropertiesExpression Properties { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<AEventSourceDeclaration> Sources { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<PragmaExpression> Pragmas { get; set; }
     }
 
@@ -153,7 +272,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class MappingDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Mapping";
+
+        [SyntaxKeyword]
         public StringLiteral Mapping { get; set; }
         // TODO:
     }
@@ -161,18 +281,28 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class ResourceTypeDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "ResourceType";
+
+        [SyntaxKeyword]
         public StringLiteral ResourceType { get; set; }
+
+        [SyntaxRequired]
         public StringLiteral Handler { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<PropertyTypeDeclaration> Properties { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<AttributeTypeDeclaration> Attributes { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<TypeDeclaration> Types { get; set; }
     }
 
     public class PropertyTypeDeclaration : ADeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Name";
+
+        [SyntaxKeyword]
         public StringLiteral Name { get; set; }
         // TODO:
     }
@@ -180,7 +310,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class AttributeTypeDeclaration : ADeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Name";
+
+        [SyntaxKeyword]
         public StringLiteral Name { get; set; }
         // TODO:
     }
@@ -188,7 +319,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class TypeDeclaration : ADeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Name";
+
+        [SyntaxKeyword]
         public StringLiteral Name { get; set; }
         // TODO:
     }
@@ -196,8 +328,11 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class MacroDeclaration : AItemDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Macro";
+
+        [SyntaxKeyword]
         public StringLiteral Macro { get; set; }
+
+        [SyntaxRequired]
         public AValueExpression Handler { get; set; }
     }
 

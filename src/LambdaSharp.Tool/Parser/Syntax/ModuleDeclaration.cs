@@ -23,7 +23,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class ModuleDeclaration : ADeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Module";
 
         [SyntaxKeyword()]
         public StringLiteral Module { get; set; }
@@ -50,7 +49,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class UsingDeclaration : ADeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Module";
 
         [SyntaxKeyword]
         public StringLiteral Module { get; set; }

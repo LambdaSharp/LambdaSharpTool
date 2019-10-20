@@ -25,93 +25,150 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Api";
+
+        [SyntaxKeyword]
         public StringLiteral Api { get; set; }
+
+
+        [SyntaxOptional]
         public StringLiteral Integration { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral OperationName { get; set; }
+
+        [SyntaxOptional]
         public BoolLiteral ApiKeyRequired { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral AuthorizationType { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> AuthorizationScopes { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Invoke { get; set; }
     }
 
     public class SchedulEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Schedule";
+
+        [SyntaxKeyword]
         public AValueExpression Schedule { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Name { get; set; }
     }
 
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "S3";
+
+        [SyntaxKeyword]
         public AValueExpression S3 { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> Events { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Prefix { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Suffix { get; set; }
     }
 
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "SlackCommand";
+
+        [SyntaxKeyword]
         public StringLiteral SlackCommand { get; set; }
     }
 
     public class TopicEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Topic";
+
+        [SyntaxKeyword]
         public AValueExpression Topic { get; set; }
+
+        [SyntaxOptional]
         public ObjectExpression Filters { get; set; }
     }
 
     public class SqsEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Sqs";
+
+        [SyntaxKeyword]
         public AValueExpression Sqs { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression BatchSize { get; set; }
     }
 
     public class AlexaEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Alexa";
+
+        [SyntaxKeyword]
         public AValueExpression Alexa { get; set; }
     }
 
     public class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "DynamoDB";
+
+        [SyntaxKeyword]
         public AValueExpression DynamoDB { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression BatchSize { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression StartingPosition { get; set; }
     }
 
     public class KinesisEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "Kinesis";
+
+        [SyntaxKeyword]
         public AValueExpression Kinesis { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression BatchSize { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression StartingPosition { get; set; }
     }
 
     public class WebSocketEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Properties ---
-        public override string Keyword => "WebSocket";
+
+        [SyntaxKeyword]
         public StringLiteral WebSocket { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral OperationName { get; set; }
+
+        [SyntaxOptional]
         public BoolLiteral ApiKeyRequired { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral AuthorizationType { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> AuthorizationScopes { get; set; }
+
+        [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Invoke { get; set; }
     }
 }

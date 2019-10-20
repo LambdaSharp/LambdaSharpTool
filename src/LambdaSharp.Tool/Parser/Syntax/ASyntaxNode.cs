@@ -31,11 +31,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public virtual ANode Synthesize() => this;
     }
 
-    public abstract class ADeclaration : ANode {
-
-        //--- Abstract Properties ---
-        public abstract string Keyword { get; }
-    }
+    public abstract class ADeclaration : ANode { }
 
     public class DeclarationList<T> : ANode where T : ANode {
 
