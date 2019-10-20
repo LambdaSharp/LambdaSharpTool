@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Internal {
 
         //--- Class Methods ---
         public static YamlStream Parse(string source) {
-            var parser = new Parser(new StringReader(source));
+            var parser = new YamlDotNet.Core.Parser(new StringReader(source));
             if(!parser.MoveNext()) {
                 throw new Exception("unexpected end");
             }
