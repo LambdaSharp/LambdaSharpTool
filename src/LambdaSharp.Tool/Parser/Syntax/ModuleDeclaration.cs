@@ -16,17 +16,34 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace LambdaSharp.Tool.Parser.Syntax {
+
     public class ModuleDeclaration : ADeclaration {
 
         //--- Properties ---
         public override string Keyword => "Module";
+
+        [SyntaxKeyword()]
         public StringLiteral Module { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Version { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Description { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<PragmaExpression> Pragmas { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<StringLiteral> Secrets { get; set; }
+
+        [SyntaxOptional]
         public DeclarationList<UsingDeclaration> Using { get; set; }
+
+        [SyntaxRequired]
         public DeclarationList<AItemDeclaration> Items { get; set; }
     }
 
@@ -34,7 +51,11 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public override string Keyword => "Module";
+
+        [SyntaxKeyword]
         public StringLiteral Module { get; set; }
+
+        [SyntaxOptional]
         public StringLiteral Description { get; set; }
     }
 }

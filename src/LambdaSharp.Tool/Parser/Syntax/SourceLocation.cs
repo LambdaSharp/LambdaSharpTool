@@ -16,20 +16,9 @@
  * limitations under the License.
  */
 
-using YamlDotNet.Core.Events;
-
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public struct SourceLocation {
-
-        //--- Constructors ---
-        public SourceLocation(string filePath, ParsingEvent parsingEvent) {
-            FilePath = filePath;
-            LineNumberStart = parsingEvent.Start.Line;
-            LineNumberEnd = parsingEvent.End.Line;
-            ColumnNumberStart = parsingEvent.Start.Column;
-            ColumnNumberEnd = parsingEvent.End.Column;
-        }
+    public class SourceLocation {
 
         //--- Properties ---
         public string FilePath { get; set; }

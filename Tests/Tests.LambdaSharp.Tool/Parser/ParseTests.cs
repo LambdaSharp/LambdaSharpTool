@@ -19,6 +19,7 @@
 using System.Linq;
 using FluentAssertions;
 using LambdaSharp.Tool.Parser;
+using LambdaSharp.Tool.Parser.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,19 +39,24 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void Foo() {
 
             // arrange
-            var module =
+            var source =
 @"Module: foo
 Version: bar
 Description: yes
 Items:
     - Something
 ";
-            var parser = new LambdaSharpParser("<literal>", module);
+            var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Parse();
+            parser.Start();
+            var module = parser.ParseDeclaration<ModuleDeclaration>();
+            parser.End();
 
             // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
             parser.Messages.Any().Should().Be(false);
         }
     }
