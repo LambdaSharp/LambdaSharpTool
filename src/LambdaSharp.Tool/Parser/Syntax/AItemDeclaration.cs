@@ -43,7 +43,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Type { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
         public BoolLiteral NoEcho { get; set; }
@@ -73,7 +73,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public IntLiteral MinValue { get; set; }
 
         [SyntaxOptional]
-        public AllowDeclaration Allow { get; set; }
+        public TagListDeclaration Allow { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Properties { get; set; }
@@ -96,7 +96,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Type { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
         public DeclarationList<StringLiteral> AllowedValues { get; set; }
@@ -119,7 +119,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Type { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
         public AValueExpression Value { get; set; }
@@ -164,10 +164,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Type { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public AllowDeclaration Allow { get; set; }
+        public TagListDeclaration Allow { get; set; }
 
         [SyntaxOptional]
         public AValueExpression Value { get; set; }
@@ -210,7 +210,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Package { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
         public DeclarationList<StringLiteral> Files { get; set; }
@@ -224,7 +224,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Function { get; set; }
 
         [SyntaxOptional]
-        public ScopeExpression Scope { get; set; }
+        public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
         public AConditionExpression If { get; set; } // -OR- name of a condition!
@@ -248,7 +248,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Handler { get; set; }
 
         [SyntaxOptional]
-        public VpcExpression Vpc { get; set; }
+        public VpcDeclaration Vpc { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Environment { get; set; }
@@ -263,10 +263,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public DeclarationList<PragmaExpression> Pragmas { get; set; }
     }
 
-    public class VpcExpression : ANode {
+    public class VpcDeclaration : ADeclaration {
 
         //--- Properties ---
-        // TODO:
+
+        [SyntaxRequired]
+        public AValueExpression SecurityGroupIds { get;set; }
+
+        [SyntaxRequired]
+        public AValueExpression SubnetIds { get;set; }
     }
 
     public class MappingDeclaration : AItemDeclaration {
@@ -275,7 +280,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxKeyword]
         public StringLiteral Mapping { get; set; }
-        // TODO:
+
+        [SyntaxRequired]
+        public ObjectExpression Value { get; set; }
     }
 
     public class ResourceTypeDeclaration : AItemDeclaration {
@@ -293,9 +300,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public DeclarationList<AttributeTypeDeclaration> Attributes { get; set; }
-
-        [SyntaxOptional]
-        public DeclarationList<TypeDeclaration> Types { get; set; }
     }
 
     public class PropertyTypeDeclaration : ADeclaration {
@@ -304,6 +308,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxKeyword]
         public StringLiteral Name { get; set; }
+
+        [SyntaxRequired]
+        public StringLiteral Type { get; set; }
+
+        [SyntaxOptional]
+        public BoolLiteral Required { get; set; }
         // TODO:
     }
 
@@ -313,16 +323,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxKeyword]
         public StringLiteral Name { get; set; }
-        // TODO:
-    }
 
-    public class TypeDeclaration : ADeclaration {
-
-        //--- Properties ---
-
-        [SyntaxKeyword]
-        public StringLiteral Name { get; set; }
-        // TODO:
+        [SyntaxRequired]
+        public StringLiteral Type { get; set; }
     }
 
     public class MacroDeclaration : AItemDeclaration {
@@ -336,15 +339,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression Handler { get; set; }
     }
 
-    public class ScopeExpression : ANode {
+    public class TagListDeclaration : ANode {
 
         //--- Properties ---
-        public IList<StringLiteral> Values { get; set; }
-    }
-
-    public class AllowDeclaration : ANode {
-
-        //--- Properties ---
-        public IList<StringLiteral> Values { get; set; }
+        public List<string> Tags { get; set; } = new List<string>();
     }
 }

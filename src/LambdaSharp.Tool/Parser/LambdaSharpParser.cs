@@ -78,6 +78,9 @@ namespace LambdaSharp.Tool.Parser {
                 [typeof(BoolLiteral)] = ParseBoolLiteral,
                 [typeof(AItemDeclaration)] = () => ParseDeclaration<AItemDeclaration>(),
                 [typeof(UsingDeclaration)] = () => ParseDeclaration<UsingDeclaration>(),
+                [typeof(VpcDeclaration)] = () => ParseDeclaration<VpcDeclaration>(),
+                [typeof(PropertyTypeDeclaration)] = () => ParseDeclaration<PropertyTypeDeclaration>(),
+                [typeof(AttributeTypeDeclaration)] = () => ParseDeclaration<AttributeTypeDeclaration>(),
                 [typeof(DeclarationList<AItemDeclaration>)] = () => ParseDeclarationList<AItemDeclaration>(),
                 [typeof(DeclarationList<UsingDeclaration>)] = () => ParseDeclarationList<UsingDeclaration>(),
                 [typeof(DeclarationList<StringLiteral>)] = () => ParseDeclarationList<StringLiteral>(),
@@ -207,6 +210,352 @@ namespace LambdaSharp.Tool.Parser {
             _parser.MoveNext();
             return result;
         }
+
+        public AValueExpression ParseValueExpression() {
+            switch(_parser.Current) {
+            case SequenceStart sequenceStart:
+                return ConvertFunction(sequenceStart.Tag, ParseListExpression());
+            case MappingStart mappingStart:
+                return ConvertFunction(mappingStart.Tag, ParseObjectExpression());
+            case Scalar scalar:
+                return ConvertFunction(scalar.Tag, ParseLiteralExpression());
+            default:
+                LogError("expected a map, sequence, or literal", Location());
+                _parser.SkipThisAndNestedEvents();
+                return null;
+            }
+
+            // local functions
+            AValueExpression ParseObjectExpression() {
+                if(!(_parser.Current is MappingStart mappingStart)) {
+                    LogError("expected a map", Location());
+                    _parser.SkipThisAndNestedEvents();
+                    return null;
+                }
+                _parser.MoveNext();
+
+                // parse declaration items in sequence
+                var result = new ObjectExpression();
+                while(!(_parser.Current is MappingEnd)) {
+
+                    // parse key
+                    var keyScalar = _parser.Expect<Scalar>();
+                    if(result.Values.ContainsKey(keyScalar.Value)) {
+                        LogError($"duplicate key '{keyScalar.Value}'", Location(keyScalar));
+                        _parser.SkipThisAndNestedEvents();
+                        continue;
+                    }
+
+                    // parse value
+                    var value = ParseValueExpression();
+                    if(value == null) {
+                        continue;
+                    }
+
+                    // add key-value pair
+                    result.Keys.Add(new StringLiteral {
+                        SourceLocation = Location(keyScalar),
+                        Value = keyScalar.Value
+                    });
+                    result.Values.Add(keyScalar.Value, value);
+                }
+                result.SourceLocation = Location(mappingStart, _parser.Current);
+                _parser.MoveNext();
+                return result;
+            }
+
+            AValueExpression ParseListExpression() {
+                if(!(_parser.Current is SequenceStart sequenceStart)) {
+                    LogError("expected a sequence", Location());
+                    _parser.SkipThisAndNestedEvents();
+                    return null;
+                }
+                _parser.MoveNext();
+
+                // parse values in sequence
+                var result = new ListExpression();
+                while(!(_parser.Current is SequenceEnd)) {
+                    var item = ParseValueExpression();
+                    if(item != null) {
+                        result.Values.Add(item);
+                    }
+                }
+                result.SourceLocation = Location(sequenceStart, _parser.Current);
+                _parser.MoveNext();
+                return result;
+            }
+
+            AValueExpression ParseLiteralExpression() {
+                if(!(_parser.Current is Scalar scalar)) {
+                    LogError("expected a literal string", Location());
+                    _parser.SkipThisAndNestedEvents();
+                    return null;
+                }
+                _parser.MoveNext();
+
+                // parse values in sequence
+                return new LiteralExpression {
+                    SourceLocation = Location(scalar),
+                    Value = scalar.Value
+                };
+            }
+
+            AValueExpression ConvertFunction(string tag, AValueExpression value) {
+                if(value == null) {
+                    return null;
+                }
+                switch(tag) {
+                case null:
+
+                    // nothing to do
+                    return value;
+                case "!Base64":
+
+                    // !Base64 VALUE
+                    return new Base64FunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Value = value
+                    };
+                case "!Cidr":
+
+                    // !Cidr [VALUE, VALUE, VALUE]
+                    if((value is ListExpression cidrList) && (cidrList.Values.Count == 3)) {
+                        return new CidrFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            IpBlock = cidrList.Values[0],
+                            Count = cidrList.Values[1],
+                            CidrBits = cidrList.Values[2]
+                        };
+                    }
+                    break;
+                case "!FindInMap":
+
+                    // !FindInMap [ VALUE, VALUE, VALUE ]
+                    if((value is ListExpression findInMapList) && (findInMapList.Values.Count == 3)) {
+                        return new FindInMapExpression {
+                            SourceLocation = value.SourceLocation,
+                            MapName = findInMapList.Values[0],
+                            TopLevelKey = findInMapList.Values[1],
+                            SecondLevelKey = findInMapList.Values[2]
+                        };
+                    }
+                    break;
+                case "!GetAtt":
+
+                    // !GetAtt STRING
+                    if(value is LiteralExpression getAttLiteral) {
+                        var referenceAndAttribute = getAttLiteral.Value.Split('.', 2);
+                        return new GetAttFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            ResourceName = new LiteralExpression {
+                                SourceLocation = getAttLiteral.SourceLocation,
+                                Value = referenceAndAttribute[0]
+                            },
+                            AttributeName = new LiteralExpression {
+                                SourceLocation = getAttLiteral.SourceLocation,
+                                Value = (referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : ""
+                            }
+                        };
+                    }
+
+                    // !GetAtt [ STRING, VALUE ]
+                    if(value is ListExpression getAttList) {
+                        if(getAttList.Values.Count != 2) {
+                            LogError("!GetAtt expects 2 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(getAttList.Values[0] is LiteralExpression resourceNameLiteral)) {
+                            LogError("!GetAtt first parameter must be a literal value", getAttList.Values[0].SourceLocation);
+                            return null;
+                        }
+                        return new GetAttFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            ResourceName = resourceNameLiteral,
+                            AttributeName = getAttList.Values[2]
+                        };
+                    }
+                    break;
+                case "!GetAZs":
+
+                    // !GetAZs VALUE
+                    return new GetAZsFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Region = value
+                    };
+                case "!If":
+
+                    // !If [ STRING, VALUE, VALUE ]
+                    if(value is ListExpression ifList) {
+                        if(ifList.Values.Count != 3) {
+                            LogError("!If expects 3 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(ifList.Values[0] is LiteralExpression conditionNameLiteral)) {
+                            LogError("!If first parameter must be a literal value", ifList.Values[0].SourceLocation);
+                            return null;
+                        }
+                        return new IfFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            ConditionName = new ConditionNameLiteralExpression {
+                                SourceLocation = conditionNameLiteral.SourceLocation,
+                                Name = conditionNameLiteral.Value
+                            },
+                            IfTrue = ifList.Values[1],
+                            IfFalse = ifList.Values[2]
+                        };
+                    }
+                    break;
+                case "!ImportValue":
+
+                    // !ImportValue VALUE
+                    return new ImportValueFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        SharedValueToImport = value
+                    };
+                case "!Join":
+
+                    // !Join [ STRING, [ VALUE, ... ]]
+                    if(value is ListExpression joinList) {
+                        if(joinList.Values.Count != 2) {
+                            LogError("!Join expects 2 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(joinList.Values[0] is LiteralExpression separatorLiteral)) {
+                            LogError("!Join first parameter must be a literal value", joinList.Values[0].SourceLocation);
+                            return null;
+                        }
+                        return new JoinFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            Separator = separatorLiteral,
+                            Values = joinList.Values[1]
+                        };
+                    }
+                    break;
+                case "!Select":
+
+                    // !Select [ VALUE, [ VALUE, ... ]]
+                    if(value is ListExpression selectList) {
+                        if(selectList.Values.Count != 2) {
+                            LogError("!Select expects 2 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        return new SelectFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            Index = selectList.Values[0],
+                            Values = selectList.Values[1]
+                        };
+                    }
+                    break;
+                case "!Split":
+
+                    // !Split [ STRING, VALUE ]
+                    if(value is ListExpression splitList) {
+                        if(splitList.Values.Count != 2) {
+                            LogError("!Split expects 2 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(splitList.Values[0] is LiteralExpression indexLiteral)) {
+                            LogError("!Split first parameter must be a literal value", splitList.Values[0].SourceLocation);
+                            return null;
+                        }
+                        return new SplitFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            Delimiter = indexLiteral,
+                            SourceString = splitList.Values[1]
+                        };
+                    }
+                    break;
+                case "!Sub":
+
+                    // !Sub STRING
+                    if(value is LiteralExpression subLiteral) {
+                        return new SubFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            FormatString = subLiteral,
+                            Parameters = null
+                        };
+                    }
+
+                    // !Sub [ STRING, { KEY: VALUE, ... }]
+                    if(value is ListExpression subList) {
+                        if(subList.Values.Count != 2) {
+                            LogError("!Sub expects 2 parameters", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(subList.Values[0] is LiteralExpression formatStringLiteral)) {
+                            LogError("!Sub first parameter must be a literal value", subList.Values[0].SourceLocation);
+                            return null;
+                        }
+                        if(!(subList.Values[1] is ObjectExpression parametersObject)) {
+                            LogError("!Sub second parameter must be a map", subList.Values[1].SourceLocation);
+                            return null;
+                        }
+                        return new SubFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            FormatString = formatStringLiteral,
+                            Parameters = parametersObject
+                        };
+                    }
+                    break;
+                case "!Transform":
+
+                    // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
+                    if(value is ObjectExpression transformMap) {
+                        if(!transformMap.Values.TryGetValue("Name", out var macroNameExpression)) {
+                            LogError("!Transform missing 'Name'", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(macroNameExpression is LiteralExpression macroNameLiteral)) {
+                            LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
+                            return null;
+                        }
+                        if(!transformMap.Values.TryGetValue("Parameters", out var parametersExpression)) {
+                            LogError("!Transform missing 'Parameters'", value.SourceLocation);
+                            return null;
+                        }
+                        if(!(parametersExpression is ObjectExpression parametersMap)) {
+                            LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
+                            return null;
+                        }
+                        return new TransformFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            MacroName = macroNameLiteral,
+                            Parameters = parametersMap
+                        };
+                    }
+                    break;
+                case "!Ref":
+
+                    // !Ref STRING
+                    if(value is LiteralExpression refLiteral) {
+                        return new ReferenceFunctionExpression {
+                            SourceLocation = value.SourceLocation,
+                            ResourceName = refLiteral
+                        };
+                    }
+                    break;
+                default:
+                    LogError($"unknown tag '{tag}'", value.SourceLocation);
+                    return null;
+                }
+                LogError($"invalid parameters for {tag} function", value.SourceLocation);
+                return null;
+            }
+        }
+/*
+        public TagListDeclaration ParseTagListDeclaration() {
+            // TODO: string literal
+            // TODO: list of string literal
+        }
+
+        public PragmaExpression ParsePragmaExpression() {
+
+        }
+
+        public AConditionExpression ParseAConditionExpression() {
+
+        }
+*/
 
         public StringLiteral ParseStringLiteral() {
             if((_parser.Current is Scalar scalar) && (scalar.Tag == null)) {

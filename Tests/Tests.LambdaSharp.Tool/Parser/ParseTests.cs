@@ -72,6 +72,55 @@ Items:
         }
 
         [Fact]
+        public void ParseLiteralExpression() {
+
+            // arrange
+            var source =
+@"text";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseValueExpression();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("text");
+        }
+
+
+        [Fact]
+        public void ParseSubFunctionExpression() {
+
+            // arrange
+            var source =
+@"!Sub text";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseValueExpression();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().BeOfType<SubFunctionExpression>();
+            var sub = (SubFunctionExpression)value;
+            sub.FormatString.Should().NotBeNull();
+            sub.FormatString.Value.Should().Be("text");
+            sub.Parameters.Should().BeNull();
+        }
+
+        [Fact(Skip = "for debugging only")]
+        // [Fact]
         public void ShowParseEvents() {
 
             // arrange
