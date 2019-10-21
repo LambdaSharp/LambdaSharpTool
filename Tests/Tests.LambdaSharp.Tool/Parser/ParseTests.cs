@@ -119,6 +119,62 @@ Items:
             sub.Parameters.Should().BeNull();
         }
 
+        [Fact]
+        public void ParseShortFormAndLongFormFunctionExpressions() {
+
+            // arrange
+            var source =
+@"!Base64
+    Fn::Sub: text";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseValueExpression();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().BeOfType<Base64FunctionExpression>();
+            var base64 = (Base64FunctionExpression)value;
+            base64.Value.Should().BeOfType<SubFunctionExpression>();
+            var sub = (SubFunctionExpression)base64.Value;
+            sub.FormatString.Should().NotBeNull();
+            sub.FormatString.Value.Should().Be("text");
+            sub.Parameters.Should().BeNull();
+        }
+
+        [Fact]
+        public void ParseLongFormAndShortFormFunctionExpressions() {
+
+            // arrange
+            var source =
+@"Fn::Base64:
+    !Sub text";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseValueExpression();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().BeOfType<Base64FunctionExpression>();
+            var base64 = (Base64FunctionExpression)value;
+            base64.Value.Should().BeOfType<SubFunctionExpression>();
+            var sub = (SubFunctionExpression)base64.Value;
+            sub.FormatString.Should().NotBeNull();
+            sub.FormatString.Value.Should().Be("text");
+            sub.Parameters.Should().BeNull();
+        }
+
         [Fact(Skip = "for debugging only")]
         // [Fact]
         public void ShowParseEvents() {

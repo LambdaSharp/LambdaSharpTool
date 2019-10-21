@@ -301,244 +301,358 @@ namespace LambdaSharp.Tool.Parser {
             }
 
             AValueExpression ConvertFunction(string tag, AValueExpression value) {
+
+                // check if value is a long-form function
+                if((value is ObjectExpression objectExpression) && (objectExpression.Values.Count == 1)) {
+                    var kv = objectExpression.Values.First();
+                    switch(kv.Key) {
+                    case "Fn::Base64":
+                        value = ConvertToBase64FunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Cidr":
+                        value = ConvertToCidrFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::FindInMap":
+                        value = ConvertToFindInMapFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::GetAtt":
+                        value = ConvertToGetAttFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::GetAZs":
+                        value = ConvertToGetAZsFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::If":
+                        value = ConvertToIfFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::ImportValue":
+                        value = ConvertToImportValueFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Join":
+                        value = ConvertToJoinFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Select":
+                        value = ConvertToSelectFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Split":
+                        value = ConvertToSplitFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Sub":
+                        value = ConvertToSubFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Transform":
+                        value = ConvertToTransformFunctionExpression(kv.Value);
+                        break;
+                    case "Ref":
+                        value = ConvertToRefFunctionExpression(kv.Value);
+                        break;
+                    default:
+
+                        // leave as is
+                        break;
+                    }
+                }
+
+                // check if there is anything to convert
                 if(value == null) {
                     return null;
                 }
+
+                // check if a short-form function tag needs to be applied
                 switch(tag) {
                 case null:
 
                     // nothing to do
                     return value;
                 case "!Base64":
-
-                    // !Base64 VALUE
-                    return new Base64FunctionExpression {
-                        SourceLocation = value.SourceLocation,
-                        Value = value
-                    };
+                    return ConvertToBase64FunctionExpression(value);
                 case "!Cidr":
-
-                    // !Cidr [VALUE, VALUE, VALUE]
-                    if((value is ListExpression cidrList) && (cidrList.Values.Count == 3)) {
-                        return new CidrFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            IpBlock = cidrList.Values[0],
-                            Count = cidrList.Values[1],
-                            CidrBits = cidrList.Values[2]
-                        };
-                    }
-                    break;
+                    return ConvertToCidrFunctionExpression(value);
                 case "!FindInMap":
-
-                    // !FindInMap [ VALUE, VALUE, VALUE ]
-                    if((value is ListExpression findInMapList) && (findInMapList.Values.Count == 3)) {
-                        return new FindInMapExpression {
-                            SourceLocation = value.SourceLocation,
-                            MapName = findInMapList.Values[0],
-                            TopLevelKey = findInMapList.Values[1],
-                            SecondLevelKey = findInMapList.Values[2]
-                        };
-                    }
-                    break;
+                    return ConvertToFindInMapFunctionExpression(value);
                 case "!GetAtt":
-
-                    // !GetAtt STRING
-                    if(value is LiteralExpression getAttLiteral) {
-                        var referenceAndAttribute = getAttLiteral.Value.Split('.', 2);
-                        return new GetAttFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            ResourceName = new LiteralExpression {
-                                SourceLocation = getAttLiteral.SourceLocation,
-                                Value = referenceAndAttribute[0]
-                            },
-                            AttributeName = new LiteralExpression {
-                                SourceLocation = getAttLiteral.SourceLocation,
-                                Value = (referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : ""
-                            }
-                        };
-                    }
-
-                    // !GetAtt [ STRING, VALUE ]
-                    if(value is ListExpression getAttList) {
-                        if(getAttList.Values.Count != 2) {
-                            LogError("!GetAtt expects 2 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(getAttList.Values[0] is LiteralExpression resourceNameLiteral)) {
-                            LogError("!GetAtt first parameter must be a literal value", getAttList.Values[0].SourceLocation);
-                            return null;
-                        }
-                        return new GetAttFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            ResourceName = resourceNameLiteral,
-                            AttributeName = getAttList.Values[2]
-                        };
-                    }
-                    break;
+                    return ConvertToGetAttFunctionExpression(value);
                 case "!GetAZs":
-
-                    // !GetAZs VALUE
-                    return new GetAZsFunctionExpression {
-                        SourceLocation = value.SourceLocation,
-                        Region = value
-                    };
+                    return ConvertToGetAZsFunctionExpression(value);
                 case "!If":
-
-                    // !If [ STRING, VALUE, VALUE ]
-                    if(value is ListExpression ifList) {
-                        if(ifList.Values.Count != 3) {
-                            LogError("!If expects 3 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(ifList.Values[0] is LiteralExpression conditionNameLiteral)) {
-                            LogError("!If first parameter must be a literal value", ifList.Values[0].SourceLocation);
-                            return null;
-                        }
-                        return new IfFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            ConditionName = new ConditionNameLiteralExpression {
-                                SourceLocation = conditionNameLiteral.SourceLocation,
-                                Name = conditionNameLiteral.Value
-                            },
-                            IfTrue = ifList.Values[1],
-                            IfFalse = ifList.Values[2]
-                        };
-                    }
-                    break;
+                    return ConvertToIfFunctionExpression(value);
                 case "!ImportValue":
-
-                    // !ImportValue VALUE
-                    return new ImportValueFunctionExpression {
-                        SourceLocation = value.SourceLocation,
-                        SharedValueToImport = value
-                    };
+                    return ConvertToImportValueFunctionExpression(value);
                 case "!Join":
-
-                    // !Join [ STRING, [ VALUE, ... ]]
-                    if(value is ListExpression joinList) {
-                        if(joinList.Values.Count != 2) {
-                            LogError("!Join expects 2 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(joinList.Values[0] is LiteralExpression separatorLiteral)) {
-                            LogError("!Join first parameter must be a literal value", joinList.Values[0].SourceLocation);
-                            return null;
-                        }
-                        return new JoinFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            Separator = separatorLiteral,
-                            Values = joinList.Values[1]
-                        };
-                    }
-                    break;
+                    return ConvertToJoinFunctionExpression(value);
                 case "!Select":
-
-                    // !Select [ VALUE, [ VALUE, ... ]]
-                    if(value is ListExpression selectList) {
-                        if(selectList.Values.Count != 2) {
-                            LogError("!Select expects 2 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        return new SelectFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            Index = selectList.Values[0],
-                            Values = selectList.Values[1]
-                        };
-                    }
-                    break;
+                    return ConvertToSelectFunctionExpression(value);
                 case "!Split":
-
-                    // !Split [ STRING, VALUE ]
-                    if(value is ListExpression splitList) {
-                        if(splitList.Values.Count != 2) {
-                            LogError("!Split expects 2 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(splitList.Values[0] is LiteralExpression indexLiteral)) {
-                            LogError("!Split first parameter must be a literal value", splitList.Values[0].SourceLocation);
-                            return null;
-                        }
-                        return new SplitFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            Delimiter = indexLiteral,
-                            SourceString = splitList.Values[1]
-                        };
-                    }
-                    break;
+                    return ConvertToSplitFunctionExpression(value);
                 case "!Sub":
-
-                    // !Sub STRING
-                    if(value is LiteralExpression subLiteral) {
-                        return new SubFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            FormatString = subLiteral,
-                            Parameters = null
-                        };
-                    }
-
-                    // !Sub [ STRING, { KEY: VALUE, ... }]
-                    if(value is ListExpression subList) {
-                        if(subList.Values.Count != 2) {
-                            LogError("!Sub expects 2 parameters", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(subList.Values[0] is LiteralExpression formatStringLiteral)) {
-                            LogError("!Sub first parameter must be a literal value", subList.Values[0].SourceLocation);
-                            return null;
-                        }
-                        if(!(subList.Values[1] is ObjectExpression parametersObject)) {
-                            LogError("!Sub second parameter must be a map", subList.Values[1].SourceLocation);
-                            return null;
-                        }
-                        return new SubFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            FormatString = formatStringLiteral,
-                            Parameters = parametersObject
-                        };
-                    }
-                    break;
+                    return ConvertToSubFunctionExpression(value);
                 case "!Transform":
-
-                    // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
-                    if(value is ObjectExpression transformMap) {
-                        if(!transformMap.Values.TryGetValue("Name", out var macroNameExpression)) {
-                            LogError("!Transform missing 'Name'", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(macroNameExpression is LiteralExpression macroNameLiteral)) {
-                            LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
-                            return null;
-                        }
-                        if(!transformMap.Values.TryGetValue("Parameters", out var parametersExpression)) {
-                            LogError("!Transform missing 'Parameters'", value.SourceLocation);
-                            return null;
-                        }
-                        if(!(parametersExpression is ObjectExpression parametersMap)) {
-                            LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
-                            return null;
-                        }
-                        return new TransformFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            MacroName = macroNameLiteral,
-                            Parameters = parametersMap
-                        };
-                    }
-                    break;
+                    return ConvertToTransformFunctionExpression(value);
                 case "!Ref":
-
-                    // !Ref STRING
-                    if(value is LiteralExpression refLiteral) {
-                        return new ReferenceFunctionExpression {
-                            SourceLocation = value.SourceLocation,
-                            ResourceName = refLiteral
-                        };
-                    }
-                    break;
+                    return ConvertToRefFunctionExpression(value);
                 default:
                     LogError($"unknown tag '{tag}'", value.SourceLocation);
                     return null;
                 }
-                LogError($"invalid parameters for {tag} function", value.SourceLocation);
+            }
+
+            AValueExpression ConvertToBase64FunctionExpression(AValueExpression value) {
+
+                // !Base64 VALUE
+                return new Base64FunctionExpression {
+                    SourceLocation = value.SourceLocation,
+                    Value = value
+                };
+            }
+
+            AValueExpression ConvertToCidrFunctionExpression(AValueExpression value) {
+
+                // !Cidr [VALUE, VALUE, VALUE]
+                if((value is ListExpression cidrList) && (cidrList.Values.Count == 3)) {
+                    return new CidrFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        IpBlock = cidrList.Values[0],
+                        Count = cidrList.Values[1],
+                        CidrBits = cidrList.Values[2]
+                    };
+                }
+                LogError($"invalid parameters for !Cidr function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToFindInMapFunctionExpression(AValueExpression value) {
+
+                // !FindInMap [ VALUE, VALUE, VALUE ]
+                if((value is ListExpression findInMapList) && (findInMapList.Values.Count == 3)) {
+                    return new FindInMapExpression {
+                        SourceLocation = value.SourceLocation,
+                        MapName = findInMapList.Values[0],
+                        TopLevelKey = findInMapList.Values[1],
+                        SecondLevelKey = findInMapList.Values[2]
+                    };
+                }
+                LogError($"invalid parameters for !FindInMap function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToGetAttFunctionExpression(AValueExpression value) {
+
+                // !GetAtt STRING
+                if(value is LiteralExpression getAttLiteral) {
+                    var referenceAndAttribute = getAttLiteral.Value.Split('.', 2);
+                    return new GetAttFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        ResourceName = new LiteralExpression {
+                            SourceLocation = getAttLiteral.SourceLocation,
+                            Value = referenceAndAttribute[0]
+                        },
+                        AttributeName = new LiteralExpression {
+                            SourceLocation = getAttLiteral.SourceLocation,
+                            Value = (referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : ""
+                        }
+                    };
+                }
+
+                // !GetAtt [ STRING, VALUE ]
+                if(value is ListExpression getAttList) {
+                    if(getAttList.Values.Count != 2) {
+                        LogError("!GetAtt expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(getAttList.Values[0] is LiteralExpression resourceNameLiteral)) {
+                        LogError("!GetAtt first parameter must be a literal value", getAttList.Values[0].SourceLocation);
+                        return null;
+                    }
+                    return new GetAttFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        ResourceName = resourceNameLiteral,
+                        AttributeName = getAttList.Values[2]
+                    };
+                }
+                LogError($"invalid parameters for !GetAtt function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToGetAZsFunctionExpression(AValueExpression value) {
+
+                // !GetAZs VALUE
+                return new GetAZsFunctionExpression {
+                    SourceLocation = value.SourceLocation,
+                    Region = value
+                };
+            }
+
+            AValueExpression ConvertToIfFunctionExpression(AValueExpression value) {
+
+                // !If [ STRING, VALUE, VALUE ]
+                if(value is ListExpression ifList) {
+                    if(ifList.Values.Count != 3) {
+                        LogError("!If expects 3 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(ifList.Values[0] is LiteralExpression conditionNameLiteral)) {
+                        LogError("!If first parameter must be a literal value", ifList.Values[0].SourceLocation);
+                        return null;
+                    }
+                    return new IfFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        ConditionName = new ConditionNameLiteralExpression {
+                            SourceLocation = conditionNameLiteral.SourceLocation,
+                            Name = conditionNameLiteral.Value
+                        },
+                        IfTrue = ifList.Values[1],
+                        IfFalse = ifList.Values[2]
+                    };
+                }
+                LogError($"invalid parameters for !If function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToImportValueFunctionExpression(AValueExpression value) {
+
+                // !ImportValue VALUE
+                return new ImportValueFunctionExpression {
+                    SourceLocation = value.SourceLocation,
+                    SharedValueToImport = value
+                };
+            }
+
+            AValueExpression ConvertToJoinFunctionExpression(AValueExpression value) {
+
+                // !Join [ STRING, [ VALUE, ... ]]
+                if(value is ListExpression joinList) {
+                    if(joinList.Values.Count != 2) {
+                        LogError("!Join expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(joinList.Values[0] is LiteralExpression separatorLiteral)) {
+                        LogError("!Join first parameter must be a literal value", joinList.Values[0].SourceLocation);
+                        return null;
+                    }
+                    return new JoinFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Separator = separatorLiteral,
+                        Values = joinList.Values[1]
+                    };
+                }
+                LogError($"invalid parameters for !Join function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToSelectFunctionExpression(AValueExpression value) {
+
+                // !Select [ VALUE, [ VALUE, ... ]]
+                if(value is ListExpression selectList) {
+                    if(selectList.Values.Count != 2) {
+                        LogError("!Select expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    return new SelectFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Index = selectList.Values[0],
+                        Values = selectList.Values[1]
+                    };
+                }
+                LogError($"invalid parameters for !Select function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToSplitFunctionExpression(AValueExpression value) {
+
+                // !Split [ STRING, VALUE ]
+                if(value is ListExpression splitList) {
+                    if(splitList.Values.Count != 2) {
+                        LogError("!Split expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(splitList.Values[0] is LiteralExpression indexLiteral)) {
+                        LogError("!Split first parameter must be a literal value", splitList.Values[0].SourceLocation);
+                        return null;
+                    }
+                    return new SplitFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Delimiter = indexLiteral,
+                        SourceString = splitList.Values[1]
+                    };
+                }
+                LogError($"invalid parameters for !Split function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToSubFunctionExpression(AValueExpression value) {
+
+                // !Sub STRING
+                if(value is LiteralExpression subLiteral) {
+                    return new SubFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        FormatString = subLiteral,
+                        Parameters = null
+                    };
+                }
+
+                // !Sub [ STRING, { KEY: VALUE, ... }]
+                if(value is ListExpression subList) {
+                    if(subList.Values.Count != 2) {
+                        LogError("!Sub expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(subList.Values[0] is LiteralExpression formatStringLiteral)) {
+                        LogError("!Sub first parameter must be a literal value", subList.Values[0].SourceLocation);
+                        return null;
+                    }
+                    if(!(subList.Values[1] is ObjectExpression parametersObject)) {
+                        LogError("!Sub second parameter must be a map", subList.Values[1].SourceLocation);
+                        return null;
+                    }
+                    return new SubFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        FormatString = formatStringLiteral,
+                        Parameters = parametersObject
+                    };
+                }
+                LogError($"invalid parameters for !Sub function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToTransformFunctionExpression(AValueExpression value) {
+
+                // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
+                if(value is ObjectExpression transformMap) {
+                    if(!transformMap.Values.TryGetValue("Name", out var macroNameExpression)) {
+                        LogError("!Transform missing 'Name'", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(macroNameExpression is LiteralExpression macroNameLiteral)) {
+                        LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
+                        return null;
+                    }
+                    if(!transformMap.Values.TryGetValue("Parameters", out var parametersExpression)) {
+                        LogError("!Transform missing 'Parameters'", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(parametersExpression is ObjectExpression parametersMap)) {
+                        LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
+                        return null;
+                    }
+                    return new TransformFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        MacroName = macroNameLiteral,
+                        Parameters = parametersMap
+                    };
+                }
+                LogError($"invalid parameters for !Transform function", value.SourceLocation);
+                return null;
+            }
+
+            AValueExpression ConvertToRefFunctionExpression(AValueExpression value) {
+
+                // !Ref STRING
+                if(value is LiteralExpression refLiteral) {
+                    return new ReferenceFunctionExpression {
+                        SourceLocation = value.SourceLocation,
+                        ResourceName = refLiteral
+                    };
+                }
+                LogError($"invalid parameters for !Ref function", value.SourceLocation);
                 return null;
             }
         }
