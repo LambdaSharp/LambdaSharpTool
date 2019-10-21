@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public Type InnerType => typeof(T);
-        public IList<T> Items { get; set; }
+        public IList<T> Items { get; set; } = new List<T>();
     }
 
     public class PragmaExpression : ANode {

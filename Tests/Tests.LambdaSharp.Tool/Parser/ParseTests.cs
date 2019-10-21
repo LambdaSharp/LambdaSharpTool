@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using System.Linq;
 using FluentAssertions;
 using LambdaSharp.Tool.Parser;
@@ -44,7 +45,10 @@ namespace Tests.LambdaSharp.Tool.Parser {
 Version: bar
 Description: yes
 Items:
-    - Something
+    - Resource: Foo
+      Type: AWS::SNS::Topic
+    - Variable: Bar
+      Value: 123
 ";
             var parser = new LambdaSharpParser("<literal>", source);
 
@@ -58,6 +62,30 @@ Items:
                 _output.WriteLine(message);
             }
             parser.Messages.Any().Should().Be(false);
+        }
+
+        [Fact]
+        public void ShowParseEvents() {
+
+            // arrange
+            var source =
+@"Module: foo
+Version: 1.0
+Description: ""this is a description""
+Items:
+    - Bool: true
+    - Int: 123
+    - Float: 123.456
+    - Func: !Sub ""${Foo}.bar""
+    - Func2:
+        Fn::Ref: ABC
+";
+             var parser = new YamlDotNet.Core.Parser(new StringReader(source));
+
+            while(parser.MoveNext()) {
+                var current = parser.Current;
+                _output.WriteLine(current.ToString());
+            }
         }
     }
 }

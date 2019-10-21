@@ -102,7 +102,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public DeclarationList<StringLiteral> AllowedValues { get; set; }
 
         [SyntaxRequired]
-        public StringLiteral Module { get; set; }
+        public ModuleLiteral Module { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
@@ -230,10 +230,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AConditionExpression If { get; set; } // -OR- name of a condition!
 
         [SyntaxRequired]
-        public IntLiteral Memory { get; set; }
+        public AValueExpression Memory { get; set; }
 
         [SyntaxRequired]
-        public IntLiteral Timeout { get; set; }
+        public AValueExpression Timeout { get; set; }
 
         [SyntaxOptional]
         public StringLiteral Project { get; set; }

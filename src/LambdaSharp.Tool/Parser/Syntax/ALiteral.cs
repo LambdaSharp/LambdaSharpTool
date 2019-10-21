@@ -30,12 +30,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public string Value { get; set; }
     }
 
-    public class ResourceReferenceLiteral : ALiteral {
-
-        //--- Properties ---
-        public string Value { get; set; }
-    }
-
     public class IntLiteral : ALiteral {
 
         //--- Properties ---
@@ -48,7 +42,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public bool Value { get; set; }
     }
 
-    public class ModuleLiteral : ALiteral {
+    public class ResourceReferenceLiteral : StringLiteral {
+
+        //--- Properties ---
+    }
+
+    public class ModuleLiteral : StringLiteral {
 
         //--- Properties ---
 //        public ModuleInfo Value { get; set; }

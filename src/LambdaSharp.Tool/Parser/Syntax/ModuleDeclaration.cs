@@ -51,7 +51,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public StringLiteral Module { get; set; }
+        public ModuleLiteral Module { get; set; }
 
         [SyntaxOptional]
         public StringLiteral Description { get; set; }
