@@ -37,13 +37,20 @@ namespace Tests.LambdaSharp.Tool.Parser {
         //--- Methods ---
 
         [Fact]
-        public void Foo() {
+        public void ParseModuleDeclaration() {
 
             // arrange
             var source =
-@"Module: foo
-Version: bar
-Description: yes
+@"Module: My.Module
+Version: 1.2.3.4-DEV
+Description: description
+Pragmas:
+    - pragma
+Secrets:
+    - secret
+Using:
+    - Module: My.OtherModule
+      Description:
 Items:
     - Resource: Foo
       Type: AWS::SNS::Topic

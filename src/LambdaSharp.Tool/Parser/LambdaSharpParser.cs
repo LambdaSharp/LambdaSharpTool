@@ -63,8 +63,8 @@ namespace LambdaSharp.Tool.Parser {
         private readonly IParser _parser;
         private readonly List<string> _messages;
         private readonly Dictionary<Type, Func<ANode>> _typeToParsers;
-        private Dictionary<string, SyntaxInfo> _itemTypeSyntaxes;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
+        private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
 
         //--- Constructors ---
         public LambdaSharpParser(string filePath, string source) {
@@ -72,21 +72,20 @@ namespace LambdaSharp.Tool.Parser {
             _parser = new YamlDotNet.Core.Parser(new StringReader(source));
             _messages = new List<string>();
             _typeToParsers = new Dictionary<Type, Func<ANode>> {
+                [typeof(ModuleDeclaration)] = () => ParseDeclaration<ModuleDeclaration>(),
                 [typeof(StringLiteral)] = ParseStringLiteral,
                 [typeof(IntLiteral)] = ParseIntLiteral,
                 [typeof(BoolLiteral)] = ParseBoolLiteral,
-                [typeof(DeclarationList<AItemDeclaration>)] = ParseAItemDeclarationList,
+                [typeof(AItemDeclaration)] = () => ParseDeclaration<AItemDeclaration>(),
+                [typeof(UsingDeclaration)] = () => ParseDeclaration<UsingDeclaration>(),
+                [typeof(DeclarationList<AItemDeclaration>)] = () => ParseDeclarationList<AItemDeclaration>(),
+                [typeof(DeclarationList<UsingDeclaration>)] = () => ParseDeclarationList<UsingDeclaration>(),
+                [typeof(DeclarationList<StringLiteral>)] = () => ParseDeclarationList<StringLiteral>(),
 
                 // TODO:
                 [typeof(DeclarationList<PragmaExpression>)] = ParseAnything,
-                [typeof(DeclarationList<StringLiteral>)] = ParseAnything,
-                [typeof(DeclarationList<UsingDeclaration>)] = ParseAnything,
                 [typeof(AValueExpression)] = ParseAnything
             };
-            _itemTypeSyntaxes = typeof(AItemDeclaration).Assembly.GetTypes()
-                .Where(type => type.BaseType == typeof(AItemDeclaration))
-                .Select(type => GetSyntax(type))
-                .ToDictionary(syntax => syntax.Keyword, syntax => syntax);
         }
 
         //--- Properties ---
@@ -103,70 +102,7 @@ namespace LambdaSharp.Tool.Parser {
             _parser.Expect<StreamEnd>();
         }
 
-        public T ParseDeclaration<T>() where T : ADeclaration, new() {
-            var syntax = GetSyntax(typeof(T));
-
-            // ensure first event is the beginning of a map
-            if(!(_parser.Current is MappingStart mappingStart) || (mappingStart.Tag != null)) {
-                LogError("expected a map", Location());
-                _parser.SkipThisAndNestedEvents();
-                return null;
-            }
-            _parser.MoveNext();
-            var result = new T();
-
-            // parse mapping
-            var foundKeys = new HashSet<string>();
-            var mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
-            while(!(_parser.Current is MappingEnd)) {
-
-                // parse key
-                var keyScalar = _parser.Expect<Scalar>();
-                var key = keyScalar.Value;
-                if(syntax.Keys.TryGetValue(key, out var keyProperty)) {
-
-                    // check if the first key is being parsed
-                    if((syntax.Keyword != null) && !foundKeys.Any() && (key != syntax.Keyword)) {
-                        LogError($"expected key '{syntax.Keyword}', but found '{key}'", Location(keyScalar));
-                    }
-
-                    // check if key is a duplicate
-                    if(!foundKeys.Add(key)) {
-                        LogError($"duplicate key '{key}'", Location(keyScalar));
-
-                        // no need to parse the value for the duplicate key
-                        _parser.SkipThisAndNestedEvents();
-                        continue;
-                    }
-
-                    // remove key from mandatory keys
-                    mandatoryKeys.Remove(key);
-
-                    // find type appropriate parser and set target property with the parser outcome
-                    if(_typeToParsers.TryGetValue(keyProperty.PropertyType, out var parser)) {
-                        keyProperty.SetValue(result, parser());
-                    } else {
-                        LogError($"no parser defined for '{key}'", Location(_parser.Current));
-                        _parser.SkipThisAndNestedEvents();
-                    }
-                } else {
-                    LogError($"unexpected key '{key}'", Location(keyScalar));
-
-                    // no need to parse an invalid key
-                    _parser.SkipThisAndNestedEvents();
-                }
-            }
-
-            // check for missing mandatory keys
-            if(mandatoryKeys.Any()) {
-                LogError($"missing keys: {string.Join(", ", mandatoryKeys.OrderBy(key => key))}", Location(mappingStart));
-            }
-            result.SourceLocation = Location(mappingStart, _parser.Current);
-            _parser.MoveNext();
-            return result;
-        }
-
-        public DeclarationList<AItemDeclaration> ParseAItemDeclarationList() {
+        public DeclarationList<T> ParseDeclarationList<T>() where T : ANode {
             if(!(_parser.Current is SequenceStart sequenceStart) || (sequenceStart.Tag != null)) {
                 LogError("expected a sequence", Location());
                 _parser.SkipThisAndNestedEvents();
@@ -175,18 +111,21 @@ namespace LambdaSharp.Tool.Parser {
             _parser.MoveNext();
 
             // parse declaration items in sequence
-            var result = new DeclarationList<AItemDeclaration>();
+            var result = new DeclarationList<T>();
             while(!(_parser.Current is SequenceEnd)) {
-                var item = ParseAItemDeclaration();
-                if(item != null) {
-                    result.Items.Add(item);
+                if(TryParse(typeof(T), out var item)) {
+                    result.Items.Add((T)item);
                 }
             }
+            result.SourceLocation = Location(sequenceStart, _parser.Current);
             _parser.MoveNext();
             return result;
         }
 
-        public AItemDeclaration ParseAItemDeclaration() {
+        public T ParseDeclaration<T>() where T : ADeclaration {
+
+            // fetch all possible syntax options for specified type
+            var syntaxes = GetSyntaxes(typeof(T));
 
             // ensure first event is the beginning of a map
             if(!(_parser.Current is MappingStart mappingStart) || (mappingStart.Tag != null)) {
@@ -195,9 +134,9 @@ namespace LambdaSharp.Tool.Parser {
                 return null;
             }
             _parser.MoveNext();
-            AItemDeclaration result = null;
+            T result = null;
 
-            // parse mapping
+            // parse mappings
             var foundKeys = new HashSet<string>();
             HashSet<string> mandatoryKeys = null;
             SyntaxInfo syntax = null;
@@ -209,8 +148,8 @@ namespace LambdaSharp.Tool.Parser {
 
                 // check if this is the first key being parsed
                 if(syntax == null) {
-                    if(_itemTypeSyntaxes.TryGetValue(key, out syntax)) {
-                        result = (AItemDeclaration)Activator.CreateInstance(syntax.Type);
+                    if(syntaxes.TryGetValue(key, out syntax)) {
+                        result = (T)Activator.CreateInstance(syntax.Type);
                         mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
                     } else {
                         LogError($"unexpected item keyword '{key}'", Location(keyScalar));
@@ -247,11 +186,8 @@ namespace LambdaSharp.Tool.Parser {
                     mandatoryKeys.Remove(key);
 
                     // find type appropriate parser and set target property with the parser outcome
-                    if(_typeToParsers.TryGetValue(keyProperty.PropertyType, out var parser)) {
-                        keyProperty.SetValue(result, parser());
-                    } else {
-                        LogError($"no parser defined for '{key}' -> {keyProperty.PropertyType.Name}", Location(_parser.Current));
-                        _parser.SkipThisAndNestedEvents();
+                    if(TryParse(keyProperty.PropertyType, out var value)) {
+                        keyProperty.SetValue(result, value);
                     }
                 } else {
                     LogError($"unexpected key '{key}'", Location(keyScalar));
@@ -320,7 +256,6 @@ namespace LambdaSharp.Tool.Parser {
             _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
         }
 
-
         private SourceLocation Location() => Location(_parser.Current);
 
         private SourceLocation Location(ParsingEvent parsingEvent) => Location(parsingEvent, parsingEvent);
@@ -339,6 +274,39 @@ namespace LambdaSharp.Tool.Parser {
                 _typeToSyntax[type] = result;
             }
             return result;
+        }
+
+        private Dictionary<string, SyntaxInfo> GetSyntaxes(Type type) {
+            if(!_syntaxCache.TryGetValue(type, out var syntaxes)) {
+                if(type.IsAbstract) {
+
+                    // for abstract types, we build a list derived types
+                    syntaxes = typeof(AItemDeclaration).Assembly.GetTypes()
+                        .Where(definedType => definedType.BaseType == typeof(AItemDeclaration))
+                        .Select(definedType => GetSyntax(definedType))
+                        .ToDictionary(syntax => syntax.Keyword, syntax => syntax);
+                } else {
+
+                    // for conrete types, we use the type itself
+                    var syntax = GetSyntax(type);
+                    syntaxes = new Dictionary<string, SyntaxInfo> {
+                        [syntax.Keyword] = syntax
+                    };
+                }
+                _syntaxCache[type] = syntaxes;
+            }
+            return syntaxes;
+        }
+
+        private bool TryParse(Type type, out ANode result) {
+            if(_typeToParsers.TryGetValue(type, out var parser)) {
+                result = parser();
+                return result != null;
+            }
+            LogError($"no parser defined for type {type.Name}", Location(_parser.Current));
+            result = null;
+            _parser.SkipThisAndNestedEvents();
+            return false;
         }
     }
 }

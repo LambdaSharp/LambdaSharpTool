@@ -41,15 +41,4 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public bool Value { get; set; }
     }
-
-    public class ResourceReferenceLiteral : StringLiteral {
-
-        //--- Properties ---
-    }
-
-    public class ModuleLiteral : StringLiteral {
-
-        //--- Properties ---
-//        public ModuleInfo Value { get; set; }
-    }
 }

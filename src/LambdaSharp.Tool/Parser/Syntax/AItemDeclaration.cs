@@ -76,7 +76,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AllowDeclaration Allow { get; set; }
 
         [SyntaxOptional]
-        public PropertiesExpression Properties { get; set; }
+        public ObjectExpression Properties { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
@@ -102,7 +102,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public DeclarationList<StringLiteral> AllowedValues { get; set; }
 
         [SyntaxRequired]
-        public ModuleLiteral Module { get; set; }
+        public StringLiteral Module { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
@@ -176,7 +176,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public DeclarationList<StringLiteral> DependsOn { get; set; }
 
         [SyntaxOptional]
-        public PropertiesExpression Properties { get; set; }
+        public ObjectExpression Properties { get; set; }
 
         [SyntaxOptional]
         public StringLiteral DefaultAttribute { get; set; }
@@ -193,7 +193,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public StringLiteral Nested { get; set; }
 
         [SyntaxRequired]
-        public ModuleLiteral Module { get; set; }
+        public StringLiteral Module { get; set; }
 
         [SyntaxOptional]
         public DeclarationList<StringLiteral> DependsOn { get; set; }
@@ -254,7 +254,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression Environment { get; set; }
 
         [SyntaxOptional]
-        public PropertiesExpression Properties { get; set; }
+        public ObjectExpression Properties { get; set; }
 
         [SyntaxOptional]
         public DeclarationList<AEventSourceDeclaration> Sources { get; set; }
@@ -346,11 +346,5 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public IList<StringLiteral> Values { get; set; }
-    }
-
-    public class PropertiesExpression : ANode {
-
-        //--- Properties ---
-        // TODO:
     }
 }
