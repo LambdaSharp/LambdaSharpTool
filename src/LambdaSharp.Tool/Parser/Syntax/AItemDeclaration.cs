@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression AllowedPattern { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> AllowedValues { get; set; }
+        public List<LiteralExpression> AllowedValues { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression MaxLength { get; set; }
@@ -82,7 +82,31 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Parameter?.Visit(this, visitor);
+            Section?.Visit(this, visitor);
+            Label?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            NoEcho?.Visit(this, visitor);
+            Default?.Visit(this, visitor);
+            ConstraintDescription?.Visit(this, visitor);
+            AllowedPattern?.Visit(this, visitor);
+            AllowedValues?.Visit(this, visitor);
+            MaxLength?.Visit(this, visitor);
+            MaxValue?.Visit(this, visitor);
+            MinLength?.Visit(this, visitor);
+            MinValue?.Visit(this, visitor);
+            Allow?.Visit(this, visitor);
+            Properties?.Visit(this, visitor);
+            EncryptionContext?.Visit(this, visitor);
+            Pragmas?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ImportDeclaration : AItemDeclaration {
@@ -99,13 +123,25 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> AllowedValues { get; set; }
+        public List<LiteralExpression> AllowedValues { get; set; }
 
         [SyntaxRequired]
         public LiteralExpression Module { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Import?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            AllowedValues?.Visit(this, visitor);
+            Module?.Visit(this, visitor);
+            EncryptionContext?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class VariableDeclaration : AItemDeclaration {
@@ -126,6 +162,17 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Variable?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            Value?.Visit(this, visitor);
+            EncryptionContext?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class GroupDeclaration : AItemDeclaration {
@@ -136,7 +183,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Group { get; set; }
 
         [SyntaxRequired]
-        public ListOf<AItemDeclaration> Items { get; set; }
+        public List<AItemDeclaration> Items { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Group?.Visit(this, visitor);
+            Items?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ConditionDeclaration : AItemDeclaration {
@@ -148,6 +203,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public AConditionExpression Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Condition?.Visit(this, visitor);
+            Value?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ResourceDeclaration : AItemDeclaration {
@@ -173,7 +236,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression Value { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> DependsOn { get; set; }
+        public List<LiteralExpression> DependsOn { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Properties { get; set; }
@@ -182,7 +245,23 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression DefaultAttribute { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Resource?.Visit(this, visitor);
+            If?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            Allow?.Visit(this, visitor);
+            Value?.Visit(this, visitor);
+            DependsOn?.Visit(this, visitor);
+            Properties?.Visit(this, visitor);
+            DefaultAttribute?.Visit(this, visitor);
+            Pragmas?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class NestedModuleDeclaration : AItemDeclaration {
@@ -196,10 +275,20 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Module { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> DependsOn { get; set; }
+        public List<LiteralExpression> DependsOn { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Parameters { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Nested?.Visit(this, visitor);
+            Module?.Visit(this, visitor);
+            DependsOn?.Visit(this, visitor);
+            Parameters?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class PackageDeclaration : AItemDeclaration {
@@ -213,7 +302,16 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
-        public ListOf<LiteralExpression> Files { get; set; }
+        public List<LiteralExpression> Files { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Package?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            Files?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class FunctionDeclaration : AItemDeclaration {
@@ -227,7 +325,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public AConditionExpression If { get; set; } // -OR- name of a condition!
+        public AConditionExpression If { get; set; }
 
         [SyntaxRequired]
         public AValueExpression Memory { get; set; }
@@ -248,7 +346,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Handler { get; set; }
 
         [SyntaxOptional]
-        public VpcDeclaration Vpc { get; set; }
+        public FunctionVpcDeclaration Vpc { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Environment { get; set; }
@@ -257,13 +355,33 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression Properties { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AEventSourceDeclaration> Sources { get; set; }
+        public List<AEventSourceDeclaration> Sources { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Function?.Visit(this, visitor);
+            Scope?.Visit(this, visitor);
+            If?.Visit(this, visitor);
+            Memory?.Visit(this, visitor);
+            Timeout?.Visit(this, visitor);
+            Project?.Visit(this, visitor);
+            Runtime?.Visit(this, visitor);
+            Language?.Visit(this, visitor);
+            Handler?.Visit(this, visitor);
+            Vpc?.Visit(this, visitor);
+            Environment?.Visit(this, visitor);
+            Properties?.Visit(this, visitor);
+            Sources?.Visit(this, visitor);
+            Pragmas?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
-    public class VpcDeclaration : ADeclaration {
+    public class FunctionVpcDeclaration : ADeclaration {
 
         //--- Properties ---
 
@@ -272,6 +390,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public AValueExpression SubnetIds { get;set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            SecurityGroupIds?.Visit(this, visitor);
+            SubnetIds?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class MappingDeclaration : AItemDeclaration {
@@ -283,6 +409,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public ObjectExpression Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Mapping?.Visit(this, visitor);
+            Value?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ResourceTypeDeclaration : AItemDeclaration {
@@ -296,13 +430,23 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Handler { get; set; }
 
         [SyntaxOptional]
-        public ListOf<PropertyTypeDeclaration> Properties { get; set; }
+        public List<ResourcePropertyTypeDeclaration> Properties { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AttributeTypeDeclaration> Attributes { get; set; }
+        public List<ResourceAttributeTypeDeclaration> Attributes { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            ResourceType?.Visit(this, visitor);
+            Handler?.Visit(this, visitor);
+            Properties?.Visit(this, visitor);
+            Attributes?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
-    public class PropertyTypeDeclaration : ADeclaration {
+    public class ResourcePropertyTypeDeclaration : ADeclaration {
 
         //--- Properties ---
 
@@ -314,9 +458,18 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public LiteralExpression Required { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Name?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            Required?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
-    public class AttributeTypeDeclaration : ADeclaration {
+    public class ResourceAttributeTypeDeclaration : ADeclaration {
 
         //--- Properties ---
 
@@ -325,6 +478,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public LiteralExpression Type { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Name?.Visit(this, visitor);
+            Type?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class MacroDeclaration : AItemDeclaration {
@@ -336,11 +497,26 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public AValueExpression Handler { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Macro?.Visit(this, visitor);
+            Handler?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
+    // TODO: consider replacing this with 'AValueExpression' instead
     public class TagListDeclaration : ASyntaxNode {
 
         //--- Properties ---
         public List<string> Tags { get; set; } = new List<string>();
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }

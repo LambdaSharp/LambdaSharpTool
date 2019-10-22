@@ -194,8 +194,8 @@ Items:
             }
             parser.Messages.Any().Should().Be(false);
             value.Should().NotBeNull();
-            value.Items.Count.Should().Be(1);
-            value.Items[0].Should().BeOfType<LiteralExpression>()
+            value.Count.Should().Be(1);
+            value[0].Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("foo");
         }
 
@@ -219,10 +219,10 @@ Items:
             }
             parser.Messages.Any().Should().Be(false);
             value.Should().NotBeNull();
-            value.Items.Count.Should().Be(2);
-            value.Items[0].Should().BeOfType<LiteralExpression>()
+            value.Count.Should().Be(2);
+            value[0].Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("foo");
-            value.Items[1].Should().BeOfType<LiteralExpression>()
+            value[1].Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("bar");
         }
 

@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Parser {
         private readonly string _filePath;
         private readonly IParser _parser;
         private readonly List<string> _messages;
-        private readonly Dictionary<Type, Func<ASyntaxNode>> _typeParsers;
+        private readonly Dictionary<Type, Func<object>> _typeParsers;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
         private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
 
@@ -71,7 +71,7 @@ namespace LambdaSharp.Tool.Parser {
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             _parser = new YamlDotNet.Core.Parser(new StringReader(source));
             _messages = new List<string>();
-            _typeParsers = new Dictionary<Type, Func<ASyntaxNode>> {
+            _typeParsers = new Dictionary<Type, Func<object>> {
 
                 // expressions
                 [typeof(AValueExpression)] = () => ParseExpression(),
@@ -85,18 +85,18 @@ namespace LambdaSharp.Tool.Parser {
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseDeclarationOf<ModuleDeclaration>(),
                 [typeof(UsingDeclaration)] = () => ParseDeclarationOf<UsingDeclaration>(),
-                [typeof(VpcDeclaration)] = () => ParseDeclarationOf<VpcDeclaration>(),
-                [typeof(PropertyTypeDeclaration)] = () => ParseDeclarationOf<PropertyTypeDeclaration>(),
-                [typeof(AttributeTypeDeclaration)] = () => ParseDeclarationOf<AttributeTypeDeclaration>(),
+                [typeof(FunctionVpcDeclaration)] = () => ParseDeclarationOf<FunctionVpcDeclaration>(),
+                [typeof(ResourcePropertyTypeDeclaration)] = () => ParseDeclarationOf<ResourcePropertyTypeDeclaration>(),
+                [typeof(ResourceAttributeTypeDeclaration)] = () => ParseDeclarationOf<ResourceAttributeTypeDeclaration>(),
                 [typeof(AItemDeclaration)] = () => ParseDeclarationOf<AItemDeclaration>(),
                 [typeof(AEventSourceDeclaration)] = () => ParseDeclarationOf<AEventSourceDeclaration>(),
 
                 // lists
-                [typeof(ListOf<AItemDeclaration>)] = () => ParseListOf<AItemDeclaration>(),
-                [typeof(ListOf<AValueExpression>)] = () => ParseListOf<AValueExpression>(),
-                [typeof(ListOf<AEventSourceDeclaration>)] = () => ParseListOf<AEventSourceDeclaration>(),
-                [typeof(ListOf<UsingDeclaration>)] = () => ParseListOf<UsingDeclaration>(),
-                [typeof(ListOf<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
+                [typeof(List<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
+                [typeof(List<AValueExpression>)] = () => ParseList<AValueExpression>(),
+                [typeof(List<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
+                [typeof(List<UsingDeclaration>)] = () => ParseList<UsingDeclaration>(),
+                [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
         }
 
@@ -114,7 +114,7 @@ namespace LambdaSharp.Tool.Parser {
             _parser.Expect<StreamEnd>();
         }
 
-        public ListOf<T> ParseListOf<T>() where T : ASyntaxNode {
+        public List<T> ParseList<T>() where T : ASyntaxNode {
             if(!(_parser.Current is SequenceStart sequenceStart) || (sequenceStart.Tag != null)) {
                 LogError("expected a sequence", Location());
                 _parser.SkipThisAndNestedEvents();
@@ -123,13 +123,14 @@ namespace LambdaSharp.Tool.Parser {
             _parser.MoveNext();
 
             // parse declaration items in sequence
-            var result = new ListOf<T>();
+            var result = new List<T>();
             while(!(_parser.Current is SequenceEnd)) {
                 if(TryParse(typeof(T), out var item)) {
-                    result.Items.Add((T)item);
+
+                    // TODO: maybe we can do better than having a cast exception here in case something goes wrong?
+                    result.Add((T)item);
                 }
             }
-            result.SourceLocation = Location(sequenceStart, _parser.Current);
             _parser.MoveNext();
             return result;
         }
@@ -676,13 +677,13 @@ namespace LambdaSharp.Tool.Parser {
             }
         }
 
-        public ListOf<LiteralExpression> ParseListOfLiteralExpressions() {
-            var result = new ListOf<LiteralExpression>();
+        public List<LiteralExpression> ParseListOfLiteralExpressions() {
+            var result = new List<LiteralExpression>();
 
             // attempt to parse a single scalar
             if(_parser.Current is Scalar scalar) {
                 _parser.MoveNext();
-                result.Items.Add(new LiteralExpression {
+                result.Add(new LiteralExpression {
                     SourceLocation = Location(scalar),
                     Value = scalar.Value
                 });
@@ -701,10 +702,9 @@ namespace LambdaSharp.Tool.Parser {
             while(!(_parser.Current is SequenceEnd)) {
                 var item = ParseExpressionOf<LiteralExpression>("literal expression");
                 if(item != null) {
-                    result.Items.Add(item);
+                    result.Add(item);
                 }
             }
-            result.SourceLocation = Location(sequenceStart, _parser.Current);
             _parser.MoveNext();
             return result;
 
@@ -756,7 +756,7 @@ namespace LambdaSharp.Tool.Parser {
             return syntaxes;
         }
 
-        private bool TryParse(Type type, out ASyntaxNode result) {
+        private bool TryParse(Type type, out object result) {
             if(_typeParsers.TryGetValue(type, out var parser)) {
                 result = parser();
                 return result != null;

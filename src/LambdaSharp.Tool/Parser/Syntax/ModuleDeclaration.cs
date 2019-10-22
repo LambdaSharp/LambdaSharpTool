@@ -17,8 +17,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
+
+    public abstract class ADeclaration : ASyntaxNode { }
 
     public class ModuleDeclaration : ADeclaration {
 
@@ -34,16 +37,28 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Description { get; set; }
 
         [SyntaxOptional]
-        public ListOf<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> Secrets { get; set; }
+        public List<LiteralExpression> Secrets { get; set; }
 
         [SyntaxOptional]
-        public ListOf<UsingDeclaration> Using { get; set; }
+        public List<UsingDeclaration> Using { get; set; }
 
         [SyntaxRequired]
-        public ListOf<AItemDeclaration> Items { get; set; }
+        public List<AItemDeclaration> Items { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Module?.Visit(this, visitor);
+            Version?.Visit(this, visitor);
+            Description?.Visit(this, visitor);
+            Secrets?.Visit(this, visitor);
+            Using?.Visit(this, visitor);
+            Items?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class UsingDeclaration : ADeclaration {
@@ -55,5 +70,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public LiteralExpression Description { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Module?.Visit(this, visitor);
+            Description?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }

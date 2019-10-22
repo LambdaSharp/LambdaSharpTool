@@ -27,17 +27,40 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public List<LiteralExpression> Keys { get; set; } = new List<LiteralExpression>();
         public Dictionary<string, AValueExpression> Values { get; set; } = new Dictionary<string, AValueExpression>();
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+
+            // TODO: introduce key-value structure so they can be visited together
+            Keys?.Visit(this, visitor);
+            Values?.Values.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ListExpression : AValueExpression {
 
         //--- Properties ---
         public List<AValueExpression> Values { get; set; } = new List<AValueExpression>();
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Values?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class LiteralExpression : AValueExpression {
 
         //--- Properties ---
         public string Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }

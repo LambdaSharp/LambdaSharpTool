@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AConditionExpression : ANode {
+    public abstract class AConditionExpression : ASyntaxNode {
 
          //--- Properties ---
     }
@@ -27,32 +27,69 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public string Name { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class EqualsConditionExpression : AConditionExpression {
 
          //--- Properties ---
-         public AConditionExpression Left { get; set; }
-         public AConditionExpression Right { get; set; }
+         public AConditionExpression LeftValue { get; set; }
+         public AConditionExpression RightValue { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            LeftValue?.Visit(this, visitor);
+            RightValue?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class NotConditionExpression : AConditionExpression {
 
          //--- Properties ---
-         public AConditionExpression Inner { get; set; }
+         public AConditionExpression Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Value?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class AndConditionExpression : AConditionExpression {
 
          //--- Properties ---
-         public AConditionExpression Left { get; set; }
-         public AConditionExpression Right { get; set; }
+         public AConditionExpression LeftValue { get; set; }
+         public AConditionExpression RightValue { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            LeftValue?.Visit(this, visitor);
+            RightValue?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class OrConditionExpression : AConditionExpression {
 
          //--- Properties ---
-         public AConditionExpression Left { get; set; }
-         public AConditionExpression Right { get; set; }
+         public AConditionExpression LeftValue { get; set; }
+         public AConditionExpression RightValue { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            LeftValue?.Visit(this, visitor);
+            RightValue?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }

@@ -18,7 +18,7 @@
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public class AFunctionExpression : AValueExpression  { }
+    public abstract class AFunctionExpression : AValueExpression  { }
 
     public class Base64FunctionExpression : AFunctionExpression {
 
@@ -26,6 +26,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public AValueExpression Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Value?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class CidrFunctionExpression : AFunctionExpression {
@@ -38,6 +45,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression IpBlock  { get; set; }
         public AValueExpression Count { get; set; }
         public AValueExpression CidrBits { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            IpBlock?.Visit(this, visitor);
+            Count?.Visit(this, visitor);
+            CidrBits?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class FindInMapExpression : AFunctionExpression {
@@ -50,6 +66,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression MapName { get; set; }
         public AValueExpression TopLevelKey { get; set; }
         public AValueExpression SecondLevelKey { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            MapName?.Visit(this, visitor);
+            TopLevelKey?.Visit(this, visitor);
+            SecondLevelKey?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class GetAttFunctionExpression : AFunctionExpression {
@@ -60,6 +85,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression ResourceName { get; set; }
         public AValueExpression AttributeName { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            ResourceName?.Visit(this, visitor);
+            AttributeName?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class GetAZsFunctionExpression : AFunctionExpression {
@@ -68,6 +101,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public AValueExpression Region { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Region?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class IfFunctionExpression : AFunctionExpression {
@@ -80,6 +120,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ConditionNameLiteralExpression ConditionName { get; set; }
         public AValueExpression IfTrue { get; set; }
         public AValueExpression IfFalse { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            ConditionName?.Visit(this, visitor);
+            IfTrue?.Visit(this, visitor);
+            IfFalse?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ImportValueFunctionExpression : AFunctionExpression {
@@ -96,6 +145,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public AValueExpression SharedValueToImport { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            SharedValueToImport?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class JoinFunctionExpression : AFunctionExpression {
@@ -117,6 +173,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression Separator { get; set; }
         public AValueExpression Values { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Separator?.Visit(this, visitor);
+            Values?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SelectFunctionExpression : AFunctionExpression {
@@ -133,6 +197,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public AValueExpression Index { get; set; }
         public AValueExpression Values { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Index?.Visit(this, visitor);
+            Values?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SplitFunctionExpression : AFunctionExpression {
@@ -153,6 +225,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public AValueExpression Delimiter { get; set; }
         public AValueExpression SourceString { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Delimiter?.Visit(this, visitor);
+            SourceString?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SubFunctionExpression : AFunctionExpression {
@@ -172,6 +252,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression FormatString { get; set; }
         public ObjectExpression Parameters { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            FormatString?.Visit(this, visitor);
+            Parameters?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class TransformFunctionExpression : AFunctionExpression {
@@ -181,6 +269,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression MacroName { get; set; }
         public ObjectExpression Parameters { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            MacroName?.Visit(this, visitor);
+            Parameters?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ReferenceFunctionExpression : AFunctionExpression {
@@ -189,5 +285,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public LiteralExpression ResourceName { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            ResourceName?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }

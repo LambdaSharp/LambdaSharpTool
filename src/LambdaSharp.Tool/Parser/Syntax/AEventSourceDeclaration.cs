@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+
 namespace LambdaSharp.Tool.Parser.Syntax {
 
     public abstract class AEventSourceDeclaration : ADeclaration {
@@ -43,13 +45,27 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> AuthorizationScopes { get; set; }
+        public List<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Invoke { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Api?.Visit(this, visitor);
+            Integration?.Visit(this, visitor);
+            OperationName?.Visit(this, visitor);
+            ApiKeyRequired?.Visit(this, visitor);
+            AuthorizationType?.Visit(this, visitor);
+            AuthorizationScopes?.Visit(this, visitor);
+            AuthorizerId?.Visit(this, visitor);
+            Invoke?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SchedulEventSourceDeclaration : AEventSourceDeclaration {
@@ -61,6 +77,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public LiteralExpression Name { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Schedule?.Visit(this, visitor);
+            Name?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
@@ -71,13 +95,23 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression S3 { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> Events { get; set; }
+        public List<LiteralExpression> Events { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Prefix { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Suffix { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            S3?.Visit(this, visitor);
+            Events?.Visit(this, visitor);
+            Prefix?.Visit(this, visitor);
+            Suffix?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
@@ -86,6 +120,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxKeyword]
         public LiteralExpression SlackCommand { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            SlackCommand?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class TopicEventSourceDeclaration : AEventSourceDeclaration {
@@ -97,6 +138,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public ObjectExpression Filters { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Topic?.Visit(this, visitor);
+            Filters?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class SqsEventSourceDeclaration : AEventSourceDeclaration {
@@ -108,6 +157,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public AValueExpression BatchSize { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Sqs?.Visit(this, visitor);
+            BatchSize?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class AlexaEventSourceDeclaration : AEventSourceDeclaration {
@@ -116,6 +173,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxKeyword]
         public AValueExpression Alexa { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Alexa?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
@@ -130,6 +194,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public AValueExpression StartingPosition { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            DynamoDB?.Visit(this, visitor);
+            BatchSize?.Visit(this, visitor);
+            StartingPosition?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class KinesisEventSourceDeclaration : AEventSourceDeclaration {
@@ -144,6 +217,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxOptional]
         public AValueExpression StartingPosition { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            Kinesis?.Visit(this, visitor);
+            BatchSize?.Visit(this, visitor);
+            StartingPosition?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class WebSocketEventSourceDeclaration : AEventSourceDeclaration {
@@ -163,12 +245,25 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public ListOf<LiteralExpression> AuthorizationScopes { get; set; }
+        public List<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Invoke { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            WebSocket?.Visit(this, visitor);
+            OperationName?.Visit(this, visitor);
+            ApiKeyRequired?.Visit(this, visitor);
+            AuthorizationType?.Visit(this, visitor);
+            AuthorizationScopes?.Visit(this, visitor);
+            AuthorizerId?.Visit(this, visitor);
+            Invoke?.Visit(this, visitor);
+            visitor.VisitEnd(parent, this);
+        }
     }
 }
