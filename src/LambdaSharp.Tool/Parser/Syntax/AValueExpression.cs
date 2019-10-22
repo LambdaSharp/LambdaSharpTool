@@ -20,12 +20,12 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AValueExpression : ANode { }
+    public abstract class AValueExpression : ASyntaxNode { }
 
     public class ObjectExpression : AValueExpression {
 
         //--- Properties ---
-        public List<StringLiteral> Keys { get; set; } = new List<StringLiteral>();
+        public List<LiteralExpression> Keys { get; set; } = new List<LiteralExpression>();
         public Dictionary<string, AValueExpression> Values { get; set; } = new Dictionary<string, AValueExpression>();
     }
 

@@ -25,25 +25,25 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword()]
-        public StringLiteral Module { get; set; }
+        public LiteralExpression Module { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Version { get; set; }
+        public LiteralExpression Version { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Description { get; set; }
+        public LiteralExpression Description { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<PragmaExpression> Pragmas { get; set; }
+        public ListOf<AValueExpression> Pragmas { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<StringLiteral> Secrets { get; set; }
+        public ListOf<LiteralExpression> Secrets { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<UsingDeclaration> Using { get; set; }
+        public ListOf<UsingDeclaration> Using { get; set; }
 
         [SyntaxRequired]
-        public DeclarationList<AItemDeclaration> Items { get; set; }
+        public ListOf<AItemDeclaration> Items { get; set; }
     }
 
     public class UsingDeclaration : ADeclaration {
@@ -51,9 +51,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public StringLiteral Module { get; set; }
+        public LiteralExpression Module { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Description { get; set; }
+        public LiteralExpression Description { get; set; }
     }
 }

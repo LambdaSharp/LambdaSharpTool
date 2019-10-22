@@ -61,7 +61,7 @@ Items:
 
             // act
             parser.Start();
-            var module = parser.ParseDeclaration<ModuleDeclaration>();
+            var module = parser.ParseDeclarationOf<ModuleDeclaration>();
             parser.End();
 
             // assert
@@ -81,7 +81,7 @@ Items:
 
             // act
             parser.Start();
-            var value = parser.ParseValueExpression();
+            var value = parser.ParseExpression();
             parser.End();
 
             // assert
@@ -104,7 +104,7 @@ Items:
 
             // act
             parser.Start();
-            var value = parser.ParseValueExpression();
+            var value = parser.ParseExpression();
             parser.End();
 
             // assert
@@ -130,7 +130,7 @@ Items:
 
             // act
             parser.Start();
-            var value = parser.ParseValueExpression();
+            var value = parser.ParseExpression();
             parser.End();
 
             // assert
@@ -158,7 +158,7 @@ Items:
 
             // act
             parser.Start();
-            var value = parser.ParseValueExpression();
+            var value = parser.ParseExpression();
             parser.End();
 
             // assert
@@ -173,6 +173,57 @@ Items:
             sub.FormatString.Should().NotBeNull();
             sub.FormatString.Value.Should().Be("text");
             sub.Parameters.Should().BeNull();
+        }
+
+        [Fact]
+        public void ParseListOfLiteralExpressions_SingleValue() {
+
+            // arrange
+            var source =
+@"foo";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseListOfLiteralExpressions();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().NotBeNull();
+            value.Items.Count.Should().Be(1);
+            value.Items[0].Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("foo");
+        }
+
+        [Fact]
+        public void ParseListOfLiteralExpressions_MultipleValues() {
+
+            // arrange
+            var source =
+@"- foo
+- bar";
+            var parser = new LambdaSharpParser("<literal>", source);
+
+            // act
+            parser.Start();
+            var value = parser.ParseListOfLiteralExpressions();
+            parser.End();
+
+            // assert
+            foreach(var message in parser.Messages) {
+                _output.WriteLine(message);
+            }
+            parser.Messages.Any().Should().Be(false);
+            value.Should().NotBeNull();
+            value.Items.Count.Should().Be(2);
+            value.Items[0].Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("foo");
+            value.Items[1].Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("bar");
         }
 
         [Fact(Skip = "for debugging only")]

@@ -21,28 +21,22 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class ANode {
+    public abstract class ASyntaxNode {
 
         //--- Properties ---
         public SourceLocation SourceLocation { get; set; }
 
         //--- Methods ---
-        public virtual void Inherit(ANode parent) { }
-        public virtual ANode Synthesize() => this;
+        public virtual void Inherit(ASyntaxNode parent) { }
+        public virtual ASyntaxNode Synthesize() => this;
     }
 
-    public abstract class ADeclaration : ANode { }
+    public abstract class ADeclaration : ASyntaxNode { }
 
-    public class DeclarationList<T> : ANode where T : ANode {
+    public class ListOf<T> : ASyntaxNode where T : ASyntaxNode {
 
         //--- Properties ---
         public Type InnerType => typeof(T);
-        public IList<T> Items { get; set; } = new List<T>();
-    }
-
-    public class PragmaExpression : ANode {
-
-        //--- Properties ---
-        // TODO:
+        public List<T> Items { get; set; } = new List<T>();
     }
 }

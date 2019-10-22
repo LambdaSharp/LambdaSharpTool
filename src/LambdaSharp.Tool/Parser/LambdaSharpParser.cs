@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Parser {
         private readonly string _filePath;
         private readonly IParser _parser;
         private readonly List<string> _messages;
-        private readonly Dictionary<Type, Func<ANode>> _typeToParsers;
+        private readonly Dictionary<Type, Func<ASyntaxNode>> _typeParsers;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
         private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
 
@@ -71,23 +71,32 @@ namespace LambdaSharp.Tool.Parser {
             _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
             _parser = new YamlDotNet.Core.Parser(new StringReader(source));
             _messages = new List<string>();
-            _typeToParsers = new Dictionary<Type, Func<ANode>> {
-                [typeof(ModuleDeclaration)] = () => ParseDeclaration<ModuleDeclaration>(),
-                [typeof(StringLiteral)] = ParseStringLiteral,
-                [typeof(IntLiteral)] = ParseIntLiteral,
-                [typeof(BoolLiteral)] = ParseBoolLiteral,
-                [typeof(AItemDeclaration)] = () => ParseDeclaration<AItemDeclaration>(),
-                [typeof(UsingDeclaration)] = () => ParseDeclaration<UsingDeclaration>(),
-                [typeof(VpcDeclaration)] = () => ParseDeclaration<VpcDeclaration>(),
-                [typeof(PropertyTypeDeclaration)] = () => ParseDeclaration<PropertyTypeDeclaration>(),
-                [typeof(AttributeTypeDeclaration)] = () => ParseDeclaration<AttributeTypeDeclaration>(),
-                [typeof(DeclarationList<AItemDeclaration>)] = () => ParseDeclarationList<AItemDeclaration>(),
-                [typeof(DeclarationList<UsingDeclaration>)] = () => ParseDeclarationList<UsingDeclaration>(),
-                [typeof(DeclarationList<StringLiteral>)] = () => ParseDeclarationList<StringLiteral>(),
+            _typeParsers = new Dictionary<Type, Func<ASyntaxNode>> {
+
+                // expressions
+                [typeof(AValueExpression)] = () => ParseExpression(),
+                [typeof(ObjectExpression)] = () => ParseExpressionOf<ObjectExpression>("map expression"),
+                [typeof(ListExpression)] = () => ParseExpressionOf<ListExpression>("list expression"),
+                [typeof(LiteralExpression)] = () => ParseExpressionOf<LiteralExpression>("literal expression"),
 
                 // TODO:
-                [typeof(DeclarationList<PragmaExpression>)] = ParseAnything,
-                [typeof(AValueExpression)] = ParseAnything
+                [typeof(AConditionExpression)] = () => throw new NotImplementedException("AConditionExpression"),
+
+                // declarations
+                [typeof(ModuleDeclaration)] = () => ParseDeclarationOf<ModuleDeclaration>(),
+                [typeof(UsingDeclaration)] = () => ParseDeclarationOf<UsingDeclaration>(),
+                [typeof(VpcDeclaration)] = () => ParseDeclarationOf<VpcDeclaration>(),
+                [typeof(PropertyTypeDeclaration)] = () => ParseDeclarationOf<PropertyTypeDeclaration>(),
+                [typeof(AttributeTypeDeclaration)] = () => ParseDeclarationOf<AttributeTypeDeclaration>(),
+                [typeof(AItemDeclaration)] = () => ParseDeclarationOf<AItemDeclaration>(),
+                [typeof(AEventSourceDeclaration)] = () => ParseDeclarationOf<AEventSourceDeclaration>(),
+
+                // lists
+                [typeof(ListOf<AItemDeclaration>)] = () => ParseListOf<AItemDeclaration>(),
+                [typeof(ListOf<AValueExpression>)] = () => ParseListOf<AValueExpression>(),
+                [typeof(ListOf<AEventSourceDeclaration>)] = () => ParseListOf<AEventSourceDeclaration>(),
+                [typeof(ListOf<UsingDeclaration>)] = () => ParseListOf<UsingDeclaration>(),
+                [typeof(ListOf<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
         }
 
@@ -105,7 +114,7 @@ namespace LambdaSharp.Tool.Parser {
             _parser.Expect<StreamEnd>();
         }
 
-        public DeclarationList<T> ParseDeclarationList<T>() where T : ANode {
+        public ListOf<T> ParseListOf<T>() where T : ASyntaxNode {
             if(!(_parser.Current is SequenceStart sequenceStart) || (sequenceStart.Tag != null)) {
                 LogError("expected a sequence", Location());
                 _parser.SkipThisAndNestedEvents();
@@ -114,7 +123,7 @@ namespace LambdaSharp.Tool.Parser {
             _parser.MoveNext();
 
             // parse declaration items in sequence
-            var result = new DeclarationList<T>();
+            var result = new ListOf<T>();
             while(!(_parser.Current is SequenceEnd)) {
                 if(TryParse(typeof(T), out var item)) {
                     result.Items.Add((T)item);
@@ -125,7 +134,7 @@ namespace LambdaSharp.Tool.Parser {
             return result;
         }
 
-        public T ParseDeclaration<T>() where T : ADeclaration {
+        public T ParseDeclarationOf<T>() where T : ADeclaration {
 
             // fetch all possible syntax options for specified type
             var syntaxes = GetSyntaxes(typeof(T));
@@ -211,7 +220,17 @@ namespace LambdaSharp.Tool.Parser {
             return result;
         }
 
-        public AValueExpression ParseValueExpression() {
+        public T ParseExpressionOf<T>(string constraint) where T : AValueExpression {
+            var result = ParseExpression();
+            if(!(result is T expression)) {
+                var isVowel = ("aeiouAEIOU".IndexOf(constraint.First()) >= 0);
+                LogError($"expected {(isVowel ? "an" : "a")} {constraint}", result.SourceLocation);
+                return null;
+            }
+            return expression;
+        }
+
+        public AValueExpression ParseExpression() {
             switch(_parser.Current) {
             case SequenceStart sequenceStart:
                 return ConvertFunction(sequenceStart.Tag, ParseListExpression());
@@ -247,13 +266,13 @@ namespace LambdaSharp.Tool.Parser {
                     }
 
                     // parse value
-                    var value = ParseValueExpression();
+                    var value = ParseExpression();
                     if(value == null) {
                         continue;
                     }
 
                     // add key-value pair
-                    result.Keys.Add(new StringLiteral {
+                    result.Keys.Add(new LiteralExpression {
                         SourceLocation = Location(keyScalar),
                         Value = keyScalar.Value
                     });
@@ -275,7 +294,7 @@ namespace LambdaSharp.Tool.Parser {
                 // parse values in sequence
                 var result = new ListExpression();
                 while(!(_parser.Current is SequenceEnd)) {
-                    var item = ParseValueExpression();
+                    var item = ParseExpression();
                     if(item != null) {
                         result.Values.Add(item);
                     }
@@ -595,7 +614,7 @@ namespace LambdaSharp.Tool.Parser {
                         LogError("!Sub expects 2 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(subList.Values[0] is LiteralExpression formatStringLiteral)) {
+                    if(!(subList.Values[0] is LiteralExpression formatLiteralExpression)) {
                         LogError("!Sub first parameter must be a literal value", subList.Values[0].SourceLocation);
                         return null;
                     }
@@ -605,7 +624,7 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new SubFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        FormatString = formatStringLiteral,
+                        FormatString = formatLiteralExpression,
                         Parameters = parametersObject
                     };
                 }
@@ -656,63 +675,39 @@ namespace LambdaSharp.Tool.Parser {
                 return null;
             }
         }
-/*
-        public TagListDeclaration ParseTagListDeclaration() {
-            // TODO: string literal
-            // TODO: list of string literal
-        }
 
-        public PragmaExpression ParsePragmaExpression() {
+        public ListOf<LiteralExpression> ParseListOfLiteralExpressions() {
+            var result = new ListOf<LiteralExpression>();
 
-        }
-
-        public AConditionExpression ParseAConditionExpression() {
-
-        }
-*/
-
-        public StringLiteral ParseStringLiteral() {
-            if((_parser.Current is Scalar scalar) && (scalar.Tag == null)) {
+            // attempt to parse a single scalar
+            if(_parser.Current is Scalar scalar) {
                 _parser.MoveNext();
-                return new StringLiteral {
+                result.Items.Add(new LiteralExpression {
                     SourceLocation = Location(scalar),
                     Value = scalar.Value
-                };
+                });
+                return result;
             }
-            LogError("expected a literal string", Location());
-            _parser.SkipThisAndNestedEvents();
-            return null;
-        }
 
-        public IntLiteral ParseIntLiteral() {
-            if((_parser.Current is Scalar scalar) && (scalar.Tag == null) && int.TryParse(scalar.Value, out var value)) {
-                _parser.MoveNext();
-                return new IntLiteral {
-                    SourceLocation = Location(scalar),
-                    Value = value
-                };
+            // check if we have a sequence instead
+            if(!(_parser.Current is SequenceStart sequenceStart)) {
+                LogError("expected a sequence", Location());
+                _parser.SkipThisAndNestedEvents();
+                return null;
             }
-            LogError("expected a literal integer", Location());
-            _parser.SkipThisAndNestedEvents();
-            return null;
-        }
+            _parser.MoveNext();
 
-        public BoolLiteral ParseBoolLiteral() {
-            if((_parser.Current is Scalar scalar) && (scalar.Tag == null) && bool.TryParse(scalar.Value, out var value)) {
-                _parser.MoveNext();
-                return new BoolLiteral {
-                    SourceLocation = Location(scalar),
-                    Value = value
-                };
+            // parse values in sequence
+            while(!(_parser.Current is SequenceEnd)) {
+                var item = ParseExpressionOf<LiteralExpression>("literal expression");
+                if(item != null) {
+                    result.Items.Add(item);
+                }
             }
-            LogError("expected a literal boolean", Location());
-            _parser.SkipThisAndNestedEvents();
-            return null;
-        }
+            result.SourceLocation = Location(sequenceStart, _parser.Current);
+            _parser.MoveNext();
+            return result;
 
-        public ANode ParseAnything() {
-            _parser.SkipThisAndNestedEvents();
-            return null;
         }
 
         private void LogError(string message, SourceLocation location) {
@@ -761,8 +756,8 @@ namespace LambdaSharp.Tool.Parser {
             return syntaxes;
         }
 
-        private bool TryParse(Type type, out ANode result) {
-            if(_typeToParsers.TryGetValue(type, out var parser)) {
+        private bool TryParse(Type type, out ASyntaxNode result) {
+            if(_typeParsers.TryGetValue(type, out var parser)) {
                 result = parser();
                 return result != null;
             }

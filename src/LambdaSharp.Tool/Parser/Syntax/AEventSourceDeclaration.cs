@@ -27,29 +27,29 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public StringLiteral Api { get; set; }
+        public LiteralExpression Api { get; set; }
 
 
         [SyntaxOptional]
-        public StringLiteral Integration { get; set; }
+        public LiteralExpression Integration { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral OperationName { get; set; }
+        public LiteralExpression OperationName { get; set; }
 
         [SyntaxOptional]
-        public BoolLiteral ApiKeyRequired { get; set; }
+        public LiteralExpression ApiKeyRequired { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral AuthorizationType { get; set; }
+        public LiteralExpression AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<StringLiteral> AuthorizationScopes { get; set; }
+        public ListOf<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Invoke { get; set; }
+        public LiteralExpression Invoke { get; set; }
     }
 
     public class SchedulEventSourceDeclaration : AEventSourceDeclaration {
@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression Schedule { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Name { get; set; }
+        public LiteralExpression Name { get; set; }
     }
 
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
@@ -71,13 +71,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression S3 { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<StringLiteral> Events { get; set; }
+        public ListOf<LiteralExpression> Events { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Prefix { get; set; }
+        public LiteralExpression Prefix { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Suffix { get; set; }
+        public LiteralExpression Suffix { get; set; }
     }
 
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
@@ -85,7 +85,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public StringLiteral SlackCommand { get; set; }
+        public LiteralExpression SlackCommand { get; set; }
     }
 
     public class TopicEventSourceDeclaration : AEventSourceDeclaration {
@@ -151,24 +151,24 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public StringLiteral WebSocket { get; set; }
+        public LiteralExpression WebSocket { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral OperationName { get; set; }
+        public LiteralExpression OperationName { get; set; }
 
         [SyntaxOptional]
-        public BoolLiteral ApiKeyRequired { get; set; }
+        public LiteralExpression ApiKeyRequired { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral AuthorizationType { get; set; }
+        public LiteralExpression AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public DeclarationList<StringLiteral> AuthorizationScopes { get; set; }
+        public ListOf<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
         public AValueExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
-        public StringLiteral Invoke { get; set; }
+        public LiteralExpression Invoke { get; set; }
     }
 }
