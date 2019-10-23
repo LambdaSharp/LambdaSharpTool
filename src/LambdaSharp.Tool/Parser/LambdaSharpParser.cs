@@ -707,7 +707,6 @@ namespace LambdaSharp.Tool.Parser {
             }
             _parser.MoveNext();
             return result;
-
         }
 
         private void LogError(string message, SourceLocation location) {
