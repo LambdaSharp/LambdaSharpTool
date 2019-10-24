@@ -60,9 +60,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var module = parser.ParseDeclarationOf<ModuleDeclaration>();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -80,9 +78,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseExpression();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -103,9 +99,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseExpression();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -129,9 +123,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseExpression();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -157,9 +149,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseExpression();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -184,9 +174,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseListOfLiteralExpressions();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {
@@ -209,9 +197,7 @@ Items:
             var parser = new LambdaSharpParser("<literal>", source);
 
             // act
-            parser.Start();
             var value = parser.ParseListOfLiteralExpressions();
-            parser.End();
 
             // assert
             foreach(var message in parser.Messages) {

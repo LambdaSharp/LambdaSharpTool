@@ -27,6 +27,26 @@ using YamlDotNet.Core.Events;
 
 namespace LambdaSharp.Tool.Parser {
 
+    // TODO: issue errors and warnings
+    public enum IssueCode {
+        Info    = 1000,
+        Warn    = 2000,
+        Error   = 3000
+    }
+
+    public enum IssueSeverity {
+        Info,
+        Warn,
+        Error
+    }
+
+    public interface ILambdaSharpParserDependencyProvider {
+
+        //--- Methods ---
+        void LogError(IssueCode issueCode, string filename, int line, int column, string[] arguments);
+        string ReadFile(string filePath);
+    }
+
     public sealed class LambdaSharpParser {
 
         //--- Types ---
@@ -59,17 +79,14 @@ namespace LambdaSharp.Tool.Parser {
         }
 
         //--- Fields ---
-        private readonly string _filePath;
-        private readonly IParser _parser;
         private readonly List<string> _messages;
         private readonly Dictionary<Type, Func<object>> _typeParsers;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
         private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
+        private readonly Stack<(string FilePath, IEnumerator<ParsingEvent> ParsingEnumerator)> _parsingEvents = new Stack<(string, IEnumerator<ParsingEvent>)>();
 
         //--- Constructors ---
         public LambdaSharpParser(string filePath, string source) {
-            _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
-            _parser = new YamlDotNet.Core.Parser(new StringReader(source));
             _messages = new List<string>();
             _typeParsers = new Dictionary<Type, Func<object>> {
 
@@ -98,40 +115,111 @@ namespace LambdaSharp.Tool.Parser {
                 [typeof(List<UsingDeclaration>)] = () => ParseList<UsingDeclaration>(),
                 [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
+            ParseYaml(filePath, source);
         }
 
         //--- Properties ---
         public IEnumerable<string> Messages => _messages;
 
-        //--- Methods ---
-        public void Start() {
-            _parser.Expect<StreamStart>();
-            _parser.Expect<DocumentStart>();
+        private (string FilePath, ParsingEvent ParsingEvent) Current {
+            get {
+            again:
+                var peek = _parsingEvents.Peek();
+                var currentParsingEvent = peek.ParsingEnumerator.Current;
+
+                // check if next event is an !Include statement
+                if((currentParsingEvent is Scalar scalar) && (scalar.Tag == "!Include")) {
+
+                    // consume !Include event
+                    MoveNext();
+
+                    // check if a YAML file is being included
+                    var includeFilePath = Path.Combine(Path.GetDirectoryName(peek.FilePath), scalar.Value);
+                    var contents = File.ReadAllText(includeFilePath);
+                    switch(Path.GetExtension(includeFilePath).ToLowerInvariant()) {
+                    case ".yml":
+                        ParseYaml(includeFilePath, contents);
+                        break;
+                    default:
+                        ParseText(includeFilePath, contents);
+                        break;
+                    }
+                    goto again;
+                }
+                return (FilePath: peek.FilePath, ParsingEvent: peek.ParsingEnumerator.Current);
+            }
         }
 
-        public void End() {
-            _parser.Expect<DocumentEnd>();
-            _parser.Expect<StreamEnd>();
+        //--- Methods ---
+        public void ParseYaml(string filePath, string source) {
+            var parsingEvents = new List<ParsingEvent>();
+            using(var reader = new StringReader(source)) {
+                var parser = new YamlDotNet.Core.Parser(reader);
+
+                // read prologue parsing events
+                parser.Expect<StreamStart>();
+                parser.Expect<DocumentStart>();
+
+                // keep reading until the end of the document is reached
+                while(!(parser.Current is DocumentEnd)) {
+                    parsingEvents.Add(parser.Current);
+                    parser.MoveNext();
+                }
+
+                // read epilogue parsing events
+                parser.Expect<DocumentEnd>();
+                parser.Expect<StreamEnd>();
+            }
+            var enumerator = parsingEvents.GetEnumerator();
+            if(enumerator.MoveNext()) {
+                _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
+            }
+        }
+
+        public void ParseText(string filePath, string source) {
+
+            // parse non-YAML file as a plaint text file
+            var lines = source.Count(c => c.Equals('\n')) + 1;
+            var lastLineOffset = source.LastIndexOf('\n');
+            var lastLineColumnsCount = (lastLineOffset < 0)
+                ? source.Length
+                : source.Length - lastLineOffset;
+
+            // push enumerator with single scalar event onto stack
+            var enumerator = new List<ParsingEvent> {
+                new Scalar(
+                    anchor: null,
+                    tag: null,
+                    value: source,
+                    style: ScalarStyle.Plain,
+                    isPlainImplicit: true,
+                    isQuotedImplicit: true,
+                    start: new Mark(index: 0, line: 1, column: 1),
+                    end: new Mark(source.Length, lines, lastLineColumnsCount)
+                )
+            }.GetEnumerator();
+            enumerator.MoveNext();
+            _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
         }
 
         public List<T> ParseList<T>() where T : ASyntaxNode {
-            if(!(_parser.Current is SequenceStart sequenceStart) || (sequenceStart.Tag != null)) {
+            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
                 LogError("expected a sequence", Location());
-                _parser.SkipThisAndNestedEvents();
+                SkipThisAndNestedEvents();
                 return null;
             }
-            _parser.MoveNext();
+            MoveNext();
 
             // parse declaration items in sequence
             var result = new List<T>();
-            while(!(_parser.Current is SequenceEnd)) {
+            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 if(TryParse(typeof(T), out var item)) {
 
                     // TODO: maybe we can do better than having a cast exception here in case something goes wrong?
                     result.Add((T)item);
                 }
             }
-            _parser.MoveNext();
+            MoveNext();
             return result;
         }
 
@@ -141,23 +229,23 @@ namespace LambdaSharp.Tool.Parser {
             var syntaxes = GetSyntaxes(typeof(T));
 
             // ensure first event is the beginning of a map
-            if(!(_parser.Current is MappingStart mappingStart) || (mappingStart.Tag != null)) {
+            if(!IsEvent<MappingStart>(out var mappingStart, out var filePath) || (mappingStart.Tag != null)) {
                 LogError("expected a map", Location());
-                _parser.SkipThisAndNestedEvents();
+                SkipThisAndNestedEvents();
                 return null;
             }
-            _parser.MoveNext();
+            MoveNext();
             T result = null;
 
             // parse mappings
             var foundKeys = new HashSet<string>();
             HashSet<string> mandatoryKeys = null;
             SyntaxInfo syntax = null;
-            while(!(_parser.Current is MappingEnd)) {
+            while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                 // parse key
-                var keyScalar = _parser.Expect<Scalar>();
-                var key = keyScalar.Value;
+                var keyScalar = Expect<Scalar>();
+                var key = keyScalar.ParsingEvent.Value;
 
                 // check if this is the first key being parsed
                 if(syntax == null) {
@@ -168,16 +256,16 @@ namespace LambdaSharp.Tool.Parser {
                         LogError($"unexpected item keyword '{key}'", Location(keyScalar));
 
                         // skip the value of the key
-                        _parser.SkipThisAndNestedEvents();
+                        SkipThisAndNestedEvents();
 
                         // skip all remaining key-value pairs
-                        while(!(_parser.Current is MappingEnd)) {
+                        while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                             // skip key
-                            _parser.Expect<Scalar>();
+                            Expect<Scalar>();
 
                             // skip value
-                            _parser.SkipThisAndNestedEvents();
+                            SkipThisAndNestedEvents();
                         }
                         return null;
                     }
@@ -191,7 +279,7 @@ namespace LambdaSharp.Tool.Parser {
                         LogError($"duplicate key '{key}'", Location(keyScalar));
 
                         // no need to parse the value for the duplicate key
-                        _parser.SkipThisAndNestedEvents();
+                        SkipThisAndNestedEvents();
                         continue;
                     }
 
@@ -206,18 +294,18 @@ namespace LambdaSharp.Tool.Parser {
                     LogError($"unexpected key '{key}'", Location(keyScalar));
 
                     // no need to parse an invalid key
-                    _parser.SkipThisAndNestedEvents();
+                    SkipThisAndNestedEvents();
                 }
             }
 
             // check for missing mandatory keys
             if(mandatoryKeys?.Any() ?? false) {
-                LogError($"missing keys: {string.Join(", ", mandatoryKeys.OrderBy(key => key))}", Location(mappingStart));
+                LogError($"missing keys: {string.Join(", ", mandatoryKeys.OrderBy(key => key))}", Location(filePath, mappingStart));
             }
             if(result != null) {
-                result.SourceLocation = Location(mappingStart, _parser.Current);
+                result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
             }
-            _parser.MoveNext();
+            MoveNext();
             return result;
         }
 
@@ -232,7 +320,7 @@ namespace LambdaSharp.Tool.Parser {
         }
 
         public AValueExpression ParseExpression() {
-            switch(_parser.Current) {
+            switch(Current.ParsingEvent) {
             case SequenceStart sequenceStart:
                 return ConvertFunction(sequenceStart.Tag, ParseListExpression());
             case MappingStart mappingStart:
@@ -241,28 +329,28 @@ namespace LambdaSharp.Tool.Parser {
                 return ConvertFunction(scalar.Tag, ParseLiteralExpression());
             default:
                 LogError("expected a map, sequence, or literal", Location());
-                _parser.SkipThisAndNestedEvents();
+                SkipThisAndNestedEvents();
                 return null;
             }
 
             // local functions
             AValueExpression ParseObjectExpression() {
-                if(!(_parser.Current is MappingStart mappingStart)) {
+                if(!IsEvent<MappingStart>(out var mappingStart, out var filePath)) {
                     LogError("expected a map", Location());
-                    _parser.SkipThisAndNestedEvents();
+                    SkipThisAndNestedEvents();
                     return null;
                 }
-                _parser.MoveNext();
+                MoveNext();
 
                 // parse declaration items in sequence
                 var result = new ObjectExpression();
-                while(!(_parser.Current is MappingEnd)) {
+                while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                     // parse key
-                    var keyScalar = _parser.Expect<Scalar>();
-                    if(result.Values.ContainsKey(keyScalar.Value)) {
-                        LogError($"duplicate key '{keyScalar.Value}'", Location(keyScalar));
-                        _parser.SkipThisAndNestedEvents();
+                    var keyScalar = Expect<Scalar>();
+                    if(result.Values.ContainsKey(keyScalar.ParsingEvent.Value)) {
+                        LogError($"duplicate key '{keyScalar.ParsingEvent.Value}'", Location(keyScalar));
+                        SkipThisAndNestedEvents();
                         continue;
                     }
 
@@ -275,47 +363,47 @@ namespace LambdaSharp.Tool.Parser {
                     // add key-value pair
                     result.Keys.Add(new LiteralExpression {
                         SourceLocation = Location(keyScalar),
-                        Value = keyScalar.Value
+                        Value = keyScalar.ParsingEvent.Value
                     });
-                    result.Values.Add(keyScalar.Value, value);
+                    result.Values.Add(keyScalar.ParsingEvent.Value, value);
                 }
-                result.SourceLocation = Location(mappingStart, _parser.Current);
-                _parser.MoveNext();
+                result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
+                MoveNext();
                 return result;
             }
 
             AValueExpression ParseListExpression() {
-                if(!(_parser.Current is SequenceStart sequenceStart)) {
+                if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
                     LogError("expected a sequence", Location());
-                    _parser.SkipThisAndNestedEvents();
+                    SkipThisAndNestedEvents();
                     return null;
                 }
-                _parser.MoveNext();
+                MoveNext();
 
                 // parse values in sequence
                 var result = new ListExpression();
-                while(!(_parser.Current is SequenceEnd)) {
+                while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                     var item = ParseExpression();
                     if(item != null) {
                         result.Values.Add(item);
                     }
                 }
-                result.SourceLocation = Location(sequenceStart, _parser.Current);
-                _parser.MoveNext();
+                result.SourceLocation = Location(filePath, sequenceStart, Current.ParsingEvent);
+                MoveNext();
                 return result;
             }
 
             AValueExpression ParseLiteralExpression() {
-                if(!(_parser.Current is Scalar scalar)) {
+                if(!IsEvent<Scalar>(out var scalar, out var filePath)) {
                     LogError("expected a literal string", Location());
-                    _parser.SkipThisAndNestedEvents();
+                    SkipThisAndNestedEvents();
                     return null;
                 }
-                _parser.MoveNext();
+                MoveNext();
 
                 // parse values in sequence
                 return new LiteralExpression {
-                    SourceLocation = Location(scalar),
+                    SourceLocation = Location(filePath, scalar),
                     Value = scalar.Value
                 };
             }
@@ -681,31 +769,31 @@ namespace LambdaSharp.Tool.Parser {
             var result = new List<LiteralExpression>();
 
             // attempt to parse a single scalar
-            if(_parser.Current is Scalar scalar) {
-                _parser.MoveNext();
+            if(IsEvent<Scalar>(out var scalar, out var filePath)) {
+                MoveNext();
                 result.Add(new LiteralExpression {
-                    SourceLocation = Location(scalar),
+                    SourceLocation = Location(filePath, scalar),
                     Value = scalar.Value
                 });
                 return result;
             }
 
             // check if we have a sequence instead
-            if(!(_parser.Current is SequenceStart sequenceStart)) {
+            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _)) {
                 LogError("expected a sequence", Location());
-                _parser.SkipThisAndNestedEvents();
+                SkipThisAndNestedEvents();
                 return null;
             }
-            _parser.MoveNext();
+            MoveNext();
 
             // parse values in sequence
-            while(!(_parser.Current is SequenceEnd)) {
+            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 var item = ParseExpressionOf<LiteralExpression>("literal expression");
                 if(item != null) {
                     result.Add(item);
                 }
             }
-            _parser.MoveNext();
+            MoveNext();
             return result;
         }
 
@@ -713,12 +801,17 @@ namespace LambdaSharp.Tool.Parser {
             _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
         }
 
-        private SourceLocation Location() => Location(_parser.Current);
+        private SourceLocation Location() {
+            var current = Current;
+            return Location(current.FilePath, current.ParsingEvent, current.ParsingEvent);
+        }
 
-        private SourceLocation Location(ParsingEvent parsingEvent) => Location(parsingEvent, parsingEvent);
+        private SourceLocation Location((string FilePath, ParsingEvent ParsingEvent) current) => Location(current.FilePath, current.ParsingEvent, current.ParsingEvent);
 
-        private SourceLocation Location(ParsingEvent startParsingEvent, ParsingEvent stopParsingEvent) => new SourceLocation {
-            FilePath = _filePath,
+        private SourceLocation Location(string filePath, ParsingEvent parsingEvent) => Location(filePath, parsingEvent, parsingEvent);
+
+        private SourceLocation Location(string filePath, ParsingEvent startParsingEvent, ParsingEvent stopParsingEvent) => new SourceLocation {
+            FilePath = filePath,
             LineNumberStart = startParsingEvent.Start.Line,
             ColumnNumberStart = startParsingEvent.Start.Column,
             LineNumberEnd = stopParsingEvent.End.Line,
@@ -760,10 +853,76 @@ namespace LambdaSharp.Tool.Parser {
                 result = parser();
                 return result != null;
             }
-            LogError($"no parser defined for type {type.Name}", Location(_parser.Current));
+            LogError($"no parser defined for type {type.Name}", Location());
             result = null;
-            _parser.SkipThisAndNestedEvents();
+            SkipThisAndNestedEvents();
             return false;
+        }
+
+        private bool IsEvent<T>(out T parsingEvent, out string filePath) where T : ParsingEvent {
+            var current = Current;
+            if(current.ParsingEvent is T typedParsingEvent) {
+                parsingEvent = typedParsingEvent;
+                filePath = current.FilePath;
+                return true;
+            }
+            parsingEvent = null;
+            filePath = null;
+            return false;
+        }
+
+        private bool MoveNext() {
+            while(_parsingEvents.Any()) {
+                var current = _parsingEvents.Peek();
+                if(current.ParsingEnumerator.MoveNext()) {
+                    return true;
+                }
+                current.ParsingEnumerator.Dispose();
+                _parsingEvents.Pop();
+            }
+            return false;
+        }
+
+        private void SkipThisAndNestedEvents() {
+            var current = Current.ParsingEvent;
+            MoveNext();
+            switch(current) {
+            case Scalar _:
+
+                // nothing to do
+                break;
+            case MappingStart _:
+                while(!IsEvent<MappingEnd>(out var _, out var _)) {
+
+                    // read key
+                    Expect<Scalar>();
+
+                    // read value
+                    SkipThisAndNestedEvents();
+                }
+                break;
+            case SequenceStart _:
+                while(!IsEvent<SequenceEnd>(out var _, out var _)) {
+
+                    // read value
+                    SkipThisAndNestedEvents();
+                }
+                break;
+            default:
+
+                // TODO: better exception
+                throw new ApplicationException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+            }
+        }
+
+        private (string FilePath, T ParsingEvent) Expect<T>() where T : ParsingEvent {
+            if(!IsEvent<T>(out var parsingEvent, out var filePath)) {
+
+                // TODO: better exception
+                throw new ApplicationException($"Expected parsing event {typeof(T).Name} instead of {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+            }
+            MoveNext();
+            return (filePath, parsingEvent);
         }
     }
 }
