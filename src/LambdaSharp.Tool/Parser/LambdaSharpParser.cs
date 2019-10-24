@@ -27,23 +27,10 @@ using YamlDotNet.Core.Events;
 
 namespace LambdaSharp.Tool.Parser {
 
-    // TODO: issue errors and warnings
-    public enum IssueCode {
-        Info    = 1000,
-        Warn    = 2000,
-        Error   = 3000
-    }
-
-    public enum IssueSeverity {
-        Info,
-        Warn,
-        Error
-    }
-
     public interface ILambdaSharpParserDependencyProvider {
 
         //--- Methods ---
-        void LogError(IssueCode issueCode, string filename, int line, int column, string[] arguments);
+        void LogError(string filePath, int line, int column, string message);
         string ReadFile(string filePath);
     }
 
@@ -79,15 +66,15 @@ namespace LambdaSharp.Tool.Parser {
         }
 
         //--- Fields ---
-        private readonly List<string> _messages;
+        private readonly ILambdaSharpParserDependencyProvider _provider;
         private readonly Dictionary<Type, Func<object>> _typeParsers;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
         private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
         private readonly Stack<(string FilePath, IEnumerator<ParsingEvent> ParsingEnumerator)> _parsingEvents = new Stack<(string, IEnumerator<ParsingEvent>)>();
 
         //--- Constructors ---
-        public LambdaSharpParser(string filePath, string source) {
-            _messages = new List<string>();
+        public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider) {
+            _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _typeParsers = new Dictionary<Type, Func<object>> {
 
                 // expressions
@@ -115,12 +102,13 @@ namespace LambdaSharp.Tool.Parser {
                 [typeof(List<UsingDeclaration>)] = () => ParseList<UsingDeclaration>(),
                 [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
-            ParseYaml(filePath, source);
+        }
+
+        public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider, string filePath) : this(provider) {
+            ParseFile(filePath);
         }
 
         //--- Properties ---
-        public IEnumerable<string> Messages => _messages;
-
         private (string FilePath, ParsingEvent ParsingEvent) Current {
             get {
             again:
@@ -133,17 +121,8 @@ namespace LambdaSharp.Tool.Parser {
                     // consume !Include event
                     MoveNext();
 
-                    // check if a YAML file is being included
-                    var includeFilePath = Path.Combine(Path.GetDirectoryName(peek.FilePath), scalar.Value);
-                    var contents = File.ReadAllText(includeFilePath);
-                    switch(Path.GetExtension(includeFilePath).ToLowerInvariant()) {
-                    case ".yml":
-                        ParseYaml(includeFilePath, contents);
-                        break;
-                    default:
-                        ParseText(includeFilePath, contents);
-                        break;
-                    }
+                    // parse specified file
+                    ParseFile(Path.Combine(Path.GetDirectoryName(peek.FilePath), scalar.Value));
                     goto again;
                 }
                 return (FilePath: peek.FilePath, ParsingEvent: peek.ParsingEnumerator.Current);
@@ -151,6 +130,20 @@ namespace LambdaSharp.Tool.Parser {
         }
 
         //--- Methods ---
+        public void ParseFile(string filePath) {
+            var contents = _provider.ReadFile(filePath);
+
+            // check if a YAML file is being parsed
+            switch(Path.GetExtension(filePath).ToLowerInvariant()) {
+            case ".yml":
+                ParseYaml(filePath, contents);
+                break;
+            default:
+                ParseText(filePath, contents);
+                break;
+            }
+        }
+
         public void ParseYaml(string filePath, string source) {
             var parsingEvents = new List<ParsingEvent>();
             using(var reader = new StringReader(source)) {
@@ -797,9 +790,8 @@ namespace LambdaSharp.Tool.Parser {
             return result;
         }
 
-        private void LogError(string message, SourceLocation location) {
-            _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
-        }
+        private void LogError(string message, SourceLocation location)
+            => _provider.LogError(location.FilePath, location.LineNumberStart, location.LineNumberEnd, message);
 
         private SourceLocation Location() {
             var current = Current;
