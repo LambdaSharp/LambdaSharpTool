@@ -389,7 +389,7 @@ See module exports documentation for more details.
 Custom resource definitions create new types of resources that can be used by other modules. Custom resources are a powerful way to expand the capabilities of modules beyond those provided by CloudFormation.
 ```yaml
 - CustomResource: Accounting::Report
-  Description: Custom resource for creating accounting reports
+  Description: Custom resource type for creating accounting reports
   Handler: AccountReportGenerator
 
 # ...

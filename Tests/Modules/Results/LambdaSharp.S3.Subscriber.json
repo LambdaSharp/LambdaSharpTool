@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C03F63E188FE00AE07FDF422F2EE58CD"
+      "Default": "AF5413834F7FE22F36E7D18BF59E08C7"
     }
   },
   "Resources": {
@@ -604,13 +604,13 @@
           "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
         }
       },
-      "Description": "Custom resource for S3 bucket subscriptions"
+      "Description": "Resource type for S3 bucket subscriptions"
     },
     "Module": {
       "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "C03F63E188FE00AE07FDF422F2EE58CD"
+      "Value": "AF5413834F7FE22F36E7D18BF59E08C7"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0.4"
@@ -843,7 +843,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "C03F63E188FE00AE07FDF422F2EE58CD",
+      "TemplateChecksum": "AF5413834F7FE22F36E7D18BF59E08C7",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -921,7 +921,7 @@
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::S3::Subscription",
-          "Description": "Custom resource for S3 bucket subscriptions",
+          "Description": "Resource type for S3 bucket subscriptions",
           "Properties": [
             {
               "Name": "Bucket",
