@@ -50,7 +50,7 @@ Items:
         Type: String
 
   - ResourceType: LambdaSharp::S3::WriteJson
-    Description: Resource for writing a JSON file to an S3 bucket
+    Description: Resource type for writing a JSON file to an S3 bucket
     Handler: S3WriterTopic
     Properties:
 
@@ -76,7 +76,7 @@ Items:
         Type: String
 
   - ResourceType: LambdaSharp::S3::EmptyBucket
-    Description: Resource for emptying an S3 bucket on deletion
+    Description: Resource type for emptying an S3 bucket on deletion
     Handler: S3WriterTopic
     Properties:
 

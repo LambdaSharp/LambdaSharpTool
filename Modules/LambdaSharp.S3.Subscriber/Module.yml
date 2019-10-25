@@ -19,7 +19,7 @@ Description: LambdaSharp S3 Lambda Function Subscriber
 Items:
 
   - ResourceType: LambdaSharp::S3::Subscription
-    Description: Custom resource for S3 bucket subscriptions
+    Description: Resource type for S3 bucket subscriptions
     Handler: CustomResourceTopic
     Properties:
 
