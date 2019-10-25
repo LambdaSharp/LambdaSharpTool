@@ -20,7 +20,7 @@ The [LambdaSharp.S3.IO](LambdaSharp-S3-IO.md) module defines resources types for
 
 ## LambdaSharp.S3.Subscriber
 
-The [LambdaSharp.S3.Subscriber](LambdaSharp-S3-Subscriber.md) module defines a resource for subscribing to S3 bucket events. This module is automatically referenced by module with Lambda functions reacting to S3 events.
+The [LambdaSharp.S3.Subscriber](LambdaSharp-S3-Subscriber.md) module defines a resource type for subscribing to S3 bucket events. This module is automatically referenced by module with Lambda functions reacting to S3 events.
 
 ## LambdaSharp.Twitter.Query
 
