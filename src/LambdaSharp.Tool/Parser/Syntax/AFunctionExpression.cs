@@ -129,7 +129,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow arbitrary condition expressions; instantiate condition item as needed
-        public ConditionReferenceExpression Condition { get; set; }
+        public ConditionNameConditionExpression Condition { get; set; }
         public AValueExpression IfTrue { get; set; }
         public AValueExpression IfFalse { get; set; }
 
