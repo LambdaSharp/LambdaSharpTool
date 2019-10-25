@@ -85,6 +85,8 @@ namespace LambdaSharp.Tool.Parser {
 
                 // TODO:
                 [typeof(AConditionExpression)] = () => throw new NotImplementedException("AConditionExpression"),
+                [typeof(MappingNameLiteral)] = () => throw new NotImplementedException("MappingNameLiteralExpression"),
+                [typeof(ConditionNameConditionExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
 
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseDeclarationOf<ModuleDeclaration>(),
@@ -96,6 +98,8 @@ namespace LambdaSharp.Tool.Parser {
                 [typeof(AEventSourceDeclaration)] = () => ParseDeclarationOf<AEventSourceDeclaration>(),
 
                 // lists
+
+                // TODO: enumerate all acceptable types explicitly instead of relying on inheritance
                 [typeof(List<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
                 [typeof(List<AValueExpression>)] = () => ParseList<AValueExpression>(),
                 [typeof(List<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
@@ -522,11 +526,18 @@ namespace LambdaSharp.Tool.Parser {
 
             AValueExpression ConvertToFindInMapFunctionExpression(AValueExpression value) {
 
-                // !FindInMap [ VALUE, VALUE, VALUE ]
-                if((value is ListExpression findInMapList) && (findInMapList.Values.Count == 3)) {
+                // !FindInMap [ NAME, VALUE, VALUE ]
+                if(
+                    (value is ListExpression findInMapList)
+                    && (findInMapList.Values.Count == 3)
+                    && (findInMapList.Values[0] is LiteralExpression mapName)
+                ) {
                     return new FindInMapExpression {
                         SourceLocation = value.SourceLocation,
-                        MapName = findInMapList.Values[0],
+                        MapName = new MappingNameLiteral {
+                            SourceLocation = mapName.SourceLocation,
+                            ReferenceName = mapName.Value
+                        },
                         TopLevelKey = findInMapList.Values[1],
                         SecondLevelKey = findInMapList.Values[2]
                     };
@@ -542,7 +553,7 @@ namespace LambdaSharp.Tool.Parser {
                     var referenceAndAttribute = getAttLiteral.Value.Split('.', 2);
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ResourceName = new LiteralExpression {
+                        ReferenceName = new LiteralExpression {
                             SourceLocation = getAttLiteral.SourceLocation,
                             Value = referenceAndAttribute[0]
                         },
@@ -565,7 +576,7 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ResourceName = resourceNameLiteral,
+                        ReferenceName = resourceNameLiteral,
                         AttributeName = getAttList.Values[2]
                     };
                 }
@@ -584,7 +595,7 @@ namespace LambdaSharp.Tool.Parser {
 
             AValueExpression ConvertToIfFunctionExpression(AValueExpression value) {
 
-                // !If [ STRING, VALUE, VALUE ]
+                // !If [ NAME, VALUE, VALUE ]
                 if(value is ListExpression ifList) {
                     if(ifList.Values.Count != 3) {
                         LogError("!If expects 3 parameters", value.SourceLocation);
@@ -596,9 +607,9 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ConditionName = new ConditionNameLiteralExpression {
+                        Condition = new ConditionNameConditionExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            Name = conditionNameLiteral.Value
+                            ReferenceName = conditionNameLiteral.Value
                         },
                         IfTrue = ifList.Values[1],
                         IfFalse = ifList.Values[2]
@@ -750,7 +761,7 @@ namespace LambdaSharp.Tool.Parser {
                 if(value is LiteralExpression refLiteral) {
                     return new ReferenceFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ResourceName = refLiteral
+                        ReferenceName = refLiteral
                     };
                 }
                 LogError($"invalid parameters for !Ref function", value.SourceLocation);

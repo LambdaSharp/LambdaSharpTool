@@ -67,11 +67,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public void VisitEnd(ASyntaxNode parent, ObjectExpression node) { }
         public void VisitEnd(ASyntaxNode parent, ListExpression node) { }
         public void VisitEnd(ASyntaxNode parent, LiteralExpression node) { }
-        public void VisitEnd(ASyntaxNode parent, ConditionNameLiteralExpression node) { }
         public void VisitEnd(ASyntaxNode parent, EqualsConditionExpression node) { }
         public void VisitEnd(ASyntaxNode parent, NotConditionExpression node) { }
         public void VisitEnd(ASyntaxNode parent, AndConditionExpression node) { }
         public void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
+        public void VisitEnd(ASyntaxNode parent, ConditionNameConditionExpression node) { }
+        public void VisitEnd(ASyntaxNode parent, MappingNameLiteral node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, ModuleDeclaration node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, UsingDeclaration node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, ApiEventSourceDeclaration node) => node.Parent = parent;
@@ -116,10 +117,17 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public void VisitStart(ASyntaxNode parent, ObjectExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, ListExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, LiteralExpression node) => node.Parent = parent;
-        public void VisitStart(ASyntaxNode parent, ConditionNameLiteralExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, EqualsConditionExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, NotConditionExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, AndConditionExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, OrConditionExpression node) => node.Parent = parent;
+
+        public void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node) {
+            throw new System.NotImplementedException();
+        }
+
+        public void VisitStart(ASyntaxNode parent, MappingNameLiteral node) {
+            throw new System.NotImplementedException();
+        }
     }
 }

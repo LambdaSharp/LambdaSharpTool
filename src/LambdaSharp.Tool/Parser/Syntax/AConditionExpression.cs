@@ -23,10 +23,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
          //--- Properties ---
     }
 
-    public class ConditionNameLiteralExpression : AConditionExpression {
+    public class ConditionNameConditionExpression : AConditionExpression {
 
         //--- Properties ---
-        public string Name { get; set; }
+        public string ReferenceName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

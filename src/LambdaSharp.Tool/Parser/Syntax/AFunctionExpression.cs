@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AValueExpression MapName { get; set; }
+        public MappingNameLiteral MapName { get; set; }
         public AValueExpression TopLevelKey { get; set; }
         public AValueExpression SecondLevelKey { get; set; }
 
@@ -77,19 +77,31 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
+    public class MappingNameLiteral : ASyntaxNode {
+
+        //--- Properties ---
+        public string ReferenceName { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
+    }
+
     public class GetAttFunctionExpression : AFunctionExpression {
 
         // NOTE: For the Fn::GetAtt logical resource name, you cannot use functions. You must specify a string that is a resource's logical ID.
         // For the Fn::GetAtt attribute name, you can use the Ref function.
 
         //--- Properties ---
-        public LiteralExpression ResourceName { get; set; }
+        public LiteralExpression ReferenceName { get; set; }
         public AValueExpression AttributeName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ResourceName?.Visit(this, visitor);
+            ReferenceName?.Visit(this, visitor);
             AttributeName?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
@@ -117,14 +129,14 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow arbitrary condition expressions; instantiate condition item as needed
-        public ConditionNameLiteralExpression ConditionName { get; set; }
+        public ConditionReferenceExpression Condition { get; set; }
         public AValueExpression IfTrue { get; set; }
         public AValueExpression IfFalse { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ConditionName?.Visit(this, visitor);
+            Condition?.Visit(this, visitor);
             IfTrue?.Visit(this, visitor);
             IfFalse?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
@@ -284,12 +296,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
         //--- Properties ---
-        public LiteralExpression ResourceName { get; set; }
+        public LiteralExpression ReferenceName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ResourceName?.Visit(this, visitor);
+            ReferenceName?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

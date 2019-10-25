@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
@@ -24,34 +26,43 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
     public class Builder {
 
         //--- Types ---
-        public class Properties {
+        public class DeclarationProperties {
 
             //--- Properties ---
             public ADeclaration Declaration { get; set; }
             public string FullName { get; set; }
+            public List<(string ReferenceName, IEnumerable<AConditionExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AConditionExpression>, ASyntaxNode)>();
+            public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
+            public AValueExpression ResolvedValue { get; set; }
         }
 
         //--- Fields ---
-        private readonly Dictionary<ASyntaxNode, Properties> _declarationProperties = new Dictionary<ASyntaxNode, Properties>();
-        private readonly Dictionary<string, Properties> _fullNameProperties = new Dictionary<string, Properties>();
+        private readonly Dictionary<ASyntaxNode, DeclarationProperties> _declarationProperties = new Dictionary<ASyntaxNode, DeclarationProperties>();
+        private readonly Dictionary<string, DeclarationProperties> _fullNameProperties = new Dictionary<string, DeclarationProperties>();
         private readonly List<string> _messages = new List<string>();
 
         //-- Properties ---
         public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---
-        public Properties GetProperties(ASyntaxNode node) {
-            _declarationProperties.TryGetValue(node, out var properties);
+        public DeclarationProperties GetProperties(ADeclaration declaration) {
+            _declarationProperties.TryGetValue(declaration, out var properties);
             return properties;
         }
 
-        public Properties GetProperties(string fullName) {
+        public bool TryGetProperties(ADeclaration declaration, out DeclarationProperties properties)
+            => _declarationProperties.TryGetValue(declaration, out properties);
+
+        public DeclarationProperties GetProperties(string fullName) {
             _fullNameProperties.TryGetValue(fullName, out var properties);
             return properties;
         }
 
+        public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
+            _fullNameProperties.TryGetValue(fullName, out properties);
+
         public void DefineDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
-            var properties = new Builder.Properties {
+            var properties = new Builder.DeclarationProperties {
                 Declaration = declaration
             };
 
@@ -67,9 +78,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             _fullNameProperties.Add(properties.FullName, properties);
         }
 
-        public void LogError(string message, SourceLocation location) {
-            _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
-        }
+        public void LogError(string message, SourceLocation location)
+            => _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
     }
 
     public class DeclarationsAnalyzer : ASyntaxVisitor {
@@ -123,28 +133,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
             _builder.DefineDeclaration(parent, node, node.Macro.Value);
-        }
-    }
-
-    public class ReferencesAnalyzer : ASyntaxVisitor {
-
-        //--- Fields ---
-        private readonly Builder _builder;
-
-        //--- Constructors ---
-        public ReferencesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
-
-        //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
-            if(_builder.GetProperties(node.ResourceName) == null) {
-                _builder.LogError($"unknown identifier {node.ResourceName}", node.SourceLocation);
-            }
-        }
-
-        public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) {
-            if(_builder.GetProperties(node.ResourceName) == null) {
-                _builder.LogError($"unknown identifier {node.ResourceName}", node.SourceLocation);
-            }
         }
     }
 }

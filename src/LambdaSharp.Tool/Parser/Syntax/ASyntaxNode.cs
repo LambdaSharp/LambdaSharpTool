@@ -36,6 +36,16 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ASyntaxNode Parent { get; set; }
         public SourceLocation SourceLocation { get; set; }
 
+        public IEnumerable<ASyntaxNode> Parents {
+            get {
+                var node = this;
+                while(node.Parent != null) {
+                    yield return node.Parent;
+                    node = node.Parent;
+                }
+            }
+        }
+
         //--- Abstract Methods ---
         public abstract void Visit(ASyntaxNode parent, ISyntaxVisitor visitor);
     }
