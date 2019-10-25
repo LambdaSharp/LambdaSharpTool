@@ -27,7 +27,7 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Parser {
 
-    public class ParseTests {
+    public abstract class _Init {
 
         //--- Types ---
         public class DependencyProvider : ILambdaSharpParserDependencyProvider {
@@ -44,183 +44,42 @@ namespace Tests.LambdaSharp.Tool.Parser {
         }
 
         //--- Fields ---
-        private readonly ITestOutputHelper _output;
+        protected readonly ITestOutputHelper Output;
+        protected readonly DependencyProvider Provider = new DependencyProvider();
 
         //--- Constructors ---
-        public ParseTests(ITestOutputHelper output) => _output = output;
+        public _Init(ITestOutputHelper output) => Output = output;
 
         //--- Methods ---
+        protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
-        [Fact]
-        public void ParseModuleDeclaration() {
-
-            // arrange
-            var source =
-@"Module: My.Module
-Version: 1.2.3.4-DEV
-Description: description
-Pragmas:
-    - pragma
-Secrets:
-    - secret
-Using:
-    - Module: My.OtherModule
-      Description:
-Items:
-    - Resource: Foo
-      Type: AWS::SNS::Topic
-    - Variable: Bar
-      Value: 123
-";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
-
-            // act
-            var module = parser.ParseDeclarationOf<ModuleDeclaration>();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
+        protected void ExpectNoMessages() {
+            foreach(var message in Provider.Messages) {
+                Output.WriteLine(message);
             }
-            provider.Messages.Any().Should().Be(false);
+            Provider.Messages.Any().Should().Be(false);
         }
+    }
 
-        [Fact]
-        public void ParseLiteralExpression() {
+    public class ParseTests : _Init {
 
-            // arrange
-            var source =
-@"text";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
+        //--- Constructors ---
+        public ParseTests(ITestOutputHelper output) : base(output) { }
 
-            // act
-            var value = parser.ParseExpression();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
-            value.Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("text");
-        }
-
-
-        [Fact]
-        public void ParseSubFunctionExpression() {
-
-            // arrange
-            var source =
-@"!Sub text";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
-
-            // act
-            var value = parser.ParseExpression();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
-            var sub = value.Should().BeOfType<SubFunctionExpression>().Which;
-            sub.FormatString.Should().NotBeNull();
-            sub.FormatString.Value.Should().Be("text");
-            sub.Parameters.Should().BeNull();
-        }
-
-        [Fact]
-        public void ParseShortFormAndLongFormFunctionExpressions() {
-
-            // arrange
-            var source =
-@"!Base64
-    Fn::Sub: text";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
-
-            // act
-            var value = parser.ParseExpression();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
-            var base64 = value.Should().BeOfType<Base64FunctionExpression>().Which;
-            var sub = base64.Value.Should().BeOfType<SubFunctionExpression>().Which;
-            sub.FormatString.Should().NotBeNull();
-            sub.FormatString.Value.Should().Be("text");
-            sub.Parameters.Should().BeNull();
-        }
-
-        [Fact]
-        public void ParseLongFormAndShortFormFunctionExpressions() {
-
-            // arrange
-            var source =
-@"Fn::Base64:
-    !Sub text";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
-
-            // act
-            var value = parser.ParseExpression();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
-            var base64 = value.Should().BeOfType<Base64FunctionExpression>().Which;
-            var sub = base64.Value.Should().BeOfType<SubFunctionExpression>().Which;
-            sub.FormatString.Should().NotBeNull();
-            sub.FormatString.Value.Should().Be("text");
-            sub.Parameters.Should().BeNull();
-        }
+        //--- Methods ---
 
         [Fact]
         public void ParseListOfLiteralExpressions_SingleValue() {
 
             // arrange
-            var source =
-@"foo";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
+            AddSource("test.yml", @"foo");
+            var parser = new LambdaSharpParser(Provider, "test.yml");
 
             // act
             var value = parser.ParseListOfLiteralExpressions();
 
             // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
+            ExpectNoMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(1);
             value[0].Should().BeOfType<LiteralExpression>()
@@ -231,57 +90,22 @@ Items:
         public void ParseListOfLiteralExpressions_MultipleValues() {
 
             // arrange
-            var source =
+            AddSource("test.yml",
 @"- foo
-- bar";
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = source
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
+- bar");
+            var parser = new LambdaSharpParser(Provider, "test.yml");
 
             // act
             var value = parser.ParseListOfLiteralExpressions();
 
             // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
+            ExpectNoMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(2);
             value[0].Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("foo");
             value[1].Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("bar");
-        }
-
-        [Fact]
-        public void ParseNestedIncludes() {
-
-            // arrange
-            var provider = new DependencyProvider {
-                Files = {
-                    ["test.yml"] = "!Include include.yml",
-                    ["include.yml"] = "!Include include.txt",
-                    ["include.txt"] = "hello world!"
-                }
-            };
-            var parser = new LambdaSharpParser(provider, "test.yml");
-
-            // act
-            var value = parser.ParseExpression();
-
-            // assert
-            foreach(var message in provider.Messages) {
-                _output.WriteLine(message);
-            }
-            provider.Messages.Any().Should().Be(false);
-            value.Should().NotBeNull();
-            var literal = value.Should().BeOfType<LiteralExpression>().Which;
-            literal.Value.Should().Be("hello world!");
-            literal.SourceLocation.FilePath.Should().Be("include.txt");
         }
 
         [Fact(Skip = "for debugging only")]
@@ -305,7 +129,7 @@ Items:
 
             while(parser.MoveNext()) {
                 var current = parser.Current;
-                _output.WriteLine(current.ToString());
+                Output.WriteLine(current.ToString());
             }
         }
     }
