@@ -180,6 +180,13 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.5) - 2019-10-25
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue that caused `lash build` to fail on C# projects which contained declarations with an `Exclude` attribute.
+
 ### (v0.7.0.4) - 2019-10-17
 
 #### New Features
