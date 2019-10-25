@@ -694,9 +694,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             var buildFolder = Path.GetDirectoryName(function.Project);
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
             var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
-            if(!_existingPackages.Remove(package)) {
-                CreatePackage(package, gitSha, gitBranch, buildFolder);
-            }
+            _existingPackages.Remove(package);
+            CreatePackage(package, gitSha, gitBranch, buildFolder);
             _builder.AddArtifact($"{function.FullName}::PackageName", package);
         }
 
@@ -739,6 +738,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             if(!Directory.Exists(Settings.OutputDirectory)) {
                 Directory.CreateDirectory(Settings.OutputDirectory);
+            }
+            if(File.Exists(package)) {
+                File.Delete(package);
             }
             File.Move(zipTempPackage, package);
         }
