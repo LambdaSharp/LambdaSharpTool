@@ -246,6 +246,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 // to skip the build, we both need the function package and the function schema when mappings are present
                 var schemaFile = Path.Combine(Settings.OutputDirectory, $"functionschema_{_builder.FullName}_{function.LogicalId}.json");
                 if((functionPackage != null) && (!mappings.Any() || File.Exists(schemaFile))) {
+                    LogInfoVerbose($"=> Analyzing function {function.Name} dependencies");
 
                     // find all files used to create the function package
                     var files = new HashSet<string>();
@@ -253,7 +254,8 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // check if any of the files has been modified more recently than hte function package
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
-                    if(!files.Any(file => File.GetLastWriteTime(file) > functionPackageDate)) {
+                    var file = files.FirstOrDefault(file => File.GetLastWriteTime(file) > functionPackageDate);
+                    if(file == null) {
                         Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
                         if(mappings.Any()) {
 
@@ -272,6 +274,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         // set the module variable to the final package name
                         _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
                         return;
+                    } else {
+                        LogInfoVerbose($"... change detected in {file}");
                     }
                 }
             }
@@ -478,6 +482,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     return;
                 }
                 files.Add(project);
+                LogInfoVerbose($"... analyzing {project}");
 
                 // enumerate all files in project folder
                 var projectFolder = Path.GetDirectoryName(project);
