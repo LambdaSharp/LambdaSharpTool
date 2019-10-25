@@ -17,7 +17,6 @@
  */
 
 using System.Collections.Generic;
-using YamlDotNet.Serialization;
 
 namespace LambdaSharp.Tool.Model.AST {
 
