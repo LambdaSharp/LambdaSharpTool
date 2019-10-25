@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EC2F6C5CB939AEAA0F410BD75F4D6565"
+      "Default": "F33CEC143513CE2BB2EF28B3910D7685"
     }
   },
   "Resources": {
@@ -724,7 +724,7 @@
           "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::WriteJson"
         }
       },
-      "Description": "Resource for writing a JSON file to an S3 bucket"
+      "Description": "Resource type for writing a JSON file to an S3 bucket"
     },
     "LambdaSharpS3EmptyBucket": {
       "Value": {
@@ -735,13 +735,13 @@
           "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::EmptyBucket"
         }
       },
-      "Description": "Resource for emptying an S3 bucket on deletion"
+      "Description": "Resource type for emptying an S3 bucket on deletion"
     },
     "Module": {
       "Value": "LambdaSharp.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "EC2F6C5CB939AEAA0F410BD75F4D6565"
+      "Value": "F33CEC143513CE2BB2EF28B3910D7685"
     },
     "LambdaSharpTool": {
       "Value": "0.7.0.4"
@@ -974,7 +974,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.IO:1.0-DEV",
       "Description": "LambdaSharp S3 Utility Module",
-      "TemplateChecksum": "EC2F6C5CB939AEAA0F410BD75F4D6565",
+      "TemplateChecksum": "F33CEC143513CE2BB2EF28B3910D7685",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1052,7 +1052,7 @@
       "ResourceTypes": [
         {
           "Type": "LambdaSharp::S3::EmptyBucket",
-          "Description": "Resource for emptying an S3 bucket on deletion",
+          "Description": "Resource type for emptying an S3 bucket on deletion",
           "Properties": [
             {
               "Name": "Bucket",
@@ -1116,7 +1116,7 @@
         },
         {
           "Type": "LambdaSharp::S3::WriteJson",
-          "Description": "Resource for writing a JSON file to an S3 bucket",
+          "Description": "Resource type for writing a JSON file to an S3 bucket",
           "Properties": [
             {
               "Name": "Bucket",

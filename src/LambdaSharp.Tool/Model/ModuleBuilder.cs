@@ -967,7 +967,7 @@ namespace LambdaSharp.Tool.Model {
                 resource: new Humidifier.Logs.LogGroup {
                     LogGroupName = FnSub($"/aws/lambda/${{{function.ResourceName}}}"),
 
-                    // TODO: allow 'LogRetentionInDays' attribute on 'Function' declaration
+                    // TODO (2019-10-25, bjorg): allow 'LogRetentionInDays' attribute on 'Function' declaration
                     RetentionInDays = FnRef("Module::LogRetentionInDays")
                 },
                 resourceExportAttribute: null,
