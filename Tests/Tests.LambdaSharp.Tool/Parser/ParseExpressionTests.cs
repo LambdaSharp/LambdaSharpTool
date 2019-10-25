@@ -35,8 +35,8 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void ParseLiteralExpression() {
 
             // arrange
-            AddSource("test.yml", @"text");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
+            var parser = NewParser(
+@"text");
 
             // act
             var value = parser.ParseExpression();
@@ -51,8 +51,8 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void ParseSubFunctionExpression() {
 
             // arrange
-            AddSource("test.yml", @"!Sub text");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
+            var parser = NewParser(
+@"!Sub text");
 
             // act
             var value = parser.ParseExpression();
@@ -69,10 +69,9 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void ParseShortFormAndLongFormFunctionExpressions() {
 
             // arrange
-            AddSource("test.yml",
+            var parser = NewParser(
 @"!Base64
     Fn::Sub: text");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
 
             // act
             var value = parser.ParseExpression();
@@ -90,10 +89,10 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void ParseLongFormAndShortFormFunctionExpressions() {
 
             // arrange
-            AddSource("test.yml",
+            var parser = NewParser(
 @"Fn::Base64:
     !Sub text");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
+
 
             // act
             var value = parser.ParseExpression();

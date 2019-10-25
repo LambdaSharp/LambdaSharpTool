@@ -34,7 +34,7 @@ namespace Tests.LambdaSharp.Tool.Parser {
         public void ParseAllFields() {
 
             // arrange
-            AddSource("test.yml",
+            var parser = NewParser(
 @"Module: My.Module
 Version: 1.2.3.4-DEV
 Description: description
@@ -51,7 +51,6 @@ Items:
     - Variable: Bar
       Value: 123
 ");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
 
             // act
             var module = parser.ParseDeclarationOf<ModuleDeclaration>();

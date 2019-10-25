@@ -121,13 +121,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public void VisitStart(ASyntaxNode parent, NotConditionExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, AndConditionExpression node) => node.Parent = parent;
         public void VisitStart(ASyntaxNode parent, OrConditionExpression node) => node.Parent = parent;
-
-        public void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node) {
-            throw new System.NotImplementedException();
-        }
-
-        public void VisitStart(ASyntaxNode parent, MappingNameLiteral node) {
-            throw new System.NotImplementedException();
-        }
+        public void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node) => node.Parent = parent;
+        public void VisitStart(ASyntaxNode parent, MappingNameLiteral node) => node.Parent = parent;
     }
 }

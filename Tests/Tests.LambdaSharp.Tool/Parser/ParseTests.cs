@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using FluentAssertions;
 using LambdaSharp.Tool.Parser;
+using LambdaSharp.Tool.Parser.Analyzers;
 using LambdaSharp.Tool.Parser.Syntax;
 using Xunit;
 using Xunit.Abstractions;
@@ -53,6 +54,11 @@ namespace Tests.LambdaSharp.Tool.Parser {
         //--- Methods ---
         protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
+        protected LambdaSharpParser NewParser(string source) {
+            AddSource("test.yml", source);
+            return new LambdaSharpParser(Provider, "test.yml");
+        }
+
         protected void ExpectNoMessages() {
             foreach(var message in Provider.Messages) {
                 Output.WriteLine(message);
@@ -69,43 +75,27 @@ namespace Tests.LambdaSharp.Tool.Parser {
         //--- Methods ---
 
         [Fact]
-        public void ParseListOfLiteralExpressions_SingleValue() {
+        public void AnalyzeRef() {
 
             // arrange
-            AddSource("test.yml", @"foo");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
+            var parser = NewParser(
+@"Module: My.Module
+Items:
+    - Resource: FooResource
+      Type: AWS::SNS::Topic
+    - Variable: BarVariable
+      Value: !Ref FooResource
+");
+            var moduleDeclaration = parser.ParseDeclarationOf<ModuleDeclaration>();
 
             // act
-            var value = parser.ParseListOfLiteralExpressions();
+            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer());
+            var builder = new Builder();
+            moduleDeclaration.Visit(parent: null, new DeclarationsAnalyzer(builder));
+            moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 
             // assert
             ExpectNoMessages();
-            value.Should().NotBeNull();
-            value.Count.Should().Be(1);
-            value[0].Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("foo");
-        }
-
-        [Fact]
-        public void ParseListOfLiteralExpressions_MultipleValues() {
-
-            // arrange
-            AddSource("test.yml",
-@"- foo
-- bar");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
-
-            // act
-            var value = parser.ParseListOfLiteralExpressions();
-
-            // assert
-            ExpectNoMessages();
-            value.Should().NotBeNull();
-            value.Count.Should().Be(2);
-            value[0].Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("foo");
-            value[1].Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("bar");
         }
 
         [Fact(Skip = "for debugging only")]
@@ -125,7 +115,7 @@ Items:
     - Func2:
         Fn::Ref: ABC
 ";
-             var parser = new YamlDotNet.Core.Parser(new StringReader(source));
+            var parser = new YamlDotNet.Core.Parser(new StringReader(source));
 
             while(parser.MoveNext()) {
                 var current = parser.Current;
