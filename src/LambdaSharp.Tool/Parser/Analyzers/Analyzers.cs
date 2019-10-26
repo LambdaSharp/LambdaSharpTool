@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
             _fullNameProperties.TryGetValue(fullName, out properties);
 
-        public void DefineDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
+        public void AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
             var properties = new Builder.DeclarationProperties {
                 Declaration = declaration
             };

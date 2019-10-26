@@ -127,7 +127,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AllowedValues { get; set; } = new List<LiteralExpression>();
+        public TagListDeclaration Allow { get; set; }
 
         [SyntaxRequired]
         public LiteralExpression Module { get; set; }
@@ -141,7 +141,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Import?.Visit(this, visitor);
             Type?.Visit(this, visitor);
             Scope?.Visit(this, visitor);
-            AllowedValues?.Visit(this, visitor);
+            Allow?.Visit(this, visitor);
             Module?.Visit(this, visitor);
             EncryptionContext?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
