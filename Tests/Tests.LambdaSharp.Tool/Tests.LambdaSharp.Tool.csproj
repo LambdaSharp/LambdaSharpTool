@@ -16,6 +16,7 @@
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\LambdaSharp.Tool\ModuleInfo.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\VersionInfo.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\Parser\**\*.cs" />
   </ItemGroup>

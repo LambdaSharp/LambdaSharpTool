@@ -37,16 +37,16 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Description { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
 
         [SyntaxOptional]
-        public List<LiteralExpression> Secrets { get; set; }
+        public List<LiteralExpression> Secrets { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
-        public List<UsingDeclaration> Using { get; set; }
+        public List<UsingDeclaration> Using { get; set; } = new List<UsingDeclaration>();
 
         [SyntaxRequired]
-        public List<AItemDeclaration> Items { get; set; }
+        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression AllowedPattern { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AllowedValues { get; set; }
+        public List<LiteralExpression> AllowedValues { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
         public LiteralExpression MaxLength { get; set; }
@@ -82,7 +82,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+
+        // NOTE (2019-10-26, bjorg): there is no syntax attribute, because items can only be added programmatically
+        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -105,6 +108,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Properties?.Visit(this, visitor);
             EncryptionContext?.Visit(this, visitor);
             Pragmas?.Visit(this, visitor);
+            Items?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
@@ -123,7 +127,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AllowedValues { get; set; }
+        public List<LiteralExpression> AllowedValues { get; set; } = new List<LiteralExpression>();
 
         [SyntaxRequired]
         public LiteralExpression Module { get; set; }
@@ -183,7 +187,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Group { get; set; }
 
         [SyntaxRequired]
-        public List<AItemDeclaration> Items { get; set; }
+        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -236,7 +240,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public AValueExpression Value { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> DependsOn { get; set; }
+        public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
         public ObjectExpression Properties { get; set; }
@@ -245,7 +249,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression DefaultAttribute { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -275,7 +279,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Module { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> DependsOn { get; set; }
+        public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
         public ObjectExpression Parameters { get; set; }
@@ -302,7 +306,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
-        public List<LiteralExpression> Files { get; set; }
+        public List<LiteralExpression> Files { get; set; } = new List<LiteralExpression>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -315,6 +319,26 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     }
 
     public class FunctionDeclaration : AItemDeclaration {
+
+        //--- Types ---
+        public class VpcExpression : ASyntaxNode {
+
+            //--- Properties ---
+
+            [SyntaxRequired]
+            public AValueExpression SecurityGroupIds { get;set; }
+
+            [SyntaxRequired]
+            public AValueExpression SubnetIds { get;set; }
+
+            //--- Methods ---
+            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+                visitor.VisitStart(parent, this);
+                SecurityGroupIds?.Visit(this, visitor);
+                SubnetIds?.Visit(this, visitor);
+                visitor.VisitEnd(parent, this);
+            }
+        }
 
         //--- Properties ---
 
@@ -346,7 +370,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Handler { get; set; }
 
         [SyntaxOptional]
-        public FunctionVpcDeclaration Vpc { get; set; }
+        public VpcExpression Vpc { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Environment { get; set; }
@@ -355,10 +379,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression Properties { get; set; }
 
         [SyntaxOptional]
-        public List<AEventSourceDeclaration> Sources { get; set; }
+        public List<AEventSourceDeclaration> Sources { get; set; } = new List<AEventSourceDeclaration>();
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; }
+        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+
+        // NOTE (2019-10-26, bjorg): there is no syntax attribute, because items can only be added programmatically
+        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -377,25 +404,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Properties?.Visit(this, visitor);
             Sources?.Visit(this, visitor);
             Pragmas?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
-        }
-    }
-
-    public class FunctionVpcDeclaration : ADeclaration {
-
-        //--- Properties ---
-
-        [SyntaxRequired]
-        public AValueExpression SecurityGroupIds { get;set; }
-
-        [SyntaxRequired]
-        public AValueExpression SubnetIds { get;set; }
-
-        //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            SecurityGroupIds?.Visit(this, visitor);
-            SubnetIds?.Visit(this, visitor);
+            Items?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
@@ -421,6 +430,48 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
     public class ResourceTypeDeclaration : AItemDeclaration {
 
+        //--- Types ---
+        public class PropertyTypeExpression : ASyntaxNode {
+
+            //--- Properties ---
+
+            [SyntaxKeyword]
+            public LiteralExpression Name { get; set; }
+
+            [SyntaxRequired]
+            public LiteralExpression Type { get; set; }
+
+            [SyntaxOptional]
+            public LiteralExpression Required { get; set; }
+
+            //--- Methods ---
+            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+                visitor.VisitStart(parent, this);
+                Name?.Visit(this, visitor);
+                Type?.Visit(this, visitor);
+                Required?.Visit(this, visitor);
+                visitor.VisitEnd(parent, this);
+            }
+        }
+
+        public class AttributeTypeExpression : ASyntaxNode {
+
+            //--- Properties ---
+
+            [SyntaxKeyword]
+            public LiteralExpression Name { get; set; }
+
+            [SyntaxRequired]
+            public LiteralExpression Type { get; set; }
+
+            //--- Methods ---
+            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+                visitor.VisitStart(parent, this);
+                Name?.Visit(this, visitor);
+                Type?.Visit(this, visitor);
+                visitor.VisitEnd(parent, this);
+            }
+        }
         //--- Properties ---
 
         [SyntaxKeyword]
@@ -430,10 +481,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Handler { get; set; }
 
         [SyntaxOptional]
-        public List<ResourcePropertyTypeDeclaration> Properties { get; set; }
+        public List<PropertyTypeExpression> Properties { get; set; } = new List<PropertyTypeExpression>();
 
         [SyntaxOptional]
-        public List<ResourceAttributeTypeDeclaration> Attributes { get; set; }
+        public List<AttributeTypeExpression> Attributes { get; set; } = new List<AttributeTypeExpression>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -442,48 +493,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Handler?.Visit(this, visitor);
             Properties?.Visit(this, visitor);
             Attributes?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
-        }
-    }
-
-    public class ResourcePropertyTypeDeclaration : ADeclaration {
-
-        //--- Properties ---
-
-        [SyntaxKeyword]
-        public LiteralExpression Name { get; set; }
-
-        [SyntaxRequired]
-        public LiteralExpression Type { get; set; }
-
-        [SyntaxOptional]
-        public LiteralExpression Required { get; set; }
-
-        //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Name?.Visit(this, visitor);
-            Type?.Visit(this, visitor);
-            Required?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
-        }
-    }
-
-    public class ResourceAttributeTypeDeclaration : ADeclaration {
-
-        //--- Properties ---
-
-        [SyntaxKeyword]
-        public LiteralExpression Name { get; set; }
-
-        [SyntaxRequired]
-        public LiteralExpression Type { get; set; }
-
-        //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Name?.Visit(this, visitor);
-            Type?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

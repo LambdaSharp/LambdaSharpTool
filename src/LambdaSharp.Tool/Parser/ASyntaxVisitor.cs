@@ -91,16 +91,16 @@ namespace LambdaSharp.Tool.Parser {
         public virtual void VisitEnd(ASyntaxNode parent, PackageDeclaration node) { }
         public virtual void VisitStart(ASyntaxNode parent, FunctionDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode parent, FunctionDeclaration node) { }
-        public virtual void VisitStart(ASyntaxNode parent, FunctionVpcDeclaration node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, FunctionVpcDeclaration node) { }
+        public virtual void VisitStart(ASyntaxNode parent, FunctionDeclaration.VpcExpression node) { }
+        public virtual void VisitEnd(ASyntaxNode parent, FunctionDeclaration.VpcExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, MappingDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode parent, MappingDeclaration node) { }
         public virtual void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) { }
-        public virtual void VisitStart(ASyntaxNode parent, ResourcePropertyTypeDeclaration node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, ResourcePropertyTypeDeclaration node) { }
-        public virtual void VisitStart(ASyntaxNode parent, ResourceAttributeTypeDeclaration node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, ResourceAttributeTypeDeclaration node) { }
+        public virtual void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) { }
+        public virtual void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) { }
+        public virtual void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) { }
+        public virtual void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, MacroDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode parent, MacroDeclaration node) { }
         public virtual void VisitStart(ASyntaxNode parent, TagListDeclaration node) { }

@@ -39,6 +39,9 @@ namespace LambdaSharp.Tool.Model {
 
     public class ModuleBuilder : AModelProcessor {
 
+        //--- Class Properties ---
+        public static object GetModuleArtifactExpression(string filename) => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
+
         //--- Fields ---
         private string _namespace;
         private string _name;
@@ -847,7 +850,7 @@ namespace LambdaSharp.Tool.Model {
             );
 
             // update the package variable to use the package-name variable
-            package.Reference = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            package.Reference = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
             return package;
         }
 
@@ -956,7 +959,7 @@ namespace LambdaSharp.Tool.Model {
                 allow: null,
                 encryptionContext: null
             );
-            function.Function.Code.S3Key = ModuleInfo.GetModuleArtifactExpression($"${{{packageName.FullName}}}");
+            function.Function.Code.S3Key = GetModuleArtifactExpression($"${{{packageName.FullName}}}");
 
             // create function log-group with retention window
             AddResource(

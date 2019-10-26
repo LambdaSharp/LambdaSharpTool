@@ -40,6 +40,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private readonly List<string> _messages = new List<string>();
 
         //-- Properties ---
+        public string ModuleNamespace { get; set; }
+        public string ModuleName { get; set; }
+        public VersionInfo ModuleVersion { get; set; }
         public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---

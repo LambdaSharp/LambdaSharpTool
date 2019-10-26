@@ -22,7 +22,6 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool {
-    using static ModelFunctions;
 
     public class ModuleLocation {
 
@@ -62,8 +61,6 @@ namespace LambdaSharp.Tool {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        public static object GetModuleArtifactExpression(string filename) => FnSub($"{MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
-
         public static ModuleInfo Parse(string moduleReference) {
             if(TryParse(moduleReference, out var result)) {
                 return result;

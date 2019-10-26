@@ -42,12 +42,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class ListExpression : AValueExpression {
 
         //--- Properties ---
-        public List<AValueExpression> Values { get; set; } = new List<AValueExpression>();
+        public List<AValueExpression> Items { get; set; } = new List<AValueExpression>();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Values?.Visit(this, visitor);
+            Items?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -23,10 +23,10 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Parser {
 
-    public class ParseDeclarationOfTests : _Init {
+    public class ParseSyntaxOfTests : _Init {
 
         //--- Constructors ---
-        public ParseDeclarationOfTests(ITestOutputHelper output) : base(output) { }
+        public ParseSyntaxOfTests(ITestOutputHelper output) : base(output) { }
 
         //--- Methods ---
 
@@ -53,7 +53,7 @@ Items:
 ");
 
             // act
-            var module = parser.ParseDeclarationOf<ModuleDeclaration>();
+            var module = parser.ParseSyntaxOf<ModuleDeclaration>();
 
             // assert
             ExpectNoMessages();

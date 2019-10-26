@@ -86,7 +86,7 @@ Items:
     - Variable: BarVariable
       Value: !Ref FooResource
 ");
-            var moduleDeclaration = parser.ParseDeclarationOf<ModuleDeclaration>();
+            var moduleDeclaration = parser.ParseSyntaxOf<ModuleDeclaration>();
 
             // act
             moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer());
