@@ -55,13 +55,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
                 _builder.ModuleVersion = version;
             } else {
-                _builder.LogError("'Version' expected to have format: Major.Minor[.Patch]", node.Version.SourceLocation);
+                _builder.LogError($"'Version' expected to have format: Major.Minor[.Patch]", node.Version.SourceLocation);
                 _builder.ModuleVersion = VersionInfo.Parse("1.0-DEV");
             }
 
             // ensure module has a namespace and name
             if(!TryParseModuleFullName(node.Module.Value, out string moduleNamespace, out var moduleName)) {
-                _builder.LogError("'Module' attribute must have format 'Namespace.Name'", node.Module.SourceLocation);
+                _builder.LogError($"'Module' attribute must have format 'Namespace.Name'", node.Module.SourceLocation);
             }
 
             // validate secrets
@@ -76,7 +76,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 //     }
 
                 } else if(!Regex.IsMatch(secret.Value, @"[0-9a-zA-Z/_\-]+")) {
-                    _builder.LogError("secret key must be a valid alias", secret.SourceLocation);
+                    _builder.LogError($"secret key must be a valid alias", secret.SourceLocation);
                 }
             }
         }
@@ -85,19 +85,17 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.LogError("invalid module reference format", node.Module.SourceLocation);
-                return;
-            }
-            if(moduleInfo.Origin == null) {
+                _builder.LogError($"invalid Module attribute value", node.Module.SourceLocation);
+            } else {
 
-                // default to deployment bucket as origin
+                // default to deployment bucket as origin when missing
+                if(moduleInfo.Origin == null) {
+                    moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                }
 
                 // TODO:
-                // moduleInfo = moduleInfo.WithOrigin(Settings.DeploymentBucketName);
+                //_builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
             }
-
-            // TODO:
-            //_builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
         }
 
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
@@ -180,7 +178,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     _builder.LogError($"missing 'Type' attribute", node.SourceLocation);
                 } else {
 
-                    // CloudFormation resource ...
+                    // the Allow attribute is only valid with native CloudFormation types (not custom resources)
                     if((node.Allow != null) && !IsNativeCloudFormationType(node.Type.Value)) {
                         _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.Type.SourceLocation);
                     }
@@ -201,6 +199,25 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
+        public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
+
+            // register item declaration
+            _builder.AddItemDeclaration(parent, node, node.Nested.Value);
+
+            // check if module reference is valid
+            if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
+                _builder.LogError($"invalid Module attribute value", node.Module.SourceLocation);
+            } else {
+
+                // default to deployment bucket as origin when missing
+                if(moduleInfo.Origin == null) {
+                    moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                }
+
+                // TODO: load nested attribute for parameter/output-attributes validation
+            }
+        }
+
         public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
 
             // register item declaration
@@ -211,12 +228,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // register item declaration
             _builder.AddItemDeclaration(parent, node, node.Condition.Value);
-        }
-
-        public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Nested.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
