@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Parser.Syntax;
@@ -24,6 +25,11 @@ using LambdaSharp.Tool.Parser.Syntax;
 namespace LambdaSharp.Tool.Parser.Analyzers {
 
     public class DeclarationsAnalyzer : ASyntaxVisitor {
+
+        //--- Class Fields ---
+
+        // TODO: validate all declaration names!
+        private static Regex ValidResourceNameRegex = new Regex("[A-Za-z0-9]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
@@ -44,7 +50,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public DeclarationsAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        public DeclarationsAnalyzer(Builder builder) {
+            _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        }
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
@@ -85,7 +93,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.LogError($"invalid Module attribute value", node.Module.SourceLocation);
+                _builder.LogError($"invalid 'Module' attribute value", node.Module.SourceLocation);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -194,7 +202,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         && (literalExpression.Value != "*")
                     )
                 ) {
-                    _builder.LogError($"resource reference must be a valid ARN or wildcard", arn.SourceLocation);
+                    _builder.LogError($"'Value' attribute must be a valid ARN or wildcard", arn.SourceLocation);
                 }
             }
         }
@@ -206,7 +214,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.LogError($"invalid Module attribute value", node.Module.SourceLocation);
+                _builder.LogError($"invalid 'Module' attribute value", node.Module.SourceLocation);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -216,6 +224,85 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                 // TODO: load nested attribute for parameter/output-attributes validation
             }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+
+            // register item declaration
+            _builder.AddItemDeclaration(parent, node, node.Package.Value);
+
+            // validate Files attributes
+            if(
+                !Directory.Exists(node.Files.Value)
+                && !Directory.Exists(Path.GetDirectoryName(node.Files.Value))
+                && !File.Exists(node.Files.Value)
+            ) {
+                _builder.LogError($"'Files' attribute must refer to an existing file or folder", node.Files.SourceLocation);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
+
+            // register item declaration
+            _builder.AddItemDeclaration(parent, node, node.Function.Value);
+
+            // validate attributes
+            ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
+            ValidateExpressionIsNumber(node, node.Timeout, $"invalid 'Timeout' value");
+
+            var functionName = node.Function.Value;
+            var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
+            string project = null;
+
+            // determine project file location and type
+            if(node.Project == null) {
+
+                // use function name to determine function project file
+                project = DetermineProjectFileLocation(Path.Combine(workingDirectory, functionName));
+            } else {
+
+                // check if the project type can be determined by the project file extension
+                project = Path.Combine(workingDirectory, node.Project.Value);
+                if(File.Exists(project)) {
+
+                    // check if project file extension is supported
+                    switch(Path.GetExtension(project).ToLowerInvariant()) {
+                    case ".csproj":
+                    case ".js":
+                    case ".sbt":
+
+                        // known extension for an existing project file; nothing to do
+                        break;
+                    default:
+                        project = null;
+                        break;
+                    }
+                } else {
+                    project = DetermineProjectFileLocation(project);
+                }
+            }
+            if(project == null) {
+                _builder.LogError($"function project file could not be found or is not supported", node.SourceLocation);
+                return;
+            }
+
+            // update 'Project' attribute with known project file that exists
+            node.Project = new LiteralExpression {
+                Parent = node,
+                SourceLocation = node.Project?.SourceLocation,
+                Value = project
+            };
+
+            // TODO: extract 'Runtime' and 'Handler'
+            //
+
+            // local function
+            string DetermineProjectFileLocation(string folderPath)
+                => new[] {
+                    Path.Combine(folderPath, $"{new DirectoryInfo(folderPath).Name}.csproj"),
+                    Path.Combine(folderPath, "index.js"),
+                    Path.Combine(folderPath, "build.sbt")
+                }.FirstOrDefault(projectPath => File.Exists(projectPath));
         }
 
         public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
@@ -228,18 +315,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // register item declaration
             _builder.AddItemDeclaration(parent, node, node.Condition.Value);
-        }
-
-        public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Package.Value);
-        }
-
-        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Function.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
@@ -289,6 +364,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // TODO:
             throw new NotImplementedException();
+        }
+
+        private void ValidateExpressionIsNumber(ASyntaxNode parent, AValueExpression expression, string errorMessage) {
+            if((expression is LiteralExpression literal) && !int.TryParse(literal.Value, out _)) {
+                _builder.LogError(errorMessage, expression.SourceLocation);
+            }
         }
     }
 }

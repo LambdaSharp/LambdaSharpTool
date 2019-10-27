@@ -306,7 +306,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
-        public List<LiteralExpression> Files { get; set; } = new List<LiteralExpression>();
+        public LiteralExpression Files { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -363,6 +363,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public LiteralExpression Runtime { get; set; }
 
+        // TODO: is this still useful?
         [SyntaxOptional]
         public LiteralExpression Language { get; set; }
 
