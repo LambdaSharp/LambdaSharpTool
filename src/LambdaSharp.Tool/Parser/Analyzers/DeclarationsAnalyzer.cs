@@ -132,14 +132,71 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             // validate EncryptionContext attribute
             if(node.EncryptionContext != null) {
                 if(node.Type?.Value != "Secret") {
-                    _builder.LogError("variable must have type 'Secret' to use 'EncryptionContext' attribute", node.SourceLocation);
+                    _builder.LogError($"variable must have type 'Secret' to use 'EncryptionContext' attribute", node.SourceLocation);
                 }
             }
 
             // validate Value attribute
             if(node.Type?.Value == "Secret") {
                 if((node.Value is ListExpression) || (node.Value is ObjectExpression)) {
-                    _builder.LogError("variable with type 'Secret' must be a literal value or function expression", node.Value.SourceLocation);
+                    _builder.LogError($"variable with type 'Secret' must be a literal value or function expression", node.Value.SourceLocation);
+                }
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
+
+            // register item declaration
+            _builder.AddItemDeclaration(parent, node, node.Resource.Value);
+
+            // check if declaration is a resource reference
+            if(node.Value != null) {
+
+                // validate attributes
+                ValidateAllowAttribute(node, node.Type, node.Allow);
+
+                // referenced resource cannot be conditional
+                if(node.If != null) {
+                    _builder.LogError($"'If' attribute cannot be used with a referenced resource", node.If.SourceLocation);
+                }
+
+                // referenced resource cannot have properties
+                if(node.Properties != null) {
+                    _builder.LogError($"'Properties' section cannot be used with a referenced resource", node.Properties.SourceLocation);
+                }
+
+                // validate Value attribute
+                if(node.Value is ListExpression listExpression) {
+                    foreach(var arnValue in listExpression.Items) {
+                        ValidateARN(arnValue);
+                    }
+                } else {
+                    ValidateARN(node.Value);
+                }
+            } else {
+
+                // CloudFormation resource must have a type
+                if(node.Type == null) {
+                    _builder.LogError($"missing 'Type' attribute", node.SourceLocation);
+                } else {
+
+                    // CloudFormation resource ...
+                    if((node.Allow != null) && !IsNativeCloudFormationType(node.Type.Value)) {
+                        _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.Type.SourceLocation);
+                    }
+                }
+            }
+
+            // local functions
+            void ValidateARN(AValueExpression arn) {
+                if(
+                    !(arn is LiteralExpression literalExpression)
+                    || (
+                        !literalExpression.Value.StartsWith("arn:", StringComparison.Ordinal)
+                        && (literalExpression.Value != "*")
+                    )
+                ) {
+                    _builder.LogError($"resource reference must be a valid ARN or wildcard", arn.SourceLocation);
                 }
             }
         }
@@ -154,12 +211,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // register item declaration
             _builder.AddItemDeclaration(parent, node, node.Condition.Value);
-        }
-
-        public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Resource.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
@@ -221,6 +272,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     // TODO: create nested conditional resource declaration
                 }
             }
+        }
+
+        private bool IsNativeCloudFormationType(string awsType) {
+
+            // TODO:
+            throw new NotImplementedException();
         }
     }
 }
