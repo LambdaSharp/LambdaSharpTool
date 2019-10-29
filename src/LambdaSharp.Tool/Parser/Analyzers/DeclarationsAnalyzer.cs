@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
@@ -28,7 +29,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         //--- Class Fields ---
 
-        // TODO: validate all declaration names!
         private static Regex ValidResourceNameRegex = new Regex("[A-Za-z0-9]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Parameter.Value);
+            AddItemDeclaration(parent, node, node.Parameter.Value);
 
             // validate attributes
             ValidatePropertiesAttribute(node, node.Type, node.Properties);
@@ -124,7 +124,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Import.Value);
+            AddItemDeclaration(parent, node, node.Import.Value);
 
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -133,7 +133,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Variable.Value);
+            AddItemDeclaration(parent, node, node.Variable.Value);
 
             // validate EncryptionContext attribute
             if(node.EncryptionContext != null) {
@@ -153,7 +153,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Resource.Value);
+            AddItemDeclaration(parent, node, node.Resource.Value);
 
             // check if declaration is a resource reference
             if(node.Value != null) {
@@ -210,7 +210,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Nested.Value);
+            AddItemDeclaration(parent, node, node.Nested.Value);
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
@@ -229,7 +229,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Package.Value);
+            AddItemDeclaration(parent, node, node.Package.Value);
 
             // validate Files attributes
             if(
@@ -244,7 +244,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Function.Value);
+            AddItemDeclaration(parent, node, node.Function.Value);
 
             // validate attributes
             ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
@@ -293,8 +293,21 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 Value = project
             };
 
-            // TODO: extract 'Runtime' and 'Handler'
-            //
+            // fill in missing attributes based on function type
+            switch(Path.GetExtension(project).ToLowerInvariant()) {
+            case ".csproj":
+                DetermineDotNetFunctionProperties();
+                break;
+            case ".js":
+                DetermineJavascriptFunctionProperties();
+                break;
+            case ".sbt":
+                DetermineScalaFunctionProperties();
+                break;
+            default:
+                _builder.LogError($"unsupported language for Lambda function", node.SourceLocation);
+                break;
+            }
 
             // local function
             string DetermineProjectFileLocation(string folderPath)
@@ -303,36 +316,139 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     Path.Combine(folderPath, "index.js"),
                     Path.Combine(folderPath, "build.sbt")
                 }.FirstOrDefault(projectPath => File.Exists(projectPath));
+
+            void DetermineDotNetFunctionProperties() {
+
+                // set the language
+                if(node.Language == null) {
+                    node.Language = new LiteralExpression {
+                        Value = "csharp"
+                    };
+                }
+
+                // check if the handler/runtime were provided or if they need to be extracted from the project file
+                var csproj = XDocument.Load(node.Project.Value);
+                var mainPropertyGroup = csproj.Element("Project")?.Element("PropertyGroup");
+
+                // compile function project
+                var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(project);
+
+                // check if we need to parse the <TargetFramework> element to determine the lambda runtime
+                var targetFramework = mainPropertyGroup?.Element("TargetFramework").Value;
+                if(node.Runtime == null) {
+                    switch(targetFramework) {
+                    case "netcoreapp1.0":
+                        _builder.LogError($".NET Core 1.0 is no longer supported for Lambda functions", node.SourceLocation);
+                        break;
+                    case "netcoreapp2.0":
+                        _builder.LogError($".NET Core 2.0 is no longer supported for Lambda functions", node.SourceLocation);
+                        break;
+                    case "netcoreapp2.1":
+                        node.Runtime = new LiteralExpression {
+                            Value = "dotnetcore2.1"
+                        };
+                        break;
+                    default:
+                        _builder.LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly", node.SourceLocation);
+                        break;
+                    }
+                }
+
+                // check if we need to read the project file <RootNamespace> element to determine the handler name
+                if(node.Handler == null) {
+                    var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
+                    if(rootNamespace != null) {
+                        node.Handler = new LiteralExpression {
+                            Value = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync"
+                        };
+                    } else {
+                        _builder.LogError($"could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file", node.SourceLocation);
+                    }
+                }
+            }
+
+            void DetermineJavascriptFunctionProperties() {
+
+                // set the language
+                if(node.Language == null) {
+                    node.Language = new LiteralExpression {
+                        Value = "javascript"
+                    };
+                }
+
+                // set runtime
+                if(node.Runtime == null) {
+                    node.Runtime = new LiteralExpression {
+                        Value = "nodejs8.10"
+                    };
+                }
+
+                // set handler
+                if(node.Handler == null) {
+                    node.Handler = new LiteralExpression {
+                        Value = "index.handler"
+                    };
+                }
+            }
+
+            void DetermineScalaFunctionProperties() {
+
+                // set the language
+                if(node.Language == null) {
+                    node.Language = new LiteralExpression {
+                        Value = "scala"
+                    };
+                }
+
+                // set runtime
+                if(node.Runtime == null) {
+                    node.Runtime = new LiteralExpression {
+                        Value = "java8"
+                    };
+                }
+
+                // set handler
+                if(node.Handler == null) {
+                    _builder.LogError($"Handler attribute is required for Scala functions", node.SourceLocation);
+                }
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Group.Value);
+            AddItemDeclaration(parent, node, node.Group.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Condition.Value);
+            AddItemDeclaration(parent, node, node.Condition.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Mapping.Value);
+            AddItemDeclaration(parent, node, node.Mapping.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.ResourceType.Value);
+            AddItemDeclaration(parent, node, node.ResourceType.Value);
         }
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node, node.Macro.Value);
+            AddItemDeclaration(parent, node, node.Macro.Value);
+        }
+
+        private void AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
+            if(!ValidResourceNameRegex.IsMatch(name)) {
+                _builder.LogError($"declartion name must be alphanumeric", declaration.SourceLocation);
+            }
+            _builder.AddItemDeclaration(parent, declaration, name);
         }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, TagListDeclaration allow) {
