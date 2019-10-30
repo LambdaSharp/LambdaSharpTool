@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -475,6 +476,66 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             AddItemDeclaration(parent, node, node.ResourceType.Value);
         }
 
+        public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
+
+            // TODO: better rules for parsing CloudFormation types
+            //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
+
+            // ensure unique property names
+            var names = new HashSet<string>();
+            if(node.Properties.Count > 0) {
+                foreach(var property in node.Properties) {
+                    if(!names.Add(property.Name.Value)) {
+                        _builder.LogError("duplicate name", property.Name.SourceLocation);
+                    }
+                }
+            } else {
+                _builder.LogError($"empty Properties section", node.SourceLocation);
+            }
+
+            // ensure unique attribute names
+            names.Clear();
+            if(node.Attributes.Count > 0) {
+                foreach(var attribute in node.Attributes) {
+                    if(!names.Add(attribute.Name.Value)) {
+                        _builder.LogError("duplicate name", attribute.Name.SourceLocation);
+                    }
+                }
+            } else {
+                _builder.LogError($"empty Attributes section", node.SourceLocation);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
+            if(!ValidResourceNameRegex.IsMatch(node.Name.Value)) {
+                _builder.LogError($"name must be alphanumeric", node.SourceLocation);
+            }
+            if(node.Type == null) {
+
+                // default Type is String when omitted
+                node.Type = new LiteralExpression {
+                    Value = "String"
+                };
+            } else if(!IsValidCloudFormationType(node.Type.Value)) {
+                _builder.LogError($"unsupported type", node.Type.SourceLocation);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
+            if(!ValidResourceNameRegex.IsMatch(node.Name.Value)) {
+                _builder.LogError($"name must be alphanumeric", node.SourceLocation);
+            }
+            if(node.Type == null) {
+
+                // default Type is String when omitted
+                node.Type = new LiteralExpression {
+                    Value = "String"
+                };
+            } else if(!IsValidCloudFormationType(node.Type.Value)) {
+                _builder.LogError($"unsupported type", node.Type.SourceLocation);
+            }
+        }
+
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
 
             // register item declaration
@@ -483,7 +544,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         private void AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
             if(!ValidResourceNameRegex.IsMatch(name)) {
-                _builder.LogError($"declartion name must be alphanumeric", declaration.SourceLocation);
+                _builder.LogError($"name must be alphanumeric", declaration.SourceLocation);
             }
             _builder.AddItemDeclaration(parent, declaration, name);
         }
@@ -522,6 +583,20 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private void ValidateExpressionIsNumber(ASyntaxNode parent, AValueExpression expression, string errorMessage) {
             if((expression is LiteralExpression literal) && !int.TryParse(literal.Value, out _)) {
                 _builder.LogError(errorMessage, expression.SourceLocation);
+            }
+        }
+
+        private bool IsValidCloudFormationType(string type) {
+            switch(type) {
+            case "String":
+            case "Long":
+            case "Integer":
+            case "Double":
+            case "Boolean":
+            case "Timestamp":
+                return true;
+            default:
+                return false;
             }
         }
     }
