@@ -17,6 +17,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
@@ -24,17 +25,37 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
     public class ObjectExpression : AValueExpression {
 
+        //--- Types ---
+        public class KeyValuePair : ASyntaxNode {
+
+            //--- Properties ---
+            public string Key { get; set; }
+            public AValueExpression Value { get; set; }
+
+            //--- Methods ---
+            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+                visitor.VisitStart(parent, this);
+                Value.Visit(this, visitor);
+                visitor.VisitEnd(parent, this);
+            }
+        }
+
         //--- Properties ---
-        public List<LiteralExpression> Keys { get; set; } = new List<LiteralExpression>();
-        public Dictionary<string, AValueExpression> Values { get; set; } = new Dictionary<string, AValueExpression>();
+        public List<KeyValuePair> Items { get; set; } = new List<KeyValuePair>();
+
+        //--- Operators ---
+        public AValueExpression this[string key] => Items.First(item => item.Key == key).Value;
 
         //--- Methods ---
+        public bool TryGetValue(string key, out AValueExpression value) {
+            var found = Items.FirstOrDefault(item => item.Key == key);
+            value = found?.Value;
+            return found != null;
+        }
+
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-
-            // TODO: introduce key-value structure so they can be visited together
-            Keys?.Visit(this, visitor);
-            Values?.Values.Visit(this, visitor);
+            Items.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

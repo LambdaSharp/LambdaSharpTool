@@ -80,6 +80,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public void LogError(string message, SourceLocation location)
-            => _messages.Add($"ERROR: {message} @ {location.FilePath}({location.LineNumberStart},{location.ColumnNumberStart})");
+            => _messages.Add($"ERROR: {message} @ {location?.FilePath ?? "n/a"}({location?.LineNumberStart ?? 0},{location?.ColumnNumberStart ?? 0})");
     }
 }

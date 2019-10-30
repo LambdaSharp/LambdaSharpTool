@@ -107,6 +107,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public void VisitEnd(ASyntaxNode parent, TagListDeclaration node) { }
         public void VisitStart(ASyntaxNode parent, ObjectExpression node) => node.Parent = parent;
         public void VisitEnd(ASyntaxNode parent, ObjectExpression node) { }
+        public void VisitStart(ASyntaxNode parent, ObjectExpression.KeyValuePair node) => node.Parent = parent;
+        public void VisitEnd(ASyntaxNode parent, ObjectExpression.KeyValuePair node) { }
         public void VisitStart(ASyntaxNode parent, ListExpression node) => node.Parent = parent;
         public void VisitEnd(ASyntaxNode parent, ListExpression node) { }
         public void VisitStart(ASyntaxNode parent, LiteralExpression node) => node.Parent = parent;
@@ -119,6 +121,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public void VisitEnd(ASyntaxNode parent, AndConditionExpression node) { }
         public void VisitStart(ASyntaxNode parent, OrConditionExpression node) => node.Parent = parent;
         public void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
+        public void VisitStart(ASyntaxNode parent, ConditionLiteralExpression node) => node.Parent = parent;
+        public void VisitEnd(ASyntaxNode parent, ConditionLiteralExpression node) { }
         public void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node) => node.Parent = parent;
         public void VisitEnd(ASyntaxNode parent, ConditionNameConditionExpression node) { }
         public void VisitStart(ASyntaxNode parent, MappingNameLiteral node) => node.Parent = parent;

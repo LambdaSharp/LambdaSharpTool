@@ -125,11 +125,20 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class IfFunctionExpression : AFunctionExpression {
 
         // NOTE: AWS CloudFormation supports the Fn::If intrinsic function in the metadata attribute, update policy attribute, and property values in the Resources section and Outputs sections of a template.
+        //  - Fn::Base64
+        //  - Fn::FindInMap
+        //  - Fn::GetAtt
+        //  - Fn::GetAZs
+        //  - Fn::If
+        //  - Fn::Join
+        //  - Fn::Select
+        //  - Fn::Sub
+        //  - Ref
 
         //--- Properties ---
 
         // TODO: allow arbitrary condition expressions; instantiate condition item as needed
-        public ConditionNameConditionExpression Condition { get; set; }
+        public ConditionLiteralExpression Condition { get; set; }
         public AValueExpression IfTrue { get; set; }
         public AValueExpression IfFalse { get; set; }
 

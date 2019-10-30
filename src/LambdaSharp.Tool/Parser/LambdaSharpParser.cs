@@ -345,7 +345,7 @@ namespace LambdaSharp.Tool.Parser {
 
                     // parse key
                     var keyScalar = Expect<Scalar>();
-                    if(result.Values.ContainsKey(keyScalar.ParsingEvent.Value)) {
+                    if(result.Items.Any(item => item.Key == keyScalar.ParsingEvent.Value)) {
                         LogError($"duplicate key '{keyScalar.ParsingEvent.Value}'", Location(keyScalar));
                         SkipThisAndNestedEvents();
                         continue;
@@ -358,11 +358,11 @@ namespace LambdaSharp.Tool.Parser {
                     }
 
                     // add key-value pair
-                    result.Keys.Add(new LiteralExpression {
+                    result.Items.Add(new ObjectExpression.KeyValuePair {
                         SourceLocation = Location(keyScalar),
-                        Value = keyScalar.ParsingEvent.Value
+                        Key = keyScalar.ParsingEvent.Value,
+                        Value = value
                     });
-                    result.Values.Add(keyScalar.ParsingEvent.Value, value);
                 }
                 result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
                 MoveNext();
@@ -408,8 +408,8 @@ namespace LambdaSharp.Tool.Parser {
             AValueExpression ConvertFunction(string tag, AValueExpression value) {
 
                 // check if value is a long-form function
-                if((value is ObjectExpression objectExpression) && (objectExpression.Values.Count == 1)) {
-                    var kv = objectExpression.Values.First();
+                if((value is ObjectExpression objectExpression) && (objectExpression.Items.Count == 1)) {
+                    var kv = objectExpression.Items.First();
                     switch(kv.Key) {
                     case "Fn::Base64":
                         value = ConvertToBase64FunctionExpression(kv.Value);
@@ -607,9 +607,9 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Condition = new ConditionNameConditionExpression {
+                        Condition = new ConditionLiteralExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            ReferenceName = conditionNameLiteral.Value
+                            Value = conditionNameLiteral.Value
                         },
                         IfTrue = ifList.Items[1],
                         IfFalse = ifList.Items[2]
@@ -729,7 +729,7 @@ namespace LambdaSharp.Tool.Parser {
 
                 // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
                 if(value is ObjectExpression transformMap) {
-                    if(!transformMap.Values.TryGetValue("Name", out var macroNameExpression)) {
+                    if(!transformMap.TryGetValue("Name", out var macroNameExpression)) {
                         LogError("!Transform missing 'Name'", value.SourceLocation);
                         return null;
                     }
@@ -737,7 +737,7 @@ namespace LambdaSharp.Tool.Parser {
                         LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
                         return null;
                     }
-                    if(!transformMap.Values.TryGetValue("Parameters", out var parametersExpression)) {
+                    if(!transformMap.TryGetValue("Parameters", out var parametersExpression)) {
                         LogError("!Transform missing 'Parameters'", value.SourceLocation);
                         return null;
                     }

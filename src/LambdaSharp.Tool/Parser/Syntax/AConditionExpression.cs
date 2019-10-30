@@ -18,12 +18,25 @@
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AConditionExpression : ASyntaxNode {
+    public abstract class AConditionExpression : ASyntaxNode { }
 
-         //--- Properties ---
+    public class ConditionLiteralExpression : AConditionExpression {
+
+        // TODO: parse STRING
+
+        //--- Properties ---
+        public string Value { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
     }
 
     public class ConditionNameConditionExpression : AConditionExpression {
+
+        // TODO: parse !Condition STRING
 
         //--- Properties ---
         public string ReferenceName { get; set; }
@@ -36,6 +49,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     }
 
     public class EqualsConditionExpression : AConditionExpression {
+
+        // TODO: parse !Equals [ EXPR, EXPR ]
+        //  - Fn::FindInMap
+        //  - Ref
+        //  - Condition
+        //  - Other condition functions
 
          //--- Properties ---
          public AConditionExpression LeftValue { get; set; }
@@ -52,6 +71,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
     public class NotConditionExpression : AConditionExpression {
 
+        // TODO: parse !Not [ EXPR ]
+        //  - Fn::FindInMap
+        //  - Ref
+        //  - Condition
+        //  - Other condition functions
+
          //--- Properties ---
          public AConditionExpression Value { get; set; }
 
@@ -64,6 +89,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     }
 
     public class AndConditionExpression : AConditionExpression {
+
+        // TODO: parse !And [ EXPR, EXPR ]
+        //  - Fn::FindInMap
+        //  - Ref
+        //  - Condition
+        //  - Other condition functions
 
          //--- Properties ---
          public AConditionExpression LeftValue { get; set; }
@@ -79,6 +110,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     }
 
     public class OrConditionExpression : AConditionExpression {
+
+        // TODO: parse !Or [ EXPR, EXPR ]
+        //  - Fn::FindInMap
+        //  - Ref
+        //  - Condition
+        //  - Other condition functions
 
          //--- Properties ---
          public AConditionExpression LeftValue { get; set; }

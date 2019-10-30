@@ -150,6 +150,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
+        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
+
+            // register item declaration
+            AddItemDeclaration(parent, node, node.Group.Value);
+        }
+
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
             // register item declaration
@@ -190,6 +196,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     if((node.Allow != null) && !IsNativeCloudFormationType(node.Type.Value)) {
                         _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.Type.SourceLocation);
                     }
+                }
+
+                // check if resource is conditional
+                if(!(node.If is ConditionLiteralExpression)) {
+
+                    // TODO: creation condition as sub-declaration
                 }
             }
 
@@ -309,6 +321,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 break;
             }
 
+            // check if resource is conditional
+            if(!(node.If is ConditionLiteralExpression)) {
+
+                // TODO: creation condition as sub-declaration
+            }
+
             // local function
             string DetermineProjectFileLocation(string folderPath)
                 => new[] {
@@ -414,12 +432,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
-
-            // register item declaration
-            AddItemDeclaration(parent, node, node.Group.Value);
-        }
-
         public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
 
             // register item declaration
@@ -430,6 +442,31 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // register item declaration
             AddItemDeclaration(parent, node, node.Mapping.Value);
+
+            // check if object expression is valid (must have first- and second-level keys)
+            if(node.Value.Items.Count > 0) {
+
+                // check that all first-level keys have object expressions
+                foreach(var topLevelEntry in node.Value.Items) {
+                    if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
+                        if(secondLevelObjectExpression.Items.Count > 0) {
+                            _builder.LogError($"missing second-level mappings", secondLevelObjectExpression.SourceLocation);
+                        } else {
+
+                            // check that all second-level keys have literal expressions
+                            foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
+                                if(!(secondLevelEntry.Value is LiteralExpression)) {
+                                    _builder.LogError($"value must be a literal", secondLevelEntry.SourceLocation);
+                                }
+                            }
+                        }
+                    } else {
+                        _builder.LogError($"value must be an object", topLevelEntry.Value.SourceLocation);
+                    }
+                }
+            } else {
+                _builder.LogError($"missing top-level mappings", node.SourceLocation);
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {

@@ -225,7 +225,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Resource { get; set; }
 
         [SyntaxOptional]
-        public AConditionExpression If { get; set; } // TODO: -OR- name of a condition!
+        public AConditionExpression If { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Type { get; set; }
