@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using LambdaSharp.Tool.Parser.Syntax;
 
@@ -43,7 +44,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public string ModuleNamespace { get; set; }
         public string ModuleName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
-        public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---
         public DeclarationProperties GetProperties(ADeclaration declaration) {
@@ -62,7 +62,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
             _fullNameProperties.TryGetValue(fullName, out properties);
 
-        public void AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
+        public Builder.DeclarationProperties AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
             var properties = new Builder.DeclarationProperties {
                 Declaration = declaration
             };
@@ -74,9 +74,27 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 properties.FullName = name;
             }
 
+            // check for reserved names
+            if(properties.FullName == "AWS") {
+                LogError($"AWS is a reserved name", declaration.SourceLocation);
+            }
+
             // store properties per-node and per-fullname
             _declarationProperties.Add(declaration, properties);
             _fullNameProperties.Add(properties.FullName, properties);
+            return properties;
+        }
+
+        public void AddSharedDependency(ModuleInfo moduleInfo) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        public void AddNestedDependency(ModuleInfo moduleInfo) {
+
+            // TODO:
+            throw new NotImplementedException();
         }
 
         public void LogError(string message, SourceLocation location)

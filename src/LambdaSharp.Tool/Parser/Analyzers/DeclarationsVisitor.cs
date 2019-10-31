@@ -26,11 +26,53 @@ using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
 
-    public class DeclarationsAnalyzer : ASyntaxVisitor {
+    public class DeclarationsVisitor : ASyntaxVisitor {
 
         //--- Class Fields ---
 
         private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly HashSet<string> _cloudFormationParameterTypes;
+
+        //--- Class Constructor ---
+        static DeclarationsVisitor() {
+
+            // create list of natively supported CloudFormation types
+            _cloudFormationParameterTypes = new HashSet<string> {
+                "String",
+                "Number",
+                "List<Number>",
+                "CommaDelimitedList",
+                "AWS::SSM::Parameter::Name",
+                "AWS::SSM::Parameter::Value<String>",
+                "AWS::SSM::Parameter::Value<List<String>>",
+                "AWS::SSM::Parameter::Value<CommaDelimitedList>"
+            };
+            foreach(var awsType in new[] {
+                "AWS::EC2::AvailabilityZone::Name",
+                "AWS::EC2::Image::Id",
+                "AWS::EC2::Instance::Id",
+                "AWS::EC2::KeyPair::KeyName",
+                "AWS::EC2::SecurityGroup::GroupName",
+                "AWS::EC2::SecurityGroup::Id",
+                "AWS::EC2::Subnet::Id",
+                "AWS::EC2::Volume::Id",
+                "AWS::EC2::VPC::Id",
+                "AWS::Route53::HostedZone::Id"
+            }) {
+
+                // add vanilla type
+                _cloudFormationParameterTypes.Add(awsType);
+
+                // add list of type
+                _cloudFormationParameterTypes.Add($"List<{awsType}>");
+
+                // add parameter store reference of type
+                _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<{awsType}>");
+
+                // add parameter store reference of list of type
+                _cloudFormationParameterTypes.Add($"AWS::SSM::Parameter::Value<List<{awsType}>>");
+            }
+        }
 
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
@@ -51,7 +93,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public DeclarationsAnalyzer(Builder builder) {
+        public DeclarationsVisitor(Builder builder) {
             _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
         }
 
@@ -100,10 +142,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // default to deployment bucket as origin when missing
                 if(moduleInfo.Origin == null) {
                     moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                    node.Module.Value = moduleInfo.ToString();
                 }
 
-                // TODO:
-                //_builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
+                // add module reference as a shared dependency
+                _builder.AddSharedDependency(moduleInfo);
             }
         }
 
@@ -113,12 +156,176 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             AddItemDeclaration(parent, node, node.Parameter.Value);
 
             // validate attributes
-            ValidatePropertiesAttribute(node, node.Type, node.Properties);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
-            // ensure parameter declration is a child of the module declaration (nesting is not allowed)
+            // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
             if(!(node.Parents.OfType<ADeclaration>() is ModuleDeclaration)) {
                 _builder.LogError($"parameter declaration cannot be nested", node.SourceLocation);
+            }
+
+            // default 'Type' attribute value is 'String' when omitted
+            if(node.Type == null) {
+                node.Type = new LiteralExpression {
+                    Parent = node,
+                    SourceLocation = node.SourceLocation,
+                    Value = "String"
+                };
+            }
+
+            // default 'Section' attribute value is "Module Settings" when omitted
+            if(node.Section == null) {
+                node.Section = new LiteralExpression {
+                    Parent = node,
+                    SourceLocation = node.SourceLocation,
+                    Value = "Module Settings"
+                };
+            }
+
+            // the 'Description' attribute cannot exceed 4,000 characters
+            if((node.Description != null) && (node.Description.Value.Length > 4_000)) {
+                _builder.LogError("the Description attribute exceeds 4,000 characters", node.Description.SourceLocation);
+            }
+
+            // only the 'Number' type can have the 'MinValue' and 'MaxValue' attributes
+            if(node.Type.Value == "Number") {
+                if(node.MinValue != null) {
+
+                    // TODO: validate the value is a number
+                    throw new NotImplementedException();
+                }
+                if(node.MaxValue != null) {
+
+                    // TODO: validate the value is a number
+                    throw new NotImplementedException();
+                }
+            } else {
+                if(node.MinValue != null) {
+                    _builder.LogError($"MinValue attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+                if(node.MaxValue != null) {
+                    _builder.LogError($"MaxValue attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+            }
+
+            // only the 'String' type can have the 'AllowedPattern', 'MinLength', and 'MaxLength' attributes
+            if(node.Type.Value == "String") {
+
+                // the 'AllowedPattern' attribute must be a valid regex expression
+                if(node.AllowedPattern != null) {
+                    try {
+                        new Regex(node.AllowedPattern.Value);
+                    } catch(ArgumentException) {
+                        _builder.LogError($"AllowedPattern must be a valid regex expression", node.Properties.SourceLocation);
+                    }
+                } else {
+
+                    // the 'ConstraintDescription' attribute is invalid when the 'ALlowedPattern' attribute is omitted
+                    if(node.ConstraintDescription != null) {
+                        _builder.LogError($"ConstraintDescription attribute can only be used in conjunction with the AllowedPattern attribute", node.Properties.SourceLocation);
+                    }
+                }
+            } else {
+                if(node.AllowedPattern != null) {
+                    _builder.LogError($"AllowedPattern attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+                if(node.MinLength != null) {
+                    _builder.LogError($"MinLength attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+                if(node.MaxLength != null) {
+                    _builder.LogError($"MaxLength attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+            }
+
+            // only the 'Secret' type can have the 'EncryptionContext' attribute
+            if(node.Type.Value == "Secret") {
+
+                // NOTE (2019-10-30, bjorg): for a 'Secret' type parameter, we need to create a new resource
+                //  that is used to decrypt the parameter into a plaintext value.
+
+                // value types cannot have Properties/Allow attribute
+                throw new NotImplementedException();
+
+                // TODO:
+                // var decoder = AddResource(
+                //     parent: result,
+                //     name: "Plaintext",
+                //     description: null,
+                //     scope: null,
+                //     resource: CreateDecryptSecretResourceFor(result),
+                //     resourceExportAttribute: null,
+                //     dependsOn: null,
+                //     condition: null,
+                //     pragmas: null
+                // );
+                // decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
+                // decoder.DiscardIfNotReachable = true;
+            } else {
+                if(node.EncryptionContext != null) {
+                    _builder.LogError($"EncryptionContext attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+            }
+
+            // validate other attributes based on parameter type
+            if(IsValidCloudFormationParameterType(node.Type.Value)) {
+
+                // value types cannot have Properties/Allow attribute
+                if(node.Properties != null) {
+                    _builder.LogError($"Properties attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+                if(node.Allow != null) {
+                    _builder.LogError($"Allow attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                }
+            } else if(IsValidCloudFormationResourceType(node.Type.Value)) {
+
+                // check if the 'Properties' attribute is set, which indicates the
+                //  underlying resource must be created when omitted as a parameter
+                if(node.Properties != null) {
+
+                    // TODO: conditionally create resource
+                    // TODO: validate resource properties
+                    throw new NotImplementedException();
+
+                    // // create conditional resource
+                    // var condition = AddCondition(
+                    //     parent: result,
+                    //     name: "IsBlank",
+                    //     description: null,
+                    //     value: FnEquals(FnRef(result.ResourceName), "")
+                    // );
+                    // var instance = AddResource(
+                    //     parent: result,
+                    //     name: "Resource",
+                    //     description: null,
+                    //     scope: null,
+                    //     type: type,
+                    //     allow: null,
+                    //     properties: properties,
+                    //     arnAttribute: arnAttribute,
+                    //     dependsOn: null,
+                    //     condition: condition.FullName,
+                    //     pragmas: pragmas
+                    // );
+
+                    // // register input parameter reference
+                    // result.Reference = FnIf(
+                    //     condition.ResourceName,
+                    //     instance.GetExportReference(),
+                    //     result.Reference
+                    // );
+
+                    // // request input parameter or conditional managed resource grants
+                    // AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
+                }
+                if(node.Allow != null) {
+
+                    // TODO: validate attributes
+                    ValidateAllowAttribute(node, node.Type, node.Allow);
+
+                    // TODO add grants
+                    throw new NotImplementedException();
+                }
+            } else {
+                _builder.LogError($"unsupported type", node.Type.SourceLocation);
             }
         }
 
@@ -200,9 +407,17 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
 
                 // check if resource is conditional
-                if(!(node.If is ConditionLiteralExpression)) {
+                if((node.If != null) && !(node.If is ConditionLiteralExpression)) {
 
-                    // TODO: creation condition as sub-declaration
+                    // creation condition as sub-declaration
+                    node.AddDeclaration(new ConditionDeclaration {
+                        Condition = new LiteralExpression {
+                            SourceLocation = node.If.SourceLocation,
+                            Value = "Condition"
+                        },
+                        Description = null,
+                        Value = node.If
+                    });
                 }
             }
 
@@ -233,9 +448,14 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // default to deployment bucket as origin when missing
                 if(moduleInfo.Origin == null) {
                     moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
+                    node.Module.Value = moduleInfo.ToString();
                 }
 
-                // TODO: load nested attribute for parameter/output-attributes validation
+                // add module reference as a shared dependency
+                _builder.AddNestedDependency(moduleInfo);
+
+                // NOTE: we cannot validate the parameters and output values from the module until the
+                //  nested dependency has been resolved.
             }
         }
 
@@ -562,18 +782,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        private void ValidatePropertiesAttribute(ADeclaration node, LiteralExpression type, ObjectExpression properties) {
-            if(properties != null) {
-                if(type == null) {
-                    _builder.LogError($"'Property' attribute requires 'Type' attribute", node.SourceLocation);
-                } else {
-                    // TODO: check if type is a valid AWS type
-                    // TODO: create nested condition declaration
-                    // TODO: create nested conditional resource declaration
-                }
-            }
-        }
-
         private bool IsNativeCloudFormationType(string awsType) {
 
             // TODO:
@@ -588,6 +796,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         private bool IsValidCloudFormationType(string type) {
             switch(type) {
+
+            // CloudFormation primitive types
             case "String":
             case "Long":
             case "Integer":
@@ -595,9 +805,18 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             case "Boolean":
             case "Timestamp":
                 return true;
+
+            // LambdaSharp primitive types
+            case "Secret":
+                return true;
             default:
                 return false;
             }
         }
+
+        private bool IsValidCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
+
+        // TODO: check AWS type
+        private bool IsValidCloudFormationResourceType(string type) => throw new NotImplementedException();
     }
 }
