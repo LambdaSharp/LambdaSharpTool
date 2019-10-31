@@ -506,7 +506,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Macro { get; set; }
 
         [SyntaxRequired]
-        public AValueExpression Handler { get; set; }
+        public LiteralExpression Handler { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

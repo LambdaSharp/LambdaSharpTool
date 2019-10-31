@@ -30,7 +30,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         //--- Class Fields ---
 
-        private static Regex ValidResourceNameRegex = new Regex("[A-Za-z0-9]+", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
         public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {

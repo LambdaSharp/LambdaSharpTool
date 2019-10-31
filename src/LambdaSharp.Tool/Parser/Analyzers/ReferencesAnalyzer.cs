@@ -183,6 +183,32 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
+        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
+            if(_builder.TryGetProperties(node.Handler.Value, out var properties)) {
+                if(properties.Declaration is FunctionDeclaration) {
+
+                    // nothing to do
+                } else if((properties.Declaration is ResourceDeclaration resourceDeclaration) && (resourceDeclaration.Type?.Value == "AWS::SNS::Topic")) {
+
+                    // nothing to do
+                } else {
+                    _builder.LogError($"Handler must reference a Function or AWS::SNS::Topic resource declaration", node.Handler.SourceLocation);
+                }
+            } else {
+                _builder.LogError($"unknown identifier {node.Handler.Value}", node.Handler.SourceLocation);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
+            if(_builder.TryGetProperties(node.Handler.Value, out var properties)) {
+                if(!(properties.Declaration is FunctionDeclaration)) {
+                    _builder.LogError($"Handler must reference a Function declaration", node.Handler.SourceLocation);
+                }
+            } else {
+                _builder.LogError($"unknown identifier {node.Handler.Value}", node.Handler.SourceLocation);
+            }
+        }
+
         private IEnumerable<AConditionExpression> FindConditions(ASyntaxNode node) {
             var conditions = new List<AConditionExpression>();
             ASyntaxNode previousParent = null;
