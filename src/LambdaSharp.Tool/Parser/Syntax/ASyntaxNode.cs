@@ -20,16 +20,6 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public static class ASyntaxNodeEx {
-
-        //--- Extension Methods ---
-        public static void Visit(this IEnumerable<ASyntaxNode> nodes, ASyntaxNode parent, ISyntaxVisitor visitor) {
-            foreach(var node in nodes) {
-                node?.Visit(parent, visitor);
-            }
-        }
-    }
-
     public abstract class ASyntaxNode {
 
         //--- Properties ---
@@ -48,5 +38,15 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Abstract Methods ---
         public abstract void Visit(ASyntaxNode parent, ISyntaxVisitor visitor);
+    }
+
+    public static class ASyntaxNodeEx {
+
+        //--- Extension Methods ---
+        public static void Visit(this IEnumerable<ASyntaxNode> nodes, ASyntaxNode parent, ISyntaxVisitor visitor) {
+            foreach(var node in nodes) {
+                node?.Visit(parent, visitor);
+            }
+        }
     }
 }
