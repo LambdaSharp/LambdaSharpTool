@@ -288,6 +288,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 node.FullName = node.LocalName;
             }
 
+            // assign default reference expression
+            node.ReferenceExpression = new ReferenceFunctionExpression {
+                ReferenceName = node.FullName
+            };
+
             // register item declaration
             _builder.AddItemDeclaration(parent, node);
         }

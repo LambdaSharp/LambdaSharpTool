@@ -108,7 +108,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // ensure module has a namespace and name
-            if(!TryParseModuleFullName(node.Module.Value, out string moduleNamespace, out var moduleName)) {
+            if(TryParseModuleFullName(node.Module.Value, out string moduleNamespace, out var moduleName)) {
+                _builder.ModuleNamespace = moduleNamespace;
+                _builder.ModuleName = moduleName;
+            } else {
                 _builder.LogError($"'Module' attribute must have format 'Namespace.Name'", node.Module.SourceLocation);
             }
 
@@ -311,7 +314,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     });
 
                     // update the reference expression for the parameter
-                    _builder.GetProperties(node.FullName).ReferenceExpression = new IfFunctionExpression {
+                    node.ReferenceExpression = new IfFunctionExpression {
                         Condition = new ConditionLiteralExpression {
                             Value = condition.FullName
                         },

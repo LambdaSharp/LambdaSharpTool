@@ -42,15 +42,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // validate reference
-            if(_builder.TryGetProperties(referenceName, out var properties)) {
+            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
 
                 // confirm reference is to a referenceable declaration
-                switch(properties.Declaration) {
+                switch(referencedDeclaration) {
                 case FunctionDeclaration _:
                 case MacroDeclaration _:
                 case NestedModuleDeclaration _:
                 case ResourceDeclaration resourceDeclaration when (resourceDeclaration.Value == null): // NOTE: only allowed if not a resource reference
-                    properties.ReverseDependencies.Add(node);
+                    referencedDeclaration.ReverseDependencies.Add(node);
                     break;
                 case ParameterDeclaration _:
                 case ImportDeclaration _:
@@ -63,16 +63,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     _builder.LogError($"identifier {node.ReferenceName} must refer to a CloudFormation resource", node.SourceLocation);
                     return;
                 default:
-                    throw new ApplicationException($"should never happen: {properties.Declaration?.GetType().Name ?? "<null>"}");
+                    throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
                 }
 
-                // find all conditions to reach this node
+                // find all conditions to reach the !GetAtt expression
                 var conditions = FindConditions(node);
 
-                // register reference with declaration
-                var declaration = node.Parents.OfType<ADeclaration>().First();
-                _builder.GetProperties(declaration)
-                    .Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
+                // register reference with referenced declaration
+                var declaration = node.Parents.OfType<AItemDeclaration>().First();
+                declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
             } else {
                 _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
             }
@@ -103,10 +102,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // validate reference
-            if(_builder.TryGetProperties(referenceName, out var properties)) {
+            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
 
                 // confirm reference is to a referenceable declaration
-                switch(properties.Declaration) {
+                switch(referencedDeclaration) {
                 case FunctionDeclaration _:
                 case MacroDeclaration _:
                 case NestedModuleDeclaration _:
@@ -115,7 +114,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 case ImportDeclaration _:
                 case VariableDeclaration _:
                 case PackageDeclaration _:
-                    properties.ReverseDependencies.Add(node);
+                    referencedDeclaration.ReverseDependencies.Add(node);
                     break;
                 case GroupDeclaration _:
                 case ConditionDeclaration _:
@@ -124,16 +123,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     _builder.LogError($"identifier {node.ReferenceName} cannot refer to this declaration type", node.SourceLocation);
                     return;
                 default:
-                    throw new ApplicationException($"should never happen: {properties.Declaration?.GetType().Name ?? "<null>"}");
+                    throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
                 }
 
                 // find all conditions to reach this node
                 var conditions = FindConditions(node);
 
                 // register reference with declaration
-                var declaration = node.Parents.OfType<ADeclaration>().First();
-                _builder.GetProperties(declaration)
-                    .Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
+                var declaration = node.Parents.OfType<AItemDeclaration>().First();
+                declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
             } else {
                 _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
             }
@@ -143,16 +141,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             var referenceName = node.ReferenceName;
 
             // validate reference
-            if(_builder.TryGetProperties(referenceName, out var properties)) {
+            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
 
                 // confirm reference is to a condition declaration
-                if(properties.Declaration is ConditionDeclaration) {
-                    properties.ReverseDependencies.Add(node);
+                if(referencedDeclaration is ConditionDeclaration) {
+                    referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
-                    var declaration = node.Parents.OfType<ADeclaration>().First();
-                    _builder.GetProperties(declaration)
-                        .Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
+                    var declaration = node.Parents.OfType<AItemDeclaration>().First();
+                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
                 } else {
                     _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
                 }
@@ -165,16 +162,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             var referenceName = node.ReferenceName;
 
             // validate reference
-            if(_builder.TryGetProperties(referenceName, out var properties)) {
+            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
 
                 // confirm reference is to a condition declaration
-                if(properties.Declaration is MappingDeclaration) {
-                    properties.ReverseDependencies.Add(node);
+                if(referencedDeclaration is MappingDeclaration) {
+                    referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
-                    var declaration = node.Parents.OfType<ADeclaration>().First();
-                    _builder.GetProperties(declaration)
-                        .Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
+                    var declaration = node.Parents.OfType<AItemDeclaration>().First();
+                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
                 } else {
                     _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
                 }
@@ -184,11 +180,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
-            if(_builder.TryGetProperties(node.Handler.Value, out var properties)) {
-                if(properties.Declaration is FunctionDeclaration) {
+            if(_builder.TryGetItemDeclaration(node.Handler.Value, out var referencedDeclaration)) {
+                if(referencedDeclaration is FunctionDeclaration) {
 
                     // nothing to do
-                } else if((properties.Declaration is ResourceDeclaration resourceDeclaration) && (resourceDeclaration.Type?.Value == "AWS::SNS::Topic")) {
+                } else if((referencedDeclaration is ResourceDeclaration resourceDeclaration) && (resourceDeclaration.Type?.Value == "AWS::SNS::Topic")) {
 
                     // nothing to do
                 } else {
@@ -200,8 +196,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
-            if(_builder.TryGetProperties(node.Handler.Value, out var properties)) {
-                if(!(properties.Declaration is FunctionDeclaration)) {
+            if(_builder.TryGetItemDeclaration(node.Handler.Value, out var referencedDeclaration)) {
+                if(!(referencedDeclaration is FunctionDeclaration)) {
                     _builder.LogError($"Handler must reference a Function declaration", node.Handler.SourceLocation);
                 }
             } else {

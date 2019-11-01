@@ -49,6 +49,29 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public bool DiscardIfNotReachable { get; set; }
         public IEnumerable<ADeclaration> Declarations => _declarations ?? Enumerable.Empty<ADeclaration>();
 
+        /// <summary>
+        /// CFN expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
+        /// </summary>
+        public AValueExpression ReferenceExpression { get; set; }
+
+        /// <summary>
+        /// List of declarations on which this declaration depends on.
+        /// </summary>
+        /// <param name="ReferenceName"></param>
+        /// <param name="Conditions"></param>
+        /// <param name="Node"></param>
+        /// <returns></returns>
+        public List<(string ReferenceName, IEnumerable<AConditionExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AConditionExpression>, ASyntaxNode)>();
+
+        /// <summary>
+        /// List of declarations that depend on this declaration.
+        /// </summary>
+        /// <typeparam name="ASyntaxNode"></typeparam>
+        /// <returns></returns>
+        public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
+        public AValueExpression ResolvedValue { get; set; }
+
+
         //--- Methods ---
         public void AddDeclaration(AItemDeclaration declaration, DoNotCallThisDirectly _) {
             if(_declarations == null) {

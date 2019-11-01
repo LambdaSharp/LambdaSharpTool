@@ -25,26 +25,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
     public class Builder {
 
-        //--- Types ---
-        public class DeclarationProperties {
-
-            //--- Properties ---
-            public ADeclaration Declaration { get; set; }
-
-            // TODO: this is the CFN expression to use when referencing the declaration; it could be conditional or an attribute, etc.
-            public AValueExpression ReferenceExpression { get; set; }
-
-            public List<(string ReferenceName, IEnumerable<AConditionExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AConditionExpression>, ASyntaxNode)>();
-            public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
-            public AValueExpression ResolvedValue { get; set; }
-        }
-
         //--- Class Fields ---
         private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Fields ---
-        private readonly Dictionary<ASyntaxNode, DeclarationProperties> _declarationProperties = new Dictionary<ASyntaxNode, DeclarationProperties>();
-        private readonly Dictionary<string, DeclarationProperties> _fullNameProperties = new Dictionary<string, DeclarationProperties>();
+        private readonly Dictionary<string, AItemDeclaration> _fullNameDeclarations = new Dictionary<string, AItemDeclaration>();
         private readonly List<string> _messages = new List<string>();
 
         //-- Properties ---
@@ -53,21 +38,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public VersionInfo ModuleVersion { get; set; }
 
         //--- Methods ---
-        public DeclarationProperties GetProperties(ADeclaration declaration) {
-            _declarationProperties.TryGetValue(declaration, out var properties);
-            return properties;
-        }
-
-        public bool TryGetProperties(ADeclaration declaration, out DeclarationProperties properties)
-            => _declarationProperties.TryGetValue(declaration, out properties);
-
-        public DeclarationProperties GetProperties(string fullName) {
-            _fullNameProperties.TryGetValue(fullName, out var properties);
-            return properties;
-        }
-
-        public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
-            _fullNameProperties.TryGetValue(fullName, out properties);
+        public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
+            => _fullNameDeclarations.TryGetValue(fullName, out declaration);
 
         public void AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
 
@@ -79,11 +51,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // store properties per-node and per-fullname
-            var properties = new Builder.DeclarationProperties {
-                Declaration = declaration
-            };
-            _declarationProperties.Add(declaration, properties);
-            _fullNameProperties.Add(declaration.FullName, properties);
+            _fullNameDeclarations.Add(declaration.FullName, declaration);
         }
 
         public void AddSharedDependency(ModuleInfo moduleInfo) {
@@ -99,12 +67,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public AValueExpression GetExportReference(ResourceDeclaration resourceDeclaration) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        public AValueExpression GetReference(AItemDeclaration itemDeclaration) {
 
             // TODO:
             throw new NotImplementedException();
