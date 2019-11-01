@@ -92,9 +92,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public DeclarationsVisitor(Builder builder) {
-            _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
-        }
+        public DeclarationsVisitor(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
@@ -150,9 +148,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
-
-            // register item declaration
-            var properties = _builder.AddItemDeclaration(parent, node);
 
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -279,7 +274,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 if(node.Properties != null) {
 
                     // add condition for creating the source
-                    var condition = node.AddDeclaration(new ConditionDeclaration {
+                    var condition = AddDeclaration(node, new ConditionDeclaration {
                         Condition = new LiteralExpression {
                             Value = "IsBlank"
                         },
@@ -294,7 +289,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     });
 
                     // add conditional resource
-                    var resource = node.AddDeclaration(new ResourceDeclaration {
+                    var resource = AddDeclaration(node, new ResourceDeclaration {
                         Resource = new LiteralExpression {
                             Value = "Resource"
                         },
@@ -316,7 +311,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     });
 
                     // update the reference expression for the parameter
-                    properties.ReferenceExpression = new IfFunctionExpression {
+                    _builder.GetProperties(node.FullName).ReferenceExpression = new IfFunctionExpression {
                         Condition = new ConditionLiteralExpression {
                             Value = condition.FullName
                         },
@@ -350,17 +345,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
         }
 
         public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
 
             // validate EncryptionContext attribute
             if(node.EncryptionContext != null) {
@@ -377,16 +366,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-        }
+        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) { }
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
 
             // check if declaration is a resource reference
             if(node.Value != null) {
@@ -429,7 +411,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 if((node.If != null) && !(node.If is ConditionLiteralExpression)) {
 
                     // creation condition as sub-declaration
-                    node.AddDeclaration(new ConditionDeclaration {
+                    AddDeclaration(node, new ConditionDeclaration {
                         Condition = new LiteralExpression {
                             SourceLocation = node.If.SourceLocation,
                             Value = "Condition"
@@ -456,9 +438,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
 
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
                 _builder.LogError($"invalid 'Module' attribute value", node.Module.SourceLocation);
@@ -480,9 +459,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
 
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-
             // validate Files attributes
             if(
                 !Directory.Exists(node.Files.Value)
@@ -494,9 +470,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
 
             // validate attributes
             ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
@@ -672,16 +645,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-        }
+        public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) { }
 
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
 
             // check if object expression is valid (must have first- and second-level keys)
             if(node.Value.Items.Count > 0) {
@@ -710,9 +676,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
@@ -775,11 +738,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
-
-            // register item declaration
-            _builder.AddItemDeclaration(parent, node);
-        }
+        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) { }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, TagListDeclaration allow) {
             if(allow != null) {
@@ -830,5 +789,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         // TODO: check AWS type
         private bool IsValidCloudFormationResourceType(string type) => throw new NotImplementedException();
+
+        private T AddDeclaration<T>(AItemDeclaration parent, T declaration) where T : AItemDeclaration {
+            parent.AddDeclaration(declaration, new AItemDeclaration.DoNotCallThisDirectly());
+            declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
+            return declaration;
+        }
     }
 }

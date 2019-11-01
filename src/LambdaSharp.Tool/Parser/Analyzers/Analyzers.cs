@@ -69,10 +69,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
             _fullNameProperties.TryGetValue(fullName, out properties);
 
-        public Builder.DeclarationProperties AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
-            var properties = new Builder.DeclarationProperties {
-                Declaration = declaration
-            };
+        public void AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
 
             // check for reserved names
             if(!ValidResourceNameRegex.IsMatch(declaration.LocalName)) {
@@ -82,9 +79,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // store properties per-node and per-fullname
+            var properties = new Builder.DeclarationProperties {
+                Declaration = declaration
+            };
             _declarationProperties.Add(declaration, properties);
             _fullNameProperties.Add(declaration.FullName, properties);
-            return properties;
         }
 
         public void AddSharedDependency(ModuleInfo moduleInfo) {

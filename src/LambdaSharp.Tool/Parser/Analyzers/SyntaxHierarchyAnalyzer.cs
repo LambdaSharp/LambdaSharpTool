@@ -22,6 +22,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
     public class SyntaxHierarchyAnalyzer : ISyntaxVisitor {
 
+        //--- Fields ---
+        private readonly Builder _builder;
+
+        //--- Constructors ---
+        public SyntaxHierarchyAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+
         //--- Methods ---
 
         #region === Module Declarations ===
@@ -274,11 +280,16 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         private void InitializeItemDeclaration(ASyntaxNode parent, AItemDeclaration node) {
+
+            // assign full name
             if(parent is AItemDeclaration parentItemDeclaration) {
                 node.FullName = $"{parentItemDeclaration.FullName}::{node.LocalName}";
             } else {
                 node.FullName = node.LocalName;
             }
+
+            // register item declaration
+            _builder.AddItemDeclaration(parent, node);
         }
     }
 }

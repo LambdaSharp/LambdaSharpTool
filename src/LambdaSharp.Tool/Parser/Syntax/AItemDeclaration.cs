@@ -25,8 +25,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
     public abstract class AItemDeclaration : ADeclaration {
 
+        //--- Types ---
+
+        // NOTE (2019-11-01, bjorg): this struct only exists to be make it the 'AddDeclaration()' method should never be called directly!
+        public struct DoNotCallThisDirectly { }
+
         //--- Fields ---
-        private List<ADeclaration> _declarations;
+        private List<AItemDeclaration> _declarations;
         private string _fullName;
 
         //--- Abstract Properties ---
@@ -45,13 +50,11 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public IEnumerable<ADeclaration> Declarations => _declarations ?? Enumerable.Empty<ADeclaration>();
 
         //--- Methods ---
-        public T AddDeclaration<T>(T declaration) where T : ADeclaration {
+        public void AddDeclaration(AItemDeclaration declaration, DoNotCallThisDirectly _) {
             if(_declarations == null) {
-                _declarations = new List<ADeclaration>();
+                _declarations = new List<AItemDeclaration>();
             }
-            declaration.Visit(this, new SyntaxHierarchyAnalyzer());
             _declarations.Add(declaration);
-            return declaration;
         }
     }
 
