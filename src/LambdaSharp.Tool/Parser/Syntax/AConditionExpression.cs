@@ -34,7 +34,21 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class ConditionNameConditionExpression : AConditionExpression {
+    public class ConditionReferenceExpression : AConditionExpression {
+
+        // TODO: parse !Ref STRING
+
+        //--- Properties ---
+        public string ReferenceName { get; set; }
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            visitor.VisitEnd(parent, this);
+        }
+    }
+
+    public class ConditionNameExpression : AConditionExpression {
 
         // TODO: parse !Condition STRING
 

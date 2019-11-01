@@ -30,7 +30,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         //--- Class Fields ---
 
-        private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static readonly HashSet<string> _cloudFormationParameterTypes;
 
         //--- Class Constructor ---
@@ -153,7 +152,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Parameter.Value);
+            var properties = _builder.AddItemDeclaration(parent, node);
 
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -242,9 +241,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // NOTE (2019-10-30, bjorg): for a 'Secret' type parameter, we need to create a new resource
                 //  that is used to decrypt the parameter into a plaintext value.
 
-                // value types cannot have Properties/Allow attribute
-                throw new NotImplementedException();
-
                 // TODO:
                 // var decoder = AddResource(
                 //     parent: result,
@@ -259,6 +255,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // );
                 // decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
                 // decoder.DiscardIfNotReachable = true;
+
+                throw new NotImplementedException();
             } else {
                 if(node.EncryptionContext != null) {
                     _builder.LogError($"EncryptionContext attribute cannot be used with this parameter type", node.Properties.SourceLocation);
@@ -277,44 +275,65 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
             } else if(IsValidCloudFormationResourceType(node.Type.Value)) {
 
-                // check if the 'Properties' attribute is set, which indicates the
-                //  underlying resource must be created when omitted as a parameter
+                // check if the 'Properties' attribute is set, which indicates a resource must be created when the parameter is omitted
                 if(node.Properties != null) {
 
-                    // TODO: conditionally create resource
+                    // add condition for creating the source
+                    var condition = node.AddDeclaration(new ConditionDeclaration {
+                        Condition = new LiteralExpression {
+                            Value = "IsBlank"
+                        },
+                        Value = new EqualsConditionExpression {
+                            LeftValue = new ConditionReferenceExpression {
+                                ReferenceName = node.FullName
+                            },
+                            RightValue = new ConditionLiteralExpression {
+                                Value = ""
+                            }
+                        }
+                    });
+
+                    // add conditional resource
+                    var resource = node.AddDeclaration(new ResourceDeclaration {
+                        Resource = new LiteralExpression {
+                            Value = "Resource"
+                        },
+                        Type = new LiteralExpression {
+                            Value = node.Type.Value
+                        },
+
+                        // TODO: should the data-structure be cloned?
+                        Properties = node.Properties,
+
+                        // TODO: set 'arnAttribute' for resource (default attribute to return when referencing the resource),
+
+                        If = new ConditionLiteralExpression {
+                            Value = condition.FullName
+                        },
+
+                        // TODO: should the data-structure be cloned?
+                        Pragmas = node.Pragmas
+                    });
+
+                    // update the reference expression for the parameter
+                    properties.ReferenceExpression = new IfFunctionExpression {
+                        Condition = new ConditionLiteralExpression {
+                            Value = condition.FullName
+                        },
+                        IfTrue = _builder.GetExportReference(resource),
+                        IfFalse = new ReferenceFunctionExpression {
+                            ReferenceName = node.FullName
+                        }
+                    };
+
                     // TODO: validate resource properties
-                    throw new NotImplementedException();
 
-                    // // create conditional resource
-                    // var condition = AddCondition(
-                    //     parent: result,
-                    //     name: "IsBlank",
-                    //     description: null,
-                    //     value: FnEquals(FnRef(result.ResourceName), "")
-                    // );
-                    // var instance = AddResource(
-                    //     parent: result,
-                    //     name: "Resource",
-                    //     description: null,
-                    //     scope: null,
-                    //     type: type,
-                    //     allow: null,
-                    //     properties: properties,
-                    //     arnAttribute: arnAttribute,
-                    //     dependsOn: null,
-                    //     condition: condition.FullName,
-                    //     pragmas: pragmas
-                    // );
-
-                    // // register input parameter reference
-                    // result.Reference = FnIf(
-                    //     condition.ResourceName,
-                    //     instance.GetExportReference(),
-                    //     result.Reference
-                    // );
+                    // TODO: grant resource permissions
 
                     // // request input parameter or conditional managed resource grants
                     // AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
+
+                    throw new NotImplementedException();
                 }
                 if(node.Allow != null) {
 
@@ -332,7 +351,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Import.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -341,7 +360,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Variable.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // validate EncryptionContext attribute
             if(node.EncryptionContext != null) {
@@ -361,13 +380,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Group.Value);
+            _builder.AddItemDeclaration(parent, node);
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Resource.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // check if declaration is a resource reference
             if(node.Value != null) {
@@ -438,7 +457,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Nested.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
@@ -462,7 +481,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Package.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // validate Files attributes
             if(
@@ -477,7 +496,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Function.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // validate attributes
             ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
@@ -656,13 +675,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Condition.Value);
+            _builder.AddItemDeclaration(parent, node);
         }
 
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Mapping.Value);
+            _builder.AddItemDeclaration(parent, node);
 
             // check if object expression is valid (must have first- and second-level keys)
             if(node.Value.Items.Count > 0) {
@@ -693,7 +712,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.ResourceType.Value);
+            _builder.AddItemDeclaration(parent, node);
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
@@ -727,7 +746,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
-            if(!ValidResourceNameRegex.IsMatch(node.Name.Value)) {
+            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
                 _builder.LogError($"name must be alphanumeric", node.SourceLocation);
             }
             if(node.Type == null) {
@@ -742,7 +761,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
-            if(!ValidResourceNameRegex.IsMatch(node.Name.Value)) {
+            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
                 _builder.LogError($"name must be alphanumeric", node.SourceLocation);
             }
             if(node.Type == null) {
@@ -759,14 +778,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
 
             // register item declaration
-            AddItemDeclaration(parent, node, node.Macro.Value);
-        }
-
-        private void AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
-            if(!ValidResourceNameRegex.IsMatch(name)) {
-                _builder.LogError($"name must be alphanumeric", declaration.SourceLocation);
-            }
-            _builder.AddItemDeclaration(parent, declaration, name);
+            _builder.AddItemDeclaration(parent, node);
         }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, TagListDeclaration allow) {

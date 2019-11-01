@@ -305,12 +305,11 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
         //--- Properties ---
-        public LiteralExpression ReferenceName { get; set; }
+        public string ReferenceName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ReferenceName?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

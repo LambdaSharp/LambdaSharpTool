@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
@@ -29,11 +30,17 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             //--- Properties ---
             public ADeclaration Declaration { get; set; }
-            public string FullName { get; set; }
+
+            // TODO: this is the CFN expression to use when referencing the declaration; it could be conditional or an attribute, etc.
+            public AValueExpression ReferenceExpression { get; set; }
+
             public List<(string ReferenceName, IEnumerable<AConditionExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AConditionExpression>, ASyntaxNode)>();
             public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
             public AValueExpression ResolvedValue { get; set; }
         }
+
+        //--- Class Fields ---
+        private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Fields ---
         private readonly Dictionary<ASyntaxNode, DeclarationProperties> _declarationProperties = new Dictionary<ASyntaxNode, DeclarationProperties>();
@@ -62,26 +69,21 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public bool TryGetProperties(string fullName, out DeclarationProperties properties) =>
             _fullNameProperties.TryGetValue(fullName, out properties);
 
-        public Builder.DeclarationProperties AddItemDeclaration(ASyntaxNode parent, ADeclaration declaration, string name) {
+        public Builder.DeclarationProperties AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
             var properties = new Builder.DeclarationProperties {
                 Declaration = declaration
             };
 
-            // assign full hierarchical name
-            if(_declarationProperties.TryGetValue(parent, out var parentProperties)) {
-                properties.FullName = $"{parentProperties.FullName}::{name}";
-            } else {
-                properties.FullName = name;
-            }
-
             // check for reserved names
-            if(properties.FullName == "AWS") {
+            if(!ValidResourceNameRegex.IsMatch(declaration.LocalName)) {
+                LogError($"name must be alphanumeric", declaration.SourceLocation);
+            } else if(declaration.FullName == "AWS") {
                 LogError($"AWS is a reserved name", declaration.SourceLocation);
             }
 
             // store properties per-node and per-fullname
             _declarationProperties.Add(declaration, properties);
-            _fullNameProperties.Add(properties.FullName, properties);
+            _fullNameProperties.Add(declaration.FullName, properties);
             return properties;
         }
 
@@ -96,6 +98,20 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             // TODO:
             throw new NotImplementedException();
         }
+
+        public AValueExpression GetExportReference(ResourceDeclaration resourceDeclaration) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        public AValueExpression GetReference(AItemDeclaration itemDeclaration) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
 
         public void LogError(string message, SourceLocation location)
             => _messages.Add($"ERROR: {message} @ {location?.FilePath ?? "n/a"}({location?.LineNumberStart ?? 0},{location?.ColumnNumberStart ?? 0})");

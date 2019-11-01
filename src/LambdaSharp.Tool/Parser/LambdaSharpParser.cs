@@ -36,6 +36,17 @@ namespace LambdaSharp.Tool.Parser {
 
     public sealed class LambdaSharpParser {
 
+        // TODO:
+        //  - create additional literal expression classes
+        //      - ALiteralExpression
+        //      - LiteralStringExpression
+        //      - LiteralIntegerExpression: https://yaml.org/type/int.html
+        //      - LiteralFloatExpression: https://yaml.org/type/float.html
+        //      - LiteralBoolExpression: https://yaml.org/type/bool.html
+        //      - LiteralTimestampExpression: https://yaml.org/type/timestamp.html
+        //      - no YAML nulls allows: https://yaml.org/type/null.html
+        //  - parse AConditionExpression
+
         //--- Types ---
         private class SyntaxInfo {
 
@@ -86,7 +97,7 @@ namespace LambdaSharp.Tool.Parser {
                 // TODO:
                 [typeof(AConditionExpression)] = () => throw new NotImplementedException("AConditionExpression"),
                 [typeof(MappingNameLiteral)] = () => throw new NotImplementedException("MappingNameLiteralExpression"),
-                [typeof(ConditionNameConditionExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
+                [typeof(ConditionNameExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
 
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseSyntaxOf<ModuleDeclaration>(),
@@ -761,7 +772,7 @@ namespace LambdaSharp.Tool.Parser {
                 if(value is LiteralExpression refLiteral) {
                     return new ReferenceFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = refLiteral
+                        ReferenceName = refLiteral.Value
                     };
                 }
                 LogError($"invalid parameters for !Ref function", value.SourceLocation);

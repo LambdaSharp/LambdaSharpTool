@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) {
-            var referenceName = node.ReferenceName.Value;
+            var referenceName = node.ReferenceName;
 
             // check if reference is to CloudFormation pseudo-parameter
             if(referenceName.StartsWith("AWS::", StringComparison.Ordinal)) {
@@ -139,7 +139,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node) {
+        public override void VisitStart(ASyntaxNode parent, ConditionNameExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference

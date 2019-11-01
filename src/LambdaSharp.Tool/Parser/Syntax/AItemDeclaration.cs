@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Tool.Parser.Analyzers;
@@ -25,20 +26,32 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public abstract class AItemDeclaration : ADeclaration {
 
         //--- Fields ---
-        public List<ADeclaration> _declarations;
+        private List<ADeclaration> _declarations;
+        private string _fullName;
+
+        //--- Abstract Properties ---
+        public abstract string LocalName { get; }
 
         //--- Properties ---
+        public string FullName {
+
+            // TODO: better exception
+            get => _fullName ?? throw new ApplicationException("value not set");
+            set => _fullName = value ?? throw new ArgumentNullException(nameof(FullName));
+        }
+
         public LiteralExpression Description { get; set; }
         public bool DiscardIfNotReachable { get; set; }
         public IEnumerable<ADeclaration> Declarations => _declarations ?? Enumerable.Empty<ADeclaration>();
 
         //--- Methods ---
-        public void AddDeclaration(ADeclaration declaration) {
+        public T AddDeclaration<T>(T declaration) where T : ADeclaration {
             if(_declarations == null) {
                 _declarations = new List<ADeclaration>();
             }
             declaration.Visit(this, new SyntaxHierarchyAnalyzer());
             _declarations.Add(declaration);
+            return declaration;
         }
     }
 
@@ -100,6 +113,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
 
+        public override string LocalName => Parameter.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -148,6 +163,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
 
+        public override string LocalName => Import.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -181,6 +198,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
 
+        public override string LocalName => Variable.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -204,6 +223,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxRequired]
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
+        public override string LocalName => Group.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -223,6 +244,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public AConditionExpression Value { get; set; }
+
+        public override string LocalName => Condition.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -268,6 +291,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
 
+        public override string LocalName => Resource.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -303,6 +327,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public ObjectExpression Parameters { get; set; }
 
+        public override string LocalName => Nested.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -327,6 +353,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public LiteralExpression Files { get; set; }
+
+        public override string LocalName => Package.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -405,6 +433,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
 
+        public override string LocalName => Function.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -436,6 +466,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public ObjectExpression Value { get; set; }
+
+        public override string LocalName => Mapping.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -505,6 +537,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         [SyntaxOptional]
         public List<AttributeTypeExpression> Attributes { get; set; } = new List<AttributeTypeExpression>();
 
+        public override string LocalName => ResourceType.Value;
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -526,6 +560,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         [SyntaxRequired]
         public LiteralExpression Handler { get; set; }
+
+        public override string LocalName => Macro.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

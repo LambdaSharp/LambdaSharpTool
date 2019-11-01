@@ -115,8 +115,10 @@ namespace LambdaSharp.Tool.Parser {
         void VisitEnd(ASyntaxNode parent, LiteralExpression node);
         void VisitStart(ASyntaxNode parent, ConditionLiteralExpression node);
         void VisitEnd(ASyntaxNode parent, ConditionLiteralExpression node);
-        void VisitStart(ASyntaxNode parent, ConditionNameConditionExpression node);
-        void VisitEnd(ASyntaxNode parent, ConditionNameConditionExpression node);
+        void VisitStart(ASyntaxNode parent, ConditionNameExpression node);
+        void VisitEnd(ASyntaxNode parent, ConditionNameExpression node);
+        void VisitStart(ASyntaxNode parent, ConditionReferenceExpression node);
+        void VisitEnd(ASyntaxNode parent, ConditionReferenceExpression node);
         void VisitStart(ASyntaxNode parent, EqualsConditionExpression node);
         void VisitEnd(ASyntaxNode parent, EqualsConditionExpression node);
         void VisitStart(ASyntaxNode parent, NotConditionExpression node);
