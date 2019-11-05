@@ -54,7 +54,20 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     if(!SecretArnRegex.IsMatch(secret.Value)) {
                         _builder.LogError("secret key must be a valid ARN", secret.SourceLocation);
                     }
-                } else if(!SecretAliasRegex.IsMatch(secret.Value)) {
+                } else if(SecretAliasRegex.IsMatch(secret.Value)) {
+
+                    // TODO: resolve KMS key alias to ARN
+
+                    // // assume key name is an alias and resolve it to its ARN
+                    // try {
+                    //     var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
+                    //     _secrets.Add(response.KeyMetadata.Arn);
+                    //     return true;
+                    // } catch(Exception e) {
+                    //     LogError($"failed to resolve key alias: {textSecret}", e);
+                    //     return false;
+                    // }
+                } else {
                     _builder.LogError($"secret key must be a valid alias", secret.SourceLocation);
                 }
             }

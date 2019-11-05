@@ -39,9 +39,6 @@ namespace LambdaSharp.Tool.Model {
 
     public class ModuleBuilder : AModelProcessor {
 
-        //--- Class Properties ---
-        public static object GetModuleArtifactExpression(string filename) => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
-
         //--- Fields ---
         private string _namespace;
         private string _name;
@@ -88,11 +85,9 @@ namespace LambdaSharp.Tool.Model {
         }
 
         //--- Properties ---
-        public string Name => _name;
         public string FullName => $"{_namespace}.{_name}";
         public string Info => $"{FullName}:{Version}";
         public VersionInfo Version { get; set; }
-        public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
 
@@ -130,8 +125,6 @@ namespace LambdaSharp.Tool.Model {
             }
             return _itemsByFullName[fullNameOrResourceName];
         }
-
-        public void AddPragma(object pragma) => _pragmas.Add(pragma);
 
         public bool TryGetItem(string fullNameOrResourceName, out AModuleItem item) {
             if(fullNameOrResourceName == null) {
@@ -233,30 +226,6 @@ namespace LambdaSharp.Tool.Model {
             }
             _dependencies[moduleKey] = dependency;
             return dependency;
-        }
-
-        public bool AddSecret(object secret) {
-            if(secret is string textSecret) {
-                if(textSecret.StartsWith("arn:")) {
-
-                    // decryption keys provided with their ARN can be added as is; no further steps required
-                    _secrets.Add(secret);
-                    return true;
-                }
-
-                // assume key name is an alias and resolve it to its ARN
-                try {
-                    var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
-                    _secrets.Add(response.KeyMetadata.Arn);
-                    return true;
-                } catch(Exception e) {
-                    LogError($"failed to resolve key alias: {textSecret}", e);
-                    return false;
-                }
-            } else {
-                _secrets.Add(secret);
-                return true;
-            }
         }
 
         public AModuleItem AddImport(
@@ -364,69 +333,6 @@ namespace LambdaSharp.Tool.Model {
                 allow: allow,
                 encryptionContext: encryptionContext
             );
-        }
-
-        public void AddResourceType(
-            string resourceType,
-            string description,
-            string handler,
-            IEnumerable<ModuleManifestResourceProperty> properties,
-            IEnumerable<ModuleManifestResourceProperty> attributes
-        ) {
-
-            // TODO (2018-09-20, bjorg): add custom resource name validation
-            if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
-                LogError($"Resource type '{resourceType}' is already defined.");
-            }
-
-            // add resource type definition
-            AddItem(new ResourceTypeItem(resourceType, description, handler));
-            _customResourceTypes.Add(new ModuleManifestResourceType {
-                Type = resourceType,
-                Description = description,
-                Properties = properties ?? Enumerable.Empty<ModuleManifestResourceProperty>(),
-                Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceProperty>()
-            });
-        }
-
-        public AModuleItem AddMacro(string macroName, string description, string handler) {
-            Validate(Regex.IsMatch(macroName, CLOUDFORMATION_ID_PATTERN), "name is not valid");
-
-            // check if a root macros collection needs to be created
-            if(!TryGetItem("Macros", out var macrosItem)) {
-                macrosItem = AddVariable(
-                    parent: null,
-                    name: "Macros",
-                    description: "Macro definitions",
-                    type: "String",
-                    scope: null,
-                    value: "",
-                    allow: null,
-                    encryptionContext: null
-                );
-            }
-
-            // add macro resource
-            var result = AddResource(
-                parent: macrosItem,
-                name: macroName,
-                description: description,
-                scope: null,
-                resource: new Humidifier.CloudFormation.Macro {
-
-                    // TODO (2018-10-30, bjorg): we may want to set 'LogGroupName' and 'LogRoleARN' as well
-
-                    Name = FnSub($"${{DeploymentPrefix}}{macroName}"),
-                    Description = description,
-                    FunctionName = FnRef(handler)
-                },
-                resourceExportAttribute: null,
-                dependsOn: null,
-                condition: null,
-                pragmas: null
-            );
-            _macroNames.Add(macroName);
-            return result;
         }
 
         public AModuleItem AddVariable(

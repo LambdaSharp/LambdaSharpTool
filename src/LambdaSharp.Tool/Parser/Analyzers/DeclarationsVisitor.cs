@@ -335,14 +335,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
 
             // check if object expression is valid (must have first- and second-level keys)
-            if(node.Value.Items.Count > 0) {
+            if(node.Value.Items.Any()) {
 
                 // check that all first-level keys have object expressions
                 foreach(var topLevelEntry in node.Value.Items) {
                     if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
-                        if(secondLevelObjectExpression.Items.Count > 0) {
-                            _builder.LogError($"missing second-level mappings", secondLevelObjectExpression.SourceLocation);
-                        } else {
+                        if(secondLevelObjectExpression.Items.Any()) {
 
                             // check that all second-level keys have literal expressions
                             foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
@@ -350,6 +348,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                                     _builder.LogError($"value must be a literal", secondLevelEntry.SourceLocation);
                                 }
                             }
+                        } else {
+                            _builder.LogError($"missing second-level mappings", secondLevelObjectExpression.SourceLocation);
                         }
                     } else {
                         _builder.LogError($"value must be an object", topLevelEntry.Value.SourceLocation);
@@ -362,17 +362,33 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
-            // TODO: missing code
+            // NOTE (2019-11-05, bjorg): processing happens in VisitEnd() after the property and attribute nodes have been processed
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
+
+            // TODO: register custom resource so that it is available do the module (maybe in VisitEnd?)
+
+            // // TODO (2018-09-20, bjorg): add custom resource name validation
+            // if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
+            //     LogError($"Resource type '{resourceType}' is already defined.");
+            // }
+
+            // // add resource type definition
+            // AddItem(new ResourceTypeItem(resourceType, description, handler));
+            // _customResourceTypes.Add(new ModuleManifestResourceType {
+            //     Type = resourceType,
+            //     Description = description,
+            //     Properties = properties ?? Enumerable.Empty<ModuleManifestResourceProperty>(),
+            //     Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceProperty>()
+            // });
 
             // TODO: better rules for parsing CloudFormation types
             //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
 
             // ensure unique property names
             var names = new HashSet<string>();
-            if(node.Properties.Count > 0) {
+            if(node.Properties.Any()) {
                 foreach(var property in node.Properties) {
                     if(!names.Add(property.Name.Value)) {
                         _builder.LogError("duplicate name", property.Name.SourceLocation);
@@ -384,7 +400,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // ensure unique attribute names
             names.Clear();
-            if(node.Attributes.Count > 0) {
+            if(node.Attributes.Any()) {
                 foreach(var attribute in node.Attributes) {
                     if(!names.Add(attribute.Name.Value)) {
                         _builder.LogError("duplicate name", attribute.Name.SourceLocation);
@@ -425,7 +441,28 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) { }
+        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
+
+            // check if a root macros collection needs to be created
+            if(!_builder.TryGetItemDeclaration("Macros", out var macrosItem)) {
+                macrosItem = AddDeclaration(node.Parents.OfType<ModuleDeclaration>().First(), new GroupDeclaration {
+                    Group = Literal("Macros"),
+                    Description = Literal("Macro definitions")
+                });
+            }
+
+            // add macro resource
+            AddDeclaration(macrosItem, new ResourceDeclaration {
+                Resource = Literal(node.Macro.Value),
+                Type = Literal("AWS::CloudFormation::Macro"),
+                Description = node.Description,
+                Properties = new ObjectExpression {
+                    ["Name"] = FnSub($"${{DeploymentPrefix}}{node.Macro.Value}"),
+                    ["Description"] = node.Description,
+                    ["FunctionName"] = FnRef(node.Handler.Value)
+                }
+            });
+        }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, TagListDeclaration allow) {
             if(allow != null) {
