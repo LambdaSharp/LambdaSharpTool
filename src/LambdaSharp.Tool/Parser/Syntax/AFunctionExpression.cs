@@ -80,6 +80,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
     public class MappingNameLiteral : ASyntaxNode {
 
         //--- Properties ---
+
+        // TODO: should this be a literal expression or not?!?
         public string ReferenceName { get; set; }
 
         //--- Methods ---

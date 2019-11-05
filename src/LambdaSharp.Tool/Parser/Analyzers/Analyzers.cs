@@ -47,7 +47,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public VersionInfo CoreServicesReferenceVersion { get; private set; }
 
         public string ModuleFullName => $"{ModuleNamespace}.{ModuleName}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(ModuleNamespace, ModuleName, ModuleVersion, origin: null);
+        public ModuleInfo ModuleInfo => new ModuleInfo(ModuleNamespace, ModuleName, ModuleVersion, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public IEnumerable<AItemDeclaration> ItemDeclarations => _fullNameDeclarations.Values;
 
         //--- Methods ---
@@ -67,7 +67,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             _fullNameDeclarations.Add(declaration.FullName, declaration);
         }
 
-        public void AddSharedDependency(ModuleInfo moduleInfo) {
+        public void AddSharedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {
 
             // TODO:
             throw new NotImplementedException();
@@ -87,6 +87,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
 
+        // TODO: errors needs an error number and fixed string
         public void LogError(string message, SourceLocation location)
             => _messages.Add($"ERROR: {message} @ {location?.FilePath ?? "n/a"}({location?.LineNumberStart ?? 0},{location?.ColumnNumberStart ?? 0})");
     }

@@ -44,80 +44,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         public ModelAstToModuleConverter(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
-        public ModuleBuilder Convert(ModuleNode module) {
-
-            // convert module definition
-            try {
-
-                // ensure version is present
-                VersionInfo version;
-                if(module.Version == null) {
-                    version = VersionInfo.Parse("1.0-DEV");
-                } else if(!VersionInfo.TryParse(module.Version, out version)) {
-                    LogError("'Version' expected to have format: Major.Minor[.Build[.Revision]]");
-                    version = VersionInfo.Parse("0.0");
-                }
-
-                // ensure namespace is present
-                if(!module.Module.TryParseModuleFullName(out string moduleNamespace, out var moduleName)) {
-                    LogError("'Module' attribute must have format 'Namespace.Name'");
-                }
-
-                // initialize module
-                _builder = new ModuleBuilder(Settings, SourceFilename, new Module {
-                    Namespace = moduleNamespace,
-                    Name = moduleName,
-                    Version = version,
-                    Description = module.Description
-                });
-
-                // convert collections
-                ForEach("Pragmas", module.Pragmas, ConvertPragma);
-                ForEach("Secrets", module.Secrets, ConvertSecret);
-                ForEach("Using", module.Using, ConvertUsing);
-                ForEach("Items", module.Items, ConvertItem);
-                return _builder;
-            } catch(Exception e) {
-                LogError(e);
-                return null;
-            }
-        }
-
-        private void ConvertPragma(int index, object pragma) {
-            AtLocation($"{index}", () => _builder.AddPragma(pragma));
-        }
-
-        private void ConvertSecret(int index, string secret) {
-            AtLocation($"{index}", () => {
-                if(string.IsNullOrEmpty(secret)) {
-                    LogError($"secret has no value");
-                } else if(secret.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
-                    LogError($"cannot grant permission to decrypt with aws/ssm");
-                } else if(secret.StartsWith("arn:")) {
-                    if(!Regex.IsMatch(secret, $"arn:aws:kms:{Settings.AwsRegion}:{Settings.AwsAccountId}:key/[a-fA-F0-9\\-]+")) {
-                        LogError("secret key must be a valid ARN for the current region and account ID");
-                    }
-                } else if(!Regex.IsMatch(secret, SECRET_ALIAS_PATTERN)) {
-                    LogError("secret key must be a valid alias");
-                }
-                _builder.AddSecret(secret);
-            });
-        }
-
-        private void ConvertUsing(int index, ModuleDependencyNode dependency) {
-            AtLocation($"{index}", () => {
-                if(!ModuleInfo.TryParse(dependency.Module, out var moduleInfo)) {
-                    LogError("invalid module reference format");
-                    return;
-                }
-                if(moduleInfo.Origin == null) {
-
-                    // default to deployment bucket as origin
-                    moduleInfo = moduleInfo.WithOrigin(Settings.DeploymentBucketName);
-                }
-                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared).Wait();
-            });
-        }
+        public ModuleBuilder Convert(ModuleNode module) => throw new NotImplementedException("deleted code");
 
         private AFunctionSource ConvertFunctionSource(ModuleItemNode function, int index, FunctionSourceNode source) {
             var type = DeterminNodeType("source", index, source, FunctionSourceNode.FieldCombinations, new[] {
@@ -230,101 +157,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             return null;
         }
 
-        private void ConvertItem(int index, ModuleItemNode node)
-            => ConvertItem(null, index, node, new[] {
-                "Condition",
-                "Function",
-                "Group",
-                "Import",
-                "Macro",
-                "Mapping",
-                "Nested",
-                "Package",
-                "Parameter",
-                "Resource",
-                "ResourceType",
-                "Variable"
-            });
 
         private void ConvertItem(AModuleItem parent, int index, ModuleItemNode node, IEnumerable<string> expectedTypes) {
             var type = DeterminNodeType("item", index, node, ModuleItemNode.FieldCombinations, expectedTypes);
             switch(type) {
             case "Parameter":
-                AtLocation(node.Parameter, () => {
-
-                    // validation
-                    if(node.Properties != null) {
-                        Validate(node.Type != null, "'Type' attribute is required");
-                    }
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
-                    Validate(parent == null, "'Parameter' cannot be nested");
-
-                    // create input parameter item
-                    _builder.AddParameter(
-                        name: node.Parameter,
-                        section: node.Section,
-                        label: node.Label,
-                        description: node.Description,
-                        type: node.Type ?? "String",
-                        scope: ConvertScope(node.Scope),
-                        noEcho: node.NoEcho,
-                        defaultValue: node.Default,
-                        constraintDescription: node.ConstraintDescription,
-                        allowedPattern: node.AllowedPattern,
-                        allowedValues: node.AllowedValues,
-                        maxLength: node.MaxLength,
-                        maxValue: node.MaxValue,
-                        minLength: node.MinLength,
-                        minValue: node.MinValue,
-                        allow: node.Allow,
-                        properties: ParseToDictionary("Properties", node.Properties),
-                        arnAttribute: node.DefaultAttribute,
-                        encryptionContext: node.EncryptionContext,
-                        pragmas: node.Pragmas
-                    );
-                });
                 break;
             case "Import":
-                AtLocation(node.Import, () => {
-
-                    // validation
-                    Validate((node.Allow == null) || (node.Type == "AWS") || ResourceMapping.IsCloudFormationType(node.Type), "'Allow' attribute can only be used with AWS resource types");
-                    Validate(node.Module != null, "missing 'Module' attribute");
-
-                    // create input parameter item
-                    _builder.AddImport(
-                        parent: parent,
-                        name: node.Import,
-                        description: node.Description,
-                        type: node.Type ?? "String",
-                        scope: ConvertScope(node.Scope),
-                        allow: node.Allow,
-                        module: node.Module ?? "Bad.Module",
-                        encryptionContext: node.EncryptionContext,
-                        out var _
-                    );
-                });
                 break;
             case "Variable":
-                AtLocation(node.Variable, () => {
-
-                    // validation
-                    Validate(node.Value != null, "missing 'Value' attribute");
-                    Validate((node.EncryptionContext == null) || (node.Type == "Secret"), "item must have Type 'Secret' to use 'EncryptionContext' section");
-                    Validate((node.Type != "Secret") || !(node.Value is IList<object>), "item with type 'Secret' cannot have a list of values");
-
-                    // create variable item
-                    _builder.AddVariable(
-                        parent: parent,
-                        name: node.Variable,
-                        description: node.Description,
-                        type: node.Type ?? "String",
-                        scope: ConvertScope(node.Scope),
-                        value: node.Value ?? "",
-                        allow: null,
-                        encryptionContext: node.EncryptionContext
-                    );
-                });
                 break;
             case "Group":
                 AtLocation(node.Group, () => {

@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Description { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+        public ListExpression Pragmas { get; set; } = new ListExpression();
 
         [SyntaxOptional]
         public List<LiteralExpression> Secrets { get; set; } = new List<LiteralExpression>();

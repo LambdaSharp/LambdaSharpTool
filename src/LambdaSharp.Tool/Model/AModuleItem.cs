@@ -19,10 +19,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Model {
     using static ModelFunctions;
@@ -251,7 +248,6 @@ namespace LambdaSharp.Tool.Model {
         public IList<AFunctionSource> Sources { get; set; }
         public Humidifier.Lambda.Function Function { get; set; }
         public object ExportReference { get; set; }
-        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");

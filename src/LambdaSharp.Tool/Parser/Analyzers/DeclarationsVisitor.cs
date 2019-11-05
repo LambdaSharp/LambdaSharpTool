@@ -32,6 +32,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         //--- Class Fields ---
         private static readonly HashSet<string> _cloudFormationParameterTypes;
         private static readonly string _decryptSecretFunctionCode;
+        private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Constructor ---
         static DeclarationsVisitor() {
@@ -96,6 +98,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
         };
 
+        private static AValueExpression FnGetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
+            ReferenceName = Literal(referenceName),
+            AttributeName = Literal(attributeName)
+        };
+
         private static AValueExpression FnSub(string formatString) => new SubFunctionExpression {
             FormatString = Literal(formatString)
         };
@@ -115,6 +122,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             Value = condition ?? throw new ArgumentNullException(nameof(condition))
         };
 
+        // TODO: left/right values should be AValueExpression
         private static AConditionExpression FnEquals(AConditionExpression leftValue, AConditionExpression rightValue) => new EqualsConditionExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
@@ -161,7 +169,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 _builder.ModuleVersion = version;
             } else {
                 _builder.LogError($"'Version' expected to have format: Major.Minor[.Patch]", node.Version.SourceLocation);
-                _builder.ModuleVersion = VersionInfo.Parse("1.0-DEV");
+                _builder.ModuleVersion = VersionInfo.Parse("0.0");
             }
 
             // ensure module has a namespace and name
@@ -176,14 +184,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             foreach(var secret in node.Secrets) {
                 if(secret.Value.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
                     _builder.LogError($"cannot grant permission to decrypt with aws/ssm", secret.SourceLocation);
-
-                // TODO:
-                // } else if(secret.Value.StartsWith("arn:", StringComparison.Ordinal)) {
-                //     if(!Regex.IsMatch(secret, $"arn:aws:kms:{Settings.AwsRegion}:{Settings.AwsAccountId}:key/[a-fA-F0-9\\-]+")) {
-                //         LogError("secret key must be a valid ARN for the current region and account ID");
-                //     }
-
-                } else if(!Regex.IsMatch(secret.Value, @"[0-9a-zA-Z/_\-]+")) {
+                } else if(secret.Value.StartsWith("arn:", StringComparison.Ordinal)) {
+                    if(!SecretArnRegex.IsMatch(secret.Value)) {
+                        _builder.LogError("secret key must be a valid ARN", secret.SourceLocation);
+                    }
+                } else if(!SecretAliasRegex.IsMatch(secret.Value)) {
                     _builder.LogError($"secret key must be a valid alias", secret.SourceLocation);
                 }
             }
@@ -261,7 +266,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             });
 
             // add overridable logging retention variable
-            if(!TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
+            if(!TryGetOverride(node, "Module::LogRetentionInDays", out var logRetentionInDays)) {
                 logRetentionInDays = Literal(30);
             }
             AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
@@ -293,22 +298,28 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 },
                 DiscardIfNotReachable = true
             });
+
+            // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::IsEnabled
             AddDeclaration(node, new ConditionDeclaration {
                 Condition = Literal("XRayIsEnabled"),
-                Value = FnNot(FnEquals(FnCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.Disabled.ToString())))
+                Value = FnNot(FnEquals(FnRefCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.Disabled.ToString())))
             });
+
+            // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::NestedIsEnabled
             AddDeclaration(node, new ConditionDeclaration {
                 Condition = Literal("XRayNestedIsEnabled"),
-                Value = FnEquals(FnCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.AllModules.ToString()))
+                Value = FnEquals(FnRefCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.AllModules.ToString()))
             });
 
             // check if module might depdent on core services
-            if(HasLambdaSharpDependencies() || HasModuleRegistration()) {
+            if(HasLambdaSharpDependencies(node) || HasModuleRegistration(node)) {
                 AddDeclaration(node, new ParameterDeclaration {
                     Parameter = Literal("LambdaSharpCoreServices"),
                     Section = Literal(section),
                     Label = Literal("Integrate with LambdaSharp.Core services"),
                     Description = Literal("Use LambdaSharp.Core Services"),
+
+                    // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
                     Default = Literal("Disabled"),
                     AllowedValues = new List<LiteralExpression> {
                         Literal("Disabled"),
@@ -318,12 +329,14 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 });
                 AddDeclaration(node, new ConditionDeclaration {
                     Condition = Literal("UseCoreServices"),
-                    Value = FnEquals(FnCondition("LambdaSharpCoreServices"), ConditionLiteral("Enabled"))
+
+                    // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
+                    Value = FnEquals(FnRefCondition("LambdaSharpCoreServices"), ConditionLiteral("Enabled"))
                 });
             }
 
             // import lambdasharp dependencies (unless requested otherwise)
-            if(HasLambdaSharpDependencies()) {
+            if(HasLambdaSharpDependencies(node)) {
 
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharpGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
@@ -354,7 +367,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // add module variables
-            if(TryGetModuleVariable("DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
+            if(TryGetVariable(node, "DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
                 AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
                     Variable = Literal("DeadLetterQueue"),
                     Description = Literal("Module Dead Letter Queue (ARN)"),
@@ -370,18 +383,25 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     condition: deadLetterQueueCondition
                 );
             }
-            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable, out var _)) {
+            if(TryGetVariable(node, "LoggingStream", out var loggingStreamVariable, out var _)) {
                 AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
                     Variable = Literal("LoggingStream"),
                     Description = Literal("Module Logging Stream (ARN)"),
-                    Value = loggingStreamVariable
+                    Value = loggingStreamVariable,
+
+                    // TODO (2019-11-05, bjorg): can we use a more specific type than 'String' here?
+                    Type = Literal("String")
                 });
             }
-            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
+            if(TryGetVariable(node, "LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
                 AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
                     Variable = Literal("LoggingStreamRole"),
                     Description = Literal("Module Logging Stream Role (ARN)"),
-                    Value = loggingStreamRoleVariable
+                    Value = loggingStreamRoleVariable,
+
+                    // TODO (2019-11-05, bjorg): consider using 'AWS::IAM::Role'
+                    Type = Literal("String")
+
                 });
             }
 
@@ -401,12 +421,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 );
             }
 
-
             // add decryption function for secret parameters and values
             AddDeclaration(node, new FunctionDeclaration {
                 Function = Literal("DecryptSecretFunction"),
                 Description = Literal("Module secret decryption function"),
                 Environment = new ObjectExpression {
+
+                    // NOTE (2019-11-05, bjorg): we use the Lambda environment to introduce a conditional dependency
+                    //  on the policy for KMS keys passed in through the 'Secrets' parameter; without this dependency,
+                    //  the Lambda function could run before the policy is in effect, causing it to fail.
                     ["MODULE_ROLE_SECRETSPOLICY"] = FnIf(
                         "Module::Role::SecretsPolicy::Condition",
                         FnRef("Module::Role::SecretsPolicy"),
@@ -455,13 +478,15 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 Parameter = Literal("DeploymentRoot"),
                 Section = Literal(section),
                 Label = Literal("Root stack name for nested deployments, blank otherwise"),
-                Description = Literal("Root Stack Name")
+                Description = Literal("Root Stack Name"),
+                Default = Literal("")
             });
             AddDeclaration(node, new ParameterDeclaration {
                 Parameter = Literal("DeploymentChecksum"),
                 Section = Literal(section),
                 Label = Literal("CloudFormation template MD5 checksum"),
-                Description = Literal("Deployment Checksum")
+                Description = Literal("Deployment Checksum"),
+                Default = Literal("")
             });
 
             // add conditional KMS permissions for secrets parameter
@@ -515,8 +540,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             );
 
             // add module registration
-            if(HasModuleRegistration()) {
-                _builder.AddSharedDependency(new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
+            if(HasModuleRegistration(node)) {
+                _builder.AddSharedDependency(node, new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
 
                 // create module registration
                 AddDeclaration(node, new ResourceDeclaration {
@@ -526,7 +551,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         ["Module"] = Literal(_builder.ModuleInfo.ToString()),
                         ["ModuleId"] = FnRef("AWS::StackName")
                     },
-                    If = FnCondition("UseCoreServices")
+                    If = ConditionLiteral("UseCoreServices")
                 });
             }
         }
@@ -547,6 +572,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     condition: null
                 );
             }
+
+            // TODO: this might be a good spot to compute the effective role permissions
         }
 
         public override void VisitStart(ASyntaxNode parent, UsingDeclaration node) {
@@ -559,11 +586,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // default to deployment bucket as origin when missing
                 if(moduleInfo.Origin == null) {
                     moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                    node.Module.Value = moduleInfo.ToString();
                 }
 
                 // add module reference as a shared dependency
-                _builder.AddSharedDependency(moduleInfo);
+                _builder.AddSharedDependency(node, moduleInfo);
             }
         }
 
@@ -614,10 +640,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
             } else {
                 if(node.MinValue != null) {
-                    _builder.LogError($"MinValue attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.LogError($"MinValue attribute cannot be used with this parameter type", node.MinValue.SourceLocation);
                 }
                 if(node.MaxValue != null) {
-                    _builder.LogError($"MaxValue attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.LogError($"MaxValue attribute cannot be used with this parameter type", node.MaxValue.SourceLocation);
                 }
             }
 
@@ -626,27 +652,39 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                 // the 'AllowedPattern' attribute must be a valid regex expression
                 if(node.AllowedPattern != null) {
+
+                    // check if 'AllowedPattern' is a valid regular expression
                     try {
                         new Regex(node.AllowedPattern.Value);
-                    } catch(ArgumentException) {
-                        _builder.LogError($"AllowedPattern must be a valid regex expression", node.Properties.SourceLocation);
+                    } catch {
+                        _builder.LogError($"AllowedPattern must be a valid regex expression", node.AllowedPattern.SourceLocation);
                     }
-                } else {
+                } else if(node.ConstraintDescription != null) {
+                    // the 'ConstraintDescription' attribute is only valid in conjunction with the 'AllowedPattern' attribute
+                    _builder.LogError($"ConstraintDescription attribute can only be used in conjunction with the AllowedPattern attribute", node.ConstraintDescription.SourceLocation);
+                }
+                if(node.MinLength != null) {
 
-                    // the 'ConstraintDescription' attribute is invalid when the 'ALlowedPattern' attribute is omitted
-                    if(node.ConstraintDescription != null) {
-                        _builder.LogError($"ConstraintDescription attribute can only be used in conjunction with the AllowedPattern attribute", node.Properties.SourceLocation);
-                    }
+                    // TODO: validate the value is a number
+                    throw new NotImplementedException();
+                }
+                if(node.MaxLength != null) {
+
+                    // TODO: validate the value is a number
+                    throw new NotImplementedException();
                 }
             } else {
                 if(node.AllowedPattern != null) {
-                    _builder.LogError($"AllowedPattern attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.LogError($"AllowedPattern attribute cannot be used with this parameter type", node.AllowedPattern.SourceLocation);
+                }
+                if(node.ConstraintDescription != null) {
+                    _builder.LogError($"ConstraintDescription attribute cannot be used with this parameter type", node.ConstraintDescription.SourceLocation);
                 }
                 if(node.MinLength != null) {
-                    _builder.LogError($"MinLength attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.LogError($"MinLength attribute cannot be used with this parameter type", node.MinLength.SourceLocation);
                 }
                 if(node.MaxLength != null) {
-                    _builder.LogError($"MaxLength attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.LogError($"MaxLength attribute cannot be used with this parameter type", node.MaxLength.SourceLocation);
                 }
             }
 
@@ -656,22 +694,16 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // NOTE (2019-10-30, bjorg): for a 'Secret' type parameter, we need to create a new resource
                 //  that is used to decrypt the parameter into a plaintext value.
 
-                // TODO:
-                // var decoder = AddResource(
-                //     parent: result,
-                //     name: "Plaintext",
-                //     description: null,
-                //     scope: null,
-                //     resource: CreateDecryptSecretResourceFor(result),
-                //     resourceExportAttribute: null,
-                //     dependsOn: null,
-                //     condition: null,
-                //     pragmas: null
-                // );
-                // decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
-                // decoder.DiscardIfNotReachable = true;
-
-                throw new NotImplementedException();
+                var decoder = AddDeclaration(node, new ResourceDeclaration {
+                    Resource = Literal("Plaintext"),
+                    Type = Literal("Module::DecryptSecret"),
+                    Properties = new ObjectExpression {
+                        ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
+                        ["Ciphertext"] = FnRef(node.FullName)
+                    },
+                    DiscardIfNotReachable = true
+                });
+                decoder.ReferenceExpression = FnGetAtt(decoder.FullName, "Plaintext");
             } else {
                 if(node.EncryptionContext != null) {
                     _builder.LogError($"EncryptionContext attribute cannot be used with this parameter type", node.Properties.SourceLocation);
@@ -695,36 +727,21 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // add condition for creating the source
                     var condition = AddDeclaration(node, new ConditionDeclaration {
-                        Condition = new LiteralExpression {
-                            Value = "IsBlank"
-                        },
-                        Value = new EqualsConditionExpression {
-                            LeftValue = new ConditionReferenceExpression {
-                                ReferenceName = node.FullName
-                            },
-                            RightValue = new ConditionLiteralExpression {
-                                Value = ""
-                            }
-                        }
+                        Condition = Literal("IsBlank"),
+                        Value = FnEquals(FnRefCondition(node.FullName), ConditionLiteral(""))
                     });
 
                     // add conditional resource
                     var resource = AddDeclaration(node, new ResourceDeclaration {
-                        Resource = new LiteralExpression {
-                            Value = "Resource"
-                        },
-                        Type = new LiteralExpression {
-                            Value = node.Type.Value
-                        },
+                        Resource = Literal("Resource"),
+                        Type = Literal(node.Type.Value),
 
                         // TODO: should the data-structure be cloned?
                         Properties = node.Properties,
 
                         // TODO: set 'arnAttribute' for resource (default attribute to return when referencing the resource),
 
-                        If = new ConditionLiteralExpression {
-                            Value = condition.FullName
-                        },
+                        If = ConditionLiteral(condition.FullName),
 
                         // TODO: should the data-structure be cloned?
                         Pragmas = node.Pragmas
@@ -732,31 +749,24 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // update the reference expression for the parameter
                     node.ReferenceExpression = new IfFunctionExpression {
-                        Condition = new ConditionLiteralExpression {
-                            Value = condition.FullName
-                        },
+                        Condition = ConditionLiteral(condition.FullName),
                         IfTrue = _builder.GetExportReference(resource),
-                        IfFalse = new ReferenceFunctionExpression {
-                            ReferenceName = node.FullName
-                        }
+                        IfFalse = FnRef(node.FullName)
                     };
-
-                    // TODO: validate resource properties
-
-                    // TODO: grant resource permissions
-
-                    // // request input parameter or conditional managed resource grants
-                    // AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
-
-                    throw new NotImplementedException();
                 }
                 if(node.Allow != null) {
 
-                    // TODO: validate attributes
+                    // validate attributes
                     ValidateAllowAttribute(node, node.Type, node.Allow);
 
-                    // TODO add grants
-                    throw new NotImplementedException();
+                    // request input parameter or conditional managed resource grants
+                    AddGrant(
+                        name: node.Parameter.Value,
+                        awsType: node.Type.Value,
+                        reference: node.ReferenceExpression,
+                        allow: node.Allow.Tags,
+                        condition: null
+                    );
                 }
             } else {
                 _builder.LogError($"unsupported type", node.Type.SourceLocation);
@@ -771,18 +781,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
 
-            // validate EncryptionContext attribute
-            if(node.EncryptionContext != null) {
-                if(node.Type?.Value != "Secret") {
-                    _builder.LogError($"variable must have type 'Secret' to use 'EncryptionContext' attribute", node.SourceLocation);
-                }
-            }
-
             // validate Value attribute
             if(node.Type?.Value == "Secret") {
                 if((node.Value is ListExpression) || (node.Value is ObjectExpression)) {
                     _builder.LogError($"variable with type 'Secret' must be a literal value or function expression", node.Value.SourceLocation);
                 }
+            } else if(node.EncryptionContext != null) {
+                _builder.LogError($"variable must have type 'Secret' to use 'EncryptionContext' attribute", node.SourceLocation);
             }
         }
 
@@ -974,7 +979,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
             }
 
-            // check if lambdasharp specific resources need to be initialized
+            // check if lambdasharp DeadLetterQueue needs to be set
             if(
                 !node.Properties.ContainsKey("DeadLetterConfig")
                 && HasDeadLetterQueue(node)
@@ -994,7 +999,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // check if function must be registered
-            if(HasFunctionRegistration(node)) {
+            if(HasModuleRegistration(node.Parents.OfType<ModuleDeclaration>().First()) && HasFunctionRegistration(node)) {
 
                 // create function registration
                 AddDeclaration(node, new ResourceDeclaration {
@@ -1014,11 +1019,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     DependsOn = new List<LiteralExpression> {
                         Literal("Module::Registration")
                     },
-
-                    // TODO: not sure this is the cleanest way to do this
-                    If = new ConditionLiteralExpression {
-                        Value = ((ConditionLiteralExpression)node.If).Value
-                    }
+                    If = (node.IfConditionName != null)
+                        ? FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
+                        : ConditionLiteral("UseCoreServices"),
                 });
 
                 // create function log-group subscription
@@ -1035,11 +1038,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                             ["LogGroupName"] = FnRef($"{node.FullName}::LogGroup"),
                             ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                         },
-
-                        // TODO: not sure this is the cleanest way to do this
-                        If = new ConditionLiteralExpression {
-                            Value = ((ConditionLiteralExpression)node.If).Value
-                        }
+                        If = (node.IfConditionName != null)
+                            ? FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
+                            : ConditionLiteral("UseCoreServices"),
                     });
                 }
             }
@@ -1308,44 +1309,59 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         private void AddGrant(string name, string awsType, AValueExpression reference, IEnumerable<string> allow, AConditionExpression condition) {
 
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        private bool TryGetOverride(string key, out AValueExpression value) {
+            // TODO: always validate as well
+            // ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // TODO:
             throw new NotImplementedException();
         }
 
-        private bool TryGetModuleVariable(string key, out AValueExpression deadLetterQueueVariable, out AConditionExpression deadLetterQueueCondition) {
-
-            // TODO:
-            throw new NotImplementedException();
+        private bool TryGetLabeledPragma(ModuleDeclaration moduleDeclaration, string key, out AValueExpression value) {
+            foreach(var objectPragma in moduleDeclaration.Pragmas.OfType<ObjectExpression>()) {
+                if(objectPragma.TryGetValue(key, out value)) {
+                    return true;
+                }
+            }
+            value = null;
+            return false;
         }
 
-        private bool HasLambdaSharpDependencies() {
-
-            // TODO:
-            throw new NotImplementedException();
+        private bool TryGetOverride(ModuleDeclaration moduleDeclaration, string key, out AValueExpression expression) {
+            if(
+                TryGetLabeledPragma(moduleDeclaration, "Overrides", out var value)
+                && (value is ObjectExpression map)
+                && map.TryGetValue(key, out expression)
+            ) {
+                return true;
+            }
+            expression = null;
+            return false;
         }
 
-        private bool HasModuleRegistration() {
-
-            // TODO:
-            throw new NotImplementedException();
+        private bool TryGetVariable(ModuleDeclaration moduleDeclaration, string name, out AValueExpression variable, out AConditionExpression condition) {
+            if(TryGetOverride(moduleDeclaration, $"Module::{name}", out variable)) {
+                condition = null;
+                return true;
+            }
+            if(HasLambdaSharpDependencies(moduleDeclaration)) {
+                condition = ConditionLiteral("UseCoreServices");
+                variable = FnIf("UseCoreServices", FnRef($"LambdaSharp::{name}"), FnRef("AWS::NoValue"));
+                return true;
+            }
+            variable = null;
+            condition = null;
+            return false;
         }
 
-        private bool HasFunctionRegistration(FunctionDeclaration functionDeclaration) {
+        private bool HasPragma(ModuleDeclaration moduleDeclaration, string pragma)
+            =>  moduleDeclaration.Pragmas.Items.Any(value => (value is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
 
-            // TODO:
-            throw new NotImplementedException();
-        }
+        private bool HasPragma(FunctionDeclaration functionDeclaration, string pragma)
+            =>  functionDeclaration.Pragmas.Items.Any(value => (value is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
 
-        private bool HasDeadLetterQueue(FunctionDeclaration functionDeclaration) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
+        private bool HasLambdaSharpDependencies(ModuleDeclaration moduleDeclaration) => !HasPragma(moduleDeclaration, "no-lambdasharp-dependencies");
+        private bool HasModuleRegistration(ModuleDeclaration moduleDeclaration) => !HasPragma(moduleDeclaration, "no-module-registration");
+        private bool HasFunctionRegistration(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-function-registration");
+        private bool HasDeadLetterQueue(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-dead-letter-queue");
     }
 }

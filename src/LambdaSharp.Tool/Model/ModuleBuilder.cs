@@ -88,18 +88,13 @@ namespace LambdaSharp.Tool.Model {
         }
 
         //--- Properties ---
-        public string Namespace => _namespace;
         public string Name => _name;
         public string FullName => $"{_namespace}.{_name}";
         public string Info => $"{FullName}:{Version}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(_namespace, _name, Version, origin: null);
         public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
         public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
-        public bool HasPragma(string pragma) => _pragmas.Contains(pragma);
-        public bool HasModuleRegistration => !HasPragma("no-module-registration");
-        public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
 
         public bool TryGetLabeledPragma(string key, out object value) {
             foreach(var dictionaryPragma in _pragmas.OfType<IDictionary>()) {
@@ -262,115 +257,6 @@ namespace LambdaSharp.Tool.Model {
                 _secrets.Add(secret);
                 return true;
             }
-        }
-
-        public AModuleItem AddParameter(
-            string name,
-            string section,
-            string label,
-            string description,
-            string type,
-            IList<string> scope,
-            bool? noEcho,
-            string defaultValue,
-            string constraintDescription,
-            string allowedPattern,
-            IList<string> allowedValues,
-            int? maxLength,
-            int? maxValue,
-            int? minLength,
-            int? minValue,
-            object allow,
-            IDictionary<string, object> properties,
-            string arnAttribute,
-            IDictionary<string, string> encryptionContext,
-            IList<object> pragmas
-        ) {
-            // TODO (2019-10-04, bjorg): check if parameter already exists
-
-            // create input parameter item
-            var parameter = new Humidifier.Parameter {
-                Type = ResourceMapping.ToCloudFormationParameterType(type),
-                Description = description,
-                Default = defaultValue,
-                ConstraintDescription = constraintDescription,
-                AllowedPattern = allowedPattern,
-                AllowedValues = allowedValues?.ToList(),
-                MaxLength = maxLength,
-                MaxValue = maxValue,
-                MinLength = minLength,
-                MinValue = minValue,
-                NoEcho = noEcho
-            };
-            var result = AddItem(new ParameterItem(
-                parent: null,
-                name: name,
-                section: section,
-                label: label,
-                description: description,
-                type: type,
-                scope: scope,
-                reference: null,
-                parameter: parameter,
-                import: null
-            ));
-
-            // check if a resource-type is associated with the input parameter
-            if(result.HasSecretType) {
-                var decoder = AddResource(
-                    parent: result,
-                    name: "Plaintext",
-                    description: null,
-                    scope: null,
-                    resource: CreateDecryptSecretResourceFor(result),
-                    resourceExportAttribute: null,
-                    dependsOn: null,
-                    condition: null,
-                    pragmas: null
-                );
-                decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
-                decoder.DiscardIfNotReachable = true;
-            } else if(!result.HasAwsType) {
-
-                // nothing to do
-            } else if(properties == null) {
-
-                // request input parameter resource grants
-                AddGrant(result.LogicalId, type, result.Reference, allow, condition: null);
-            } else {
-
-                // create conditional resource
-                var condition = AddCondition(
-                    parent: result,
-                    name: "IsBlank",
-                    description: null,
-                    value: FnEquals(FnRef(result.ResourceName), "")
-                );
-                var instance = AddResource(
-                    parent: result,
-                    name: "Resource",
-                    description: null,
-                    scope: null,
-                    type: type,
-                    allow: null,
-                    properties: properties,
-                    arnAttribute: arnAttribute,
-                    dependsOn: null,
-                    condition: condition.FullName,
-                    pragmas: pragmas
-                );
-
-                // register input parameter reference
-                result.Reference = FnIf(
-                    condition.ResourceName,
-                    instance.GetExportReference(),
-                    result.Reference
-                );
-
-                // request input parameter or conditional managed resource grants
-                AddGrant(instance.LogicalId, type, result.Reference, allow, condition: null);
-            }
-            return result;
         }
 
         public AModuleItem AddImport(

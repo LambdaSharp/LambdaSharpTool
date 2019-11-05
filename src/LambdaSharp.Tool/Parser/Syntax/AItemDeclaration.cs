@@ -137,7 +137,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+        public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Parameter.Value;
 
@@ -315,7 +315,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression DefaultAttribute { get; set; }
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+        public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Resource.Value;
 
@@ -460,6 +460,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Function.Value;
+
+        public string IfConditionName => ((ConditionLiteralExpression)If)?.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
