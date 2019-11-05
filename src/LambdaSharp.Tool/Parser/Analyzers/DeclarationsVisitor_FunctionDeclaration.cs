@@ -33,18 +33,18 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
             ValidateExpressionIsNumber(node, node.Timeout, $"invalid 'Timeout' value");
 
-            var functionName = node.Function.Value;
-            var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
-            string project = null;
+            // TODO: validate function sources
 
-            // check if function uses embedded code or a project
+            // check if function uses inline code or a project
+            var isInlineFunction = false;
             if(
                 node.Properties.TryGetValue("Code", out var codeProperty)
                 && (codeProperty is ObjectExpression codeObject)
                 && (codeObject.ContainsKey("ZipFile"))
             ) {
+                isInlineFunction = true;
 
-                // lambda declaration uses embedded code; validate the other required fields are set
+                // lambda declaration uses inline code; validate the other required fields are set
                 if(node.Runtime == null) {
                     _builder.LogError($"missing 'Runtime' attribute", node.SourceLocation);
                 }
@@ -55,12 +55,14 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     _builder.LogError($"missing 'Language' attribute", node.SourceLocation);
                 }
             } else {
+                var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
+                string project = null;
 
                 // determine project file location and type
                 if(node.Project == null) {
 
                     // use function name to determine function project file
-                    project = DetermineProjectFileLocation(Path.Combine(workingDirectory, functionName));
+                    project = DetermineProjectFileLocation(Path.Combine(workingDirectory, node.Function.Value));
                 } else {
 
                     // check if the project type can be determined by the project file extension
@@ -98,7 +100,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // fill in missing attributes based on function type
                 switch(Path.GetExtension(project).ToLowerInvariant()) {
                 case ".csproj":
-                    DetermineDotNetFunctionProperties();
+                    DetermineDotNetFunctionProperties(project);
                     break;
                 case ".js":
                     DetermineJavascriptFunctionProperties();
@@ -126,10 +128,87 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // check if resource is conditional
-            if(!(node.If is ConditionLiteralExpression)) {
+            if((node.If != null) && !(node.If is ConditionLiteralExpression)) {
 
-                // TODO: creation condition as sub-declaration
+                // convert conditional expression to a condition literal
+                var condition = AddDeclaration(node, new ConditionDeclaration {
+                    Condition = Literal("If"),
+                    Value = node.If
+                });
+                node.If = ConditionLiteral(condition.FullName);
             }
+
+
+            // initialize 'Properties' attribute
+            if(node.Description != null) {
+                SetProperty("Description", Literal(node.Description.Value.TrimEnd() + $" (v{_builder.ModuleVersion.ToString()})"));
+            }
+            SetProperty("Timeout", node.Timeout);
+            SetProperty("Runtime", node.Runtime);
+            SetProperty("MemorySize", node.Memory);
+            SetProperty("Handler", node.Handler);
+            SetProperty("Role", FnGetAtt("Module::Role", "Arn"));
+            SetProperty("Environment", new ObjectExpression {
+                ["Variables"] = new ObjectExpression()
+            });
+            if(!isInlineFunction) {
+
+                // add variable for package name
+                var packageVariable = AddDeclaration(node, new VariableDeclaration {
+                    Variable = Literal("PackageName"),
+                    Value = Literal($"{node.LogicalId}-DRYRUN.zip")
+                });
+                SetProperty("Code", new ObjectExpression {
+                    ["S3Key"] = GetModuleArtifactExpression($"${{{packageVariable.FullName}}}"),
+                    ["S3Bucket"] = FnRef("DeploymentBucketName")
+                });
+            }
+            SetProperty("TracingConfig", new ObjectExpression {
+                ["Mode"] = FnIf("XRayIsEnabled", Literal("Active"), Literal("PassThrough"))
+            });
+
+            // create function log-group with retention window
+            AddDeclaration(node, new ResourceDeclaration {
+                Resource = Literal("LogGroup"),
+                Type = Literal("AWS::Logs::LogGroup"),
+                Properties = new ObjectExpression {
+                    ["LogGroupName"] = FnSub($"/aws/lambda/${{{node.FullName}}}"),
+
+                    // TODO (2019-10-25, bjorg): allow 'LogRetentionInDays' attribute on 'Function' declaration
+                    ["RetentionInDays"] = FnRef("Module::LogRetentionInDays")
+                },
+
+                // TODO: we should clone this
+                If = node.If
+            });
+
+            // check if function is a Finalizer
+            var isFinalizer = (node.Parents.OfType<ADeclaration>() is ModuleDeclaration) && (node.Function.Value == "Finalizer");
+            if(isFinalizer) {
+
+                // finalizer doesn't need a dead-letter queue or registration b/c it gets deleted anyway on failure or teardown
+                node.Pragmas.Add(Literal("no-function-registration"));
+                node.Pragmas.Add(Literal("no-dead-letter-queue"));
+
+                // NOTE (2018-12-18, bjorg): always set the 'Finalizer' timeout to the maximum limit to prevent ugly timeout scenarios
+                node.Properties["Timeout"] = Literal(900);
+
+                // add finalizer invocation (dependsOn will be set later when all resources have been added)
+                AddDeclaration(node, new ResourceDeclaration {
+                    Resource = Literal("Invocation"),
+                    Type = Literal("Module::Finalizer"),
+                    Properties = new ObjectExpression {
+                        ["ServiceToken"] = FnGetAtt(node.FullName, "Arn"),
+                        ["DeploymentChecksum"] = FnRef("DeploymentChecksum"),
+                        ["ModuleVersion"] = Literal(_builder.ModuleVersion.ToString())
+                    },
+
+                    // TODO: we should clone this
+                    If = node.If
+                });
+            }
+
+            // TODO: validate properties
 
             // check if function must be registered
             if(HasModuleRegistration(node.Parents.OfType<ModuleDeclaration>().First()) && HasFunctionRegistration(node)) {
@@ -186,7 +265,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     Path.Combine(folderPath, "build.sbt")
                 }.FirstOrDefault(projectPath => File.Exists(projectPath));
 
-            void DetermineDotNetFunctionProperties() {
+            void DetermineDotNetFunctionProperties(string project) {
 
                 // set the language
                 if(node.Language == null) {
@@ -279,6 +358,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // set handler
                 if(node.Handler == null) {
                     _builder.LogError($"Handler attribute is required for Scala functions", node.SourceLocation);
+                }
+            }
+
+            void SetProperty(string key, AValueExpression valueExpression) {
+                if((valueExpression != null) && !node.Properties.ContainsKey(key)) {
+                    node.Properties[key] = valueExpression;
                 }
             }
         }

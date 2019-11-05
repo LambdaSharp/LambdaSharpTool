@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         //--- Class Constructor ---
         static DeclarationsVisitor() {
 
-            // load source code for embedded secret decryption function
+            // load source code for inline secret decryption function
             _decryptSecretFunctionCode = typeof(DeclarationsVisitor).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.DecryptSecretFunction.js");
 
             // create list of natively supported CloudFormation types
@@ -198,11 +198,11 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
+            // validate 'Allow' attribute
+            ValidateAllowAttribute(node, node.Type, node.Allow);
+
             // check if declaration is a resource reference
             if(node.Value != null) {
-
-                // validate attributes
-                ValidateAllowAttribute(node, node.Type, node.Allow);
 
                 // referenced resource cannot be conditional
                 if(node.If != null) {
@@ -211,7 +211,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                 // referenced resource cannot have properties
                 if(node.Properties != null) {
-                    _builder.LogError($"'Properties' section cannot be used with a referenced resource", node.Properties.SourceLocation);
+                    _builder.LogError($"'Properties' attribute cannot be used with a referenced resource", node.Properties.SourceLocation);
                 }
 
                 // validate Value attribute
@@ -222,17 +222,16 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 } else {
                     ValidateARN(node.Value);
                 }
+
+                // default type to 'String'
+                if(node.Type == null) {
+                    node.Type = Literal("String");
+                }
             } else {
 
                 // CloudFormation resource must have a type
                 if(node.Type == null) {
                     _builder.LogError($"missing 'Type' attribute", node.SourceLocation);
-                } else {
-
-                    // the Allow attribute is only valid with native CloudFormation types (not custom resources)
-                    if((node.Allow != null) && !IsNativeCloudFormationType(node.Type.Value)) {
-                        _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.Type.SourceLocation);
-                    }
                 }
 
                 // check if resource is conditional
@@ -247,6 +246,19 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         Description = null,
                         Value = node.If
                     });
+                }
+
+                // TODO: validate properties
+
+                // add resource permissions
+                if(node.Allow != null) {
+                    AddGrant(
+                        name: node.LogicalId,
+                        awsType: node.Type.Value,
+                        reference: node.ReferenceExpression,
+                        allow: node.Allow.Tags,
+                        condition: null
+                    );
                 }
             }
 
@@ -274,11 +286,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 // default to deployment bucket as origin when missing
                 if(moduleInfo.Origin == null) {
                     moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                    node.Module.Value = moduleInfo.ToString();
                 }
 
                 // add module reference as a shared dependency
-                _builder.AddNestedDependency(moduleInfo);
+                _builder.AddNestedDependency(node, moduleInfo);
 
                 // NOTE: we cannot validate the parameters and output values from the module until the
                 //  nested dependency has been resolved.
@@ -287,14 +298,36 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
 
-            // validate Files attributes
-            if(
-                !Directory.Exists(node.Files.Value)
-                && !Directory.Exists(Path.GetDirectoryName(node.Files.Value))
-                && !File.Exists(node.Files.Value)
-            ) {
+            // 'Files' reference is relative to YAML file it originated from
+            var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
+            var absolutePath = Path.Combine(workingDirectory, node.Files.Value);
+
+            // determine if 'Files' is a file or a folder
+            if(File.Exists(absolutePath)) {
+
+                // TODO: add support for using a single item that has no key
+                node.ResolvedFiles.Add(new KeyValuePair<string, string>("", absolutePath));
+            } else if(Directory.Exists(absolutePath)) {
+
+                // add all files from folder
+                foreach(var filePath in Directory.GetFiles(absolutePath, "*", SearchOption.AllDirectories)) {
+                    var relativeFilePathName = Path.GetRelativePath(absolutePath, filePath);
+                    node.ResolvedFiles.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
+                }
+                node.ResolvedFiles = node.ResolvedFiles.OrderBy(kv => kv.Key).ToList();
+            } else {
                 _builder.LogError($"'Files' attribute must refer to an existing file or folder", node.Files.SourceLocation);
             }
+
+            // add variable to resolve package location
+            var variable = AddDeclaration(node, new VariableDeclaration {
+                Variable = Literal("PackageName"),
+                Type = Literal("String"),
+                Value = Literal($"{node.LogicalId}-DRYRUN.zip")
+            });
+
+            // update 'Package' reference
+            node.ReferenceExpression = GetModuleArtifactExpression($"${{{variable.FullName}}}");
         }
 
         public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) { }
@@ -328,6 +361,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
+
+            // TODO: missing code
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
@@ -399,7 +434,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 } else if(type?.Value == "AWS") {
 
                     // nothing to do; any 'Allow' expression is legal
+                } else if(!IsNativeCloudFormationType(type.Value)) {
+                    _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.SourceLocation);
                 } else {
+
                     // TODO: ResourceMapping.IsCloudFormationType(node.Type?.Value), "'Allow' attribute can only be used with AWS resource types"
                 }
             }
@@ -499,6 +537,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             condition = null;
             return false;
         }
+
+        private static AValueExpression GetModuleArtifactExpression(string filename)
+            => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
         private bool HasPragma(ModuleDeclaration moduleDeclaration, string pragma)
             =>  moduleDeclaration.Pragmas.Items.Any(value => (value is LiteralExpression literalExpression) && (literalExpression.Value == pragma));

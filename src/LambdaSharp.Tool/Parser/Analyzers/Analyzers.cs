@@ -36,6 +36,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
         //--- Fields ---
         private readonly Dictionary<string, AItemDeclaration> _fullNameDeclarations = new Dictionary<string, AItemDeclaration>();
+        private readonly HashSet<string> _logicalIds = new HashSet<string>();
         private readonly List<string> _messages = new List<string>();
 
         //-- Properties ---
@@ -54,7 +55,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
             => _fullNameDeclarations.TryGetValue(fullName, out declaration);
 
-        public void AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
+        public string AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
 
             // check for reserved names
             if(!ValidResourceNameRegex.IsMatch(declaration.LocalName)) {
@@ -65,6 +66,16 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
             // store properties per-node and per-fullname
             _fullNameDeclarations.Add(declaration.FullName, declaration);
+
+            // find a valid CloudFormation logical ID
+            var baseLogicalId = declaration.FullName.Replace("::", "");
+            var logicalIdSuffix = 0;
+            var logicalId = baseLogicalId;
+            while(!_logicalIds.Add(logicalId)) {
+                ++logicalIdSuffix;
+                logicalId = baseLogicalId + logicalIdSuffix;
+            }
+            return logicalId;
         }
 
         public void AddSharedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {
@@ -73,7 +84,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             throw new NotImplementedException();
         }
 
-        public void AddNestedDependency(ModuleInfo moduleInfo) {
+        public void AddNestedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {
 
             // TODO:
             throw new NotImplementedException();

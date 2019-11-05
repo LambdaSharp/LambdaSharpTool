@@ -33,6 +33,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Fields ---
         private List<AItemDeclaration> _declarations;
         private string _fullName;
+        private string _logicalId;
 
         //--- Abstract Properties ---
         public abstract string LocalName { get; }
@@ -43,6 +44,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             // TODO: better exception
             get => _fullName ?? throw new ApplicationException("value not set");
             set => _fullName = value ?? throw new ArgumentNullException(nameof(FullName));
+        }
+
+        public string LogicalId {
+
+            // TODO: better exception
+            get => _logicalId ?? throw new ApplicationException("value not set");
+            set => _logicalId = value ?? throw new ArgumentNullException(nameof(LogicalId));
         }
 
         public LiteralExpression Description { get; set; }
@@ -309,7 +317,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
-        public ObjectExpression Properties { get; set; }
+        public ObjectExpression Properties { get; set; } = new ObjectExpression();
 
         [SyntaxOptional]
         public LiteralExpression DefaultAttribute { get; set; }
@@ -382,6 +390,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         public override string LocalName => Package.Value;
 
+        public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -451,7 +461,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public ObjectExpression Environment { get; set; }
 
         [SyntaxOptional]
-        public ObjectExpression Properties { get; set; }
+        public ObjectExpression Properties { get; set; } = new ObjectExpression();
 
         [SyntaxOptional]
         public List<AEventSourceDeclaration> Sources { get; set; } = new List<AEventSourceDeclaration>();

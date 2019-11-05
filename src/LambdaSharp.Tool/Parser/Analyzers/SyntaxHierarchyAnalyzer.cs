@@ -294,7 +294,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             };
 
             // register item declaration
-            _builder.AddItemDeclaration(parent, node);
+            node.LogicalId = _builder.AddItemDeclaration(parent, node);
         }
     }
 }
