@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -29,6 +31,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public class KeyValuePair : ASyntaxNode {
 
             //--- Properties ---
+
+            // TODO: should the 'Key' have a source location as well?
             public string Key { get; set; }
             public AValueExpression Value { get; set; }
 
@@ -44,7 +48,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<KeyValuePair> Items { get; set; } = new List<KeyValuePair>();
 
         //--- Operators ---
-        public AValueExpression this[string key] => Items.First(item => item.Key == key).Value;
+        public AValueExpression this[string key] {
+            get => Items.First(item => item.Key == key).Value;
+            set => Items.Add(new KeyValuePair {
+                Key = key ?? throw new ArgumentNullException(nameof(key)),
+                Value = value ?? throw new ArgumentNullException(nameof(value))
+            });
+        }
 
         //--- Methods ---
         public bool TryGetValue(string key, out AValueExpression value) {
@@ -53,6 +63,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             return found != null;
         }
 
+        public bool ContainsKey(string key) => Items.Any(item => item.Key == key);
+
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
             Items.Visit(this, visitor);
@@ -60,7 +72,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class ListExpression : AValueExpression {
+    public class ListExpression : AValueExpression, IEnumerable {
 
         //--- Properties ---
         public List<AValueExpression> Items { get; set; } = new List<AValueExpression>();
@@ -71,6 +83,11 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Items?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
+
+        public void Add(AValueExpression expression) => Items.Add(expression);
+
+        //--- IEnumerable Members ---
+        IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
     }
 
     public class LiteralExpression : AValueExpression {

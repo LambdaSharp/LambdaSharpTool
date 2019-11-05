@@ -457,7 +457,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<AEventSourceDeclaration> Sources { get; set; } = new List<AEventSourceDeclaration>();
 
         [SyntaxOptional]
-        public List<AValueExpression> Pragmas { get; set; } = new List<AValueExpression>();
+        public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Function.Value;
 

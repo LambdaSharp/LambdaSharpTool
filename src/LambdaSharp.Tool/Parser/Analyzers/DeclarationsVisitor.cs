@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
@@ -29,11 +30,14 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
     public class DeclarationsVisitor : ASyntaxVisitor {
 
         //--- Class Fields ---
-
         private static readonly HashSet<string> _cloudFormationParameterTypes;
+        private static readonly string _decryptSecretFunctionCode;
 
         //--- Class Constructor ---
         static DeclarationsVisitor() {
+
+            // load source code for embedded secret decryption function
+            _decryptSecretFunctionCode = typeof(DeclarationsVisitor).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.DecryptSecretFunction.js");
 
             // create list of natively supported CloudFormation types
             _cloudFormationParameterTypes = new HashSet<string> {
@@ -88,6 +92,59 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return true;
         }
 
+        private static AValueExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
+            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
+        };
+
+        private static AValueExpression FnSub(string formatString) => new SubFunctionExpression {
+            FormatString = Literal(formatString)
+        };
+
+        private static AValueExpression FnSplit(string delimiter, AValueExpression sourceString) => new SplitFunctionExpression {
+            Delimiter = Literal(delimiter),
+            SourceString = sourceString
+        };
+
+        private static AValueExpression FnIf(string condition, AValueExpression ifTrue, AValueExpression ifFalse) => new IfFunctionExpression {
+            Condition = ConditionLiteral(condition),
+            IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
+            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
+        };
+
+        private static AConditionExpression FnNot(AConditionExpression condition) => new NotConditionExpression {
+            Value = condition ?? throw new ArgumentNullException(nameof(condition))
+        };
+
+        private static AConditionExpression FnEquals(AConditionExpression leftValue, AConditionExpression rightValue) => new EqualsConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        private static AConditionExpression FnAnd(AConditionExpression leftValue, AConditionExpression rightValue) => new AndConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        private static AConditionExpression FnCondition(string referenceName) => new ConditionNameExpression {
+            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
+        };
+
+        private static AConditionExpression FnRefCondition(string referenceName) => new ConditionReferenceExpression {
+            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
+        };
+
+        private static LiteralExpression Literal(string value) => new LiteralExpression {
+            Value = value ?? throw new ArgumentNullException(nameof(value))
+        };
+
+        private static LiteralExpression Literal(int value) => new LiteralExpression {
+            Value = value.ToString()
+        };
+
+        private static ConditionLiteralExpression ConditionLiteral(string value) => new ConditionLiteralExpression {
+            Value = value ?? throw new ArgumentNullException(nameof(value))
+        };
+
         //--- Fields ---
         private readonly Builder _builder;
 
@@ -129,6 +186,366 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 } else if(!Regex.IsMatch(secret.Value, @"[0-9a-zA-Z/_\-]+")) {
                     _builder.LogError($"secret key must be a valid alias", secret.SourceLocation);
                 }
+            }
+
+            // add implicit module variables
+            var moduleGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
+                Group = Literal("Module"),
+                Description = Literal("Module Variables")
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Id"),
+                Description = Literal("Module ID"),
+                Value = FnRef("AWS::StackName")
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Namespace"),
+                Description = Literal("Module Namespace"),
+                Value = Literal(_builder.ModuleNamespace)
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Name"),
+                Description = Literal("Module Name"),
+                Value = Literal(_builder.ModuleName)
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("FullName"),
+                Description = Literal("Module Full Name"),
+                Value = Literal(_builder.ModuleFullName)
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Version"),
+                Description = Literal("Module Version"),
+                Value = Literal(_builder.ModuleVersion.ToString())
+            });
+            AddDeclaration(moduleGroupDeclaration, new ConditionDeclaration {
+                Condition = Literal("IsNested"),
+                Description = Literal("Module is nested"),
+                Value = FnNot(FnEquals(FnCondition("DeploymentRoot"), ConditionLiteral("")))
+            });
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("RootId"),
+                Description = Literal("Root Module ID"),
+                Value = FnIf("Module::IsNested", FnRef("DeploymentRoot"), FnRef("Module::Id"))
+            });
+
+            // create module IAM role used by all functions
+            AddDeclaration(moduleGroupDeclaration, new ResourceDeclaration {
+                Resource = Literal("Role"),
+                Type = Literal("AWS::IAM::Role"),
+                Properties = new ObjectExpression {
+                    ["AssumeRolePolicyDocument"] = new ObjectExpression {
+                        ["Version"] = Literal("2012-10-17"),
+                        ["Statement"] = new ListExpression {
+                            new ObjectExpression {
+                                ["Sid"] = Literal("ModuleLambdaPrincipal"),
+                                ["Effect"] = Literal("Allow"),
+                                ["Principal"] = new ObjectExpression {
+                                    ["Service"] = Literal("lambda.amazonaws.com")
+                                },
+                                ["Action"] = Literal("sts:AssumeRole")
+                            }
+                        }
+                    },
+                    ["Policies"] = new ListExpression {
+                        new ObjectExpression {
+                            ["PolicyName"] = FnSub("${AWS::StackName}ModulePolicy"),
+                            ["PolicyDocument"] = new ObjectExpression {
+                                ["Version"] = Literal("2012-10-17"),
+                                ["Statement"] = new ListExpression()
+                            }
+                        }
+                    }
+                },
+                DiscardIfNotReachable = true
+            });
+
+            // add overridable logging retention variable
+            if(!TryGetOverride("Module::LogRetentionInDays", out var logRetentionInDays)) {
+                logRetentionInDays = Literal(30);
+            }
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("LogRetentionInDays"),
+                Description = Literal("Number days log entries are retained for"),
+                Type = Literal("Number"),
+                Value = logRetentionInDays
+            });
+
+            // add LambdaSharp Module Options
+            var section = "LambdaSharp Module Options";
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("Secrets"),
+                Section = Literal(section),
+                Label = Literal("Comma-separated list of additional KMS secret keys"),
+                Description = Literal("Secret Keys (ARNs)"),
+                Default = Literal("")
+            });
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("XRayTracing"),
+                Section = Literal(section),
+                Label = Literal("Enable AWS X-Ray tracing mode for module resources"),
+                Description = Literal("AWS X-Ray Tracing"),
+                Default = Literal(XRayTracingLevel.Disabled.ToString()),
+                AllowedValues = new List<LiteralExpression> {
+                    Literal(XRayTracingLevel.Disabled.ToString()),
+                    Literal(XRayTracingLevel.RootModule.ToString()),
+                    Literal(XRayTracingLevel.AllModules.ToString())
+                },
+                DiscardIfNotReachable = true
+            });
+            AddDeclaration(node, new ConditionDeclaration {
+                Condition = Literal("XRayIsEnabled"),
+                Value = FnNot(FnEquals(FnCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.Disabled.ToString())))
+            });
+            AddDeclaration(node, new ConditionDeclaration {
+                Condition = Literal("XRayNestedIsEnabled"),
+                Value = FnEquals(FnCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.AllModules.ToString()))
+            });
+
+            // check if module might depdent on core services
+            if(HasLambdaSharpDependencies() || HasModuleRegistration()) {
+                AddDeclaration(node, new ParameterDeclaration {
+                    Parameter = Literal("LambdaSharpCoreServices"),
+                    Section = Literal(section),
+                    Label = Literal("Integrate with LambdaSharp.Core services"),
+                    Description = Literal("Use LambdaSharp.Core Services"),
+                    Default = Literal("Disabled"),
+                    AllowedValues = new List<LiteralExpression> {
+                        Literal("Disabled"),
+                        Literal("Enabled")
+                    },
+                    DiscardIfNotReachable = true
+                });
+                AddDeclaration(node, new ConditionDeclaration {
+                    Condition = Literal("UseCoreServices"),
+                    Value = FnEquals(FnCondition("LambdaSharpCoreServices"), ConditionLiteral("Enabled"))
+                });
+            }
+
+            // import lambdasharp dependencies (unless requested otherwise)
+            if(HasLambdaSharpDependencies()) {
+
+                // add LambdaSharp Module Internal resource imports
+                var lambdasharpGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
+                    Group = Literal("LambdaSharp"),
+                    Description = Literal("LambdaSharp Core Imports")
+                });
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration {
+                    Import = Literal("DeadLetterQueue"),
+                    Module = Literal("LambdaSharp.Core"),
+
+                    // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
+                    Type = Literal("String")
+                });
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration {
+                    Import = Literal("LoggingStream"),
+                    Module = Literal("LambdaSharp.Core"),
+
+                    // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
+                    Type = Literal("String")
+                });
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration {
+                    Import = Literal("LoggingStreamRole"),
+                    Module = Literal("LambdaSharp.Core"),
+
+                    // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
+                    Type = Literal("String")
+                });
+            }
+
+            // add module variables
+            if(TryGetModuleVariable("DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
+                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                    Variable = Literal("DeadLetterQueue"),
+                    Description = Literal("Module Dead Letter Queue (ARN)"),
+                    Value = deadLetterQueueVariable
+                });
+                AddGrant(
+                    name: "DeadLetterQueue",
+                    awsType: null,
+                    reference: FnRef("Module::DeadLetterQueue"),
+                    allow: new[] {
+                        "sqs:SendMessage"
+                    },
+                    condition: deadLetterQueueCondition
+                );
+            }
+            if(TryGetModuleVariable("LoggingStream", out var loggingStreamVariable, out var _)) {
+                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                    Variable = Literal("LoggingStream"),
+                    Description = Literal("Module Logging Stream (ARN)"),
+                    Value = loggingStreamVariable
+                });
+            }
+            if(TryGetModuleVariable("LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
+                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
+                    Variable = Literal("LoggingStreamRole"),
+                    Description = Literal("Module Logging Stream Role (ARN)"),
+                    Value = loggingStreamRoleVariable
+                });
+            }
+
+            // add KMS permissions for secrets in module
+            if(node.Secrets.Any()) {
+                AddGrant(
+                    name: "EmbeddedSecrets",
+                    awsType: null,
+                    reference: new ListExpression {
+                        Items = node.Secrets.Cast<AValueExpression>().ToList()
+                    },
+                    allow: new[] {
+                        "kms:Decrypt",
+                        "kms:Encrypt"
+                    },
+                    condition: null
+                );
+            }
+
+
+            // add decryption function for secret parameters and values
+            AddDeclaration(node, new FunctionDeclaration {
+                Function = Literal("DecryptSecretFunction"),
+                Description = Literal("Module secret decryption function"),
+                Environment = new ObjectExpression {
+                    ["MODULE_ROLE_SECRETSPOLICY"] = FnIf(
+                        "Module::Role::SecretsPolicy::Condition",
+                        FnRef("Module::Role::SecretsPolicy"),
+                        FnRef("AWS::NoValue")
+                    )
+                },
+                Pragmas = new ListExpression {
+                    Literal("no-function-registration"),
+                    Literal("no-dead-letter-queue"),
+                    Literal("no-wildcard-scoped-variables")
+                },
+                Timeout = Literal(30),
+                Memory = Literal(128),
+                Runtime = Literal("nodejs8.10"),
+                Handler = Literal("index.handler"),
+                Language = Literal("javascript"),
+                Properties = new ObjectExpression {
+                    ["Code"] = new ObjectExpression {
+                        ["ZipFile"] = Literal(_decryptSecretFunctionCode)
+                    }
+                },
+                DiscardIfNotReachable = true
+            });
+
+            // add LambdaSharp Deployment Settings
+            section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("DeploymentBucketName"),
+                Section = Literal(section),
+                Label = Literal("Deployment S3 bucket name"),
+                Description = Literal("Deployment S3 Bucket Name")
+            });
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("DeploymentPrefix"),
+                Section = Literal(section),
+                Label = Literal("Deployment tier prefix"),
+                Description = Literal("Deployment Tier Prefix")
+            });
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("DeploymentPrefixLowercase"),
+                Section = Literal(section),
+                Label = Literal("Deployment tier prefix (lowercase)"),
+                Description = Literal("Deployment Tier Prefix (lowercase)")
+            });
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("DeploymentRoot"),
+                Section = Literal(section),
+                Label = Literal("Root stack name for nested deployments, blank otherwise"),
+                Description = Literal("Root Stack Name")
+            });
+            AddDeclaration(node, new ParameterDeclaration {
+                Parameter = Literal("DeploymentChecksum"),
+                Section = Literal(section),
+                Label = Literal("CloudFormation template MD5 checksum"),
+                Description = Literal("Deployment Checksum")
+            });
+
+            // add conditional KMS permissions for secrets parameter
+            AddGrant(
+                name: "Secrets",
+                awsType: null,
+                reference: FnSplit(",", FnRef("Secrets")),
+                allow: new List<string> {
+                    "kms:Decrypt",
+                    "kms:Encrypt"
+                },
+                condition: FnNot(FnEquals(FnRefCondition("Secrets"), ConditionLiteral("")))
+            );
+
+            // permissions needed for writing to log streams (but not for creating log groups!)
+            AddGrant(
+                name: "LogStream",
+                awsType: null,
+                reference: Literal("arn:aws:logs:*:*:*"),
+                allow: new[] {
+                    "logs:CreateLogStream",
+                    "logs:PutLogEvents"
+                },
+                condition: null
+            );
+
+            // permissions needed for reading state of CloudFormation stack (used by Finalizer to confirm a delete operation is happening)
+            AddGrant(
+                name: "CloudFormation",
+                awsType: null,
+                reference: FnRef("AWS::StackId"),
+                allow: new[] {
+                    "cloudformation:DescribeStacks"
+                },
+                condition: null
+            );
+
+            // permissions needed for X-Ray lambda daemon to upload tracing information
+            AddGrant(
+                name: "AWSXRay",
+                awsType: null,
+                reference: Literal("*"),
+                allow: new[] {
+                    "xray:PutTraceSegments",
+                    "xray:PutTelemetryRecords",
+                    "xray:GetSamplingRules",
+                    "xray:GetSamplingTargets",
+                    "xray:GetSamplingStatisticSummaries"
+                },
+                condition: null
+            );
+
+            // add module registration
+            if(HasModuleRegistration()) {
+                _builder.AddSharedDependency(new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
+
+                // create module registration
+                AddDeclaration(node, new ResourceDeclaration {
+                    Resource = Literal("Registration"),
+                    Type = Literal("LambdaSharp::Registration::Module"),
+                    Properties = new ObjectExpression {
+                        ["Module"] = Literal(_builder.ModuleInfo.ToString()),
+                        ["ModuleId"] = FnRef("AWS::StackName")
+                    },
+                    If = FnCondition("UseCoreServices")
+                });
+            }
+        }
+
+        public override void VisitEnd(ASyntaxNode parent, ModuleDeclaration node) {
+
+            // permissions needed for lambda functions to exist in a VPC
+            if(_builder.ItemDeclarations.OfType<FunctionDeclaration>().Any()) {
+                AddGrant(
+                    name: "VpcNetworkInterfaces",
+                    awsType: null,
+                    reference: Literal("*"),
+                    allow: new[] {
+                        "ec2:DescribeNetworkInterfaces",
+                        "ec2:CreateNetworkInterface",
+                        "ec2:DeleteNetworkInterface"
+                    },
+                    condition: null
+                );
             }
         }
 
@@ -482,65 +899,149 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
             string project = null;
 
-            // determine project file location and type
-            if(node.Project == null) {
+            // check if function uses embedded code or a project
+            if(
+                node.Properties.TryGetValue("Code", out var codeProperty)
+                && (codeProperty is ObjectExpression codeObject)
+                && (codeObject.ContainsKey("ZipFile"))
+            ) {
 
-                // use function name to determine function project file
-                project = DetermineProjectFileLocation(Path.Combine(workingDirectory, functionName));
+                // lambda declaration uses embedded code; validate the other required fields are set
+                if(node.Runtime == null) {
+                    _builder.LogError($"missing 'Runtime' attribute", node.SourceLocation);
+                }
+                if(node.Handler == null) {
+                    _builder.LogError($"missing 'Handler' attribute", node.SourceLocation);
+                }
+                if(node.Language == null) {
+                    _builder.LogError($"missing 'Language' attribute", node.SourceLocation);
+                }
             } else {
 
-                // check if the project type can be determined by the project file extension
-                project = Path.Combine(workingDirectory, node.Project.Value);
-                if(File.Exists(project)) {
+                // determine project file location and type
+                if(node.Project == null) {
 
-                    // check if project file extension is supported
-                    switch(Path.GetExtension(project).ToLowerInvariant()) {
-                    case ".csproj":
-                    case ".js":
-                    case ".sbt":
-
-                        // known extension for an existing project file; nothing to do
-                        break;
-                    default:
-                        project = null;
-                        break;
-                    }
+                    // use function name to determine function project file
+                    project = DetermineProjectFileLocation(Path.Combine(workingDirectory, functionName));
                 } else {
-                    project = DetermineProjectFileLocation(project);
+
+                    // check if the project type can be determined by the project file extension
+                    project = Path.Combine(workingDirectory, node.Project.Value);
+                    if(File.Exists(project)) {
+
+                        // check if project file extension is supported
+                        switch(Path.GetExtension(project).ToLowerInvariant()) {
+                        case ".csproj":
+                        case ".js":
+                        case ".sbt":
+
+                            // known extension for an existing project file; nothing to do
+                            break;
+                        default:
+                            project = null;
+                            break;
+                        }
+                    } else {
+                        project = DetermineProjectFileLocation(project);
+                    }
+                }
+                if(project == null) {
+                    _builder.LogError($"function project file could not be found or is not supported", node.SourceLocation);
+                    return;
+                }
+
+                // update 'Project' attribute with known project file that exists
+                node.Project = new LiteralExpression {
+                    Parent = node,
+                    SourceLocation = node.Project?.SourceLocation,
+                    Value = project
+                };
+
+                // fill in missing attributes based on function type
+                switch(Path.GetExtension(project).ToLowerInvariant()) {
+                case ".csproj":
+                    DetermineDotNetFunctionProperties();
+                    break;
+                case ".js":
+                    DetermineJavascriptFunctionProperties();
+                    break;
+                case ".sbt":
+                    DetermineScalaFunctionProperties();
+                    break;
+                default:
+                    _builder.LogError($"unsupported language for Lambda function", node.SourceLocation);
+                    break;
                 }
             }
-            if(project == null) {
-                _builder.LogError($"function project file could not be found or is not supported", node.SourceLocation);
-                return;
-            }
 
-            // update 'Project' attribute with known project file that exists
-            node.Project = new LiteralExpression {
-                Parent = node,
-                SourceLocation = node.Project?.SourceLocation,
-                Value = project
-            };
+            // check if lambdasharp specific resources need to be initialized
+            if(
+                !node.Properties.ContainsKey("DeadLetterConfig")
+                && HasDeadLetterQueue(node)
+                && _builder.TryGetItemDeclaration("Module::DeadLetterQueue", out _)
+            ) {
 
-            // fill in missing attributes based on function type
-            switch(Path.GetExtension(project).ToLowerInvariant()) {
-            case ".csproj":
-                DetermineDotNetFunctionProperties();
-                break;
-            case ".js":
-                DetermineJavascriptFunctionProperties();
-                break;
-            case ".sbt":
-                DetermineScalaFunctionProperties();
-                break;
-            default:
-                _builder.LogError($"unsupported language for Lambda function", node.SourceLocation);
-                break;
+                // initialize dead-letter queue
+                node.Properties["DeadLetterConfig"] = new ObjectExpression {
+                    ["TargetArn"] = FnRef("Module::DeadLetterQueue")
+                };
             }
 
             // check if resource is conditional
             if(!(node.If is ConditionLiteralExpression)) {
 
                 // TODO: creation condition as sub-declaration
+            }
+
+            // check if function must be registered
+            if(HasFunctionRegistration(node)) {
+
+                // create function registration
+                AddDeclaration(node, new ResourceDeclaration {
+                    Resource = Literal("Registration"),
+                    Type = Literal("LambdaSharp::Registration::Function"),
+                    Properties = new ObjectExpression {
+                        ["ModuleId"] = FnRef("AWS::StackName"),
+                        ["FunctionId"] = FnRef(node.FullName),
+                        ["FunctionName"] = Literal(node.Function.Value),
+                        ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{node.FullName}}}"),
+                        ["FunctionPlatform"] = Literal("AWS Lambda"),
+                        ["FunctionFramework"] = node.Runtime,
+                        ["FunctionLanguage"] = node.Language,
+                        ["FunctionMaxMemory"] = node.Memory,
+                        ["FunctionMaxDuration"] = node.Timeout
+                    },
+                    DependsOn = new List<LiteralExpression> {
+                        Literal("Module::Registration")
+                    },
+
+                    // TODO: not sure this is the cleanest way to do this
+                    If = new ConditionLiteralExpression {
+                        Value = ((ConditionLiteralExpression)node.If).Value
+                    }
+                });
+
+                // create function log-group subscription
+                if(
+                    _builder.TryGetItemDeclaration("Module::LoggingStream", out _)
+                    && _builder.TryGetItemDeclaration("Module::LoggingStreamRole", out _)
+                ) {
+                    AddDeclaration(node, new ResourceDeclaration {
+                        Resource = Literal("LogGroupSubscription"),
+                        Type = Literal("AWS::Logs::SubscriptionFilter"),
+                        Properties = new ObjectExpression {
+                            ["DestinationArn"] = FnRef("Module::LoggingStream"),
+                            ["FilterPattern"] = Literal("-\"*** \""),
+                            ["LogGroupName"] = FnRef($"{node.FullName}::LogGroup"),
+                            ["RoleArn"] = FnRef("Module::LoggingStreamRole")
+                        },
+
+                        // TODO: not sure this is the cleanest way to do this
+                        If = new ConditionLiteralExpression {
+                            Value = ((ConditionLiteralExpression)node.If).Value
+                        }
+                    });
+                }
             }
 
             // local function
@@ -797,6 +1298,54 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             parent.AddDeclaration(declaration, new AItemDeclaration.DoNotCallThisDirectly());
             declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
             return declaration;
+        }
+
+        private T AddDeclaration<T>(ModuleDeclaration parent, T declaration) where T : AItemDeclaration {
+            parent.Items.Add(declaration);
+            declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
+            return declaration;
+        }
+
+        private void AddGrant(string name, string awsType, AValueExpression reference, IEnumerable<string> allow, AConditionExpression condition) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool TryGetOverride(string key, out AValueExpression value) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool TryGetModuleVariable(string key, out AValueExpression deadLetterQueueVariable, out AConditionExpression deadLetterQueueCondition) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool HasLambdaSharpDependencies() {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool HasModuleRegistration() {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool HasFunctionRegistration(FunctionDeclaration functionDeclaration) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        private bool HasDeadLetterQueue(FunctionDeclaration functionDeclaration) {
+
+            // TODO:
+            throw new NotImplementedException();
         }
     }
 }

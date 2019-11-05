@@ -89,8 +89,8 @@ Items:
             var moduleDeclaration = parser.ParseSyntaxOf<ModuleDeclaration>();
 
             // act
-            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer());
             var builder = new Builder();
+            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new DeclarationsVisitor(builder));
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 

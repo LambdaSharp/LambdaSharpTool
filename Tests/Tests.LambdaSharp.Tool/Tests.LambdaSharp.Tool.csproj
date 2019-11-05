@@ -19,5 +19,6 @@
     <Compile Include="..\..\src\LambdaSharp.Tool\ModuleInfo.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\VersionInfo.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\Parser\**\*.cs" />
+    <Compile Include="..\..\src\LambdaSharp.Tool\Internal\AssemblyEx.cs" />
   </ItemGroup>
 </Project>

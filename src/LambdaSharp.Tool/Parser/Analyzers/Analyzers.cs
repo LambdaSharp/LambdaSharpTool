@@ -23,6 +23,12 @@ using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
 
+    public enum XRayTracingLevel {
+        Disabled,
+        RootModule,
+        AllModules
+    }
+
     public class Builder {
 
         //--- Class Fields ---
@@ -36,6 +42,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         public string ModuleNamespace { get; set; }
         public string ModuleName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
+
+        // TODO: initialize CoreServicesReferenceVersion
+        public VersionInfo CoreServicesReferenceVersion { get; private set; }
+
+        public string ModuleFullName => $"{ModuleNamespace}.{ModuleName}";
+        public ModuleInfo ModuleInfo => new ModuleInfo(ModuleNamespace, ModuleName, ModuleVersion, origin: null);
+        public IEnumerable<AItemDeclaration> ItemDeclarations => _fullNameDeclarations.Values;
 
         //--- Methods ---
         public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
