@@ -247,18 +247,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
-        public void VisitStart(ASyntaxNode parent, ConditionLiteralExpression node) {
+        public void VisitStart(ASyntaxNode parent, ConditionRefExpression node) {
             InitializeSyntaxNode(parent, node);
         }
-        public void VisitEnd(ASyntaxNode parent, ConditionLiteralExpression node) { }
-        public void VisitStart(ASyntaxNode parent, ConditionNameExpression node) {
-            InitializeSyntaxNode(parent, node);
-        }
-        public void VisitEnd(ASyntaxNode parent, ConditionNameExpression node) { }
-        public void VisitStart(ASyntaxNode parent, ConditionReferenceExpression node) {
-            InitializeSyntaxNode(parent, node);
-        }
-        public void VisitEnd(ASyntaxNode parent, ConditionReferenceExpression node) { }
+        public void VisitEnd(ASyntaxNode parent, ConditionRefExpression node) { }
         #endregion
 
         #region === Misc ===

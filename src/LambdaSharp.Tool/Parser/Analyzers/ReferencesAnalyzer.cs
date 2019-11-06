@@ -137,7 +137,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionNameExpression node) {
+        public override void VisitStart(ASyntaxNode parent, ConditionRefExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference

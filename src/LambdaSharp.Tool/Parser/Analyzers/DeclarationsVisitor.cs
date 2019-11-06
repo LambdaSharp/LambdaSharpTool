@@ -93,51 +93,29 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return true;
         }
 
-        private static AValueExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
+        #region *** AValueExpression Functions ***
+        private static ReferenceFunctionExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
             ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
         };
 
-        private static AValueExpression FnGetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
+        private static GetAttFunctionExpression FnGetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
             ReferenceName = Literal(referenceName),
             AttributeName = Literal(attributeName)
         };
 
-        private static AValueExpression FnSub(string formatString) => new SubFunctionExpression {
+        private static SubFunctionExpression FnSub(string formatString) => new SubFunctionExpression {
             FormatString = Literal(formatString)
         };
 
-        private static AValueExpression FnSplit(string delimiter, AValueExpression sourceString) => new SplitFunctionExpression {
+        private static SplitFunctionExpression FnSplit(string delimiter, AValueExpression sourceString) => new SplitFunctionExpression {
             Delimiter = Literal(delimiter),
             SourceString = sourceString
         };
 
-        private static AValueExpression FnIf(string condition, AValueExpression ifTrue, AValueExpression ifFalse) => new IfFunctionExpression {
-            Condition = ConditionLiteral(condition),
+        private static IfFunctionExpression FnIf(string condition, AValueExpression ifTrue, AValueExpression ifFalse) => new IfFunctionExpression {
+            Condition = FnConditionRef(condition),
             IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
             IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
-        };
-
-        private static AConditionExpression FnNot(AConditionExpression condition) => new NotConditionExpression {
-            Value = condition ?? throw new ArgumentNullException(nameof(condition))
-        };
-
-        // TODO: left/right values should be AValueExpression
-        private static AConditionExpression FnEquals(AConditionExpression leftValue, AConditionExpression rightValue) => new EqualsConditionExpression {
-            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
-        };
-
-        private static AConditionExpression FnAnd(AConditionExpression leftValue, AConditionExpression rightValue) => new AndConditionExpression {
-            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
-        };
-
-        private static AConditionExpression FnCondition(string referenceName) => new ConditionNameExpression {
-            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
-        };
-
-        private static AConditionExpression FnRefCondition(string referenceName) => new ConditionReferenceExpression {
-            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
         };
 
         private static LiteralExpression Literal(string value) => new LiteralExpression {
@@ -147,10 +125,32 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private static LiteralExpression Literal(int value) => new LiteralExpression {
             Value = value.ToString()
         };
+        #endregion
 
-        private static ConditionLiteralExpression ConditionLiteral(string value) => new ConditionLiteralExpression {
-            Value = value ?? throw new ArgumentNullException(nameof(value))
+        #region *** AConditionExpression Functions ***
+        private static NotConditionExpression FnNot(AConditionExpression condition) => new NotConditionExpression {
+            Value = condition ?? throw new ArgumentNullException(nameof(condition))
         };
+
+        private static EqualsConditionExpression FnEquals(AValueExpression leftValue, AValueExpression rightValue) => new EqualsConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        private static AndConditionExpression FnAnd(AConditionExpression leftValue, AConditionExpression rightValue) => new AndConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        private static OrConditionExpression FnOr(AConditionExpression leftValue, AConditionExpression rightValue) => new OrConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        private static ConditionRefExpression FnConditionRef(string referenceName) => new ConditionRefExpression {
+            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
+        };
+        #endregion
 
         //--- Fields ---
         private readonly Builder _builder;
@@ -235,7 +235,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
 
                 // check if resource is conditional
-                if((node.If != null) && !(node.If is ConditionLiteralExpression)) {
+                if((node.If != null) && !(node.If is ConditionRefExpression)) {
 
                     // creation condition as sub-declaration
                     AddDeclaration(node, new ConditionDeclaration {
@@ -566,7 +566,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 return true;
             }
             if(HasLambdaSharpDependencies(moduleDeclaration)) {
-                condition = ConditionLiteral("UseCoreServices");
+                condition = FnConditionRef("UseCoreServices");
                 variable = FnIf("UseCoreServices", FnRef($"LambdaSharp::{name}"), FnRef("AWS::NoValue"));
                 return true;
             }

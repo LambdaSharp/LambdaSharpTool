@@ -161,7 +161,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     // add condition for creating the source
                     var condition = AddDeclaration(node, new ConditionDeclaration {
                         Condition = Literal("IsBlank"),
-                        Value = FnEquals(FnRefCondition(node.FullName), ConditionLiteral(""))
+                        Value = FnEquals(FnRef(node.FullName), Literal(""))
                     });
 
                     // add conditional resource
@@ -174,7 +174,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                         // TODO: set 'arnAttribute' for resource (default attribute to return when referencing the resource),
 
-                        If = ConditionLiteral(condition.FullName),
+                        If = FnConditionRef(condition.FullName),
 
                         // TODO: should the data-structure be cloned?
                         Pragmas = node.Pragmas
@@ -182,7 +182,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // update the reference expression for the parameter
                     node.ReferenceExpression = new IfFunctionExpression {
-                        Condition = ConditionLiteral(condition.FullName),
+                        Condition = FnConditionRef(condition.FullName),
                         IfTrue = _builder.GetExportReference(resource),
                         IfFalse = FnRef(node.FullName)
                     };

@@ -128,14 +128,14 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // check if resource is conditional
-            if((node.If != null) && !(node.If is ConditionLiteralExpression)) {
+            if((node.If != null) && !(node.If is ConditionRefExpression)) {
 
                 // convert conditional expression to a condition literal
                 var condition = AddDeclaration(node, new ConditionDeclaration {
                     Condition = Literal("If"),
                     Value = node.If
                 });
-                node.If = ConditionLiteral(condition.FullName);
+                node.If = FnConditionRef(condition.FullName);
             }
 
 
@@ -232,8 +232,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         Literal("Module::Registration")
                     },
                     If = (node.IfConditionName != null)
-                        ? FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
-                        : ConditionLiteral("UseCoreServices"),
+                        ? (AConditionExpression)FnAnd(FnConditionRef("UseCoreServices"), FnConditionRef(node.IfConditionName))
+                        : FnConditionRef("UseCoreServices"),
                 });
 
                 // create function log-group subscription
@@ -251,8 +251,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                             ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                         },
                         If = (node.IfConditionName != null)
-                            ? FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
-                            : ConditionLiteral("UseCoreServices"),
+                            ? (AConditionExpression)FnAnd(FnConditionRef("UseCoreServices"), FnConditionRef(node.IfConditionName))
+                            : FnConditionRef("UseCoreServices"),
                     });
                 }
             }

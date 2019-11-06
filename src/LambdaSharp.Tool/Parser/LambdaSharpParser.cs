@@ -97,7 +97,7 @@ namespace LambdaSharp.Tool.Parser {
                 // TODO:
                 [typeof(AConditionExpression)] = () => throw new NotImplementedException("AConditionExpression"),
                 [typeof(MappingNameLiteral)] = () => throw new NotImplementedException("MappingNameLiteralExpression"),
-                [typeof(ConditionNameExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
+                [typeof(ConditionRefExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
 
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseSyntaxOf<ModuleDeclaration>(),
@@ -618,9 +618,9 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Condition = new ConditionLiteralExpression {
+                        Condition = new ConditionRefExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            Value = conditionNameLiteral.Value
+                            ReferenceName = conditionNameLiteral.Value
                         },
                         IfTrue = ifList.Items[1],
                         IfFalse = ifList.Items[2]

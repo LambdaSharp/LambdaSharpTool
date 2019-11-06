@@ -105,7 +105,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             AddDeclaration(moduleGroupDeclaration, new ConditionDeclaration {
                 Condition = Literal("IsNested"),
                 Description = Literal("Module is nested"),
-                Value = FnNot(FnEquals(FnCondition("DeploymentRoot"), ConditionLiteral("")))
+                Value = FnNot(FnEquals(FnRef("DeploymentRoot"), Literal("")))
             });
             AddDeclaration(moduleGroupDeclaration, new VariableDeclaration {
                 Variable = Literal("RootId"),
@@ -181,13 +181,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::IsEnabled
             AddDeclaration(node, new ConditionDeclaration {
                 Condition = Literal("XRayIsEnabled"),
-                Value = FnNot(FnEquals(FnRefCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.Disabled.ToString())))
+                Value = FnNot(FnEquals(FnRef("XRayTracing"), Literal(XRayTracingLevel.Disabled.ToString())))
             });
 
             // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::NestedIsEnabled
             AddDeclaration(node, new ConditionDeclaration {
                 Condition = Literal("XRayNestedIsEnabled"),
-                Value = FnEquals(FnRefCondition("XRayTracing"), ConditionLiteral(XRayTracingLevel.AllModules.ToString()))
+                Value = FnEquals(FnRef("XRayTracing"), Literal(XRayTracingLevel.AllModules.ToString()))
             });
 
             // check if module might depdent on core services
@@ -210,7 +210,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     Condition = Literal("UseCoreServices"),
 
                     // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
-                    Value = FnEquals(FnRefCondition("LambdaSharpCoreServices"), ConditionLiteral("Enabled"))
+                    Value = FnEquals(FnRef("LambdaSharpCoreServices"), Literal("Enabled"))
                 });
             }
 
@@ -377,7 +377,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     "kms:Decrypt",
                     "kms:Encrypt"
                 },
-                condition: FnNot(FnEquals(FnRefCondition("Secrets"), ConditionLiteral("")))
+                condition: FnNot(FnEquals(FnRef("Secrets"), Literal("")))
             );
 
             // permissions needed for writing to log streams (but not for creating log groups!)
@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         ["Module"] = Literal(_builder.ModuleInfo.ToString()),
                         ["ModuleId"] = FnRef("AWS::StackName")
                     },
-                    If = ConditionLiteral("UseCoreServices")
+                    If = FnConditionRef("UseCoreServices")
                 });
             }
         }
