@@ -21,7 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LambdaSharp.Tool.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AExpression : ASyntaxNode { }
 

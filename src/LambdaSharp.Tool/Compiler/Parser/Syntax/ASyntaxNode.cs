@@ -18,7 +18,7 @@
 
 using System.Collections.Generic;
 
-namespace LambdaSharp.Tool.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class ASyntaxNode {
 

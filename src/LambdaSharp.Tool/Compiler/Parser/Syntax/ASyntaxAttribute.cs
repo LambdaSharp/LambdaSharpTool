@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public enum SyntaxType {
         Required,

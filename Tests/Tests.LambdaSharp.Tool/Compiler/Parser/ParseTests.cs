@@ -20,13 +20,14 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using FluentAssertions;
-using LambdaSharp.Tool.Parser;
-using LambdaSharp.Tool.Parser.Analyzers;
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler;
+using LambdaSharp.Tool.Compiler.Analyzers;
+using LambdaSharp.Tool.Compiler.Parser;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Tool.Parser {
+namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 
     public abstract class _Init {
 

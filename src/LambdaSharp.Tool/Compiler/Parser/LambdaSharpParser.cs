@@ -21,11 +21,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
-namespace LambdaSharp.Tool.Parser {
+namespace LambdaSharp.Tool.Compiler.Parser {
 
     public interface ILambdaSharpParserDependencyProvider {
 

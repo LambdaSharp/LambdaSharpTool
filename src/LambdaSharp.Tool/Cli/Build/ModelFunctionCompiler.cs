@@ -31,8 +31,8 @@ namespace LambdaSharp.Tool.Cli.Build {
     public class ModelFunctionProcessor : AModelProcessor {
 
         //--- Class Fields ---
-        private static readonly string LambdaRestApiRequestTemplate = typeof(ModelFunctionProcessor).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.LambdaRestApiRequest.vtl");
-        private static readonly string LambdaRestApiResponseTemplate = typeof(ModelFunctionProcessor).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.LambdaRestApiResponse.vtl");
+        private static readonly string LambdaRestApiRequestTemplate = typeof(ModelFunctionProcessor).Assembly.ReadManifestResource("Resources/LambdaRestApiRequest.vtl");
+        private static readonly string LambdaRestApiResponseTemplate = typeof(ModelFunctionProcessor).Assembly.ReadManifestResource("Resources/LambdaRestApiResponse.vtl");
 
         //--- Fields ---
         private ModuleBuilder _builder;
@@ -562,7 +562,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Stage") {
                     ["AccessLogSettings"] = new Dictionary<string, dynamic> {
                         ["DestinationArn"] = FnSub($"arn:aws:logs:${{AWS::Region}}:${{AWS::AccountId}}:log-group:${{{webSocketLogGroup.FullName}}}"),
-                        ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.WebSocketLogging.json")), Formatting.None)
+                        ["Format"] = JsonConvert.SerializeObject(JObject.Parse(GetType().Assembly.ReadManifestResource("Resources/WebSocketLogging.json")), Formatting.None)
                     },
                     ["ApiId"] = FnRef("Module::WebSocket"),
                     ["StageName"] = "LATEST",

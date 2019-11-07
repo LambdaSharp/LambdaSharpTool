@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli {
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
 
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
-            var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
+            var result = typeof(ACliCommand).Assembly.ReadManifestResource($"Resources/{resourceName}");
             if(substitutions != null) {
                 foreach(var kv in substitutions) {
                     result = result.Replace($"%%{kv.Key}%%", kv.Value);

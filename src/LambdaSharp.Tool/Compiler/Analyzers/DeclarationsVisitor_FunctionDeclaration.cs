@@ -20,9 +20,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Xml.Linq;
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
-namespace LambdaSharp.Tool.Parser.Analyzers {
+namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public partial class DeclarationsVisitor {
 

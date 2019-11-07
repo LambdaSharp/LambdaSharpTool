@@ -22,9 +22,9 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
-namespace LambdaSharp.Tool.Parser.Analyzers {
+namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public partial class DeclarationsVisitor : ASyntaxVisitor {
 
@@ -38,7 +38,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         static DeclarationsVisitor() {
 
             // load source code for inline secret decryption function
-            _decryptSecretFunctionCode = typeof(DeclarationsVisitor).Assembly.ReadManifestResource("LambdaSharp.Tool.Resources.DecryptSecretFunction.js");
+            _decryptSecretFunctionCode = typeof(DeclarationsVisitor).Assembly.ReadManifestResource("Resources/DecryptSecretFunction.js");
 
             // create list of natively supported CloudFormation types
             _cloudFormationParameterTypes = new HashSet<string> {

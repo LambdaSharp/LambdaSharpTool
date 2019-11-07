@@ -17,12 +17,12 @@
  */
 
 using FluentAssertions;
-using LambdaSharp.Tool.Parser;
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Tool.Parser {
+namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 
     public class ParseExpressionTests : _Init {
 

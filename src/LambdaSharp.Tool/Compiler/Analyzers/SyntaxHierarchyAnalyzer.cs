@@ -16,9 +16,9 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Tool.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
-namespace LambdaSharp.Tool.Parser.Analyzers {
+namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public class SyntaxHierarchyAnalyzer : ISyntaxVisitor {
 
