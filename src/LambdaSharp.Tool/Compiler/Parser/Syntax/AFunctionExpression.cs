@@ -22,6 +22,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class Base64FunctionExpression : AFunctionExpression {
 
+        // !Base64 VALUE
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
@@ -37,6 +38,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class CidrFunctionExpression : AFunctionExpression {
 
+        // !Cidr [ VALUE, VALUE, VALUE ]
         // NOTE: You can use the following functions in a Fn::Cidr function:
         //  - !Select
         //  - !Ref
@@ -58,6 +60,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class FindInMapFunctionExpression : AFunctionExpression {
 
+        // !FindInMap [ STRING, VALUE, VALUE ]
         // NOTE: You can use the following functions in a Fn::FindInMap function:
         //  - Fn::FindInMap
         //  - Ref
@@ -79,6 +82,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class GetAttFunctionExpression : AFunctionExpression {
 
+        // !GetAtt [ STRING, VALUE ]
         // NOTE: For the Fn::GetAtt logical resource name, you cannot use functions. You must specify a string that is a resource's logical ID.
         // For the Fn::GetAtt attribute name, you can use the Ref function.
 
@@ -97,6 +101,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class GetAZsFunctionExpression : AFunctionExpression {
 
+        // !GetAZs VALUE
         // NOTE: You can use the Ref function in the Fn::GetAZs function.
 
         //--- Properties ---
@@ -112,6 +117,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class IfFunctionExpression : AFunctionExpression {
 
+        // !If [ CONDITION, VALUE, VALUE ]
         // NOTE: AWS CloudFormation supports the Fn::If intrinsic function in the metadata attribute, update policy attribute, and property values in the Resources section and Outputs sections of a template.
         //  - Fn::Base64
         //  - Fn::FindInMap
@@ -140,6 +146,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class ImportValueFunctionExpression : AFunctionExpression {
 
+        // !ImportValue VALUE
         // NOTE: You can use the following functions in the Fn::ImportValue function. The value of these functions can't depend on a resource.
         //  - Fn::Base64
         //  - Fn::FindInMap
@@ -163,6 +170,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class JoinFunctionExpression : AFunctionExpression {
 
+        // !Join [ STRING, VALUE ]
         // NOTE: For the Fn::Join delimiter, you cannot use any functions. You must specify a string value.
         //  For the Fn::Join list of values, you can use the following functions:
         //  - Fn::Base64
@@ -192,6 +200,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class SelectFunctionExpression : AFunctionExpression {
 
+        // !Select [ VALUE, VALUE ]
         // NOTE: For the Fn::Select index value, you can use the Ref and Fn::FindInMap functions.
         //  For the Fn::Select list of objects, you can use the following functions:
         //  - Fn::FindInMap
@@ -216,6 +225,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class SplitFunctionExpression : AFunctionExpression {
 
+        // !Split [ VALUE, VALUE ]
         // NOTE: For the Fn::Split delimiter, you cannot use any functions. You must specify a string value.
         //  For the Fn::Split list of values, you can use the following functions:
         //  - Fn::Base64
@@ -244,6 +254,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class SubFunctionExpression : AFunctionExpression {
 
+        // !Sub VALUE
+        // !Sub [ VALUE, OBJECT ]
         // NOTE: For the String parameter, you cannot use any functions. You must specify a string value.
         // For the VarName and VarValue parameters, you can use the following functions:
         //  - Fn::Base64
@@ -271,6 +283,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class TransformFunctionExpression : AFunctionExpression {
 
+        // !Transform { Name: STRING, Parameters: OBJECT }
         // NOTE: AWS CloudFormation passes any intrinsic function calls included in Fn::Transform to the specified macro as literal strings.
 
         //--- Properties ---
@@ -288,6 +301,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class ReferenceFunctionExpression : AFunctionExpression {
 
+        // !Ref STRING
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
         //--- Properties ---

@@ -412,19 +412,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 } else if(type?.Value == "AWS") {
 
                     // nothing to do; any 'Allow' expression is legal
-                } else if(!IsNativeCloudFormationType(type.Value)) {
+                } else if(!IsValidCloudFormationResourceType(type.Value)) {
                     _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.SourceLocation);
                 } else {
 
                     // TODO: ResourceMapping.IsCloudFormationType(node.Type?.Value), "'Allow' attribute can only be used with AWS resource types"
                 }
             }
-        }
-
-        private bool IsNativeCloudFormationType(string awsType) {
-
-            // TODO:
-            throw new NotImplementedException();
         }
 
         private void ValidateExpressionIsNumber(ASyntaxNode parent, AExpression expression, string errorMessage) {

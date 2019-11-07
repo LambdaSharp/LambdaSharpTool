@@ -61,15 +61,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // only the 'Number' type can have the 'MinValue' and 'MaxValue' attributes
             if(node.Type.Value == "Number") {
-                if(node.MinValue != null) {
-
-                    // TODO: validate the value is a number
-                    throw new NotImplementedException();
+                if((node.MinValue != null) && !int.TryParse(node.MinValue.Value, out var _)) {
+                    _builder.LogError($"value must be an integer", node.MinValue.SourceLocation);
                 }
-                if(node.MaxValue != null) {
-
-                    // TODO: validate the value is a number
-                    throw new NotImplementedException();
+                if((node.MaxValue != null) && !int.TryParse(node.MaxValue.Value, out var _)) {
+                    _builder.LogError($"value must be an integer", node.MaxValue.SourceLocation);
                 }
             } else {
                 if(node.MinValue != null) {
@@ -96,15 +92,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     // the 'ConstraintDescription' attribute is only valid in conjunction with the 'AllowedPattern' attribute
                     _builder.LogError($"ConstraintDescription attribute can only be used in conjunction with the AllowedPattern attribute", node.ConstraintDescription.SourceLocation);
                 }
-                if(node.MinLength != null) {
-
-                    // TODO: validate the value is a number
-                    throw new NotImplementedException();
+                if((node.MinLength != null) && !int.TryParse(node.MinLength.Value, out var _)) {
+                    _builder.LogError($"value must be an integer", node.MinLength.SourceLocation);
                 }
-                if(node.MaxLength != null) {
-
-                    // TODO: validate the value is a number
-                    throw new NotImplementedException();
+                if((node.MaxLength != null) && !int.TryParse(node.MaxLength.Value, out var _)) {
+                    _builder.LogError($"value must be an integer", node.MaxLength.SourceLocation);
                 }
             } else {
                 if(node.AllowedPattern != null) {

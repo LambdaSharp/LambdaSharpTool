@@ -350,7 +350,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                     // parse key
                     var keyScalar = Expect<Scalar>();
-                    if(result.Items.Any(item => item.Key == keyScalar.ParsingEvent.Value)) {
+                    if(result.ContainsKey(keyScalar.ParsingEvent.Value)) {
                         LogError($"duplicate key '{keyScalar.ParsingEvent.Value}'", Location(keyScalar));
                         SkipThisAndNestedEvents();
                         continue;
@@ -367,7 +367,10 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     // add key-value pair
                     result.Items.Add(new ObjectExpression.KeyValuePair {
                         SourceLocation = Location(keyScalar),
-                        Key = keyScalar.ParsingEvent.Value,
+                        Key = new LiteralExpression {
+                            SourceLocation = Location(keyScalar),
+                            Value = keyScalar.ParsingEvent.Value
+                        },
                         Value = value
                     });
                 }
@@ -420,7 +423,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // check if value is a long-form function
                 if((value is ObjectExpression objectExpression) && (objectExpression.Items.Count == 1)) {
                     var kv = objectExpression.Items.First();
-                    switch(kv.Key) {
+                    switch(kv.Key.Value) {
                     case "Fn::Base64":
                         value = ConvertToBase64FunctionExpression(kv.Value);
                         break;

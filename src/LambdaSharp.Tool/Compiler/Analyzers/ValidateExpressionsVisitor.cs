@@ -45,10 +45,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // NOTE (2019-11-07, bjorg): by this stage, object expressions should only contain values as
             //  condition function have already been converted into the their respective class instances.
             foreach(var item in node) {
-
-                // TODO: once 'Key' is a LiteralExpression
-                // ArgumentIsValue(item.Key);
-
+                ArgumentIsValue(item.Key);
                 ArgumentIsValue(item.Value);
             }
         }

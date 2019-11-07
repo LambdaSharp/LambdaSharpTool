@@ -31,9 +31,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public class KeyValuePair : ASyntaxNode {
 
             //--- Properties ---
-
-            // TODO: should the 'Key' have a source location as well?
-            public string Key { get; set; }
+            public LiteralExpression Key { get; set; }
             public AExpression Value { get; set; }
 
             //--- Methods ---
@@ -49,21 +47,31 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Operators ---
         public AExpression this[string key] {
-            get => Items.First(item => item.Key == key).Value;
+            get => Items.First(item => item.Key.Value == key).Value;
             set => Items.Add(new KeyValuePair {
-                Key = key ?? throw new ArgumentNullException(nameof(key)),
+                Key = new LiteralExpression {
+                    Value = key ?? throw new ArgumentNullException(nameof(key))
+                },
+                Value = value ?? throw new ArgumentNullException(nameof(value))
+            });
+        }
+
+        public AExpression this[LiteralExpression key] {
+            get => Items.First(item => item.Key.Value == key.Value).Value;
+            set => Items.Add(new KeyValuePair {
+                Key = key,
                 Value = value ?? throw new ArgumentNullException(nameof(value))
             });
         }
 
         //--- Methods ---
         public bool TryGetValue(string key, out AExpression value) {
-            var found = Items.FirstOrDefault(item => item.Key == key);
+            var found = Items.FirstOrDefault(item => item.Key.Value == key);
             value = found?.Value;
             return found != null;
         }
 
-        public bool ContainsKey(string key) => Items.Any(item => item.Key == key);
+        public bool ContainsKey(string key) => Items.Any(item => item.Key.Value == key);
 
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);

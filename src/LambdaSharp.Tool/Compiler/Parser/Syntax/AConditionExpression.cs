@@ -20,7 +20,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class ConditionExpression : AExpression {
 
-        // TODO: parse !Condition STRING
+        // !Condition STRING
 
         //--- Properties ---
         public LiteralExpression ReferenceName { get; set; }
@@ -35,7 +35,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class EqualsConditionExpression : AExpression {
 
-        // TODO: parse !Equals [ EXPR, EXPR ]
+        // !Equals [ EXPR, EXPR ]
+        // NOTE: You can use the following functions in a Fn::Equals function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
@@ -56,7 +57,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class NotConditionExpression : AExpression {
 
-        // TODO: parse !Not [ EXPR ]
+        // parse !Not [ EXPR ]
+        // NOTE: You can use the following functions in a Fn::Not function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
@@ -75,7 +77,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class AndConditionExpression : AExpression {
 
-        // TODO: parse !And [ EXPR, EXPR ]
+        // !And [ EXPR, EXPR ]
+        // NOTE: You can use the following functions in a Fn::And function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
@@ -96,7 +99,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class OrConditionExpression : AExpression {
 
-        // TODO: parse !Or [ EXPR, EXPR ]
+        // !Or [ EXPR, EXPR ]
+        // NOTE: You can use the following functions in a Fn::Or function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
