@@ -470,7 +470,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         public override string LocalName => Function.Value;
 
-        public string IfConditionName => ((ConditionRefExpression)If)?.ReferenceName;
+        public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

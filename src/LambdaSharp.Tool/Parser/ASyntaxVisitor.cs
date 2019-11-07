@@ -16,11 +16,71 @@
  * limitations under the License.
  */
 
+using System;
 using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser {
 
     public abstract class ASyntaxVisitor : ISyntaxVisitor {
+
+        //--- Class Methods ---
+
+        #region *** CloudFormation Functions ***
+        public static ReferenceFunctionExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
+            ReferenceName = Literal(referenceName)
+        };
+
+        public static GetAttFunctionExpression FnGetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
+            ReferenceName = Literal(referenceName),
+            AttributeName = Literal(attributeName)
+        };
+
+        public static SubFunctionExpression FnSub(string formatString) => new SubFunctionExpression {
+            FormatString = Literal(formatString)
+        };
+
+        public static SplitFunctionExpression FnSplit(string delimiter, AExpression sourceString) => new SplitFunctionExpression {
+            Delimiter = Literal(delimiter),
+            SourceString = sourceString
+        };
+
+        public static IfFunctionExpression FnIf(string condition, AExpression ifTrue, AExpression ifFalse) => new IfFunctionExpression {
+            Condition = FnCondition(condition),
+            IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
+            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
+        };
+
+        public static LiteralExpression Literal(string value) => new LiteralExpression {
+            Value = value ?? throw new ArgumentNullException(nameof(value))
+        };
+
+        public static LiteralExpression Literal(int value) => new LiteralExpression {
+            Value = value.ToString()
+        };
+
+        public static NotConditionExpression FnNot(AExpression condition) => new NotConditionExpression {
+            Value = condition ?? throw new ArgumentNullException(nameof(condition))
+        };
+
+        public static EqualsConditionExpression FnEquals(AExpression leftValue, AExpression rightValue) => new EqualsConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        public static AndConditionExpression FnAnd(AExpression leftValue, AExpression rightValue) => new AndConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        public static OrConditionExpression FnOr(AExpression leftValue, AExpression rightValue) => new OrConditionExpression {
+            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+        };
+
+        public static ConditionExpression FnCondition(string referenceName) => new ConditionExpression {
+            ReferenceName = Literal(referenceName)
+        };
+        #endregion
 
         //--- Methods ---
         public virtual void VisitStart(ASyntaxNode parent, ModuleDeclaration node) { }
@@ -51,8 +111,8 @@ namespace LambdaSharp.Tool.Parser {
         public virtual void VisitEnd(ASyntaxNode parent, Base64FunctionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, CidrFunctionExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, CidrFunctionExpression node) { }
-        public virtual void VisitStart(ASyntaxNode parent, FindInMapExpression node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, FindInMapExpression node) { }
+        public virtual void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) { }
+        public virtual void VisitEnd(ASyntaxNode parent, FindInMapFunctionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, GetAttFunctionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, GetAZsFunctionExpression node) { }
@@ -113,8 +173,8 @@ namespace LambdaSharp.Tool.Parser {
         public virtual void VisitEnd(ASyntaxNode parent, ListExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, LiteralExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, LiteralExpression node) { }
-        public virtual void VisitStart(ASyntaxNode parent, ConditionRefExpression node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, ConditionRefExpression node) { }
+        public virtual void VisitStart(ASyntaxNode parent, ConditionExpression node) { }
+        public virtual void VisitEnd(ASyntaxNode parent, ConditionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, EqualsConditionExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, EqualsConditionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, NotConditionExpression node) { }

@@ -168,10 +168,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, CidrFunctionExpression node) { }
-        public void VisitStart(ASyntaxNode parent, FindInMapExpression node) {
+        public void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
             InitializeSyntaxNode(parent, node);
         }
-        public void VisitEnd(ASyntaxNode parent, FindInMapExpression node) { }
+        public void VisitEnd(ASyntaxNode parent, FindInMapFunctionExpression node) { }
         public void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
             InitializeSyntaxNode(parent, node);
         }
@@ -247,10 +247,10 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
-        public void VisitStart(ASyntaxNode parent, ConditionRefExpression node) {
+        public void VisitStart(ASyntaxNode parent, ConditionExpression node) {
             InitializeSyntaxNode(parent, node);
         }
-        public void VisitEnd(ASyntaxNode parent, ConditionRefExpression node) { }
+        public void VisitEnd(ASyntaxNode parent, ConditionExpression node) { }
         #endregion
 
         #region === Misc ===
@@ -275,9 +275,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // assign default reference expression
-            node.ReferenceExpression = new ReferenceFunctionExpression {
-                ReferenceName = node.FullName
-            };
+            node.ReferenceExpression = ASyntaxVisitor.FnRef(node.FullName);
 
             // register item declaration
             node.LogicalId = _builder.AddItemDeclaration(parent, node);

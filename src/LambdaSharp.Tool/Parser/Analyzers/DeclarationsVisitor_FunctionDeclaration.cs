@@ -128,7 +128,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // check if resource is conditional
-            if((node.If != null) && !(node.If is ConditionRefExpression)) {
+            if((node.If != null) && !(node.If is ConditionExpression)) {
 
                 // convert conditional expression to a condition literal
                 var condition = AddDeclaration(node, new ConditionDeclaration {
@@ -361,9 +361,9 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
             }
 
-            void SetProperty(string key, AExpression valueExpression) {
-                if((valueExpression != null) && !node.Properties.ContainsKey(key)) {
-                    node.Properties[key] = valueExpression;
+            void SetProperty(string key, AExpression expression) {
+                if((expression != null) && !node.Properties.ContainsKey(key)) {
+                    node.Properties[key] = expression;
                 }
             }
         }

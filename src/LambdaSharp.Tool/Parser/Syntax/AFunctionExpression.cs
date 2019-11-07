@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class FindInMapExpression : AFunctionExpression {
+    public class FindInMapFunctionExpression : AFunctionExpression {
 
         // NOTE: You can use the following functions in a Fn::FindInMap function:
         //  - Fn::FindInMap
@@ -124,9 +124,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-
-        // TODO: allow arbitrary condition expressions; instantiate condition item as needed
-        public ConditionRefExpression Condition { get; set; }
+        public AExpression Condition { get; set; }
         public AExpression IfTrue { get; set; }
         public AExpression IfFalse { get; set; }
 
@@ -293,11 +291,12 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
         //--- Properties ---
-        public string ReferenceName { get; set; }
+        public LiteralExpression ReferenceName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
+            ReferenceName?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

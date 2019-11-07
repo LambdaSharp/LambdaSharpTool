@@ -93,63 +93,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return true;
         }
 
-        #region *** CloudFormation Functions ***
-        private static ReferenceFunctionExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
-            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
-        };
-
-        private static GetAttFunctionExpression FnGetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
-            ReferenceName = Literal(referenceName),
-            AttributeName = Literal(attributeName)
-        };
-
-        private static SubFunctionExpression FnSub(string formatString) => new SubFunctionExpression {
-            FormatString = Literal(formatString)
-        };
-
-        private static SplitFunctionExpression FnSplit(string delimiter, AExpression sourceString) => new SplitFunctionExpression {
-            Delimiter = Literal(delimiter),
-            SourceString = sourceString
-        };
-
-        private static IfFunctionExpression FnIf(string condition, AExpression ifTrue, AExpression ifFalse) => new IfFunctionExpression {
-            Condition = FnCondition(condition),
-            IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
-            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
-        };
-
-        private static LiteralExpression Literal(string value) => new LiteralExpression {
-            Value = value ?? throw new ArgumentNullException(nameof(value))
-        };
-
-        private static LiteralExpression Literal(int value) => new LiteralExpression {
-            Value = value.ToString()
-        };
-
-        private static NotConditionExpression FnNot(AExpression condition) => new NotConditionExpression {
-            Value = condition ?? throw new ArgumentNullException(nameof(condition))
-        };
-
-        private static EqualsConditionExpression FnEquals(AExpression leftValue, AExpression rightValue) => new EqualsConditionExpression {
-            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
-        };
-
-        private static AndConditionExpression FnAnd(AExpression leftValue, AExpression rightValue) => new AndConditionExpression {
-            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
-        };
-
-        private static OrConditionExpression FnOr(AExpression leftValue, AExpression rightValue) => new OrConditionExpression {
-            LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
-        };
-
-        private static ConditionRefExpression FnCondition(string referenceName) => new ConditionRefExpression {
-            ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
-        };
-        #endregion
-
         //--- Fields ---
         private readonly Builder _builder;
 
@@ -233,7 +176,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
 
                 // check if resource is conditional
-                if((node.If != null) && !(node.If is ConditionRefExpression)) {
+                if((node.If != null) && !(node.If is ConditionExpression)) {
 
                     // creation condition as sub-declaration
                     AddDeclaration(node, new ConditionDeclaration {

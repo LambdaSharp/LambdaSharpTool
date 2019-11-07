@@ -356,6 +356,8 @@ namespace LambdaSharp.Tool.Parser {
                         continue;
                     }
 
+                    // TODO: key could be 'Fn::Transform' indicating this structure is being transformed by a CloudFormation macro
+
                     // parse value
                     var value = ParseExpressionOfType<AExpression>("expression");
                     if(value == null) {
@@ -573,7 +575,7 @@ namespace LambdaSharp.Tool.Parser {
                         LogError("!FindInMap first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
-                    return new FindInMapExpression {
+                    return new FindInMapFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         MapName = new LiteralExpression {
                             SourceLocation = mapNameLiteral.SourceLocation,
@@ -648,9 +650,12 @@ namespace LambdaSharp.Tool.Parser {
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Condition = new ConditionRefExpression {
+                        Condition = new ConditionExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            ReferenceName = conditionNameLiteral.Value
+                            ReferenceName = new LiteralExpression {
+                                SourceLocation = conditionNameLiteral.SourceLocation,
+                                Value = conditionNameLiteral.Value
+                            }
                         },
                         IfTrue = parameterList[1],
                         IfFalse = parameterList[2]
@@ -778,13 +783,13 @@ namespace LambdaSharp.Tool.Parser {
                         LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
                         return null;
                     }
-                    if(!parameterMap.TryGetValue("Parameters", out var parametersExpression)) {
-                        LogError("!Transform missing 'Parameters'", value.SourceLocation);
-                        return null;
-                    }
-                    if(!(parametersExpression is ObjectExpression parametersMap)) {
-                        LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
-                        return null;
+                    ObjectExpression parametersMap = null;
+                    if(parameterMap.TryGetValue("Parameters", out var parametersExpression)) {
+                        if(!(parametersExpression is ObjectExpression)) {
+                            LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
+                            return null;
+                        }
+                        parameterMap = (ObjectExpression)parametersExpression;
                     }
                     return new TransformFunctionExpression {
                         SourceLocation = value.SourceLocation,
@@ -802,7 +807,10 @@ namespace LambdaSharp.Tool.Parser {
                 if(value is LiteralExpression refLiteral) {
                     return new ReferenceFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = refLiteral.Value
+                        ReferenceName = new LiteralExpression {
+                            SourceLocation = value.SourceLocation,
+                            Value = refLiteral.Value
+                        }
                     };
                 }
                 LogError($"invalid parameter for !Ref function", value.SourceLocation);
@@ -884,9 +892,12 @@ namespace LambdaSharp.Tool.Parser {
 
                 // !Condition STRING
                 if(value is LiteralExpression conditionLiteral) {
-                    return new ConditionRefExpression {
+                    return new ConditionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = conditionLiteral.Value
+                        ReferenceName = new LiteralExpression {
+                            SourceLocation = value.SourceLocation,
+                            Value = conditionLiteral.Value
+                        }
                     };
                 }
                 LogError($"invalid parameter for !Condition function", value.SourceLocation);

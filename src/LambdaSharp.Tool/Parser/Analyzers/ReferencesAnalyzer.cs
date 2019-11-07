@@ -81,8 +81,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             var referenceName = node.ReferenceName;
 
             // check if reference is to CloudFormation pseudo-parameter
-            if(referenceName.StartsWith("AWS::", StringComparison.Ordinal)) {
-                switch(referenceName) {
+            if(referenceName.Value.StartsWith("AWS::", StringComparison.Ordinal)) {
+                switch(referenceName.Value) {
                 case "AWS::AccountId":
                 case "AWS::NotificationARNs":
                 case "AWS::NoValue":
@@ -102,7 +102,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // validate reference
-            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
+            if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
 
                 // confirm reference is to a referenceable declaration
                 switch(referencedDeclaration) {
@@ -131,17 +131,17 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                 // register reference with declaration
                 var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
+                declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: conditions, Node: node));
             } else {
                 _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionRefExpression node) {
+        public override void VisitStart(ASyntaxNode parent, ConditionExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference
-            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
+            if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
 
                 // confirm reference is to a condition declaration
                 if(referencedDeclaration is ConditionDeclaration) {
@@ -149,7 +149,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // register reference with declaration
                     var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
+                    declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
                     _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
                 }
@@ -158,7 +158,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, FindInMapExpression node) {
+        public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
             var referenceName = node.MapName.Value;
 
             // validate reference
