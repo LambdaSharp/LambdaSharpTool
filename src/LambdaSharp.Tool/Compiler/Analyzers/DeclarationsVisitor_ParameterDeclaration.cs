@@ -29,6 +29,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
 
             // validate attributes
+            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
@@ -189,7 +190,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         name: node.Parameter.Value,
                         awsType: node.Type.Value,
                         reference: node.ReferenceExpression,
-                        allow: node.Allow.Tags,
+                        allow: node.Allow,
                         condition: null
                     );
                 }

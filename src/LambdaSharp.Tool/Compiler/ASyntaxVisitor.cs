@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Linq;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler {
@@ -56,6 +57,10 @@ namespace LambdaSharp.Tool.Compiler {
 
         public static LiteralExpression Literal(int value) => new LiteralExpression {
             Value = value.ToString()
+        };
+
+        public static ListExpression LiteralList(params string[] values) => new ListExpression {
+            Items = values.Select(value => (AExpression)Literal(value)).ToList()
         };
 
         public static NotConditionExpression FnNot(AExpression condition) => new NotConditionExpression {
@@ -163,8 +168,6 @@ namespace LambdaSharp.Tool.Compiler {
         public virtual void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, MacroDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode parent, MacroDeclaration node) { }
-        public virtual void VisitStart(ASyntaxNode parent, TagListDeclaration node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, TagListDeclaration node) { }
         public virtual void VisitStart(ASyntaxNode parent, ObjectExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, ObjectExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, ObjectExpression.KeyValuePair node) { }

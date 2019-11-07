@@ -120,6 +120,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
             // validate attributes
+            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
         }
 
@@ -139,7 +140,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
-            // validate 'Allow' attribute
+            // validate attributes
+            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // check if declaration is a resource reference
@@ -197,7 +199,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         name: node.LogicalId,
                         awsType: node.Type.Value,
                         reference: node.ReferenceExpression,
-                        allow: node.Allow.Tags,
+                        allow: node.Allow,
                         condition: null
                     );
                 }
@@ -238,6 +240,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+
+            // validate attributes
+            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
 
             // 'Files' reference is relative to YAML file it originated from
             var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
@@ -405,7 +410,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             });
         }
 
-        private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, TagListDeclaration allow) {
+        private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, AExpression allow) {
+            ValidateExpressionIsLiteralOrListOfLiteral(allow);
             if(allow != null) {
                 if(type == null) {
                     _builder.LogError($"'Allow' attribute requires 'Type' attribute", node.SourceLocation);
@@ -464,7 +470,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             return declaration;
         }
 
-        private void AddGrant(string name, string awsType, AExpression reference, IEnumerable<string> allow, AExpression condition) {
+        private void AddGrant(string name, string awsType, AExpression reference, AExpression allow, AExpression condition) {
 
             // TODO: always validate as well
             // ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -523,5 +529,26 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private bool HasModuleRegistration(ModuleDeclaration moduleDeclaration) => !HasPragma(moduleDeclaration, "no-module-registration");
         private bool HasFunctionRegistration(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-function-registration");
         private bool HasDeadLetterQueue(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-dead-letter-queue");
+
+        private void ValidateExpressionIsLiteralOrListOfLiteral(AExpression expression) {
+
+            // missing and literal expressions are safe
+            if((expression == null) || (expression is LiteralExpression)) {
+                return;
+            }
+
+            // list expressions must be further validated
+            if(expression is ListExpression listExpression) {
+
+                // make sure every item in the list is a literal expression
+                foreach(var item in listExpression) {
+                    if(!(item is LiteralExpression)) {
+                        _builder.LogError($"expected literal expression", item.SourceLocation);
+                    }
+                }
+            } else {
+                _builder.LogError($"expected literal expression or list of literal expressions", expression.SourceLocation);
+            }
+        }
     }
 }

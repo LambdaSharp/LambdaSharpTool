@@ -105,7 +105,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Type { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression NoEcho { get; set; }
@@ -135,7 +135,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression MinValue { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Allow { get; set; }
+        public AExpression Allow { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Properties { get; set; }
@@ -185,10 +185,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Type { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Allow { get; set; }
+        public AExpression Allow { get; set; }
 
         [SyntaxRequired]
         public LiteralExpression Module { get; set; }
@@ -223,7 +223,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Type { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxRequired]
         public AExpression Value { get; set; }
@@ -304,10 +304,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Type { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Allow { get; set; }
+        public AExpression Allow { get; set; }
 
         [SyntaxOptional]
         public AExpression Value { get; set; }
@@ -382,7 +382,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Package { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxRequired]
         public LiteralExpression Files { get; set; }
@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Function { get; set; }
 
         [SyntaxOptional]
-        public TagListDeclaration Scope { get; set; }
+        public AExpression Scope { get; set; }
 
         [SyntaxOptional]
         public AExpression If { get; set; }
@@ -606,19 +606,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             Macro?.Visit(this, visitor);
             Handler?.Visit(this, visitor);
             Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
-        }
-    }
-
-    // TODO: consider replacing this with 'AExpression' instead
-    public class TagListDeclaration : ASyntaxNode {
-
-        //--- Properties ---
-        public List<string> Tags { get; set; } = new List<string>();
-
-        //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
             visitor.VisitEnd(parent, this);
         }
     }

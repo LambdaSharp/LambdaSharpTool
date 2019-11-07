@@ -253,13 +253,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public void VisitEnd(ASyntaxNode parent, ConditionExpression node) { }
         #endregion
 
-        #region === Misc ===
-        public void VisitStart(ASyntaxNode parent, TagListDeclaration node) {
-            InitializeSyntaxNode(parent, node);
-        }
-        public void VisitEnd(ASyntaxNode parent, TagListDeclaration node) { }
-        #endregion
-
         private void InitializeSyntaxNode(ASyntaxNode parent, ASyntaxNode node) {
             node.Parent ??= parent;
             node.SourceLocation ??= parent.SourceLocation;

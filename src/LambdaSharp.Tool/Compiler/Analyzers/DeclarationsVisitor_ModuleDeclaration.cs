@@ -256,8 +256,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     name: "DeadLetterQueue",
                     awsType: null,
                     reference: FnRef("Module::DeadLetterQueue"),
-                    allow: new[] {
-                        "sqs:SendMessage"
+                    allow: new ListExpression {
+                        Literal("sqs:SendMessage")
                     },
                     condition: deadLetterQueueCondition
                 );
@@ -292,9 +292,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     reference: new ListExpression {
                         Items = node.Secrets.Cast<AExpression>().ToList()
                     },
-                    allow: new[] {
-                        "kms:Decrypt",
-                        "kms:Encrypt"
+                    allow: new ListExpression {
+                        Literal("kms:Decrypt"),
+                        Literal("kms:Encrypt")
                     },
                     condition: null
                 );
@@ -373,9 +373,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "Secrets",
                 awsType: null,
                 reference: FnSplit(",", FnRef("Secrets")),
-                allow: new List<string> {
-                    "kms:Decrypt",
-                    "kms:Encrypt"
+                allow: new ListExpression {
+                    Literal("kms:Decrypt"),
+                    Literal("kms:Encrypt")
                 },
                 condition: FnNot(FnEquals(FnRef("Secrets"), Literal("")))
             );
@@ -385,9 +385,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "LogStream",
                 awsType: null,
                 reference: Literal("arn:aws:logs:*:*:*"),
-                allow: new[] {
-                    "logs:CreateLogStream",
-                    "logs:PutLogEvents"
+                allow: new ListExpression {
+                    Literal("logs:CreateLogStream"),
+                    Literal("logs:PutLogEvents")
                 },
                 condition: null
             );
@@ -397,8 +397,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "CloudFormation",
                 awsType: null,
                 reference: FnRef("AWS::StackId"),
-                allow: new[] {
-                    "cloudformation:DescribeStacks"
+                allow: new ListExpression {
+                    Literal("cloudformation:DescribeStacks")
                 },
                 condition: null
             );
@@ -408,12 +408,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "AWSXRay",
                 awsType: null,
                 reference: Literal("*"),
-                allow: new[] {
-                    "xray:PutTraceSegments",
-                    "xray:PutTelemetryRecords",
-                    "xray:GetSamplingRules",
-                    "xray:GetSamplingTargets",
-                    "xray:GetSamplingStatisticSummaries"
+                allow: new ListExpression {
+                    Literal("xray:PutTraceSegments"),
+                    Literal("xray:PutTelemetryRecords"),
+                    Literal("xray:GetSamplingRules"),
+                    Literal("xray:GetSamplingTargets"),
+                    Literal("xray:GetSamplingStatisticSummaries")
                 },
                 condition: null
             );
@@ -443,10 +443,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     name: "VpcNetworkInterfaces",
                     awsType: null,
                     reference: Literal("*"),
-                    allow: new[] {
-                        "ec2:DescribeNetworkInterfaces",
-                        "ec2:CreateNetworkInterface",
-                        "ec2:DeleteNetworkInterface"
+                    allow: new ListExpression {
+                        Literal("ec2:DescribeNetworkInterfaces"),
+                        Literal("ec2:CreateNetworkInterface"),
+                        Literal("ec2:DeleteNetworkInterface")
                     },
                     condition: null
                 );
