@@ -53,7 +53,7 @@ Items:
 ");
 
             // act
-            var module = parser.ParseSyntaxOf<ModuleDeclaration>();
+            var module = parser.ParseSyntaxOfType<ModuleDeclaration>();
 
             // assert
             ExpectNoMessages();

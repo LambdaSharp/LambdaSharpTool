@@ -86,7 +86,7 @@ Items:
     - Variable: BarVariable
       Value: !Ref FooResource
 ");
-            var moduleDeclaration = parser.ParseSyntaxOf<ModuleDeclaration>();
+            var moduleDeclaration = parser.ParseSyntaxOfType<ModuleDeclaration>();
 
             // act
             var builder = new Builder();

@@ -23,6 +23,16 @@ using LambdaSharp.Tool.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Parser.Analyzers {
 
+    // TODO:
+    //  - record declarations
+    //  - import missing information
+    //      - other modules
+    //      - convert secret key alias to ARN
+    //      - cloudformation spec (if need be)
+    //  - validate nested expressions
+    //  - create derivative resources
+    //  - resolve all references
+
     public enum XRayTracingLevel {
         Disabled,
         RootModule,
@@ -90,7 +100,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             throw new NotImplementedException();
         }
 
-        public AValueExpression GetExportReference(ResourceDeclaration resourceDeclaration) {
+        public AExpression GetExportReference(ResourceDeclaration resourceDeclaration) {
 
             // TODO:
             throw new NotImplementedException();

@@ -23,9 +23,9 @@ using System.Linq;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AValueExpression : ASyntaxNode { }
+    public abstract class AExpression : ASyntaxNode { }
 
-    public class ObjectExpression : AValueExpression {
+    public class ObjectExpression : AExpression, IEnumerable, IEnumerable<ObjectExpression.KeyValuePair> {
 
         //--- Types ---
         public class KeyValuePair : ASyntaxNode {
@@ -34,7 +34,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
             // TODO: should the 'Key' have a source location as well?
             public string Key { get; set; }
-            public AValueExpression Value { get; set; }
+            public AExpression Value { get; set; }
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<KeyValuePair> Items { get; set; } = new List<KeyValuePair>();
 
         //--- Operators ---
-        public AValueExpression this[string key] {
+        public AExpression this[string key] {
             get => Items.First(item => item.Key == key).Value;
             set => Items.Add(new KeyValuePair {
                 Key = key ?? throw new ArgumentNullException(nameof(key)),
@@ -57,7 +57,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
 
         //--- Methods ---
-        public bool TryGetValue(string key, out AValueExpression value) {
+        public bool TryGetValue(string key, out AExpression value) {
             var found = Items.FirstOrDefault(item => item.Key == key);
             value = found?.Value;
             return found != null;
@@ -70,12 +70,25 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             Items.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
+
+        //--- IEnumerable Members ---
+        IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
+
+        //--- IEnumerable<AExpression> Members ---
+        IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => Items.GetEnumerator();
     }
 
-    public class ListExpression : AValueExpression, IEnumerable {
+    public class ListExpression : AExpression, IEnumerable, IEnumerable<AExpression> {
 
         //--- Properties ---
-        public List<AValueExpression> Items { get; set; } = new List<AValueExpression>();
+        public List<AExpression> Items { get; set; } = new List<AExpression>();
+        public int Count => Items.Count;
+
+        //--- Operators ---
+        public AExpression this[int index] {
+            get => Items[index];
+            set => Items[index] = value;
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -84,13 +97,16 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             visitor.VisitEnd(parent, this);
         }
 
-        public void Add(AValueExpression expression) => Items.Add(expression);
+        public void Add(AExpression expression) => Items.Add(expression);
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
+
+        //--- IEnumerable<AExpression> Members ---
+        IEnumerator<AExpression> IEnumerable<AExpression>.GetEnumerator() => Items.GetEnumerator();
     }
 
-    public class LiteralExpression : AValueExpression {
+    public class LiteralExpression : AExpression {
 
         //--- Properties ---
         public string Value { get; set; }

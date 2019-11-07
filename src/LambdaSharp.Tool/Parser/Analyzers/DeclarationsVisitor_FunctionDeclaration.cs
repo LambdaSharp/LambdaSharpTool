@@ -135,7 +135,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     Condition = Literal("If"),
                     Value = node.If
                 });
-                node.If = FnConditionRef(condition.FullName);
+                node.If = FnCondition(condition.FullName);
             }
 
 
@@ -232,8 +232,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         Literal("Module::Registration")
                     },
                     If = (node.IfConditionName != null)
-                        ? (AConditionExpression)FnAnd(FnConditionRef("UseCoreServices"), FnConditionRef(node.IfConditionName))
-                        : FnConditionRef("UseCoreServices"),
+                        ? (AExpression)FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
+                        : FnCondition("UseCoreServices"),
                 });
 
                 // create function log-group subscription
@@ -251,8 +251,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                             ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                         },
                         If = (node.IfConditionName != null)
-                            ? (AConditionExpression)FnAnd(FnConditionRef("UseCoreServices"), FnConditionRef(node.IfConditionName))
-                            : FnConditionRef("UseCoreServices"),
+                            ? (AExpression)FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
+                            : FnCondition("UseCoreServices"),
                     });
                 }
             }
@@ -361,7 +361,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                 }
             }
 
-            void SetProperty(string key, AValueExpression valueExpression) {
+            void SetProperty(string key, AExpression valueExpression) {
                 if((valueExpression != null) && !node.Properties.ContainsKey(key)) {
                     node.Properties[key] = valueExpression;
                 }

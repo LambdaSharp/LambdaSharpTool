@@ -18,9 +18,7 @@
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AConditionExpression : ASyntaxNode { }
-
-    public class ConditionRefExpression : AConditionExpression {
+    public class ConditionRefExpression : AExpression {
 
         // TODO: parse !Condition STRING
 
@@ -34,7 +32,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class EqualsConditionExpression : AConditionExpression {
+    public class EqualsConditionExpression : AExpression {
 
         // TODO: parse !Equals [ EXPR, EXPR ]
         //  - Fn::FindInMap
@@ -43,8 +41,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AValueExpression LeftValue { get; set; }
-         public AValueExpression RightValue { get; set; }
+         public AExpression LeftValue { get; set; }
+         public AExpression RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -55,7 +53,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class NotConditionExpression : AConditionExpression {
+    public class NotConditionExpression : AExpression {
 
         // TODO: parse !Not [ EXPR ]
         //  - Fn::FindInMap
@@ -64,7 +62,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AConditionExpression Value { get; set; }
+         public AExpression Value { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -74,7 +72,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class AndConditionExpression : AConditionExpression {
+    public class AndConditionExpression : AExpression {
 
         // TODO: parse !And [ EXPR, EXPR ]
         //  - Fn::FindInMap
@@ -83,8 +81,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AConditionExpression LeftValue { get; set; }
-         public AConditionExpression RightValue { get; set; }
+         public AExpression LeftValue { get; set; }
+         public AExpression RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -95,7 +93,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class OrConditionExpression : AConditionExpression {
+    public class OrConditionExpression : AExpression {
 
         // TODO: parse !Or [ EXPR, EXPR ]
         //  - Fn::FindInMap
@@ -104,8 +102,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AConditionExpression LeftValue { get; set; }
-         public AConditionExpression RightValue { get; set; }
+         public AExpression LeftValue { get; set; }
+         public AExpression RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

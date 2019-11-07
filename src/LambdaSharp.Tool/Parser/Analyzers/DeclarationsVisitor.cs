@@ -93,7 +93,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return true;
         }
 
-        #region *** AValueExpression Functions ***
+        #region *** CloudFormation Functions ***
         private static ReferenceFunctionExpression FnRef(string referenceName) => new ReferenceFunctionExpression {
             ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
         };
@@ -107,13 +107,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             FormatString = Literal(formatString)
         };
 
-        private static SplitFunctionExpression FnSplit(string delimiter, AValueExpression sourceString) => new SplitFunctionExpression {
+        private static SplitFunctionExpression FnSplit(string delimiter, AExpression sourceString) => new SplitFunctionExpression {
             Delimiter = Literal(delimiter),
             SourceString = sourceString
         };
 
-        private static IfFunctionExpression FnIf(string condition, AValueExpression ifTrue, AValueExpression ifFalse) => new IfFunctionExpression {
-            Condition = FnConditionRef(condition),
+        private static IfFunctionExpression FnIf(string condition, AExpression ifTrue, AExpression ifFalse) => new IfFunctionExpression {
+            Condition = FnCondition(condition),
             IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
             IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
         };
@@ -125,29 +125,27 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
         private static LiteralExpression Literal(int value) => new LiteralExpression {
             Value = value.ToString()
         };
-        #endregion
 
-        #region *** AConditionExpression Functions ***
-        private static NotConditionExpression FnNot(AConditionExpression condition) => new NotConditionExpression {
+        private static NotConditionExpression FnNot(AExpression condition) => new NotConditionExpression {
             Value = condition ?? throw new ArgumentNullException(nameof(condition))
         };
 
-        private static EqualsConditionExpression FnEquals(AValueExpression leftValue, AValueExpression rightValue) => new EqualsConditionExpression {
+        private static EqualsConditionExpression FnEquals(AExpression leftValue, AExpression rightValue) => new EqualsConditionExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        private static AndConditionExpression FnAnd(AConditionExpression leftValue, AConditionExpression rightValue) => new AndConditionExpression {
+        private static AndConditionExpression FnAnd(AExpression leftValue, AExpression rightValue) => new AndConditionExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        private static OrConditionExpression FnOr(AConditionExpression leftValue, AConditionExpression rightValue) => new OrConditionExpression {
+        private static OrConditionExpression FnOr(AExpression leftValue, AExpression rightValue) => new OrConditionExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        private static ConditionRefExpression FnConditionRef(string referenceName) => new ConditionRefExpression {
+        private static ConditionRefExpression FnCondition(string referenceName) => new ConditionRefExpression {
             ReferenceName = referenceName ?? throw new ArgumentNullException(nameof(referenceName))
         };
         #endregion
@@ -263,7 +261,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
 
             // local functions
-            void ValidateARN(AValueExpression arn) {
+            void ValidateARN(AExpression arn) {
                 if(
                     !(arn is LiteralExpression literalExpression)
                     || (
@@ -486,7 +484,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             throw new NotImplementedException();
         }
 
-        private void ValidateExpressionIsNumber(ASyntaxNode parent, AValueExpression expression, string errorMessage) {
+        private void ValidateExpressionIsNumber(ASyntaxNode parent, AExpression expression, string errorMessage) {
             if((expression is LiteralExpression literal) && !int.TryParse(literal.Value, out _)) {
                 _builder.LogError(errorMessage, expression.SourceLocation);
             }
@@ -529,7 +527,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return declaration;
         }
 
-        private void AddGrant(string name, string awsType, AValueExpression reference, IEnumerable<string> allow, AConditionExpression condition) {
+        private void AddGrant(string name, string awsType, AExpression reference, IEnumerable<string> allow, AExpression condition) {
 
             // TODO: always validate as well
             // ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -538,7 +536,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             throw new NotImplementedException();
         }
 
-        private bool TryGetLabeledPragma(ModuleDeclaration moduleDeclaration, string key, out AValueExpression value) {
+        private bool TryGetLabeledPragma(ModuleDeclaration moduleDeclaration, string key, out AExpression value) {
             foreach(var objectPragma in moduleDeclaration.Pragmas.OfType<ObjectExpression>()) {
                 if(objectPragma.TryGetValue(key, out value)) {
                     return true;
@@ -548,7 +546,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return false;
         }
 
-        private bool TryGetOverride(ModuleDeclaration moduleDeclaration, string key, out AValueExpression expression) {
+        private bool TryGetOverride(ModuleDeclaration moduleDeclaration, string key, out AExpression expression) {
             if(
                 TryGetLabeledPragma(moduleDeclaration, "Overrides", out var value)
                 && (value is ObjectExpression map)
@@ -560,13 +558,13 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return false;
         }
 
-        private bool TryGetVariable(ModuleDeclaration moduleDeclaration, string name, out AValueExpression variable, out AConditionExpression condition) {
+        private bool TryGetVariable(ModuleDeclaration moduleDeclaration, string name, out AExpression variable, out AExpression condition) {
             if(TryGetOverride(moduleDeclaration, $"Module::{name}", out variable)) {
                 condition = null;
                 return true;
             }
             if(HasLambdaSharpDependencies(moduleDeclaration)) {
-                condition = FnConditionRef("UseCoreServices");
+                condition = FnCondition("UseCoreServices");
                 variable = FnIf("UseCoreServices", FnRef($"LambdaSharp::{name}"), FnRef("AWS::NoValue"));
                 return true;
             }
@@ -575,7 +573,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             return false;
         }
 
-        private static AValueExpression GetModuleArtifactExpression(string filename)
+        private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
         private bool HasPragma(ModuleDeclaration moduleDeclaration, string pragma)

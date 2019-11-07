@@ -174,7 +174,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                         // TODO: set 'arnAttribute' for resource (default attribute to return when referencing the resource),
 
-                        If = FnConditionRef(condition.FullName),
+                        If = FnCondition(condition.FullName),
 
                         // TODO: should the data-structure be cloned?
                         Pragmas = node.Pragmas
@@ -182,7 +182,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // update the reference expression for the parameter
                     node.ReferenceExpression = new IfFunctionExpression {
-                        Condition = FnConditionRef(condition.FullName),
+                        Condition = FnCondition(condition.FullName),
                         IfTrue = _builder.GetExportReference(resource),
                         IfFalse = FnRef(node.FullName)
                     };

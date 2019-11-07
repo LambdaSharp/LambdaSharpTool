@@ -290,7 +290,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                     name: "EmbeddedSecrets",
                     awsType: null,
                     reference: new ListExpression {
-                        Items = node.Secrets.Cast<AValueExpression>().ToList()
+                        Items = node.Secrets.Cast<AExpression>().ToList()
                     },
                     allow: new[] {
                         "kms:Decrypt",
@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
                         ["Module"] = Literal(_builder.ModuleInfo.ToString()),
                         ["ModuleId"] = FnRef("AWS::StackName")
                     },
-                    If = FnConditionRef("UseCoreServices")
+                    If = FnCondition("UseCoreServices")
                 });
             }
         }

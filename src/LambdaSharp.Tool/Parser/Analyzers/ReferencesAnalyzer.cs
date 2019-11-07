@@ -149,7 +149,7 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // register reference with declaration
                     var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
+                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
                     _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
                 }
@@ -158,8 +158,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, MappingNameLiteral node) {
-            var referenceName = node.ReferenceName;
+        public override void VisitStart(ASyntaxNode parent, FindInMapExpression node) {
+            var referenceName = node.MapName.Value;
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
@@ -170,12 +170,12 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
 
                     // register reference with declaration
                     var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AConditionExpression>(), Node: node));
+                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
-                    _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
+                    _builder.LogError($"identifier {referenceName} must refer to a Condition", node.SourceLocation);
                 }
             } else {
-                _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
+                _builder.LogError($"unknown identifier {referenceName}", node.SourceLocation);
             }
         }
 
@@ -205,8 +205,8 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             }
         }
 
-        private IEnumerable<AConditionExpression> FindConditions(ASyntaxNode node) {
-            var conditions = new List<AConditionExpression>();
+        private IEnumerable<AExpression> FindConditions(ASyntaxNode node) {
+            var conditions = new List<AExpression>();
             ASyntaxNode previousParent = null;
             foreach(var parent in node.Parents) {
 

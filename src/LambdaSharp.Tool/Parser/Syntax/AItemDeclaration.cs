@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Parser.Analyzers;
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
@@ -60,7 +59,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         /// <summary>
         /// CFN expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
         /// </summary>
-        public AValueExpression ReferenceExpression { get; set; }
+        public AExpression ReferenceExpression { get; set; }
 
         /// <summary>
         /// List of declarations on which this declaration depends on.
@@ -69,7 +68,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         /// <param name="Conditions"></param>
         /// <param name="Node"></param>
         /// <returns></returns>
-        public List<(string ReferenceName, IEnumerable<AConditionExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AConditionExpression>, ASyntaxNode)>();
+        public List<(string ReferenceName, IEnumerable<AExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AExpression>, ASyntaxNode)>();
 
         /// <summary>
         /// List of declarations that depend on this declaration.
@@ -77,7 +76,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         /// <typeparam name="ASyntaxNode"></typeparam>
         /// <returns></returns>
         public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
-        public AValueExpression ResolvedValue { get; set; }
+        public AExpression ResolvedValue { get; set; }
 
 
         //--- Methods ---
@@ -227,7 +226,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxRequired]
-        public AValueExpression Value { get; set; }
+        public AExpression Value { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression EncryptionContext { get; set; }
@@ -277,7 +276,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Condition { get; set; }
 
         [SyntaxRequired]
-        public AConditionExpression Value { get; set; }
+        public AExpression Value { get; set; }
 
         public override string LocalName => Condition.Value;
 
@@ -299,7 +298,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public LiteralExpression Resource { get; set; }
 
         [SyntaxOptional]
-        public AConditionExpression If { get; set; }
+        public AExpression If { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Type { get; set; }
@@ -311,7 +310,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Allow { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression Value { get; set; }
+        public AExpression Value { get; set; }
 
         [SyntaxOptional]
         public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
@@ -411,10 +410,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
             //--- Properties ---
 
             [SyntaxRequired]
-            public AValueExpression SecurityGroupIds { get;set; }
+            public AExpression SecurityGroupIds { get;set; }
 
             [SyntaxRequired]
-            public AValueExpression SubnetIds { get;set; }
+            public AExpression SubnetIds { get;set; }
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -434,13 +433,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public TagListDeclaration Scope { get; set; }
 
         [SyntaxOptional]
-        public AConditionExpression If { get; set; }
+        public AExpression If { get; set; }
 
         [SyntaxRequired]
-        public AValueExpression Memory { get; set; }
+        public AExpression Memory { get; set; }
 
         [SyntaxRequired]
-        public AValueExpression Timeout { get; set; }
+        public AExpression Timeout { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Project { get; set; }
@@ -611,7 +610,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    // TODO: consider replacing this with 'AValueExpression' instead
+    // TODO: consider replacing this with 'AExpression' instead
     public class TagListDeclaration : ASyntaxNode {
 
         //--- Properties ---

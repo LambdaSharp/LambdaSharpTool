@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression AuthorizerId { get; set; }
+        public AExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Invoke { get; set; }
@@ -73,7 +73,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression Schedule { get; set; }
+        public AExpression Schedule { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Name { get; set; }
@@ -92,7 +92,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression S3 { get; set; }
+        public AExpression S3 { get; set; }
 
         [SyntaxOptional]
         public List<LiteralExpression> Events { get; set; }
@@ -134,7 +134,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression Topic { get; set; }
+        public AExpression Topic { get; set; }
 
         [SyntaxOptional]
         public ObjectExpression Filters { get; set; }
@@ -153,10 +153,10 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression Sqs { get; set; }
+        public AExpression Sqs { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression BatchSize { get; set; }
+        public AExpression BatchSize { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -172,7 +172,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression Alexa { get; set; }
+        public AExpression Alexa { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -187,13 +187,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression DynamoDB { get; set; }
+        public AExpression DynamoDB { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression BatchSize { get; set; }
+        public AExpression BatchSize { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression StartingPosition { get; set; }
+        public AExpression StartingPosition { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -210,13 +210,13 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AValueExpression Kinesis { get; set; }
+        public AExpression Kinesis { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression BatchSize { get; set; }
+        public AExpression BatchSize { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression StartingPosition { get; set; }
+        public AExpression StartingPosition { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -248,7 +248,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         public List<LiteralExpression> AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
-        public AValueExpression AuthorizerId { get; set; }
+        public AExpression AuthorizerId { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression Invoke { get; set; }

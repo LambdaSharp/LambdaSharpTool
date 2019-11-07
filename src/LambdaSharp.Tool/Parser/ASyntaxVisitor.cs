@@ -123,7 +123,5 @@ namespace LambdaSharp.Tool.Parser {
         public virtual void VisitEnd(ASyntaxNode parent, AndConditionExpression node) { }
         public virtual void VisitStart(ASyntaxNode parent, OrConditionExpression node) { }
         public virtual void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
-        public virtual void VisitStart(ASyntaxNode parent, MappingNameLiteral node) { }
-        public virtual void VisitEnd(ASyntaxNode parent, MappingNameLiteral node) { }
     }
 }

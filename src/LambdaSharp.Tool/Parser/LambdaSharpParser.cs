@@ -45,7 +45,6 @@ namespace LambdaSharp.Tool.Parser {
         //      - LiteralBoolExpression: https://yaml.org/type/bool.html
         //      - LiteralTimestampExpression: https://yaml.org/type/timestamp.html
         //      - no YAML nulls allows: https://yaml.org/type/null.html
-        //  - parse AConditionExpression
 
         //--- Types ---
         private class SyntaxInfo {
@@ -89,30 +88,25 @@ namespace LambdaSharp.Tool.Parser {
             _typeParsers = new Dictionary<Type, Func<object>> {
 
                 // expressions
-                [typeof(AValueExpression)] = () => ParseExpression(),
-                [typeof(ObjectExpression)] = () => ParseExpressionOf<ObjectExpression>("map expression"),
-                [typeof(ListExpression)] = () => ParseExpressionOf<ListExpression>("list expression"),
-                [typeof(LiteralExpression)] = () => ParseExpressionOf<LiteralExpression>("literal expression"),
-
-                // TODO:
-                [typeof(AConditionExpression)] = () => throw new NotImplementedException("AConditionExpression"),
-                [typeof(MappingNameLiteral)] = () => throw new NotImplementedException("MappingNameLiteralExpression"),
-                [typeof(ConditionRefExpression)] = () => throw new NotImplementedException("ConditionReferenceExpression"),
+                [typeof(AExpression)] = () => ParseExpressionOfType<AExpression>("expression"),
+                [typeof(ObjectExpression)] = () => ParseExpressionOfType<ObjectExpression>("map expression"),
+                [typeof(ListExpression)] = () => ParseExpressionOfType<ListExpression>("list expression"),
+                [typeof(LiteralExpression)] = () => ParseExpressionOfType<LiteralExpression>("literal expression"),
 
                 // declarations
-                [typeof(ModuleDeclaration)] = () => ParseSyntaxOf<ModuleDeclaration>(),
-                [typeof(UsingDeclaration)] = () => ParseSyntaxOf<UsingDeclaration>(),
-                [typeof(FunctionDeclaration.VpcExpression)] = () => ParseSyntaxOf<FunctionDeclaration.VpcExpression>(),
-                [typeof(ResourceTypeDeclaration.PropertyTypeExpression)] = () => ParseSyntaxOf<ResourceTypeDeclaration.PropertyTypeExpression>(),
-                [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOf<ResourceTypeDeclaration.AttributeTypeExpression>(),
-                [typeof(AItemDeclaration)] = () => ParseSyntaxOf<AItemDeclaration>(),
-                [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOf<AEventSourceDeclaration>(),
-
-                // lists
+                [typeof(ModuleDeclaration)] = () => ParseSyntaxOfType<ModuleDeclaration>(),
+                [typeof(UsingDeclaration)] = () => ParseSyntaxOfType<UsingDeclaration>(),
+                [typeof(FunctionDeclaration.VpcExpression)] = () => ParseSyntaxOfType<FunctionDeclaration.VpcExpression>(),
+                [typeof(ResourceTypeDeclaration.PropertyTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.PropertyTypeExpression>(),
+                [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeExpression>(),
 
                 // TODO: enumerate all acceptable types explicitly instead of relying on inheritance
+                [typeof(AItemDeclaration)] = () => ParseSyntaxOfType<AItemDeclaration>(),
+                [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
+
+                // lists
                 [typeof(List<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
-                [typeof(List<AValueExpression>)] = () => ParseList<AValueExpression>(),
+                [typeof(List<AExpression>)] = () => ParseList<AExpression>(),
                 [typeof(List<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
                 [typeof(List<UsingDeclaration>)] = () => ParseList<UsingDeclaration>(),
                 [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
@@ -231,7 +225,7 @@ namespace LambdaSharp.Tool.Parser {
             return result;
         }
 
-        public T ParseSyntaxOf<T>() where T : ASyntaxNode {
+        public T ParseSyntaxOfType<T>() where T : ASyntaxNode {
 
             // fetch all possible syntax options for specified type
             var syntaxes = GetSyntaxes(typeof(T));
@@ -317,17 +311,17 @@ namespace LambdaSharp.Tool.Parser {
             return result;
         }
 
-        public T ParseExpressionOf<T>(string constraint) where T : AValueExpression {
+        public T ParseExpressionOfType<T>(string constraint) where T : AExpression {
             var result = ParseExpression();
             if(!(result is T expression)) {
-                var isVowel = ("aeiouAEIOU".IndexOf(constraint.First()) >= 0);
+                var isVowel = ("aeiouAEIOU".IndexOf(constraint.FirstOrDefault()) >= 0);
                 LogError($"expected {(isVowel ? "an" : "a")} {constraint}", result.SourceLocation);
                 return null;
             }
             return expression;
         }
 
-        public AValueExpression ParseExpression() {
+        public AExpression ParseExpression() {
             switch(Current.ParsingEvent) {
             case SequenceStart sequenceStart:
                 return ConvertFunction(sequenceStart.Tag, ParseListExpression());
@@ -342,7 +336,7 @@ namespace LambdaSharp.Tool.Parser {
             }
 
             // local functions
-            AValueExpression ParseObjectExpression() {
+            AExpression ParseObjectExpression() {
                 if(!IsEvent<MappingStart>(out var mappingStart, out var filePath)) {
                     LogError("expected a map", Location());
                     SkipThisAndNestedEvents();
@@ -363,7 +357,7 @@ namespace LambdaSharp.Tool.Parser {
                     }
 
                     // parse value
-                    var value = ParseExpression();
+                    var value = ParseExpressionOfType<AExpression>("expression");
                     if(value == null) {
                         continue;
                     }
@@ -380,7 +374,7 @@ namespace LambdaSharp.Tool.Parser {
                 return result;
             }
 
-            AValueExpression ParseListExpression() {
+            AExpression ParseListExpression() {
                 if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
                     LogError("expected a sequence", Location());
                     SkipThisAndNestedEvents();
@@ -391,7 +385,7 @@ namespace LambdaSharp.Tool.Parser {
                 // parse values in sequence
                 var result = new ListExpression();
                 while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                    var item = ParseExpression();
+                    var item = ParseExpressionOfType<AExpression>("expression");
                     if(item != null) {
                         result.Items.Add(item);
                     }
@@ -401,7 +395,10 @@ namespace LambdaSharp.Tool.Parser {
                 return result;
             }
 
-            AValueExpression ParseLiteralExpression() {
+            AExpression ParseLiteralExpression() {
+
+                // TODO: handle unquoted literals
+
                 if(!IsEvent<Scalar>(out var scalar, out var filePath)) {
                     LogError("expected a literal string", Location());
                     SkipThisAndNestedEvents();
@@ -416,7 +413,7 @@ namespace LambdaSharp.Tool.Parser {
                 };
             }
 
-            AValueExpression ConvertFunction(string tag, AValueExpression value) {
+            AExpression ConvertFunction(string tag, AExpression value) {
 
                 // check if value is a long-form function
                 if((value is ObjectExpression objectExpression) && (objectExpression.Items.Count == 1)) {
@@ -460,6 +457,21 @@ namespace LambdaSharp.Tool.Parser {
                         break;
                     case "Ref":
                         value = ConvertToRefFunctionExpression(kv.Value);
+                        break;
+                    case "Fn::Equals":
+                        value = ConvertToEqualsConditionExpression(kv.Value);
+                        break;
+                    case "Fn::Not":
+                        value = ConvertToNotConditionExpression(kv.Value);
+                        break;
+                    case "Fn::And":
+                        value = ConvertToAndConditionExpression(kv.Value);
+                        break;
+                    case "Fn::Or":
+                        value = ConvertToOrConditionExpression(kv.Value);
+                        break;
+                    case "Condition":
+                        value = ConvertToConditionRefExpression(kv.Value);
                         break;
                     default:
 
@@ -505,13 +517,23 @@ namespace LambdaSharp.Tool.Parser {
                     return ConvertToTransformFunctionExpression(value);
                 case "!Ref":
                     return ConvertToRefFunctionExpression(value);
+                case "!Equals":
+                    return ConvertToEqualsConditionExpression(value);
+                case "!Not":
+                    return ConvertToNotConditionExpression(value);
+                case "!And":
+                    return ConvertToAndConditionExpression(value);
+                case "!Or":
+                    return ConvertToOrConditionExpression(value);
+                case "!Condition":
+                    return ConvertToConditionRefExpression(value);
                 default:
                     LogError($"unknown tag '{tag}'", value.SourceLocation);
                     return null;
                 }
             }
 
-            AValueExpression ConvertToBase64FunctionExpression(AValueExpression value) {
+            AExpression ConvertToBase64FunctionExpression(AExpression value) {
 
                 // !Base64 VALUE
                 return new Base64FunctionExpression {
@@ -520,82 +542,90 @@ namespace LambdaSharp.Tool.Parser {
                 };
             }
 
-            AValueExpression ConvertToCidrFunctionExpression(AValueExpression value) {
+            AExpression ConvertToCidrFunctionExpression(AExpression value) {
 
-                // !Cidr [VALUE, VALUE, VALUE]
-                if((value is ListExpression cidrList) && (cidrList.Items.Count == 3)) {
+                // !Cidr [ VALUE, VALUE, VALUE ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 3) {
+                        LogError("!Cidr expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
                     return new CidrFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        IpBlock = cidrList.Items[0],
-                        Count = cidrList.Items[1],
-                        CidrBits = cidrList.Items[2]
+                        IpBlock = parameterList[0],
+                        Count = parameterList[1],
+                        CidrBits = parameterList[2]
                     };
                 }
-                LogError($"invalid parameters for !Cidr function", value.SourceLocation);
+                LogError($"invalid parameter for !Cidr function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToFindInMapFunctionExpression(AValueExpression value) {
+            AExpression ConvertToFindInMapFunctionExpression(AExpression value) {
 
                 // !FindInMap [ NAME, VALUE, VALUE ]
-                if(
-                    (value is ListExpression findInMapList)
-                    && (findInMapList.Items.Count == 3)
-                    && (findInMapList.Items[0] is LiteralExpression mapName)
-                ) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 3) {
+                        LogError("!FindInMap expects 3 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    if(!(parameterList[0] is LiteralExpression mapNameLiteral)) {
+                        LogError("!FindInMap first parameter must be a literal value", parameterList[0].SourceLocation);
+                        return null;
+                    }
                     return new FindInMapExpression {
                         SourceLocation = value.SourceLocation,
-                        MapName = new MappingNameLiteral {
-                            SourceLocation = mapName.SourceLocation,
-                            ReferenceName = mapName.Value
+                        MapName = new LiteralExpression {
+                            SourceLocation = mapNameLiteral.SourceLocation,
+                            Value = mapNameLiteral.Value
                         },
-                        TopLevelKey = findInMapList.Items[1],
-                        SecondLevelKey = findInMapList.Items[2]
+                        TopLevelKey = parameterList[1],
+                        SecondLevelKey = parameterList[2]
                     };
                 }
-                LogError($"invalid parameters for !FindInMap function", value.SourceLocation);
+                LogError($"invalid parameter for !FindInMap function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToGetAttFunctionExpression(AValueExpression value) {
+            AExpression ConvertToGetAttFunctionExpression(AExpression value) {
 
                 // !GetAtt STRING
-                if(value is LiteralExpression getAttLiteral) {
-                    var referenceAndAttribute = getAttLiteral.Value.Split('.', 2);
+                if(value is LiteralExpression parameterLiteral) {
+                    var referenceAndAttribute = parameterLiteral.Value.Split('.', 2);
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         ReferenceName = new LiteralExpression {
-                            SourceLocation = getAttLiteral.SourceLocation,
+                            SourceLocation = parameterLiteral.SourceLocation,
                             Value = referenceAndAttribute[0]
                         },
                         AttributeName = new LiteralExpression {
-                            SourceLocation = getAttLiteral.SourceLocation,
+                            SourceLocation = parameterLiteral.SourceLocation,
                             Value = (referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : ""
                         }
                     };
                 }
 
                 // !GetAtt [ STRING, VALUE ]
-                if(value is ListExpression getAttList) {
-                    if(getAttList.Items.Count != 2) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 2) {
                         LogError("!GetAtt expects 2 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(getAttList.Items[0] is LiteralExpression resourceNameLiteral)) {
-                        LogError("!GetAtt first parameter must be a literal value", getAttList.Items[0].SourceLocation);
+                    if(!(parameterList[0] is LiteralExpression resourceNameLiteral)) {
+                        LogError("!GetAtt first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         ReferenceName = resourceNameLiteral,
-                        AttributeName = getAttList.Items[2]
+                        AttributeName = parameterList[2]
                     };
                 }
-                LogError($"invalid parameters for !GetAtt function", value.SourceLocation);
+                LogError($"invalid parameter for !GetAtt function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToGetAZsFunctionExpression(AValueExpression value) {
+            AExpression ConvertToGetAZsFunctionExpression(AExpression value) {
 
                 // !GetAZs VALUE
                 return new GetAZsFunctionExpression {
@@ -604,16 +634,16 @@ namespace LambdaSharp.Tool.Parser {
                 };
             }
 
-            AValueExpression ConvertToIfFunctionExpression(AValueExpression value) {
+            AExpression ConvertToIfFunctionExpression(AExpression value) {
 
-                // !If [ NAME, VALUE, VALUE ]
-                if(value is ListExpression ifList) {
-                    if(ifList.Items.Count != 3) {
+                // !If [ NAME/CONDITION, VALUE, VALUE ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 3) {
                         LogError("!If expects 3 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(ifList.Items[0] is LiteralExpression conditionNameLiteral)) {
-                        LogError("!If first parameter must be a literal value", ifList.Items[0].SourceLocation);
+                    if(!(parameterList[0] is LiteralExpression conditionNameLiteral)) {
+                        LogError("!If first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
                     return new IfFunctionExpression {
@@ -622,15 +652,15 @@ namespace LambdaSharp.Tool.Parser {
                             SourceLocation = conditionNameLiteral.SourceLocation,
                             ReferenceName = conditionNameLiteral.Value
                         },
-                        IfTrue = ifList.Items[1],
-                        IfFalse = ifList.Items[2]
+                        IfTrue = parameterList[1],
+                        IfFalse = parameterList[2]
                     };
                 }
-                LogError($"invalid parameters for !If function", value.SourceLocation);
+                LogError($"invalid parameter for !If function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToImportValueFunctionExpression(AValueExpression value) {
+            AExpression ConvertToImportValueFunctionExpression(AExpression value) {
 
                 // !ImportValue VALUE
                 return new ImportValueFunctionExpression {
@@ -639,69 +669,69 @@ namespace LambdaSharp.Tool.Parser {
                 };
             }
 
-            AValueExpression ConvertToJoinFunctionExpression(AValueExpression value) {
+            AExpression ConvertToJoinFunctionExpression(AExpression value) {
 
                 // !Join [ STRING, [ VALUE, ... ]]
-                if(value is ListExpression joinList) {
-                    if(joinList.Items.Count != 2) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 2) {
                         LogError("!Join expects 2 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(joinList.Items[0] is LiteralExpression separatorLiteral)) {
-                        LogError("!Join first parameter must be a literal value", joinList.Items[0].SourceLocation);
+                    if(!(parameterList[0] is LiteralExpression separatorLiteral)) {
+                        LogError("!Join first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
                     return new JoinFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         Separator = separatorLiteral,
-                        Values = joinList.Items[1]
+                        Values = parameterList[1]
                     };
                 }
-                LogError($"invalid parameters for !Join function", value.SourceLocation);
+                LogError($"invalid parameter for !Join function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToSelectFunctionExpression(AValueExpression value) {
+            AExpression ConvertToSelectFunctionExpression(AExpression value) {
 
                 // !Select [ VALUE, [ VALUE, ... ]]
-                if(value is ListExpression selectList) {
-                    if(selectList.Items.Count != 2) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 2) {
                         LogError("!Select expects 2 parameters", value.SourceLocation);
                         return null;
                     }
                     return new SelectFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Index = selectList.Items[0],
-                        Values = selectList.Items[1]
+                        Index = parameterList[0],
+                        Values = parameterList[1]
                     };
                 }
-                LogError($"invalid parameters for !Select function", value.SourceLocation);
+                LogError($"invalid parameter for !Select function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToSplitFunctionExpression(AValueExpression value) {
+            AExpression ConvertToSplitFunctionExpression(AExpression value) {
 
                 // !Split [ STRING, VALUE ]
-                if(value is ListExpression splitList) {
-                    if(splitList.Items.Count != 2) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 2) {
                         LogError("!Split expects 2 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(splitList.Items[0] is LiteralExpression indexLiteral)) {
-                        LogError("!Split first parameter must be a literal value", splitList.Items[0].SourceLocation);
+                    if(!(parameterList[0] is LiteralExpression indexLiteral)) {
+                        LogError("!Split first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
                     return new SplitFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         Delimiter = indexLiteral,
-                        SourceString = splitList.Items[1]
+                        SourceString = parameterList[1]
                     };
                 }
-                LogError($"invalid parameters for !Split function", value.SourceLocation);
+                LogError($"invalid parameter for !Split function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToSubFunctionExpression(AValueExpression value) {
+            AExpression ConvertToSubFunctionExpression(AExpression value) {
 
                 // !Sub STRING
                 if(value is LiteralExpression subLiteral) {
@@ -713,17 +743,17 @@ namespace LambdaSharp.Tool.Parser {
                 }
 
                 // !Sub [ STRING, { KEY: VALUE, ... }]
-                if(value is ListExpression subList) {
-                    if(subList.Items.Count != 2) {
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Items.Count != 2) {
                         LogError("!Sub expects 2 parameters", value.SourceLocation);
                         return null;
                     }
-                    if(!(subList.Items[0] is LiteralExpression formatLiteralExpression)) {
-                        LogError("!Sub first parameter must be a literal value", subList.Items[0].SourceLocation);
+                    if(!(parameterList[0] is LiteralExpression formatLiteralExpression)) {
+                        LogError("!Sub first parameter must be a literal value", parameterList[0].SourceLocation);
                         return null;
                     }
-                    if(!(subList.Items[1] is ObjectExpression parametersObject)) {
-                        LogError("!Sub second parameter must be a map", subList.Items[1].SourceLocation);
+                    if(!(parameterList[1] is ObjectExpression parametersObject)) {
+                        LogError("!Sub second parameter must be a map", parameterList[1].SourceLocation);
                         return null;
                     }
                     return new SubFunctionExpression {
@@ -732,15 +762,15 @@ namespace LambdaSharp.Tool.Parser {
                         Parameters = parametersObject
                     };
                 }
-                LogError($"invalid parameters for !Sub function", value.SourceLocation);
+                LogError($"invalid parameter for !Sub function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToTransformFunctionExpression(AValueExpression value) {
+            AExpression ConvertToTransformFunctionExpression(AExpression value) {
 
                 // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
-                if(value is ObjectExpression transformMap) {
-                    if(!transformMap.TryGetValue("Name", out var macroNameExpression)) {
+                if(value is ObjectExpression parameterMap) {
+                    if(!parameterMap.TryGetValue("Name", out var macroNameExpression)) {
                         LogError("!Transform missing 'Name'", value.SourceLocation);
                         return null;
                     }
@@ -748,7 +778,7 @@ namespace LambdaSharp.Tool.Parser {
                         LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
                         return null;
                     }
-                    if(!transformMap.TryGetValue("Parameters", out var parametersExpression)) {
+                    if(!parameterMap.TryGetValue("Parameters", out var parametersExpression)) {
                         LogError("!Transform missing 'Parameters'", value.SourceLocation);
                         return null;
                     }
@@ -762,11 +792,11 @@ namespace LambdaSharp.Tool.Parser {
                         Parameters = parametersMap
                     };
                 }
-                LogError($"invalid parameters for !Transform function", value.SourceLocation);
+                LogError($"invalid parameter for !Transform function", value.SourceLocation);
                 return null;
             }
 
-            AValueExpression ConvertToRefFunctionExpression(AValueExpression value) {
+            AExpression ConvertToRefFunctionExpression(AExpression value) {
 
                 // !Ref STRING
                 if(value is LiteralExpression refLiteral) {
@@ -775,7 +805,91 @@ namespace LambdaSharp.Tool.Parser {
                         ReferenceName = refLiteral.Value
                     };
                 }
-                LogError($"invalid parameters for !Ref function", value.SourceLocation);
+                LogError($"invalid parameter for !Ref function", value.SourceLocation);
+                return null;
+            }
+
+            AExpression ConvertToEqualsConditionExpression(AExpression value) {
+
+                // !Equals [ VALUE, VALUE ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Count != 2) {
+                        LogError("!Equals expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    return new EqualsConditionExpression {
+                        SourceLocation = value.SourceLocation,
+                        LeftValue = parameterList[0],
+                        RightValue = parameterList[1]
+                    };
+                }
+                LogError($"invalid parameter for !Equals function", value.SourceLocation);
+                return null;
+            }
+
+            AExpression ConvertToNotConditionExpression(AExpression value) {
+
+                // !Not [ CONDITION ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Count != 1) {
+                        LogError("!Not expects 1 parameter", value.SourceLocation);
+                        return null;
+                    }
+                    return new NotConditionExpression {
+                        SourceLocation = value.SourceLocation,
+                        Value = parameterList[0]
+                    };
+                }
+                LogError($"invalid parameter for !Not function", value.SourceLocation);
+                return null;
+            }
+
+            AExpression ConvertToAndConditionExpression(AExpression value) {
+
+                // !And [ CONDITION, CONDITION ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Count != 2) {
+                        LogError("!And expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    return new AndConditionExpression {
+                        SourceLocation = value.SourceLocation,
+                        LeftValue = parameterList[0],
+                        RightValue = parameterList[1]
+                    };
+                }
+                LogError($"invalid parameter for !And function", value.SourceLocation);
+                return null;
+            }
+
+            AExpression ConvertToOrConditionExpression(AExpression value) {
+
+                // !Or [ CONDITION, CONDITION ]
+                if(value is ListExpression parameterList) {
+                    if(parameterList.Count != 2) {
+                        LogError("!Or expects 2 parameters", value.SourceLocation);
+                        return null;
+                    }
+                    return new OrConditionExpression {
+                        SourceLocation = value.SourceLocation,
+                        LeftValue = parameterList[0],
+                        RightValue = parameterList[1]
+                    };
+                }
+                LogError($"invalid parameter for !Or function", value.SourceLocation);
+                return null;
+            }
+
+            AExpression ConvertToConditionRefExpression(AExpression value) {
+
+                // !Condition STRING
+                if(value is LiteralExpression conditionLiteral) {
+                    return new ConditionRefExpression {
+                        SourceLocation = value.SourceLocation,
+                        ReferenceName = conditionLiteral.Value
+                    };
+                }
+                LogError($"invalid parameter for !Condition function", value.SourceLocation);
                 return null;
             }
         }
@@ -803,7 +917,7 @@ namespace LambdaSharp.Tool.Parser {
 
             // parse values in sequence
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                var item = ParseExpressionOf<LiteralExpression>("literal expression");
+                var item = ParseExpressionOfType<LiteralExpression>("literal expression");
                 if(item != null) {
                     result.Add(item);
                 }

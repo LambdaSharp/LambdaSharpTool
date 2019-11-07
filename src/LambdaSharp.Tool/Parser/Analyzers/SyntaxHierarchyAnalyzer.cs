@@ -258,12 +258,6 @@ namespace LambdaSharp.Tool.Parser.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, TagListDeclaration node) { }
-        public void VisitStart(ASyntaxNode parent, MappingNameLiteral node) {
-            InitializeSyntaxNode(parent, node);
-        }
-        public void VisitEnd(ASyntaxNode parent, MappingNameLiteral node) {
-            InitializeSyntaxNode(parent, node);
-        }
         #endregion
 
         private void InitializeSyntaxNode(ASyntaxNode parent, ASyntaxNode node) {

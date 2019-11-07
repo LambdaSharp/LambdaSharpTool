@@ -18,14 +18,14 @@
 
 namespace LambdaSharp.Tool.Parser.Syntax {
 
-    public abstract class AFunctionExpression : AValueExpression  { }
+    public abstract class AFunctionExpression : AExpression  { }
 
     public class Base64FunctionExpression : AFunctionExpression {
 
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
-        public AValueExpression Value { get; set; }
+        public AExpression Value { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -42,9 +42,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - !Ref
 
         //--- Properties ---
-        public AValueExpression IpBlock  { get; set; }
-        public AValueExpression Count { get; set; }
-        public AValueExpression CidrBits { get; set; }
+        public AExpression IpBlock  { get; set; }
+        public AExpression Count { get; set; }
+        public AExpression CidrBits { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -63,9 +63,9 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public MappingNameLiteral MapName { get; set; }
-        public AValueExpression TopLevelKey { get; set; }
-        public AValueExpression SecondLevelKey { get; set; }
+        public LiteralExpression MapName { get; set; }
+        public AExpression TopLevelKey { get; set; }
+        public AExpression SecondLevelKey { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -77,20 +77,6 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         }
     }
 
-    public class MappingNameLiteral : ASyntaxNode {
-
-        //--- Properties ---
-
-        // TODO: should this be a literal expression or not?!?
-        public string ReferenceName { get; set; }
-
-        //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            visitor.VisitEnd(parent, this);
-        }
-    }
-
     public class GetAttFunctionExpression : AFunctionExpression {
 
         // NOTE: For the Fn::GetAtt logical resource name, you cannot use functions. You must specify a string that is a resource's logical ID.
@@ -98,7 +84,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public LiteralExpression ReferenceName { get; set; }
-        public AValueExpression AttributeName { get; set; }
+        public AExpression AttributeName { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -114,7 +100,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         // NOTE: You can use the Ref function in the Fn::GetAZs function.
 
         //--- Properties ---
-        public AValueExpression Region { get; set; }
+        public AExpression Region { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -141,8 +127,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         // TODO: allow arbitrary condition expressions; instantiate condition item as needed
         public ConditionRefExpression Condition { get; set; }
-        public AValueExpression IfTrue { get; set; }
-        public AValueExpression IfFalse { get; set; }
+        public AExpression IfTrue { get; set; }
+        public AExpression IfFalse { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -167,7 +153,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AValueExpression SharedValueToImport { get; set; }
+        public AExpression SharedValueToImport { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -195,7 +181,7 @@ namespace LambdaSharp.Tool.Parser.Syntax {
 
         //--- Properties ---
         public LiteralExpression Separator { get; set; }
-        public AValueExpression Values { get; set; }
+        public AExpression Values { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -218,8 +204,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AValueExpression Index { get; set; }
-        public AValueExpression Values { get; set; }
+        public AExpression Index { get; set; }
+        public AExpression Values { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -246,8 +232,8 @@ namespace LambdaSharp.Tool.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AValueExpression Delimiter { get; set; }
-        public AValueExpression SourceString { get; set; }
+        public AExpression Delimiter { get; set; }
+        public AExpression SourceString { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
