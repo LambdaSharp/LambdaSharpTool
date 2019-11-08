@@ -34,7 +34,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
                 _builder.ModuleVersion = version;
             } else {
-                _builder.Log(Error.VersionAttributeIsInvalid, node.Version);
+                _builder.Log(Error.VersionAttributeInvalid, node.Version);
                 _builder.ModuleVersion = VersionInfo.Parse("0.0");
             }
 
@@ -43,7 +43,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 _builder.ModuleNamespace = moduleNamespace;
                 _builder.ModuleName = moduleName;
             } else {
-                _builder.Log(Error.ModuleNameAttributeIsInvalid, node.Module);
+                _builder.Log(Error.ModuleNameAttributeInvalid, node.Module);
             }
 
             // validate secrets

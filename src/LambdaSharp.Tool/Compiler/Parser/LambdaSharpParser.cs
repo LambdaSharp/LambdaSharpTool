@@ -30,6 +30,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
     public interface ILambdaSharpParserDependencyProvider {
 
         //--- Methods ---
+
+        // TODO: replace with 'Error' type
         void LogError(string filePath, int line, int column, string message);
         string ReadFile(string filePath);
     }

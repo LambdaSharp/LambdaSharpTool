@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     try {
                         new Regex(node.AllowedPattern.Value);
                     } catch {
-                        _builder.Log(Error.AllowedPatternAttributeIsInvalid, node.AllowedPattern);
+                        _builder.Log(Error.AllowedPatternAttributeInvalid, node.AllowedPattern);
                     }
                 } else if(node.ConstraintDescription != null) {
                     // the 'ConstraintDescription' attribute is only valid in conjunction with the 'AllowedPattern' attribute
@@ -195,7 +195,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     );
                 }
             } else {
-                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
+                _builder.Log(Error.TypeAttributeInvalid, node.Type);
             }
         }
     }

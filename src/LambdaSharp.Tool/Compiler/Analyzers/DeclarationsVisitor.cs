@@ -104,7 +104,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.Log(Error.ModuleAttributeIsInvalid, node.Module);
+                _builder.Log(Error.ModuleAttributeInvalid, node.Module);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         && (literalExpression.Value != "*")
                     )
                 ) {
-                    _builder.Log(Error.ResourceValueAttributeIsInvalid, arn);
+                    _builder.Log(Error.ResourceValueAttributeInvalid, arn);
                 }
             }
         }
@@ -223,7 +223,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.Log(Error.ModuleAttributeIsInvalid, node.Module);
+                _builder.Log(Error.ModuleAttributeInvalid, node.Module);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -262,7 +262,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
                 node.ResolvedFiles = node.ResolvedFiles.OrderBy(kv => kv.Key).ToList();
             } else {
-                _builder.Log(Error.FilesAttributeIsInvalid, node.Files);
+                _builder.Log(Error.FilesAttributeInvalid, node.Files);
             }
 
             // add variable to resolve package location
@@ -341,7 +341,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
             } else {
-                _builder.Log(Error.ResourceTypePropertiesAttributeIsInvalid, node);
+                _builder.Log(Error.ResourceTypePropertiesAttributeInvalid, node);
             }
 
             // ensure unique attribute names
@@ -353,7 +353,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
             } else {
-                _builder.Log(Error.ResourceTypeAttributesAttributeIsInvalid, node);
+                _builder.Log(Error.ResourceTypeAttributesAttributeInvalid, node);
             }
         }
 
@@ -368,7 +368,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     Value = "String"
                 };
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
+                _builder.Log(Error.TypeAttributeInvalid, node.Type);
             }
         }
 
@@ -383,7 +383,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     Value = "String"
                 };
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
+                _builder.Log(Error.TypeAttributeInvalid, node.Type);
             }
         }
 
@@ -419,7 +419,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // nothing to do; any 'Allow' expression is legal
                 } else if(!IsValidCloudFormationResourceType(type.Value)) {
-                    _builder.Log(Error.AllowAttributeRequiresAwsType, node);
+                    _builder.Log(Error.AllowAttributeRequiresCloudFormationType, node);
                 } else {
 
                     // TODO: ResourceMapping.IsCloudFormationType(node.Type?.Value), "'Allow' attribute can only be used with AWS resource types"

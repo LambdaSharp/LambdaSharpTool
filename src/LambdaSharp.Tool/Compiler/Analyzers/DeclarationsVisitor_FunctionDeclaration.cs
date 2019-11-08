@@ -31,8 +31,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate attributes
             ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
-            ValidateExpressionIsNumber(node, node.Memory, Error.InvalidMemoryAttributeValue);
-            ValidateExpressionIsNumber(node, node.Timeout, Error.InvalidTimeoutAttributeValue);
+            ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
+            ValidateExpressionIsNumber(node, node.Timeout, Error.TimeoutAttributeInvalid);
 
             // TODO: validate function sources
 
@@ -47,13 +47,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // lambda declaration uses inline code; validate the other required fields are set
                 if(node.Runtime == null) {
-                    _builder.Log(Error.MissingRuntimeAttribute, node);
+                    _builder.Log(Error.RuntimeAttributeMissing, node);
                 }
                 if(node.Handler == null) {
-                    _builder.Log(Error.MissingHandlerAttribute, node);
+                    _builder.Log(Error.HandlerAttributeMissing, node);
                 }
                 if(node.Language == null) {
-                    _builder.Log(Error.MissingLanguageAttribute, node);
+                    _builder.Log(Error.LanguageAttributeMissing, node);
                 }
             } else {
                 var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
                 if(project == null) {
-                    _builder.Log(Error.UnsupportedFunctionProjectAttribute, node);
+                    _builder.Log(Error.ProjectAttributeInvalid, node);
                     return;
                 }
 
@@ -110,7 +110,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     DetermineScalaFunctionProperties();
                     break;
                 default:
-                    _builder.Log(Error.InvalidLanguageAttributeValue, node);
+                    _builder.Log(Error.LanguageAttributeInvalid, node);
                     break;
                 }
             }
