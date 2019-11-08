@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
@@ -29,7 +30,7 @@ namespace LambdaSharp.Tool.Compiler {
     //      - other modules
     //      - convert secret key alias to ARN
     //      - cloudformation spec (if need be)
-    //  - validate nested expressions
+    //  - validate nested expressions (ValidateExpressionsVisitor)
     //  - create derivative resources
     //  - resolve all references
 
@@ -69,9 +70,9 @@ namespace LambdaSharp.Tool.Compiler {
 
             // check for reserved names
             if(!ValidResourceNameRegex.IsMatch(declaration.LocalName)) {
-                LogError($"name must be alphanumeric", declaration.SourceLocation);
+                Log(Error.NameMustBeAlphanumeric, declaration);
             } else if(declaration.FullName == "AWS") {
-                LogError($"AWS is a reserved name", declaration.SourceLocation);
+                Log(Error.NameIsReservedAws, declaration);
             }
 
             // store properties per-node and per-fullname
@@ -108,8 +109,19 @@ namespace LambdaSharp.Tool.Compiler {
 
         public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
 
-        // TODO: errors needs an error number and fixed string
-        public void LogError(string message, SourceLocation location)
-            => _messages.Add($"ERROR: {message} @ {location?.FilePath ?? "n/a"}({location?.LineNumberStart ?? 0},{location?.ColumnNumberStart ?? 0})");
+        public void Log(Error error, ASyntaxNode node) {
+            if(node == null) {
+                _messages.Add($"ERROR{error.Code}: {error.Message}");
+            } else if(node.SourceLocation != null) {
+                _messages.Add($"ERROR{error.Code}: {error.Message} @ {node.SourceLocation.FilePath ?? "n/a"}({node.SourceLocation.LineNumberStart},{node.SourceLocation.ColumnNumberStart})");
+            } else {
+                var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
+                if(nearestNode != null) {
+                    _messages.Add($"ERROR{error.Code}: {error.Message} @ (near) {nearestNode.SourceLocation.FilePath ?? "n/a"}({nearestNode.SourceLocation.LineNumberStart},{nearestNode.SourceLocation.ColumnNumberStart})");
+                } else {
+                    _messages.Add($"ERROR{error.Code}: {error.Message} @ (no location information available)");
+                }
+            }
+        }
     }
 }

@@ -34,7 +34,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
                 _builder.ModuleVersion = version;
             } else {
-                _builder.LogError($"'Version' expected to have format: Major.Minor[.Patch]", node.Version.SourceLocation);
+                _builder.Log(Error.VersionAttributeIsInvalid, node.Version);
                 _builder.ModuleVersion = VersionInfo.Parse("0.0");
             }
 
@@ -43,16 +43,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 _builder.ModuleNamespace = moduleNamespace;
                 _builder.ModuleName = moduleName;
             } else {
-                _builder.LogError($"'Module' attribute must have format 'Namespace.Name'", node.Module.SourceLocation);
+                _builder.Log(Error.ModuleNameAttributeIsInvalid, node.Module);
             }
 
             // validate secrets
             foreach(var secret in node.Secrets) {
                 if(secret.Value.Equals("aws/ssm", StringComparison.OrdinalIgnoreCase)) {
-                    _builder.LogError($"cannot grant permission to decrypt with aws/ssm", secret.SourceLocation);
+                    _builder.Log(Error.CannotGrantPermissionToDecryptParameterStore, secret);
                 } else if(secret.Value.StartsWith("arn:", StringComparison.Ordinal)) {
                     if(!SecretArnRegex.IsMatch(secret.Value)) {
-                        _builder.LogError("secret key must be a valid ARN", secret.SourceLocation);
+                        _builder.Log(Error.SecretKeyMustBeValidARN, secret);
                     }
                 } else if(SecretAliasRegex.IsMatch(secret.Value)) {
 
@@ -68,7 +68,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     //     return false;
                     // }
                 } else {
-                    _builder.LogError($"secret key must be a valid alias", secret.SourceLocation);
+                    _builder.Log(Error.SecreteKeyMustBeValidAlias, secret);
                 }
             }
 

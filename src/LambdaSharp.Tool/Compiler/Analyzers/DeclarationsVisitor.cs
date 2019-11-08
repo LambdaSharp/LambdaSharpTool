@@ -104,7 +104,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.LogError($"invalid 'Module' attribute value", node.Module.SourceLocation);
+                _builder.Log(Error.ModuleAttributeIsInvalid, node.Module);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -129,10 +129,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // validate Value attribute
             if(node.Type?.Value == "Secret") {
                 if((node.Value is ListExpression) || (node.Value is ObjectExpression)) {
-                    _builder.LogError($"variable with type 'Secret' must be a literal value or function expression", node.Value.SourceLocation);
+                    _builder.Log(Error.SecretTypeMustBeLiteralOrExpression, node.Value);
                 }
             } else if(node.EncryptionContext != null) {
-                _builder.LogError($"variable must have type 'Secret' to use 'EncryptionContext' attribute", node.SourceLocation);
+                _builder.Log(Error.EncryptionContextAttributeRequiresSecretType, node);
             }
         }
 
@@ -149,12 +149,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // referenced resource cannot be conditional
                 if(node.If != null) {
-                    _builder.LogError($"'If' attribute cannot be used with a referenced resource", node.If.SourceLocation);
+                    _builder.Log(Error.IfAttributeRequiresCloudFormationType, node.If);
                 }
 
                 // referenced resource cannot have properties
                 if(node.Properties != null) {
-                    _builder.LogError($"'Properties' attribute cannot be used with a referenced resource", node.Properties.SourceLocation);
+                    _builder.Log(Error.PropertiesAttributeRequiresCloudFormationType, node.Properties);
                 }
 
                 // validate Value attribute
@@ -174,7 +174,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // CloudFormation resource must have a type
                 if(node.Type == null) {
-                    _builder.LogError($"missing 'Type' attribute", node.SourceLocation);
+                    _builder.Log(Error.TypeAttributeMissing, node);
                 }
 
                 // check if resource is conditional
@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         && (literalExpression.Value != "*")
                     )
                 ) {
-                    _builder.LogError($"'Value' attribute must be a valid ARN or wildcard", arn.SourceLocation);
+                    _builder.Log(Error.ResourceValueAttributeIsInvalid, arn);
                 }
             }
         }
@@ -223,7 +223,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.LogError($"invalid 'Module' attribute value", node.Module.SourceLocation);
+                _builder.Log(Error.ModuleAttributeIsInvalid, node.Module);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -262,7 +262,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
                 node.ResolvedFiles = node.ResolvedFiles.OrderBy(kv => kv.Key).ToList();
             } else {
-                _builder.LogError($"'Files' attribute must refer to an existing file or folder", node.Files.SourceLocation);
+                _builder.Log(Error.FilesAttributeIsInvalid, node.Files);
             }
 
             // add variable to resolve package location
@@ -291,18 +291,18 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             // check that all second-level keys have literal expressions
                             foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
                                 if(!(secondLevelEntry.Value is LiteralExpression)) {
-                                    _builder.LogError($"value must be a literal", secondLevelEntry.SourceLocation);
+                                    _builder.Log(Error.ValueMustBeAnInteger, secondLevelEntry);
                                 }
                             }
                         } else {
-                            _builder.LogError($"missing second-level mappings", secondLevelObjectExpression.SourceLocation);
+                            _builder.Log(Error.MappingDeclarationSecondLevelIsMissing, secondLevelObjectExpression);
                         }
                     } else {
-                        _builder.LogError($"value must be an object", topLevelEntry.Value.SourceLocation);
+                        _builder.Log(Error.ExpectedObjectExpression, topLevelEntry.Value);
                     }
                 }
             } else {
-                _builder.LogError($"missing top-level mappings", node.SourceLocation);
+                _builder.Log(Error.MappingDeclarationTopLevelIsMissing, node);
             }
         }
 
@@ -337,11 +337,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Properties.Any()) {
                 foreach(var property in node.Properties) {
                     if(!names.Add(property.Name.Value)) {
-                        _builder.LogError("duplicate name", property.Name.SourceLocation);
+                        _builder.Log(Error.DuplicateName, property.Name);
                     }
                 }
             } else {
-                _builder.LogError($"empty Properties section", node.SourceLocation);
+                _builder.Log(Error.ResourceTypePropertiesAttributeIsInvalid, node);
             }
 
             // ensure unique attribute names
@@ -349,17 +349,17 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Attributes.Any()) {
                 foreach(var attribute in node.Attributes) {
                     if(!names.Add(attribute.Name.Value)) {
-                        _builder.LogError("duplicate name", attribute.Name.SourceLocation);
+                        _builder.Log(Error.DuplicateName, attribute.Name);
                     }
                 }
             } else {
-                _builder.LogError($"empty Attributes section", node.SourceLocation);
+                _builder.Log(Error.ResourceTypeAttributesAttributeIsInvalid, node);
             }
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
             if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
-                _builder.LogError($"name must be alphanumeric", node.SourceLocation);
+                _builder.Log(Error.NameMustBeAlphanumeric, node);
             }
             if(node.Type == null) {
 
@@ -368,13 +368,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     Value = "String"
                 };
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.LogError($"unsupported type", node.Type.SourceLocation);
+                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
             }
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
             if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
-                _builder.LogError($"name must be alphanumeric", node.SourceLocation);
+                _builder.Log(Error.NameMustBeAlphanumeric, node);
             }
             if(node.Type == null) {
 
@@ -383,7 +383,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     Value = "String"
                 };
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.LogError($"unsupported type", node.Type.SourceLocation);
+                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
             }
         }
 
@@ -414,12 +414,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             ValidateExpressionIsLiteralOrListOfLiteral(allow);
             if(allow != null) {
                 if(type == null) {
-                    _builder.LogError($"'Allow' attribute requires 'Type' attribute", node.SourceLocation);
+                    _builder.Log(Error.AllowAttributeRequiresTypeAttribute, node);
                 } else if(type?.Value == "AWS") {
 
                     // nothing to do; any 'Allow' expression is legal
                 } else if(!IsValidCloudFormationResourceType(type.Value)) {
-                    _builder.LogError($"'Allow' attribute can only be used with AWS resource types", node.SourceLocation);
+                    _builder.Log(Error.AllowAttributeRequiresAwsType, node);
                 } else {
 
                     // TODO: ResourceMapping.IsCloudFormationType(node.Type?.Value), "'Allow' attribute can only be used with AWS resource types"
@@ -427,9 +427,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        private void ValidateExpressionIsNumber(ASyntaxNode parent, AExpression expression, string errorMessage) {
+        private void ValidateExpressionIsNumber(ASyntaxNode parent, AExpression expression, Error errorMessage) {
             if((expression is LiteralExpression literal) && !int.TryParse(literal.Value, out _)) {
-                _builder.LogError(errorMessage, expression.SourceLocation);
+                _builder.Log(errorMessage, expression);
             }
         }
 
@@ -543,11 +543,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // make sure every item in the list is a literal expression
                 foreach(var item in listExpression) {
                     if(!(item is LiteralExpression)) {
-                        _builder.LogError($"expected literal expression", item.SourceLocation);
+                        _builder.Log(Error.ExpectedLiteralValue, item);
                     }
                 }
             } else {
-                _builder.LogError($"expected literal expression or list of literal expressions", expression.SourceLocation);
+                _builder.Log(Error.ExpectedLiteralValueOrListOfLiteralValues, expression);
             }
         }
     }

@@ -34,7 +34,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
             if(!(node.Parents.OfType<ADeclaration>() is ModuleDeclaration)) {
-                _builder.LogError($"parameter declaration cannot be nested", node.SourceLocation);
+                _builder.Log(Error.ParameterDeclarationCannotBeNested, node);
             }
 
             // default 'Type' attribute value is 'String' when omitted
@@ -57,23 +57,23 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // the 'Description' attribute cannot exceed 4,000 characters
             if((node.Description != null) && (node.Description.Value.Length > 4_000)) {
-                _builder.LogError("the Description attribute exceeds 4,000 characters", node.Description.SourceLocation);
+                _builder.Log(Error.DescriptionAttributeExceedsSizeLimit, node.Description);
             }
 
             // only the 'Number' type can have the 'MinValue' and 'MaxValue' attributes
             if(node.Type.Value == "Number") {
                 if((node.MinValue != null) && !int.TryParse(node.MinValue.Value, out var _)) {
-                    _builder.LogError($"value must be an integer", node.MinValue.SourceLocation);
+                    _builder.Log(Error.ValueMustBeAnInteger, node.MinValue);
                 }
                 if((node.MaxValue != null) && !int.TryParse(node.MaxValue.Value, out var _)) {
-                    _builder.LogError($"value must be an integer", node.MaxValue.SourceLocation);
+                    _builder.Log(Error.ValueMustBeAnInteger, node.MaxValue);
                 }
             } else {
                 if(node.MinValue != null) {
-                    _builder.LogError($"MinValue attribute cannot be used with this parameter type", node.MinValue.SourceLocation);
+                    _builder.Log(Error.MinValueAttributeRequiresNumberType, node.MinValue);
                 }
                 if(node.MaxValue != null) {
-                    _builder.LogError($"MaxValue attribute cannot be used with this parameter type", node.MaxValue.SourceLocation);
+                    _builder.Log(Error.MaxValueAttributeRequiresNumberType, node.MaxValue);
                 }
             }
 
@@ -87,30 +87,30 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     try {
                         new Regex(node.AllowedPattern.Value);
                     } catch {
-                        _builder.LogError($"AllowedPattern must be a valid regex expression", node.AllowedPattern.SourceLocation);
+                        _builder.Log(Error.AllowedPatternAttributeIsInvalid, node.AllowedPattern);
                     }
                 } else if(node.ConstraintDescription != null) {
                     // the 'ConstraintDescription' attribute is only valid in conjunction with the 'AllowedPattern' attribute
-                    _builder.LogError($"ConstraintDescription attribute can only be used in conjunction with the AllowedPattern attribute", node.ConstraintDescription.SourceLocation);
+                    _builder.Log(Error.ConstraintDescriptionAttributeRequiresAllowedPatternAttribute, node.ConstraintDescription);
                 }
                 if((node.MinLength != null) && !int.TryParse(node.MinLength.Value, out var _)) {
-                    _builder.LogError($"value must be an integer", node.MinLength.SourceLocation);
+                    _builder.Log(Error.ValueMustBeAnInteger, node.MinLength);
                 }
                 if((node.MaxLength != null) && !int.TryParse(node.MaxLength.Value, out var _)) {
-                    _builder.LogError($"value must be an integer", node.MaxLength.SourceLocation);
+                    _builder.Log(Error.ValueMustBeAnInteger, node.MaxLength);
                 }
             } else {
                 if(node.AllowedPattern != null) {
-                    _builder.LogError($"AllowedPattern attribute cannot be used with this parameter type", node.AllowedPattern.SourceLocation);
+                    _builder.Log(Error.AllowedPatternAttributeRequiresStringType, node.AllowedPattern);
                 }
                 if(node.ConstraintDescription != null) {
-                    _builder.LogError($"ConstraintDescription attribute cannot be used with this parameter type", node.ConstraintDescription.SourceLocation);
+                    _builder.Log(Error.ConstraintDescriptionAttributeRequiresStringType, node.ConstraintDescription);
                 }
                 if(node.MinLength != null) {
-                    _builder.LogError($"MinLength attribute cannot be used with this parameter type", node.MinLength.SourceLocation);
+                    _builder.Log(Error.MinLengthAttributeRequiresStringType, node.MinLength);
                 }
                 if(node.MaxLength != null) {
-                    _builder.LogError($"MaxLength attribute cannot be used with this parameter type", node.MaxLength.SourceLocation);
+                    _builder.Log(Error.MaxLengthAttributeRequiresStringType, node.MaxLength);
                 }
             }
 
@@ -132,7 +132,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 decoder.ReferenceExpression = FnGetAtt(decoder.FullName, "Plaintext");
             } else {
                 if(node.EncryptionContext != null) {
-                    _builder.LogError($"EncryptionContext attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.Log(Error.EncryptionContextAttributeRequiresSecretType, node.Properties);
                 }
             }
 
@@ -141,10 +141,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // value types cannot have Properties/Allow attribute
                 if(node.Properties != null) {
-                    _builder.LogError($"Properties attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.Log(Error.PropertiesAttributeRequiresCloudFormationType, node.Properties);
                 }
                 if(node.Allow != null) {
-                    _builder.LogError($"Allow attribute cannot be used with this parameter type", node.Properties.SourceLocation);
+                    _builder.Log(Error.AllowAttributeRequiresCloudFormationType, node.Properties);
                 }
             } else if(IsValidCloudFormationResourceType(node.Type.Value)) {
 
@@ -195,7 +195,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     );
                 }
             } else {
-                _builder.LogError($"unsupported type", node.Type.SourceLocation);
+                _builder.Log(Error.TypeAttributeIsInvalid, node.Type);
             }
         }
     }

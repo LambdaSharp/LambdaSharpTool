@@ -31,8 +31,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate attributes
             ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
-            ValidateExpressionIsNumber(node, node.Memory, $"invalid 'Memory' value");
-            ValidateExpressionIsNumber(node, node.Timeout, $"invalid 'Timeout' value");
+            ValidateExpressionIsNumber(node, node.Memory, Error.InvalidMemoryAttributeValue);
+            ValidateExpressionIsNumber(node, node.Timeout, Error.InvalidTimeoutAttributeValue);
 
             // TODO: validate function sources
 
@@ -47,13 +47,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // lambda declaration uses inline code; validate the other required fields are set
                 if(node.Runtime == null) {
-                    _builder.LogError($"missing 'Runtime' attribute", node.SourceLocation);
+                    _builder.Log(Error.MissingRuntimeAttribute, node);
                 }
                 if(node.Handler == null) {
-                    _builder.LogError($"missing 'Handler' attribute", node.SourceLocation);
+                    _builder.Log(Error.MissingHandlerAttribute, node);
                 }
                 if(node.Language == null) {
-                    _builder.LogError($"missing 'Language' attribute", node.SourceLocation);
+                    _builder.Log(Error.MissingLanguageAttribute, node);
                 }
             } else {
                 var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
@@ -87,7 +87,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
                 if(project == null) {
-                    _builder.LogError($"function project file could not be found or is not supported", node.SourceLocation);
+                    _builder.Log(Error.UnsupportedFunctionProjectAttribute, node);
                     return;
                 }
 
@@ -110,7 +110,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     DetermineScalaFunctionProperties();
                     break;
                 default:
-                    _builder.LogError($"unsupported language for Lambda function", node.SourceLocation);
+                    _builder.Log(Error.InvalidLanguageAttributeValue, node);
                     break;
                 }
             }
@@ -287,10 +287,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if(node.Runtime == null) {
                     switch(targetFramework) {
                     case "netcoreapp1.0":
-                        _builder.LogError($".NET Core 1.0 is no longer supported for Lambda functions", node.SourceLocation);
-                        break;
                     case "netcoreapp2.0":
-                        _builder.LogError($".NET Core 2.0 is no longer supported for Lambda functions", node.SourceLocation);
+                        _builder.Log(Error.UnsupportedVersionOfDotNetCore, node);
                         break;
                     case "netcoreapp2.1":
                         node.Runtime = new LiteralExpression {
@@ -298,7 +296,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         };
                         break;
                     default:
-                        _builder.LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly", node.SourceLocation);
+                        _builder.Log(Error.UnknownVersionOfDotNetCore, node);
                         break;
                     }
                 }
@@ -311,7 +309,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             Value = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync"
                         };
                     } else {
-                        _builder.LogError($"could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file", node.SourceLocation);
+                        _builder.Log(Error.FailedToAutoDetectHandlerInDotNetFunctionProject, node);
                     }
                 }
             }
@@ -358,7 +356,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // set handler
                 if(node.Handler == null) {
-                    _builder.LogError($"Handler attribute is required for Scala functions", node.SourceLocation);
+                    _builder.Log(Error.HandlerAttributeIsRequiredForScalaFunction, node);
                 }
             }
 

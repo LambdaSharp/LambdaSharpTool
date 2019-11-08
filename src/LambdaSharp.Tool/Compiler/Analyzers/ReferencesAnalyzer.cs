@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if reference is to CloudFormation pseudo-parameter
             if(referenceName.StartsWith("AWS::", StringComparison.Ordinal)) {
-                _builder.LogError($"{node.ReferenceName} is not a resource", node.SourceLocation);
+                _builder.Log(Error.NameIsNotAResource(node.ReferenceName.Value), node);
                 return;
             }
 
@@ -60,9 +60,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 case PackageDeclaration _:
                 case MappingDeclaration _:
                 case ResourceTypeDeclaration _:
-                    _builder.LogError($"identifier {node.ReferenceName} must refer to a CloudFormation resource", node.SourceLocation);
+                    _builder.Log(Error.NameMustBeACloudFormationResource(node.ReferenceName.Value), node);
                     return;
                 default:
+
+                    // TODO: better exception
                     throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
                 }
 
@@ -73,7 +75,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 var declaration = node.Parents.OfType<AItemDeclaration>().First();
                 declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
             } else {
-                _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
         }
 
@@ -95,7 +97,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     // nothing to do
                     return;
                 default:
-                    _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
+                    _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
                     break;
                 }
                 return;
@@ -120,7 +122,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 case ConditionDeclaration _:
                 case MappingDeclaration _:
                 case ResourceTypeDeclaration _:
-                    _builder.LogError($"identifier {node.ReferenceName} cannot refer to this declaration type", node.SourceLocation);
+                    _builder.Log(Error.IdentifierReferesToInvalidDeclarationType(node.ReferenceName.Value), node);
                     return;
                 default:
                     throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
@@ -133,7 +135,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 var declaration = node.Parents.OfType<AItemDeclaration>().First();
                 declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: conditions, Node: node));
             } else {
-                _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
         }
 
@@ -151,10 +153,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     var declaration = node.Parents.OfType<AItemDeclaration>().First();
                     declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
-                    _builder.LogError($"identifier {node.ReferenceName} must refer to a Condition", node.SourceLocation);
+                    _builder.Log(Error.IdentifierMustReferToACondition(node.ReferenceName.Value), node);
                 }
             } else {
-                _builder.LogError($"unknown identifier {node.ReferenceName}", node.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
         }
 
@@ -172,10 +174,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     var declaration = node.Parents.OfType<AItemDeclaration>().First();
                     declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
-                    _builder.LogError($"identifier {referenceName} must refer to a Condition", node.SourceLocation);
+                    _builder.Log(Error.IdentifierMustReferToACondition(referenceName), node);
                 }
             } else {
-                _builder.LogError($"unknown identifier {referenceName}", node.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(referenceName), node);
             }
         }
 
@@ -188,20 +190,20 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // nothing to do
                 } else {
-                    _builder.LogError($"Handler must reference a Function or AWS::SNS::Topic resource declaration", node.Handler.SourceLocation);
+                    _builder.Log(Error.HandlerMustBeAFunctionOrSnsTopic, node.Handler);
                 }
             } else {
-                _builder.LogError($"unknown identifier {node.Handler.Value}", node.Handler.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(node.Handler.Value), node);
             }
         }
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
             if(_builder.TryGetItemDeclaration(node.Handler.Value, out var referencedDeclaration)) {
                 if(!(referencedDeclaration is FunctionDeclaration)) {
-                    _builder.LogError($"Handler must reference a Function declaration", node.Handler.SourceLocation);
+                    _builder.Log(Error.HandlerMustBeAFunction, node.Handler);
                 }
             } else {
-                _builder.LogError($"unknown identifier {node.Handler.Value}", node.Handler.SourceLocation);
+                _builder.Log(Error.UnknownIdentifier(node.Handler.Value), node);
             }
         }
 
@@ -224,6 +226,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             Value = ifParent.Condition
                         });
                     } else {
+
+                        // TODO: better exception
                         throw new ApplicationException("this shouldn't happen");
                     }
                 }

@@ -157,7 +157,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // nothing we can do
                 break;
             default:
-                _builder.LogError($"expected a condition expression", expression.SourceLocation);
+                _builder.Log(Error.ExpectedConditionExpression, expression);
                 break;
             }
         }
@@ -190,7 +190,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // nothing we can do
                 break;
             default:
-                 _builder.LogError($"expected a condition expression", expression.SourceLocation);
+                 _builder.Log(Error.ExpectedConditionExpression, expression);
                 break;
            }
         }
