@@ -17,12 +17,42 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler {
 
     public struct Error {
 
         //--- Class Fields ---
+        #region *** Internal Errors ***
+        public static readonly Func<string, Error> MissingParserDefinition = parameter => new Error(0, $"no parser defined for type {parameter}");
+        #endregion
+
+        #region *** Parsing Errors ***
+        public static readonly Error ExpectedExpression = new Error(0, "expected a map, sequence, or literal");
+        public static readonly Error ExpectedSequenceExpression = new Error(0, "expected a sequence");
+        public static readonly Error ExpectedLiteralValue = new Error(0, "expected literal value");
+
+        // TODO: dup?
+        public static readonly Error ExpectedObjectExpression = new Error(0, "expected an object expression");
+        public static readonly Error ExpectedMapExpression = new Error(0, "expected a map");
+
+        public static readonly Func<string, Error> UnexpectedItemKeyword = parameter => new Error(0, $"unexpected item keyword '{parameter}'");
+        public static readonly Func<string, Error> DuplicateKey = parameter => new Error(0, $"duplicate key '{parameter}'");
+        public static readonly Func<string, Error> unexpectedKey = parameter => new Error(0, $"unexpected key '{parameter}'");
+        public static readonly Func<IEnumerable<string>, Error> RequiredKeysMissing = parameter => new Error(0, $"missing required keys: {string.Join(", ", parameter.OrderBy(key => key))}");
+        public static readonly Func<string, Error> UnknownTag = parameter => new Error(0, $"unknown tag '{parameter}'");
+        public static readonly Func<string, Error> FunctionExpectsOneParameter = parameter => new Error(0, $"{parameter} expects 1 parameter");
+        public static readonly Func<string, Error> FunctionExpectsTwoParameters = parameter => new Error(0, $"{parameter} expects 2 parameters");
+        public static readonly Func<string, Error> FunctionExpectsThreeParameters = parameter => new Error(0, $"{parameter} expects 3 parameters");
+        public static readonly Func<string, Error> FunctionInvalidParameter = parameter => new Error(0, $"invalid parameter for {parameter} function");
+        public static readonly Func<string, Error> FunctionExpectsLiteralFirstParameter = parameter => new Error(0, $"{parameter} first parameter must be a literal value");
+        public static readonly Func<string, Error> FunctionExpectsMapSecondParameter = parameter => new Error(0, $"{parameter} second parameter must be a map");
+        public static readonly Error TransformFunctionMissingName = new Error(0, "!Transform missing 'Name'");
+        public static readonly Error TransformFunctionExpectsLiteralNameParameter = new Error(0, "!Transform 'Name' must be a literal value");
+        public static readonly Error TransformFunctionExpectsMapParametersParameter = new Error(0, "!Transform 'Parameters' must be a map");
+        #endregion
 
         #region *** Identifier Validation ***
         public static readonly Error NameIsReservedAws = new Error(1000, "'AWS' is a reserved name");
@@ -71,8 +101,6 @@ namespace LambdaSharp.Tool.Compiler {
 
         // TODO: keep reviewing errors
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
-        public static readonly Error ExpectedObjectExpression = new Error(0, "expected an object expressions");
-        public static readonly Error ExpectedLiteralValue = new Error(0, "expected literal value");
         public static readonly Error DuplicateName = new Error(0, "duplicate name");
         public static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");
         public static readonly Error SecretKeyMustBeValidARN = new Error(0, "secret key must be a valid ARN");

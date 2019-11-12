@@ -26,7 +26,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Types ---
 
-        // NOTE (2019-11-01, bjorg): this struct only exists to be make it the 'AddDeclaration()' method should never be called directly!
+        // NOTE (2019-11-01, bjorg): this struct only exists to make it clear the 'AddDeclaration()' method should never be called directly!
         public struct DoNotCallThisDirectly { }
 
         //--- Fields ---
@@ -76,8 +76,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         /// <typeparam name="ASyntaxNode"></typeparam>
         /// <returns></returns>
         public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
-        public AExpression ResolvedValue { get; set; }
-
 
         //--- Methods ---
         public void AddDeclaration(AItemDeclaration declaration, DoNotCallThisDirectly _) {

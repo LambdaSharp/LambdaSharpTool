@@ -24,7 +24,6 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.Tool.Internal;
-using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Model {
     using static ModelFunctions;

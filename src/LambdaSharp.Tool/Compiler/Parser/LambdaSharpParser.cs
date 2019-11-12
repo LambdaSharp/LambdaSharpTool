@@ -30,9 +30,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
     public interface ILambdaSharpParserDependencyProvider {
 
         //--- Methods ---
-
-        // TODO: replace with 'Error' type
-        void LogError(string filePath, int line, int column, string message);
+        void Log(Error error, SourceLocation sourceLocation);
         string ReadFile(string filePath);
     }
 
@@ -90,10 +88,10 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             _typeParsers = new Dictionary<Type, Func<object>> {
 
                 // expressions
-                [typeof(AExpression)] = () => ParseExpressionOfType<AExpression>("expression"),
-                [typeof(ObjectExpression)] = () => ParseExpressionOfType<ObjectExpression>("map expression"),
-                [typeof(ListExpression)] = () => ParseExpressionOfType<ListExpression>("list expression"),
-                [typeof(LiteralExpression)] = () => ParseExpressionOfType<LiteralExpression>("literal expression"),
+                [typeof(AExpression)] = () => ParseExpression(),
+                [typeof(ObjectExpression)] = () => ParseExpressionOfType<ObjectExpression>(Error.ExpectedMapExpression),
+                [typeof(ListExpression)] = () => ParseExpressionOfType<ListExpression>(Error.ExpectedSequenceExpression),
+                [typeof(LiteralExpression)] = () => ParseExpressionOfType<LiteralExpression>(Error.ExpectedLiteralValue),
 
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseSyntaxOfType<ModuleDeclaration>(),
@@ -208,7 +206,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
         public List<T> ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
-                LogError("expected a sequence", Location());
+                Log(Error.ExpectedSequenceExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }
@@ -218,9 +216,13 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             var result = new List<T>();
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 if(TryParse(typeof(T), out var item)) {
+                    try {
+                        result.Add((T)item);
+                    } catch(InvalidCastException) {
 
-                    // TODO: maybe we can do better than having a cast exception here in case something goes wrong?
-                    result.Add((T)item);
+                        // TODO: better exception
+                        throw new ApplicationException($"expected type {typeof(T).FullName}, but found {item.GetType().FullName} instead");
+                    }
                 }
             }
             MoveNext();
@@ -234,7 +236,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             // ensure first event is the beginning of a map
             if(!IsEvent<MappingStart>(out var mappingStart, out var filePath) || (mappingStart.Tag != null)) {
-                LogError("expected a map", Location());
+                Log(Error.ExpectedMapExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }
@@ -257,7 +259,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         result = (T)Activator.CreateInstance(syntax.Type);
                         mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
                     } else {
-                        LogError($"unexpected item keyword '{key}'", Location(keyScalar));
+                        Log(Error.UnexpectedItemKeyword(key), Location(keyScalar));
 
                         // skip the value of the key
                         SkipThisAndNestedEvents();
@@ -280,7 +282,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                     // check if key is a duplicate
                     if(!foundKeys.Add(key)) {
-                        LogError($"duplicate key '{key}'", Location(keyScalar));
+                        Log(Error.DuplicateKey(key), Location(keyScalar));
 
                         // no need to parse the value for the duplicate key
                         SkipThisAndNestedEvents();
@@ -295,7 +297,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         keyProperty.SetValue(result, value);
                     }
                 } else {
-                    LogError($"unexpected key '{key}'", Location(keyScalar));
+                    Log(Error.unexpectedKey(key), Location(keyScalar));
 
                     // no need to parse an invalid key
                     SkipThisAndNestedEvents();
@@ -304,7 +306,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             // check for missing mandatory keys
             if(mandatoryKeys?.Any() ?? false) {
-                LogError($"missing keys: {string.Join(", ", mandatoryKeys.OrderBy(key => key))}", Location(filePath, mappingStart));
+                Log(Error.RequiredKeysMissing(mandatoryKeys), Location(filePath, mappingStart));
             }
             if(result != null) {
                 result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
@@ -313,11 +315,10 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return result;
         }
 
-        public T ParseExpressionOfType<T>(string constraint) where T : AExpression {
+        public T ParseExpressionOfType<T>(Error error) where T : AExpression {
             var result = ParseExpression();
             if(!(result is T expression)) {
-                var isVowel = ("aeiouAEIOU".IndexOf(constraint.FirstOrDefault()) >= 0);
-                LogError($"expected {(isVowel ? "an" : "a")} {constraint}", result.SourceLocation);
+                Log(error, result.SourceLocation);
                 return null;
             }
             return expression;
@@ -332,7 +333,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             case Scalar scalar:
                 return ConvertFunction(scalar.Tag, ParseLiteralExpression());
             default:
-                LogError("expected a map, sequence, or literal", Location());
+                Log(Error.ExpectedExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }
@@ -340,7 +341,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             // local functions
             AExpression ParseObjectExpression() {
                 if(!IsEvent<MappingStart>(out var mappingStart, out var filePath)) {
-                    LogError("expected a map", Location());
+                    Log(Error.ExpectedMapExpression, Location());
                     SkipThisAndNestedEvents();
                     return null;
                 }
@@ -353,7 +354,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     // parse key
                     var keyScalar = Expect<Scalar>();
                     if(result.ContainsKey(keyScalar.ParsingEvent.Value)) {
-                        LogError($"duplicate key '{keyScalar.ParsingEvent.Value}'", Location(keyScalar));
+                        Log(Error.DuplicateKey(keyScalar.ParsingEvent.Value), Location(keyScalar));
                         SkipThisAndNestedEvents();
                         continue;
                     }
@@ -361,7 +362,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     // TODO: key could be 'Fn::Transform' indicating this structure is being transformed by a CloudFormation macro
 
                     // parse value
-                    var value = ParseExpressionOfType<AExpression>("expression");
+                    var value = ParseExpression();
                     if(value == null) {
                         continue;
                     }
@@ -383,7 +384,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             AExpression ParseListExpression() {
                 if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
-                    LogError("expected a sequence", Location());
+                    Log(Error.ExpectedSequenceExpression, Location());
                     SkipThisAndNestedEvents();
                     return null;
                 }
@@ -392,7 +393,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // parse values in sequence
                 var result = new ListExpression();
                 while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                    var item = ParseExpressionOfType<AExpression>("expression");
+                    var item = ParseExpression();
                     if(item != null) {
                         result.Items.Add(item);
                     }
@@ -407,7 +408,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // TODO: handle unquoted literals
 
                 if(!IsEvent<Scalar>(out var scalar, out var filePath)) {
-                    LogError("expected a literal string", Location());
+                    Log(Error.ExpectedLiteralValue, Location());
                     SkipThisAndNestedEvents();
                     return null;
                 }
@@ -535,7 +536,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 case "!Condition":
                     return ConvertToConditionRefExpression(value);
                 default:
-                    LogError($"unknown tag '{tag}'", value.SourceLocation);
+                    Log(Error.UnknownTag(tag), value.SourceLocation);
                     return null;
                 }
             }
@@ -554,7 +555,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Cidr [ VALUE, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 3) {
-                        LogError("!Cidr expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Cidr"), value.SourceLocation);
                         return null;
                     }
                     return new CidrFunctionExpression {
@@ -564,7 +565,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         CidrBits = parameterList[2]
                     };
                 }
-                LogError($"invalid parameter for !Cidr function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Cidr"), value.SourceLocation);
                 return null;
             }
 
@@ -573,11 +574,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !FindInMap [ NAME, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 3) {
-                        LogError("!FindInMap expects 3 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsThreeParameters("!FindInMap"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression mapNameLiteral)) {
-                        LogError("!FindInMap first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!FindInMap"), parameterList[0].SourceLocation);
                         return null;
                     }
                     return new FindInMapFunctionExpression {
@@ -590,7 +591,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         SecondLevelKey = parameterList[2]
                     };
                 }
-                LogError($"invalid parameter for !FindInMap function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!FindInMap"), value.SourceLocation);
                 return null;
             }
 
@@ -615,11 +616,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !GetAtt [ STRING, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 2) {
-                        LogError("!GetAtt expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!GetAtt"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression resourceNameLiteral)) {
-                        LogError("!GetAtt first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!GetAtt"), parameterList[0].SourceLocation);
                         return null;
                     }
                     return new GetAttFunctionExpression {
@@ -628,7 +629,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         AttributeName = parameterList[2]
                     };
                 }
-                LogError($"invalid parameter for !GetAtt function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!GetAtt"), value.SourceLocation);
                 return null;
             }
 
@@ -646,11 +647,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !If [ NAME/CONDITION, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 3) {
-                        LogError("!If expects 3 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsThreeParameters("!If"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression conditionNameLiteral)) {
-                        LogError("!If first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!If"), parameterList[0].SourceLocation);
                         return null;
                     }
                     return new IfFunctionExpression {
@@ -666,7 +667,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         IfFalse = parameterList[2]
                     };
                 }
-                LogError($"invalid parameter for !If function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!If"), value.SourceLocation);
                 return null;
             }
 
@@ -684,11 +685,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Join [ STRING, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 2) {
-                        LogError("!Join expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Join"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression separatorLiteral)) {
-                        LogError("!Join first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!Join"), parameterList[0].SourceLocation);
                         return null;
                     }
                     return new JoinFunctionExpression {
@@ -697,7 +698,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Values = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !Join function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Join"), value.SourceLocation);
                 return null;
             }
 
@@ -706,7 +707,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Select [ VALUE, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 2) {
-                        LogError("!Select expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Select"), value.SourceLocation);
                         return null;
                     }
                     return new SelectFunctionExpression {
@@ -715,7 +716,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Values = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !Select function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Select"), value.SourceLocation);
                 return null;
             }
 
@@ -724,11 +725,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Split [ STRING, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 2) {
-                        LogError("!Split expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Split"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression indexLiteral)) {
-                        LogError("!Split first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!Split"), parameterList[0].SourceLocation);
                         return null;
                     }
                     return new SplitFunctionExpression {
@@ -737,7 +738,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         SourceString = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !Split function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Split"), value.SourceLocation);
                 return null;
             }
 
@@ -755,15 +756,15 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Sub [ STRING, { KEY: VALUE, ... }]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 2) {
-                        LogError("!Sub expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Sub"), value.SourceLocation);
                         return null;
                     }
                     if(!(parameterList[0] is LiteralExpression formatLiteralExpression)) {
-                        LogError("!Sub first parameter must be a literal value", parameterList[0].SourceLocation);
+                        Log(Error.FunctionExpectsLiteralFirstParameter("!Sub"), parameterList[0].SourceLocation);
                         return null;
                     }
                     if(!(parameterList[1] is ObjectExpression parametersObject)) {
-                        LogError("!Sub second parameter must be a map", parameterList[1].SourceLocation);
+                        Log(Error.FunctionExpectsMapSecondParameter("!Sub"), parameterList[1].SourceLocation);
                         return null;
                     }
                     return new SubFunctionExpression {
@@ -772,7 +773,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Parameters = parametersObject
                     };
                 }
-                LogError($"invalid parameter for !Sub function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Sub"), value.SourceLocation);
                 return null;
             }
 
@@ -781,17 +782,17 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
                 if(value is ObjectExpression parameterMap) {
                     if(!parameterMap.TryGetValue("Name", out var macroNameExpression)) {
-                        LogError("!Transform missing 'Name'", value.SourceLocation);
+                        Log(Error.TransformFunctionMissingName, value.SourceLocation);
                         return null;
                     }
                     if(!(macroNameExpression is LiteralExpression macroNameLiteral)) {
-                        LogError("!Transform 'Name' must be a literal value", macroNameExpression.SourceLocation);
+                        Log(Error.TransformFunctionExpectsLiteralNameParameter, macroNameExpression.SourceLocation);
                         return null;
                     }
                     ObjectExpression parametersMap = null;
                     if(parameterMap.TryGetValue("Parameters", out var parametersExpression)) {
                         if(!(parametersExpression is ObjectExpression)) {
-                            LogError("!Transform 'Parameters' must be a map", parametersExpression.SourceLocation);
+                            Log(Error.TransformFunctionExpectsMapParametersParameter, parametersExpression.SourceLocation);
                             return null;
                         }
                         parameterMap = (ObjectExpression)parametersExpression;
@@ -802,7 +803,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Parameters = parametersMap
                     };
                 }
-                LogError($"invalid parameter for !Transform function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Transform"), value.SourceLocation);
                 return null;
             }
 
@@ -818,7 +819,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         }
                     };
                 }
-                LogError($"invalid parameter for !Ref function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Ref"), value.SourceLocation);
                 return null;
             }
 
@@ -827,7 +828,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Equals [ VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Count != 2) {
-                        LogError("!Equals expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Equals"), value.SourceLocation);
                         return null;
                     }
                     return new EqualsConditionExpression {
@@ -836,7 +837,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         RightValue = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !Equals function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Equals"), value.SourceLocation);
                 return null;
             }
 
@@ -845,7 +846,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Not [ CONDITION ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Count != 1) {
-                        LogError("!Not expects 1 parameter", value.SourceLocation);
+                        Log(Error.FunctionExpectsOneParameter("!Not"), value.SourceLocation);
                         return null;
                     }
                     return new NotConditionExpression {
@@ -853,7 +854,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Value = parameterList[0]
                     };
                 }
-                LogError($"invalid parameter for !Not function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Not"), value.SourceLocation);
                 return null;
             }
 
@@ -862,7 +863,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !And [ CONDITION, CONDITION ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Count != 2) {
-                        LogError("!And expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!And"), value.SourceLocation);
                         return null;
                     }
                     return new AndConditionExpression {
@@ -871,7 +872,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         RightValue = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !And function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!And"), value.SourceLocation);
                 return null;
             }
 
@@ -880,7 +881,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Or [ CONDITION, CONDITION ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Count != 2) {
-                        LogError("!Or expects 2 parameters", value.SourceLocation);
+                        Log(Error.FunctionExpectsTwoParameters("!Or"), value.SourceLocation);
                         return null;
                     }
                     return new OrConditionExpression {
@@ -889,7 +890,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         RightValue = parameterList[1]
                     };
                 }
-                LogError($"invalid parameter for !Or function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Or"), value.SourceLocation);
                 return null;
             }
 
@@ -905,7 +906,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         }
                     };
                 }
-                LogError($"invalid parameter for !Condition function", value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!Condition"), value.SourceLocation);
                 return null;
             }
         }
@@ -925,7 +926,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             // check if we have a sequence instead
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _)) {
-                LogError("expected a sequence", Location());
+                Log(Error.ExpectedSequenceExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }
@@ -933,7 +934,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             // parse values in sequence
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                var item = ParseExpressionOfType<LiteralExpression>("literal expression");
+                var item = ParseExpressionOfType<LiteralExpression>(Error.ExpectedLiteralValue);
                 if(item != null) {
                     result.Add(item);
                 }
@@ -942,8 +943,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return result;
         }
 
-        private void LogError(string message, SourceLocation location)
-            => _provider.LogError(location.FilePath, location.LineNumberStart, location.LineNumberEnd, message);
+        private void Log(Error error, SourceLocation location) => _provider.Log(error, location);
 
         private SourceLocation Location() {
             var current = Current;
@@ -997,7 +997,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 result = parser();
                 return result != null;
             }
-            LogError($"no parser defined for type {type.Name}", Location());
+            Log(Error.MissingParserDefinition(type.Name), Location());
             result = null;
             SkipThisAndNestedEvents();
             return false;

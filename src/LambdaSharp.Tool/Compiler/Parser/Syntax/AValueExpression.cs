@@ -48,12 +48,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Operators ---
         public AExpression this[string key] {
             get => Items.First(item => item.Key.Value == key).Value;
-            set => Items.Add(new KeyValuePair {
-                Key = new LiteralExpression {
-                    Value = key ?? throw new ArgumentNullException(nameof(key))
-                },
-                Value = value ?? throw new ArgumentNullException(nameof(value))
-            });
+            set {
+
+                // don't add null entries
+                if(value != null) {
+                    Items.Add(new KeyValuePair {
+                        Key = new LiteralExpression {
+                            Value = key ?? throw new ArgumentNullException(nameof(key))
+                        },
+                        Value = value
+                    });
+                }
+            }
         }
 
         public AExpression this[LiteralExpression key] {

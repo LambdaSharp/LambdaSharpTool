@@ -27,10 +27,12 @@ namespace LambdaSharp.Tool.Compiler {
     // TODO:
     //  - record declarations
     //  - import missing information
-    //      - other modules
+    //      - other modules manifests
     //      - convert secret key alias to ARN
     //      - cloudformation spec (if need be)
-    //  - validate nested expressions (ValidateExpressionsVisitor)
+    //  - define custom resource types
+    //  - validate usage against imported definitions
+    //  - validate nested expressions (done: ValidateExpressionsVisitor)
     //  - create derivative resources
     //  - resolve all references
 
@@ -48,7 +50,7 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Fields ---
         private readonly Dictionary<string, AItemDeclaration> _fullNameDeclarations = new Dictionary<string, AItemDeclaration>();
         private readonly HashSet<string> _logicalIds = new HashSet<string>();
-        private readonly List<string> _messages = new List<string>();
+        private readonly ErrorList _errorList = new ErrorList();
 
         //-- Properties ---
         public string ModuleNamespace { get; set; }
@@ -111,15 +113,15 @@ namespace LambdaSharp.Tool.Compiler {
 
         public void Log(Error error, ASyntaxNode node) {
             if(node == null) {
-                _messages.Add($"ERROR{error.Code}: {error.Message}");
+                _errorList.Add(error, sourceLocation: null, excact: false);
             } else if(node.SourceLocation != null) {
-                _messages.Add($"ERROR{error.Code}: {error.Message} @ {node.SourceLocation.FilePath ?? "n/a"}({node.SourceLocation.LineNumberStart},{node.SourceLocation.ColumnNumberStart})");
+                _errorList.Add(error, node.SourceLocation, excact: true);
             } else {
                 var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
                 if(nearestNode != null) {
-                    _messages.Add($"ERROR{error.Code}: {error.Message} @ (near) {nearestNode.SourceLocation.FilePath ?? "n/a"}({nearestNode.SourceLocation.LineNumberStart},{nearestNode.SourceLocation.ColumnNumberStart})");
+                    _errorList.Add(error, sourceLocation: nearestNode.SourceLocation, excact: false);
                 } else {
-                    _messages.Add($"ERROR{error.Code}: {error.Message} @ (no location information available)");
+                    _errorList.Add(error, sourceLocation: null, excact: false);
                 }
             }
         }

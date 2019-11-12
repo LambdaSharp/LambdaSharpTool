@@ -472,6 +472,25 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private void AddGrant(string name, string awsType, AExpression reference, AExpression allow, AExpression condition) {
 
+            // TODO: validate AWS type
+
+            var allowList = new List<string>();
+            if(allow is LiteralExpression allowLiteralExpression) {
+                allowList.Add(allowLiteralExpression.Value);
+            } else if(allow is ListExpression allowListExpression) {
+                foreach(var allowListItem in allowListExpression.OfType<LiteralExpression>()) {
+                    allowList.Add(allowListItem.Value);
+                }
+            } else {
+
+                // TODO: could also be !Ref or !Split, etc...
+            }
+            if(!allowList.Any()) {
+
+                // nothing to do
+                return;
+            }
+
             // TODO: always validate as well
             // ValidateAllowAttribute(node, node.Type, node.Allow);
 
