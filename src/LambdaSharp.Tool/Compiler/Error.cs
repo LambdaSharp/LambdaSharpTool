@@ -26,32 +26,33 @@ namespace LambdaSharp.Tool.Compiler {
 
         //--- Class Fields ---
         #region *** Internal Errors ***
-        public static readonly Func<string, Error> MissingParserDefinition = parameter => new Error(0, $"no parser defined for type {parameter}");
+        public static readonly Func<string, Error> MissingParserDefinition = parameter => new Error(0, $"no parser defined for type '{parameter}'");
         #endregion
 
         #region *** Parsing Errors ***
-        public static readonly Error ExpectedExpression = new Error(0, "expected a map, sequence, or literal");
-        public static readonly Error ExpectedSequenceExpression = new Error(0, "expected a sequence");
-        public static readonly Error ExpectedLiteralValue = new Error(0, "expected literal value");
-
-        // TODO: dup?
-        public static readonly Error ExpectedObjectExpression = new Error(0, "expected an object expression");
+        public static readonly Error ExpectedExpression = new Error(0, "expected a map, list, or literal value");
+        public static readonly Error ExpectedListExpression = new Error(0, "expected a list");
+        public static readonly Error ExpectedLiteralValue = new Error(0, "expected a literal value");
         public static readonly Error ExpectedMapExpression = new Error(0, "expected a map");
-
-        public static readonly Func<string, Error> UnexpectedItemKeyword = parameter => new Error(0, $"unexpected item keyword '{parameter}'");
+        public static readonly Func<string, Error> UnrecognizedModuleItem = parameter => new Error(0, $"unrecognized item '{parameter}'");
         public static readonly Func<string, Error> DuplicateKey = parameter => new Error(0, $"duplicate key '{parameter}'");
-        public static readonly Func<string, Error> unexpectedKey = parameter => new Error(0, $"unexpected key '{parameter}'");
-        public static readonly Func<IEnumerable<string>, Error> RequiredKeysMissing = parameter => new Error(0, $"missing required keys: {string.Join(", ", parameter.OrderBy(key => key))}");
-        public static readonly Func<string, Error> UnknownTag = parameter => new Error(0, $"unknown tag '{parameter}'");
+        public static readonly Func<string, Error> UnexpectedKey = parameter => new Error(0, $"unexpected key '{parameter}'");
+        public static readonly Func<IEnumerable<string>, Error> RequiredKeysMissing = parameter => new Error(0, $"missing required keys {string.Join(", ", parameter.OrderBy(key => key))}");
+        public static readonly Func<string, Error> UnknownFunctionTag = parameter => new Error(0, $"unknown function '{parameter}'");
+
+        // TODO: unroll errors for each function (!Cidr, !Condition, !If, etc.); this makes it easier to track what errors are reported by each function
         public static readonly Func<string, Error> FunctionExpectsOneParameter = parameter => new Error(0, $"{parameter} expects 1 parameter");
         public static readonly Func<string, Error> FunctionExpectsTwoParameters = parameter => new Error(0, $"{parameter} expects 2 parameters");
         public static readonly Func<string, Error> FunctionExpectsThreeParameters = parameter => new Error(0, $"{parameter} expects 3 parameters");
+
+        // TODO: replace with error that shows what is expected
         public static readonly Func<string, Error> FunctionInvalidParameter = parameter => new Error(0, $"invalid parameter for {parameter} function");
+
         public static readonly Func<string, Error> FunctionExpectsLiteralFirstParameter = parameter => new Error(0, $"{parameter} first parameter must be a literal value");
         public static readonly Func<string, Error> FunctionExpectsMapSecondParameter = parameter => new Error(0, $"{parameter} second parameter must be a map");
-        public static readonly Error TransformFunctionMissingName = new Error(0, "!Transform missing 'Name'");
-        public static readonly Error TransformFunctionExpectsLiteralNameParameter = new Error(0, "!Transform 'Name' must be a literal value");
-        public static readonly Error TransformFunctionExpectsMapParametersParameter = new Error(0, "!Transform 'Parameters' must be a map");
+        public static readonly Error TransformFunctionMissingName = new Error(0, "!Transform function requires 'Name' key");
+        public static readonly Error TransformFunctionExpectsLiteralNameParameter = new Error(0, "!Transform function requires 'Name' key to be a literal value");
+        public static readonly Error TransformFunctionExpectsMapParametersParameter = new Error(0, "!Transform function requires 'Parameters' key to be a map");
         #endregion
 
         #region *** Identifier Validation ***
@@ -117,7 +118,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Func<string, Error> IdentifierMustReferToACondition = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
         public static readonly Error HandlerMustBeAFunctionOrSnsTopic = new Error(0, "Handler must reference a Function or AWS::SNS::Topic resource declaration");
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
-        public static readonly Error ExpectedConditionExpression = new Error(2000, "expected a condition expression");
+        public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
 
         //--- Fields ---
         public readonly int Code;

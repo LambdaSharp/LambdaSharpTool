@@ -90,7 +90,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // expressions
                 [typeof(AExpression)] = () => ParseExpression(),
                 [typeof(ObjectExpression)] = () => ParseExpressionOfType<ObjectExpression>(Error.ExpectedMapExpression),
-                [typeof(ListExpression)] = () => ParseExpressionOfType<ListExpression>(Error.ExpectedSequenceExpression),
+                [typeof(ListExpression)] = () => ParseExpressionOfType<ListExpression>(Error.ExpectedListExpression),
                 [typeof(LiteralExpression)] = () => ParseExpressionOfType<LiteralExpression>(Error.ExpectedLiteralValue),
 
                 // declarations
@@ -206,7 +206,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
         public List<T> ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
-                Log(Error.ExpectedSequenceExpression, Location());
+                Log(Error.ExpectedListExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }
@@ -259,7 +259,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         result = (T)Activator.CreateInstance(syntax.Type);
                         mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
                     } else {
-                        Log(Error.UnexpectedItemKeyword(key), Location(keyScalar));
+                        Log(Error.UnrecognizedModuleItem(key), Location(keyScalar));
 
                         // skip the value of the key
                         SkipThisAndNestedEvents();
@@ -297,7 +297,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         keyProperty.SetValue(result, value);
                     }
                 } else {
-                    Log(Error.unexpectedKey(key), Location(keyScalar));
+                    Log(Error.UnexpectedKey(key), Location(keyScalar));
 
                     // no need to parse an invalid key
                     SkipThisAndNestedEvents();
@@ -384,7 +384,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             AExpression ParseListExpression() {
                 if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
-                    Log(Error.ExpectedSequenceExpression, Location());
+                    Log(Error.ExpectedListExpression, Location());
                     SkipThisAndNestedEvents();
                     return null;
                 }
@@ -536,7 +536,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 case "!Condition":
                     return ConvertToConditionRefExpression(value);
                 default:
-                    Log(Error.UnknownTag(tag), value.SourceLocation);
+                    Log(Error.UnknownFunctionTag(tag), value.SourceLocation);
                     return null;
                 }
             }
@@ -555,7 +555,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // !Cidr [ VALUE, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
                     if(parameterList.Items.Count != 3) {
-                        Log(Error.FunctionExpectsTwoParameters("!Cidr"), value.SourceLocation);
+                        Log(Error.FunctionExpectsThreeParameters("!Cidr"), value.SourceLocation);
                         return null;
                     }
                     return new CidrFunctionExpression {
@@ -926,7 +926,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             // check if we have a sequence instead
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _)) {
-                Log(Error.ExpectedSequenceExpression, Location());
+                Log(Error.ExpectedListExpression, Location());
                 SkipThisAndNestedEvents();
                 return null;
             }

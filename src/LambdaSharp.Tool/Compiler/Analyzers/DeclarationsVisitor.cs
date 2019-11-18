@@ -298,7 +298,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             _builder.Log(Error.MappingDeclarationSecondLevelIsMissing, secondLevelObjectExpression);
                         }
                     } else {
-                        _builder.Log(Error.ExpectedObjectExpression, topLevelEntry.Value);
+                        _builder.Log(Error.ExpectedMapExpression, topLevelEntry.Value);
                     }
                 }
             } else {
