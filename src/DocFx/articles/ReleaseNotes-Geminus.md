@@ -180,6 +180,14 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.6) - TBD
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where a stack update was skipped when the only change was in the parameters.
+
+
 ### (v0.7.0.5) - 2019-10-25
 
 #### Fixes
