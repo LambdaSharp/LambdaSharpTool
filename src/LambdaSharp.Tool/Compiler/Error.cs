@@ -119,6 +119,8 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error HandlerMustBeAFunctionOrSnsTopic = new Error(0, "Handler must reference a Function or AWS::SNS::Topic resource declaration");
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
+        public static readonly Error ApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
+        public static readonly Error ApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported integration type");
 
         //--- Fields ---
         public readonly int Code;

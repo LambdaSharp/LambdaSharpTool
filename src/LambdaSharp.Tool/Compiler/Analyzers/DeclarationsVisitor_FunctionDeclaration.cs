@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -365,6 +366,73 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     node.Properties[key] = expression;
                 }
             }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ApiEventSourceDeclaration node) {
+
+            // extract http method from route
+            var api = node.Api.Value.Trim();
+            var pathSeparatorIndex = api.IndexOfAny(new[] { ':', ' ' });
+            if(pathSeparatorIndex < 0) {
+                _builder.Log(Error.ApiEventSourceInvalidApiFormat, node);
+                return;
+            }
+
+            // extract the API method
+            var method = api.Substring(0, pathSeparatorIndex).ToUpperInvariant();
+            if(method == "*") {
+                method = "ANY";
+            }
+            node.ApiMethod = method;
+
+            // extract the API path
+            var path = api.Substring(pathSeparatorIndex + 1)
+                .TrimStart()
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // TODO: parse and validate API path
+
+            // parse integration into a valid enum
+            if(!Enum.TryParse<ApiEventSourceDeclaration.IntegrationType>(node.Integration.Value ?? "RequestResponse", ignoreCase: true, out var integration)) {
+                _builder.Log(Error.ApiEventSourceUnsupportedIntegrationType, node.Integration);
+            }
+            node.ApiIntegrationType = integration;
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SchedulEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, S3EventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, TopicEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SqsEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, AlexaEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, DynamoDBEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, KinesisEventSourceDeclaration node) {
+            // TODO:
+        }
+
+        public override void VisitStart(ASyntaxNode parent, WebSocketEventSourceDeclaration node) {
+            // TODO:
         }
     }
 }

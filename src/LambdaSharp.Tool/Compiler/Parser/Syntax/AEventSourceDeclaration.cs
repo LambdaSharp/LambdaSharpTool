@@ -26,11 +26,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     }
     public class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Types ---
+        public enum IntegrationType {
+            Unsupported,
+            RequestResponse,
+            SlackCommand
+        }
+
+
         //--- Properties ---
 
         [SyntaxKeyword]
         public LiteralExpression Api { get; set; }
-
 
         [SyntaxOptional]
         public LiteralExpression Integration { get; set; }
@@ -52,6 +59,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         [SyntaxOptional]
         public LiteralExpression Invoke { get; set; }
+
+        public string ApiMethod { get; set; }
+        public string[] ApiPath { get; set; }
+        public IntegrationType ApiIntegrationType { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
