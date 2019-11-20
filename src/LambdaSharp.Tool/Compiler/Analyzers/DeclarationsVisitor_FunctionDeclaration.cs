@@ -27,6 +27,27 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public partial class DeclarationsVisitor {
 
+        //--- Class Fields ---
+
+        // NOTE (2019-11-20, bjorg): list of S3 event types taken from https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html
+        private static HashSet<string> S3EventTypes = new HashSet<string> {
+            "s3:ObjectCreated:*",
+            "s3:ObjectCreated:Put",
+            "s3:ObjectCreated:Post",
+            "s3:ObjectCreated:Copy",
+            "s3:ObjectCreated:CompleteMultipartUpload",
+            "s3:ObjectRemoved:*",
+            "s3:ObjectRemoved:Delete",
+            "s3:ObjectRemoved:DeleteMarkerCreated",
+            "s3:ObjectRestore:Post",
+            "s3:ObjectRestore:Completed",
+            "s3:ReducedRedundancyLostObject",
+            "s3:Replication:OperationFailedReplication",
+            "s3:Replication:OperationMissedThreshold",
+            "s3:Replication:OperationReplicatedAfterThreshold",
+            "s3:Replication:OperationNotTracked"
+        };
+
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
 
@@ -34,8 +55,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
             ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
             ValidateExpressionIsNumber(node, node.Timeout, Error.TimeoutAttributeInvalid);
-
-            // TODO: validate function sources
 
             // check if function uses inline code or a project
             var isInlineFunction = false;
@@ -400,39 +419,213 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, SchedulEventSourceDeclaration node) {
-            // TODO:
+
+            // TODO: validate 'node.Schedule' is either valid cron or rate expression
         }
 
         public override void VisitStart(ASyntaxNode parent, S3EventSourceDeclaration node) {
-            // TODO:
+
+            // validate events
+            if(node.Events == null) {
+                node.Events = new List<LiteralExpression> {
+                    Literal("s3:ObjectCreated:*")
+                };
+            } else if(!node.Events.Any()) {
+
+                // TODO: consider using ListExpression as type for 'node.Events' so that we can use 'node.Events' to report the position or the error
+                _builder.Log(Error.S3EventSourceEventListCannotBeEmpty, node);
+            }
+            var unrecognizedEvents = node.Events
+                .Where(e => !S3EventTypes.Contains(e.Value))
+                .OrderBy(e => e.Value)
+                .ToList();
+            foreach(var unrecognizedEvent in unrecognizedEvents) {
+                _builder.Log(Error.S3EventSourceUnrecognizedEventType(unrecognizedEvent.Value), unrecognizedEvent);
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) {
-            // TODO:
+
+            // extract the API path
+            var path = node.SlackCommand.Value
+                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+            // TODO: parse and validate API path
         }
 
         public override void VisitStart(ASyntaxNode parent, TopicEventSourceDeclaration node) {
-            // TODO:
+
+            // TODO: validate 'node.Filters'; see https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html
+
+            // key: name of attribute to filter on
+            // value: list of possible matches (OR'ed together)
+            //  "text": exact match with 'text'
+            //  { "anything-but": "text" }
+            //  { "anything-but": number }
+            //  { "anything-but": [ "text1", "text2", ... ]}
+            //  { "anything-but": [ number1, number2, ... ]}
+            //  { "prefix": "text" }
+            //  { "numeric": [ "=", number ]}
+            //  { "numeric": [ "<", number ]}
+            //  { "numeric": [ "<=", number ]}
+            //  { "numeric": [ ">", number ]}
+            //  { "numeric": [ ">=", number ]}
+            //  { "numeric": [ ">", number1, "<", number2 ]}
+            //  { "numeric": [ ">=", number1, "<", number2 ]}
+            //  { "numeric": [ ">", number1, "<=", number2 ]}
+            //  { "numeric": [ ">=", number1, "<=", number2 ]}
+            //  { "numeric": [ "<", number1, ">", number2 ]}
+            //  { "numeric": [ "<=", number1, ">", number2 ]}
+            //  { "numeric": [ "<", number1, ">=", number2 ]}
+            //  { "numeric": [ "<=", number1, ">=", number2 ]}
+            //  { "exists": bool }
+
+            // NOTE:
+            //  - The total combination of values must not exceed 150. Calculate the total combination by multiplying the number of values in each array.
+            //  - A filter policy can have a maximum of 5 attribute names.
+            //  - The maximum size of a policy is 256 KB.
         }
 
         public override void VisitStart(ASyntaxNode parent, SqsEventSourceDeclaration node) {
-            // TODO:
+
+            // validate 'BatchSize' for SQS source
+            if(node.BatchSize == null) {
+                node.BatchSize = Literal(10);
+            } else if(node.BatchSize is LiteralExpression batchSizeLiteral) {
+                if(!int.TryParse(batchSizeLiteral.Value, out var batchSize) || ((batchSize < 1) || (batchSize > 10))) {
+                    _builder.Log(Error.SqsEventSourceInvalidBatchSize, node.BatchSize);
+                }
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, AlexaEventSourceDeclaration node) {
-            // TODO:
+
+            // nothing to do
         }
 
         public override void VisitStart(ASyntaxNode parent, DynamoDBEventSourceDeclaration node) {
-            // TODO:
+
+            // validate 'BatchSize' for DynamoDB stream source
+            if(node.BatchSize == null) {
+                node.BatchSize = Literal(100);
+            } else if(node.BatchSize is LiteralExpression batchSizeLiteral) {
+                if(!int.TryParse(batchSizeLiteral.Value, out var batchSize) || ((batchSize < 1) || (batchSize > 1000))) {
+                    _builder.Log(Error.DynamoDBEventSourceInvalidBatchSize, node.BatchSize);
+                }
+            }
+
+            // validate 'StartingPosition' for DynamoDB stream source
+            if(node.StartingPosition == null) {
+                node.StartingPosition = Literal("LATEST");
+            } else if(node.StartingPosition is LiteralExpression startingPositionLiteral) {
+                switch(startingPositionLiteral.Value) {
+                case "LATEST":
+                case "TRIM_HORIZON":
+
+                    // nothing to do
+                    break;
+                default:
+                    _builder.Log(Error.DynamoDBEventSourceInvalidStartingPosition, node.StartingPosition);
+                    break;
+                }
+            }
+
+            // validate 'MaximumBatchingWindowInSeconds' for DynamoDB source
+            if(node.MaximumBatchingWindowInSeconds is LiteralExpression maximumBatchingWindowInSecondsLiteral) {
+                if(!int.TryParse(maximumBatchingWindowInSecondsLiteral.Value, out var maximumBatchingWindowInSeconds) || ((maximumBatchingWindowInSeconds < 0) || (maximumBatchingWindowInSeconds > 300))) {
+                    _builder.Log(Error.DynamoDBEventSourceInvalidMaximumBatchingWindowInSeconds, node.BatchSize);
+                }
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, KinesisEventSourceDeclaration node) {
-            // TODO:
-        }
+
+            // validate 'BatchSize' for Kinesis stream source
+            if(node.BatchSize == null) {
+                node.BatchSize = Literal(100);
+            } else if(node.BatchSize is LiteralExpression batchSizeLiteral) {
+                if(!int.TryParse(batchSizeLiteral.Value, out var batchSize) || ((batchSize < 1) || (batchSize > 10000))) {
+                    _builder.Log(Error.KinesisEventSourceInvalidBatchSize, node.BatchSize);
+                }
+            }
+
+            // validate 'StartingPosition' for DynamoDB stream source
+            if(node.StartingPosition == null) {
+                node.StartingPosition = Literal("LATEST");
+            } else if(node.StartingPosition is LiteralExpression startingPositionLiteral) {
+                switch(startingPositionLiteral.Value) {
+                case "AT_TIMESTAMP":
+                case "LATEST":
+                case "TRIM_HORIZON":
+
+                    // nothing to do
+                    break;
+                default:
+                    _builder.Log(Error.KinesisEventSourceInvalidStartingPosition, node.StartingPosition);
+                    break;
+                }
+            }
+
+            // validate 'MaximumBatchingWindowInSeconds' for DynamoDB source
+            if(node.MaximumBatchingWindowInSeconds is LiteralExpression maximumBatchingWindowInSecondsLiteral) {
+                if(!int.TryParse(maximumBatchingWindowInSecondsLiteral.Value, out var maximumBatchingWindowInSeconds) || ((maximumBatchingWindowInSeconds < 0) || (maximumBatchingWindowInSeconds > 300))) {
+                    _builder.Log(Error.KinesisEventSourceInvalidMaximumBatchingWindowInSeconds, node.BatchSize);
+                }
+            }
+       }
 
         public override void VisitStart(ASyntaxNode parent, WebSocketEventSourceDeclaration node) {
-            // TODO:
+
+            // see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-route.html
+
+            // TODO: ensure 'node.WebSocket' value is unique for every entry
+
+            // validate pre-defined WebSocket routes
+            if(node.WebSocket.Value.StartsWith("$", StringComparison.Ordinal)) {
+                switch(node.WebSocket.Value) {
+                case "$connect":
+                case "$disconnect":
+                case "$default":
+
+                    // nothing to do
+                    break;
+                default:
+                    _builder.Log(Error.WebSocketEventSourceInvalidPredefinedRoute, node.WebSocket);
+                    break;
+                }
+            }
+
+            // TODO: 'node.ApiKeyRequired' value must a boolean
+
+            // validate 'AuthorizationType' for WebSocket source
+            if(node.AuthorizationType != null) {
+                switch(node.AuthorizationType.Value) {
+                case "AWS_IAM":
+                case "CUSTOM":
+
+                    // nothing to do
+                    break;
+                default:
+                    _builder.Log(Error.WebSocketEventSourceInvalidAuthorizationType, node.AuthorizationType);
+                    break;
+                }
+            }
+
+            // validate 'AuthorizerId' for WebSocket source
+            if(node.AuthorizerId != null) {
+
+                // 'AuthorizationType' must be CUSTOM in this case
+                if(node.AuthorizationType == null) {
+                    node.AuthorizationType = Literal("CUSTOM");
+                } else if(node.AuthorizationType.Value != "CUSTOM") {
+                    _builder.Log(Error.WebSocketEventSourceInvalidAuthorizationTypeForCustomAuthorizer, node.AuthorizationType);
+                }
+            }
+
+            // ensure that authorization configuration can only be set for the '$connect' route
+            if((node.AuthorizationType != null) && (node.WebSocket.Value != "$connect")) {
+                _builder.Log(Error.WebSocketEventSourceInvalidAuthorizationConfigurationForRoute, node.AuthorizationType);
+            }
         }
     }
 }

@@ -206,6 +206,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public AExpression StartingPosition { get; set; }
 
+        [SyntaxOptional]
+        public AExpression MaximumBatchingWindowInSeconds { get; set; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
@@ -228,6 +231,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         [SyntaxOptional]
         public AExpression StartingPosition { get; set; }
+
+        [SyntaxOptional]
+        public AExpression MaximumBatchingWindowInSeconds { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -121,6 +121,20 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
         public static readonly Error ApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
         public static readonly Error ApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported integration type");
+        public static readonly Error S3EventSourceEventListCannotBeEmpty = new Error(0, "'Events' attribute cannot be an empty list");
+        public static readonly Func<string, Error> S3EventSourceUnrecognizedEventType = parameter => new Error(0, $"'{parameter}' is not a recognized S3 event type");
+        public static readonly Error SqsEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10");
+        public static readonly Error DynamoDBEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 1,000");
+        public static readonly Error DynamoDBEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be either LATEST or TRIM_HORIZON");
+        public static readonly Error DynamoDBEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
+        public static readonly Error KinesisEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10,000");
+        public static readonly Error KinesisEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be one of AT_TIMESTAMP, LATEST, or TRIM_HORIZON");
+        public static readonly Error KinesisEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
+        public static readonly Error WebSocketEventSourceInvalidPredefinedRoute = new Error(0, "WebSocket route starting with $ must be one of $connect, $disconnect, or $default");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationType = new Error(0, "'AuthorizationType' must be either AWS_IAM or CUSTOM");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationTypeForCustomAuthorizer = new Error(0, "'AuthorizationType' must be CUSTOM");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
+        public static readonly Error EventSource = new Error(0, "");
 
         //--- Fields ---
         public readonly int Code;
