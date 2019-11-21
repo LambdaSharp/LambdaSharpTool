@@ -24,6 +24,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Properties ---
         public LiteralExpression ReferenceName { get; set; }
+        public ConditionDeclaration ReferencedDeclaration { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

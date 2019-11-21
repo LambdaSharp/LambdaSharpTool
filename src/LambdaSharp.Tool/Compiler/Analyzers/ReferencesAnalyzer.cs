@@ -50,6 +50,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 case MacroDeclaration _:
                 case NestedModuleDeclaration _:
                 case ResourceDeclaration resourceDeclaration when (resourceDeclaration.Value == null): // NOTE: only allowed if not a resource reference
+                    node.ReferencedDeclaration = referencedDeclaration;
                     referencedDeclaration.ReverseDependencies.Add(node);
                     break;
                 case ParameterDeclaration _:
@@ -63,9 +64,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.NameMustBeACloudFormationResource(node.ReferenceName.Value), node);
                     return;
                 default:
-
-                    // TODO: better exception
-                    throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
+                    throw new ShouldNeverHappenException(referencedDeclaration.GetType().Name);
                 }
 
                 // find all conditions to reach the !GetAtt expression
@@ -116,6 +115,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 case ImportDeclaration _:
                 case VariableDeclaration _:
                 case PackageDeclaration _:
+                    node.ReferencedDeclaration = referencedDeclaration;
                     referencedDeclaration.ReverseDependencies.Add(node);
                     break;
                 case GroupDeclaration _:
@@ -146,7 +146,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
 
                 // confirm reference is to a condition declaration
-                if(referencedDeclaration is ConditionDeclaration) {
+                if(referencedDeclaration is ConditionDeclaration referencedConditionDeclaration) {
+                    node.ReferencedDeclaration = referencedConditionDeclaration;
                     referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
@@ -167,7 +168,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
 
                 // confirm reference is to a condition declaration
-                if(referencedDeclaration is MappingDeclaration) {
+                if(referencedDeclaration is MappingDeclaration referencedMappingDeclaration) {
+                    node.ReferencedDeclaration = referencedMappingDeclaration;
                     referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
