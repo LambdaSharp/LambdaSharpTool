@@ -132,6 +132,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxKeyword]
         public LiteralExpression SlackCommand { get; set; }
 
+        public string[] SlackPath { get; set; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);

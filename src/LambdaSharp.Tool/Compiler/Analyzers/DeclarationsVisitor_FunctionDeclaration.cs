@@ -389,27 +389,44 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ApiEventSourceDeclaration node) {
 
-            // extract http method from route
+            // extract HTTP method from route
             var api = node.Api.Value.Trim();
             var pathSeparatorIndex = api.IndexOfAny(new[] { ':', ' ' });
-            if(pathSeparatorIndex < 0) {
+            if(pathSeparatorIndex >= 0) {
+
+                // extract the API method
+                node.ApiMethod = api.Substring(0, pathSeparatorIndex).ToUpperInvariant();
+                if(node.ApiMethod == "*") {
+                    node.ApiMethod = "ANY";
+                }
+
+                // extract the API path
+                node.ApiPath = api.Substring(pathSeparatorIndex + 1)
+                    .TrimStart()
+                    .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
+                // validate API path segments
+                if(node.ApiPath.Where(segment =>
+                    (segment.StartsWith("{", StringComparison.Ordinal) && !segment.EndsWith("}", StringComparison.Ordinal))
+                    || (segment.StartsWith("{", StringComparison.Ordinal) && !segment.EndsWith("}", StringComparison.Ordinal))
+                    || (segment == "{}")
+                    || (segment == "{+}")
+                ).Any()) {
+                    _builder.Log(Error.ApiEventSourceInvalidApiFormat, node.Api);
+                } else {
+
+                    // check if the API path has a greedy parameter and ensure it is the last parameter
+                    var greedyParameter = node.ApiPath.Select((segment, index) => new {
+                        Index = index,
+                        Segment = segment
+                    }).FirstOrDefault(t => t.Segment.EndsWith("+}", StringComparison.Ordinal));
+                    if((greedyParameter != null) && (greedyParameter.Index != (node.ApiPath.Length - 1))) {
+                        _builder.Log(Error.ApiEventSourceInvalidGreedyParameterMustBeLast(greedyParameter.Segment), node.Api);
+                    }
+                }
+            } else {
                 _builder.Log(Error.ApiEventSourceInvalidApiFormat, node);
-                return;
             }
-
-            // extract the API method
-            var method = api.Substring(0, pathSeparatorIndex).ToUpperInvariant();
-            if(method == "*") {
-                method = "ANY";
-            }
-            node.ApiMethod = method;
-
-            // extract the API path
-            var path = api.Substring(pathSeparatorIndex + 1)
-                .TrimStart()
-                .Split('/', StringSplitOptions.RemoveEmptyEntries);
-
-            // TODO: parse and validate API path
 
             // parse integration into a valid enum
             if(!Enum.TryParse<ApiEventSourceDeclaration.IntegrationType>(node.Integration.Value ?? "RequestResponse", ignoreCase: true, out var integration)) {
@@ -447,10 +464,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) {
 
             // extract the API path
-            var path = node.SlackCommand.Value
+            node.SlackPath = node.SlackCommand.Value
                 .Split('/', StringSplitOptions.RemoveEmptyEntries);
 
-            // TODO: parse and validate API path
+            // validate API path segments
+            if(node.SlackPath.Where(segment =>
+                segment.StartsWith("{", StringComparison.Ordinal)
+                || segment.EndsWith("}", StringComparison.Ordinal)
+            ).Any()) {
+                _builder.Log(Error.SlackCommandEventSourceInvalidRestPath, node.SlackCommand);
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, TopicEventSourceDeclaration node) {

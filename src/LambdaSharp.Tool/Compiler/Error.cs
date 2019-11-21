@@ -121,8 +121,10 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
         public static readonly Error ApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
         public static readonly Error ApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported integration type");
+        public static readonly Func<string, Error> ApiEventSourceInvalidGreedyParameterMustBeLast = parameter => new Error(0, $"the {parameter} parameter must be the last segment in the path");
         public static readonly Error S3EventSourceEventListCannotBeEmpty = new Error(0, "'Events' attribute cannot be an empty list");
         public static readonly Func<string, Error> S3EventSourceUnrecognizedEventType = parameter => new Error(0, $"'{parameter}' is not a recognized S3 event type");
+        public static readonly Error SlackCommandEventSourceInvalidRestPath = new Error(0, "REST API path for SlackCommand can not contain parameters");
         public static readonly Error SqsEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10");
         public static readonly Error DynamoDBEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 1,000");
         public static readonly Error DynamoDBEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be either LATEST or TRIM_HORIZON");
