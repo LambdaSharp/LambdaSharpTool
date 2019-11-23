@@ -391,7 +391,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if a root macros collection needs to be created
             if(!_builder.TryGetItemDeclaration("Macros", out var macrosItem)) {
-                macrosItem = AddDeclaration(node.Parents.OfType<ModuleDeclaration>().First(), new GroupDeclaration {
+                macrosItem = AddDeclaration(node.ParentModuleDeclaration, new GroupDeclaration {
                     Group = Literal("Macros"),
                     Description = Literal("Macro definitions")
                 });

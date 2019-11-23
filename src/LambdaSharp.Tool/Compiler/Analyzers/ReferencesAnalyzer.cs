@@ -71,8 +71,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 var conditions = FindConditions(node);
 
                 // register reference with referenced declaration
-                var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -125,15 +124,14 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.IdentifierReferesToInvalidDeclarationType(node.ReferenceName.Value), node);
                     return;
                 default:
-                    throw new ApplicationException($"should never happen: {referencedDeclaration.GetType().Name}");
+                    throw new ShouldNeverHappenException($"unrecognized declaration type: {referencedDeclaration.GetType().Name}");
                 }
 
                 // find all conditions to reach this node
                 var conditions = FindConditions(node);
 
                 // register reference with declaration
-                var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: conditions, Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: conditions, Node: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -151,8 +149,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
-                    var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                    declaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
+                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
                     _builder.Log(Error.IdentifierMustReferToACondition(node.ReferenceName.Value), node);
                 }
@@ -173,8 +170,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     referencedDeclaration.ReverseDependencies.Add(node);
 
                     // register reference with declaration
-                    var declaration = node.Parents.OfType<AItemDeclaration>().First();
-                    declaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
+                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
                 } else {
                     _builder.Log(Error.IdentifierMustReferToACondition(referenceName), node);
                 }

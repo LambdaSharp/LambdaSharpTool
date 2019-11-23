@@ -17,6 +17,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
@@ -35,6 +36,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 }
             }
         }
+
+        public AItemDeclaration ParentItemDeclaration => Parents.OfType<AItemDeclaration>().First();
+        public ModuleDeclaration ParentModuleDeclaration => Parents.OfType<ModuleDeclaration>().First();
 
         //--- Abstract Methods ---
         public abstract void Visit(ASyntaxNode parent, ISyntaxVisitor visitor);
