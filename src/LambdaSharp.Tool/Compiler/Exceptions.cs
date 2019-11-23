@@ -23,6 +23,13 @@ namespace LambdaSharp.Tool.Compiler {
     public class ShouldNeverHappenException : Exception {
 
         //--- Constructors ---
-        public ShouldNeverHappenException(string hint) : base($"HINT: {hint}") { }
+        public ShouldNeverHappenException() : this("this shouldn't happen") { }
+        public ShouldNeverHappenException(string message) : base(message) { }
+    }
+
+    public class NullValueException : Exception {
+
+        //--- Constructors ---
+        public NullValueException(string message) : base(message) { }
     }
 }

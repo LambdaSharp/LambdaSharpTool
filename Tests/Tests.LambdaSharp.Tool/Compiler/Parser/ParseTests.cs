@@ -39,8 +39,8 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             public Dictionary<string, string> Files { get; private set; } = new Dictionary<string, string>();
 
             //--- Methods ---
-            public void LogError(string filePath, int line, int column, string message)
-                => Messages.Add($"ERROR: {message} @ {filePath}({line},{column})");
+            public void Log(Error error, SourceLocation sourceLocation)
+                => Messages.Add($"ERROR{error.Code}: {error.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
 
             public string ReadFile(string filePath) => Files[filePath];
         }
@@ -92,7 +92,7 @@ Items:
             // act
             var builder = new Builder();
             moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(builder));
-            moduleDeclaration.Visit(parent: null, new DeclarationsVisitor(builder));
+            moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 
             // assert

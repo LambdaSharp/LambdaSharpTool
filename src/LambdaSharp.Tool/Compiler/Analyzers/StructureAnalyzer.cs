@@ -26,7 +26,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public partial class DeclarationsVisitor : ASyntaxVisitor {
+    public partial class StructureAnalyzer : ASyntaxAnalyzer {
 
         //--- Class Fields ---
         private static readonly HashSet<string> _cloudFormationParameterTypes;
@@ -35,10 +35,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Constructor ---
-        static DeclarationsVisitor() {
+        static StructureAnalyzer() {
 
             // load source code for inline secret decryption function
-            _decryptSecretFunctionCode = typeof(DeclarationsVisitor).Assembly.ReadManifestResource("Resources/DecryptSecretFunction.js");
+            _decryptSecretFunctionCode = typeof(StructureAnalyzer).Assembly.ReadManifestResource("Resources/DecryptSecretFunction.js");
 
             // create list of natively supported CloudFormation types
             _cloudFormationParameterTypes = new HashSet<string> {
@@ -97,7 +97,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public DeclarationsVisitor(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        public StructureAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, UsingDeclaration node) {

@@ -23,7 +23,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public partial class DeclarationsVisitor {
+    public partial class StructureAnalyzer {
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {

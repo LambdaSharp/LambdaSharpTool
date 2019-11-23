@@ -43,6 +43,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             // parse text into a pre-processed YAML token stream
             IParser yamlParser;
             try {
+
+                // TODO: consider porting selector logic to LambdaSharpParser
                 _selector = ":" + (selector ?? "Default");
                 var inputStream = YamlParser.Parse(source);
                 var outputStream = new YamlStream {

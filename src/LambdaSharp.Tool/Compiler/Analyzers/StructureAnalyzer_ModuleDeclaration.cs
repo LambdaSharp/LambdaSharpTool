@@ -23,19 +23,21 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public partial class DeclarationsVisitor {
+    public partial class StructureAnalyzer {
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
 
             // ensure module version is present and valid
-            if(node.Version == null) {
-                _builder.ModuleVersion = VersionInfo.Parse("1.0-DEV");
-            } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
-                _builder.ModuleVersion = version;
-            } else {
-                _builder.Log(Error.VersionAttributeInvalid, node.Version);
-                _builder.ModuleVersion = VersionInfo.Parse("0.0");
+            if(_builder.ModuleVersion == null) {
+                if(node.Version == null) {
+                    _builder.ModuleVersion = VersionInfo.Parse("1.0-DEV");
+                } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
+                    _builder.ModuleVersion = version;
+                } else {
+                    _builder.Log(Error.VersionAttributeInvalid, node.Version);
+                    _builder.ModuleVersion = VersionInfo.Parse("0.0");
+                }
             }
 
             // ensure module has a namespace and name

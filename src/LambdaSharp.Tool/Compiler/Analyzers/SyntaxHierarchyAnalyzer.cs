@@ -268,7 +268,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // assign default reference expression
-            node.ReferenceExpression = ASyntaxVisitor.FnRef(node.FullName);
+            node.ReferenceExpression = ASyntaxAnalyzer.FnRef(node.FullName);
 
             // register item declaration
             node.LogicalId = _builder.AddItemDeclaration(parent, node);

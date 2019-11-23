@@ -23,7 +23,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public class ReferencesAnalyzer : ASyntaxVisitor {
+    public class ReferencesAnalyzer : ASyntaxAnalyzer {
 
         //--- Fields ---
         private readonly Builder _builder;
@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.NameMustBeACloudFormationResource(node.ReferenceName.Value), node);
                     return;
                 default:
-                    throw new ShouldNeverHappenException(referencedDeclaration.GetType().Name);
+                    throw new ShouldNeverHappenException($"unexpected type: {referencedDeclaration.GetType().Name}");
                 }
 
                 // find all conditions to reach the !GetAtt expression
@@ -228,9 +228,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             Value = ifParent.Condition
                         });
                     } else {
-
-                        // TODO: better exception
-                        throw new ApplicationException("this shouldn't happen");
+                        throw new ShouldNeverHappenException();
                     }
                 }
                 previousParent = parent;

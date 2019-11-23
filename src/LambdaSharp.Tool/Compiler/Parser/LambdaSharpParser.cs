@@ -219,9 +219,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     try {
                         result.Add((T)item);
                     } catch(InvalidCastException) {
-
-                        // TODO: better exception
-                        throw new ApplicationException($"expected type {typeof(T).FullName}, but found {item.GetType().FullName} instead");
+                        throw new ShouldNeverHappenException($"expected type {typeof(T).FullName}, but found {item.GetType().FullName} instead");
                     }
                 }
             }

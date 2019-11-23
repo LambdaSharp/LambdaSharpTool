@@ -21,14 +21,13 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public class ValidateExpressionsVisitor : ASyntaxVisitor {
+    public class ReferenceAnalyzer : ASyntaxAnalyzer {
 
         //--- Fields ---
         private readonly Builder _builder;
 
-
         //--- Constructors ---
-        public ValidateExpressionsVisitor(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+        public ReferenceAnalyzer(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ListExpression node)  {

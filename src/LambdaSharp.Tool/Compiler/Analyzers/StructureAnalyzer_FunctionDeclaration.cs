@@ -25,7 +25,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public partial class DeclarationsVisitor {
+    public partial class StructureAnalyzer {
 
         //--- Class Fields ---
 

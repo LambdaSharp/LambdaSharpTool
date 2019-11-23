@@ -39,17 +39,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Properties ---
         public string FullName {
-
-            // TODO: better exception
-            get => _fullName ?? throw new ApplicationException("value not set");
-            set => _fullName = value ?? throw new ArgumentNullException(nameof(FullName));
+            get => _fullName ?? throw new ArgumentNullException("value not set");
+            set => _fullName = value ?? throw new NullValueException(nameof(FullName));
         }
 
         public string LogicalId {
-
-            // TODO: better exception
-            get => _logicalId ?? throw new ApplicationException("value not set");
-            set => _logicalId = value ?? throw new ArgumentNullException(nameof(LogicalId));
+            get => _logicalId ?? throw new ArgumentNullException("value not set");
+            set => _logicalId = value ?? throw new NullValueException(nameof(LogicalId));
         }
 
         public LiteralExpression Description { get; set; }

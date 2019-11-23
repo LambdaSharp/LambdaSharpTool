@@ -19,14 +19,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
-using LambdaSharp.Tool.Model;
-using LambdaSharp.Tool.Model.AST;
+using LambdaSharp.Tool.Compiler;
+using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool {
 
-    public abstract class AModelProcessor {
+    public abstract class AModelProcessor : ILambdaSharpParserDependencyProvider {
 
         //--- Constants ---
         protected const string CLOUDFORMATION_ID_PATTERN = "[a-zA-Z][a-zA-Z0-9]*";
@@ -161,5 +162,12 @@ namespace LambdaSharp.Tool {
                 }
             });
         }
+
+        //--- ILambdaSharpParserDependencyProvider Members ---
+        void ILambdaSharpParserDependencyProvider.Log(Error error, SourceLocation sourceLocation)
+            => LogError($"ERROR{error.Code}: {error.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
+
+        string ILambdaSharpParserDependencyProvider.ReadFile(string filePath)
+            => File.ReadAllText(filePath);
    }
 }

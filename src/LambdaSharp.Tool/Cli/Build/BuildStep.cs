@@ -19,6 +19,10 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using LambdaSharp.Tool.Compiler;
+using LambdaSharp.Tool.Compiler.Analyzers;
+using LambdaSharp.Tool.Compiler.Parser;
+using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Cli.Build {
 
@@ -54,79 +58,90 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Reading module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
-            var source = await File.ReadAllTextAsync(SourceFilename);
+            Console.WriteLine($"Copmi module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
 
-            // parse yaml to module AST
-            var moduleAst = new ModelYamlToAstConverter(Settings, SourceFilename).Convert(source, selector);
+            // parse yaml to module declaration AST
+            var moduleDeclaration = new LambdaSharpParser(this, SourceFilename).ParseSyntaxOfType<ModuleDeclaration>();
             if(HasErrors) {
                 return false;
             }
 
-            // convert module AST to model
-            var module = new ModelAstToModuleConverter(Settings, SourceFilename).Convert(moduleAst);
-            if(HasErrors) {
-                return false;
-            }
+            // prepare compilation
+            Console.WriteLine($"Compiling: {moduleDeclaration.Module.Value} (v{moduleDeclaration.Version?.Value ?? moduleVersion?.ToString() ?? "1.0-DEV"})");
+            var moduleBuilder = new Builder();
 
             // override module version
             if(moduleVersion != null) {
-                module.Version = moduleVersion;
+                moduleBuilder.ModuleVersion = moduleVersion;
             }
-            Console.WriteLine($"Compiling: {module.FullName} (v{module.Version})");
 
-            // augment module definitions
-            new ModelModuleInitializer(Settings, SourceFilename).Initialize(module);
+            // prepare AST for processing
+            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
 
-            // package all functions
-            new ModelFunctionPackager(Settings, SourceFilename).Package(
-                module,
-                noCompile: noPackageBuild,
-                noAssemblyValidation: noAssemblyValidation,
-                gitSha: gitSha,
-                gitBranch: gitBranch,
-                buildConfiguration: buildConfiguration,
-                forceBuild: forceBuild
-            );
-
-            // package all files
-            new ModelFilesPackager(Settings, SourceFilename).Package(module, noPackageBuild);
-
-            // augment module definitions
-            new ModelFunctionProcessor(Settings, SourceFilename).Process(module);
+            // analyze structure of AST
+            moduleDeclaration.Visit(parent: null, new StructureAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
 
-            // resolve all references
-            new ModelLinker(Settings, SourceFilename).Process(module);
+            // analyze references in AST
+            moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
 
-            // validate references
-            new ModelPostLinkerValidation(Settings, SourceFilename).Validate(module);
-            if(HasErrors) {
-                return false;
-            }
+            // TODO: convert rest of build steps
+            throw new NotImplementedException();
 
-            // create folder for cloudformation output
-            var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
-            if(outputCloudFormationDirectory != "") {
-                Directory.CreateDirectory(outputCloudFormationDirectory);
-            }
+            // // package all functions
+            // new ModelFunctionPackager(Settings, SourceFilename).Package(
+            //     module,
+            //     noCompile: noPackageBuild,
+            //     noAssemblyValidation: noAssemblyValidation,
+            //     gitSha: gitSha,
+            //     gitBranch: gitBranch,
+            //     buildConfiguration: buildConfiguration,
+            //     forceBuild: forceBuild
+            // );
 
-            // generate & save cloudformation template
-            var template = new ModelStackGenerator(Settings, SourceFilename).Generate(module.ToModule(), gitSha, gitBranch);
-            if(HasErrors) {
-                return false;
-            }
-            File.WriteAllText(outputCloudFormationFilePath, template);
-            Console.WriteLine($"=> Module compilation done: {Path.GetRelativePath(Settings.WorkingDirectory, outputCloudFormationFilePath)}");
-            return true;
+            // // package all files
+            // new ModelFilesPackager(Settings, SourceFilename).Package(module, noPackageBuild);
+
+            // // augment module definitions
+            // new ModelFunctionProcessor(Settings, SourceFilename).Process(module);
+            // if(HasErrors) {
+            //     return false;
+            // }
+
+            // // resolve all references
+            // new ModelLinker(Settings, SourceFilename).Process(module);
+            // if(HasErrors) {
+            //     return false;
+            // }
+
+            // // validate references
+            // new ModelPostLinkerValidation(Settings, SourceFilename).Validate(module);
+            // if(HasErrors) {
+            //     return false;
+            // }
+
+            // // create folder for cloudformation output
+            // var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);
+            // if(outputCloudFormationDirectory != "") {
+            //     Directory.CreateDirectory(outputCloudFormationDirectory);
+            // }
+
+            // // generate & save cloudformation template
+            // var template = new ModelStackGenerator(Settings, SourceFilename).Generate(module.ToModule(), gitSha, gitBranch);
+            // if(HasErrors) {
+            //     return false;
+            // }
+            // File.WriteAllText(outputCloudFormationFilePath, template);
+            // Console.WriteLine($"=> Module compilation done: {Path.GetRelativePath(Settings.WorkingDirectory, outputCloudFormationFilePath)}");
+            // return true;
         }
     }
 }
