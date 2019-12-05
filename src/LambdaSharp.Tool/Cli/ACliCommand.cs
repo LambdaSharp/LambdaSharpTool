@@ -58,6 +58,9 @@ namespace LambdaSharp.Tool.Cli {
 
     public abstract class ACliCommand : CliBase {
 
+        //--- Class Properties ---
+        public static string CredentialsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "credentials");
+
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
             => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
@@ -83,6 +86,12 @@ namespace LambdaSharp.Tool.Cli {
             var stopwatch = Stopwatch.StartNew();
             var cached = false;
             try {
+
+                // check if .aws/credentials file exists
+                if(!File.Exists(CredentialsFilePath)) {
+                    LogError($"IMPORTANT: run '{Settings.Lash} init' to create an AWS profile");
+                    return null;
+                }
 
                 // initialize AWS profile
                 if(awsProfile == null) {
@@ -204,6 +213,9 @@ namespace LambdaSharp.Tool.Cli {
                             // TODO (2019-10-08, bjorg): provide option to disable profile caching (or at least force a reset)
                             allowCaching: true
                         );
+                        if(awsAccount == null) {
+                            return null;
+                        }
 
                         // create AWS clients
                         ssmClient = new AmazonSimpleSystemsManagementClient();
@@ -241,7 +253,7 @@ namespace LambdaSharp.Tool.Cli {
                         PromptsAsErrors = promptsAsErrorsOption.HasValue()
                     };
                 } catch(AmazonClientException e) when(e.Message == "No RegionEndpoint or ServiceURL configured") {
-                    LogError("AWS profile configuration is missing a region specifier");
+                    LogError("AWS profile is missing a region specifier");
                     return null;
                 }
             };
