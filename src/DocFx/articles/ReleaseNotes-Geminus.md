@@ -182,10 +182,16 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ### (v0.7.0.6) - TBD
 
+#### New Features
+
+* LambdaSharp CLI
+    * `lash init` now prompts and creates a default AWS profile when none exists.
+
 #### Fixes
 
 * LambdaSharp CLI
     * Fixed an issue where a stack update was skipped when the only change was in the parameters.
+    * Fixed an issue in the WebSocket logging configuration.
 
 
 ### (v0.7.0.5) - 2019-10-25
