@@ -186,6 +186,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 * LambdaSharp CLI
     * Fixed an issue where a stack update was skipped when the only change was in the parameters.
+    * Fixed an issue in the WebSocket logging configuration.
 
 
 ### (v0.7.0.5) - 2019-10-25
