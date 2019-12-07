@@ -367,7 +367,6 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                     // add key-value pair
                     result.Items.Add(new ObjectExpression.KeyValuePair {
-                        SourceLocation = Location(keyScalar),
                         Key = new LiteralExpression {
                             SourceLocation = Location(keyScalar),
                             Value = keyScalar.ParsingEvent.Value
@@ -747,7 +746,9 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     return new SubFunctionExpression {
                         SourceLocation = value.SourceLocation,
                         FormatString = subLiteral,
-                        Parameters = null
+                        Parameters = new ObjectExpression {
+                            SourceLocation = value.SourceLocation
+                        }
                     };
                 }
 

@@ -25,21 +25,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AExpression : ASyntaxNode { }
 
-    public class ObjectExpression : AExpression, IEnumerable, IEnumerable<ObjectExpression.KeyValuePair> {
+    public abstract class AValueExpression : AExpression { }
+
+    public class ObjectExpression : AValueExpression, IEnumerable, IEnumerable<ObjectExpression.KeyValuePair> {
 
         //--- Types ---
-        public class KeyValuePair : ASyntaxNode {
+        public class KeyValuePair {
 
             //--- Properties ---
             public LiteralExpression Key { get; set; }
             public AExpression Value { get; set; }
-
-            //--- Methods ---
-            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-                visitor.VisitStart(parent, this);
-                Value.Visit(this, visitor);
-                visitor.VisitEnd(parent, this);
-            }
         }
 
         //--- Properties ---
@@ -78,10 +73,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public bool ContainsKey(string key) => Items.Any(item => item.Key.Value == key);
+        public int Count => Items.Count;
 
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Items.Visit(this, visitor);
+            foreach(var kv in Items) {
+                kv.Key.Visit(this, visitor);
+                kv.Value.Visit(this, visitor);
+            }
             visitor.VisitEnd(parent, this);
         }
 
@@ -92,7 +91,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => Items.GetEnumerator();
     }
 
-    public class ListExpression : AExpression, IEnumerable, IEnumerable<AExpression> {
+    public class ListExpression : AValueExpression, IEnumerable, IEnumerable<AExpression> {
 
         //--- Properties ---
         public List<AExpression> Items { get; set; } = new List<AExpression>();
@@ -120,7 +119,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         IEnumerator<AExpression> IEnumerable<AExpression>.GetEnumerator() => Items.GetEnumerator();
     }
 
-    public class LiteralExpression : AExpression {
+    public class LiteralExpression : AValueExpression {
 
         //--- Properties ---
         public string Value { get; set; }

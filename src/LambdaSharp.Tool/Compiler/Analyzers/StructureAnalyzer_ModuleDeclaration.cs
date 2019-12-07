@@ -74,6 +74,52 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
             }
 
+            // add built-in AWS variables
+            var awsGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
+                Group = Literal("AWS"),
+                Description = Literal("AWS Pseudo-Parameters")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("AccountId"),
+                Description = Literal("AWS account ID of the account in which the CloudFormation stack is being created"),
+                Value = FnRef("AWS::AccountId")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("NotificationARNs"),
+                Description = Literal("List of notification Amazon Resource Names (ARNs) for the current CloudFormation stack"),
+                Value = FnRef("AWS::NotificationARNs")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("NoValue"),
+                Description = Literal("Removes the resource property it is assigned to"),
+                Value = FnRef("AWS::NoValue")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Partition"),
+                Description = Literal("Partition that the resource is in (e.g. aws, aws-cn, aws-us-gov, etc.)"),
+                Value = FnRef("AWS::Partition")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("Region"),
+                Description = Literal("AWS Region in which the CloudFormation stack is located"),
+                Value = FnRef("AWS::Region")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("StackId"),
+                Description = Literal("ARN of the current CloudFormation stack"),
+                Value = FnRef("AWS::StackId")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("StackName"),
+                Description = Literal("Name of the current CloudFormation stack"),
+                Value = FnRef("AWS::StackName")
+            });
+            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
+                Variable = Literal("URLSuffix"),
+                Description = Literal("Suffix for a domain (e.g. amazonaws.com, amazonaws.com.cn, etc.)"),
+                Value = FnRef("AWS::URLSuffix")
+            });
+
             // add implicit module variables
             var moduleGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
                 Group = Literal("Module"),

@@ -93,6 +93,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
+            // resolve references in AST
+            new ReferenceResolver(moduleBuilder).Visit();
+            if(HasErrors) {
+                return false;
+            }
+
             // TODO: convert rest of build steps
             throw new NotImplementedException();
 

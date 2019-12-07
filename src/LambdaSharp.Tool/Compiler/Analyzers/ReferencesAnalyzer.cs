@@ -19,11 +19,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public class ReferencesAnalyzer : ASyntaxAnalyzer {
+
+        //--- Constants ---
+        private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
+
+        //--- Class Methods ---
+        private static string ReplaceSubPattern(string subPattern, Func<string, string, int, int, int, int, string> replace)
+            => Regex.Replace(subPattern, SUBVARIABLE_PATTERN, match => {
+                var matchText = match.ToString();
+                var name = matchText.Substring(2, matchText.Length - 3).Trim().Split('.', 2);
+                var key = name[0].Trim();
+                var suffix = (name.Length == 2) ? name[1].Trim() : null;
+                var startLineOffset = subPattern.Take(match.Index).Count(c => c == '\n');
+                var endLineOffset = subPattern.Take(match.Index + matchText.Length).Count(c => c == '\n');
+                var startColumnOffset = subPattern.Take(match.Index).Reverse().TakeWhile(c => c != '\n').Count();
+                var endColumnOffset = subPattern.Take(match.Index + matchText.Length).Reverse().TakeWhile(c => c != '\n').Count();
+                return replace(key, suffix, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) ?? matchText;
+            });
 
         //--- Fields ---
         private readonly Builder _builder;
@@ -35,43 +53,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
             var referenceName = node.ReferenceName.Value;
 
-            // check if reference is to CloudFormation pseudo-parameter
-            if(referenceName.StartsWith("AWS::", StringComparison.Ordinal)) {
-                _builder.Log(Error.NameIsNotAResource(node.ReferenceName.Value), node);
-                return;
-            }
-
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
-
-                // confirm reference is to a referenceable declaration
-                switch(referencedDeclaration) {
-                case FunctionDeclaration _:
-                case MacroDeclaration _:
-                case NestedModuleDeclaration _:
-                case ResourceDeclaration resourceDeclaration when (resourceDeclaration.Value == null): // NOTE: only allowed if not a resource reference
-                    node.ReferencedDeclaration = referencedDeclaration;
-                    referencedDeclaration.ReverseDependencies.Add(node);
-                    break;
-                case ParameterDeclaration _:
-                case ImportDeclaration _:
-                case VariableDeclaration _:
-                case GroupDeclaration _:
-                case ConditionDeclaration _:
-                case PackageDeclaration _:
-                case MappingDeclaration _:
-                case ResourceTypeDeclaration _:
-                    _builder.Log(Error.NameMustBeACloudFormationResource(node.ReferenceName.Value), node);
-                    return;
-                default:
-                    throw new ShouldNeverHappenException($"unexpected type: {referencedDeclaration.GetType().Name}");
-                }
-
-                // find all conditions to reach the !GetAtt expression
-                var conditions = FindConditions(node);
-
-                // register reference with referenced declaration
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: conditions, Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: FindConditions(node), Node: node));
+                referencedDeclaration.ReverseDependencies.Add(node);
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -80,61 +65,77 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) {
             var referenceName = node.ReferenceName;
 
-            // check if reference is to CloudFormation pseudo-parameter
-            if(referenceName.Value.StartsWith("AWS::", StringComparison.Ordinal)) {
-                switch(referenceName.Value) {
-                case "AWS::AccountId":
-                case "AWS::NotificationARNs":
-                case "AWS::NoValue":
-                case "AWS::Partition":
-                case "AWS::Region":
-                case "AWS::StackId":
-                case "AWS::StackName":
-                case "AWS::URLSuffix":
-
-                    // nothing to do
-                    return;
-                default:
-                    _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
-                    break;
-                }
-                return;
-            }
-
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
-
-                // confirm reference is to a referenceable declaration
-                switch(referencedDeclaration) {
-                case FunctionDeclaration _:
-                case MacroDeclaration _:
-                case NestedModuleDeclaration _:
-                case ResourceDeclaration resourceDeclaration when (resourceDeclaration.Value == null): // NOTE: only allowed if not a resource reference
-                case ParameterDeclaration _:
-                case ImportDeclaration _:
-                case VariableDeclaration _:
-                case PackageDeclaration _:
-                    node.ReferencedDeclaration = referencedDeclaration;
-                    referencedDeclaration.ReverseDependencies.Add(node);
-                    break;
-                case GroupDeclaration _:
-                case ConditionDeclaration _:
-                case MappingDeclaration _:
-                case ResourceTypeDeclaration _:
-                    _builder.Log(Error.IdentifierReferesToInvalidDeclarationType(node.ReferenceName.Value), node);
-                    return;
-                default:
-                    throw new ShouldNeverHappenException($"unrecognized declaration type: {referencedDeclaration.GetType().Name}");
-                }
-
-                // find all conditions to reach this node
-                var conditions = FindConditions(node);
-
-                // register reference with declaration
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: conditions, Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Node: node));
+                referencedDeclaration.ReverseDependencies.Add(node);
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SubFunctionExpression node) {
+
+            // NOTE (2019-12-07, bjorg): convert all nested !Ref and !GetAtt expressions into
+            //  explit expressions using local !Sub parameters; this allows us track these
+            //  references as dependencies, as well as allowing us later to analyze
+            //  and resolve these references without having to parse the !Sub format string anymore;
+            //  during the optimization phase, the !Ref and !GetAtt expressions are inlined again
+            //  where possible.
+
+            // replace as many ${VAR} occurrences as possible in the format string
+            node.FormatString.Value = ReplaceSubPattern(
+                node.FormatString.Value,
+                (subReferenceName, subAttributeName, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
+
+                    // compute source location based on line/column offsets
+                    var sourceLocation = new Parser.SourceLocation {
+                        FilePath = node.FormatString.SourceLocation.FilePath,
+                        LineNumberStart = node.FormatString.SourceLocation.LineNumberStart + startLineOffset,
+                        LineNumberEnd = node.FormatString.SourceLocation.LineNumberStart + endLineOffset,
+                        ColumnNumberStart = node.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
+                        ColumnNumberEnd = node.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
+                    };
+
+                    // check if reference is to a local !Sub parameter
+                    if(node.Parameters.ContainsKey(subReferenceName)) {
+                        if(subAttributeName != null) {
+                            _builder.Log(Error.SubFunctionParametersCannotUseAttributeNotation(subReferenceName), sourceLocation);
+                        }
+                    } else if(_builder.TryGetItemDeclaration(subReferenceName, out var referencedDeclaration)) {
+
+                        // check if embedded expression is a !Ref or !GetAtt expression
+                        var argName = $"P{node.Parameters.Count}";
+                        AExpression argExpression;
+                        if(subAttributeName == null) {
+
+                            // create explicit !Ref expression
+                            argExpression = new ReferenceFunctionExpression {
+                                SourceLocation = sourceLocation,
+                                ReferenceName = ASyntaxAnalyzer.Literal(subReferenceName)
+                            };
+                        } else {
+
+                            // create explicit !GetAtt expression
+                            argExpression = new GetAttFunctionExpression {
+                                SourceLocation = sourceLocation,
+                                ReferenceName = ASyntaxAnalyzer.Literal(subReferenceName),
+                                AttributeName = ASyntaxAnalyzer.Literal(subAttributeName)
+                            };
+                        }
+
+                        // move the resolved expression into !Sub parameters
+                        node.Parameters[argName] = argExpression;
+                        argExpression.Visit(node.Parameters, new SyntaxHierarchyAnalyzer(_builder));
+
+                        // substitute found value as new argument
+                        return $"${{{argName}}}";
+                    } else {
+                        _builder.Log(Error.UnknownIdentifier(subReferenceName), sourceLocation);
+                    }
+                    return null;
+                }
+            );
         }
 
         public override void VisitStart(ASyntaxNode parent, ConditionExpression node) {
@@ -142,17 +143,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
-
-                // confirm reference is to a condition declaration
-                if(referencedDeclaration is ConditionDeclaration referencedConditionDeclaration) {
-                    node.ReferencedDeclaration = referencedConditionDeclaration;
-                    referencedDeclaration.ReverseDependencies.Add(node);
-
-                    // register reference with declaration
-                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
-                } else {
-                    _builder.Log(Error.IdentifierMustReferToACondition(node.ReferenceName.Value), node);
-                }
+                referencedDeclaration.ReverseDependencies.Add(node);
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -163,17 +155,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
-
-                // confirm reference is to a condition declaration
-                if(referencedDeclaration is MappingDeclaration referencedMappingDeclaration) {
-                    node.ReferencedDeclaration = referencedMappingDeclaration;
-                    referencedDeclaration.ReverseDependencies.Add(node);
-
-                    // register reference with declaration
-                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
-                } else {
-                    _builder.Log(Error.IdentifierMustReferToACondition(referenceName), node);
-                }
+                referencedDeclaration.ReverseDependencies.Add(node);
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(referenceName), node);
             }

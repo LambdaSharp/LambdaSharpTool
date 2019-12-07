@@ -70,6 +70,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression TopLevelKey { get; set; }
         public AExpression SecondLevelKey { get; set; }
         public MappingDeclaration ReferencedDeclaration { get; set; }
+        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -91,6 +92,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression ReferenceName { get; set; }
         public AExpression AttributeName { get; set; }
         public AItemDeclaration ReferencedDeclaration { get; set; }
+        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -309,6 +311,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression ReferenceName { get; set; }
         public AItemDeclaration ReferencedDeclaration { get; set; }
+        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

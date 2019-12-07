@@ -78,7 +78,9 @@ namespace LambdaSharp.Tool.Compiler {
             }
 
             // store properties per-node and per-fullname
-            _fullNameDeclarations.Add(declaration.FullName, declaration);
+            if(!_fullNameDeclarations.TryAdd(declaration.FullName, declaration)) {
+                Log(Error.DuplicateName, declaration);
+            }
 
             // find a valid CloudFormation logical ID
             var baseLogicalId = declaration.FullName.Replace("::", "");
@@ -113,17 +115,20 @@ namespace LambdaSharp.Tool.Compiler {
 
         public void Log(Error error, ASyntaxNode node) {
             if(node == null) {
-                _errorList.Add(error, sourceLocation: null, excact: false);
+                Log(error, sourceLocation: null, excact: false);
             } else if(node.SourceLocation != null) {
-                _errorList.Add(error, node.SourceLocation, excact: true);
+                Log(error, node.SourceLocation, excact: true);
             } else {
                 var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
                 if(nearestNode != null) {
-                    _errorList.Add(error, sourceLocation: nearestNode.SourceLocation, excact: false);
+                    Log(error, sourceLocation: nearestNode.SourceLocation, excact: false);
                 } else {
-                    _errorList.Add(error, sourceLocation: null, excact: false);
+                    Log(error, sourceLocation: null, excact: false);
                 }
             }
         }
+
+        public void Log(Error error, Parser.SourceLocation sourceLocation, bool excact = true)
+            => _errorList.Add(error, sourceLocation, excact);
     }
 }

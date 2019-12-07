@@ -44,6 +44,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Func<string, Error> FunctionExpectsOneParameter = parameter => new Error(0, $"{parameter} expects 1 parameter");
         public static readonly Func<string, Error> FunctionExpectsTwoParameters = parameter => new Error(0, $"{parameter} expects 2 parameters");
         public static readonly Func<string, Error> FunctionExpectsThreeParameters = parameter => new Error(0, $"{parameter} expects 3 parameters");
+        public static readonly Func<string, Error> SubFunctionParametersCannotUseAttributeNotation = parameter => new Error(0, $"cannot use attribute notation on local parameter '{parameter}'");
 
         // TODO: replace with error that shows what is expected
         public static readonly Func<string, Error> FunctionInvalidParameter = parameter => new Error(0, $"invalid parameter for {parameter} function");
@@ -56,7 +57,7 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         #region *** Identifier Validation ***
-        public static readonly Error NameIsReservedAws = new Error(1000, "'AWS' is a reserved name");
+        public static readonly Error NameIsReservedAws = new Error(0, "'AWS' is a reserved name");
         public static readonly Error NameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         #endregion
 
@@ -64,6 +65,9 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
         public static readonly Error MappingDeclarationTopLevelIsMissing = new Error(0, "Mapping declaration is missing top-level mappings");
         public static readonly Error MappingDeclarationSecondLevelIsMissing = new Error(0, "Mapping declaration is missing second-level mappings");
+
+        // TODO: these is an internal error; should it be an exception instead?
+        public static readonly Func<object, Error> UnrecognizedExpression = parameter => new Error(0, $"unrecognized expression: {parameter?.GetType().Name ?? "<null>"}");
         #endregion
 
         #region *** Attribute Validation ***
@@ -100,6 +104,11 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error VersionAttributeInvalid = new Error(0, "'Version' attribute expected to have format: Major.Minor[.Patch]");
         #endregion
 
+        #region *** Reference Validation ***
+        public static readonly Func<string, Error> ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
+        public static readonly Func<string, Error> ReferenceWithAttributeMustBeResource = parameter => new Error(0, $"{parameter} does not support attributes");
+        #endregion
+
         // TODO: keep reviewing errors
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
         public static readonly Error DuplicateName = new Error(0, "duplicate name");
@@ -111,11 +120,11 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error UnsupportedVersionOfDotNetCore = new Error(0, "this version of .NET Core is no longer supported for Lambda functions");
         public static readonly Error UnknownVersionOfDotNetCore = new Error(0, "could not determine runtime from target framework; specify 'Runtime' attribute explicitly");
         public static readonly Error FailedToAutoDetectHandlerInDotNetFunctionProject = new Error(0, "could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
-        public static readonly Func<string, Error> NameIsNotAResource = parameter => new Error(0, $"{parameter} is not a resource");
         public static readonly Func<string, Error> NameMustBeACloudFormationResource = parameter => new Error(0, $"identifier {parameter} must refer to a CloudFormation resource");
         public static readonly Func<string, Error> UnknownIdentifier = parameter => new Error(0, $"unknown identifier {parameter}");
         public static readonly Func<string, Error> IdentifierReferesToInvalidDeclarationType = parameter => new Error(0, $"identifier {parameter} cannot refer to this declaration type");
         public static readonly Func<string, Error> IdentifierMustReferToACondition = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
+        public static readonly Func<string, Error> IdentifierMustReferToAMapping = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
         public static readonly Error HandlerMustBeAFunctionOrSnsTopic = new Error(0, "Handler must reference a Function or AWS::SNS::Topic resource declaration");
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");

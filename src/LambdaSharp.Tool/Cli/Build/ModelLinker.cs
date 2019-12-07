@@ -229,7 +229,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             if(doesNotContainBoundItems) {
 
                                 // capture that progress towards resolving all bound items has been made;
-                                // if ever an iteration does not produces progress, we need to stop; otherwise
+                                // if ever an iteration does not produce progress, we need to stop; otherwise
                                 // we will loop forever
                                 progress = true;
 

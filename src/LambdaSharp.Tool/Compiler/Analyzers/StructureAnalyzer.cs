@@ -147,6 +147,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // check if declaration is a resource reference
             if(node.Value != null) {
 
+                // references should resolved to the resource reference
+                node.ReferenceExpression = node.Value;
+
                 // referenced resource cannot be conditional
                 if(node.If != null) {
                     _builder.Log(Error.IfAttributeRequiresCloudFormationType, node.If);
@@ -161,16 +164,53 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if(node.Value is ListExpression listExpression) {
                     foreach(var arnValue in listExpression.Items) {
                         ValidateARN(arnValue);
+
+                        // add resource permissions per ARN
+                        if(node.Allow != null) {
+                            AddGrant(
+                                name: node.LogicalId,
+                                awsType: node.Type.Value,
+                                reference: arnValue,
+                                allow: node.Allow,
+                                condition: null
+                            );
+                        }
+                    }
+
+                    // default type to 'String'
+                    if(node.Type == null) {
+
+                        // TODO: what's the best type here?
+                        node.Type = Literal("List");
                     }
                 } else {
                     ValidateARN(node.Value);
-                }
 
-                // default type to 'String'
-                if(node.Type == null) {
-                    node.Type = Literal("String");
+                    // add resource permissions per ARN
+                    if(node.Allow != null) {
+                        AddGrant(
+                            name: node.LogicalId,
+                            awsType: node.Type.Value,
+                            reference: node.Value,
+                            allow: node.Allow,
+                            condition: null
+                        );
+                    }
+
+                    // default type to 'String'
+                    if(node.Type == null) {
+                        node.Type = Literal("String");
+                    }
                 }
             } else {
+
+                // set reference expression to declaration itself
+                var refExpression = FnRef(node.FullName);
+                refExpression.ReferencedDeclaration = node;
+                node.ReferenceExpression = refExpression;
+
+                // TODO: there needs to be a better way to do this!
+                refExpression.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
 
                 // CloudFormation resource must have a type
                 if(node.Type == null) {
@@ -291,7 +331,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             // check that all second-level keys have literal expressions
                             foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
                                 if(!(secondLevelEntry.Value is LiteralExpression)) {
-                                    _builder.Log(Error.ValueMustBeAnInteger, secondLevelEntry);
+                                    _builder.Log(Error.ExpectedLiteralValue, secondLevelEntry.Value);
                                 }
                             }
                         } else {
@@ -409,6 +449,102 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
             });
         }
+
+        public override void VisitStart(ASyntaxNode parent, AndConditionExpression node) {
+            AssertIsConditionExpression(node.LeftValue);
+            AssertIsConditionExpression(node.RightValue);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, Base64FunctionExpression node) { }
+
+        public override void VisitStart(ASyntaxNode parent, CidrFunctionExpression node) {
+            AssertIsNotConditionExpression(node.IpBlock);
+            AssertIsNotConditionExpression(node.Count);
+            AssertIsNotConditionExpression(node.CidrBits);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ConditionExpression node) { }
+
+        public override void VisitStart(ASyntaxNode parent, EqualsConditionExpression node) {
+            AssertIsNotConditionExpression(node.LeftValue);
+            AssertIsNotConditionExpression(node.RightValue);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
+            AssertIsNotConditionExpression(node.TopLevelKey);
+            AssertIsNotConditionExpression(node.SecondLevelKey);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
+            AssertIsNotConditionExpression(node.AttributeName);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, GetAZsFunctionExpression node) {
+            AssertIsNotConditionExpression(node.Region);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, IfFunctionExpression node) {
+
+            // NOTE (2019-11-22, bjorg): we allow literal expression, in addition to condition expression for the !If condition
+            if(node.Condition is LiteralExpression literalExpression) {
+
+                // lift literal expression into a !Condition expression
+                node.Condition = new ConditionExpression {
+                    SourceLocation = literalExpression.SourceLocation,
+                    ReferenceName = literalExpression
+                };
+            }
+            AssertIsConditionExpression(node.Condition);
+            AssertIsNotConditionExpression(node.IfTrue);
+            AssertIsNotConditionExpression(node.IfFalse);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ImportValueFunctionExpression node) {
+            AssertIsNotConditionExpression(node.SharedValueToImport);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, JoinFunctionExpression node) {
+            AssertIsNotConditionExpression(node.Values);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ListExpression node) {
+            foreach(var item in node) {
+                AssertIsNotConditionExpression(item);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, LiteralExpression node) { }
+
+        public override void VisitStart(ASyntaxNode parent, NotConditionExpression node) {
+            AssertIsConditionExpression(node.Value);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ObjectExpression node) {
+            foreach(var kv in node) {
+                AssertIsNotConditionExpression(kv.Value);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, OrConditionExpression node) {
+            AssertIsConditionExpression(node.LeftValue);
+            AssertIsConditionExpression(node.RightValue);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) { }
+
+        public override void VisitStart(ASyntaxNode parent, SelectFunctionExpression node) {
+            AssertIsNotConditionExpression(node.Index);
+            AssertIsNotConditionExpression(node.Values);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SplitFunctionExpression node) {
+            AssertIsNotConditionExpression(node.Delimiter);
+            AssertIsNotConditionExpression(node.SourceString);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, SubFunctionExpression node) { }
+
+        public override void VisitStart(ASyntaxNode parent, TransformFunctionExpression node) { }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, AExpression allow) {
             ValidateExpressionIsLiteralOrListOfLiteral(allow);
@@ -567,6 +703,38 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
             } else {
                 _builder.Log(Error.ExpectedLiteralValueOrListOfLiteralValues, expression);
+            }
+        }
+
+        private void AssertIsConditionExpression(AExpression expression) {
+            switch(expression) {
+            case AConditionExpression _:
+
+                // nothing to do
+                break;
+            case AValueExpression _:
+            case AFunctionExpression _:
+                _builder.Log(Error.ExpectedConditionExpression, expression);
+                break;
+            default:
+                _builder.Log(Error.UnrecognizedExpression(expression), expression);
+                break;
+            }
+        }
+
+        private void AssertIsNotConditionExpression(AExpression expression) {
+            switch(expression) {
+            case AConditionExpression _:
+                _builder.Log(Error.ExpectedConditionExpression, expression);
+                break;
+            case AValueExpression _:
+            case AFunctionExpression _:
+
+                // nothing to do
+                break;
+            default:
+                _builder.Log(Error.UnrecognizedExpression(expression), expression);
+                break;
             }
         }
     }

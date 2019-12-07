@@ -216,9 +216,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, ObjectExpression node) { }
-        public void VisitStart(ASyntaxNode parent, ObjectExpression.KeyValuePair node) {
-            InitializeSyntaxNode(parent, node);
-        }
         public void VisitEnd(ASyntaxNode parent, ObjectExpression.KeyValuePair node) { }
         public void VisitStart(ASyntaxNode parent, ListExpression node) {
             InitializeSyntaxNode(parent, node);
@@ -267,6 +264,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 node.FullName = node.LocalName;
             }
 
+            // TODO: we shouldn't always assign this expresion, because it's not always the correct thing to do
             // assign default reference expression
             node.ReferenceExpression = ASyntaxAnalyzer.FnRef(node.FullName);
 

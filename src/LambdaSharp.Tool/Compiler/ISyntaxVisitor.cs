@@ -105,8 +105,6 @@ namespace LambdaSharp.Tool.Compiler {
         void VisitEnd(ASyntaxNode parent, MacroDeclaration node);
         void VisitStart(ASyntaxNode parent, ObjectExpression node);
         void VisitEnd(ASyntaxNode parent, ObjectExpression node);
-        void VisitStart(ASyntaxNode parent, ObjectExpression.KeyValuePair node);
-        void VisitEnd(ASyntaxNode parent, ObjectExpression.KeyValuePair node);
         void VisitStart(ASyntaxNode parent, ListExpression node);
         void VisitEnd(ASyntaxNode parent, ListExpression node);
         void VisitStart(ASyntaxNode parent, LiteralExpression node);

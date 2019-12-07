@@ -30,6 +30,7 @@ namespace LambdaSharp.Tool.Compiler {
     public class NullValueException : Exception {
 
         //--- Constructors ---
+        public NullValueException() { }
         public NullValueException(string message) : base(message) { }
     }
 }

@@ -18,13 +18,16 @@
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
-    public class ConditionExpression : AExpression {
+    public abstract class AConditionExpression : AExpression { }
+
+    public class ConditionExpression : AConditionExpression {
 
         // !Condition STRING
 
         //--- Properties ---
         public LiteralExpression ReferenceName { get; set; }
         public ConditionDeclaration ReferencedDeclaration { get; set; }
+        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -34,7 +37,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class EqualsConditionExpression : AExpression {
+    public class EqualsConditionExpression : AConditionExpression {
 
         // !Equals [ EXPR, EXPR ]
         // NOTE: You can use the following functions in a Fn::Equals function:
@@ -56,7 +59,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class NotConditionExpression : AExpression {
+    public class NotConditionExpression : AConditionExpression {
 
         // parse !Not [ EXPR ]
         // NOTE: You can use the following functions in a Fn::Not function:
@@ -76,7 +79,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class AndConditionExpression : AExpression {
+    public class AndConditionExpression : AConditionExpression {
 
         // !And [ EXPR, EXPR ]
         // NOTE: You can use the following functions in a Fn::And function:
@@ -98,7 +101,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class OrConditionExpression : AExpression {
+    public class OrConditionExpression : AConditionExpression {
 
         // !Or [ EXPR, EXPR ]
         // NOTE: You can use the following functions in a Fn::Or function:

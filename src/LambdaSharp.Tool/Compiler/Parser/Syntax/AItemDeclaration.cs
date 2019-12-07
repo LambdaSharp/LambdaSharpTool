@@ -36,6 +36,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Abstract Properties ---
         public abstract string LocalName { get; }
+        public abstract string CloudFormationType { get; }
 
         //--- Properties ---
         public string FullName {
@@ -141,6 +142,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Parameter.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -191,6 +193,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         public override string LocalName => Import.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -226,6 +229,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         public override string LocalName => Variable.Value;
+        public override string CloudFormationType => null;
+        public AExpression ResolvedExpression { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -251,6 +256,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         public override string LocalName => Group.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -273,6 +279,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression Value { get; set; }
 
         public override string LocalName => Condition.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -319,6 +326,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Resource.Value;
+        public override string CloudFormationType => Type.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -355,6 +363,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression Parameters { get; set; }
 
         public override string LocalName => Nested.Value;
+        public override string CloudFormationType => "AWS::CloudFormation::Stack";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -382,6 +391,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Files { get; set; }
 
         public override string LocalName => Package.Value;
+        public override string CloudFormationType => null;
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
 
@@ -463,6 +473,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Function.Value;
+        public override string CloudFormationType => "AWS::Lambda::Function";
 
         public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
 
@@ -499,6 +510,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression Value { get; set; }
 
         public override string LocalName => Mapping.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -569,6 +581,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<AttributeTypeExpression> Attributes { get; set; } = new List<AttributeTypeExpression>();
 
         public override string LocalName => ResourceType.Value;
+        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -593,6 +606,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Handler { get; set; }
 
         public override string LocalName => Macro.Value;
+        public override string CloudFormationType => "AWS::CloudFormation::Macro";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

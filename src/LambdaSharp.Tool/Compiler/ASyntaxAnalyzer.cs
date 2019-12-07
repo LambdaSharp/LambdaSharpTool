@@ -36,13 +36,29 @@ namespace LambdaSharp.Tool.Compiler {
             AttributeName = Literal(attributeName)
         };
 
+        public static GetAttFunctionExpression FnGetAtt(string referenceName, AExpression attributeName) => new GetAttFunctionExpression {
+            ReferenceName = Literal(referenceName),
+            AttributeName = attributeName ?? throw new ArgumentNullException(nameof(attributeName))
+        };
+
         public static SubFunctionExpression FnSub(string formatString) => new SubFunctionExpression {
             FormatString = Literal(formatString)
         };
 
+        public static SubFunctionExpression FnSub(string formatString, ObjectExpression parameters) => new SubFunctionExpression {
+            FormatString = Literal(formatString),
+            Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters))
+        };
+
         public static SplitFunctionExpression FnSplit(string delimiter, AExpression sourceString) => new SplitFunctionExpression {
             Delimiter = Literal(delimiter),
-            SourceString = sourceString
+            SourceString = sourceString ?? throw new ArgumentNullException(nameof(sourceString))
+        };
+
+        public static FindInMapFunctionExpression FnFindInMap(string mapName, AExpression topLevelKey, AExpression secondLevelKey) => new FindInMapFunctionExpression {
+            MapName = Literal(mapName),
+            TopLevelKey = topLevelKey ?? throw new ArgumentNullException(nameof(topLevelKey)),
+            SecondLevelKey = secondLevelKey ?? throw new ArgumentNullException(nameof(secondLevelKey))
         };
 
         public static IfFunctionExpression FnIf(string condition, AExpression ifTrue, AExpression ifFalse) => new IfFunctionExpression {
