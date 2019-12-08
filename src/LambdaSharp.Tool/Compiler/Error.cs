@@ -22,9 +22,26 @@ using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler {
 
-    public struct Error {
+    public struct Warning : IBuildReportEntry {
 
-        //--- Class Fields ---
+        //--- Constants ---
+        public static readonly Func<string, Warning> ReferenceIsUnreachable = parameter => new Warning(0, $"'{parameter}' is defined but never used");
+
+        //--- Constructors ---
+        public Warning(int code, string message) {
+            Code = code;
+            Message = message ?? throw new ArgumentNullException(nameof(message));
+        }
+
+        //--- Properties ---
+        public int Code { get; private set; }
+        public string Message { get; private set; }
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Warning;
+    }
+
+    public struct Error : IBuildReportEntry {
+
+        //--- Constants ---
         #region *** Internal Errors ***
         public static readonly Func<string, Error> MissingParserDefinition = parameter => new Error(0, $"no parser defined for type '{parameter}'");
         #endregion
@@ -107,6 +124,10 @@ namespace LambdaSharp.Tool.Compiler {
         #region *** Reference Validation ***
         public static readonly Func<string, Error> ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
         public static readonly Func<string, Error> ReferenceWithAttributeMustBeResource = parameter => new Error(0, $"{parameter} does not support attributes");
+        public static readonly Func<string, Error> ReferenceWithCircularDependency = parameter => new Error(0, $"circular dependency on '{parameter}'");
+
+        // TODO: same as 'UnknownIdentifier'?
+        public static readonly Func<string, Error> ReferenceDoesNotExist = parameter => new Error(0, $"unknown reference '{parameter}'");
         #endregion
 
         // TODO: keep reviewing errors
@@ -147,14 +168,15 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
         public static readonly Error EventSource = new Error(0, "");
 
-        //--- Fields ---
-        public readonly int Code;
-        public readonly string Message;
-
         //--- Constructors ---
         public Error(int code, string message) {
             Code = code;
             Message = message ?? throw new ArgumentNullException(nameof(message));
         }
+
+        //--- Properties ---
+        public int Code { get; private set; }
+        public string Message { get; private set; }
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Error;
     }
 }

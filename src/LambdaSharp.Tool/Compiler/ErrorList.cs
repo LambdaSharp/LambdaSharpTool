@@ -21,7 +21,23 @@ using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool.Compiler {
 
-    public class ErrorList {
+    public enum BuildReportEntrySeverity {
+        Info,
+        Warning,
+        Error,
+        Fatal
+    }
+
+    public interface IBuildReportEntry {
+
+        //--- Properties ---
+        int Code { get; }
+        string Message { get; }
+        BuildReportEntrySeverity Severity { get; }
+    }
+
+    // TODO: rename file
+    public class BuilderReport {
 
         //--- Fields ---
         private readonly List<string> _messages = new List<string>();
@@ -30,13 +46,14 @@ namespace LambdaSharp.Tool.Compiler {
         public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---
-        public void Add(Error error, SourceLocation sourceLocation, bool excact) {
+        public void Add(IBuildReportEntry entry, SourceLocation sourceLocation, bool excact) {
+            var label = entry.Severity.ToString().ToUpperInvariant();
             if(sourceLocation == null) {
-                _messages.Add($"ERROR{error.Code}: {error.Message} @ (no location information available)");
+                _messages.Add($"{label}{entry.Code}: {entry.Message} @ (no location information available)");
             } else if(excact) {
-                _messages.Add($"ERROR{error.Code}: {error.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
+                _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
             } else {
-                _messages.Add($"ERROR{error.Code}: {error.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
+                _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
             }
         }
     }

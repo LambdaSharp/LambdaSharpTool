@@ -37,6 +37,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Abstract Properties ---
         public abstract string LocalName { get; }
         public abstract string CloudFormationType { get; }
+        public bool HasCloudFormationType => CloudFormationType != null;
 
         //--- Properties ---
         public string FullName {
@@ -65,14 +66,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         /// <param name="Conditions"></param>
         /// <param name="Node"></param>
         /// <returns></returns>
-        public List<(string ReferenceName, IEnumerable<AExpression> Conditions, ASyntaxNode Node)> Dependencies { get; set; } = new List<(string, IEnumerable<AExpression>, ASyntaxNode)>();
+        public List<(string ReferenceName, IEnumerable<AExpression> Conditions, AExpression Expression)> Dependencies { get; set; } = new List<(string, IEnumerable<AExpression>, AExpression)>();
 
         /// <summary>
         /// List of declarations that depend on this declaration.
         /// </summary>
         /// <typeparam name="ASyntaxNode"></typeparam>
         /// <returns></returns>
-        public List<ASyntaxNode> ReverseDependencies { get; set; } = new List<ASyntaxNode>();
+        public List<AExpression> ReverseDependencies { get; set; } = new List<AExpression>();
 
         //--- Methods ---
         public void AddDeclaration(AItemDeclaration declaration, DoNotCallThisDirectly _) {

@@ -35,6 +35,20 @@ namespace LambdaSharp.Tool.Compiler {
     //  - validate nested expressions (done: ValidateExpressionsVisitor)
     //  - create derivative resources
     //  - resolve all references
+    //  - validate all !GetAtt occurrences (including those inside a !Sub expression)
+    //      - check if this declaration should be typechecked
+    //          - if(foundDeclaration.HasTypeValidation) ...
+    //          - if(foundDeclaration.HasAttribute(literalExpression.Value)) ...
+    //          - LogError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attributeName}'");
+    //  - add optimization phase that simplifies !Sub statements and removed redundant conditional expressions in !If statements
+    //  - the !Ref expression can ONLY reference parameters from within a 'Condition' declaration or
+    //  when nested inside an !If expression.
+    //  - validate if attribute name exists on resource type (unless type checking is disabled for this declration)
+    //  - for !Ref, must know what types of references are legal (Parameters only -or- Resources and Paramaters)
+    //  - register custom resource types for the module
+    //  - detect cycle between custom resource handler and an instance of the custom resource in its handler
+    //  - rename `ItemDeclarations` to `Declarations`
+    //  - rename `ParentItemDeclaration` to `ParentDeclaration`
 
     public enum XRayTracingLevel {
         Disabled,
@@ -50,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Fields ---
         private readonly Dictionary<string, AItemDeclaration> _fullNameDeclarations = new Dictionary<string, AItemDeclaration>();
         private readonly HashSet<string> _logicalIds = new HashSet<string>();
-        private readonly ErrorList _errorList = new ErrorList();
+        private readonly BuilderReport _report = new BuilderReport();
 
         //-- Properties ---
         public string ModuleNamespace { get; set; }
@@ -63,6 +77,7 @@ namespace LambdaSharp.Tool.Compiler {
         public string ModuleFullName => $"{ModuleNamespace}.{ModuleName}";
         public ModuleInfo ModuleInfo => new ModuleInfo(ModuleNamespace, ModuleName, ModuleVersion, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public IEnumerable<AItemDeclaration> ItemDeclarations => _fullNameDeclarations.Values;
+        public bool HasErrors => _report.Messages.Any();
 
         //--- Methods ---
         public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
@@ -113,22 +128,22 @@ namespace LambdaSharp.Tool.Compiler {
 
         public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
 
-        public void Log(Error error, ASyntaxNode node) {
+        public void Log(IBuildReportEntry entry, ASyntaxNode node) {
             if(node == null) {
-                Log(error, sourceLocation: null, excact: false);
+                Log(entry, sourceLocation: null, excact: false);
             } else if(node.SourceLocation != null) {
-                Log(error, node.SourceLocation, excact: true);
+                Log(entry, node.SourceLocation, excact: true);
             } else {
                 var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
                 if(nearestNode != null) {
-                    Log(error, sourceLocation: nearestNode.SourceLocation, excact: false);
+                    Log(entry, sourceLocation: nearestNode.SourceLocation, excact: false);
                 } else {
-                    Log(error, sourceLocation: null, excact: false);
+                    Log(entry, sourceLocation: null, excact: false);
                 }
             }
         }
 
-        public void Log(Error error, Parser.SourceLocation sourceLocation, bool excact = true)
-            => _errorList.Add(error, sourceLocation, excact);
+        public void Log(IBuildReportEntry entry, Parser.SourceLocation sourceLocation, bool excact = true)
+            => _report.Add(entry, sourceLocation, excact);
     }
 }

@@ -45,6 +45,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         //      - LiteralBoolExpression: https://yaml.org/type/bool.html
         //      - LiteralTimestampExpression: https://yaml.org/type/timestamp.html
         //      - no YAML nulls allows: https://yaml.org/type/null.html
+        //  - `cloudformation package`, when given a YAML template, converts even explicit strings to integers when the string begins with a 0 and contains nothing but digits · Issue #2934 · aws/aws-cli · GitHub (https://github.com/aws/aws-cli/issues/2934)
 
         //--- Types ---
         private class SyntaxInfo {
