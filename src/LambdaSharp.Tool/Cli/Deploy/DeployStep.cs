@@ -95,7 +95,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 var existing = updateValidation.ExistingStack;
 
                 // check if existing stack checksum matches template checksum
-                if(!forceDeploy) {
+                if(!forceDeploy && !parameters.Any()) {
                     var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
                     if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
                         Settings.WriteAnsiLine($"=> No changes found to deploy", AnsiTerminal.BrightBlack);
