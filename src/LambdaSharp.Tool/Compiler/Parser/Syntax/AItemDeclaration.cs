@@ -144,6 +144,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public override string LocalName => Parameter.Value;
         public override string CloudFormationType => null;
+        public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -328,6 +329,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public override string LocalName => Resource.Value;
         public override string CloudFormationType => Type.Value;
+        public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -477,6 +479,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public override string CloudFormationType => "AWS::Lambda::Function";
 
         public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
+        public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
+        public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
+        public bool HasHandlerValidation => !HasPragma("no-handler-validation");
+        public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

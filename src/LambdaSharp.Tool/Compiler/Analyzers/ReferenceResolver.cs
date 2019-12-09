@@ -41,7 +41,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private Dictionary<string, AItemDeclaration> _boundDeclarations = new Dictionary<string, AItemDeclaration>();
 
         //--- Constructors ---
-        public ReferenceResolver(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        public ReferenceResolver(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public void Visit() {
@@ -292,7 +292,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // nothing to do
                 break;
             case ListExpression listExpression:
-                for(var i = 0; i < _boundDeclarations.Count; ++i) {
+                for(var i = 0; i < listExpression.Count; ++i) {
                     listExpression[i] = Visit(listExpression[i], visitor);
                 }
                 break;

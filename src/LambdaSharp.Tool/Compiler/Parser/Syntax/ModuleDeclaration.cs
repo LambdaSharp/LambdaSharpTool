@@ -17,6 +17,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
@@ -46,6 +47,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         [SyntaxRequired]
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
+
+        public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

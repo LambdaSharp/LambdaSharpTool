@@ -87,6 +87,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
+            // TODO:
+            //  - convert declaration to cloudformation resources
+            //  - generate properties for declarations (e.g. function decl)
+
             // analyze references in AST
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(moduleBuilder));
             if(HasErrors) {
