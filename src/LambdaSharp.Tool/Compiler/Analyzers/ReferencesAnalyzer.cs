@@ -55,7 +55,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: FindConditions(node), Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: FindConditions(node), Expression: node));
                 referencedDeclaration.ReverseDependencies.Add(node);
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
@@ -67,7 +67,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
                 referencedDeclaration.ReverseDependencies.Add(node);
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
@@ -144,7 +144,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
                 referencedDeclaration.ReverseDependencies.Add(node);
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
                 referencedDeclaration.ReverseDependencies.Add(node);
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Node: node));
+                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
             } else {
                 _builder.Log(Error.UnknownIdentifier(referenceName), node);
             }
