@@ -33,6 +33,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static readonly string _decryptSecretFunctionCode;
         private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static Regex AlphanumericRegex = new Regex("^[0-9a-zA-Z]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Constructor ---
         static StructureAnalyzer() {
@@ -322,16 +323,39 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if object expression is valid (must have first- and second-level keys)
             if(node.Value.Items.Any()) {
+                var topLevelKeys = new HashSet<string>();
+                var secondLevelKeys = new HashSet<string>();
 
                 // check that all first-level keys have object expressions
                 foreach(var topLevelEntry in node.Value.Items) {
+
+                    // validate top-level key
+                    if(!AlphanumericRegex.IsMatch(topLevelEntry.Key.Value)) {
+                        _builder.Log(Error.MappingKeyMustBeAlphanumeric, topLevelEntry.Key);
+                    }
+                    if(!topLevelKeys.Add(topLevelEntry.Key.Value)) {
+                        _builder.Log(Error.MappingDuplicateKey, topLevelEntry.Key);
+                    }
+
+                    // validate top-level value
                     if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
                         if(secondLevelObjectExpression.Items.Any()) {
+                            secondLevelKeys.Clear();
 
                             // check that all second-level keys have literal expressions
                             foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
-                                if(!(secondLevelEntry.Value is LiteralExpression)) {
-                                    _builder.Log(Error.ExpectedLiteralValue, secondLevelEntry.Value);
+
+                                // validate top-level key
+                                if(!AlphanumericRegex.IsMatch(secondLevelEntry.Key.Value)) {
+                                    _builder.Log(Error.MappingKeyMustBeAlphanumeric, secondLevelEntry.Key);
+                                }
+                                if(!secondLevelKeys.Add(secondLevelEntry.Key.Value)) {
+                                    _builder.Log(Error.MappingDuplicateKey, secondLevelEntry.Key);
+                                }
+
+                                // validate second-level value
+                                if(!IsListOrLiteral(secondLevelEntry.Value)) {
+                                    _builder.Log(Error.MappingExpectedListOrLiteral, secondLevelEntry.Value);
                                 }
                             }
                         } else {
@@ -344,6 +368,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.MappingDeclarationTopLevelIsMissing, node);
             }
+
+            // local functions
+            bool IsListOrLiteral(AExpression value)
+                => (value is LiteralExpression)
+                    || ((value is ListExpression listExpression) && listExpression.All(item => IsListOrLiteral(item)));
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {

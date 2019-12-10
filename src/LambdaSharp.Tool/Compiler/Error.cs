@@ -80,11 +80,17 @@ namespace LambdaSharp.Tool.Compiler {
 
         #region *** Structural Validation ***
         public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
-        public static readonly Error MappingDeclarationTopLevelIsMissing = new Error(0, "Mapping declaration is missing top-level mappings");
-        public static readonly Error MappingDeclarationSecondLevelIsMissing = new Error(0, "Mapping declaration is missing second-level mappings");
 
         // TODO: these is an internal error; should it be an exception instead?
         public static readonly Func<object, Error> UnrecognizedExpression = parameter => new Error(0, $"unrecognized expression: {parameter?.GetType().Name ?? "<null>"}");
+        #endregion
+
+        #region *** Mapping Validation ***
+        public static readonly Error MappingDeclarationTopLevelIsMissing = new Error(0, "Mapping declaration is missing top-level mappings");
+        public static readonly Error MappingDeclarationSecondLevelIsMissing = new Error(0, "Mapping declaration is missing second-level mappings");
+        public static readonly Error MappingKeyMustBeAlphanumeric = new Error(0, "key must be alphanumeric");
+        public static readonly Error MappingDuplicateKey = new Error(0, "duplicate key");
+        public static readonly Error MappingExpectedListOrLiteral = new Error(0, "expected list expression or literal value");
         #endregion
 
         #region *** Attribute Validation ***
