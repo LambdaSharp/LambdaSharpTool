@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AD39C23EF11002A787F265B6AF35D824"
+      "Default": "5CB2FFCE5503768D2627F24ED3725B8B"
     }
   },
   "Resources": {
@@ -1041,7 +1041,7 @@
           "DestinationArn": {
             "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
           },
-          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\",\"status\":\"$context.status\"}"
+          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\"}"
         },
         "ApiId": {
           "Ref": "ModuleWebSocket"
@@ -1073,10 +1073,10 @@
       "Value": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "AD39C23EF11002A787F265B6AF35D824"
+      "Value": "5CB2FFCE5503768D2627F24ED3725B8B"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.4"
+      "Value": "0.7.0.6"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1305,7 +1305,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "AD39C23EF11002A787F265B6AF35D824",
+      "TemplateChecksum": "5CB2FFCE5503768D2627F24ED3725B8B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

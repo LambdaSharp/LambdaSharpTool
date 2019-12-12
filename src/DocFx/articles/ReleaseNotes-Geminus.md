@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.5) - 2019-10-25
+# LambdaSharp "Geminus" Release (v0.7.0.6) - 2019-12-12
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,19 +180,18 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
-### (v0.7.0.6) - TBD
+### (v0.7.0.6) - 2019-12-12
 
 #### New Features
 
 * LambdaSharp CLI
-    * `lash init` now prompts and creates a default AWS profile when none exists.
+    * `lash init` now prompts to create a default AWS profile when none exists.
 
 #### Fixes
 
 * LambdaSharp CLI
-    * Fixed an issue where a stack update was skipped when the only change was in the parameters.
+    * Fixed an issue where a stack update was skipped when only the parameter values changed.
     * Fixed an issue in the WebSocket logging configuration.
-
 
 ### (v0.7.0.5) - 2019-10-25
 
