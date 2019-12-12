@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -37,15 +38,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
     public sealed class LambdaSharpParser {
 
         // TODO:
-        //  - create additional literal expression classes
-        //      - ALiteralExpression
-        //      - LiteralStringExpression
-        //      - LiteralIntegerExpression: https://yaml.org/type/int.html
-        //      - LiteralFloatExpression: https://yaml.org/type/float.html
-        //      - LiteralBoolExpression: https://yaml.org/type/bool.html
-        //      - LiteralTimestampExpression: https://yaml.org/type/timestamp.html
-        //      - no YAML nulls allows: https://yaml.org/type/null.html
         //  - `cloudformation package`, when given a YAML template, converts even explicit strings to integers when the string begins with a 0 and contains nothing but digits · Issue #2934 · aws/aws-cli · GitHub (https://github.com/aws/aws-cli/issues/2934)
+        //  - 'null' literal can also be used where keys are allowed! (e.g. ~: foo)
 
         //--- Types ---
         private class SyntaxInfo {
@@ -412,11 +406,251 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 }
                 MoveNext();
 
-                // parse values in sequence
+                // parse value
+                string value;
+                LiteralType type;
+                switch(scalar.Style) {
+                case ScalarStyle.Plain:
+                    switch(scalar.Value) {
+
+                    // null literal: https://yaml.org/type/null.html
+                    case "~":
+                    case "null":
+                    case "Null":
+                    case "NULL":
+                    case "":
+
+                        // TODO: 'null' is not allows in CloudFormation; how should we react?
+                        value = "";
+                        type = LiteralType.Null;
+                        break;
+
+                    // bool (true) literal: https://yaml.org/type/bool.html
+                    case "y":
+                    case "Y":
+                    case "yes":
+                    case "Yes":
+                    case "YES":
+                    case "true":
+                    case "True":
+                    case "TRUE":
+                    case "on":
+                    case "On":
+                    case "ON":
+                        value = "true";
+                        type = LiteralType.Bool;
+                        break;
+
+                    // bool (false) literal: https://yaml.org/type/bool.html
+                    case "n":
+                    case "N":
+                    case "no":
+                    case "No":
+                    case "NO":
+                    case "false":
+                    case "False":
+                    case "FALSE":
+                    case "off":
+                    case "Off":
+                    case "OFF":
+                        value = "false";
+                        type = LiteralType.Bool;
+                        break;
+                    default:
+                        if(TryParseYamlInteger(scalar.Value, out var integerLiteral)) {
+                            value = integerLiteral;
+                            type = LiteralType.Integer;
+                        } else if(TryParseYamlFloat(scalar.Value, out var floatLiteral)) {
+                            value = floatLiteral.ToString();
+                            type = LiteralType.Float;
+                        } else if(DateTimeOffset.TryParseExact(scalar.Value, "yyyy-MM-dd", formatProvider: null, DateTimeStyles.AssumeUniversal, out var dateTimeLiteral)) {
+
+                            // NOTE (2019-12-12, bjorg): timestamp literal: https://yaml.org/type/timestamp.html
+                            //  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] # (ymd)
+                            value = dateTimeLiteral.ToString();
+                            type = LiteralType.Timestamp;
+                        } else if(DateTimeOffset.TryParse(scalar.Value, formatProvider: null, DateTimeStyles.AssumeUniversal, out dateTimeLiteral)) {
+
+                            // NOTE (2019-12-12, bjorg): timestamp literal: https://yaml.org/type/timestamp.html
+                            //  [0-9][0-9][0-9][0-9] # (year)
+                            //   -[0-9][0-9]? # (month)
+                            //   -[0-9][0-9]? # (day)
+                            //   ([Tt]|[ \t]+)[0-9][0-9]? # (hour)
+                            //   :[0-9][0-9] # (minute)
+                            //   :[0-9][0-9] # (second)
+                            //   (\.[0-9]*)? # (fraction)
+                            //   (([ \t]*)Z|[-+][0-9][0-9]?(:[0-9][0-9])?)? # (time zone)
+                            value = dateTimeLiteral.ToUniversalTime().ToString();
+                            type = LiteralType.Timestamp;
+                        } else {
+
+                            // always fallback to string literal
+                            value = scalar.Value;
+                            type = LiteralType.String;
+                        }
+                        break;
+                    }
+                    break;
+                case ScalarStyle.DoubleQuoted:
+                case ScalarStyle.SingleQuoted:
+                case ScalarStyle.Folded:
+                case ScalarStyle.Literal:
+
+                    // all other scalar styles are always strings
+                    value = scalar.Value;
+                    type = LiteralType.String;
+                    break;
+                default:
+                    throw new ShouldNeverHappenException($"unexpected scalar style: {scalar.Style} ({(int)scalar.Style})");
+                }
                 return new LiteralExpression {
                     SourceLocation = Location(filePath, scalar),
-                    Value = scalar.Value
+                    Value = value,
+                    Type = type
                 };
+
+                // local functions
+                bool TryParseYamlInteger(string value, out string number) {
+
+                    // NOTE (2019-12-10, bjorg): integer literal: https://yaml.org/type/int.html
+                    //  [-+]?0b[0-1_]+ # (base 2)
+                    //  |[-+]?0[0-7_]+ # (base 8)
+                    //  |[-+]?(0|[1-9][0-9_]*) # (base 10)
+                    //  |[-+]?0x[0-9a-fA-F_]+ # (base 16)
+                    //  |[-+]?[1-9][0-9_]*(:[0-5]?[0-9])+ # (base 60)
+                    var index = 0;
+                    var negative = false;
+                    var radix = 10;
+                    number = null;
+
+                    // detect leading sign
+                    if(value[0] == '-') {
+                        ++index;
+                        negative = true;
+                    } else if(value[0] == '+') {
+                        ++index;
+                    }
+                    if(index == value.Length) {
+                        return false;
+                    }
+
+                    // detect base selector
+                    if(string.Compare(value, index, "0b", 0, 2, StringComparison.Ordinal) == 0) {
+                        radix = 2;
+                        index += 2;
+                    } else if(string.Compare(value, index, "0x", 0, 2, StringComparison.Ordinal) == 0) {
+                        radix = 16;
+                        index += 2;
+                    } else if(value[index] == '0') {
+                        radix = 8;
+                        ++index;
+
+                        // special case where we only have a single 0 as number
+                        if(index == value.Length) {
+                            number = "0";
+                            return true;
+                        }
+                    }
+                    if(index == value.Length) {
+                        return false;
+                    }
+
+                    // compute result
+                    ulong result;
+                    if(radix == 10) {
+                        result = 0UL;
+
+                        // could be decimal or base 60 (sexagesimal)
+                        var first = true;
+                        foreach(var chunk in value.Substring(index).Split(':')) {
+                            result *= 60UL;
+                            if(!ulong.TryParse(chunk.Replace("_", ""), out var part)) {
+                                return false;
+                            }
+
+                            // trailing chunks must be less than 60
+                            if(!first && (part >= 60)) {
+                                return false;
+                            }
+                            result += part;
+                            first = false;
+                        }
+                    } else {
+                        try {
+                            result = Convert.ToUInt64(value.Substring(index).Replace("_", "").ToString(), radix);
+                        } catch {
+                            return false;
+                        }
+                    }
+
+                    // render number as signed integer
+                    if(negative) {
+                        number = "-" + result.ToString();
+                    } else {
+                        number = result.ToString();
+                    }
+                    return true;
+                }
+
+                bool TryParseYamlFloat(string value, out double number) {
+
+                    // NOTE (2019-12-12, bjorg): float literal: https://yaml.org/type/float.html
+                    //  [-+]?([0-9][0-9_]*)?\.[0-9.]*([eE][-+][0-9]+)? (base 10)
+                    //  |[-+]?[0-9][0-9_]*(:[0-5]?[0-9])+\.[0-9_]* (base 60)
+                    //  |[-+]?\.(inf|Inf|INF) # (infinity)
+                    //  |\.(nan|NaN|NAN) # (not a number)
+
+                    switch(value) {
+                    case "-.inf":
+                    case "-.Inf":
+                    case "-.INF":
+                        number = double.NegativeInfinity;
+                        break;
+                    case "+.inf":
+                    case "+.Inf":
+                    case "+.INF":
+                    case ".inf":
+                    case ".Inf":
+                    case ".INF":
+                        number = double.PositiveInfinity;
+                        break;
+                    case ".nan":
+                    case ".NaN":
+                    case ".NAN":
+                        number = double.NaN;
+                        break;
+                    default:
+                        number = 0;
+
+                        // could be decimal or base 60 (sexagesimal)
+                        var values = value.Split(':');
+                        for(var i = 0; i < values.Length; ++i) {
+                            number *= 60.0;
+
+                            // all chunks must be integers, except the last chunk can be a floating-point value
+                            double chunkValue;
+                            if(i != (values.Length - 1)) {
+                                if(!long.TryParse(values[i].Replace("_", ""), out var part)) {
+                                    return false;
+                                }
+                                chunkValue = part;
+                            } else {
+                                if(!double.TryParse(values[i].Replace("_", ""), out var part)) {
+                                    return false;
+                                }
+                                chunkValue = part;
+                            }
+
+                            // trailing chunks must be less than 60
+                            if((i > 0) && (chunkValue >= 60)) {
+                                return false;
+                            }
+                            number += chunkValue;
+                        }
+                        break;
+                    }
+                    return true;
+                }
             }
 
             AExpression ConvertFunction(string tag, AExpression value) {

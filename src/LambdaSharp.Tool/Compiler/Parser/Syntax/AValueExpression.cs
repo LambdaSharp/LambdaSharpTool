@@ -119,10 +119,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         IEnumerator<AExpression> IEnumerable<AExpression>.GetEnumerator() => Items.GetEnumerator();
     }
 
+    public enum LiteralType {
+        String,
+        Integer,
+        Float,
+        Bool,
+        Timestamp,
+        Null
+    }
+
     public class LiteralExpression : AValueExpression {
 
         //--- Properties ---
         public string Value { get; set; }
+        public LiteralType Type { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

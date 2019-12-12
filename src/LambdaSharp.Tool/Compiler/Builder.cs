@@ -42,7 +42,7 @@ namespace LambdaSharp.Tool.Compiler {
     //          - LogError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attributeName}'");
     //  - add optimization phase that simplifies !Sub statements and removed redundant conditional expressions in !If statements
     //  - the !Ref expression can ONLY reference parameters from within a 'Condition' declaration or
-    //  when nested inside an !If expression.
+    //      when nested inside an !If expression.
     //  - validate if attribute name exists on resource type (unless type checking is disabled for this declration)
     //  - for !Ref, must know what types of references are legal (Parameters only -or- Resources and Paramaters)
     //  - register custom resource types for the module
