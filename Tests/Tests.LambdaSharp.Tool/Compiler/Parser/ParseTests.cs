@@ -110,8 +110,27 @@ Version: 1.0
 Description: ""this is a description""
 Items:
     - Bool: true
-    - Int: 123
+    - Int: 0123
     - Float: 123.456
+    - String: |
+        This entire block of text will be the value of the 'literal_block' key,
+        with line breaks being preserved.
+
+        The literal continues until de-dented, and the leading indentation is
+        stripped.
+
+            Any lines that are 'more-indented' keep the rest of their indentation -
+            these lines will be indented by 4 spaces.
+    - String: >
+        This entire block of text will be the value of 'folded_style', but this
+        time, all newlines will be replaced with a single space.
+
+        Blank lines, like above, are converted to a newline character.
+
+            'More-indented' lines keep their newlines, too -
+            this text will appear over two lines.
+    - String: 'a string with '' a single quote'
+    - String: ""a string with an escaped charater: \u00B2""
     - Func: !Sub ""${Foo}.bar""
     - Func2:
         Fn::Ref: ABC
