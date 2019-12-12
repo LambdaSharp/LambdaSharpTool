@@ -61,6 +61,33 @@ namespace LambdaSharp.Tool.Cli {
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 cmd.OnExecute(async () => {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
+
+                    // check if .aws/credentials file needs to be created
+                    if(!File.Exists(CredentialsFilePath)) {
+                        var tmpSettings = new Settings();
+
+                        // prompt for AWS credentials information
+                        Console.WriteLine();
+                        tmpSettings.PromptLabel("Create AWS profile");
+                        var accessKey = tmpSettings.PromptString("Enter the AWS Access Key ID");
+                        var secretAccessKey = tmpSettings.PromptString("Enter the AWS Secret Access Key");
+                        var region = tmpSettings.PromptString("Enter the AWS region", "us-east-1");
+
+                        // create credentials file
+                        var credentialsTemplate = ReadResource("credentials.txt", new Dictionary<string, string> {
+                            ["REGION"] = region,
+                            ["ACCESSKEY"] = accessKey,
+                            ["SECRETACCESSKEY"] = secretAccessKey
+                        });
+                        try {
+                            File.WriteAllText(CredentialsFilePath, credentialsTemplate);
+                        } catch {
+                            LogError("unable to create .aws/credentials file");
+                            return;
+                        }
+                    }
+
+                    // initialize settings
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;

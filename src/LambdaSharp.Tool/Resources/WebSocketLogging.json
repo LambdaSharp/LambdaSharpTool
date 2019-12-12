@@ -13,6 +13,5 @@
     "apiId": "$context.apiId",
     "stage": "$context.stage",
     "connectionId": "$context.connectionId",
-    "route": "$context.routeKey",
-    "status": "$context.status"
+    "route": "$context.routeKey"
 }
