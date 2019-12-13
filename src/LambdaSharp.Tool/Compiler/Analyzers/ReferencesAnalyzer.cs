@@ -105,7 +105,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     } else if(_builder.TryGetItemDeclaration(subReferenceName, out var referencedDeclaration)) {
 
                         // check if embedded expression is a !Ref or !GetAtt expression
-                        var argName = $"P{node.Parameters.Count}";
                         AExpression argExpression;
                         if(subAttributeName == null) {
 
@@ -125,6 +124,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         }
 
                         // move the resolved expression into !Sub parameters
+                        var argName = $"P{node.Parameters.Count}";
                         node.Parameters[argName] = argExpression;
                         argExpression.Visit(node.Parameters, new SyntaxHierarchyAnalyzer(_builder));
 
