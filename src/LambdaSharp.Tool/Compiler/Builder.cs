@@ -49,6 +49,12 @@ namespace LambdaSharp.Tool.Compiler {
     //  - detect cycle between custom resource handler and an instance of the custom resource in its handler
     //  - rename `ItemDeclarations` to `Declarations`
     //  - rename `ParentItemDeclaration` to `ParentDeclaration`
+    //  - CloudFormation expression type validation
+    //  - tests
+    //      - !If with expression in condition
+    //      - !If with literal in condition
+    //      - condition declaration with reference to non-parameter declaration
+    //      - circular dependencies
 
     public enum XRayTracingLevel {
         Disabled,
@@ -67,6 +73,7 @@ namespace LambdaSharp.Tool.Compiler {
         private readonly BuilderReport _report = new BuilderReport();
 
         //-- Properties ---
+        public ModuleDeclaration ModuleDeclaration { get; set; }
         public string ModuleNamespace { get; set; }
         public string ModuleName { get; set; }
         public VersionInfo ModuleVersion { get; set; }

@@ -73,6 +73,10 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error TransformFunctionExpectsMapParametersParameter = new Error(0, "!Transform function requires 'Parameters' key to be a map");
         #endregion
 
+        #region *** !GetAtt Validation ***
+        public static readonly Error GetAttCannotBeUsedInAConditionDeclaration = new Error(0, "condition cannot use !GetAtt function");
+        #endregion
+
         #region *** Identifier Validation ***
         public static readonly Error NameIsReservedAws = new Error(0, "'AWS' is a reserved name");
         public static readonly Error NameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
@@ -82,7 +86,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
 
         // TODO: these is an internal error; should it be an exception instead?
-        public static readonly Func<object, Error> UnrecognizedExpression = parameter => new Error(0, $"unrecognized expression: {parameter?.GetType().Name ?? "<null>"}");
+        public static readonly Func<object, Error> UnrecognizedExpressionType = parameter => new Error(0, $"unrecognized expression: {parameter?.GetType().Name ?? "<null>"}");
         #endregion
 
         #region *** Mapping Validation ***
@@ -129,6 +133,7 @@ namespace LambdaSharp.Tool.Compiler {
 
         #region *** Reference Validation ***
         public static readonly Func<string, Error> ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
+        public static readonly Func<string, Error> ReferenceMustBeParameter = parameter => new Error(0, $"{parameter} must be a parameter");
         public static readonly Func<string, Error> ReferenceWithAttributeMustBeResource = parameter => new Error(0, $"{parameter} does not support attributes");
         public static readonly Func<string, Error> ReferenceWithCircularDependency = parameter => new Error(0, $"circular dependency on '{parameter}'");
 
@@ -150,11 +155,12 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Func<string, Error> NameMustBeACloudFormationResource = parameter => new Error(0, $"identifier {parameter} must refer to a CloudFormation resource");
         public static readonly Func<string, Error> UnknownIdentifier = parameter => new Error(0, $"unknown identifier {parameter}");
         public static readonly Func<string, Error> IdentifierReferesToInvalidDeclarationType = parameter => new Error(0, $"identifier {parameter} cannot refer to this declaration type");
-        public static readonly Func<string, Error> IdentifierMustReferToACondition = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
-        public static readonly Func<string, Error> IdentifierMustReferToAMapping = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
+        public static readonly Func<string, Error> IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
+        public static readonly Func<string, Error> IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
         public static readonly Error HandlerMustBeAFunctionOrSnsTopic = new Error(0, "Handler must reference a Function or AWS::SNS::Topic resource declaration");
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
+        public static readonly Error ExpectedLiteralStringExpression = new Error(0, "expected literal string expression");
         public static readonly Error ApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
         public static readonly Error ApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported integration type");
         public static readonly Func<string, Error> ApiEventSourceInvalidGreedyParameterMustBeLast = parameter => new Error(0, $"the {parameter} parameter must be the last segment in the path");

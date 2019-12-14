@@ -138,7 +138,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // check if lambdasharp DeadLetterQueue needs to be set
             if(
                 !node.Properties.ContainsKey("DeadLetterConfig")
-                && HasDeadLetterQueue(node)
+                && node.HasDeadLetterQueue
                 && _builder.TryGetItemDeclaration("Module::DeadLetterQueue", out _)
             ) {
 
@@ -232,7 +232,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // TODO: validate properties
 
             // check if function must be registered
-            if(HasModuleRegistration(node.ParentModuleDeclaration) && HasFunctionRegistration(node)) {
+            if(node.ParentModuleDeclaration.HasModuleRegistration && node.HasFunctionRegistration) {
 
                 // create function registration
                 AddDeclaration(node, new ResourceDeclaration {

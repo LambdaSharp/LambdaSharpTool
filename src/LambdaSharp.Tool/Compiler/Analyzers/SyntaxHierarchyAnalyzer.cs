@@ -20,6 +20,10 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
+    /// <summary>
+    /// This analyzer is responsible for linking all tree nodes to their parents, inheriting name and location,
+    /// and ensuring that all declarations are registered with the builder.
+    /// </summary>
     public class SyntaxHierarchyAnalyzer : ISyntaxVisitor {
 
         //--- Fields ---

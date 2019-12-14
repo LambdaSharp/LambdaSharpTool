@@ -178,7 +178,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         }
                     }
 
-                    // default type to 'String'
+                    // default type to 'List'
                     if(node.Type == null) {
 
                         // TODO: what's the best type here?
@@ -487,34 +487,34 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, Base64FunctionExpression node) { }
 
         public override void VisitStart(ASyntaxNode parent, CidrFunctionExpression node) {
-            AssertIsNotConditionExpression(node.IpBlock);
-            AssertIsNotConditionExpression(node.Count);
-            AssertIsNotConditionExpression(node.CidrBits);
+            AssertIsValueExpression(node.IpBlock);
+            AssertIsValueExpression(node.Count);
+            AssertIsValueExpression(node.CidrBits);
         }
 
         public override void VisitStart(ASyntaxNode parent, ConditionExpression node) { }
 
         public override void VisitStart(ASyntaxNode parent, EqualsConditionExpression node) {
-            AssertIsNotConditionExpression(node.LeftValue);
-            AssertIsNotConditionExpression(node.RightValue);
+            AssertIsValueExpression(node.LeftValue);
+            AssertIsValueExpression(node.RightValue);
         }
 
         public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
-            AssertIsNotConditionExpression(node.TopLevelKey);
-            AssertIsNotConditionExpression(node.SecondLevelKey);
+            AssertIsValueExpression(node.TopLevelKey);
+            AssertIsValueExpression(node.SecondLevelKey);
         }
 
         public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
-            AssertIsNotConditionExpression(node.AttributeName);
+            AssertIsValueExpression(node.AttributeName);
         }
 
         public override void VisitStart(ASyntaxNode parent, GetAZsFunctionExpression node) {
-            AssertIsNotConditionExpression(node.Region);
+            AssertIsValueExpression(node.Region);
         }
 
         public override void VisitStart(ASyntaxNode parent, IfFunctionExpression node) {
 
-            // NOTE (2019-11-22, bjorg): we allow literal expression, in addition to condition expression for the !If condition
+            // NOTE (2019-11-22, bjorg): we allow literal expression, in addition to condition expression, for the !If condition
             if(node.Condition is LiteralExpression literalExpression) {
 
                 // lift literal expression into a !Condition expression
@@ -522,23 +522,44 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     SourceLocation = literalExpression.SourceLocation,
                     ReferenceName = literalExpression
                 };
+                node.Condition.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
+            } else if((node.Condition is AConditionExpression) && !(node.Condition is ConditionExpression)) {
+
+                // convert inline conditional expression into a reference to a conditional declaration
+                string conditionName = null;
+                for(var i = 0; ; ++i) {
+                    conditionName = $"IfExpr{i}";
+                    if(!_builder.TryGetItemDeclaration($"{node.ParentItemDeclaration.FullName}::{conditionName}", out var _)) {
+                        break;
+                    }
+                }
+                var condition = AddDeclaration(node.ParentItemDeclaration, new ConditionDeclaration {
+                    Condition = Literal(conditionName),
+                    Value = node.Condition
+                });
+                node.Condition = new ConditionExpression {
+                    SourceLocation = node.Condition.SourceLocation,
+                    ReferenceName = Literal(condition.FullName)
+                };
+                node.Condition.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
             }
             AssertIsConditionExpression(node.Condition);
-            AssertIsNotConditionExpression(node.IfTrue);
-            AssertIsNotConditionExpression(node.IfFalse);
+            AssertIsValueExpression(node.IfTrue);
+            AssertIsValueExpression(node.IfFalse);
         }
 
         public override void VisitStart(ASyntaxNode parent, ImportValueFunctionExpression node) {
-            AssertIsNotConditionExpression(node.SharedValueToImport);
+            AssertIsValueExpression(node.SharedValueToImport);
         }
 
         public override void VisitStart(ASyntaxNode parent, JoinFunctionExpression node) {
-            AssertIsNotConditionExpression(node.Values);
+            AssertIsLiteralString(node.Separator);
+            AssertIsValueExpression(node.Values);
         }
 
         public override void VisitStart(ASyntaxNode parent, ListExpression node) {
             foreach(var item in node) {
-                AssertIsNotConditionExpression(item);
+                AssertIsValueExpression(item);
             }
         }
 
@@ -550,7 +571,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ObjectExpression node) {
             foreach(var kv in node) {
-                AssertIsNotConditionExpression(kv.Value);
+                AssertIsValueExpression(kv.Value);
             }
         }
 
@@ -562,13 +583,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) { }
 
         public override void VisitStart(ASyntaxNode parent, SelectFunctionExpression node) {
-            AssertIsNotConditionExpression(node.Index);
-            AssertIsNotConditionExpression(node.Values);
+            AssertIsValueExpression(node.Index);
+            AssertIsValueExpression(node.Values);
         }
 
         public override void VisitStart(ASyntaxNode parent, SplitFunctionExpression node) {
-            AssertIsNotConditionExpression(node.Delimiter);
-            AssertIsNotConditionExpression(node.SourceString);
+            AssertIsLiteralString(node.Delimiter);
+            AssertIsValueExpression(node.SourceString);
         }
 
         public override void VisitStart(ASyntaxNode parent, SubFunctionExpression node) { }
@@ -690,7 +711,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 condition = null;
                 return true;
             }
-            if(HasLambdaSharpDependencies(moduleDeclaration)) {
+            if(moduleDeclaration.HasLambdaSharpDependencies) {
                 condition = FnCondition("UseCoreServices");
                 variable = FnIf("UseCoreServices", FnRef($"LambdaSharp::{name}"), FnRef("AWS::NoValue"));
                 return true;
@@ -702,17 +723,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
-
-        private bool HasPragma(ModuleDeclaration moduleDeclaration, string pragma)
-            =>  moduleDeclaration.Pragmas.Items.Any(value => (value is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
-
-        private bool HasPragma(FunctionDeclaration functionDeclaration, string pragma)
-            =>  functionDeclaration.Pragmas.Items.Any(value => (value is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
-
-        private bool HasLambdaSharpDependencies(ModuleDeclaration moduleDeclaration) => !HasPragma(moduleDeclaration, "no-lambdasharp-dependencies");
-        private bool HasModuleRegistration(ModuleDeclaration moduleDeclaration) => !HasPragma(moduleDeclaration, "no-module-registration");
-        private bool HasFunctionRegistration(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-function-registration");
-        private bool HasDeadLetterQueue(FunctionDeclaration functionDeclaration) => !HasPragma(functionDeclaration, "no-dead-letter-queue");
 
         private void ValidateExpressionIsLiteralOrListOfLiteral(AExpression expression) {
 
@@ -746,12 +756,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 _builder.Log(Error.ExpectedConditionExpression, expression);
                 break;
             default:
-                _builder.Log(Error.UnrecognizedExpression(expression), expression);
+                _builder.Log(Error.UnrecognizedExpressionType(expression), expression);
                 break;
             }
         }
 
-        private void AssertIsNotConditionExpression(AExpression expression) {
+        private void AssertIsValueExpression(AExpression expression) {
             switch(expression) {
             case AConditionExpression _:
                 _builder.Log(Error.ExpectedConditionExpression, expression);
@@ -762,8 +772,14 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // nothing to do
                 break;
             default:
-                _builder.Log(Error.UnrecognizedExpression(expression), expression);
+                _builder.Log(Error.UnrecognizedExpressionType(expression), expression);
                 break;
+            }
+        }
+
+        private void AssertIsLiteralString(AExpression expression) {
+            if(!(expression is LiteralExpression literalExpression) || literalExpression.Type != LiteralType.String) {
+                _builder.Log(Error.ExpectedLiteralStringExpression, expression);
             }
         }
     }

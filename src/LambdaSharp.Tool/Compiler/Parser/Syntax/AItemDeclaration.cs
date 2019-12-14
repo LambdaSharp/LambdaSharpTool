@@ -30,7 +30,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public struct DoNotCallThisDirectly { }
 
         //--- Fields ---
-        private List<AItemDeclaration> _declarations;
+        private List<AItemDeclaration> _internalDeclarations;
         private string _fullName;
         private string _logicalId;
 
@@ -52,7 +52,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public LiteralExpression Description { get; set; }
         public bool DiscardIfNotReachable { get; set; }
-        public IEnumerable<ADeclaration> Declarations => _declarations ?? Enumerable.Empty<ADeclaration>();
+        public IEnumerable<ADeclaration> Declarations => _internalDeclarations ?? Enumerable.Empty<ADeclaration>();
 
         /// <summary>
         /// CFN expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
@@ -77,10 +77,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Methods ---
         public void AddDeclaration(AItemDeclaration declaration, DoNotCallThisDirectly _) {
-            if(_declarations == null) {
-                _declarations = new List<AItemDeclaration>();
+            if(_internalDeclarations == null) {
+                _internalDeclarations = new List<AItemDeclaration>();
             }
-            _declarations.Add(declaration);
+            _internalDeclarations.Add(declaration);
         }
     }
 
@@ -170,6 +170,17 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             Declarations?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
+    }
+
+    public class PseudoParameterDeclaration : AItemDeclaration {
+
+        //--- Properties ---
+        public LiteralExpression PseudoParameter { get; set; }
+        public override string LocalName => PseudoParameter.Value;
+        public override string CloudFormationType => null;
+
+        //--- Methods ---
+        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) { }
     }
 
     public class ImportDeclaration : AItemDeclaration {
@@ -484,6 +495,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
+        public bool HasFunctionRegistration => !HasPragma("no-function-registration");
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

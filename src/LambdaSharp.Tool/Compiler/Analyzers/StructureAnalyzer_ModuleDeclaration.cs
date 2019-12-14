@@ -27,6 +27,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
+            _builder.ModuleDeclaration = node;
 
             // ensure module version is present and valid
             if(_builder.ModuleVersion == null) {
@@ -79,45 +80,37 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 Group = Literal("AWS"),
                 Description = Literal("AWS Pseudo-Parameters")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("AccountId"),
-                Description = Literal("AWS account ID of the account in which the CloudFormation stack is being created"),
-                Value = FnRef("AWS::AccountId")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("AccountId"),
+                Description = Literal("AWS account ID of the account in which the CloudFormation stack is being created")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("NotificationARNs"),
-                Description = Literal("List of notification Amazon Resource Names (ARNs) for the current CloudFormation stack"),
-                Value = FnRef("AWS::NotificationARNs")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("NotificationARNs"),
+                Description = Literal("List of notification Amazon Resource Names (ARNs) for the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("NoValue"),
-                Description = Literal("Removes the resource property it is assigned to"),
-                Value = FnRef("AWS::NoValue")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("NoValue"),
+                Description = Literal("Removes the resource property it is assigned to")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("Partition"),
-                Description = Literal("Partition that the resource is in (e.g. aws, aws-cn, aws-us-gov, etc.)"),
-                Value = FnRef("AWS::Partition")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("Partition"),
+                Description = Literal("Partition that the resource is in (e.g. aws, aws-cn, aws-us-gov, etc.)")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("Region"),
-                Description = Literal("AWS Region in which the CloudFormation stack is located"),
-                Value = FnRef("AWS::Region")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("Region"),
+                Description = Literal("AWS Region in which the CloudFormation stack is located")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("StackId"),
-                Description = Literal("ARN of the current CloudFormation stack"),
-                Value = FnRef("AWS::StackId")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("StackId"),
+                Description = Literal("ARN of the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("StackName"),
-                Description = Literal("Name of the current CloudFormation stack"),
-                Value = FnRef("AWS::StackName")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("StackName"),
+                Description = Literal("Name of the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new VariableDeclaration {
-                Variable = Literal("URLSuffix"),
-                Description = Literal("Suffix for a domain (e.g. amazonaws.com, amazonaws.com.cn, etc.)"),
-                Value = FnRef("AWS::URLSuffix")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration {
+                PseudoParameter = Literal("URLSuffix"),
+                Description = Literal("Suffix for a domain (e.g. amazonaws.com, amazonaws.com.cn, etc.)")
             });
 
             // add implicit module variables
@@ -239,7 +232,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             });
 
             // check if module might depdent on core services
-            if(HasLambdaSharpDependencies(node) || HasModuleRegistration(node)) {
+            if(node.HasLambdaSharpDependencies || node.HasModuleRegistration) {
                 AddDeclaration(node, new ParameterDeclaration {
                     Parameter = Literal("LambdaSharpCoreServices"),
                     Section = Literal(section),
@@ -263,7 +256,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // import lambdasharp dependencies (unless requested otherwise)
-            if(HasLambdaSharpDependencies(node)) {
+            if(node.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal resource imports
                 var lambdasharpGroupDeclaration = AddDeclaration(node, new GroupDeclaration {
@@ -467,7 +460,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             );
 
             // add module registration
-            if(HasModuleRegistration(node)) {
+            if(node.HasModuleRegistration) {
                 _builder.AddSharedDependency(node, new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
 
                 // create module registration

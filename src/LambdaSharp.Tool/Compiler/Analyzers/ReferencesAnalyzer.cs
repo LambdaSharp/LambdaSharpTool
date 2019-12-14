@@ -24,6 +24,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
+    // TODO: what is the purpose of this analyze? and should it do the !Sub normalization?
     public class ReferencesAnalyzer : ASyntaxAnalyzer {
 
         //--- Constants ---
@@ -51,12 +52,45 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
-            var referenceName = node.ReferenceName.Value;
+            var referenceName = node.ReferenceName;
 
             // validate reference
-            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: FindConditions(node), Expression: node));
-                referencedDeclaration.ReverseDependencies.Add(node);
+            if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
+                if(node.ParentItemDeclaration is ConditionDeclaration) {
+                    _builder.Log(Error.GetAttCannotBeUsedInAConditionDeclaration, node);
+                } else {
+
+                    // validate the declaration type
+                    switch(referencedDeclaration) {
+                    case ConditionDeclaration _:
+                    case MappingDeclaration _:
+                    case ResourceTypeDeclaration _:
+                    case GroupDeclaration _:
+                        _builder.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
+                        break;
+                    case ParameterDeclaration _:
+                    case PseudoParameterDeclaration _:
+                    case VariableDeclaration _:
+                    case PackageDeclaration _:
+                    case FunctionDeclaration _:
+                    case MacroDeclaration _:
+                    case NestedModuleDeclaration _:
+                    case ResourceDeclaration _:
+                    case ImportDeclaration _:
+                        if(!referencedDeclaration.HasCloudFormationType) {
+                            _builder.Log(Error.ReferenceWithAttributeMustBeResource(referenceName.Value), referenceName);
+                        } else {
+                            node.ReferencedDeclaration = referencedDeclaration;
+
+                            // track mutual dependencies
+                            node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
+                            referencedDeclaration.ReverseDependencies.Add(node);
+                        }
+                        break;
+                    default:
+                        throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
+                    }
+                }
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -67,8 +101,62 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
-                referencedDeclaration.ReverseDependencies.Add(node);
+                if(node.ParentItemDeclaration is ConditionDeclaration) {
+
+                    // validate the declaration type
+                    switch(referencedDeclaration) {
+                    case ConditionDeclaration _:
+                    case MappingDeclaration _:
+                    case ResourceTypeDeclaration _:
+                    case GroupDeclaration _:
+                    case VariableDeclaration _:
+                    case PackageDeclaration _:
+                    case FunctionDeclaration _:
+                    case MacroDeclaration _:
+                    case NestedModuleDeclaration _:
+                    case ResourceDeclaration _:
+                    case ImportDeclaration _:
+                        _builder.Log(Error.ReferenceMustBeParameter(referenceName.Value), referenceName);
+                        break;
+                    case ParameterDeclaration _:
+                    case PseudoParameterDeclaration _:
+                        node.ReferencedDeclaration = referencedDeclaration;
+
+                        // track mutual dependencies
+                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
+                        referencedDeclaration.ReverseDependencies.Add(node);
+                        break;
+                    default:
+                        throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
+                    }
+                } else {
+
+                    // validate the declaration type
+                    switch(referencedDeclaration) {
+                    case ConditionDeclaration _:
+                    case MappingDeclaration _:
+                    case ResourceTypeDeclaration _:
+                    case GroupDeclaration _:
+                        _builder.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
+                        break;
+                    case ParameterDeclaration _:
+                    case VariableDeclaration _:
+                    case PackageDeclaration _:
+                    case FunctionDeclaration _:
+                    case MacroDeclaration _:
+                    case NestedModuleDeclaration _:
+                    case ResourceDeclaration _:
+                    case ImportDeclaration _:
+                        node.ReferencedDeclaration = referencedDeclaration;
+
+                        // track mutual dependencies
+                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
+                        referencedDeclaration.ReverseDependencies.Add(node);
+                        break;
+                    default:
+                        throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
+                    }
+                }
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
@@ -143,22 +231,36 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate reference
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
-                referencedDeclaration.ReverseDependencies.Add(node);
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
+                if(referencedDeclaration is ConditionDeclaration conditionDeclaration) {
+                    node.ReferencedDeclaration = conditionDeclaration;
+
+                    // track mutual dependencies
+                    referencedDeclaration.ReverseDependencies.Add(node);
+                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
+                } else {
+                    _builder.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
+                }
             } else {
                 _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
             }
         }
 
         public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
-            var referenceName = node.MapName.Value;
+            var referenceName = node.MapName;
 
             // validate reference
-            if(_builder.TryGetItemDeclaration(referenceName, out var referencedDeclaration)) {
-                referencedDeclaration.ReverseDependencies.Add(node);
-                node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
+            if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
+                if(referencedDeclaration is MappingDeclaration mappingDeclaration) {
+                    node.ReferencedDeclaration = mappingDeclaration;
+
+                    // track mutual dependencies
+                    referencedDeclaration.ReverseDependencies.Add(node);
+                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
+                } else {
+                    _builder.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
+                }
             } else {
-                _builder.Log(Error.UnknownIdentifier(referenceName), node);
+                _builder.Log(Error.UnknownIdentifier(referenceName.Value), node);
             }
         }
 
@@ -200,6 +302,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     if(object.ReferenceEquals(ifParent.IfTrue, previousParent)) {
                         conditions.Add(ifParent.Condition);
                     } else if(object.ReferenceEquals(ifParent.IfFalse, previousParent)) {
+
+                        // TODO: review this one more time
 
                         // for IfFalse, create a !Not intermediary node
                         conditions.Add(new NotConditionExpression {

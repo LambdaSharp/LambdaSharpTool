@@ -49,6 +49,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
+        public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -66,11 +66,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression MapName { get; set; }
         public AExpression TopLevelKey { get; set; }
         public AExpression SecondLevelKey { get; set; }
         public MappingDeclaration ReferencedDeclaration { get; set; }
-        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -89,10 +90,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // For the Fn::GetAtt attribute name, you can use the Ref function.
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression ReferenceName { get; set; }
         public AExpression AttributeName { get; set; }
         public AItemDeclaration ReferencedDeclaration { get; set; }
-        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -190,6 +192,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression Separator { get; set; }
         public AExpression Values { get; set; }
 
@@ -244,7 +248,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AExpression Delimiter { get; set; }
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
+        public LiteralExpression Delimiter { get; set; }
         public AExpression SourceString { get; set; }
 
         //--- Methods ---
@@ -273,6 +279,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression FormatString { get; set; }
         public ObjectExpression Parameters { get; set; }
 
@@ -291,6 +299,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: AWS CloudFormation passes any intrinsic function calls included in Fn::Transform to the specified macro as literal strings.
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression MacroName { get; set; }
         public ObjectExpression Parameters { get; set; }
 
@@ -309,9 +319,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         public LiteralExpression ReferenceName { get; set; }
         public AItemDeclaration ReferencedDeclaration { get; set; }
-        public bool IsResolved => ReferencedDeclaration != null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
