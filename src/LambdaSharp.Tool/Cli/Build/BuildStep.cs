@@ -87,15 +87,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
-            // TODO:
-            //  - convert declaration to cloudformation resources
-            //  - generate properties for declarations (e.g. function decl)
-
             // analyze references in AST
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
+
+            // TODO: type validation
 
             // resolve references in AST
             new ReferenceResolver(moduleBuilder).Visit();
@@ -105,6 +103,11 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // TODO: convert rest of build steps
             throw new NotImplementedException();
+
+            // TODO:
+            //  - generate build artifacts
+            //  - convert declaration to cloudformation resources
+            //  - generate properties for declarations (e.g. function decl)
 
             // // package all functions
             // new ModelFunctionPackager(Settings, SourceFilename).Package(
