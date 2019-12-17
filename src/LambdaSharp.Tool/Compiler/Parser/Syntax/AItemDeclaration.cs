@@ -36,8 +36,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Abstract Properties ---
         public abstract string LocalName { get; }
-        public abstract string CloudFormationType { get; }
-        public bool HasCloudFormationType => CloudFormationType != null;
 
         //--- Properties ---
         public string FullName {
@@ -84,7 +82,30 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class ParameterDeclaration : AItemDeclaration {
+    public interface IScopedDeclaration {
+
+        //--- Properties ---
+        string FullName { get; }
+        AExpression Scope { get; }
+        IEnumerable<string> ScopeValues { get; }
+        bool HasSecretType { get; }
+        AExpression ReferenceExpression { get; }
+    }
+
+    public interface IConditionalDeclaration {
+
+        //--- Properties ---
+        AExpression If { get; }
+        string IfConditionName { get; }
+    }
+
+    public abstract class AResourceInstanceDeclaration : AItemDeclaration {
+
+        //--- Abstract Properties ---
+        public abstract string CloudFormationType { get; }
+    }
+
+    public class ParameterDeclaration : AItemDeclaration, IScopedDeclaration {
 
         //--- Properties ---
 
@@ -143,8 +164,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Parameter.Value;
-        public override string CloudFormationType => null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public bool HasSecretType => Type.Value == "Secret";
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -177,13 +199,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
         public LiteralExpression PseudoParameter { get; set; }
         public override string LocalName => PseudoParameter.Value;
-        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) { }
     }
 
-    public class ImportDeclaration : AItemDeclaration {
+    public class ImportDeclaration : AItemDeclaration, IScopedDeclaration {
 
         //--- Properties ---
 
@@ -206,7 +227,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         public override string LocalName => Import.Value;
-        public override string CloudFormationType => null;
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public bool HasSecretType => Type.Value == "Secret";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -222,7 +244,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class VariableDeclaration : AItemDeclaration {
+    public class VariableDeclaration : AItemDeclaration, IScopedDeclaration {
 
         //--- Properties ---
 
@@ -242,8 +264,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression EncryptionContext { get; set; }
 
         public override string LocalName => Variable.Value;
-        public override string CloudFormationType => null;
-        public AExpression ResolvedExpression { get; set; }
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public bool HasSecretType => Type.Value == "Secret";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -269,7 +291,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
         public override string LocalName => Group.Value;
-        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -292,7 +313,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression Value { get; set; }
 
         public override string LocalName => Condition.Value;
-        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -304,7 +324,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class ResourceDeclaration : AItemDeclaration {
+    public class ResourceDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalDeclaration {
 
         //--- Properties ---
 
@@ -339,8 +359,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string LocalName => Resource.Value;
-        public override string CloudFormationType => Type.Value;
+        public override string CloudFormationType => (Value == null) ? Type.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public bool HasSecretType => Type.Value == "Secret";
+        public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -360,7 +383,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class NestedModuleDeclaration : AItemDeclaration {
+    public class NestedModuleDeclaration : AResourceInstanceDeclaration {
 
         //--- Properties ---
 
@@ -391,7 +414,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class PackageDeclaration : AItemDeclaration {
+    public class PackageDeclaration : AItemDeclaration, IScopedDeclaration {
 
         //--- Properties --
 
@@ -405,9 +428,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression Files { get; set; }
 
         public override string LocalName => Package.Value;
-        public override string CloudFormationType => null;
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public bool HasSecretType => false;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -420,7 +444,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class FunctionDeclaration : AItemDeclaration {
+    public class FunctionDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalDeclaration {
 
         //--- Types ---
         public class VpcExpression : ASyntaxNode {
@@ -475,7 +499,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public VpcExpression Vpc { get; set; }
 
         [SyntaxOptional]
-        public ObjectExpression Environment { get; set; }
+        public ObjectExpression Environment { get; set; } = new ObjectExpression();
 
         [SyntaxOptional]
         public ObjectExpression Properties { get; set; } = new ObjectExpression();
@@ -489,13 +513,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public override string LocalName => Function.Value;
         public override string CloudFormationType => "AWS::Lambda::Function";
 
-        public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
         public bool HasAssemblyValidation => !HasPragma("no-assembly-validation");
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public bool HasSecretType => false;
+        public string IfConditionName => ((ConditionExpression)If)?.ReferenceName.Value;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -530,7 +556,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression Value { get; set; }
 
         public override string LocalName => Mapping.Value;
-        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -601,7 +626,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<AttributeTypeExpression> Attributes { get; set; } = new List<AttributeTypeExpression>();
 
         public override string LocalName => ResourceType.Value;
-        public override string CloudFormationType => null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -615,7 +639,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class MacroDeclaration : AItemDeclaration {
+    public class MacroDeclaration : AResourceInstanceDeclaration {
 
         //--- Properties ---
 

@@ -52,7 +52,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
+            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
             ValidateExpressionIsNumber(node, node.Timeout, Error.TimeoutAttributeInvalid);
 
@@ -252,7 +252,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     DependsOn = new List<LiteralExpression> {
                         Literal("Module::Registration")
                     },
-                    If = (node.IfConditionName != null)
+                    If = (node.If != null)
                         ? (AExpression)FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
                         : FnCondition("UseCoreServices"),
                 });
@@ -271,7 +271,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             ["LogGroupName"] = FnRef($"{node.FullName}::LogGroup"),
                             ["RoleArn"] = FnRef("Module::LoggingStreamRole")
                         },
-                        If = (node.IfConditionName != null)
+                        If = (node.If != null)
                             ? (AExpression)FnAnd(FnCondition("UseCoreServices"), FnCondition(node.IfConditionName))
                             : FnCondition("UseCoreServices"),
                     });

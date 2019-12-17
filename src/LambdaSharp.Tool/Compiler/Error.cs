@@ -134,11 +134,11 @@ namespace LambdaSharp.Tool.Compiler {
         #region *** Reference Validation ***
         public static readonly Func<string, Error> ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
         public static readonly Func<string, Error> ReferenceMustBeParameter = parameter => new Error(0, $"{parameter} must be a parameter");
-        public static readonly Func<string, Error> ReferenceWithAttributeMustBeResource = parameter => new Error(0, $"{parameter} does not support attributes");
-        public static readonly Func<string, Error> ReferenceWithCircularDependency = parameter => new Error(0, $"circular dependency on '{parameter}'");
-
-        // TODO: same as 'UnknownIdentifier'?
-        public static readonly Func<string, Error> ReferenceDoesNotExist = parameter => new Error(0, $"unknown reference '{parameter}'");
+        public static readonly Func<string, Error> ReferenceMustBeResourceInstance = parameter => new Error(0, $"{parameter} must be a CloudFormation stack resource");
+        public static readonly Func<string, Error> ReferenceWithCircularDependency = parameter => new Error(0, $"circular dependency on {parameter}");
+        public static readonly Func<string, Error> ReferenceMustBeFunction = parameter => new Error(0, $"{parameter} must be a function");
+        public static readonly Func<string, Error> ReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter}");
+        public static readonly Func<string, Error> ReferenceCannotBeSelf = parameter => new Error(0, $"self-dependency on {parameter}");
         #endregion
 
         // TODO: keep reviewing errors
@@ -153,7 +153,6 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error UnknownVersionOfDotNetCore = new Error(0, "could not determine runtime from target framework; specify 'Runtime' attribute explicitly");
         public static readonly Error FailedToAutoDetectHandlerInDotNetFunctionProject = new Error(0, "could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
         public static readonly Func<string, Error> NameMustBeACloudFormationResource = parameter => new Error(0, $"identifier {parameter} must refer to a CloudFormation resource");
-        public static readonly Func<string, Error> UnknownIdentifier = parameter => new Error(0, $"unknown identifier {parameter}");
         public static readonly Func<string, Error> IdentifierReferesToInvalidDeclarationType = parameter => new Error(0, $"identifier {parameter} cannot refer to this declaration type");
         public static readonly Func<string, Error> IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
         public static readonly Func<string, Error> IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
@@ -178,7 +177,8 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error WebSocketEventSourceInvalidAuthorizationType = new Error(0, "'AuthorizationType' must be either AWS_IAM or CUSTOM");
         public static readonly Error WebSocketEventSourceInvalidAuthorizationTypeForCustomAuthorizer = new Error(0, "'AuthorizationType' must be CUSTOM");
         public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
-        public static readonly Error EventSource = new Error(0, "");
+        public static readonly Error FunctionPropertiesEnvironmentMustBeMap = new Error(0, "Properties.Environment must be a map");
+        public static readonly Error FunctionPropertiesEnvironmentVariablesMustBeMap = new Error(0, "Properties.Environment.Variables must be a map");
 
         //--- Constructors ---
         public Error(int code, string message) {

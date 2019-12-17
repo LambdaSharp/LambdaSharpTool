@@ -50,7 +50,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 // NOTE: extract syntax poproperties from type to identify what keys are expected and required;
                 //  in addition, one key can be called out as the keyword, which means it must be the first key
                 //  to appear in the mapping.
-                var syntaxProperties = type.GetProperties()
+                var syntaxProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                     .Select(property => new {
                         Syntax = property.GetCustomAttributes<ASyntaxAttribute>().FirstOrDefault(),
                         Property = property
@@ -1196,27 +1196,26 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             ColumnNumberEnd = stopParsingEvent.End.Column
         };
 
-        private SyntaxInfo GetSyntax(Type type) {
-            if(!_typeToSyntax.TryGetValue(type, out var result)) {
-                result = new SyntaxInfo(type);
-                _typeToSyntax[type] = result;
-            }
-            return result;
-        }
-
         private Dictionary<string, SyntaxInfo> GetSyntaxes(Type type) {
             if(!_syntaxCache.TryGetValue(type, out var syntaxes)) {
                 if(type.IsAbstract) {
+                    syntaxes = new Dictionary<string, SyntaxInfo>();
 
-                    // for abstract types, we build a list derived types
-                    syntaxes = typeof(AItemDeclaration).Assembly.GetTypes()
-                        .Where(definedType => definedType.BaseType == typeof(AItemDeclaration))
-                        .Select(definedType => GetSyntax(definedType))
-                        .ToDictionary(syntax => syntax.Keyword, syntax => syntax);
+                    // for abstract types, we build a list of derived types recursively
+                    foreach(var kv in type.Assembly
+                        .GetTypes()
+                        .Where(definedType => definedType.BaseType == type)
+                        .SelectMany(derivedType => GetSyntaxes(derivedType))
+                    ) {
+                        syntaxes.Add(kv.Key, kv.Value);
+                    }
                 } else {
 
-                    // for conrete types, we use the type itself
-                    var syntax = GetSyntax(type);
+                    // for concrete types, we use the type itself
+                    if(!_typeToSyntax.TryGetValue(type, out var syntax)) {
+                        syntax = new SyntaxInfo(type);
+                        _typeToSyntax[type] = syntax;
+                    }
                     syntaxes = new Dictionary<string, SyntaxInfo> {
                         [syntax.Keyword] = syntax
                     };

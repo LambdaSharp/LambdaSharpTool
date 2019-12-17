@@ -121,7 +121,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
+            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
         }
 
@@ -142,7 +142,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
+            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // check if declaration is a resource reference
@@ -283,7 +283,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node.Scope);
+            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
 
             // 'Files' reference is relative to YAML file it originated from
             var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
@@ -597,7 +597,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, TransformFunctionExpression node) { }
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, AExpression allow) {
-            ValidateExpressionIsLiteralOrListOfLiteral(allow);
+            ValidateExpressionIsLiteralOrListOfLiteral(node, ref allow);
             if(allow != null) {
                 if(type == null) {
                     _builder.Log(Error.AllowAttributeRequiresTypeAttribute, node);
@@ -724,15 +724,64 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
-        private void ValidateExpressionIsLiteralOrListOfLiteral(AExpression expression) {
+        private void ValidateExpressionIsLiteralOrListOfLiteral(ASyntaxNode parent, AExpression expression, Action<AExpression> putExpression) {
+            ValidateExpressionIsLiteralOrListOfLiteral(parent, ref expression);
+            putExpression(expression);
+        }
 
-            // missing and literal expressions are safe
-            if((expression == null) || (expression is LiteralExpression)) {
-                return;
-            }
+        private void ValidateExpressionIsLiteralOrListOfLiteral(ASyntaxNode parent, ref AExpression expression) {
+            switch(expression) {
+            case null:
+                expression = new ListExpression {
+                    Parent = parent,
+                    SourceLocation = parent.SourceLocation
+                };
+                break;
+            case LiteralExpression literalExpression: {
+                    var list = new ListExpression {
+                        Parent = parent,
+                        SourceLocation = literalExpression.SourceLocation
+                    };
+                    expression = list;
 
-            // list expressions must be further validated
-            if(expression is ListExpression listExpression) {
+                    // parse comma-separated items from literal value
+                    var offset = 0;
+                    while(offset < literalExpression.Value.Length) {
+
+                        // skip whitespace at the beginning
+                        for(; (offset < literalExpression.Value.Length) && char.IsWhiteSpace(literalExpression.Value[offset]); ++offset);
+
+                        // find the next separator
+                        var next = literalExpression.Value.IndexOf(',', offset);
+                        if(next < 0) {
+                            next = literalExpression.Value.Length;
+                        }
+                        var item = literalExpression.Value.Substring(offset, next - offset).TrimEnd();
+                        if(!string.IsNullOrWhiteSpace(item)) {
+
+                            // calculate relative position of sub-string in literal expression
+                            var startLineOffset = literalExpression.Value.Take(offset).Count(c => c == '\n');
+                            var endLineOffset = literalExpression.Value.Take(offset + item.Length).Count(c => c == '\n');
+                            var startColumnOffset = literalExpression.Value.Take(offset).Reverse().TakeWhile(c => c != '\n').Count();
+                            var endColumnOffset = literalExpression.Value.Take(offset + item.Length).Reverse().TakeWhile(c => c != '\n').Count();
+
+                            // add literal value
+                            list.Items.Add(new ListExpression {
+                                Parent = parent,
+                                SourceLocation = new Parser.SourceLocation {
+                                    FilePath = literalExpression.SourceLocation.FilePath,
+                                    LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,
+                                    LineNumberEnd = literalExpression.SourceLocation.LineNumberStart + endLineOffset,
+                                    ColumnNumberStart = literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
+                                    ColumnNumberEnd = literalExpression.SourceLocation.ColumnNumberEnd + endColumnOffset
+                                }
+                            });
+                        }
+                        offset = next + 1;
+                    }
+                }
+                break;
+            case ListExpression listExpression:
 
                 // make sure every item in the list is a literal expression
                 foreach(var item in listExpression) {
@@ -740,8 +789,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         _builder.Log(Error.ExpectedLiteralValue, item);
                     }
                 }
-            } else {
+                break;
+            default:
                 _builder.Log(Error.ExpectedLiteralValueOrListOfLiteralValues, expression);
+                break;
             }
         }
 

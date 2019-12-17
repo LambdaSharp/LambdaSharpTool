@@ -84,6 +84,27 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             visitor.VisitEnd(parent, this);
         }
 
+        public T GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
+            if(error == null) {
+                throw new ArgumentNullException(nameof(error));
+            }
+            if(TryGetValue(key, out var value)) {
+                if(value is T inner) {
+                    return inner;
+                } else {
+                    error(value);
+                    return default(T);
+                }
+            } else {
+                var result = new T {
+                    Parent = this,
+                    SourceLocation = SourceLocation
+                };
+                this[key] = result;
+                return result;
+            }
+        }
+
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
 
