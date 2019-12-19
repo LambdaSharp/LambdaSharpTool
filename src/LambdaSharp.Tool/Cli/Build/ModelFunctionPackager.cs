@@ -250,7 +250,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                     // find all files used to create the function package
                     var files = new HashSet<string>();
-                    AddProjectFiles(files, function.Project);
+                    AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
 
                     // check if any of the files has been modified more recently than hte function package
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
@@ -497,22 +497,22 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // recurse into referenced projects
                 foreach(var projectReference in csproj.Descendants("ProjectReference").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(projectReference.Attribute("Include").Value))));
+                    AddProjectFiles(files, Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(projectReference.Attribute("Include").Value))));
                 }
 
                 // add compile file references
                 foreach(var compile in csproj.Descendants("Compile").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(compile.Attribute("Include").Value))));
+                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(compile.Attribute("Include").Value))));
                 }
 
                 // add content file references
                 foreach(var content in csproj.Descendants("Content").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(content.Attribute("Include").Value))));
+                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(content.Attribute("Include").Value))));
                 }
 
                 // added embedded resources
                 foreach(var embeddedResource in csproj.Descendants("EmbeddedResource").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(Path.Combine(projectFolder, ResolveFilePath(embeddedResource.Attribute("Include").Value))));
+                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(embeddedResource.Attribute("Include").Value))));
                 }
             } catch(Exception e) {
                 LogError($"error while analyzing '{project}'", e);
