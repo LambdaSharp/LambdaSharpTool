@@ -92,9 +92,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         AExpression ReferenceExpression { get; }
     }
 
-    public interface IConditionalDeclaration {
+    public interface IConditionalResourceDeclaration {
 
         //--- Properties ---
+        string FullName { get; }
         AExpression If { get; }
         string IfConditionName { get; }
     }
@@ -324,7 +325,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class ResourceDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalDeclaration {
+    public class ResourceDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
 
         //--- Properties ---
 
@@ -444,7 +445,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class FunctionDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalDeclaration {
+    public class FunctionDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
 
         //--- Types ---
         public class VpcExpression : ASyntaxNode {

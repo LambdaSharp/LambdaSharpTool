@@ -101,13 +101,24 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
-            // TODO: convert rest of build steps
-            throw new NotImplementedException();
+            // generate function environment based on scoped resources
+            moduleDeclaration.Visit(parent: null, new FunctionEnvironmentAnalyzer(moduleBuilder));
+            if(HasErrors) {
+                return false;
+            }
+
+            // determine the necessary dependencies for the finalizer
+            new FinalizerDependenciesAnalyzer(moduleBuilder).Visit();
+            if(HasErrors) {
+                return false;
+            }
 
             // TODO:
             //  - generate build artifacts
             //  - convert declaration to cloudformation resources
-            //  - generate properties for declarations (e.g. function decl)
+
+            // TODO:
+            throw new NotImplementedException();
 
             // // package all functions
             // new ModelFunctionPackager(Settings, SourceFilename).Package(
@@ -122,24 +133,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // // package all files
             // new ModelFilesPackager(Settings, SourceFilename).Package(module, noPackageBuild);
-
-            // // augment module definitions
-            // new ModelFunctionProcessor(Settings, SourceFilename).Process(module);
-            // if(HasErrors) {
-            //     return false;
-            // }
-
-            // // resolve all references
-            // new ModelLinker(Settings, SourceFilename).Process(module);
-            // if(HasErrors) {
-            //     return false;
-            // }
-
-            // // validate references
-            // new ModelPostLinkerValidation(Settings, SourceFilename).Validate(module);
-            // if(HasErrors) {
-            //     return false;
-            // }
 
             // // create folder for cloudformation output
             // var outputCloudFormationDirectory = Path.GetDirectoryName(outputCloudFormationFilePath);

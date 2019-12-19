@@ -68,17 +68,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     case GroupDeclaration _:
                         _builder.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
                         break;
-                    case ParameterDeclaration _:
-                    case PseudoParameterDeclaration _:
-                    case VariableDeclaration _:
-                    case PackageDeclaration _:
-                    case FunctionDeclaration _:
-                    case MacroDeclaration _:
-                    case NestedModuleDeclaration _:
-                    case ResourceDeclaration _:
-                    case ImportDeclaration _:
-                        if(!referencedDeclaration.HasCloudFormationType) {
-                            _builder.Log(Error.ReferenceWithAttributeMustBeResource(referenceName.Value), referenceName);
+                    case AResourceInstanceDeclaration cloudFormationResourceDeclaration:
+
+                        // TODO: we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
+                        if(cloudFormationResourceDeclaration.CloudFormationType == null) {
+                            _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                         } else {
                             node.ReferencedDeclaration = referencedDeclaration;
 
@@ -87,12 +81,19 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             referencedDeclaration.ReverseDependencies.Add(node);
                         }
                         break;
+                    case ParameterDeclaration _:
+                    case PseudoParameterDeclaration _:
+                    case VariableDeclaration _:
+                    case PackageDeclaration _:
+                    case ImportDeclaration _:
+                        _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
+                        break;
                     default:
                         throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
                     }
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
         }
 
@@ -158,7 +159,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
         }
 
@@ -219,7 +220,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         // substitute found value as new argument
                         return $"${{{argName}}}";
                     } else {
-                        _builder.Log(Error.UnknownIdentifier(subReferenceName), sourceLocation);
+                        _builder.Log(Error.ReferenceDoesNotExist(subReferenceName), sourceLocation);
                     }
                     return null;
                 }
@@ -241,7 +242,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(node.ReferenceName.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
         }
 
@@ -260,8 +261,32 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(referenceName.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(referenceName.Value), node);
             }
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
+        }
+
+        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
+            ValidateFunctionScope(node.Scope, node);
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
@@ -276,7 +301,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.HandlerMustBeAFunctionOrSnsTopic, node.Handler);
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(node.Handler.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
         }
 
@@ -286,7 +311,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.HandlerMustBeAFunction, node.Handler);
                 }
             } else {
-                _builder.Log(Error.UnknownIdentifier(node.Handler.Value), node);
+                _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
         }
 
@@ -318,6 +343,40 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
             conditions.Reverse();
             return conditions;
+        }
+
+        private void ValidateFunctionScope(AExpression scopeExpression, AItemDeclaration declaration) {
+
+            // NOTE (2019-12-16, bjorg): the structure has already been validated
+            foreach(LiteralExpression innerScopeExpression in (ListExpression)scopeExpression) {
+                Validate(innerScopeExpression);
+            }
+
+            // validate functions
+            void Validate(LiteralExpression scope) {
+                switch(scope.Value) {
+                case "*":
+                case "all":
+
+                    // nothing to do; wildcards are valid even when no functions are defined
+                    break;
+                case "public":
+
+                    // nothing to do; 'public' is a reserved scope keyword
+                    break;
+                default:
+                    if(_builder.TryGetItemDeclaration(scope.Value, out var scopeReferenceDeclaration)) {
+                        if(!(scopeReferenceDeclaration is FunctionDeclaration)) {
+                            _builder.Log(Error.ReferenceMustBeFunction(scope.Value), scope);
+                        } else if(scopeReferenceDeclaration == declaration) {
+                            _builder.Log(Error.ReferenceCannotBeSelf(scope.Value), scope);
+                        }
+                    } else {
+                            _builder.Log(Error.ReferenceDoesNotExist(scope.Value), scope);
+                    }
+                    break;
+                }
+            }
         }
     }
 }
