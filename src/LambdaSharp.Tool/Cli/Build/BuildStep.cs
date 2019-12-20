@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Copmi module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
+            Console.WriteLine($"Reading module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
 
             // parse yaml to module declaration AST
             var moduleDeclaration = new LambdaSharpParser(this, SourceFilename).ParseSyntaxOfType<ModuleDeclaration>();

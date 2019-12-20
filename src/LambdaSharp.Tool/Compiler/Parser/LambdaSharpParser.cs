@@ -57,7 +57,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     })
                     .Where(tuple => tuple.Syntax != null)
                     .ToList();
-                Type = type;
+                Type = type ?? throw new ArgumentNullException(nameof(type));
                 Keyword = syntaxProperties.FirstOrDefault(tuple => tuple.Syntax.Type == SyntaxType.Keyword)?.Property.Name;
                 Keys = syntaxProperties.ToDictionary(tuple => tuple.Property.Name, Tuple => Tuple.Property);
                 MandatoryKeys = syntaxProperties.Where(tuple => tuple.Syntax.Type != SyntaxType.Optional).Select(tuple => tuple.Property.Name).ToArray();
@@ -68,6 +68,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             public string Keyword { get; private set; }
             public Dictionary<string, PropertyInfo> Keys { get; private set; }
             public IEnumerable<string> MandatoryKeys { get; private set; }
+            public bool HasKeyword => Keyword != null;
         }
 
         //--- Fields ---
@@ -1216,9 +1217,10 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         syntax = new SyntaxInfo(type);
                         _typeToSyntax[type] = syntax;
                     }
-                    syntaxes = new Dictionary<string, SyntaxInfo> {
-                        [syntax.Keyword] = syntax
-                    };
+                    syntaxes = new Dictionary<string, SyntaxInfo>();
+                    if(syntax.HasKeyword) {
+                        syntaxes[syntax.Keyword] = syntax;
+                    }
                 }
                 _syntaxCache[type] = syntaxes;
             }

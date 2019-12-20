@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+ #nullable enable
+
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AFunctionExpression : AExpression  { }
@@ -26,7 +28,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
-        public AExpression Value { get; set; }
+        public AExpression? Value { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -44,9 +46,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - !Ref
 
         //--- Properties ---
-        public AExpression IpBlock  { get; set; }
-        public AExpression Count { get; set; }
-        public AExpression CidrBits { get; set; }
+        public AExpression? IpBlock  { get; set; }
+        public AExpression? Count { get; set; }
+        public AExpression? CidrBits { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -68,10 +70,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression MapName { get; set; }
-        public AExpression TopLevelKey { get; set; }
-        public AExpression SecondLevelKey { get; set; }
-        public MappingDeclaration ReferencedDeclaration { get; set; }
+        public LiteralExpression? MapName { get; set; }
+        public AExpression? TopLevelKey { get; set; }
+        public AExpression? SecondLevelKey { get; set; }
+        public MappingDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -92,9 +94,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression ReferenceName { get; set; }
-        public AExpression AttributeName { get; set; }
-        public AItemDeclaration ReferencedDeclaration { get; set; }
+        public LiteralExpression? ReferenceName { get; set; }
+        public AExpression? AttributeName { get; set; }
+        public AItemDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -111,7 +113,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: You can use the Ref function in the Fn::GetAZs function.
 
         //--- Properties ---
-        public AExpression Region { get; set; }
+        public AExpression? Region { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -136,9 +138,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AExpression Condition { get; set; }
-        public AExpression IfTrue { get; set; }
-        public AExpression IfFalse { get; set; }
+        public AExpression? Condition { get; set; }
+        public AExpression? IfTrue { get; set; }
+        public AExpression? IfFalse { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -164,7 +166,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AExpression SharedValueToImport { get; set; }
+        public AExpression? SharedValueToImport { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -194,8 +196,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression Separator { get; set; }
-        public AExpression Values { get; set; }
+        public LiteralExpression? Separator { get; set; }
+        public AExpression? Values { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -219,8 +221,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Ref
 
         //--- Properties ---
-        public AExpression Index { get; set; }
-        public AExpression Values { get; set; }
+        public AExpression? Index { get; set; }
+        public AExpression? Values { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -250,8 +252,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression Delimiter { get; set; }
-        public AExpression SourceString { get; set; }
+        public LiteralExpression? Delimiter { get; set; }
+        public AExpression? SourceString { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -281,8 +283,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression FormatString { get; set; }
-        public ObjectExpression Parameters { get; set; }
+        public LiteralExpression? FormatString { get; set; }
+        public ObjectExpression? Parameters { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -301,8 +303,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression MacroName { get; set; }
-        public ObjectExpression Parameters { get; set; }
+        public LiteralExpression? MacroName { get; set; }
+        public ObjectExpression? Parameters { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -321,8 +323,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression ReferenceName { get; set; }
-        public AItemDeclaration ReferencedDeclaration { get; set; }
+        public LiteralExpression? ReferenceName { get; set; }
+        public AItemDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -16,14 +16,13 @@
  * limitations under the License.
  */
 
+ #nullable enable
+
 using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
-    public abstract class AEventSourceDeclaration : ADeclaration {
-
-        //--- Properties ---
-    }
+    public abstract class AEventSourceDeclaration : ADeclaration { }
     public class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Types ---
@@ -37,31 +36,31 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public LiteralExpression Api { get; set; }
+        public LiteralExpression? Api { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Integration { get; set; }
+        public LiteralExpression? Integration { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression OperationName { get; set; }
+        public LiteralExpression? OperationName { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression ApiKeyRequired { get; set; }
+        public LiteralExpression? ApiKeyRequired { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression AuthorizationType { get; set; }
+        public LiteralExpression? AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AuthorizationScopes { get; set; }
+        public List<LiteralExpression>? AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
-        public AExpression AuthorizerId { get; set; }
+        public AExpression? AuthorizerId { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Invoke { get; set; }
+        public LiteralExpression? Invoke { get; set; }
 
-        public string ApiMethod { get; set; }
-        public string[] ApiPath { get; set; }
+        public string? ApiMethod { get; set; }
+        public string[]? ApiPath { get; set; }
         public IntegrationType ApiIntegrationType { get; set; }
 
         //--- Methods ---
@@ -84,10 +83,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression Schedule { get; set; }
+        public AExpression? Schedule { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Name { get; set; }
+        public LiteralExpression? Name { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -103,16 +102,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression S3 { get; set; }
+        public AExpression? S3 { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> Events { get; set; }
+        public List<LiteralExpression>? Events { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Prefix { get; set; }
+        public LiteralExpression? Prefix { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Suffix { get; set; }
+        public LiteralExpression? Suffix { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -130,9 +129,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public LiteralExpression SlackCommand { get; set; }
+        public LiteralExpression? SlackCommand { get; set; }
 
-        public string[] SlackPath { get; set; }
+        public string[]? SlackPath { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -147,10 +146,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression Topic { get; set; }
+        public AExpression? Topic { get; set; }
 
         [SyntaxOptional]
-        public ObjectExpression Filters { get; set; }
+        public ObjectExpression? Filters { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -166,10 +165,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression Sqs { get; set; }
+        public AExpression? Sqs { get; set; }
 
         [SyntaxOptional]
-        public AExpression BatchSize { get; set; }
+        public AExpression? BatchSize { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -185,7 +184,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression Alexa { get; set; }
+        public AExpression? Alexa { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -200,16 +199,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression DynamoDB { get; set; }
+        public AExpression? DynamoDB { get; set; }
 
         [SyntaxOptional]
-        public AExpression BatchSize { get; set; }
+        public AExpression? BatchSize { get; set; }
 
         [SyntaxOptional]
-        public AExpression StartingPosition { get; set; }
+        public AExpression? StartingPosition { get; set; }
 
         [SyntaxOptional]
-        public AExpression MaximumBatchingWindowInSeconds { get; set; }
+        public AExpression? MaximumBatchingWindowInSeconds { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -226,16 +225,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public AExpression Kinesis { get; set; }
+        public AExpression? Kinesis { get; set; }
 
         [SyntaxOptional]
-        public AExpression BatchSize { get; set; }
+        public AExpression? BatchSize { get; set; }
 
         [SyntaxOptional]
-        public AExpression StartingPosition { get; set; }
+        public AExpression? StartingPosition { get; set; }
 
         [SyntaxOptional]
-        public AExpression MaximumBatchingWindowInSeconds { get; set; }
+        public AExpression? MaximumBatchingWindowInSeconds { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -252,25 +251,25 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public LiteralExpression WebSocket { get; set; }
+        public LiteralExpression? WebSocket { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression OperationName { get; set; }
+        public LiteralExpression? OperationName { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression ApiKeyRequired { get; set; }
+        public LiteralExpression? ApiKeyRequired { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression AuthorizationType { get; set; }
+        public LiteralExpression? AuthorizationType { get; set; }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AuthorizationScopes { get; set; }
+        public List<LiteralExpression>? AuthorizationScopes { get; set; }
 
         [SyntaxOptional]
-        public AExpression AuthorizerId { get; set; }
+        public AExpression? AuthorizerId { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Invoke { get; set; }
+        public LiteralExpression? Invoke { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

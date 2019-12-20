@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Linq;
 
@@ -28,13 +30,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword()]
-        public LiteralExpression Module { get; set; }
+        public LiteralExpression? Module { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Version { get; set; }
+        public LiteralExpression? Version { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Description { get; set; }
+        public LiteralExpression? Description { get; set; }
 
         [SyntaxOptional]
         public ListExpression Pragmas { get; set; } = new ListExpression();
@@ -53,7 +55,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override void Visit(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
             Module?.Visit(this, visitor);
             Version?.Visit(this, visitor);
@@ -70,10 +72,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxKeyword]
-        public LiteralExpression Module { get; set; }
+        public LiteralExpression? Module { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression Description { get; set; }
+        public LiteralExpression? Description { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+ #nullable enable
+
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AConditionExpression : AExpression { }
@@ -25,8 +27,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // !Condition STRING
 
         //--- Properties ---
-        public LiteralExpression ReferenceName { get; set; }
-        public ConditionDeclaration ReferencedDeclaration { get; set; }
+        public LiteralExpression? ReferenceName { get; set; }
+        public ConditionDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -46,8 +48,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AExpression LeftValue { get; set; }
-         public AExpression RightValue { get; set; }
+         public AExpression? LeftValue { get; set; }
+         public AExpression? RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -68,7 +70,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AExpression Value { get; set; }
+         public AExpression? Value { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -88,8 +90,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AExpression LeftValue { get; set; }
-         public AExpression RightValue { get; set; }
+         public AExpression? LeftValue { get; set; }
+         public AExpression? RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -110,8 +112,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Other condition functions
 
          //--- Properties ---
-         public AExpression LeftValue { get; set; }
-         public AExpression RightValue { get; set; }
+         public AExpression? LeftValue { get; set; }
+         public AExpression? RightValue { get; set; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

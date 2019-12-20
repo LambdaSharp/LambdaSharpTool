@@ -3,7 +3,7 @@
     <Error Condition="'$(LAMBDASHARP_VERSION_PREFIX)' == ''" Text="Run '$LAMBDASHARP/Scripts/set-lash-version.sh' before building." />
   </Target>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
 
@@ -24,7 +24,6 @@
     <ToolCommandName>lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
     <OutputType>Exe</OutputType>
-    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="AWSSDK.APIGateway" Version="3.3.101.6" />
