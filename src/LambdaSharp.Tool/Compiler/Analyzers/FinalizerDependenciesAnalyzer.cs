@@ -37,7 +37,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 && (finalizerInvocationResourceDeclaration.Type.Value == "Module::Finalizer")
             ) {
                 var allResourceDeclaration = _builder.ItemDeclarations
-                    .OfType<AResourceInstanceDeclaration>()
+                    .OfType<IResourceDeclaration>()
                     .Where(declaration => declaration.FullName != "Finalizer::Invocation")
                     .ToList();
 
@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         .Where(conditionalResourceDeclaration => conditionalResourceDeclaration.If != null)
                         .Select(conditionalResourceDeclaration => ASyntaxAnalyzer.FnIf(
                             conditionalResourceDeclaration.IfConditionName,
-                            _builder.GetExportReference((AResourceInstanceDeclaration)conditionalResourceDeclaration),
+                            _builder.GetExportReference(conditionalResourceDeclaration),
                             ASyntaxAnalyzer.FnRef("AWS::NoValue"))
                         )
                         .Cast<AExpression>()

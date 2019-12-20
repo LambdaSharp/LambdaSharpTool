@@ -127,7 +127,7 @@ namespace LambdaSharp.Tool.Compiler {
             throw new NotImplementedException();
         }
 
-        public AExpression GetExportReference(AResourceInstanceDeclaration resourceDeclaration) {
+        public AExpression GetExportReference(IResourceDeclaration resourceDeclaration) {
 
             // TODO:
             throw new NotImplementedException();

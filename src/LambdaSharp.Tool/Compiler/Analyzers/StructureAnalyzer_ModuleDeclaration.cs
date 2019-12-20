@@ -30,15 +30,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             _builder.ModuleDeclaration = node;
 
             // ensure module version is present and valid
+            if(!VersionInfo.TryParse(node.Version.Value, out var version)) {
+                _builder.Log(Error.VersionAttributeInvalid, node.Version);
+                version = VersionInfo.Parse("0.0");
+            }
             if(_builder.ModuleVersion == null) {
-                if(node.Version == null) {
-                    _builder.ModuleVersion = VersionInfo.Parse("1.0-DEV");
-                } else if(VersionInfo.TryParse(node.Version.Value, out var version)) {
-                    _builder.ModuleVersion = version;
-                } else {
-                    _builder.Log(Error.VersionAttributeInvalid, node.Version);
-                    _builder.ModuleVersion = VersionInfo.Parse("0.0");
-                }
+                _builder.ModuleVersion = version;
             }
 
             // ensure module has a namespace and name

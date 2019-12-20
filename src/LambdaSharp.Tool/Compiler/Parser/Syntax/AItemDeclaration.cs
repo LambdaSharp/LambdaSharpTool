@@ -94,18 +94,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         AExpression? ReferenceExpression { get; }
     }
 
-    public interface IConditionalResourceDeclaration {
+    public interface IResourceDeclaration {
 
         //--- Properties ---
         string FullName { get; }
-        AExpression? If { get; }
-        string? IfConditionName { get; }
+        string? CloudFormationType { get; }
     }
 
-    public abstract class AResourceInstanceDeclaration : AItemDeclaration {
+    public interface IConditionalResourceDeclaration : IResourceDeclaration {
 
-        //--- Abstract Properties ---
-        public abstract string? CloudFormationType { get; }
+        //--- Properties ---
+        AExpression? If { get; }
+        string? IfConditionName { get; }
     }
 
     public class ParameterDeclaration : AItemDeclaration, IScopedDeclaration {
@@ -327,7 +327,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class ResourceDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
+    public class ResourceDeclaration : AItemDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
 
         //--- Properties ---
 
@@ -362,7 +362,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string? LocalName => Resource?.Value;
-        public override string? CloudFormationType => (Value == null) ? Type!.Value : null;
+        public string? CloudFormationType => (Value == null) ? Type!.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
@@ -386,7 +386,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class NestedModuleDeclaration : AResourceInstanceDeclaration {
+    public class NestedModuleDeclaration : AItemDeclaration, IResourceDeclaration {
 
         //--- Properties ---
 
@@ -403,7 +403,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ObjectExpression? Parameters { get; set; }
 
         public override string? LocalName => Nested?.Value;
-        public override string CloudFormationType => "AWS::CloudFormation::Stack";
+        public string CloudFormationType => "AWS::CloudFormation::Stack";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -447,7 +447,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class FunctionDeclaration : AResourceInstanceDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
+    public class FunctionDeclaration : AItemDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
 
         //--- Types ---
         public class VpcExpression : ASyntaxNode {
@@ -514,7 +514,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ListExpression Pragmas { get; set; } = new ListExpression();
 
         public override string? LocalName => Function?.Value;
-        public override string CloudFormationType => "AWS::Lambda::Function";
+        public string CloudFormationType => "AWS::Lambda::Function";
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasDeadLetterQueue => !HasPragma("no-dead-letter-queue");
@@ -642,7 +642,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class MacroDeclaration : AResourceInstanceDeclaration {
+    public class MacroDeclaration : AItemDeclaration, IResourceDeclaration {
 
         //--- Properties ---
 
@@ -653,7 +653,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression? Handler { get; set; }
 
         public override string LocalName => Macro!.Value;
-        public override string CloudFormationType => "AWS::CloudFormation::Macro";
+        public string CloudFormationType => "AWS::CloudFormation::Macro";
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

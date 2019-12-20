@@ -58,7 +58,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // read input file
             Console.WriteLine();
-            Console.WriteLine($"Reading module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
+            Console.WriteLine($"Parsing module: {Path.GetRelativePath(Directory.GetCurrentDirectory(), SourceFilename)}");
 
             // parse yaml to module declaration AST
             var moduleDeclaration = new LambdaSharpParser(this, SourceFilename).ParseSyntaxOfType<ModuleDeclaration>();
@@ -66,20 +66,20 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
-            // prepare compilation
-            Console.WriteLine($"Compiling: {moduleDeclaration.Module.Value} (v{moduleDeclaration.Version?.Value ?? moduleVersion?.ToString() ?? "1.0-DEV"})");
-            var moduleBuilder = new Builder();
-
-            // override module version
-            if(moduleVersion != null) {
-                moduleBuilder.ModuleVersion = moduleVersion;
-            }
-
             // prepare AST for processing
+            var moduleBuilder = new Builder();
             moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
+
+            // optionally, override module version
+            if(moduleVersion != null) {
+                moduleBuilder.ModuleVersion = moduleVersion;
+            }
+
+            // prepare compilation
+            Console.WriteLine($"Compiling: {moduleDeclaration.Module.Value} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
 
             // analyze structure of AST
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(moduleBuilder));
@@ -93,7 +93,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 return false;
             }
 
-            // TODO: type validation
+            // TODO:
+            //  * collect definitions to download
+            //  * type validation
 
             // resolve references in AST
             new ReferenceResolver(moduleBuilder).Visit();
@@ -114,8 +116,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // TODO:
-            //  - generate build artifacts
-            //  - convert declaration to cloudformation resources
+            //  * generate build artifacts
+            //  * convert declaration to cloudformation resources
 
             // TODO:
             throw new NotImplementedException();

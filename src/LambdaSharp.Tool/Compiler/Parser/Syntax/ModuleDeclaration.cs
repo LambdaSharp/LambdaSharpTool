@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression? Module { get; set; }
 
         [SyntaxOptional]
-        public LiteralExpression? Version { get; set; }
+        public LiteralExpression Version { get; set; } = ASyntaxAnalyzer.Literal("1.0-DEV");
 
         [SyntaxOptional]
         public LiteralExpression? Description { get; set; }

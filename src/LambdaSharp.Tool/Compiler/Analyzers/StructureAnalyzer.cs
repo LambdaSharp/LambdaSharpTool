@@ -34,6 +34,15 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static Regex AlphanumericRegex = new Regex("^[0-9a-zA-Z]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+        private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
+            "Alexa",
+            "AMZN",
+            "Amazon",
+            "ASK",
+            "AWS",
+            "Custom",
+            "Dev"
+        };
 
         //--- Class Constructor ---
         static StructureAnalyzer() {
@@ -377,7 +386,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
-            // NOTE (2019-11-05, bjorg): processing happens in VisitEnd() after the property and attribute nodes have been processed
+            // validate resource type name
+            var resourceTypeNameParts = node.ResourceType.Value.Split("::", 2);
+            if(resourceTypeNameParts.Length == 1) {
+                _builder.Log(Error.ResourceTypeInvalidFormat, node.ResourceType);
+            }
+            if(_reservedResourceTypePrefixes.Contains(resourceTypeNameParts[0])) {
+                _builder.Log(Error.ResourceTypeReservedPrefix(resourceTypeNameParts[0]), node.ResourceType);
+            }
+
+            // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
@@ -406,7 +424,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Properties.Any()) {
                 foreach(var property in node.Properties) {
                     if(!names.Add(property.Name.Value)) {
-                        _builder.Log(Error.DuplicateName, property.Name);
+                        _builder.Log(Error.ResourceTypePropertyDuplicateName(property.Name.Value), property.Name);
                     }
                 }
             } else {
@@ -418,7 +436,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Attributes.Any()) {
                 foreach(var attribute in node.Attributes) {
                     if(!names.Add(attribute.Name.Value)) {
-                        _builder.Log(Error.DuplicateName, attribute.Name);
+                        _builder.Log(Error.ResourceTypeAttributeDuplicateName(attribute.Name.Value), attribute.Name);
                     }
                 }
             } else {
@@ -433,9 +451,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Type == null) {
 
                 // default Type is String when omitted
-                node.Type = new LiteralExpression {
-                    Value = "String"
-                };
+                node.Type = Literal("String");
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
                 _builder.Log(Error.TypeAttributeInvalid, node.Type);
             }
@@ -448,9 +464,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Type == null) {
 
                 // default Type is String when omitted
-                node.Type = new LiteralExpression {
-                    Value = "String"
-                };
+                node.Type = Literal("String");
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
                 _builder.Log(Error.TypeAttributeInvalid, node.Type);
             }

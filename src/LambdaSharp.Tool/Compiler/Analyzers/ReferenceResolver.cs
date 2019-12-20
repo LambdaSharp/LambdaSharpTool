@@ -23,7 +23,6 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    // TODO: better name?
     public class ReferenceResolver {
 
         //--- Class Methods ---

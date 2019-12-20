@@ -24,7 +24,6 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    // TODO: what is the purpose of this analyze? and should it do the !Sub normalization?
     public class ReferencesAnalyzer : ASyntaxAnalyzer {
 
         //--- Constants ---
@@ -58,39 +57,23 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
                 if(node.ParentItemDeclaration is ConditionDeclaration) {
                     _builder.Log(Error.GetAttCannotBeUsedInAConditionDeclaration, node);
-                } else {
+                }
+                if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
-                    // validate the declaration type
-                    switch(referencedDeclaration) {
-                    case ConditionDeclaration _:
-                    case MappingDeclaration _:
-                    case ResourceTypeDeclaration _:
-                    case GroupDeclaration _:
-                        _builder.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
-                        break;
-                    case AResourceInstanceDeclaration cloudFormationResourceDeclaration:
-
-                        // TODO: we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
-                        if(cloudFormationResourceDeclaration.CloudFormationType == null) {
-                            _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
-                        } else {
-                            node.ReferencedDeclaration = referencedDeclaration;
-
-                            // track mutual dependencies
-                            node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
-                            referencedDeclaration.ReverseDependencies.Add(node);
-                        }
-                        break;
-                    case ParameterDeclaration _:
-                    case PseudoParameterDeclaration _:
-                    case VariableDeclaration _:
-                    case PackageDeclaration _:
-                    case ImportDeclaration _:
+                    // TODO: we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
+                    if(resourceDeclaration.CloudFormationType == null) {
                         _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
-                        break;
-                    default:
-                        throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
+                    } else {
+                        node.ReferencedDeclaration = referencedDeclaration;
+
+                        // TODO: validate the attribute exists on the given resource type
+
+                        // track mutual dependencies
+                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
+                        referencedDeclaration.ReverseDependencies.Add(node);
                     }
+                } else {
+                    _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                 }
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
