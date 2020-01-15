@@ -232,9 +232,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // creation condition as sub-declaration
                     AddDeclaration(node, new ConditionDeclaration {
-                        Condition = new LiteralExpression {
+                        Condition = new LiteralExpression("Condition") {
                             SourceLocation = node.If.SourceLocation,
-                            Value = "Condition"
                         },
                         Description = null,
                         Value = node.If
@@ -331,12 +330,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
 
             // check if object expression is valid (must have first- and second-level keys)
-            if(node.Value.Items.Any()) {
+            if(node.Value.Any()) {
                 var topLevelKeys = new HashSet<string>();
                 var secondLevelKeys = new HashSet<string>();
 
                 // check that all first-level keys have object expressions
-                foreach(var topLevelEntry in node.Value.Items) {
+                foreach(var topLevelEntry in node.Value) {
 
                     // validate top-level key
                     if(!AlphanumericRegex.IsMatch(topLevelEntry.Key.Value)) {
@@ -348,11 +347,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // validate top-level value
                     if(topLevelEntry.Value is ObjectExpression secondLevelObjectExpression) {
-                        if(secondLevelObjectExpression.Items.Any()) {
+                        if(secondLevelObjectExpression.Any()) {
                             secondLevelKeys.Clear();
 
                             // check that all second-level keys have literal expressions
-                            foreach(var secondLevelEntry in secondLevelObjectExpression.Items) {
+                            foreach(var secondLevelEntry in secondLevelObjectExpression) {
 
                                 // validate top-level key
                                 if(!AlphanumericRegex.IsMatch(secondLevelEntry.Key.Value)) {

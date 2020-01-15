@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using FluentAssertions;
 using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
@@ -210,7 +211,7 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             ExpectNoMessages();
             var map = value.Should().BeOfType<ObjectExpression>().Which;
             map.Count.Should().Be(1);
-            var item = map.Items[0];
+            var item = map.First();
             var literal = item.Value.Should().BeOfType<LiteralExpression>().Which;
             literal.Value.Should().Be(output);
             literal.Type.Should().Be(type);

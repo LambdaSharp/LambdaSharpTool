@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+ #nullable enable
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,59 +34,72 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Types ---
         public class KeyValuePair {
 
+            //--- Constructors ---
+            public KeyValuePair(LiteralExpression key, AExpression value) {
+                Key = key;
+                Value = value;
+            }
+
             //--- Properties ---
-            public LiteralExpression Key { get; set; }
+            public LiteralExpression Key {get; }
             public AExpression Value { get; set; }
         }
 
-        //--- Properties ---
-        public List<KeyValuePair> Items { get; set; } = new List<KeyValuePair>();
+        //--- Fields ---
+        private readonly List<KeyValuePair> _items = new List<KeyValuePair>();
 
         //--- Operators ---
         public AExpression this[string key] {
-            get => Items.First(item => item.Key.Value == key).Value;
+            get => this[new LiteralExpression(key)];
+            set => this[new LiteralExpression(key)] = value;
+        }
+
+        public AExpression this[LiteralExpression key] {
+            get {
+                if(key == null) {
+                    throw new ArgumentNullException(nameof(key));
+                }
+                return _items.First(item => item.Key.Value == key.Value).Value;
+            }
             set {
+                if(key == null) {
+                    throw new ArgumentNullException(nameof(key));
+                }
+                _items.RemoveAll(kv => kv.Key.Value == key.Value);
 
                 // don't add null entries
                 if(value != null) {
-                    Items.Add(new KeyValuePair {
-                        Key = new LiteralExpression {
-                            Value = key ?? throw new ArgumentNullException(nameof(key))
-                        },
-                        Value = value
-                    });
+                    _items.Add(new KeyValuePair(key, value));
+                    key.Parent = this;
+                    key.SourceLocation ??= SourceLocation;
+                    value.Parent = this;
+                    value.SourceLocation ??= SourceLocation;
                 }
             }
         }
 
-        public AExpression this[LiteralExpression key] {
-            get => Items.First(item => item.Key.Value == key.Value).Value;
-            set => Items.Add(new KeyValuePair {
-                Key = key,
-                Value = value ?? throw new ArgumentNullException(nameof(value))
-            });
-        }
-
         //--- Methods ---
-        public bool TryGetValue(string key, out AExpression value) {
-            var found = Items.FirstOrDefault(item => item.Key.Value == key);
+
+        // TODO: AExpression is only null if return value is false
+        public bool TryGetValue(string key, out AExpression? value) {
+            var found = _items.FirstOrDefault(item => item.Key.Value == key);
             value = found?.Value;
             return found != null;
         }
 
-        public bool ContainsKey(string key) => Items.Any(item => item.Key.Value == key);
-        public int Count => Items.Count;
+        public bool ContainsKey(string key) => _items.Any(item => item.Key.Value == key);
+        public int Count => _items.Count;
 
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            foreach(var kv in Items) {
+            foreach(var kv in _items) {
                 kv.Key.Visit(this, visitor);
                 kv.Value.Visit(this, visitor);
             }
             visitor.VisitEnd(parent, this);
         }
 
-        public T GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
+        public T? GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
             if(error == null) {
                 throw new ArgumentNullException(nameof(error));
             }
@@ -92,7 +107,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 if(value is T inner) {
                     return inner;
                 } else {
-                    error(value);
+                    error(value!);
                     return default(T);
                 }
             } else {
@@ -106,10 +121,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
         //--- IEnumerable<AExpression> Members ---
-        IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => Items.GetEnumerator();
+        IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => _items.GetEnumerator();
     }
 
     public class ListExpression : AValueExpression, IEnumerable, IEnumerable<AExpression> {
@@ -121,7 +136,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Operators ---
         public AExpression this[int index] {
             get => Items[index];
-            set => Items[index] = value;
+            set {
+                Items[index] = value ?? throw new ArgumentNullException(nameof(value));
+                value.Parent = this;
+                value.SourceLocation ??= SourceLocation;
+            }
         }
 
         //--- Methods ---
@@ -151,9 +170,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class LiteralExpression : AValueExpression {
 
+        //--- Constructors ---
+        public LiteralExpression(string value) : this(value, LiteralType.String) { }
+
+        public LiteralExpression(string value, LiteralType type) {
+            Value = value ?? throw new ArgumentNullException(nameof(value));
+            Type = type;
+        }
+
+        public LiteralExpression(int value) {
+            Value = value.ToString();
+            Type = LiteralType.Integer;
+        }
+
         //--- Properties ---
-        public string Value { get; set; }
-        public LiteralType Type { get; set; }
+        public string Value { get; }
+        public LiteralType Type { get; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

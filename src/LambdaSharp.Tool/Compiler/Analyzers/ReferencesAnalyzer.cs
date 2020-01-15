@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             //  where possible.
 
             // replace as many ${VAR} occurrences as possible in the format string
-            node.FormatString.Value = ReplaceSubPattern(
+            node.FormatString = new LiteralExpression(ReplaceSubPattern(
                 node.FormatString.Value,
                 (subReferenceName, subAttributeName, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
 
@@ -207,7 +207,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                     return null;
                 }
-            );
+            )) {
+                SourceLocation = node.FormatString.SourceLocation
+            };
         }
 
         public override void VisitStart(ASyntaxNode parent, ConditionExpression node) {

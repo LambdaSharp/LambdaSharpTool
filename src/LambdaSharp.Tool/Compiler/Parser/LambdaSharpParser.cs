@@ -362,13 +362,9 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
 
                     // add key-value pair
-                    result.Items.Add(new ObjectExpression.KeyValuePair {
-                        Key = new LiteralExpression {
-                            SourceLocation = Location(keyScalar),
-                            Value = keyScalar.ParsingEvent.Value
-                        },
-                        Value = value
-                    });
+                    result[new LiteralExpression(keyScalar.ParsingEvent.Value) {
+                        SourceLocation = Location(keyScalar)
+                    }] = value;
                 }
                 result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
                 MoveNext();
@@ -504,10 +500,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 default:
                     throw new ShouldNeverHappenException($"unexpected scalar style: {scalar.Style} ({(int)scalar.Style})");
                 }
-                return new LiteralExpression {
-                    SourceLocation = Location(filePath, scalar),
-                    Value = value,
-                    Type = type
+                return new LiteralExpression(value, type) {
+                    SourceLocation = Location(filePath, scalar)
                 };
 
                 // local functions
@@ -657,8 +651,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             AExpression ConvertFunction(string tag, AExpression value) {
 
                 // check if value is a long-form function
-                if((value is ObjectExpression objectExpression) && (objectExpression.Items.Count == 1)) {
-                    var kv = objectExpression.Items.First();
+                if((value is ObjectExpression objectExpression) && (objectExpression.Count == 1)) {
+                    var kv = objectExpression.First();
                     switch(kv.Key.Value) {
                     case "Fn::Base64":
                         value = ConvertToBase64FunctionExpression(kv.Value);
@@ -816,9 +810,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
                     return new FindInMapFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        MapName = new LiteralExpression {
-                            SourceLocation = mapNameLiteral.SourceLocation,
-                            Value = mapNameLiteral.Value
+                        MapName = new LiteralExpression(mapNameLiteral.Value) {
+                            SourceLocation = mapNameLiteral.SourceLocation
                         },
                         TopLevelKey = parameterList[1],
                         SecondLevelKey = parameterList[2]
@@ -835,13 +828,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     var referenceAndAttribute = parameterLiteral.Value.Split('.', 2);
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression {
-                            SourceLocation = parameterLiteral.SourceLocation,
-                            Value = referenceAndAttribute[0]
+                        ReferenceName = new LiteralExpression(referenceAndAttribute[0]) {
+                            SourceLocation = parameterLiteral.SourceLocation
                         },
-                        AttributeName = new LiteralExpression {
-                            SourceLocation = parameterLiteral.SourceLocation,
-                            Value = (referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : ""
+                        AttributeName = new LiteralExpression((referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : "") {
+                            SourceLocation = parameterLiteral.SourceLocation
                         }
                     };
                 }
@@ -891,9 +882,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         SourceLocation = value.SourceLocation,
                         Condition = new ConditionExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            ReferenceName = new LiteralExpression {
-                                SourceLocation = conditionNameLiteral.SourceLocation,
-                                Value = conditionNameLiteral.Value
+                            ReferenceName = new LiteralExpression(conditionNameLiteral.Value) {
+                                SourceLocation = conditionNameLiteral.SourceLocation
                             }
                         },
                         IfTrue = parameterList[1],
@@ -1048,9 +1038,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 if(value is LiteralExpression refLiteral) {
                     return new ReferenceFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression {
-                            SourceLocation = value.SourceLocation,
-                            Value = refLiteral.Value
+                        ReferenceName = new LiteralExpression(refLiteral.Value) {
+                            SourceLocation = value.SourceLocation
                         }
                     };
                 }
@@ -1135,9 +1124,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 if(value is LiteralExpression conditionLiteral) {
                     return new ConditionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression {
-                            SourceLocation = value.SourceLocation,
-                            Value = conditionLiteral.Value
+                        ReferenceName = new LiteralExpression(conditionLiteral.Value) {
+                            SourceLocation = value.SourceLocation
                         }
                     };
                 }
@@ -1152,9 +1140,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             // attempt to parse a single scalar
             if(IsEvent<Scalar>(out var scalar, out var filePath)) {
                 MoveNext();
-                result.Add(new LiteralExpression {
-                    SourceLocation = Location(filePath, scalar),
-                    Value = scalar.Value
+                result.Add(new LiteralExpression(scalar.Value) {
+                    SourceLocation = Location(filePath, scalar)
                 });
                 return result;
             }

@@ -112,10 +112,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
 
                 // update 'Project' attribute with known project file that exists
-                node.Project = new LiteralExpression {
+                node.Project = new LiteralExpression(project) {
                     Parent = node,
-                    SourceLocation = node.Project?.SourceLocation,
-                    Value = project
+                    SourceLocation = node.Project?.SourceLocation
                 };
 
                 // fill in missing attributes based on function type
@@ -290,9 +289,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // set the language
                 if(node.Language == null) {
-                    node.Language = new LiteralExpression {
-                        Value = "csharp"
-                    };
+                    node.Language = new LiteralExpression("csharp");
                 }
 
                 // check if the handler/runtime were provided or if they need to be extracted from the project file
@@ -311,9 +308,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         _builder.Log(Error.UnsupportedVersionOfDotNetCore, node);
                         break;
                     case "netcoreapp2.1":
-                        node.Runtime = new LiteralExpression {
-                            Value = "dotnetcore2.1"
-                        };
+                        node.Runtime = new LiteralExpression("dotnetcore2.1");
                         break;
                     default:
                         _builder.Log(Error.UnknownVersionOfDotNetCore, node);
@@ -325,9 +320,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if(node.Handler == null) {
                     var rootNamespace = mainPropertyGroup?.Element("RootNamespace")?.Value;
                     if(rootNamespace != null) {
-                        node.Handler = new LiteralExpression {
-                            Value = $"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync"
-                        };
+                        node.Handler = new LiteralExpression($"{projectName}::{rootNamespace}.Function::FunctionHandlerAsync");
                     } else {
                         _builder.Log(Error.FailedToAutoDetectHandlerInDotNetFunctionProject, node);
                     }
@@ -338,23 +331,17 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // set the language
                 if(node.Language == null) {
-                    node.Language = new LiteralExpression {
-                        Value = "javascript"
-                    };
+                    node.Language = new LiteralExpression("javascript");
                 }
 
                 // set runtime
                 if(node.Runtime == null) {
-                    node.Runtime = new LiteralExpression {
-                        Value = "nodejs8.10"
-                    };
+                    node.Runtime = new LiteralExpression("nodejs8.10");
                 }
 
                 // set handler
                 if(node.Handler == null) {
-                    node.Handler = new LiteralExpression {
-                        Value = "index.handler"
-                    };
+                    node.Handler = new LiteralExpression("index.handler");
                 }
             }
 
@@ -362,16 +349,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // set the language
                 if(node.Language == null) {
-                    node.Language = new LiteralExpression {
-                        Value = "scala"
-                    };
+                    node.Language = new LiteralExpression("scala");
                 }
 
                 // set runtime
                 if(node.Runtime == null) {
-                    node.Runtime = new LiteralExpression {
-                        Value = "java8"
-                    };
+                    node.Runtime = new LiteralExpression("java8");
                 }
 
                 // set handler
