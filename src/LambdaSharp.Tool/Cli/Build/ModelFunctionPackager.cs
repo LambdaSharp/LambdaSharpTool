@@ -448,26 +448,27 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // rename function package with hash
             var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
-            if(!_existingPackages.Remove(package)) {
-                File.Move(temporaryPackage, package);
+            if(_existingPackages.Remove(package)) {
 
-                // add git-info.json file
-                using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Update)) {
-                    var entry = zipArchive.CreateEntry(GIT_INFO_FILE);
+                // remove old, existing package so we can move the new package into location (which also preserves the more recent build timestamp)
+                File.Delete(package);
+            }
+            File.Move(temporaryPackage, package);
 
-                    // Set RW-R--R-- permissions attributes on non-Windows operating system
-                    if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                        entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
-                    }
-                    using(var stream = entry.Open()) {
-                        stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ModuleManifestGitInfo {
-                            SHA = gitSha,
-                            Branch = gitBranch
-                        }).ToString(Formatting.None)));
-                    }
+            // add git-info.json file
+            using(var zipArchive = ZipFile.Open(package, ZipArchiveMode.Update)) {
+                var entry = zipArchive.CreateEntry(GIT_INFO_FILE);
+
+                // Set RW-R--R-- permissions attributes on non-Windows operating system
+                if(!RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                    entry.ExternalAttributes = 0b1_000_000_110_100_100 << 16;
                 }
-            } else {
-                File.Delete(temporaryPackage);
+                using(var stream = entry.Open()) {
+                    stream.Write(Encoding.UTF8.GetBytes(JObject.FromObject(new ModuleManifestGitInfo {
+                        SHA = gitSha,
+                        Branch = gitBranch
+                    }).ToString(Formatting.None)));
+                }
             }
 
             // set the module variable to the final package name
@@ -497,23 +498,28 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // recurse into referenced projects
                 foreach(var projectReference in csproj.Descendants("ProjectReference").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(projectReference.Attribute("Include").Value))));
+                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(projectReference));
                 }
 
                 // add compile file references
                 foreach(var compile in csproj.Descendants("Compile").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(compile.Attribute("Include").Value))));
+                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(compile));
                 }
 
                 // add content file references
                 foreach(var content in csproj.Descendants("Content").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(content.Attribute("Include").Value))));
+                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(content));
                 }
 
                 // added embedded resources
                 foreach(var embeddedResource in csproj.Descendants("EmbeddedResource").Where(node => node.Attribute("Include") != null)) {
-                    AddFileReferences(Path.GetFullPath(MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(embeddedResource.Attribute("Include").Value))));
+                    AddFileReferences(GetFilePathFromIncludeAttribute(embeddedResource));
                 }
+
+                // local functions
+                string GetFilePathFromIncludeAttribute(XElement element)
+                    => Path.GetFullPath(Path.Combine(projectFolder, MsBuildFileUtilities.MaybeAdjustFilePath(projectFolder, ResolveFilePath(element.Attribute("Include").Value))));
+
             } catch(Exception e) {
                 LogError($"error while analyzing '{project}'", e);
             }
