@@ -268,7 +268,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 node.FullName = node.LocalName;
             }
 
-            // TODO: we shouldn't always assign this expresion, because it's not always the correct thing to do
+            // TODO: we shouldn't always assign this expression, because it's not always the correct thing to do
             // assign default reference expression
             node.ReferenceExpression = ASyntaxAnalyzer.FnRef(node.FullName);
 
