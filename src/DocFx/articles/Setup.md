@@ -10,12 +10,15 @@ keywords: video, tutorial, getting started, overview, setup, install
 
 ## Step 0: Prerequisite
 
-To get started, make sure you have signed-up for an AWS account and downloaded the required tools.
+To get started, make sure you have signed-up for an AWS account and downloaded .NET Core.
 
 1. [AWS Account](https://portal.aws.amazon.com/billing/signup#/start)
-1. [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
 1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
 
+> **IMPORTANT:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
+> ```bash
+> export PATH=$HOME/.dotnet/tools:$PATH
+> ```
 
 ## Step 1: Installing LambdaSharp CLI
 
@@ -146,22 +149,25 @@ __Using PowerShell/Bash:__
 git clone https://github.com/LambdaSharp/LambdaSharpTool.git
 ```
 
-Define the `LAMBDASHARP` environment variable to point to the folder of the `LambdaSharpTool` clone. Furthermore, define `lash` as an alias to invoke the LambdaSharp CLI. The following script assumes LambdaSharp was cloned into the `/Repos/LambdaSharpTool` directory.
+Define the `LAMBDASHARP` environment variable to point to the folder of the `LambdaSharpTool` clone. Invoke the `set-lash-version` to set the correct version for the tool, otherwise it will not compile. Finally, define `lst` as an alias to invoke the LambdaSharp CLI.
+
+The following script assumes LambdaSharp was cloned into the `/Repos/LambdaSharpTool` directory.
 
 __Using PowerShell:__
 ```powershell
-New-Variable -Name LAMBDASHARP -Value \Repos\LambdaSharpTool
-function lash {
-  dotnet run -p $LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
+$Env:LAMBDASHARP="\Repos\LambdaSharpTool"
+$Env:LAMBDASHARP\Scripts\Set-Lash-Version.ps1
+function Run-LambdaSharp-Project {
+    dotnet run -p $env:LAMBDASHARP\src\LambdaSharp.Tool\LambdaSharp.Tool.csproj -- $args
 }
+New-Alias -Name lst -Value Run-LambdaSharp-Project -Description "Run LambdaSharp from project" -Force
 ```
 
 __Using Bash:__
 ```bash
 export LAMBDASHARP=/Repos/LambdaSharpTool
-alias lash="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
+source $LAMBDASHARP/Scripts/set-lash-version.sh
+alias lst="dotnet run -p $LAMBDASHARP/src/LambdaSharp.Tool/LambdaSharp.Tool.csproj --"
 ```
 
-__IMPORTANT:__ make sure to always use your  `lash` alias instead of the `lash` command.
-
-In addition, you need to run `Scripts/set-lash-version.sh` to set required environment variables for building the project file. This script sets the `LAMBDASHARP_VERSION_PREFIX`, `LAMBDASHARP_VERSION_SUFFIX`, and `LAMBDASHARP_VERSION` environment variables.
+__IMPORTANT:__ make sure to always use your `lst` function/alias instead of the `lash` command.
