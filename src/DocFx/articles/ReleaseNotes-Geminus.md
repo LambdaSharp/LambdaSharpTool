@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.6) - 2019-12-12
+# LambdaSharp "Geminus" Release (v0.7.0.7) - 2020-01-31
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -179,6 +179,16 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
 ## Releases
+
+### (v0.7.0.7) - 2020-01-31
+
+#### Fixes
+
+* LambdaSharp CLI
+    * `lash build` did not properly convert `\` in `.csproj` files on non-Windows operating systems, which caused a false-negative when trying to detect changes to function projects.
+    * Replaced locally patched `SharpZipLib` assembly with nuget version since the local patch was merged and published in v1.2.0
+    * Fixed an issue where a function project would be recompiled every time even when no changes were made.
+    * Fixed an issue where cached information was stored in the wrong application folder.
 
 ### (v0.7.0.6) - 2019-12-12
 
