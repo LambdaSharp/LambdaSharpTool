@@ -96,6 +96,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             // TODO:
             //  * collect definitions to download
             //  * type validation
+            //  * validate the attribute exists on !GetAtt on the given resource type
 
             // resolve references in AST
             new ReferenceResolver(moduleBuilder).Visit();

@@ -60,13 +60,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
                 if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
-                    // TODO: we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
+                    // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
                     if(resourceDeclaration.CloudFormationType == null) {
                         _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                     } else {
                         node.ReferencedDeclaration = referencedDeclaration;
-
-                        // TODO: validate the attribute exists on the given resource type
 
                         // track mutual dependencies
                         node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
