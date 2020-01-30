@@ -254,14 +254,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public void VisitEnd(ASyntaxNode parent, ConditionExpression node) { }
         #endregion
 
-        private void InitializeSyntaxNode(ASyntaxNode parent, ASyntaxNode node) {
-            node.Parent ??= parent;
-            node.SourceLocation ??= parent.SourceLocation;
-        }
+        private void InitializeSyntaxNode(ASyntaxNode parent, ASyntaxNode node) { }
 
         private void InitializeItemDeclaration(ASyntaxNode parent, AItemDeclaration node) {
 
             // TODO: not true for ResourceType declarations since they don't have an addressable name!
+
             // assign full name
             if(parent is AItemDeclaration parentItemDeclaration) {
                 node.FullName = $"{parentItemDeclaration.FullName}::{node.ItemName.Value}";
