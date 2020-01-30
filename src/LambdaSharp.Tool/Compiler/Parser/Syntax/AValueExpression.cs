@@ -21,6 +21,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
@@ -41,7 +42,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Properties ---
-            public LiteralExpression Key {get; }
+            public LiteralExpression Key { get; }
             public AExpression Value { get; set; }
         }
 
@@ -65,26 +66,27 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 if(key == null) {
                     throw new ArgumentNullException(nameof(key));
                 }
-                _items.RemoveAll(kv => kv.Key.Value == key.Value);
+                if(value == null) {
+                    throw new ArgumentNullException(nameof(value));
 
-                // don't add null entries
-                if(value != null) {
-                    _items.Add(new KeyValuePair(key, value));
-                    key.Parent = this;
-                    key.SourceLocation ??= SourceLocation;
-                    value.Parent = this;
-                    value.SourceLocation ??= SourceLocation;
                 }
+                Remove(key.Value);
+                _items.Add(new KeyValuePair(SetParent(key), SetParent(value)));
             }
         }
 
         //--- Methods ---
-
-        // TODO: AExpression is only null if return value is false
-        public bool TryGetValue(string key, out AExpression? value) {
+        public bool TryGetValue(string key, [NotNullWhen(true)] out AExpression? value) {
             var found = _items.FirstOrDefault(item => item.Key.Value == key);
             value = found?.Value;
             return found != null;
+        }
+
+        public bool Remove(string key) {
+            if(key == null) {
+                throw new ArgumentNullException(nameof(key));
+            }
+            return _items.RemoveAll(kv => kv.Key.Value == key) > 0;
         }
 
         public bool ContainsKey(string key) => _items.Any(item => item.Key.Value == key);
@@ -112,10 +114,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 }
             } else {
                 var result = new T {
-                    Parent = this,
                     SourceLocation = SourceLocation
                 };
-                this[key] = result;
+                this[key] = SetParent(result);
                 return result;
             }
         }
@@ -129,34 +130,42 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public class ListExpression : AValueExpression, IEnumerable, IEnumerable<AExpression> {
 
+        //--- Fields ---
+        private readonly List<AExpression> _items = new List<AExpression>();
+
+        //--- Constructors ---
+        public ListExpression() { }
+
+        public ListExpression(IEnumerable<AExpression> items) {
+            _items.AddRange(items);
+            foreach(var item in items) {
+                SetParent(item);
+            }
+        }
+
         //--- Properties ---
-        public List<AExpression> Items { get; set; } = new List<AExpression>();
-        public int Count => Items.Count;
+        public int Count => _items.Count;
 
         //--- Operators ---
         public AExpression this[int index] {
-            get => Items[index];
-            set {
-                Items[index] = value ?? throw new ArgumentNullException(nameof(value));
-                value.Parent = this;
-                value.SourceLocation ??= SourceLocation;
-            }
+            get => _items[index];
+            set => _items[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Items?.Visit(this, visitor);
+            _items?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
 
-        public void Add(AExpression expression) => Items.Add(expression);
+        public void Add(AExpression expression) => _items.Add(SetParent(expression));
 
         //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => Items.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
 
         //--- IEnumerable<AExpression> Members ---
-        IEnumerator<AExpression> IEnumerable<AExpression>.GetEnumerator() => Items.GetEnumerator();
+        IEnumerator<AExpression> IEnumerable<AExpression>.GetEnumerator() => _items.GetEnumerator();
     }
 
     public enum LiteralType {

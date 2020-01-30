@@ -16,16 +16,29 @@
  * limitations under the License.
  */
 
+#nullable enable
+
+using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class ASyntaxNode {
 
+        //--- Fields ---
+        private SourceLocation? _sourceLocation;
+
         //--- Properties ---
-        public ASyntaxNode Parent { get; set; }
-        public SourceLocation SourceLocation { get; set; }
+        public ASyntaxNode? Parent { get; private set; }
+
+        public SourceLocation? SourceLocation {
+
+            // TODO: consider return a default empty location when no source location is found
+            get => _sourceLocation ?? Parent?.SourceLocation;
+            set => _sourceLocation = value;
+        }
 
         public IEnumerable<ASyntaxNode> Parents {
             get {
@@ -42,6 +55,30 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Abstract Methods ---
         public abstract void Visit(ASyntaxNode parent, ISyntaxVisitor visitor);
+
+        //--- Methods ---
+        [return: NotNullIfNotNull("node") ]
+        protected T? SetParent<T>(T? node) where T : ASyntaxNode {
+            if(node != null) {
+
+                // TODO: should we enforce this?
+                // if(node.Parent != null) {
+                //     throw new ApplicationException("node already had a parent");
+                // }
+                node.Parent = this;
+            }
+            return node;
+        }
+
+        [return: NotNullIfNotNull("list") ]
+        protected List<T>? SetParent<T>(List<T>? list) where T : ASyntaxNode {
+            if(list != null) {
+                foreach(var node in list) {
+                    SetParent(node);
+                }
+            }
+            return list;
+        }
     }
 
     public static class ASyntaxNodeEx {

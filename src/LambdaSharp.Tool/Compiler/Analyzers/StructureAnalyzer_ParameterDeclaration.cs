@@ -40,7 +40,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // default 'Type' attribute value is 'String' when omitted
             if(node.Type == null) {
                 node.Type = new LiteralExpression("String") {
-                    Parent = node,
                     SourceLocation = node.SourceLocation
                 };
             }
@@ -48,7 +47,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // default 'Section' attribute value is "Module Settings" when omitted
             if(node.Section == null) {
                 node.Section = new LiteralExpression("Module Settings") {
-                    Parent = node,
                     SourceLocation = node.SourceLocation
                 };
             }

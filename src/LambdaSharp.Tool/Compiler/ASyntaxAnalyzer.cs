@@ -73,9 +73,7 @@ namespace LambdaSharp.Tool.Compiler {
         // TODO: consider inlining to allow SourceLocation to be set more easily
         public static LiteralExpression Literal(int value) => new LiteralExpression(value);
 
-        public static ListExpression LiteralList(params string[] values) => new ListExpression {
-            Items = values.Select(value => (AExpression)Literal(value)).ToList()
-        };
+        public static ListExpression LiteralList(params string[] values) => new ListExpression(values.Select(value => Literal(value)));
 
         public static NotConditionExpression FnNot(AExpression condition) => new NotConditionExpression {
             Value = condition ?? throw new ArgumentNullException(nameof(condition))

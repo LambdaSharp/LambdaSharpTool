@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
- #nullable enable
+#nullable enable
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
@@ -26,9 +26,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         // !Condition STRING
 
+        //--- Fields ---
+        private LiteralExpression? _referenceName;
+        private ConditionDeclaration? _referencedDeclaration;
+
         //--- Properties ---
-        public LiteralExpression? ReferenceName { get; set; }
-        public ConditionDeclaration? ReferencedDeclaration { get; set; }
+        public LiteralExpression? ReferenceName {
+            get => _referenceName;
+            set => _referenceName = SetParent(value);
+        }
+
+        public ConditionDeclaration? ReferencedDeclaration {
+            get => _referencedDeclaration;
+            set => _referencedDeclaration = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -47,9 +58,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Condition
         //  - Other condition functions
 
-         //--- Properties ---
-         public AExpression? LeftValue { get; set; }
-         public AExpression? RightValue { get; set; }
+        //--- Fields ---
+        private AExpression? _leftValue;
+        private AExpression? _rightValue;
+
+        //--- Properties ---
+        public AExpression? LeftValue {
+            get => _leftValue;
+            set => _leftValue = SetParent(value);
+        }
+
+        public AExpression? RightValue {
+            get => _rightValue;
+            set => _rightValue = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -69,8 +91,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Condition
         //  - Other condition functions
 
-         //--- Properties ---
-         public AExpression? Value { get; set; }
+        //--- Fields ---
+        private AExpression? _value;
+
+        //--- Properties ---
+        public AExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -89,9 +117,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Condition
         //  - Other condition functions
 
-         //--- Properties ---
-         public AExpression? LeftValue { get; set; }
-         public AExpression? RightValue { get; set; }
+        //--- Fields ---
+        private AExpression? _leftValue;
+        private AExpression? _rightValue;
+
+        //--- Properties ---
+        public AExpression? LeftValue {
+            get => _leftValue;
+            set => _leftValue = SetParent(value);
+        }
+
+        public AExpression? RightValue {
+            get => _rightValue;
+            set => _rightValue = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -111,9 +150,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Condition
         //  - Other condition functions
 
-         //--- Properties ---
-         public AExpression? LeftValue { get; set; }
-         public AExpression? RightValue { get; set; }
+        //--- Fields ---
+        private AExpression? _leftValue;
+        private AExpression? _rightValue;
+
+        //--- Properties ---
+        public AExpression? LeftValue {
+            get => _leftValue;
+            set => _leftValue = SetParent(value);
+        }
+
+        public AExpression? RightValue {
+            get => _rightValue;
+            set => _rightValue = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -172,7 +172,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // validate Value attribute
                 if(node.Value is ListExpression listExpression) {
-                    foreach(var arnValue in listExpression.Items) {
+                    foreach(var arnValue in listExpression) {
                         ValidateARN(arnValue);
 
                         // add resource permissions per ARN
@@ -740,13 +740,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             switch(expression) {
             case null:
                 expression = new ListExpression {
-                    Parent = parent,
                     SourceLocation = parent.SourceLocation
                 };
                 break;
             case LiteralExpression literalExpression: {
                     var list = new ListExpression {
-                        Parent = parent,
                         SourceLocation = literalExpression.SourceLocation
                     };
                     expression = list;
@@ -773,8 +771,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             var endColumnOffset = literalExpression.Value.Take(offset + item.Length).Reverse().TakeWhile(c => c != '\n').Count();
 
                             // add literal value
-                            list.Items.Add(new ListExpression {
-                                Parent = parent,
+                            list.Add(new ListExpression {
                                 SourceLocation = new Parser.SourceLocation {
                                     FilePath = literalExpression.SourceLocation.FilePath,
                                     LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,

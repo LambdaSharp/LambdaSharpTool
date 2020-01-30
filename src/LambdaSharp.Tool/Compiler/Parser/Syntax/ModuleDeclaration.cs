@@ -29,28 +29,58 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Module")]
     public class ModuleDeclaration : ADeclaration {
 
+        //--- Fields ---
+        private LiteralExpression _version;
+        private LiteralExpression? _description;
+        private ListExpression _pragmas;
+        private List<LiteralExpression> _secrets = new List<LiteralExpression>();
+        private List<UsingModuleDeclaration> _using = new List<UsingModuleDeclaration>();
+        private List<AItemDeclaration> _items = new List<AItemDeclaration>();
+
         //--- Constructors ---
-        public ModuleDeclaration(LiteralExpression moduleName) => ModuleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
+        public ModuleDeclaration(LiteralExpression moduleName) {
+            ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
+            _version = SetParent(ASyntaxAnalyzer.Literal("1.0-DEV"));
+            _pragmas = SetParent(new ListExpression());
+        }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression Version { get; set; } = ASyntaxAnalyzer.Literal("1.0-DEV");
+        public LiteralExpression Version {
+            get => _version;
+            set => _version = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Description { get; set; }
+        public LiteralExpression? Description {
+            get => _description;
+            set => _description = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ListExpression Pragmas { get; set; } = new ListExpression();
+        public ListExpression Pragmas {
+            get => _pragmas;
+            set => _pragmas = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression> Secrets { get; set; } = new List<LiteralExpression>();
+        public List<LiteralExpression> Secrets {
+            get => _secrets;
+            set => _secrets = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         [SyntaxOptional]
-        public List<UsingModuleDeclaration> Using { get; set; } = new List<UsingModuleDeclaration>();
+        public List<UsingModuleDeclaration> Using {
+            get => _using;
+            set => _using = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         [SyntaxRequired]
-        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
+        public List<AItemDeclaration> Items {
+            get => _items;
+            set => _items = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         public LiteralExpression ModuleName { get; }
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
@@ -73,13 +103,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Module")]
     public class UsingModuleDeclaration : ADeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _description;
+
         //--- Constructors ---
-        public UsingModuleDeclaration(LiteralExpression moduleName) => ModuleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
+        public UsingModuleDeclaration(LiteralExpression moduleName) => ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Description { get; set; }
+        public LiteralExpression? Description {
+            get => _description;
+            set => _description = SetParent(value);
+        }
 
         public LiteralExpression ModuleName { get; }
 

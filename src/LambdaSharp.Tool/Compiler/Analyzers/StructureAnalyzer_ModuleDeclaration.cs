@@ -295,9 +295,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 AddGrant(
                     name: "EmbeddedSecrets",
                     awsType: null,
-                    reference: new ListExpression {
-                        Items = node.Secrets.Cast<AExpression>().ToList()
-                    },
+                    reference: new ListExpression(node.Secrets),
                     allow: new ListExpression {
                         Literal("kms:Decrypt"),
                         Literal("kms:Encrypt")

@@ -414,7 +414,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                     var item = ParseExpression();
                     if(item != null) {
-                        result.Items.Add(item);
+                        result.Add(item);
                     }
                 }
                 result.SourceLocation = Location(filePath, sequenceStart, Current.ParsingEvent);
@@ -811,7 +811,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !Cidr [ VALUE, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 3) {
+                    if(parameterList.Count != 3) {
                         Log(Error.FunctionExpectsThreeParameters("!Cidr"), value.SourceLocation);
                         return null;
                     }
@@ -830,7 +830,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !FindInMap [ NAME, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 3) {
+                    if(parameterList.Count != 3) {
                         Log(Error.FunctionExpectsThreeParameters("!FindInMap"), value.SourceLocation);
                         return null;
                     }
@@ -869,7 +869,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !GetAtt [ STRING, VALUE ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 2) {
+                    if(parameterList.Count != 2) {
                         Log(Error.FunctionExpectsTwoParameters("!GetAtt"), value.SourceLocation);
                         return null;
                     }
@@ -900,7 +900,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !If [ NAME/CONDITION, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 3) {
+                    if(parameterList.Count != 3) {
                         Log(Error.FunctionExpectsThreeParameters("!If"), value.SourceLocation);
                         return null;
                     }
@@ -937,7 +937,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !Join [ STRING, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 2) {
+                    if(parameterList.Count != 2) {
                         Log(Error.FunctionExpectsTwoParameters("!Join"), value.SourceLocation);
                         return null;
                     }
@@ -959,7 +959,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !Select [ VALUE, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 2) {
+                    if(parameterList.Count != 2) {
                         Log(Error.FunctionExpectsTwoParameters("!Select"), value.SourceLocation);
                         return null;
                     }
@@ -977,7 +977,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !Split [ STRING, VALUE ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 2) {
+                    if(parameterList.Count != 2) {
                         Log(Error.FunctionExpectsTwoParameters("!Split"), value.SourceLocation);
                         return null;
                     }
@@ -1010,7 +1010,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // !Sub [ STRING, { KEY: VALUE, ... }]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Items.Count != 2) {
+                    if(parameterList.Count != 2) {
                         Log(Error.FunctionExpectsTwoParameters("!Sub"), value.SourceLocation);
                         return null;
                     }

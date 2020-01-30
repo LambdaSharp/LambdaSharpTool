@@ -50,10 +50,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // NOTE: for conditional resources, we need to take a dependency via an expression; however
                 //  this approach doesn't work for custom resources because they don't support !Ref
-                finalizerInvocationResourceDeclaration.Properties["DependsOn"] = new ListExpression {
-                    Parent = finalizerInvocationResourceDeclaration.Properties,
-                    SourceLocation = finalizerInvocationResourceDeclaration.SourceLocation,
-                    Items = allResourceDeclaration
+                finalizerInvocationResourceDeclaration.Properties["DependsOn"] = new ListExpression(
+                    allResourceDeclaration
                         .OfType<IConditionalResourceDeclaration>()
                         .Where(conditionalResourceDeclaration => conditionalResourceDeclaration.If != null)
                         .Select(conditionalResourceDeclaration => ASyntaxAnalyzer.FnIf(
@@ -61,8 +59,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             _builder.GetExportReference(conditionalResourceDeclaration),
                             ASyntaxAnalyzer.FnRef("AWS::NoValue"))
                         )
-                        .Cast<AExpression>()
-                        .ToList()
+                ) {
+                    SourceLocation = finalizerInvocationResourceDeclaration.SourceLocation
                 };
             }
         }

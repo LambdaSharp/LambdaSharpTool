@@ -28,6 +28,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Api")]
     public class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _integration;
+        private LiteralExpression? _operationName;
+        private LiteralExpression? _apiKeyRequired;
+        private LiteralExpression? _authorizationType;
+        private List<LiteralExpression>? _authorizationScopes;
+        private AExpression? _authorizerId;
+        private LiteralExpression? _invoke;
+
         //--- Types ---
         public enum IntegrationType {
             Unsupported,
@@ -36,30 +45,51 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Constructors ---
-        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Integration { get; set; }
+        public LiteralExpression? Integration {
+            get => _integration;
+            set => _integration = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? OperationName { get; set; }
+        public LiteralExpression? OperationName {
+            get => _operationName;
+            set => _operationName = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? ApiKeyRequired { get; set; }
+        public LiteralExpression? ApiKeyRequired {
+            get => _apiKeyRequired;
+            set => _apiKeyRequired = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? AuthorizationType { get; set; }
+        public LiteralExpression? AuthorizationType {
+            get => _authorizationType;
+            set => _authorizationType = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression>? AuthorizationScopes { get; set; }
+        public List<LiteralExpression>? AuthorizationScopes {
+            get => _authorizationScopes;
+            set => _authorizationScopes = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? AuthorizerId { get; set; }
+        public AExpression? AuthorizerId {
+            get => _authorizerId;
+            set => _authorizerId = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Invoke { get; set; }
+        public LiteralExpression? Invoke {
+            get => _invoke;
+            set => _invoke = SetParent(value);
+        }
 
         public LiteralExpression EventSource { get; }
         public string? ApiMethod { get; set; }
@@ -84,13 +114,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Schedule", typeof(AExpression))]
     public class SchedulEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _name;
+
         //--- Constructors ---
-        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Name { get; set; }
+        public LiteralExpression? Name {
+            get => _name;
+            set => _name = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -106,19 +142,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("S3", typeof(AExpression))]
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private List<LiteralExpression>? _events;
+        private LiteralExpression? _prefix;
+        private LiteralExpression? _suffix;
+
         //--- Constructors ---
-        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public List<LiteralExpression>? Events { get; set; }
+        public List<LiteralExpression>? Events {
+            get => _events;
+            set => _events = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Prefix { get; set; }
+        public LiteralExpression? Prefix {
+            get => _prefix;
+            set => _prefix = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Suffix { get; set; }
+        public LiteralExpression? Suffix {
+            get => _suffix;
+            set => _suffix = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -137,7 +187,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
         public string[]? SlackPath { get; set; }
@@ -154,14 +204,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Topic", typeof(AExpression))]
     public class TopicEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private ObjectExpression? _filters;
+
         //--- Constructors ---
-        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         // TODO (2020-01-30, bjorg): add validation for topic filters
         [SyntaxOptional]
-        public ObjectExpression? Filters { get; set; }
+        public ObjectExpression? Filters {
+            get => _filters;
+            set => _filters = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -177,14 +233,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Sqs", typeof(AExpression))]
     public class SqsEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private AExpression? _batchSize;
+
         //--- Constructors ---
         // TODO: constructor must be able to take `AExpression`!
-        public SqsEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public SqsEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? BatchSize { get; set; }
+        public AExpression? BatchSize {
+            get => _batchSize;
+            set => _batchSize = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -201,7 +263,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class AlexaEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         public AExpression EventSource { get; }
 
@@ -216,19 +278,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("DynamoDB", typeof(AExpression))]
     public class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private AExpression? _batchSize;
+        private AExpression? _startingPosition;
+        private AExpression? _maximumBatchingWindowInSeconds;
+
         //--- Constructors ---
-        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? BatchSize { get; set; }
+        public AExpression? BatchSize {
+            get => _batchSize;
+            set => _batchSize = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? StartingPosition { get; set; }
+        public AExpression? StartingPosition {
+            get => _startingPosition;
+            set => _startingPosition = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? MaximumBatchingWindowInSeconds { get; set; }
+        public AExpression? MaximumBatchingWindowInSeconds {
+            get => _maximumBatchingWindowInSeconds;
+            set => _maximumBatchingWindowInSeconds = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -245,19 +321,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Kinesis", typeof(AExpression))]
     public class KinesisEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private AExpression? _batchSize;
+        private AExpression? _startingPosition;
+        private AExpression? _maximumBatchingWindowInSeconds;
+
         //--- Constructors ---
-        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? BatchSize { get; set; }
+        public AExpression? BatchSize {
+            get => _batchSize;
+            set => _batchSize = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? StartingPosition { get; set; }
+        public AExpression? StartingPosition {
+            get => _startingPosition;
+            set => _startingPosition = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? MaximumBatchingWindowInSeconds { get; set; }
+        public AExpression? MaximumBatchingWindowInSeconds {
+            get => _maximumBatchingWindowInSeconds;
+            set => _maximumBatchingWindowInSeconds = SetParent(value);
+        }
 
         public AExpression EventSource { get; }
 
@@ -274,28 +364,54 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("WebSocket")]
     public class WebSocketEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _operationName;
+        private LiteralExpression? _apiKeyRequired;
+        private LiteralExpression? _authorizationType;
+        private List<LiteralExpression>? _authorizationScopes;
+        private AExpression? _authorizerId;
+        private LiteralExpression? _invoke;
+
         //--- Constructors ---
-        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? OperationName { get; set; }
+        public LiteralExpression? OperationName {
+            get => _operationName;
+            set => _operationName = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? ApiKeyRequired { get; set; }
+        public LiteralExpression? ApiKeyRequired {
+            get => _apiKeyRequired;
+            set => _apiKeyRequired = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? AuthorizationType { get; set; }
+        public LiteralExpression? AuthorizationType {
+            get => _authorizationType;
+            set => _authorizationType = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression>? AuthorizationScopes { get; set; }
+        public List<LiteralExpression>? AuthorizationScopes {
+            get => _authorizationScopes;
+            set => _authorizationScopes = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? AuthorizerId { get; set; }
+        public AExpression? AuthorizerId {
+            get => _authorizerId;
+            set => _authorizerId = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Invoke { get; set; }
+        public LiteralExpression? Invoke {
+            get => _invoke;
+            set => _invoke = SetParent(value);
+        }
 
         public LiteralExpression EventSource { get; }
 

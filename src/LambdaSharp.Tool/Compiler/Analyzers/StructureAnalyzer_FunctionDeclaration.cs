@@ -113,7 +113,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // update 'Project' attribute with known project file that exists
                 node.Project = new LiteralExpression(project) {
-                    Parent = node,
                     SourceLocation = node.Project?.SourceLocation
                 };
 

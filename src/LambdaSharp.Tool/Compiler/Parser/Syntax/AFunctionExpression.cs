@@ -16,19 +16,25 @@
  * limitations under the License.
  */
 
- #nullable enable
+#nullable enable
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
-    public abstract class AFunctionExpression : AExpression  { }
+    public abstract class AFunctionExpression : AExpression { }
 
     public class Base64FunctionExpression : AFunctionExpression {
+
+        //--- Fields ---
+        private AExpression? _value;
 
         // !Base64 VALUE
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
-        public AExpression? Value { get; set; }
+        public AExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -45,10 +51,26 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - !Select
         //  - !Ref
 
+        //--- Fields ---
+        private AExpression? _ipBlock;
+        private AExpression? _count;
+        private AExpression? _cidrBits;
+
         //--- Properties ---
-        public AExpression? IpBlock  { get; set; }
-        public AExpression? Count { get; set; }
-        public AExpression? CidrBits { get; set; }
+        public AExpression? IpBlock {
+            get => _ipBlock;
+            set => _ipBlock = SetParent(value);
+        }
+
+        public AExpression? Count {
+            get => _count;
+            set => _count = SetParent(value);
+        }
+
+        public AExpression? CidrBits {
+            get => _cidrBits;
+            set => _cidrBits = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -67,12 +89,28 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::FindInMap
         //  - Ref
 
+        //--- Fields ---
+        private LiteralExpression? _mapName;
+        private AExpression? _topLevelKey;
+        private AExpression? _secondLevelKey;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? MapName { get; set; }
-        public AExpression? TopLevelKey { get; set; }
-        public AExpression? SecondLevelKey { get; set; }
+        public LiteralExpression? MapName {
+            get => _mapName;
+            set => _mapName = SetParent(value);
+        }
+
+        public AExpression? TopLevelKey {
+            get => _topLevelKey;
+            set => _topLevelKey = SetParent(value);
+        }
+
+        public AExpression? SecondLevelKey {
+            get => _secondLevelKey;
+            set => _secondLevelKey = SetParent(value);
+        }
         public MappingDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
@@ -91,11 +129,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: For the Fn::GetAtt logical resource name, you cannot use functions. You must specify a string that is a resource's logical ID.
         // For the Fn::GetAtt attribute name, you can use the Ref function.
 
+        //--- Fields ---
+        private LiteralExpression? _referenceName;
+        private AExpression? _attributeName;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? ReferenceName { get; set; }
-        public AExpression? AttributeName { get; set; }
+        public LiteralExpression? ReferenceName {
+            get => _referenceName;
+            set => _referenceName = SetParent(value);
+        }
+
+        public AExpression? AttributeName {
+            get => _attributeName;
+            set => _attributeName = SetParent(value);
+        }
         public AItemDeclaration? ReferencedDeclaration { get; set; }
 
         //--- Methods ---
@@ -112,8 +161,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // !GetAZs VALUE
         // NOTE: You can use the Ref function in the Fn::GetAZs function.
 
+        //--- Fields ---
+        private AExpression? _region;
+
         //--- Properties ---
-        public AExpression? Region { get; set; }
+        public AExpression? Region {
+            get => _region;
+            set => _region = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -137,10 +192,26 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Sub
         //  - Ref
 
+        //--- Fields ---
+        private AExpression? _condition;
+        private AExpression? _ifTrue;
+        private AExpression? _ifFalse;
+
         //--- Properties ---
-        public AExpression? Condition { get; set; }
-        public AExpression? IfTrue { get; set; }
-        public AExpression? IfFalse { get; set; }
+        public AExpression? Condition {
+            get => _condition;
+            set => _condition = SetParent(value);
+        }
+
+        public AExpression? IfTrue {
+            get => _ifTrue;
+            set => _ifTrue = SetParent(value);
+        }
+
+        public AExpression? IfFalse {
+            get => _ifFalse;
+            set => _ifFalse = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -165,8 +236,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Sub
         //  - Ref
 
+        //--- Fields ---
+        private AExpression? _sharedValueToImport;
+
         //--- Properties ---
-        public AExpression? SharedValueToImport { get; set; }
+        public AExpression? SharedValueToImport {
+            get => _sharedValueToImport;
+            set => _sharedValueToImport = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -193,11 +270,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Sub
         //  - Ref
 
+        //--- Fields ---
+        private LiteralExpression? _separator;
+        private AExpression? _values;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? Separator { get; set; }
-        public AExpression? Values { get; set; }
+        public LiteralExpression? Separator {
+            get => _separator;
+            set => _separator = SetParent(value);
+        }
+
+        public AExpression? Values {
+            get => _values;
+            set => _values = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -220,9 +308,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Split
         //  - Ref
 
+        //--- Fields ---
+        private AExpression? _index;
+        private AExpression? _values;
+
         //--- Properties ---
-        public AExpression? Index { get; set; }
-        public AExpression? Values { get; set; }
+        public AExpression? Index {
+            get => _index;
+            set => _index = SetParent(value);
+        }
+
+        public AExpression? Values {
+            get => _values;
+            set => _values = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -249,11 +348,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Sub
         //  - Ref
 
+        //--- Fields ---
+        private LiteralExpression? _delimiter;
+        private AExpression? _sourceString;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? Delimiter { get; set; }
-        public AExpression? SourceString { get; set; }
+        public LiteralExpression? Delimiter {
+            get => _delimiter;
+            set => _delimiter = SetParent(value);
+        }
+
+        public AExpression? SourceString {
+            get => _sourceString;
+            set => _sourceString = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -280,11 +390,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //  - Fn::Select
         //  - Ref
 
+        //--- Fields ---
+        private LiteralExpression? _formatString;
+        private ObjectExpression? _parameters;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? FormatString { get; set; }
-        public ObjectExpression? Parameters { get; set; }
+        public LiteralExpression? FormatString {
+            get => _formatString;
+            set => _formatString = SetParent(value);
+        }
+
+        public ObjectExpression? Parameters {
+            get => _parameters;
+            set => _parameters = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -300,11 +421,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // !Transform { Name: STRING, Parameters: OBJECT }
         // NOTE: AWS CloudFormation passes any intrinsic function calls included in Fn::Transform to the specified macro as literal strings.
 
+        //--- Fields ---
+        private LiteralExpression? _macroName;
+        private ObjectExpression? _parameters;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? MacroName { get; set; }
-        public ObjectExpression? Parameters { get; set; }
+        public LiteralExpression? MacroName {
+            get => _macroName;
+            set => _macroName = SetParent(value);
+        }
+
+        public ObjectExpression? Parameters {
+            get => _parameters;
+            set => _parameters = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -320,11 +452,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // !Ref STRING
         // NOTE: You cannot use any functions in the Ref function. You must specify a string that is a resource logical ID.
 
+        //--- Fields ---
+        private LiteralExpression? _referenceName;
+        private AItemDeclaration? _referencedDeclaration;
+
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? ReferenceName { get; set; }
-        public AItemDeclaration? ReferencedDeclaration { get; set; }
+        public LiteralExpression? ReferenceName {
+            get => _referenceName;
+            set => _referenceName = SetParent(value);
+        }
+
+        public AItemDeclaration? ReferencedDeclaration {
+            get => _referencedDeclaration;
+            set => _referencedDeclaration = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {

@@ -35,14 +35,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private List<AItemDeclaration>? _internalDeclarations;
         private string? _fullName;
         private string? _logicalId;
+        private LiteralExpression? _description;
 
         //--- Constructors ---
-        protected AItemDeclaration(LiteralExpression itemName) => ItemName = itemName ?? throw new ArgumentNullException(nameof(itemName));
+        protected AItemDeclaration(LiteralExpression itemName) => ItemName = SetParent(itemName) ?? throw new ArgumentNullException(nameof(itemName));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Description { get; set; }
+        public LiteralExpression? Description {
+            get => _description;
+            set => _description = SetParent(value);
+        }
 
         public LiteralExpression ItemName { get; }
 
@@ -130,65 +134,137 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Parameter")]
     public class ParameterDeclaration : AItemDeclaration, IScopedDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _section;
+        private LiteralExpression? _label;
+        private LiteralExpression? _type;
+        private AExpression? _scope;
+        private LiteralExpression? _noEcho;
+        private LiteralExpression? _default;
+        private LiteralExpression? _constraintDescription;
+        private LiteralExpression? _allowedPattern;
+        private List<LiteralExpression> _allowedValues = new List<LiteralExpression>();
+        private LiteralExpression? _maxLength;
+        private LiteralExpression? _maxValue;
+        private LiteralExpression? _minLength;
+        private LiteralExpression? _minValue;
+        private AExpression? _allow;
+        private ObjectExpression? _properties;
+        private ObjectExpression? _encryptionContext;
+        private ListExpression _pragmas;
+
         //--- Constructors ---
-        public ParameterDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
+            _pragmas = SetParent(new ListExpression());
+        }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Section { get; set; }
+        public LiteralExpression? Section {
+            get => _section;
+            set => _section = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Label { get; set; }
+        public LiteralExpression? Label {
+            get => _label;
+            set => _label = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Type { get; set; }
+        public LiteralExpression? Type {
+            get => _type;
+            set => _type = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => _scope;
+            set => _scope = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? NoEcho { get; set; }
+        public LiteralExpression? NoEcho {
+            get => _noEcho;
+            set => _noEcho = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Default { get; set; }
+        public LiteralExpression? Default {
+            get => _default;
+            set => _default = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? ConstraintDescription { get; set; }
+        public LiteralExpression? ConstraintDescription {
+            get => _constraintDescription;
+            set => _constraintDescription = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? AllowedPattern { get; set; }
+        public LiteralExpression? AllowedPattern {
+            get => _allowedPattern;
+            set => _allowedPattern = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression> AllowedValues { get; set; } = new List<LiteralExpression>();
+        public List<LiteralExpression> AllowedValues {
+            get => _allowedValues;
+            set => _allowedValues = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? MaxLength { get; set; }
+        public LiteralExpression? MaxLength {
+            get => _maxLength;
+            set => _maxLength = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? MaxValue { get; set; }
+        public LiteralExpression? MaxValue {
+            get => _maxValue;
+            set => _maxValue = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? MinLength { get; set; }
+        public LiteralExpression? MinLength {
+            get => _minLength;
+            set => _minLength = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? MinValue { get; set; }
+        public LiteralExpression? MinValue {
+            get => _minValue;
+            set => _minValue = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Allow { get; set; }
+        public AExpression? Allow {
+            get => _allow;
+            set => _allow = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression? Properties { get; set; }
+        public ObjectExpression? Properties {
+            get => _properties;
+            set => _properties = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression? EncryptionContext { get; set; }
+        public ObjectExpression? EncryptionContext {
+            get => _encryptionContext;
+            set => _encryptionContext = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ListExpression Pragmas { get; set; } = new ListExpression();
+        public ListExpression Pragmas {
+            get => _pragmas;
+            set => _pragmas = SetParent(value);
+        }
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
-        public IEnumerable<string> ScopeValues => ((ListExpression)Scope!).Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string> ScopeValues => ((ListExpression)Scope!).Cast<LiteralExpression>().Select(item => item.Value).ToList();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -222,11 +298,17 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     /// </summary>
     public class PseudoParameterDeclaration : AItemDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? pseudoParameter;
+
         //--- Constructors ---
         public PseudoParameterDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
-        public LiteralExpression? PseudoParameter { get; set; }
+        public LiteralExpression? PseudoParameter {
+            get => pseudoParameter;
+            set => pseudoParameter = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) { }
@@ -235,27 +317,49 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Import")]
     public class ImportDeclaration : AItemDeclaration, IScopedDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _type;
+        private AExpression? _scope;
+        private AExpression? _allow;
+        private LiteralExpression? _module;
+        private ObjectExpression? _encryptionContext;
+
         //--- Constructors ---
         public ImportDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Type { get; set; }
+        public LiteralExpression? Type {
+            get => _type;
+            set => _type = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => _scope;
+            set => _scope = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Allow { get; set; }
+        public AExpression? Allow {
+            get => _allow;
+            set => _allow = SetParent(value);
+        }
 
         [SyntaxRequired]
-        public LiteralExpression? Module { get; set; }
+        public LiteralExpression? Module {
+            get => _module;
+            set => _module = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression? EncryptionContext { get; set; }
+        public ObjectExpression? EncryptionContext {
+            get => _encryptionContext;
+            set => _encryptionContext = SetParent(value);
+        }
 
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
@@ -275,24 +379,42 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Variable")]
     public class VariableDeclaration : AItemDeclaration, IScopedDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? type;
+        private AExpression? scope;
+        private AExpression? _value;
+        private ObjectExpression? _encryptionContext;
+
         //--- Constructors ---
         public VariableDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Type { get; set; }
+        public LiteralExpression? Type {
+            get => type;
+            set => type = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => scope;
+            set => scope = SetParent(value);
+        }
 
         [SyntaxRequired]
-        public AExpression? Value { get; set; }
+        public AExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression? EncryptionContext { get; set; }
+        public ObjectExpression? EncryptionContext {
+            get => _encryptionContext;
+            set => _encryptionContext = SetParent(value);
+        }
 
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
@@ -311,13 +433,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Group")]
     public class GroupDeclaration : AItemDeclaration {
 
+        //--- Fields ---
+        private List<AItemDeclaration> _items = new List<AItemDeclaration>();
+
         //--- Constructors ---
         public GroupDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
+        public List<AItemDeclaration> Items {
+            get => _items;
+            set => _items = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -332,13 +460,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Condition")]
     public class ConditionDeclaration : AItemDeclaration {
 
+        //--- Fields ---
+        private AExpression? _value;
+
         //--- Constructors ---
         public ConditionDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public AExpression? Value { get; set; }
+        public AExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -353,41 +487,82 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Resource")]
     public class ResourceDeclaration : AItemDeclaration, IScopedDeclaration, IConditionalResourceDeclaration {
 
+        //--- Fields ---
+        private AExpression? _if;
+        private LiteralExpression? _type;
+        private AExpression? scope;
+        private AExpression? _allow;
+        private AExpression? _value;
+        private List<LiteralExpression> _dependsOn = new List<LiteralExpression>();
+        private ObjectExpression _properties;
+        private LiteralExpression? _defaultAttribute;
+        private ListExpression _pragmas;
+
         //--- Constructors ---
-        public ResourceDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
+            _properties = SetParent(new ObjectExpression());
+            _pragmas = SetParent(new ListExpression());
+        }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? If { get; set; }
+        public AExpression? If {
+            get => _if;
+            set => _if = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Type { get; set; }
+        public LiteralExpression? Type {
+            get => _type;
+            set => _type = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => scope;
+            set => scope = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Allow { get; set; }
+        public AExpression? Allow {
+            get => _allow;
+            set => _allow = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? Value { get; set; }
+        public AExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
+        public List<LiteralExpression> DependsOn {
+            get => _dependsOn;
+            set => _dependsOn = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression Properties { get; set; } = new ObjectExpression();
+        public ObjectExpression Properties {
+            get => _properties;
+            set => _properties = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? DefaultAttribute { get; set; }
+        public LiteralExpression? DefaultAttribute {
+            get => _defaultAttribute;
+            set => _defaultAttribute = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ListExpression Pragmas { get; set; } = new ListExpression();
+        public ListExpression Pragmas {
+            get => _pragmas;
+            set => _pragmas = SetParent(value);
+        }
 
         public string? CloudFormationType => (Value == null) ? Type!.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
 
@@ -412,19 +587,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Nested")]
     public class NestedModuleDeclaration : AItemDeclaration, IResourceDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _module;
+        private List<LiteralExpression> dependsOn = new List<LiteralExpression>();
+        private ObjectExpression? _parameters;
+
         //--- Constructors ---
         public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public LiteralExpression? Module { get; set; }
+        public LiteralExpression? Module {
+            get => _module;
+            set => _module = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<LiteralExpression> DependsOn { get; set; } = new List<LiteralExpression>();
+        public List<LiteralExpression> DependsOn {
+            get => dependsOn;
+            set => dependsOn = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ObjectExpression? Parameters { get; set; }
+        public ObjectExpression? Parameters {
+            get => _parameters;
+            set => _parameters = SetParent(value);
+        }
 
         public string CloudFormationType => "AWS::CloudFormation::Stack";
 
@@ -443,20 +632,30 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Package")]
     public class PackageDeclaration : AItemDeclaration, IScopedDeclaration {
 
+        //--- Fields ---
+        private AExpression? _scope;
+        private LiteralExpression? _files;
+
         //--- Constructors ---
         public PackageDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties --
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => _scope;
+            set => _scope = SetParent(value);
+        }
 
         // TODO: shouldn't this be List<LiteralExpression>?
         [SyntaxRequired]
-        public LiteralExpression? Files { get; set; }
+        public LiteralExpression? Files {
+            get => _files;
+            set => _files = SetParent(value);
+        }
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => false;
 
         //--- Methods ---
@@ -476,13 +675,23 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Types ---
         public class VpcExpression : ASyntaxNode {
 
+            //--- Fields ---
+            private AExpression? _securityGroupIds;
+            private AExpression? _subnetIds;
+
             //--- Properties ---
 
             [SyntaxRequired]
-            public AExpression? SecurityGroupIds { get;set; }
+            public AExpression? SecurityGroupIds {
+                get => _securityGroupIds;
+                set => _securityGroupIds = SetParent(value);
+            }
 
             [SyntaxRequired]
-            public AExpression? SubnetIds { get;set; }
+            public AExpression? SubnetIds {
+                get => _subnetIds;
+                set => _subnetIds = SetParent(value);
+            }
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -493,50 +702,108 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
+        //--- Fields ---
+        private AExpression? _scope;
+        private AExpression? _if;
+        private AExpression? _memory;
+        private AExpression? _timeout;
+        private LiteralExpression? _project;
+        private LiteralExpression? _runtime;
+        private LiteralExpression? _language;
+        private LiteralExpression? _handler;
+        private VpcExpression? _vpc;
+        private ObjectExpression _environment;
+        private ObjectExpression _properties;
+        private List<AEventSourceDeclaration> _sources = new List<AEventSourceDeclaration>();
+        private ListExpression _pragmas;
+
         //--- Constructors ---
-        public FunctionDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public FunctionDeclaration(LiteralExpression itemName) : base(itemName) {
+            _environment = SetParent(new ObjectExpression());
+            _properties = SetParent(new ObjectExpression());
+            _pragmas = SetParent(new ListExpression());
+        }
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? Scope { get; set; }
+        public AExpression? Scope {
+            get => _scope;
+            set => _scope = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public AExpression? If { get; set; }
+        public AExpression? If {
+            get => _if;
+            set => _if = SetParent(value);
+        }
 
         [SyntaxRequired]
-        public AExpression? Memory { get; set; }
+        public AExpression? Memory {
+            get => _memory;
+            set => _memory = SetParent(value);
+        }
 
         [SyntaxRequired]
-        public AExpression? Timeout { get; set; }
+        public AExpression? Timeout {
+            get => _timeout;
+            set => _timeout = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Project { get; set; }
+        public LiteralExpression? Project {
+            get => _project;
+            set => _project = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Runtime { get; set; }
+        public LiteralExpression? Runtime {
+            get => _runtime;
+            set => _runtime = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Language { get; set; }
+        public LiteralExpression? Language {
+            get => _language;
+            set => _language = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public LiteralExpression? Handler { get; set; }
+        public LiteralExpression? Handler {
+            get => _handler;
+            set => _handler = SetParent(value);
+        }
 
-        // TODO: this notation is deprecated, use `VpcConfig` in `Properties` instead
+        // TODO (2020-01-30, bjorg): this notation is deprecated, use `VpcConfig` in `Properties` instead
         [SyntaxOptional]
-        public VpcExpression? Vpc { get; set; }
-
-        [SyntaxOptional]
-        public ObjectExpression Environment { get; set; } = new ObjectExpression();
-
-        [SyntaxOptional]
-        public ObjectExpression Properties { get; set; } = new ObjectExpression();
-
-        [SyntaxOptional]
-        public List<AEventSourceDeclaration> Sources { get; set; } = new List<AEventSourceDeclaration>();
+        public VpcExpression? Vpc {
+            get => _vpc;
+            set => _vpc = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public ListExpression Pragmas { get; set; } = new ListExpression();
+        public ObjectExpression Environment {
+            get => _environment;
+            set => _environment = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public ObjectExpression Properties {
+            get => _properties;
+            set => _properties = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public List<AEventSourceDeclaration> Sources {
+            get => _sources;
+            set => _sources = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public ListExpression Pragmas {
+            get => _pragmas;
+            set => _pragmas = SetParent(value);
+        }
 
         public string CloudFormationType => "AWS::Lambda::Function";
 
@@ -546,7 +813,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Items.Cast<LiteralExpression>().Select(item => item.Value).ToList();
+        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
 
@@ -575,14 +842,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Mapping")]
     public class MappingDeclaration : AItemDeclaration {
 
+        //--- Fields ---
+        private ObjectExpression? _value;
+
         //--- Constructors ---
         public MappingDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
-
         [SyntaxRequired]
-        public ObjectExpression? Value { get; set; }
+        public ObjectExpression? Value {
+            get => _value;
+            set => _value = SetParent(value);
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -600,16 +872,30 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Types ---
         public class PropertyTypeExpression : ASyntaxNode {
 
+            //--- Fields ---
+            private LiteralExpression? _name;
+            private LiteralExpression? _type;
+            private LiteralExpression? _required;
+
             //--- Properties ---
 
             [SyntaxRequired]
-            public LiteralExpression? Name { get; set; }
+            public LiteralExpression? Name {
+                get => _name;
+                set => _name = SetParent(value);
+            }
 
             [SyntaxRequired]
-            public LiteralExpression? Type { get; set; }
+            public LiteralExpression? Type {
+                get => _type;
+                set => _type = SetParent(value);
+            }
 
             [SyntaxOptional]
-            public LiteralExpression? Required { get; set; }
+            public LiteralExpression? Required {
+                get => _required;
+                set => _required = SetParent(value);
+            }
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -623,13 +909,23 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public class AttributeTypeExpression : ASyntaxNode {
 
+            //--- Fields ---
+            private LiteralExpression? _name;
+            private LiteralExpression? _type;
+
             //--- Properties ---
 
             [SyntaxRequired]
-            public LiteralExpression? Name { get; set; }
+            public LiteralExpression? Name {
+                get => _name;
+                set => _name = SetParent(value);
+            }
 
             [SyntaxRequired]
-            public LiteralExpression? Type { get; set; }
+            public LiteralExpression? Type {
+                get => _type;
+                set => _type = SetParent(value);
+            }
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -640,19 +936,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
+        //--- Fields ---
+        private LiteralExpression? _handler;
+        private List<PropertyTypeExpression> properties = new List<PropertyTypeExpression>();
+        private List<AttributeTypeExpression> _attributes = new List<AttributeTypeExpression>();
+
         //--- Constructors ---
         public ResourceTypeDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public LiteralExpression? Handler { get; set; }
+        public LiteralExpression? Handler {
+            get => _handler;
+            set => _handler = SetParent(value);
+        }
 
         [SyntaxOptional]
-        public List<PropertyTypeExpression> Properties { get; set; } = new List<PropertyTypeExpression>();
+        public List<PropertyTypeExpression> Properties {
+            get => properties;
+            set => properties = value;
+        }
 
         [SyntaxOptional]
-        public List<AttributeTypeExpression> Attributes { get; set; } = new List<AttributeTypeExpression>();
+        public List<AttributeTypeExpression> Attributes {
+            get => _attributes;
+            set => _attributes = value;
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -669,13 +979,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Macro")]
     public class MacroDeclaration : AItemDeclaration, IResourceDeclaration {
 
+        //--- Fields ---
+        private LiteralExpression? _handler;
+
         //--- Constructors ---
         public MacroDeclaration(LiteralExpression keywordValue) : base(keywordValue) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public LiteralExpression? Handler { get; set; }
+        public LiteralExpression? Handler {
+            get => _handler;
+            set => _handler = SetParent(value);
+        }
 
         public string CloudFormationType => "AWS::CloudFormation::Macro";
 
