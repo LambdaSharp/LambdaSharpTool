@@ -45,30 +45,41 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         private class SyntaxInfo {
 
             //--- Constructors ---
-            public SyntaxInfo(Type type) {
+            public SyntaxInfo(Type declarationType) {
+                if(declarationType == null) {
+                    throw new ArgumentNullException(nameof(declarationType));
+                }
 
-                // NOTE: extract syntax poproperties from type to identify what keys are expected and required;
-                //  in addition, one key can be called out as the keyword, which means it must be the first key
-                //  to appear in the mapping.
-                var syntaxProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
+                // NOTE: the keyword must be the first key in a mapping and cannot be used to identify any other parsable constructs
+                var declarationKeywordAttribute = declarationType.GetCustomAttribute<SyntaxDeclarationKeywordAttribute>();
+                if(declarationKeywordAttribute != null) {
+                    Keyword = declarationKeywordAttribute.Keyword;
+                    KeywordType = declarationKeywordAttribute.Type ?? typeof(LiteralExpression);
+                }
+
+                // NOTE: extract all properties with a syntax attribute from type to identify what keys are expected and required;
+                //  in addition, one key can be called out as the keyword, which means it must be the first key to appear in the mapping.
+                var syntaxProperties = declarationType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
                     .Select(property => new {
-                        Syntax = property.GetCustomAttributes<ASyntaxAttribute>().FirstOrDefault(),
+                        Syntax = property.GetCustomAttribute<ASyntaxAttribute>(),
                         Property = property
                     })
                     .Where(tuple => tuple.Syntax != null)
                     .ToList();
-                Type = type ?? throw new ArgumentNullException(nameof(type));
-                Keyword = syntaxProperties.FirstOrDefault(tuple => tuple.Syntax.Type == SyntaxType.Keyword)?.Property.Name;
+                DeclarationType = declarationType;
                 Keys = syntaxProperties.ToDictionary(tuple => tuple.Property.Name, Tuple => Tuple.Property);
-                MandatoryKeys = syntaxProperties.Where(tuple => tuple.Syntax.Type != SyntaxType.Optional).Select(tuple => tuple.Property.Name).ToArray();
+                MandatoryKeys = syntaxProperties
+                    .Where(tuple => tuple.Syntax is SyntaxRequiredAttribute)
+                    .Select(tuple => tuple.Property.Name)
+                    .ToArray();
             }
 
             //--- Properties ---
-            public Type Type { get; private set; }
-            public string Keyword { get; private set; }
-            public Dictionary<string, PropertyInfo> Keys { get; private set; }
-            public IEnumerable<string> MandatoryKeys { get; private set; }
-            public bool HasKeyword => Keyword != null;
+            public Type DeclarationType { get; }
+            public string Keyword { get; }
+            public Type KeywordType { get; }
+            public Dictionary<string, PropertyInfo> Keys { get; }
+            public IEnumerable<string> MandatoryKeys { get; }
         }
 
         //--- Fields ---
@@ -91,7 +102,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // declarations
                 [typeof(ModuleDeclaration)] = () => ParseSyntaxOfType<ModuleDeclaration>(),
-                [typeof(UsingDeclaration)] = () => ParseSyntaxOfType<UsingDeclaration>(),
+                [typeof(UsingModuleDeclaration)] = () => ParseSyntaxOfType<UsingModuleDeclaration>(),
                 [typeof(FunctionDeclaration.VpcExpression)] = () => ParseSyntaxOfType<FunctionDeclaration.VpcExpression>(),
                 [typeof(ResourceTypeDeclaration.PropertyTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.PropertyTypeExpression>(),
                 [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeExpression>(),
@@ -104,7 +115,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 [typeof(List<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
                 [typeof(List<AExpression>)] = () => ParseList<AExpression>(),
                 [typeof(List<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
-                [typeof(List<UsingDeclaration>)] = () => ParseList<UsingDeclaration>(),
+                [typeof(List<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
                 [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
         }
@@ -249,9 +260,28 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // check if this is the first key being parsed
                 if(syntax == null) {
-                    if(syntaxes.TryGetValue(key, out syntax)) {
-                        result = (T)Activator.CreateInstance(syntax.Type);
+                    if((syntaxes.Count == 1) && syntaxes.TryGetValue("", out syntax)) {
+
+                        // parse using the default syntax
+                        result = (T)Activator.CreateInstance(syntax.DeclarationType);
+                        result.SourceLocation = Location(keyScalar);
                         mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
+                    } else if(syntaxes.TryGetValue(key, out syntax)) {
+
+                        // parse using the syntax matching the first key (akin to a keyword)
+                        if(TryParse(syntax.KeywordType, out var keywordValue)) {
+                            result = (T)Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
+                        } else {
+
+                            // skip all remaining key-value pairs
+                            SkipMapRemainingEvents();
+                            return null;
+                        }
+                        result.SourceLocation = Location(keyScalar);
+                        mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
+
+                        // continue to next key-value pair since we already parsed the keyword value
+                        continue;
                     } else {
                         Log(Error.UnrecognizedModuleItem(key), Location(keyScalar));
 
@@ -1140,6 +1170,10 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             // attempt to parse a single scalar
             if(IsEvent<Scalar>(out var scalar, out var filePath)) {
                 MoveNext();
+
+                // TODO: split value into list on commas
+                // TODO: replace generic `AExpression` properties with `List<LiteralExpression>` where appropriate (e.g. Scope, Allow)
+
                 result.Add(new LiteralExpression(scalar.Value) {
                     SourceLocation = Location(filePath, scalar)
                 });
@@ -1205,9 +1239,15 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         _typeToSyntax[type] = syntax;
                     }
                     syntaxes = new Dictionary<string, SyntaxInfo>();
-                    if(syntax.HasKeyword) {
-                        syntaxes[syntax.Keyword] = syntax;
+
+                    // validate that we can only have a default syntax if it's the only syntax
+                    var keyword = syntax.Keyword ?? "";
+                    if((keyword != "") && syntaxes.ContainsKey("")) {
+                        throw new ApplicationException("attempted to add a keyword syntax to a collection containing a default syntax");
+                    } else if((keyword == "") && (syntaxes.Count != 0)) {
+                        throw new ApplicationException("attempted to add a default syntax to a collection with keyword syntaxes");
                     }
+                    syntaxes.Add(keyword, syntax);
                 }
                 _syntaxCache[type] = syntaxes;
             }
@@ -1278,6 +1318,13 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // TODO: better exception
                 throw new ApplicationException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+            }
+        }
+
+        private void SkipMapRemainingEvents() {
+            while(!IsEvent<MappingEnd>(out var _, out var _)) {
+                Expect<Scalar>();
+                SkipThisAndNestedEvents();
             }
         }
 

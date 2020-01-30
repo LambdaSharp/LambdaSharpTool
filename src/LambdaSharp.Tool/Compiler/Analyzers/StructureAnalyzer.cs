@@ -110,11 +110,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public StructureAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, UsingDeclaration node) {
+        public override void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {
 
             // check if module reference is valid
-            if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.Log(Error.ModuleAttributeInvalid, node.Module);
+            if(!ModuleInfo.TryParse(node.ModuleName.Value, out var moduleInfo)) {
+                _builder.Log(Error.ModuleAttributeInvalid, node.ModuleName);
             } else {
 
                 // default to deployment bucket as origin when missing
@@ -231,11 +231,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if((node.If != null) && !(node.If is ConditionExpression)) {
 
                     // creation condition as sub-declaration
-                    AddDeclaration(node, new ConditionDeclaration {
-                        Condition = new LiteralExpression("Condition") {
-                            SourceLocation = node.If.SourceLocation,
-                        },
-                        Description = null,
+                    AddDeclaration(node, new ConditionDeclaration(Literal("Condition")) {
                         Value = node.If
                     });
                 }
@@ -315,8 +311,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // add variable to resolve package location
-            var variable = AddDeclaration(node, new VariableDeclaration {
-                Variable = Literal("PackageName"),
+            var variable = AddDeclaration(node, new VariableDeclaration(Literal("PackageName")) {
                 Type = Literal("String"),
                 Value = Literal($"{node.LogicalId}-DRYRUN.zip")
             });
@@ -386,13 +381,15 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
             // validate resource type name
-            var resourceTypeNameParts = node.ResourceType.Value.Split("::", 2);
+            var resourceTypeNameParts = node.ItemName.Value.Split("::", 2);
             if(resourceTypeNameParts.Length == 1) {
-                _builder.Log(Error.ResourceTypeInvalidFormat, node.ResourceType);
+                _builder.Log(Error.ResourceTypeInvalidFormat, node.ItemName);
             }
             if(_reservedResourceTypePrefixes.Contains(resourceTypeNameParts[0])) {
-                _builder.Log(Error.ResourceTypeReservedPrefix(resourceTypeNameParts[0]), node.ResourceType);
+                _builder.Log(Error.ResourceTypeReservedPrefix(resourceTypeNameParts[0]), node.ItemName);
             }
+
+            // TODO: check for duplicate resource type definitions
 
             // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
         }
@@ -473,19 +470,17 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // check if a root macros collection needs to be created
             if(!_builder.TryGetItemDeclaration("Macros", out var macrosItem)) {
-                macrosItem = AddDeclaration(node.ParentModuleDeclaration, new GroupDeclaration {
-                    Group = Literal("Macros"),
+                macrosItem = AddDeclaration(node.ParentModuleDeclaration, new GroupDeclaration(Literal("Macros")) {
                     Description = Literal("Macro definitions")
                 });
             }
 
             // add macro resource
-            AddDeclaration(macrosItem, new ResourceDeclaration {
-                Resource = Literal(node.Macro.Value),
+            AddDeclaration(macrosItem, new ResourceDeclaration(node.ItemName) {
                 Type = Literal("AWS::CloudFormation::Macro"),
                 Description = node.Description,
                 Properties = new ObjectExpression {
-                    ["Name"] = FnSub($"${{DeploymentPrefix}}{node.Macro.Value}"),
+                    ["Name"] = FnSub($"${{DeploymentPrefix}}{node.ItemName}"),
                     ["Description"] = node.Description,
                     ["FunctionName"] = FnRef(node.Handler.Value)
                 }
@@ -546,8 +541,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         break;
                     }
                 }
-                var condition = AddDeclaration(node.ParentItemDeclaration, new ConditionDeclaration {
-                    Condition = Literal(conditionName),
+                var condition = AddDeclaration(node.ParentItemDeclaration, new ConditionDeclaration(Literal(conditionName)) {
                     Value = node.Condition
                 });
                 node.Condition = new ConditionExpression {

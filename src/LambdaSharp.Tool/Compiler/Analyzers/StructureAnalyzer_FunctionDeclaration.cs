@@ -83,7 +83,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if(node.Project == null) {
 
                     // use function name to determine function project file
-                    project = DetermineProjectFileLocation(Path.Combine(workingDirectory, node.Function.Value));
+                    project = DetermineProjectFileLocation(Path.Combine(workingDirectory, node.ItemName.Value));
                 } else {
 
                     // check if the project type can be determined by the project file extension
@@ -151,8 +151,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if((node.If != null) && !(node.If is ConditionExpression)) {
 
                 // convert conditional expression to a condition literal
-                var condition = AddDeclaration(node, new ConditionDeclaration {
-                    Condition = Literal("If"),
+                var condition = AddDeclaration(node, new ConditionDeclaration(Literal("If")) {
                     Value = node.If
                 });
                 node.If = FnCondition(condition.FullName);
@@ -174,8 +173,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(!isInlineFunction) {
 
                 // add variable for package name
-                var packageVariable = AddDeclaration(node, new VariableDeclaration {
-                    Variable = Literal("PackageName"),
+                var packageVariable = AddDeclaration(node, new VariableDeclaration(Literal("PackageName")) {
                     Value = Literal($"{node.LogicalId}-DRYRUN.zip")
                 });
                 SetProperty("Code", new ObjectExpression {
@@ -188,8 +186,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             });
 
             // create function log-group with retention window
-            AddDeclaration(node, new ResourceDeclaration {
-                Resource = Literal("LogGroup"),
+            AddDeclaration(node, new ResourceDeclaration(Literal("LogGroup")) {
                 Type = Literal("AWS::Logs::LogGroup"),
                 Properties = new ObjectExpression {
                     ["LogGroupName"] = FnSub($"/aws/lambda/${{{node.FullName}}}"),
@@ -203,7 +200,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             });
 
             // check if function is a Finalizer
-            var isFinalizer = (node.Parents.OfType<ADeclaration>() is ModuleDeclaration) && (node.Function.Value == "Finalizer");
+            var isFinalizer = (node.Parents.OfType<ADeclaration>() is ModuleDeclaration) && (node.FullName == "Finalizer");
             if(isFinalizer) {
 
                 // finalizer doesn't need a dead-letter queue or registration b/c it gets deleted anyway on failure or teardown
@@ -214,8 +211,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 node.Properties["Timeout"] = Literal(900);
 
                 // add finalizer invocation (dependsOn will be set later when all resources have been added)
-                AddDeclaration(node, new ResourceDeclaration {
-                    Resource = Literal("Invocation"),
+                AddDeclaration(node, new ResourceDeclaration(Literal("Invocation")) {
                     Type = Literal("Module::Finalizer"),
                     Properties = new ObjectExpression {
                         ["ServiceToken"] = FnGetAtt(node.FullName, "Arn"),
@@ -234,13 +230,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.ParentModuleDeclaration.HasModuleRegistration && node.HasFunctionRegistration) {
 
                 // create function registration
-                AddDeclaration(node, new ResourceDeclaration {
-                    Resource = Literal("Registration"),
+                AddDeclaration(node, new ResourceDeclaration(Literal("Registration")) {
                     Type = Literal("LambdaSharp::Registration::Function"),
                     Properties = new ObjectExpression {
                         ["ModuleId"] = FnRef("AWS::StackName"),
                         ["FunctionId"] = FnRef(node.FullName),
-                        ["FunctionName"] = Literal(node.Function.Value),
+                        ["FunctionName"] = Literal(node.ItemName.Value),
                         ["FunctionLogGroupName"] = FnSub($"/aws/lambda/${{{node.FullName}}}"),
                         ["FunctionPlatform"] = Literal("AWS Lambda"),
                         ["FunctionFramework"] = node.Runtime,
@@ -261,8 +256,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.TryGetItemDeclaration("Module::LoggingStream", out _)
                     && _builder.TryGetItemDeclaration("Module::LoggingStreamRole", out _)
                 ) {
-                    AddDeclaration(node, new ResourceDeclaration {
-                        Resource = Literal("LogGroupSubscription"),
+                    AddDeclaration(node, new ResourceDeclaration(Literal("LogGroupSubscription")) {
                         Type = Literal("AWS::Logs::SubscriptionFilter"),
                         Properties = new ObjectExpression {
                             ["DestinationArn"] = FnRef("Module::LoggingStream"),
@@ -373,7 +367,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ApiEventSourceDeclaration node) {
 
             // extract HTTP method from route
-            var api = node.Api.Value.Trim();
+            var api = node.EventSource.Value.Trim();
             var pathSeparatorIndex = api.IndexOfAny(new[] { ':', ' ' });
             if(pathSeparatorIndex >= 0) {
 
@@ -395,7 +389,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     || (segment == "{}")
                     || (segment == "{+}")
                 ).Any()) {
-                    _builder.Log(Error.ApiEventSourceInvalidApiFormat, node.Api);
+                    _builder.Log(Error.ApiEventSourceInvalidApiFormat, node.EventSource);
                 } else {
 
                     // check if the API path has a greedy parameter and ensure it is the last parameter
@@ -404,7 +398,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         Segment = segment
                     }).FirstOrDefault(t => t.Segment.EndsWith("+}", StringComparison.Ordinal));
                     if((greedyParameter != null) && (greedyParameter.Index != (node.ApiPath.Length - 1))) {
-                        _builder.Log(Error.ApiEventSourceInvalidGreedyParameterMustBeLast(greedyParameter.Segment), node.Api);
+                        _builder.Log(Error.ApiEventSourceInvalidGreedyParameterMustBeLast(greedyParameter.Segment), node.EventSource);
                     }
                 }
             } else {
@@ -447,15 +441,14 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) {
 
             // extract the API path
-            node.SlackPath = node.SlackCommand.Value
-                .Split('/', StringSplitOptions.RemoveEmptyEntries);
+            node.SlackPath = node.EventSource.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
             // validate API path segments
             if(node.SlackPath.Where(segment =>
                 segment.StartsWith("{", StringComparison.Ordinal)
                 || segment.EndsWith("}", StringComparison.Ordinal)
             ).Any()) {
-                _builder.Log(Error.SlackCommandEventSourceInvalidRestPath, node.SlackCommand);
+                _builder.Log(Error.SlackCommandEventSourceInvalidRestPath, node.EventSource);
             }
         }
 
@@ -587,8 +580,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // TODO: ensure 'node.WebSocket' value is unique for every entry
 
             // validate pre-defined WebSocket routes
-            if(node.WebSocket.Value.StartsWith("$", StringComparison.Ordinal)) {
-                switch(node.WebSocket.Value) {
+            if(node.EventSource.Value.StartsWith("$", StringComparison.Ordinal)) {
+                switch(node.EventSource.Value) {
                 case "$connect":
                 case "$disconnect":
                 case "$default":
@@ -596,7 +589,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     // nothing to do
                     break;
                 default:
-                    _builder.Log(Error.WebSocketEventSourceInvalidPredefinedRoute, node.WebSocket);
+                    _builder.Log(Error.WebSocketEventSourceInvalidPredefinedRoute, node.EventSource);
                     break;
                 }
             }
@@ -629,7 +622,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // ensure that authorization configuration can only be set for the '$connect' route
-            if((node.AuthorizationType != null) && (node.WebSocket.Value != "$connect")) {
+            if((node.AuthorizationType != null) && (node.EventSource.Value != "$connect")) {
                 _builder.Log(Error.WebSocketEventSourceInvalidAuthorizationConfigurationForRoute, node.AuthorizationType);
             }
         }

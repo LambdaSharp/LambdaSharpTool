@@ -55,6 +55,9 @@ namespace LambdaSharp.Tool.Compiler {
     //      - !If with literal in condition
     //      - condition declaration with reference to non-parameter declaration
     //      - circular dependencies
+    //  - warn on unrecognized pragmas
+    //  - nested module parameters can only be scalar or list (correct?)
+    //  - lambda environment variable values must be scalar or list (correct?)
 
     public enum XRayTracingLevel {
         Disabled,
@@ -93,7 +96,7 @@ namespace LambdaSharp.Tool.Compiler {
         public string AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
 
             // check for reserved names
-            if(!ValidResourceNameRegex.IsMatch(declaration.LocalName)) {
+            if(!ValidResourceNameRegex.IsMatch(declaration.ItemName.Value)) {
                 Log(Error.NameMustBeAlphanumeric, declaration);
             } else if(declaration.FullName == "AWS") {
                 Log(Error.NameIsReservedAws, declaration);

@@ -18,6 +18,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -25,12 +26,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class ADeclaration : ASyntaxNode { }
 
+    [SyntaxDeclarationKeyword("Module")]
     public class ModuleDeclaration : ADeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public ModuleDeclaration(LiteralExpression moduleName) => ModuleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
 
-        [SyntaxKeyword()]
-        public LiteralExpression? Module { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression Version { get; set; } = ASyntaxAnalyzer.Literal("1.0-DEV");
@@ -45,11 +47,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public List<LiteralExpression> Secrets { get; set; } = new List<LiteralExpression>();
 
         [SyntaxOptional]
-        public List<UsingDeclaration> Using { get; set; } = new List<UsingDeclaration>();
+        public List<UsingModuleDeclaration> Using { get; set; } = new List<UsingModuleDeclaration>();
 
         [SyntaxRequired]
         public List<AItemDeclaration> Items { get; set; } = new List<AItemDeclaration>();
 
+        public LiteralExpression ModuleName { get; }
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
@@ -57,7 +60,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Methods ---
         public override void Visit(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Module?.Visit(this, visitor);
+            ModuleName.Visit(this, visitor);
             Version?.Visit(this, visitor);
             Description?.Visit(this, visitor);
             Secrets?.Visit(this, visitor);
@@ -67,20 +70,23 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class UsingDeclaration : ADeclaration {
+    [SyntaxDeclarationKeyword("Module")]
+    public class UsingModuleDeclaration : ADeclaration {
+
+        //--- Constructors ---
+        public UsingModuleDeclaration(LiteralExpression moduleName) => ModuleName = moduleName ?? throw new ArgumentNullException(nameof(moduleName));
 
         //--- Properties ---
-
-        [SyntaxKeyword]
-        public LiteralExpression? Module { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression? Description { get; set; }
 
+        public LiteralExpression ModuleName { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Module?.Visit(this, visitor);
+            ModuleName.Visit(this, visitor);
             Description?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }

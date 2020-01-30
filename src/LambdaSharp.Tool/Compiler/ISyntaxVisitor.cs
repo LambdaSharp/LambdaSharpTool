@@ -27,8 +27,8 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Methods ---
         void VisitStart(ASyntaxNode? parent, ModuleDeclaration node);
         void VisitEnd(ASyntaxNode? parent, ModuleDeclaration node);
-        void VisitStart(ASyntaxNode? parent, UsingDeclaration node);
-        void VisitEnd(ASyntaxNode? parent, UsingDeclaration node);
+        void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node);
+        void VisitEnd(ASyntaxNode? parent, UsingModuleDeclaration node);
         void VisitStart(ASyntaxNode? parent, ApiEventSourceDeclaration node);
         void VisitEnd(ASyntaxNode? parent, ApiEventSourceDeclaration node);
         void VisitStart(ASyntaxNode? parent, SchedulEventSourceDeclaration node);

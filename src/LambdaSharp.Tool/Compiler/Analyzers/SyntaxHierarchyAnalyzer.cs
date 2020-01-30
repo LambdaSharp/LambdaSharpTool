@@ -39,10 +39,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             InitializeSyntaxNode(parent, node);
         }
         public void VisitEnd(ASyntaxNode parent, ModuleDeclaration node) { }
-        public void VisitStart(ASyntaxNode parent, UsingDeclaration node) {
+        public void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {
             InitializeSyntaxNode(parent, node);
         }
-        public void VisitEnd(ASyntaxNode parent, UsingDeclaration node) { }
+        public void VisitEnd(ASyntaxNode parent, UsingModuleDeclaration node) { }
         #endregion
 
         #region === Item Declarations ===
@@ -261,11 +261,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private void InitializeItemDeclaration(ASyntaxNode parent, AItemDeclaration node) {
 
+            // TODO: not true for ResourceType declarations since they don't have an addressable name!
             // assign full name
             if(parent is AItemDeclaration parentItemDeclaration) {
-                node.FullName = $"{parentItemDeclaration.FullName}::{node.LocalName}";
+                node.FullName = $"{parentItemDeclaration.FullName}::{node.ItemName.Value}";
             } else {
-                node.FullName = node.LocalName;
+                node.FullName = node.ItemName.Value;
             }
 
             // TODO: we shouldn't always assign this expression, because it's not always the correct thing to do

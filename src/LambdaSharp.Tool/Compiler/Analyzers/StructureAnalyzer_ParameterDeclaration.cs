@@ -118,8 +118,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // NOTE (2019-10-30, bjorg): for a 'Secret' type parameter, we need to create a new resource
                 //  that is used to decrypt the parameter into a plaintext value.
 
-                var decoder = AddDeclaration(node, new ResourceDeclaration {
-                    Resource = Literal("Plaintext"),
+                var decoder = AddDeclaration(node, new ResourceDeclaration(Literal("Plaintext")) {
                     Type = Literal("Module::DecryptSecret"),
                     Properties = new ObjectExpression {
                         ["ServiceToken"] = FnGetAtt("Module::DecryptSecretFunction", "Arn"),
@@ -150,14 +149,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 if(node.Properties != null) {
 
                     // add condition for creating the source
-                    var condition = AddDeclaration(node, new ConditionDeclaration {
-                        Condition = Literal("IsBlank"),
+                    var condition = AddDeclaration(node, new ConditionDeclaration(Literal("IsBlank")) {
                         Value = FnEquals(FnRef(node.FullName), Literal(""))
                     });
 
                     // add conditional resource
-                    var resource = AddDeclaration(node, new ResourceDeclaration {
-                        Resource = Literal("Resource"),
+                    var resource = AddDeclaration(node, new ResourceDeclaration(Literal("Resource")) {
                         Type = Literal(node.Type.Value),
 
                         // TODO: should the data-structure be cloned?
@@ -185,7 +182,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // request input parameter or conditional managed resource grants
                     AddGrant(
-                        name: node.Parameter.Value,
+
+                        // TODO: which name should be used here?
+                        name: node.LogicalId,
                         awsType: node.Type.Value,
                         reference: node.ReferenceExpression,
                         allow: node.Allow,

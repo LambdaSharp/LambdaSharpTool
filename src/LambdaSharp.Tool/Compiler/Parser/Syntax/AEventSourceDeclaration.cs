@@ -16,13 +16,16 @@
  * limitations under the License.
  */
 
- #nullable enable
+#nullable enable
 
+using System;
 using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AEventSourceDeclaration : ADeclaration { }
+
+    [SyntaxDeclarationKeyword("Api")]
     public class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Types ---
@@ -32,11 +35,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             SlackCommand
         }
 
+        //--- Constructors ---
+        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
-
-        [SyntaxKeyword]
-        public LiteralExpression? Api { get; set; }
 
         [SyntaxOptional]
         public LiteralExpression? Integration { get; set; }
@@ -59,6 +61,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public LiteralExpression? Invoke { get; set; }
 
+        public LiteralExpression EventSource { get; }
         public string? ApiMethod { get; set; }
         public string[]? ApiPath { get; set; }
         public IntegrationType ApiIntegrationType { get; set; }
@@ -66,7 +69,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Api?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             Integration?.Visit(this, visitor);
             OperationName?.Visit(this, visitor);
             ApiKeyRequired?.Visit(this, visitor);
@@ -78,31 +81,35 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
+    [SyntaxDeclarationKeyword("Schedule", typeof(AExpression))]
     public class SchedulEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? Schedule { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression? Name { get; set; }
 
+        public AExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Schedule?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             Name?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("S3", typeof(AExpression))]
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? S3 { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public List<LiteralExpression>? Events { get; set; }
@@ -113,10 +120,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public LiteralExpression? Suffix { get; set; }
 
+        public AExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            S3?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             Events?.Visit(this, visitor);
             Prefix?.Visit(this, visitor);
             Suffix?.Visit(this, visitor);
@@ -124,82 +133,93 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
+    [SyntaxDeclarationKeyword("SlackCommand")]
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
+        //--- Constructors ---
+        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
+
         //--- Properties ---
-
-        [SyntaxKeyword]
-        public LiteralExpression? SlackCommand { get; set; }
-
         public string[]? SlackPath { get; set; }
+        public LiteralExpression EventSource { get; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            SlackCommand?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("Topic", typeof(AExpression))]
     public class TopicEventSourceDeclaration : AEventSourceDeclaration {
+
+        //--- Constructors ---
+        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 
-        [SyntaxKeyword]
-        public AExpression? Topic { get; set; }
-
+        // TODO (2020-01-30, bjorg): add validation for topic filters
         [SyntaxOptional]
         public ObjectExpression? Filters { get; set; }
+
+        public AExpression EventSource { get; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Topic?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             Filters?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("Sqs", typeof(AExpression))]
     public class SqsEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        // TODO: constructor must be able to take `AExpression`!
+        public SqsEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? Sqs { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public AExpression? BatchSize { get; set; }
 
+        public AExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Sqs?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             BatchSize?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("Alexa", typeof(AExpression))]
     public class AlexaEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? Alexa { get; set; }
+        public AExpression EventSource { get; }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Alexa?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("DynamoDB", typeof(AExpression))]
     public class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? DynamoDB { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public AExpression? BatchSize { get; set; }
@@ -210,22 +230,25 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public AExpression? MaximumBatchingWindowInSeconds { get; set; }
 
+        public AExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            DynamoDB?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             BatchSize?.Visit(this, visitor);
             StartingPosition?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("Kinesis", typeof(AExpression))]
     public class KinesisEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public AExpression? Kinesis { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public AExpression? BatchSize { get; set; }
@@ -236,22 +259,25 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public AExpression? MaximumBatchingWindowInSeconds { get; set; }
 
+        public AExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Kinesis?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             BatchSize?.Visit(this, visitor);
             StartingPosition?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }
 
+    [SyntaxDeclarationKeyword("WebSocket")]
     public class WebSocketEventSourceDeclaration : AEventSourceDeclaration {
 
-        //--- Properties ---
+        //--- Constructors ---
+        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = eventSource ?? throw new ArgumentNullException(nameof(eventSource));
 
-        [SyntaxKeyword]
-        public LiteralExpression? WebSocket { get; set; }
+        //--- Properties ---
 
         [SyntaxOptional]
         public LiteralExpression? OperationName { get; set; }
@@ -271,10 +297,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         [SyntaxOptional]
         public LiteralExpression? Invoke { get; set; }
 
+        public LiteralExpression EventSource { get; }
+
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            WebSocket?.Visit(this, visitor);
+            EventSource.Visit(this, visitor);
             OperationName?.Visit(this, visitor);
             ApiKeyRequired?.Visit(this, visitor);
             AuthorizationType?.Visit(this, visitor);

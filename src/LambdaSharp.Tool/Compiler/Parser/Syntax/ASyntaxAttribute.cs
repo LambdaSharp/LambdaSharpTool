@@ -16,41 +16,28 @@
  * limitations under the License.
  */
 
+ #nullable enable
+
 using System;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
-    public enum SyntaxType {
-        Required,
-        Optional,
-        Keyword
-    }
-
     [AttributeUsage(AttributeTargets.Property)]
-    public abstract class ASyntaxAttribute : Attribute {
+    public abstract class ASyntaxAttribute : Attribute { }
+
+    public sealed class SyntaxRequiredAttribute : ASyntaxAttribute { }
+
+    public sealed class SyntaxOptionalAttribute : ASyntaxAttribute { }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public sealed class SyntaxDeclarationKeywordAttribute : Attribute {
 
         //--- Constructors ---
-        public ASyntaxAttribute(SyntaxType type) => Type = type;
+        public SyntaxDeclarationKeywordAttribute(string keyword) => Keyword = keyword ?? throw new ArgumentNullException(nameof(keyword));
+        public SyntaxDeclarationKeywordAttribute(string keyword, Type type) : this(keyword) => Type = type ?? throw new ArgumentNullException(nameof(type));
 
         //--- Properties ---
-        public SyntaxType Type { get; private set; } = SyntaxType.Required;
-    }
-
-    public class SyntaxRequiredAttribute : ASyntaxAttribute {
-
-        //--- Constructors ---
-        public SyntaxRequiredAttribute() : base(SyntaxType.Required) { }
-    }
-
-    public class SyntaxOptionalAttribute : ASyntaxAttribute {
-
-        //--- Constructors ---
-        public SyntaxOptionalAttribute() : base(SyntaxType.Optional) { }
-    }
-
-    public class SyntaxKeywordAttribute : ASyntaxAttribute {
-
-        //--- Constructors ---
-        public SyntaxKeywordAttribute() : base(SyntaxType.Keyword) { }
+        public string Keyword { get; }
+        public Type? Type { get; }
     }
 }

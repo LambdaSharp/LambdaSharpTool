@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // prepare compilation
-            Console.WriteLine($"Compiling: {moduleDeclaration.Module.Value} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
+            Console.WriteLine($"Compiling: {moduleDeclaration.ModuleName} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
 
             // analyze structure of AST
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(moduleBuilder));
