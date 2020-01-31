@@ -188,6 +188,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * `lash build` did not properly convert `\` in `.csproj` files on non-Windows operating systems, which caused a false-negative when trying to detect changes to function projects.
     * Replaced locally patched `SharpZipLib` assembly with nuget version since the local patch was merged and published in v1.2.0
     * Fixed an issue where a function project would be recompiled every time even when no changes were made.
+    * Fixed an issue where cached information was stored in the wrong application folder.
 
 ### (v0.7.0.6) - 2019-12-12
 
