@@ -68,10 +68,6 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // prepare AST for processing
             var moduleBuilder = new Builder();
-            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(moduleBuilder));
-            if(HasErrors) {
-                return false;
-            }
 
             // optionally, override module version
             if(moduleVersion != null) {
