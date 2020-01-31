@@ -187,7 +187,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 Label = Literal("Enable AWS X-Ray tracing mode for module resources"),
                 Description = Literal("AWS X-Ray Tracing"),
                 Default = Literal(XRayTracingLevel.Disabled.ToString()),
-                AllowedValues = new List<LiteralExpression> {
+                AllowedValues = new SyntaxNodes<LiteralExpression> {
                     Literal(XRayTracingLevel.Disabled.ToString()),
                     Literal(XRayTracingLevel.RootModule.ToString()),
                     Literal(XRayTracingLevel.AllModules.ToString())
@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
                     Default = Literal("Disabled"),
-                    AllowedValues = new List<LiteralExpression> {
+                    AllowedValues = new SyntaxNodes<LiteralExpression> {
                         Literal("Disabled"),
                         Literal("Enabled")
                     },

@@ -112,11 +112,11 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
 
                 // lists
-                [typeof(List<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
-                [typeof(List<AExpression>)] = () => ParseList<AExpression>(),
-                [typeof(List<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
-                [typeof(List<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
-                [typeof(List<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
+                [typeof(SyntaxNodes<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
+                [typeof(SyntaxNodes<AExpression>)] = () => ParseList<AExpression>(),
+                [typeof(SyntaxNodes<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
+                [typeof(SyntaxNodes<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
+                [typeof(SyntaxNodes<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
         }
 
@@ -211,7 +211,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
         }
 
-        public List<T> ParseList<T>() where T : ASyntaxNode {
+        public SyntaxNodes<T> ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
                 Log(Error.ExpectedListExpression, Location());
                 SkipThisAndNestedEvents();
@@ -220,7 +220,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             MoveNext();
 
             // parse declaration items in sequence
-            var result = new List<T>();
+            var result = new SyntaxNodes<T>();
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 if(TryParse(typeof(T), out var item)) {
                     try {
@@ -1164,8 +1164,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             }
         }
 
-        public List<LiteralExpression> ParseListOfLiteralExpressions() {
-            var result = new List<LiteralExpression>();
+        public SyntaxNodes<LiteralExpression> ParseListOfLiteralExpressions() {
+            var result = new SyntaxNodes<LiteralExpression>();
 
             // attempt to parse a single scalar
             if(IsEvent<Scalar>(out var scalar, out var filePath)) {

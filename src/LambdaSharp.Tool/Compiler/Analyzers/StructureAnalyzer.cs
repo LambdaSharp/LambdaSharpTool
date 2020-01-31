@@ -652,7 +652,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private bool IsValidCloudFormationResourceType(string type) => throw new NotImplementedException();
 
         private T AddDeclaration<T>(AItemDeclaration parent, T declaration) where T : AItemDeclaration {
-            parent.AddDeclaration(declaration, new AItemDeclaration.DoNotCallThisDirectly());
+            parent.Declarations.Add(declaration);
+
+            // TODO: can we get rid of this?
             declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
             return declaration;
         }

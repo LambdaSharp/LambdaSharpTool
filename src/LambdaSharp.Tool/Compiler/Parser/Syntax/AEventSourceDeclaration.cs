@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _operationName;
         private LiteralExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
-        private List<LiteralExpression>? _authorizationScopes;
+        private SyntaxNodes<LiteralExpression>? _authorizationScopes;
         private AExpression? _authorizerId;
         private LiteralExpression? _invoke;
 
@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public List<LiteralExpression>? AuthorizationScopes {
+        public SyntaxNodes<LiteralExpression>? AuthorizationScopes {
             get => _authorizationScopes;
             set => _authorizationScopes = SetParent(value);
         }
@@ -143,7 +143,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private List<LiteralExpression>? _events;
+        private SyntaxNodes<LiteralExpression>? _events;
         private LiteralExpression? _prefix;
         private LiteralExpression? _suffix;
 
@@ -153,7 +153,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxOptional]
-        public List<LiteralExpression>? Events {
+        public SyntaxNodes<LiteralExpression>? Events {
             get => _events;
             set => _events = SetParent(value);
         }
@@ -368,7 +368,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _operationName;
         private LiteralExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
-        private List<LiteralExpression>? _authorizationScopes;
+        private SyntaxNodes<LiteralExpression>? _authorizationScopes;
         private AExpression? _authorizerId;
         private LiteralExpression? _invoke;
 
@@ -396,7 +396,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public List<LiteralExpression>? AuthorizationScopes {
+        public SyntaxNodes<LiteralExpression>? AuthorizationScopes {
             get => _authorizationScopes;
             set => _authorizationScopes = SetParent(value);
         }

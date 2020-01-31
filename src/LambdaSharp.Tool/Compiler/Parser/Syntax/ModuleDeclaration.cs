@@ -33,15 +33,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression _version;
         private LiteralExpression? _description;
         private ListExpression _pragmas;
-        private List<LiteralExpression> _secrets = new List<LiteralExpression>();
-        private List<UsingModuleDeclaration> _using = new List<UsingModuleDeclaration>();
-        private List<AItemDeclaration> _items = new List<AItemDeclaration>();
+        private SyntaxNodes<LiteralExpression> _secrets;
+        private SyntaxNodes<UsingModuleDeclaration> _using;
+        private SyntaxNodes<AItemDeclaration> _items;
 
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
             ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
             _version = SetParent(ASyntaxAnalyzer.Literal("1.0-DEV"));
             _pragmas = SetParent(new ListExpression());
+            _secrets = SetParent(new SyntaxNodes<LiteralExpression>());
+            _using = SetParent(new SyntaxNodes<UsingModuleDeclaration>());
+            _items = SetParent(new SyntaxNodes<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -65,19 +68,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public List<LiteralExpression> Secrets {
+        public SyntaxNodes<LiteralExpression> Secrets {
             get => _secrets;
             set => _secrets = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
-        public List<UsingModuleDeclaration> Using {
+        public SyntaxNodes<UsingModuleDeclaration> Using {
             get => _using;
             set => _using = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxRequired]
-        public List<AItemDeclaration> Items {
+        public SyntaxNodes<AItemDeclaration> Items {
             get => _items;
             set => _items = SetParent(value) ?? throw new ArgumentNullException();
         }

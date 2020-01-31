@@ -242,7 +242,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         ["FunctionMaxMemory"] = node.Memory,
                         ["FunctionMaxDuration"] = node.Timeout
                     },
-                    DependsOn = new List<LiteralExpression> {
+                    DependsOn = new SyntaxNodes<LiteralExpression> {
                         Literal("Module::Registration")
                     },
                     If = (node.If != null)
@@ -420,7 +420,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate events
             if(node.Events == null) {
-                node.Events = new List<LiteralExpression> {
+                node.Events = new SyntaxNodes<LiteralExpression> {
                     Literal("s3:ObjectCreated:*")
                 };
             } else if(!node.Events.Any()) {

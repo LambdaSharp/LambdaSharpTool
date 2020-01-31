@@ -155,7 +155,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            _items?.Visit(this, visitor);
+            foreach(var item in _items) {
+                item?.Visit(this, visitor);
+            }
             visitor.VisitEnd(parent, this);
         }
 

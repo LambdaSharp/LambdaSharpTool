@@ -19,6 +19,7 @@
 #nullable enable
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -26,6 +27,18 @@ using System.Linq;
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class ASyntaxNode {
+
+        //--- Class Methods ---
+        public static void SetParent(ASyntaxNode? node, ASyntaxNode parent) {
+            if(node != null) {
+
+                // TODO: should we enforce this?
+                // if(node.Parent != null) {
+                //     throw new ApplicationException("node already has a parent");
+                // }
+                node.Parent = parent;
+            }
+        }
 
         //--- Fields ---
         private SourceLocation? _sourceLocation;
@@ -59,35 +72,78 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Methods ---
         [return: NotNullIfNotNull("node") ]
         protected T? SetParent<T>(T? node) where T : ASyntaxNode {
-            if(node != null) {
-
-                // TODO: should we enforce this?
-                // if(node.Parent != null) {
-                //     throw new ApplicationException("node already had a parent");
-                // }
-                node.Parent = this;
-            }
+            SetParent(node, this);
             return node;
         }
 
         [return: NotNullIfNotNull("list") ]
-        protected List<T>? SetParent<T>(List<T>? list) where T : ASyntaxNode {
+        protected SyntaxNodes<T>? SetParent<T>(SyntaxNodes<T>? list) where T : ASyntaxNode {
             if(list != null) {
-                foreach(var node in list) {
-                    SetParent(node);
-                }
+                list.Parent = this;
             }
             return list;
         }
     }
 
-    public static class ASyntaxNodeEx {
+    public class SyntaxNodes<T> : IEnumerable, IEnumerable<T> where T : ASyntaxNode {
 
-        //--- Extension Methods ---
-        public static void Visit(this IEnumerable<ASyntaxNode> nodes, ASyntaxNode parent, ISyntaxVisitor visitor) {
-            foreach(var node in nodes) {
-                node?.Visit(parent, visitor);
+        //--- Fields ---
+        private ASyntaxNode? _parent;
+        private readonly List<T> _nodes;
+
+        //--- Constructors ---
+        public SyntaxNodes() => _nodes = new List<T>();
+
+        public SyntaxNodes(IEnumerable<T> nodes) => _nodes = new List<T>(nodes);
+
+        //--- Properties ---
+        public int Count => _nodes.Count;
+
+        public ASyntaxNode Parent {
+            get => _parent ?? throw new ArgumentNullException(nameof(Parent));
+            set {
+                _parent = value ?? throw new ArgumentNullException(nameof(Parent));
+                foreach(var node in _nodes) {
+                    SetParent(node);
+                }
             }
         }
+
+        public bool HasParent => _parent != null;
+
+        //--- Operators ---
+        public T this[int index] {
+            get => _nodes[index];
+            set => _nodes[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
+        }
+
+        //--- Methods ---
+        public void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            foreach(var node in _nodes) {
+                node?.Visit(Parent, visitor);
+            }
+        }
+
+        public void Add(T expression) => _nodes.Add(SetParent(expression) ??  throw new ArgumentNullException(nameof(expression)));
+
+        [return: NotNullIfNotNull("node")]
+        private T SetParent(T node) {
+            if(HasParent) {
+                ASyntaxNode.SetParent(node, Parent);
+            }
+            return node;
+        }
+
+        //--- IEnumerable Members ---
+        IEnumerator IEnumerable.GetEnumerator() => _nodes.GetEnumerator();
+
+        //--- IEnumerable<TS> Members ---
+        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _nodes.GetEnumerator();
+    }
+
+    public static class SyntaxNodesEx {
+
+        //--- Extension Methods ---
+        public static SyntaxNodes<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode => new SyntaxNodes<T>(enumerable);
     }
 }

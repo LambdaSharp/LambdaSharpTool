@@ -46,7 +46,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     .Where(declaration => (declaration is IConditionalResourceDeclaration conditionalResourceDeclaration) && (conditionalResourceDeclaration.If == null))
                     .Select(declaration => ASyntaxAnalyzer.Literal(declaration.FullName))
                     .OrderBy(fullName => fullName.Value)
-                    .ToList();
+                    .ToSyntaxNodes();
 
                 // NOTE: for conditional resources, we need to take a dependency via an expression; however
                 //  this approach doesn't work for custom resources because they don't support !Ref
