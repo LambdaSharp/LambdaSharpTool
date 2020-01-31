@@ -18,6 +18,8 @@
 
 #nullable enable
 
+using System;
+
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AFunctionExpression : AExpression { }
@@ -31,9 +33,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
-        public AExpression? Value {
-            get => _value;
-            set => _value = SetParent(value);
+        public AExpression Value {
+            get => _value ?? throw new ArgumentNullException();
+            set => _value = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -57,19 +59,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _cidrBits;
 
         //--- Properties ---
-        public AExpression? IpBlock {
-            get => _ipBlock;
-            set => _ipBlock = SetParent(value);
+        public AExpression IpBlock {
+            get => _ipBlock ?? throw new ArgumentNullException();
+            set => _ipBlock = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? Count {
-            get => _count;
-            set => _count = SetParent(value);
+        public AExpression Count {
+            get => _count ?? throw new ArgumentNullException();
+            set => _count = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? CidrBits {
-            get => _cidrBits;
-            set => _cidrBits = SetParent(value);
+        public AExpression CidrBits {
+            get => _cidrBits ?? throw new ArgumentNullException();
+            set => _cidrBits = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -97,19 +99,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? MapName {
-            get => _mapName;
-            set => _mapName = SetParent(value);
+        public LiteralExpression MapName {
+            get => _mapName ?? throw new ArgumentNullException();
+            set => _mapName = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? TopLevelKey {
-            get => _topLevelKey;
-            set => _topLevelKey = SetParent(value);
+        public AExpression TopLevelKey {
+            get => _topLevelKey ?? throw new ArgumentNullException();
+            set => _topLevelKey = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? SecondLevelKey {
-            get => _secondLevelKey;
-            set => _secondLevelKey = SetParent(value);
+        public AExpression SecondLevelKey {
+            get => _secondLevelKey ?? throw new ArgumentNullException();
+            set => _secondLevelKey = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
         public MappingDeclaration? ReferencedDeclaration { get; set; }
 
@@ -132,20 +134,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Fields ---
         private LiteralExpression? _referenceName;
         private AExpression? _attributeName;
+        private AItemDeclaration? referencedDeclaration;
 
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? ReferenceName {
-            get => _referenceName;
-            set => _referenceName = SetParent(value);
+        public LiteralExpression ReferenceName {
+            get => _referenceName ?? throw new ArgumentNullException();
+            set => _referenceName = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? AttributeName {
-            get => _attributeName;
-            set => _attributeName = SetParent(value);
+        public AExpression AttributeName {
+            get => _attributeName ?? throw new ArgumentNullException();
+            set => _attributeName = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
-        public AItemDeclaration? ReferencedDeclaration { get; set; }
+
+        public AItemDeclaration? ReferencedDeclaration {
+            get => referencedDeclaration;
+            set {
+                if(referencedDeclaration != null) {
+                    referencedDeclaration.UntrackDependency(this);
+                }
+                referencedDeclaration = value;
+                if(referencedDeclaration != null) {
+                    ParentItemDeclaration.TrackDependency(referencedDeclaration, this);
+                }
+            }
+        }
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -165,9 +180,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _region;
 
         //--- Properties ---
-        public AExpression? Region {
-            get => _region;
-            set => _region = SetParent(value);
+        public AExpression Region {
+            get => _region ?? throw new ArgumentNullException();
+            set => _region = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -198,19 +213,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _ifFalse;
 
         //--- Properties ---
-        public AExpression? Condition {
-            get => _condition;
-            set => _condition = SetParent(value);
+        public AExpression Condition {
+            get => _condition ?? throw new ArgumentNullException();
+            set => _condition = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? IfTrue {
-            get => _ifTrue;
-            set => _ifTrue = SetParent(value);
+        public AExpression IfTrue {
+            get => _ifTrue ?? throw new ArgumentNullException();
+            set => _ifTrue = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? IfFalse {
-            get => _ifFalse;
-            set => _ifFalse = SetParent(value);
+        public AExpression IfFalse {
+            get => _ifFalse ?? throw new ArgumentNullException();
+            set => _ifFalse = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -240,9 +255,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _sharedValueToImport;
 
         //--- Properties ---
-        public AExpression? SharedValueToImport {
-            get => _sharedValueToImport;
-            set => _sharedValueToImport = SetParent(value);
+        public AExpression SharedValueToImport {
+            get => _sharedValueToImport ?? throw new ArgumentNullException();
+            set => _sharedValueToImport = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -277,14 +292,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? Separator {
-            get => _separator;
-            set => _separator = SetParent(value);
+        public LiteralExpression Separator {
+            get => _separator ?? throw new ArgumentNullException();
+            set => _separator = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? Values {
-            get => _values;
-            set => _values = SetParent(value);
+        public AExpression Values {
+            get => _values ?? throw new ArgumentNullException();
+            set => _values = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -313,9 +328,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _values;
 
         //--- Properties ---
-        public AExpression? Index {
-            get => _index;
-            set => _index = SetParent(value);
+        public AExpression Index {
+            get => _index ?? throw new ArgumentNullException();
+            set => _index = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         public AExpression? Values {
@@ -355,14 +370,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? Delimiter {
-            get => _delimiter;
-            set => _delimiter = SetParent(value);
+        public LiteralExpression Delimiter {
+            get => _delimiter ?? throw new ArgumentNullException();
+            set => _delimiter = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AExpression? SourceString {
-            get => _sourceString;
-            set => _sourceString = SetParent(value);
+        public AExpression SourceString {
+            get => _sourceString ?? throw new ArgumentNullException();
+            set => _sourceString = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -397,14 +412,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? FormatString {
-            get => _formatString;
-            set => _formatString = SetParent(value);
+        public LiteralExpression FormatString {
+            get => _formatString ?? throw new ArgumentNullException();
+            set => _formatString = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public ObjectExpression? Parameters {
-            get => _parameters;
-            set => _parameters = SetParent(value);
+        public ObjectExpression Parameters {
+            get => _parameters ?? throw new ArgumentNullException();
+            set => _parameters = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -428,14 +443,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? MacroName {
-            get => _macroName;
-            set => _macroName = SetParent(value);
+        public LiteralExpression MacroName {
+            get => _macroName ?? throw new ArgumentNullException();
+            set => _macroName = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public ObjectExpression? Parameters {
-            get => _parameters;
-            set => _parameters = SetParent(value);
+        public ObjectExpression Parameters {
+            get => _parameters ?? throw new ArgumentNullException();
+            set => _parameters = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -459,14 +474,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression? ReferenceName {
-            get => _referenceName;
-            set => _referenceName = SetParent(value);
+        public LiteralExpression ReferenceName {
+            get => _referenceName ?? throw new ArgumentNullException();
+            set => _referenceName = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
-        public AItemDeclaration? ReferencedDeclaration {
-            get => _referencedDeclaration;
-            set => _referencedDeclaration = SetParent(value);
+        public AItemDeclaration ReferencedDeclaration {
+            get => _referencedDeclaration ?? throw new ArgumentNullException();
+            set => _referencedDeclaration = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---

@@ -131,14 +131,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 ) {
                     foundDeclarationsToRemove = true;
                     DebugWriteLine(() => $"DISCARD '{declaration.FullName}'");
-
-                    // iterate over all expressions that introduced dependencies for this declaration and remove itself from them
-                    foreach(var dependency in declaration.Dependencies) {
-                        dependency.Expression
-                            .ParentItemDeclaration
-                            .ReverseDependencies
-                            .RemoveAll(expression => expression.ParentItemDeclaration == declaration);
-                    }
+                    declaration.UntrackAllDependencies();
                 }
             } while(foundDeclarationsToRemove);
 

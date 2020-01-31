@@ -26,10 +26,28 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AItemDeclaration : ADeclaration {
 
+        //--- Types ---
+        public class DependencyRecord {
+
+            //--- Constructors ---
+            public DependencyRecord(AItemDeclaration referencedDeclaration, IEnumerable<AExpression> conditions, AExpression expression) {
+                ReferencedDeclaration = referencedDeclaration ?? throw new ArgumentNullException(nameof(referencedDeclaration));
+                Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
+                Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+            }
+
+            //--- Properties ---
+            public AItemDeclaration ReferencedDeclaration { get; }
+            public IEnumerable<AExpression> Conditions { get; }
+            public AExpression Expression { get; }
+        }
+
         //--- Fields ---
         private string? _fullName;
         private string? _logicalId;
         private LiteralExpression? _description;
+        private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
+        private readonly List<AExpression> _reverseDependencies = new List<AExpression>();
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
@@ -73,15 +91,74 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         /// <param name="Conditions"></param>
         /// <param name="Node"></param>
         /// <returns></returns>
-        // TODO: add specialized type instead of generic tuple
-        public List<(string ReferenceName, IEnumerable<AExpression> Conditions, AExpression Expression)> Dependencies { get; set; } = new List<(string, IEnumerable<AExpression>, AExpression)>();
+        public IEnumerable<DependencyRecord> Dependencies => _dependencies;
 
         /// <summary>
         /// List of declarations that depend on this declaration.
         /// </summary>
         /// <typeparam name="ASyntaxNode"></typeparam>
         /// <returns></returns>
-        public List<AExpression> ReverseDependencies { get; set; } = new List<AExpression>();
+        public IEnumerable<AExpression> ReverseDependencies => _reverseDependencies;
+
+        //--- Methods ---
+        public void TrackDependency(AItemDeclaration referencedDeclaration, AExpression dependentExpression) {
+            if(referencedDeclaration is null) {
+                throw new ArgumentNullException(nameof(referencedDeclaration));
+            }
+            if(dependentExpression is null) {
+                throw new ArgumentNullException(nameof(dependentExpression));
+            }
+            _dependencies.Add(new AItemDeclaration.DependencyRecord(referencedDeclaration, FindConditions(dependentExpression), dependentExpression));
+            referencedDeclaration._reverseDependencies.Add(dependentExpression);
+
+            // local functions
+            IEnumerable<AExpression> FindConditions(ASyntaxNode node) {
+                var conditions = new List<AExpression>();
+                ASyntaxNode? previousParent = null;
+                foreach(var parent in node.Parents) {
+
+                    // check if parent is an !If expression
+                    if(parent is IfFunctionExpression ifParent) {
+
+                        // determine if reference came from IfTrue or IfFalse path
+                        if(object.ReferenceEquals(ifParent.IfTrue, previousParent)) {
+                            conditions.Add(ifParent.Condition);
+                        } else if(object.ReferenceEquals(ifParent.IfFalse, previousParent)) {
+
+                            // TODO: review this one more time
+
+                            // for IfFalse, create a !Not intermediary node
+                            conditions.Add(new NotConditionExpression {
+                                SourceLocation = ifParent.Condition.SourceLocation,
+                                Value = ifParent.Condition
+                            });
+                        } else {
+                            throw new ShouldNeverHappenException();
+                        }
+                    }
+                    previousParent = parent;
+                }
+                conditions.Reverse();
+                return conditions;
+            }
+        }
+
+        public void UntrackDependency(AExpression dependentExpression)
+            => _reverseDependencies.RemoveAll(reverseDependency => reverseDependency == dependentExpression);
+
+        public void UntrackAllDependencies() {
+
+            // iterate over all dependencies for this declaration and remove itself from the reverse dependencies list
+            foreach(var dependency in _dependencies) {
+
+                // TODO: this is what it should be, but not all expressions have `ReferencedDeclaration`; introduce interface we can filter on
+                // dependency.Expression.ReferencedDeclaration = null;
+                dependency.ReferencedDeclaration
+                    ._reverseDependencies
+                    .RemoveAll(expression => expression.ParentItemDeclaration == this);
+            }
+            _dependencies.Clear();
+        }
     }
 
     /// <summary>

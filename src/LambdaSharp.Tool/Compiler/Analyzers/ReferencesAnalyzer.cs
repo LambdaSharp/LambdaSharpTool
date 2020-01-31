@@ -65,10 +65,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                     } else {
                         node.ReferencedDeclaration = referencedDeclaration;
-
-                        // track mutual dependencies
-                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
-                        referencedDeclaration.ReverseDependencies.Add(node);
                     }
                 } else {
                     _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
@@ -103,10 +99,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     case ParameterDeclaration _:
                     case PseudoParameterDeclaration _:
                         node.ReferencedDeclaration = referencedDeclaration;
-
-                        // track mutual dependencies
-                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
-                        referencedDeclaration.ReverseDependencies.Add(node);
                         break;
                     default:
                         throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
@@ -130,10 +122,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     case ResourceDeclaration _:
                     case ImportDeclaration _:
                         node.ReferencedDeclaration = referencedDeclaration;
-
-                        // track mutual dependencies
-                        node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: FindConditions(node), Expression: node));
-                        referencedDeclaration.ReverseDependencies.Add(node);
                         break;
                     default:
                         throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
@@ -217,10 +205,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
                 if(referencedDeclaration is ConditionDeclaration conditionDeclaration) {
                     node.ReferencedDeclaration = conditionDeclaration;
-
-                    // track mutual dependencies
-                    referencedDeclaration.ReverseDependencies.Add(node);
-                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
                 } else {
                     _builder.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
                 }
@@ -236,10 +220,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(_builder.TryGetItemDeclaration(referenceName.Value, out var referencedDeclaration)) {
                 if(referencedDeclaration is MappingDeclaration mappingDeclaration) {
                     node.ReferencedDeclaration = mappingDeclaration;
-
-                    // track mutual dependencies
-                    referencedDeclaration.ReverseDependencies.Add(node);
-                    node.ParentItemDeclaration.Dependencies.Add((ReferenceName: referenceName.Value, Conditions: Enumerable.Empty<AExpression>(), Expression: node));
                 } else {
                     _builder.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
                 }
@@ -296,36 +276,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
-        }
-
-        private IEnumerable<AExpression> FindConditions(ASyntaxNode node) {
-            var conditions = new List<AExpression>();
-            ASyntaxNode previousParent = null;
-            foreach(var parent in node.Parents) {
-
-                // check if parent is an !If expression
-                if(parent is IfFunctionExpression ifParent) {
-
-                    // determine if reference came from IfTrue or IfFalse path
-                    if(object.ReferenceEquals(ifParent.IfTrue, previousParent)) {
-                        conditions.Add(ifParent.Condition);
-                    } else if(object.ReferenceEquals(ifParent.IfFalse, previousParent)) {
-
-                        // TODO: review this one more time
-
-                        // for IfFalse, create a !Not intermediary node
-                        conditions.Add(new NotConditionExpression {
-                            SourceLocation = ifParent.Condition.SourceLocation,
-                            Value = ifParent.Condition
-                        });
-                    } else {
-                        throw new ShouldNeverHappenException();
-                    }
-                }
-                previousParent = parent;
-            }
-            conditions.Reverse();
-            return conditions;
         }
 
         private void ValidateFunctionScope(AExpression scopeExpression, AItemDeclaration declaration) {
