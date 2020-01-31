@@ -187,7 +187,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 Label = Literal("Enable AWS X-Ray tracing mode for module resources"),
                 Description = Literal("AWS X-Ray Tracing"),
                 Default = Literal(XRayTracingLevel.Disabled.ToString()),
-                AllowedValues = new SyntaxNodes<LiteralExpression> {
+                AllowedValues = new SyntaxNodeCollection<LiteralExpression> {
                     Literal(XRayTracingLevel.Disabled.ToString()),
                     Literal(XRayTracingLevel.RootModule.ToString()),
                     Literal(XRayTracingLevel.AllModules.ToString())
@@ -214,7 +214,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
                     Default = Literal("Disabled"),
-                    AllowedValues = new SyntaxNodes<LiteralExpression> {
+                    AllowedValues = new SyntaxNodeCollection<LiteralExpression> {
                         Literal("Disabled"),
                         Literal("Enabled")
                     },
@@ -256,12 +256,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // add module variables
             if(TryGetVariable(node, "DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
-                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("DeadLetterQueue")) {
+                var deadLetterQueueDeclaration = AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("DeadLetterQueue")) {
                     Description = Literal("Module Dead Letter Queue (ARN)"),
                     Value = deadLetterQueueVariable
                 });
                 AddGrant(
-                    name: "DeadLetterQueue",
+                    name: deadLetterQueueDeclaration.FullName,
                     awsType: null,
                     reference: FnRef("Module::DeadLetterQueue"),
                     allow: new ListExpression {

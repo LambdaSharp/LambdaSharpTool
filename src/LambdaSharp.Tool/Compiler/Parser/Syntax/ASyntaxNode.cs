@@ -77,7 +77,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [return: NotNullIfNotNull("list") ]
-        protected SyntaxNodes<T>? SetParent<T>(SyntaxNodes<T>? list) where T : ASyntaxNode {
+        protected SyntaxNodeCollection<T>? SetParent<T>(SyntaxNodeCollection<T>? list) where T : ASyntaxNode {
+            if(list != null) {
+                list.Parent = this;
+            }
+            return list;
+        }
+
+        [return: NotNullIfNotNull("list") ]
+        protected SyntaxNodeCollection<AItemDeclaration>? SetParent(SyntaxNodeCollection<AItemDeclaration>? list) {
             if(list != null) {
                 list.Parent = this;
             }
@@ -85,16 +93,24 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
     }
 
-    public class SyntaxNodes<T> : IEnumerable, IEnumerable<T> where T : ASyntaxNode {
+    public sealed class SyntaxNodeCollection<T> : IEnumerable, IEnumerable<T> where T : ASyntaxNode {
 
         //--- Fields ---
         private ASyntaxNode? _parent;
         private readonly List<T> _nodes;
 
         //--- Constructors ---
-        public SyntaxNodes() => _nodes = new List<T>();
+        public SyntaxNodeCollection() => _nodes = new List<T>();
 
-        public SyntaxNodes(IEnumerable<T> nodes) => _nodes = new List<T>(nodes);
+        public SyntaxNodeCollection(IEnumerable<T> nodes) {
+            if(nodes is null) {
+                throw new ArgumentNullException(nameof(nodes));
+            }
+            _nodes = new List<T>(nodes);
+            foreach(var node in _nodes) {
+                ImportNode(node);
+            }
+        }
 
         //--- Properties ---
         public int Count => _nodes.Count;
@@ -104,7 +120,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set {
                 _parent = value ?? throw new ArgumentNullException(nameof(Parent));
                 foreach(var node in _nodes) {
-                    SetParent(node);
+                    ImportNode(node);
                 }
             }
         }
@@ -114,7 +130,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Operators ---
         public T this[int index] {
             get => _nodes[index];
-            set => _nodes[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
+            set => _nodes[index] = ImportNode(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
@@ -124,10 +140,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
-        public void Add(T expression) => _nodes.Add(SetParent(expression) ??  throw new ArgumentNullException(nameof(expression)));
+        public void Add(T expression) => _nodes.Add(ImportNode(expression) ??  throw new ArgumentNullException(nameof(expression)));
 
         [return: NotNullIfNotNull("node")]
-        private T SetParent(T node) {
+        private T ImportNode(T node) {
             if(HasParent) {
                 ASyntaxNode.SetParent(node, Parent);
             }
@@ -144,6 +160,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public static class SyntaxNodesEx {
 
         //--- Extension Methods ---
-        public static SyntaxNodes<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode => new SyntaxNodes<T>(enumerable);
+        public static SyntaxNodeCollection<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode => new SyntaxNodeCollection<T>(enumerable);
     }
 }

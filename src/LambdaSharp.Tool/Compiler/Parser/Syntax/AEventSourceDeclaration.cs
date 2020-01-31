@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _operationName;
         private LiteralExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
-        private SyntaxNodes<LiteralExpression>? _authorizationScopes;
+        private SyntaxNodeCollection<LiteralExpression>? _authorizationScopes;
         private AExpression? _authorizerId;
         private LiteralExpression? _invoke;
 
@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression>? AuthorizationScopes {
+        public SyntaxNodeCollection<LiteralExpression>? AuthorizationScopes {
             get => _authorizationScopes;
             set => _authorizationScopes = SetParent(value);
         }
@@ -143,7 +143,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class S3EventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private SyntaxNodes<LiteralExpression>? _events;
+        private SyntaxNodeCollection<LiteralExpression>? _events;
         private LiteralExpression? _prefix;
         private LiteralExpression? _suffix;
 
@@ -153,7 +153,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression>? Events {
+        public SyntaxNodeCollection<LiteralExpression>? Events {
             get => _events;
             set => _events = SetParent(value);
         }
@@ -212,7 +212,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Properties ---
 
-        // TODO (2020-01-30, bjorg): add validation for topic filters
         [SyntaxOptional]
         public ObjectExpression? Filters {
             get => _filters;
@@ -368,7 +367,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _operationName;
         private LiteralExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
-        private SyntaxNodes<LiteralExpression>? _authorizationScopes;
+        private SyntaxNodeCollection<LiteralExpression>? _authorizationScopes;
         private AExpression? _authorizerId;
         private LiteralExpression? _invoke;
 
@@ -396,7 +395,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression>? AuthorizationScopes {
+        public SyntaxNodeCollection<LiteralExpression>? AuthorizationScopes {
             get => _authorizationScopes;
             set => _authorizationScopes = SetParent(value);
         }

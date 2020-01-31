@@ -33,18 +33,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression _version;
         private LiteralExpression? _description;
         private ListExpression _pragmas;
-        private SyntaxNodes<LiteralExpression> _secrets;
-        private SyntaxNodes<UsingModuleDeclaration> _using;
-        private SyntaxNodes<AItemDeclaration> _items;
+        private SyntaxNodeCollection<LiteralExpression> _secrets;
+        private SyntaxNodeCollection<UsingModuleDeclaration> _using;
+        private SyntaxNodeCollection<AItemDeclaration> _items;
 
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
             ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
             _version = SetParent(ASyntaxAnalyzer.Literal("1.0-DEV"));
             _pragmas = SetParent(new ListExpression());
-            _secrets = SetParent(new SyntaxNodes<LiteralExpression>());
-            _using = SetParent(new SyntaxNodes<UsingModuleDeclaration>());
-            _items = SetParent(new SyntaxNodes<AItemDeclaration>());
+            _secrets = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _using = SetParent(new SyntaxNodeCollection<UsingModuleDeclaration>());
+            _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -68,19 +68,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression> Secrets {
+        public SyntaxNodeCollection<LiteralExpression> Secrets {
             get => _secrets;
             set => _secrets = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<UsingModuleDeclaration> Using {
+        public SyntaxNodeCollection<UsingModuleDeclaration> Using {
             get => _using;
             set => _using = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxRequired]
-        public SyntaxNodes<AItemDeclaration> Items {
+        public SyntaxNodeCollection<AItemDeclaration> Items {
             get => _items;
             set => _items = SetParent(value) ?? throw new ArgumentNullException();
         }

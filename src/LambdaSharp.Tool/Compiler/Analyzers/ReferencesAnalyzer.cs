@@ -184,7 +184,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         // move the resolved expression into !Sub parameters
                         var argName = $"P{node.Parameters.Count}";
                         node.Parameters[argName] = argExpression;
-                        argExpression.Visit(node.Parameters, new SyntaxHierarchyAnalyzer(_builder));
 
                         // substitute found value as new argument
                         return $"${{{argName}}}";

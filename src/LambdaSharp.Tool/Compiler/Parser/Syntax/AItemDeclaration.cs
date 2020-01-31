@@ -52,7 +52,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
             ItemName = SetParent(itemName) ?? throw new ArgumentNullException(nameof(itemName));
-            Declarations = SetParent(new SyntaxNodes<AItemDeclaration>());
+            Declarations = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -64,20 +64,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public LiteralExpression ItemName { get; }
-
-        // TODO: should this value always be dynamically computed? in case the node is moved?
-        public string FullName {
-            get => _fullName ?? throw new ArgumentNullException("value not set");
-            set => _fullName = value ?? throw new NullValueException(nameof(FullName));
-        }
+        public string FullName => (ParentItemDeclaration != null) ? $"{ParentItemDeclaration.FullName}::{ItemName.Value}" : ItemName.Value;
 
         public string LogicalId {
-            get => _logicalId ?? throw new ArgumentNullException("value not set");
-            set => _logicalId = value ?? throw new NullValueException(nameof(LogicalId));
+            get => _logicalId ?? throw new InvalidOperationException("value not set");
+            set => _logicalId = value ?? throw new NullValueException(nameof(value));
         }
 
         public bool DiscardIfNotReachable { get; set; }
-        public SyntaxNodes<AItemDeclaration> Declarations { get; }
+        public SyntaxNodeCollection<AItemDeclaration> Declarations { get; }
 
         /// <summary>
         /// CloudFormation expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
@@ -209,7 +204,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _default;
         private LiteralExpression? _constraintDescription;
         private LiteralExpression? _allowedPattern;
-        private SyntaxNodes<LiteralExpression> _allowedValues;
+        private SyntaxNodeCollection<LiteralExpression> _allowedValues;
         private LiteralExpression? _maxLength;
         private LiteralExpression? _maxValue;
         private LiteralExpression? _minLength;
@@ -221,7 +216,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Constructors ---
         public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
-            _allowedValues = SetParent(new SyntaxNodes<LiteralExpression>());
+            _allowedValues = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _pragmas = SetParent(new ListExpression());
         }
 
@@ -276,7 +271,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression> AllowedValues {
+        public SyntaxNodeCollection<LiteralExpression> AllowedValues {
             get => _allowedValues;
             set => _allowedValues = SetParent(value);
         }
@@ -501,17 +496,17 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class GroupDeclaration : AItemDeclaration {
 
         //--- Fields ---
-        private SyntaxNodes<AItemDeclaration> _items;
+        private SyntaxNodeCollection<AItemDeclaration> _items;
 
         //--- Constructors ---
         public GroupDeclaration(LiteralExpression itemName) : base(itemName) {
-            _items = SetParent(new SyntaxNodes<AItemDeclaration>());
+            _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
 
         [SyntaxRequired]
-        public SyntaxNodes<AItemDeclaration> Items {
+        public SyntaxNodeCollection<AItemDeclaration> Items {
             get => _items;
             set => _items = SetParent(value);
         }
@@ -562,14 +557,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? scope;
         private AExpression? _allow;
         private AExpression? _value;
-        private SyntaxNodes<LiteralExpression> _dependsOn;
+        private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression _properties;
         private LiteralExpression? _defaultAttribute;
         private ListExpression _pragmas;
 
         //--- Constructors ---
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
-            _dependsOn = SetParent(new SyntaxNodes<LiteralExpression>());
+            _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _properties = SetParent(new ObjectExpression());
             _pragmas = SetParent(new ListExpression());
         }
@@ -607,7 +602,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression> DependsOn {
+        public SyntaxNodeCollection<LiteralExpression> DependsOn {
             get => _dependsOn;
             set => _dependsOn = SetParent(value);
         }
@@ -659,12 +654,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Fields ---
         private LiteralExpression? _module;
-        private SyntaxNodes<LiteralExpression> _dependsOn;
+        private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression? _parameters;
 
         //--- Constructors ---
         public NestedModuleDeclaration(LiteralExpression itemName) : base(itemName) {
-            _dependsOn = SetParent(new SyntaxNodes<LiteralExpression>());
+            _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
         }
 
         //--- Properties ---
@@ -676,7 +671,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<LiteralExpression> DependsOn {
+        public SyntaxNodeCollection<LiteralExpression> DependsOn {
             get => _dependsOn;
             set => _dependsOn = SetParent(value);
         }
@@ -786,14 +781,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private VpcExpression? _vpc;
         private ObjectExpression _environment;
         private ObjectExpression _properties;
-        private SyntaxNodes<AEventSourceDeclaration> _sources;
+        private SyntaxNodeCollection<AEventSourceDeclaration> _sources;
         private ListExpression _pragmas;
 
         //--- Constructors ---
         public FunctionDeclaration(LiteralExpression itemName) : base(itemName) {
             _environment = SetParent(new ObjectExpression());
             _properties = SetParent(new ObjectExpression());
-            _sources = _sources = new SyntaxNodes<AEventSourceDeclaration>();
+            _sources = _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
             _pragmas = SetParent(new ListExpression());
         }
 
@@ -867,7 +862,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<AEventSourceDeclaration> Sources {
+        public SyntaxNodeCollection<AEventSourceDeclaration> Sources {
             get => _sources;
             set => _sources = SetParent(value);
         }
@@ -1011,13 +1006,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Fields ---
         private LiteralExpression? _handler;
-        private SyntaxNodes<PropertyTypeExpression> _properties;
-        private SyntaxNodes<AttributeTypeExpression> _attributes;
+        private SyntaxNodeCollection<PropertyTypeExpression> _properties;
+        private SyntaxNodeCollection<AttributeTypeExpression> _attributes;
 
         //--- Constructors ---
         public ResourceTypeDeclaration(LiteralExpression itemName) : base(itemName) {
-            _properties = SetParent(new SyntaxNodes<PropertyTypeExpression>());
-            _attributes = SetParent(new SyntaxNodes<AttributeTypeExpression>());
+            _properties = SetParent(new SyntaxNodeCollection<PropertyTypeExpression>());
+            _attributes = SetParent(new SyntaxNodeCollection<AttributeTypeExpression>());
         }
 
         //--- Properties ---
@@ -1029,13 +1024,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<PropertyTypeExpression> Properties {
+        public SyntaxNodeCollection<PropertyTypeExpression> Properties {
             get => _properties;
             set => _properties = value;
         }
 
         [SyntaxOptional]
-        public SyntaxNodes<AttributeTypeExpression> Attributes {
+        public SyntaxNodeCollection<AttributeTypeExpression> Attributes {
             get => _attributes;
             set => _attributes = value;
         }

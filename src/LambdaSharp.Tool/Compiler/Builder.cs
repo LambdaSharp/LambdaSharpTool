@@ -93,7 +93,11 @@ namespace LambdaSharp.Tool.Compiler {
         public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
             => _fullNameDeclarations.TryGetValue(fullName, out declaration);
 
-        public string AddItemDeclaration(ASyntaxNode parent, AItemDeclaration declaration) {
+        public void RegisterItemDeclaration(AItemDeclaration declaration) {
+
+            // TODO: we shouldn't always assign this expression, because it's not always the correct thing to do
+            // assign default reference expression
+            declaration.ReferenceExpression = ASyntaxAnalyzer.FnRef(declaration.FullName);
 
             // check for reserved names
             if(!ValidResourceNameRegex.IsMatch(declaration.ItemName.Value)) {
@@ -115,7 +119,7 @@ namespace LambdaSharp.Tool.Compiler {
                 ++logicalIdSuffix;
                 logicalId = baseLogicalId + logicalIdSuffix;
             }
-            return logicalId;
+            declaration.LogicalId = logicalId;
         }
 
         public void AddSharedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {

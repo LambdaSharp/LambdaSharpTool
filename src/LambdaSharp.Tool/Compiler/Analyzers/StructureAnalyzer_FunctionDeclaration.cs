@@ -223,8 +223,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 });
             }
 
-            // TODO: validate properties
-
             // check if function must be registered
             if(node.ParentModuleDeclaration.HasModuleRegistration && node.HasFunctionRegistration) {
 
@@ -242,7 +240,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         ["FunctionMaxMemory"] = node.Memory,
                         ["FunctionMaxDuration"] = node.Timeout
                     },
-                    DependsOn = new SyntaxNodes<LiteralExpression> {
+                    DependsOn = new SyntaxNodeCollection<LiteralExpression> {
                         Literal("Module::Registration")
                     },
                     If = (node.If != null)
@@ -420,12 +418,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // validate events
             if(node.Events == null) {
-                node.Events = new SyntaxNodes<LiteralExpression> {
+                node.Events = new SyntaxNodeCollection<LiteralExpression> {
                     Literal("s3:ObjectCreated:*")
                 };
             } else if(!node.Events.Any()) {
-
-                // TODO: consider using ListExpression as type for 'node.Events' so that we can use 'node.Events' to report the position or the error
                 _builder.Log(Error.S3EventSourceEventListCannotBeEmpty, node);
             }
             var unrecognizedEvents = node.Events

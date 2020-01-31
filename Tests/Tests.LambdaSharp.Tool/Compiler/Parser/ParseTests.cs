@@ -91,7 +91,6 @@ Items:
 
             // act
             var builder = new Builder();
-            moduleDeclaration.Visit(parent: null, new SyntaxHierarchyAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 

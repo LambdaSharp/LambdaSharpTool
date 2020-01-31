@@ -129,6 +129,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+
             // validate attributes
             ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -146,9 +149,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) { }
+        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+        }
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
 
             // validate attributes
             ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
@@ -178,7 +188,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         // add resource permissions per ARN
                         if(node.Allow != null) {
                             AddGrant(
-                                name: node.LogicalId,
+                                name: node.FullName,
                                 awsType: node.Type.Value,
                                 reference: arnValue,
                                 allow: node.Allow,
@@ -199,7 +209,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     // add resource permissions per ARN
                     if(node.Allow != null) {
                         AddGrant(
-                            name: node.LogicalId,
+                            name: node.FullName,
                             awsType: node.Type.Value,
                             reference: node.Value,
                             allow: node.Allow,
@@ -219,9 +229,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 refExpression.ReferencedDeclaration = node;
                 node.ReferenceExpression = refExpression;
 
-                // TODO: there needs to be a better way to do this!
-                refExpression.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
-
                 // CloudFormation resource must have a type
                 if(node.Type == null) {
                     _builder.Log(Error.TypeAttributeMissing, node);
@@ -236,12 +243,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     });
                 }
 
-                // TODO: validate properties
-
                 // add resource permissions
                 if(node.Allow != null) {
                     AddGrant(
-                        name: node.LogicalId,
+                        name: node.FullName,
                         awsType: node.Type.Value,
                         reference: node.ReferenceExpression,
                         allow: node.Allow,
@@ -266,6 +271,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
 
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
                 _builder.Log(Error.ModuleAttributeInvalid, node.Module);
@@ -285,6 +293,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
 
             // validate attributes
             ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
@@ -320,9 +331,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             node.ReferenceExpression = GetModuleArtifactExpression($"${{{variable.FullName}}}");
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) { }
+        public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+        }
 
         public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
 
             // check if object expression is valid (must have first- and second-level keys)
             if(node.Value.Any()) {
@@ -380,6 +398,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
 
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+
             // validate resource type name
             var resourceTypeNameParts = node.ItemName.Value.Split("::", 2);
             if(resourceTypeNameParts.Length == 1) {
@@ -395,6 +416,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
 
             // TODO: register custom resource so that it is available do the module (maybe in VisitEnd?)
 
@@ -468,6 +492,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
 
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+
             // check if a root macros collection needs to be created
             if(!_builder.TryGetItemDeclaration("Macros", out var macrosItem)) {
                 macrosItem = AddDeclaration(node.ParentModuleDeclaration, new GroupDeclaration(Literal("Macros")) {
@@ -530,7 +557,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     SourceLocation = literalExpression.SourceLocation,
                     ReferenceName = literalExpression
                 };
-                node.Condition.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
             } else if((node.Condition is AConditionExpression) && !(node.Condition is ConditionExpression)) {
 
                 // convert inline conditional expression into a reference to a conditional declaration
@@ -548,7 +574,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     SourceLocation = node.Condition.SourceLocation,
                     ReferenceName = Literal(condition.FullName)
                 };
-                node.Condition.Visit(node, new SyntaxHierarchyAnalyzer(_builder));
             }
             AssertIsConditionExpression(node.Condition);
             AssertIsValueExpression(node.IfTrue);
@@ -653,21 +678,18 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private T AddDeclaration<T>(AItemDeclaration parent, T declaration) where T : AItemDeclaration {
             parent.Declarations.Add(declaration);
-
-            // TODO: can we get rid of this?
-            declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
             return declaration;
         }
 
         private T AddDeclaration<T>(ModuleDeclaration parent, T declaration) where T : AItemDeclaration {
             parent.Items.Add(declaration);
-            declaration.Visit(parent, new SyntaxHierarchyAnalyzer(_builder));
             return declaration;
         }
 
         private void AddGrant(string name, string awsType, AExpression reference, AExpression allow, AExpression condition) {
 
             // TODO: validate AWS type
+            // TODO: get logical ID from item
 
             var allowList = new List<string>();
             if(allow is LiteralExpression allowLiteralExpression) {

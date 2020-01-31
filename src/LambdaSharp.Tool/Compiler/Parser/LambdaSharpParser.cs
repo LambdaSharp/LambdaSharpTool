@@ -106,17 +106,15 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 [typeof(FunctionDeclaration.VpcExpression)] = () => ParseSyntaxOfType<FunctionDeclaration.VpcExpression>(),
                 [typeof(ResourceTypeDeclaration.PropertyTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.PropertyTypeExpression>(),
                 [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeExpression>(),
-
-                // TODO: enumerate all acceptable types explicitly instead of relying on inheritance
                 [typeof(AItemDeclaration)] = () => ParseSyntaxOfType<AItemDeclaration>(),
                 [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
 
                 // lists
-                [typeof(SyntaxNodes<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
-                [typeof(SyntaxNodes<AExpression>)] = () => ParseList<AExpression>(),
-                [typeof(SyntaxNodes<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
-                [typeof(SyntaxNodes<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
-                [typeof(SyntaxNodes<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
+                [typeof(SyntaxNodeCollection<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),
+                [typeof(SyntaxNodeCollection<AExpression>)] = () => ParseList<AExpression>(),
+                [typeof(SyntaxNodeCollection<AEventSourceDeclaration>)] = () => ParseList<AEventSourceDeclaration>(),
+                [typeof(SyntaxNodeCollection<UsingModuleDeclaration>)] = () => ParseList<UsingModuleDeclaration>(),
+                [typeof(SyntaxNodeCollection<LiteralExpression>)] = () => ParseListOfLiteralExpressions()
             };
         }
 
@@ -211,7 +209,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
         }
 
-        public SyntaxNodes<T> ParseList<T>() where T : ASyntaxNode {
+        public SyntaxNodeCollection<T> ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
                 Log(Error.ExpectedListExpression, Location());
                 SkipThisAndNestedEvents();
@@ -220,7 +218,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             MoveNext();
 
             // parse declaration items in sequence
-            var result = new SyntaxNodes<T>();
+            var result = new SyntaxNodeCollection<T>();
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 if(TryParse(typeof(T), out var item)) {
                     try {
@@ -1164,8 +1162,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             }
         }
 
-        public SyntaxNodes<LiteralExpression> ParseListOfLiteralExpressions() {
-            var result = new SyntaxNodes<LiteralExpression>();
+        public SyntaxNodeCollection<LiteralExpression> ParseListOfLiteralExpressions() {
+            var result = new SyntaxNodeCollection<LiteralExpression>();
 
             // attempt to parse a single scalar
             if(IsEvent<Scalar>(out var scalar, out var filePath)) {

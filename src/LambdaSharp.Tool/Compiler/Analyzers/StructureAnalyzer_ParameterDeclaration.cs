@@ -180,9 +180,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // request input parameter or conditional managed resource grants
                     AddGrant(
-
-                        // TODO: which name should be used here?
-                        name: node.LogicalId,
+                        name: node.FullName,
                         awsType: node.Type.Value,
                         reference: node.ReferenceExpression,
                         allow: node.Allow,
