@@ -43,7 +43,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Fields ---
-        private string? _fullName;
         private string? _logicalId;
         private LiteralExpression? _description;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
