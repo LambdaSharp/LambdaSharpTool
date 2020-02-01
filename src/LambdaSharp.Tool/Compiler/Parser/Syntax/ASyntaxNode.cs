@@ -49,6 +49,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public SourceLocation? SourceLocation {
 
             // TODO: consider return a default empty location when no source location is found
+            // TODO: check Builder.Log implementation and compare
             get => _sourceLocation ?? Parent?.SourceLocation;
             set => _sourceLocation = value;
         }
