@@ -49,7 +49,27 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
         }
 
         [Fact]
-        public void ParseListOfLiteralExpressions_MultipleValues() {
+        public void ParseListOfLiteralExpressions_CommDelimitedValues() {
+
+            // arrange
+            var parser = NewParser(
+@"foo, bar");
+
+            // act
+            var value = parser.ParseListOfLiteralExpressions();
+
+            // assert
+            ExpectNoMessages();
+            value.Should().NotBeNull();
+            value.Count.Should().Be(2);
+            value[0].Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("foo");
+            value[1].Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("bar");
+        }
+
+        [Fact]
+        public void ParseListOfLiteralExpressions_ListOfValues() {
 
             // arrange
             var parser = NewParser(

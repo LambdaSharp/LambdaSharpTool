@@ -287,14 +287,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         SkipThisAndNestedEvents();
 
                         // skip all remaining key-value pairs
-                        while(!IsEvent<MappingEnd>(out var _, out var _)) {
-
-                            // skip key
-                            Expect<Scalar>();
-
-                            // skip value
-                            SkipThisAndNestedEvents();
-                        }
+                        SkipMapRemainingEvents();
                         return null;
                     }
                 }
@@ -1163,40 +1156,49 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         }
 
         public SyntaxNodeCollection<LiteralExpression> ParseListOfLiteralExpressions() {
+            var expression = ParseExpression();
             var result = new SyntaxNodeCollection<LiteralExpression>();
+            switch(expression) {
+            case LiteralExpression literalExpression:
 
-            // attempt to parse a single scalar
-            if(IsEvent<Scalar>(out var scalar, out var filePath)) {
-                MoveNext();
+                // for strings, check if literal is a comma-delimited list of values
+                if(literalExpression.Type == LiteralType.String) {
+                    foreach(var value in literalExpression.Value.Split(",", StringSplitOptions.RemoveEmptyEntries)) {
+                        result.Add(new LiteralExpression(value.Trim()) {
 
-                // TODO: split value into list on commas
-                // TODO: replace generic `AExpression` properties with `List<LiteralExpression>` where appropriate (e.g. Scope, Allow)
+                            // TODO: extract correct position in string
+                            SourceLocation = literalExpression.SourceLocation
+                        });
+                    }
+                } else {
 
-                result.Add(new LiteralExpression(scalar.Value) {
-                    SourceLocation = Location(filePath, scalar)
-                });
-                return result;
-            }
-
-            // check if we have a sequence instead
-            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _)) {
-                Log(Error.ExpectedListExpression, Location());
-                SkipThisAndNestedEvents();
-                return null;
-            }
-            MoveNext();
-
-            // parse values in sequence
-            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                var item = ParseExpressionOfType<LiteralExpression>(Error.ExpectedLiteralValue);
-                if(item != null) {
-                    result.Add(item);
+                    // keep non-strings literals as-is
+                    result.Add(literalExpression);
                 }
+                break;
+            case ListExpression listExpression:
+
+                // check that all items in the list are literals
+                var nonLiteralItems = listExpression.Where(item => !(item is LiteralExpression)).ToList();
+                if(nonLiteralItems.Any()) {
+                    foreach(var nonLiteralItem in nonLiteralItems) {
+                        Log(Error.ExpectedLiteralValue, nonLiteralItem.SourceLocation);
+                    };
+                    return null;
+                } else {
+                    foreach(var item in listExpression) {
+                        result.Add((LiteralExpression)item);
+                    }
+                }
+                break;
+            default:
+                Log(Error.ExpectedListExpression, expression.SourceLocation);
+                break;
             }
-            MoveNext();
             return result;
         }
 
+        // TODO: should take a node instead (where possible)
         private void Log(Error error, SourceLocation location) => _provider.Log(error, location);
 
         private SourceLocation Location() {
