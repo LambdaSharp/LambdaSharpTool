@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
@@ -133,7 +134,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             _builder.RegisterItemDeclaration(node);
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
         }
 
@@ -161,7 +161,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             _builder.RegisterItemDeclaration(node);
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // check if declaration is a resource reference
@@ -296,9 +295,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
-
-            // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
 
             // 'Files' reference is relative to YAML file it originated from
             var workingDirectory = Path.GetDirectoryName(node.SourceLocation.FilePath);
@@ -628,8 +624,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, TransformFunctionExpression node) { }
 
-        private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, AExpression allow) {
-            ValidateExpressionIsLiteralOrListOfLiteral(node, ref allow);
+        private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, SyntaxNodeCollection<LiteralExpression> allow) {
             if(allow != null) {
                 if(type == null) {
                     _builder.Log(Error.AllowAttributeRequiresTypeAttribute, node);
@@ -686,22 +681,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             return declaration;
         }
 
-        private void AddGrant(string name, string awsType, AExpression reference, AExpression allow, AExpression condition) {
+        private void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition) {
 
             // TODO: validate AWS type
             // TODO: get logical ID from item
 
-            var allowList = new List<string>();
-            if(allow is LiteralExpression allowLiteralExpression) {
-                allowList.Add(allowLiteralExpression.Value);
-            } else if(allow is ListExpression allowListExpression) {
-                foreach(var allowListItem in allowListExpression.OfType<LiteralExpression>()) {
-                    allowList.Add(allowListItem.Value);
-                }
-            } else {
-
-                // TODO: could also be !Ref or !Split, etc...
-            }
+            var allowList = allow.Select(literal => literal.Value).ToList();
             if(!allowList.Any()) {
 
                 // nothing to do
@@ -755,11 +740,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
 
-        private void ValidateExpressionIsLiteralOrListOfLiteral(ASyntaxNode parent, AExpression expression, Action<AExpression> putExpression) {
-            ValidateExpressionIsLiteralOrListOfLiteral(parent, ref expression);
-            putExpression(expression);
-        }
-
         private void ValidateExpressionIsLiteralOrListOfLiteral(ASyntaxNode parent, ref AExpression expression) {
             switch(expression) {
             case null:
@@ -796,7 +776,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                             // add literal value
                             list.Add(new ListExpression {
-                                SourceLocation = new Parser.SourceLocation {
+                                SourceLocation = new SourceLocation {
                                     FilePath = literalExpression.SourceLocation.FilePath,
                                     LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,
                                     LineNumberEnd = literalExpression.SourceLocation.LineNumberStart + endLineOffset,

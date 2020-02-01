@@ -29,7 +29,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateAllowAttribute(node, node.Type, node.Allow);
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)

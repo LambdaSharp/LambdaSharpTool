@@ -52,7 +52,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
 
             // validate attributes
-            ValidateExpressionIsLiteralOrListOfLiteral(node, node.Scope, scope => node.Scope = scope);
             ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
             ValidateExpressionIsNumber(node, node.Timeout, Error.TimeoutAttributeInvalid);
 

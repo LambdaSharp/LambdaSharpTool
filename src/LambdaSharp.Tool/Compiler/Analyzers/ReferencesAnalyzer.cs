@@ -17,9 +17,9 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
@@ -147,7 +147,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 (subReferenceName, subAttributeName, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
 
                     // compute source location based on line/column offsets
-                    var sourceLocation = new Parser.SourceLocation {
+                    var sourceLocation = new SourceLocation {
                         FilePath = node.FormatString.SourceLocation.FilePath,
                         LineNumberStart = node.FormatString.SourceLocation.LineNumberStart + startLineOffset,
                         LineNumberEnd = node.FormatString.SourceLocation.LineNumberStart + endLineOffset,
@@ -277,15 +277,15 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        private void ValidateFunctionScope(AExpression scopeExpression, AItemDeclaration declaration) {
+        private void ValidateFunctionScope(SyntaxNodeCollection<LiteralExpression> scopeExpression, AItemDeclaration declaration) {
 
             // NOTE (2019-12-16, bjorg): the structure has already been validated
-            foreach(LiteralExpression innerScopeExpression in (ListExpression)scopeExpression) {
-                Validate(innerScopeExpression);
+            foreach(var innerScopeExpression in scopeExpression) {
+                ValidateScope(innerScopeExpression);
             }
 
             // validate functions
-            void Validate(LiteralExpression scope) {
+            void ValidateScope(LiteralExpression scope) {
                 switch(scope.Value) {
                 case "*":
                 case "all":

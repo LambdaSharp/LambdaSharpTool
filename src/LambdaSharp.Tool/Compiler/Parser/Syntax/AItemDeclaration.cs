@@ -163,8 +163,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Properties ---
         string FullName { get; }
-        AExpression? Scope { get; }
-        IEnumerable<string>? ScopeValues { get; }
+        SyntaxNodeCollection<LiteralExpression>? Scope { get; }
+        IEnumerable<string>? ScopeValues => Scope.Select(item => item.Value).ToList();
         bool HasSecretType { get; }
         AExpression? ReferenceExpression { get; }
     }
@@ -198,7 +198,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _section;
         private LiteralExpression? _label;
         private LiteralExpression? _type;
-        private AExpression? _scope;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
         private LiteralExpression? _noEcho;
         private LiteralExpression? _default;
         private LiteralExpression? _constraintDescription;
@@ -208,7 +208,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _maxValue;
         private LiteralExpression? _minLength;
         private LiteralExpression? _minValue;
-        private AExpression? _allow;
+        private SyntaxNodeCollection<LiteralExpression>? _allow;
         private ObjectExpression? _properties;
         private ObjectExpression? _encryptionContext;
         private ListExpression _pragmas;
@@ -240,9 +240,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => _scope;
-            set => _scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
@@ -300,9 +300,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public AExpression? Allow {
-            get => _allow;
-            set => _allow = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Allow {
+            get => _allow ?? throw new InvalidOperationException();
+            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
@@ -325,7 +325,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
-        public IEnumerable<string> ScopeValues => ((ListExpression)Scope!).Cast<LiteralExpression>().Select(item => item.Value).ToList();
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -380,8 +379,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Fields ---
         private LiteralExpression? _type;
-        private AExpression? _scope;
-        private AExpression? _allow;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
+        private SyntaxNodeCollection<LiteralExpression>? _allow;
         private LiteralExpression? _module;
         private ObjectExpression? _encryptionContext;
 
@@ -397,15 +396,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => _scope;
-            set => _scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
-        public AExpression? Allow {
-            get => _allow;
-            set => _allow = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Allow {
+            get => _allow ?? throw new InvalidOperationException();
+            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxRequired]
@@ -420,7 +419,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set => _encryptionContext = SetParent(value);
         }
 
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
@@ -442,7 +440,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Fields ---
         private LiteralExpression? type;
-        private AExpression? scope;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
         private AExpression? _value;
         private ObjectExpression? _encryptionContext;
 
@@ -458,9 +456,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => scope;
-            set => scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxRequired]
@@ -475,7 +473,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set => _encryptionContext = SetParent(value);
         }
 
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
@@ -553,8 +550,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Fields ---
         private AExpression? _if;
         private LiteralExpression? _type;
-        private AExpression? scope;
-        private AExpression? _allow;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
+        private SyntaxNodeCollection<LiteralExpression>? _allow;
         private AExpression? _value;
         private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression _properties;
@@ -583,15 +580,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => scope;
-            set => scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
-        public AExpression? Allow {
-            get => _allow;
-            set => _allow = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Allow {
+            get => _allow ?? throw new InvalidOperationException();
+            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
@@ -626,7 +623,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public string? CloudFormationType => (Value == null) ? Type!.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => Type!.Value == "Secret";
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
 
@@ -699,7 +695,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public class PackageDeclaration : AItemDeclaration, IScopedDeclaration {
 
         //--- Fields ---
-        private AExpression? _scope;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
         private LiteralExpression? _files;
 
         //--- Constructors ---
@@ -708,9 +704,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties --
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => _scope;
-            set => _scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         // TODO: shouldn't this be List<LiteralExpression>?
@@ -721,7 +717,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => false;
 
         //--- Methods ---
@@ -769,7 +764,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Fields ---
-        private AExpression? _scope;
+        private SyntaxNodeCollection<LiteralExpression>? _scope;
         private AExpression? _if;
         private AExpression? _memory;
         private AExpression? _timeout;
@@ -794,9 +789,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? Scope {
-            get => _scope;
-            set => _scope = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression> Scope {
+            get => _scope ?? throw new InvalidOperationException();
+            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
@@ -880,7 +875,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasHandlerValidation => !HasPragma("no-handler-validation");
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
-        public IEnumerable<string>? ScopeValues => ((ListExpression?)Scope)?.Cast<LiteralExpression>().Select(item => item.Value).ToList();
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
 

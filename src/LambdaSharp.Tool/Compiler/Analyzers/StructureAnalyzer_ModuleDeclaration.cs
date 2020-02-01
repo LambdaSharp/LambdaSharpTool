@@ -264,7 +264,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     name: deadLetterQueueDeclaration.FullName,
                     awsType: null,
                     reference: FnRef("Module::DeadLetterQueue"),
-                    allow: new ListExpression {
+                    allow: new SyntaxNodeCollection<LiteralExpression> {
                         Literal("sqs:SendMessage")
                     },
                     condition: deadLetterQueueCondition
@@ -296,7 +296,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     name: "EmbeddedSecrets",
                     awsType: null,
                     reference: new ListExpression(node.Secrets),
-                    allow: new ListExpression {
+                    allow: new SyntaxNodeCollection<LiteralExpression> {
                         Literal("kms:Decrypt"),
                         Literal("kms:Encrypt")
                     },
@@ -371,7 +371,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "Secrets",
                 awsType: null,
                 reference: FnSplit(",", FnRef("Secrets")),
-                allow: new ListExpression {
+                allow: new SyntaxNodeCollection<LiteralExpression> {
                     Literal("kms:Decrypt"),
                     Literal("kms:Encrypt")
                 },
@@ -383,7 +383,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "LogStream",
                 awsType: null,
                 reference: Literal("arn:aws:logs:*:*:*"),
-                allow: new ListExpression {
+                allow: new SyntaxNodeCollection<LiteralExpression> {
                     Literal("logs:CreateLogStream"),
                     Literal("logs:PutLogEvents")
                 },
@@ -395,7 +395,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "CloudFormation",
                 awsType: null,
                 reference: FnRef("AWS::StackId"),
-                allow: new ListExpression {
+                allow: new SyntaxNodeCollection<LiteralExpression> {
                     Literal("cloudformation:DescribeStacks")
                 },
                 condition: null
@@ -406,7 +406,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 name: "AWSXRay",
                 awsType: null,
                 reference: Literal("*"),
-                allow: new ListExpression {
+                allow: new SyntaxNodeCollection<LiteralExpression> {
                     Literal("xray:PutTraceSegments"),
                     Literal("xray:PutTelemetryRecords"),
                     Literal("xray:GetSamplingRules"),
@@ -440,7 +440,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     name: "VpcNetworkInterfaces",
                     awsType: null,
                     reference: Literal("*"),
-                    allow: new ListExpression {
+                    allow: new SyntaxNodeCollection<LiteralExpression> {
                         Literal("ec2:DescribeNetworkInterfaces"),
                         Literal("ec2:CreateNetworkInterface"),
                         Literal("ec2:DeleteNetworkInterface")

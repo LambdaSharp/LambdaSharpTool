@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler {
@@ -58,6 +59,8 @@ namespace LambdaSharp.Tool.Compiler {
     //  - warn on unrecognized pragmas
     //  - nested module parameters can only be scalar or list (correct?)
     //  - lambda environment variable values must be scalar or list (correct?)
+    //  - replace `new ArgumentNullException(nameof(value))` with `new ArgumentNullException()` in properties
+    //  - throw `InvalidOperationException` when accessing a null property with a non-nullable type
 
     public enum XRayTracingLevel {
         Disabled,
@@ -157,7 +160,7 @@ namespace LambdaSharp.Tool.Compiler {
             }
         }
 
-        public void Log(IBuildReportEntry entry, Parser.SourceLocation sourceLocation, bool excact = true)
+        public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool excact = true)
             => _report.Add(entry, sourceLocation, excact);
     }
 }

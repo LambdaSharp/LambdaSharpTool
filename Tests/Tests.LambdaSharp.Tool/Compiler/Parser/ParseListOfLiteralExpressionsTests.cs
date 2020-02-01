@@ -62,10 +62,20 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             ExpectNoMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(2);
-            value[0].Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("foo");
-            value[1].Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("bar");
+            var firstItem = value[0].Should().BeOfType<LiteralExpression>()
+                .Which;
+            firstItem.Value.Should().Be("foo");
+            firstItem.SourceLocation.LineNumberStart.Should().Be(1);
+            firstItem.SourceLocation.LineNumberEnd.Should().Be(1);
+            firstItem.SourceLocation.ColumnNumberStart.Should().Be(1);
+            firstItem.SourceLocation.ColumnNumberEnd.Should().Be(3);
+            var secondItem = value[1].Should().BeOfType<LiteralExpression>()
+                .Which;
+            secondItem.Value.Should().Be("bar");
+            secondItem.SourceLocation.LineNumberStart.Should().Be(1);
+            secondItem.SourceLocation.LineNumberEnd.Should().Be(1);
+            secondItem.SourceLocation.ColumnNumberStart.Should().Be(6);
+            secondItem.SourceLocation.ColumnNumberEnd.Should().Be(8);
         }
 
         [Fact]

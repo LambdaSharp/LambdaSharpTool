@@ -484,7 +484,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         } else if(DateTimeOffset.TryParseExact(scalar.Value, "yyyy-MM-dd", formatProvider: null, DateTimeStyles.AssumeUniversal, out var dateTimeLiteral)) {
 
                             // NOTE (2019-12-12, bjorg): timestamp literal: https://yaml.org/type/timestamp.html
-                            //  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] # (ymd)
+                            //  [0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9] # (year-month-date)
                             value = dateTimeLiteral.ToString();
                             type = LiteralType.Timestamp;
                         } else if(DateTimeOffset.TryParse(scalar.Value, formatProvider: null, DateTimeStyles.AssumeUniversal, out dateTimeLiteral)) {
@@ -1163,12 +1163,40 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                 // for strings, check if literal is a comma-delimited list of values
                 if(literalExpression.Type == LiteralType.String) {
-                    foreach(var value in literalExpression.Value.Split(",", StringSplitOptions.RemoveEmptyEntries)) {
-                        result.Add(new LiteralExpression(value.Trim()) {
 
-                            // TODO: extract correct position in string
-                            SourceLocation = literalExpression.SourceLocation
-                        });
+                    // parse comma-separated items from literal value
+                    var offset = 0;
+                    while(offset < literalExpression.Value.Length) {
+
+                        // skip whitespace at the beginning
+                        for(; (offset < literalExpression.Value.Length) && char.IsWhiteSpace(literalExpression.Value[offset]); ++offset);
+
+                        // find the next separator
+                        var next = literalExpression.Value.IndexOf(',', offset);
+                        if(next < 0) {
+                            next = literalExpression.Value.Length;
+                        }
+                        var item = literalExpression.Value.Substring(offset, next - offset).TrimEnd();
+                        if(!string.IsNullOrWhiteSpace(item)) {
+
+                            // calculate relative position of sub-string in literal expression
+                            var startLineOffset = literalExpression.Value.Take(offset).Count(c => c == '\n');
+                            var endLineOffset = literalExpression.Value.Take(offset + item.Length).Count(c => c == '\n');
+                            var startColumnOffset = literalExpression.Value.Take(offset).Reverse().TakeWhile(c => c != '\n').Count();
+                            var endColumnOffset = literalExpression.Value.Take(offset + item.Length).Reverse().TakeWhile(c => c != '\n').Count();
+
+                            // add literal value
+                            result.Add(new LiteralExpression(item) {
+                                SourceLocation = new SourceLocation {
+                                    FilePath = literalExpression.SourceLocation.FilePath,
+                                    LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,
+                                    LineNumberEnd = literalExpression.SourceLocation.LineNumberStart + endLineOffset,
+                                    ColumnNumberStart = literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
+                                    ColumnNumberEnd = literalExpression.SourceLocation.ColumnNumberStart + endColumnOffset - 1
+                                }
+                            });
+                        }
+                        offset = next + 1;
                     }
                 } else {
 
