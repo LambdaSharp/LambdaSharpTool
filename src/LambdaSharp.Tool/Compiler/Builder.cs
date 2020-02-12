@@ -61,6 +61,7 @@ namespace LambdaSharp.Tool.Compiler {
     //  - lambda environment variable values must be scalar or list (correct?)
     //  - replace `new ArgumentNullException(nameof(value))` with `new ArgumentNullException()` in properties
     //  - throw `InvalidOperationException` when accessing a null property with a non-nullable type
+    //  - rename 'Builder' to 'BuildContext'
 
     public enum XRayTracingLevel {
         Disabled,
@@ -68,6 +69,26 @@ namespace LambdaSharp.Tool.Compiler {
         AllModules
     }
 
+    public class Grant {
+
+        //--- Constructors ---
+        public Grant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition) {
+            Name = name ?? throw new ArgumentNullException(nameof(name));
+            AwsType = awsType;
+            Reference = reference ?? throw new ArgumentNullException(nameof(reference));
+            Allow = allow ?? throw new ArgumentNullException(nameof(allow));
+            Condition = condition;
+        }
+
+        //--- Properties ---
+        public string Name { get; }
+        public string AwsType { get; }
+        public AExpression Reference { get; }
+        public SyntaxNodeCollection<LiteralExpression> Allow { get; }
+        public AExpression Condition { get; }
+    }
+
+    // TODO: rename class since it's not really used for building the final result; it's more about tracking meta-data of the module
     public class Builder {
 
         //--- Class Fields ---
@@ -77,6 +98,7 @@ namespace LambdaSharp.Tool.Compiler {
         private readonly Dictionary<string, AItemDeclaration> _fullNameDeclarations = new Dictionary<string, AItemDeclaration>();
         private readonly HashSet<string> _logicalIds = new HashSet<string>();
         private readonly BuilderReport _report = new BuilderReport();
+        private readonly List<Grant> _grants = new List<Grant>();
 
         //-- Properties ---
         public ModuleDeclaration ModuleDeclaration { get; set; }
@@ -91,6 +113,7 @@ namespace LambdaSharp.Tool.Compiler {
         public ModuleInfo ModuleInfo => new ModuleInfo(ModuleNamespace, ModuleName, ModuleVersion, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public IEnumerable<AItemDeclaration> ItemDeclarations => _fullNameDeclarations.Values;
         public bool HasErrors => _report.Messages.Any();
+        public IEnumerable<Grant> Grants => _grants;
 
         //--- Methods ---
         public bool TryGetItemDeclaration(string fullName, out AItemDeclaration declaration)
@@ -125,18 +148,6 @@ namespace LambdaSharp.Tool.Compiler {
             declaration.LogicalId = logicalId;
         }
 
-        public void AddSharedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
-        public void AddNestedDependency(ADeclaration declaration, ModuleInfo moduleInfo) {
-
-            // TODO:
-            throw new NotImplementedException();
-        }
-
         public AExpression GetExportReference(IResourceDeclaration resourceDeclaration) {
 
             // TODO:
@@ -144,6 +155,10 @@ namespace LambdaSharp.Tool.Compiler {
         }
 
         public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
+
+        // TODO: validate grants
+        public void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition)
+            => _grants.Add(new Grant(name, awsType, reference, allow, condition));
 
         public void Log(IBuildReportEntry entry, ASyntaxNode node) {
             if(node == null) {

@@ -418,7 +418,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // add module registration
             if(node.HasModuleRegistration) {
-                _builder.AddSharedDependency(node, new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
 
                 // create module registration
                 AddDeclaration(node, new ResourceDeclaration(Literal("Registration")) {

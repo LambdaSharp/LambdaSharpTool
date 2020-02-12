@@ -77,6 +77,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             // prepare compilation
             Console.WriteLine($"Compiling: {moduleDeclaration.ModuleName} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
 
+            // download dependencies and cloudformation specification
+            moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(moduleBuilder));
+            if(HasErrors) {
+                return false;
+            }
+
             // analyze structure of AST
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(moduleBuilder));
             if(HasErrors) {
@@ -88,11 +94,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(HasErrors) {
                 return false;
             }
-
-            // TODO:
-            //  * collect definitions to download
-            //  * type validation
-            //  * validate the attribute exists on !GetAtt on the given resource type
 
             // resolve references in AST
             new ReferenceResolver(moduleBuilder).Visit();

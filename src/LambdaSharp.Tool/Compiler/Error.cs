@@ -42,6 +42,8 @@ namespace LambdaSharp.Tool.Compiler {
 
     public struct Error : IBuildReportEntry {
 
+        // TODO: consider having a string as error ID (e.g. "CS1001")
+
         //--- Constants ---
         #region *** Internal Errors ***
         public static readonly ErrorFunc MissingParserDefinition = parameter => new Error(0, $"no parser defined for type '{parameter}'");

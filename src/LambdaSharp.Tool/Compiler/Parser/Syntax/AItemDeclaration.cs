@@ -550,8 +550,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Fields ---
         private AExpression? _if;
         private LiteralExpression? _type;
-        private SyntaxNodeCollection<LiteralExpression>? _scope;
-        private SyntaxNodeCollection<LiteralExpression>? _allow;
+        private SyntaxNodeCollection<LiteralExpression> _scope;
+        private SyntaxNodeCollection<LiteralExpression> _allow;
         private AExpression? _value;
         private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression _properties;
@@ -560,6 +560,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Constructors ---
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
+            _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
+            _allow = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _properties = SetParent(new ObjectExpression());
             _pragmas = SetParent(new ListExpression());
@@ -581,13 +583,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
-            get => _scope ?? throw new InvalidOperationException();
+            get => _scope;
             set => _scope = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Allow {
-            get => _allow ?? throw new InvalidOperationException();
+            get => _allow;
             set => _allow = SetParent(value) ?? throw new ArgumentNullException();
         }
 

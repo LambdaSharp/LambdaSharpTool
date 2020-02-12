@@ -113,19 +113,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {
 
-            // check if module reference is valid
-            if(!ModuleInfo.TryParse(node.ModuleName.Value, out var moduleInfo)) {
-                _builder.Log(Error.ModuleAttributeInvalid, node.ModuleName);
-            } else {
-
-                // default to deployment bucket as origin when missing
-                if(moduleInfo.Origin == null) {
-                    moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                }
-
-                // add module reference as a shared dependency
-                _builder.AddSharedDependency(node, moduleInfo);
-            }
+            // TODO: load resource types from module
         }
 
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
@@ -223,6 +211,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
             } else {
 
+                // TODO: confirm resource type is defined
+                // TODO: validate resource properties
+
                 // set reference expression to declaration itself
                 var refExpression = FnRef(node.FullName);
                 refExpression.ReferencedDeclaration = node;
@@ -273,22 +264,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // register item declaration
             _builder.RegisterItemDeclaration(node);
 
-            // check if module reference is valid
-            if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
-                _builder.Log(Error.ModuleAttributeInvalid, node.Module);
-            } else {
-
-                // default to deployment bucket as origin when missing
-                if(moduleInfo.Origin == null) {
-                    moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                }
-
-                // add module reference as a shared dependency
-                _builder.AddNestedDependency(node, moduleInfo);
-
-                // NOTE: we cannot validate the parameters and output values from the module until the
-                //  nested dependency has been resolved.
-            }
+            // TODO: validate the parameters and output values from the module
         }
 
         public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
@@ -537,6 +513,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
             AssertIsValueExpression(node.AttributeName);
+
+            // TODO: validate the attribute exists on !GetAtt on the given resource type
         }
 
         public override void VisitStart(ASyntaxNode parent, GetAZsFunctionExpression node) {
@@ -681,24 +659,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             return declaration;
         }
 
-        private void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition) {
-
-            // TODO: validate AWS type
-            // TODO: get logical ID from item
-
-            var allowList = allow.Select(literal => literal.Value).ToList();
-            if(!allowList.Any()) {
-
-                // nothing to do
-                return;
-            }
-
-            // TODO: always validate as well
-            // ValidateAllowAttribute(node, node.Type, node.Allow);
-
-            // TODO:
-            throw new NotImplementedException();
-        }
+        private void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition)
+            => _builder.AddGrant(name, awsType, reference, allow, condition);
 
         private bool TryGetLabeledPragma(ModuleDeclaration moduleDeclaration, string key, out AExpression value) {
             foreach(var objectPragma in moduleDeclaration.Pragmas.OfType<ObjectExpression>()) {

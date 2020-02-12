@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
-        public AItemDeclaration ParentItemDeclaration => Parents.OfType<AItemDeclaration>().First();
+        public AItemDeclaration? ParentItemDeclaration => Parents.OfType<AItemDeclaration>().FirstOrDefault();
         public ModuleDeclaration ParentModuleDeclaration => Parents.OfType<ModuleDeclaration>().First();
 
         //--- Abstract Methods ---
