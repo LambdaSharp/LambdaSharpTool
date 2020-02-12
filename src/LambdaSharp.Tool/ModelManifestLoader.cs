@@ -49,11 +49,11 @@ namespace LambdaSharp.Tool {
         //--- Class Fields ---
         private static HttpClient _httpClient = new HttpClient();
 
-        //--- Constructors --
-        public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
-
         //--- Fields ---
         private Dictionary<string, IAmazonS3> _s3ClientByBucketName = new Dictionary<string, IAmazonS3>();
+
+        //--- Constructors --
+        public ModelManifestLoader(Settings settings, string sourceFilename) : base(settings, sourceFilename) { }
 
         //--- Methods ---
         public bool TryLoadFromFile(string filepath, out ModuleManifest manifest) {
@@ -484,6 +484,6 @@ namespace LambdaSharp.Tool {
             result = new AmazonS3Client(RegionEndpoint.GetBySystemName(values.First()));
             _s3ClientByBucketName[bucketName] = result;
             return result;
-       }
+        }
     }
 }

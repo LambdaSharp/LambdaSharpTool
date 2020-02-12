@@ -151,18 +151,6 @@ namespace LambdaSharp.Tool {
             return result;
         }
 
-        protected void ForEach<T>(string location, IEnumerable<T> values, Action<int, T> action) {
-            if(values?.Any() != true) {
-                return;
-            }
-            AtLocation(location, () => {
-                var index = 0;
-                foreach(var value in values) {
-                    action(++index, value);
-                }
-            });
-        }
-
         //--- ILambdaSharpParserDependencyProvider Members ---
         void ILambdaSharpParserDependencyProvider.Log(Error error, SourceLocation sourceLocation)
             => LogError($"ERROR{error.Code}: {error.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
