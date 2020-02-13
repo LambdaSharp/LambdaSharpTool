@@ -157,7 +157,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 }
                 referencedDeclaration = value;
                 if(referencedDeclaration != null) {
-                    ParentItemDeclaration.TrackDependency(referencedDeclaration, this);
+                    ParentItemDeclaration?.TrackDependency(referencedDeclaration, this);
                 }
             }
         }

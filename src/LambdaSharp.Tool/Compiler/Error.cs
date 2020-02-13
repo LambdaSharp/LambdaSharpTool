@@ -19,14 +19,67 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Compiler {
     using ErrorFunc = Func<string, Error>;
+    using ErrorFunc2 = Func<string, string, Error>;
+    using ErrorFunc3 = Func<string, string, string, Error>;
+    using ErrorFunc5 = Func<string, string, string, string, string, Error>;
+    using WarningFunc = Func<string, Warning>;
+
+    public struct Timing : IBuildReportEntry {
+
+        //--- Constructors ---
+        public Timing(string description, TimeSpan duration, bool? cached)
+            => (Description, Duration, Cached) = (description ?? throw new ArgumentNullException(nameof(description)), duration, cached);
+
+        //--- Properties ---
+        public int Code => 0;
+        public string Message => $"{Description} [duration={Duration.TotalSeconds:N2}s{(Cached.HasValue ? $", cached={Cached.Value.ToString().ToLowerInvariant()}" : "")}]";
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Timing;
+        public string Description { get; }
+        public TimeSpan Duration { get; }
+        public bool? Cached { get; }
+    }
+
+    public struct Verbose : IBuildReportEntry {
+
+        //--- Constructors ---
+        public Verbose(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
+
+        //--- Properties ---
+        public int Code => 0;
+        public string Message { get; private set; }
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Verbose;
+    }
+
+    public struct Info : IBuildReportEntry {
+
+        //--- Constructors ---
+        public Info(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
+
+        //--- Properties ---
+        public int Code => 0;
+        public string Message { get; private set; }
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Info;
+    }
 
     public struct Warning : IBuildReportEntry {
 
         //--- Constants ---
-        public static readonly Func<string, Warning> ReferenceIsUnreachable = parameter => new Warning(0, $"'{parameter}' is defined but never used");
+        #region *** Reference Validation ***
+        public static readonly WarningFunc ReferenceIsUnreachable = parameter => new Warning(0, $"'{parameter}' is defined but never used");
+        #endregion
+
+        #region *** Manifest Loader ***
+        public static readonly WarningFunc ManifestLoaderCouldNotFindBucket = parameter => new Warning(0, $"could not find '{parameter}' bucket");
+        public static readonly WarningFunc ManifestLoaderCouldNotDetectBucketRegion = parameter => new Warning(0, $"could not detect region for '{parameter}' bucket");
+        public static readonly WarningFunc ManifestLoaderCouldNotRetrieveModuleVersion = parameter => new Warning(0, $"unable to retrieve module version from CloudFormation stack '{parameter}'");
+        #endregion
+
+        // TODO: keep reviewing warnings
+        public static readonly Warning UnableToValidateDependency = new Warning(0, "unable to validate dependency");
 
         //--- Constructors ---
         public Warning(int code, string message) {
@@ -152,6 +205,19 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly ErrorFunc ReferenceCannotBeSelf = parameter => new Error(0, $"self-dependency on {parameter}");
         #endregion
 
+        #region *** Manifest Loader ***
+        public static readonly ErrorFunc ManifestLoaderInvalidTemplate = parameter => new Error(0, $"invalid CloudFormation template: {parameter}");
+        public static readonly ErrorFunc ManifestLoaderIncompatibleManifestVersion = parameter => new Error(0, $"Incompatible LambdaSharp manifest version (found: {parameter}, expected: {ModuleManifest.CurrentVersion})");
+        public static readonly ErrorFunc ManifestLoaderIncompatibleNameMappingsVersion = parameter => new Error(0, $"Incompatible LambdaSharp name mappings version (found: {parameter}, expected: {ModuleNameMappings.CurrentVersion})");
+        public static readonly Error ManifestLoaderMissingNameMappings = new Error(0, "CloudFormation file does not contain LambdaSharp name mappings");
+        public static readonly ErrorFunc ManifestLoaderCouldNotLoadTemplate = parameter => new Error(0, $"could not load CloudFormation template for {parameter}");
+        public static readonly ErrorFunc ManifestLoaderCircularDependencyDetected = parameter => new Error(0, $"circular dependency detected: {parameter}");
+        public static readonly ErrorFunc ManifestLoaderCouldNotFindModule = parameter => new Error(0, $"could not find module '{parameter}'");
+        public static readonly ErrorFunc2 ManifestLoaderDeployedDependencyNameMismatch = (p1, p2) => new Error(0, $"deployed dependent module name ({p1}) does not match {p2}");
+        public static readonly ErrorFunc3 ManifestLoaderDeployedDependencyVersionMismatch = (p1, p2, p3) => new Error(0, $"deployed dependent module {p1} (v{p2}) is not compatible with v{p3}");
+        public static readonly ErrorFunc5 ManifestLoaderDeployedDependencyConflict = (p1, p2, p3, p4, p5) => new Error(0, $"version conflict for module '{p1}': module '{p2}' requires v{p3}, but {p4} uses v{p5})");
+        #endregion
+
         // TODO: keep reviewing errors
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
         public static readonly Error DuplicateName = new Error(0, "duplicate name");
@@ -190,6 +256,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
         public static readonly Error FunctionPropertiesEnvironmentMustBeMap = new Error(0, "Properties.Environment must be a map");
         public static readonly Error FunctionPropertiesEnvironmentVariablesMustBeMap = new Error(0, "Properties.Environment.Variables must be a map");
+        public static readonly ErrorFunc UnsupportedDependencyType = parameter => new Error(0, $"unsupported depency type '{parameter}'");
 
         //--- Constructors ---
         public Error(int code, string message) {

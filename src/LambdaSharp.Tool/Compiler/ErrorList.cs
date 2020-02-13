@@ -16,12 +16,32 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool.Compiler {
 
+    public interface ILogger {
+
+        //--- Methods ---
+        void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact);
+    }
+
+    public static class ILoggerEx {
+
+        //--- Methods ---
+        public static void Log(this ILogger logger, IBuildReportEntry entry) => logger.Log(entry, sourceLocation: null, exact: true);
+        public static void Log(this ILogger logger, IBuildReportEntry entry, SourceLocation sourceLocation) => logger.Log(entry, sourceLocation, exact: true);
+        public static void LogInfoVerbose(this ILogger logger, string message, SourceLocation sourceLocation, bool exact) => logger.Log(new Verbose(message), sourceLocation, exact);
+        public static void LogInfoVerbose(this ILogger logger, string message) => logger.LogInfoVerbose(message, sourceLocation: null, exact: true);
+        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached, SourceLocation sourceLocation, bool exact) => logger.Log(new Timing(message, duration, cached), sourceLocation, exact);
+        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached) => logger.LogInfoPerformance(message, duration, cached, sourceLocation: null, exact: true);
+    }
+
     public enum BuildReportEntrySeverity {
+        Timing,
+        Verbose,
         Info,
         Warning,
         Error,
@@ -36,8 +56,7 @@ namespace LambdaSharp.Tool.Compiler {
         BuildReportEntrySeverity Severity { get; }
     }
 
-    // TODO: rename file
-    public class BuilderReport {
+    public class BuildReportLogger : ILogger {
 
         //--- Fields ---
         private readonly List<string> _messages = new List<string>();
@@ -46,11 +65,13 @@ namespace LambdaSharp.Tool.Compiler {
         public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---
-        public void Add(IBuildReportEntry entry, SourceLocation sourceLocation, bool excact) {
+        public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
+
+            // TODO: message should not be captured as strings, which makes further formatting impossible (such as colorization)
             var label = entry.Severity.ToString().ToUpperInvariant();
             if(sourceLocation == null) {
-                _messages.Add($"{label}{entry.Code}: {entry.Message} @ (no location information available)");
-            } else if(excact) {
+                _messages.Add($"{label}{entry.Code}: {entry.Message}");
+            } else if(exact) {
                 _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
             } else {
                 _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");

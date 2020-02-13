@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-using System;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
@@ -34,7 +34,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.HasModuleRegistration) {
 
                 // add module reference as a shared dependency
-                AddSharedDependency(node, new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"));
+                _builder.AddDependencyAsync(
+                    new ModuleInfo("LambdaSharp", "Core", _builder.CoreServicesReferenceVersion, "lambdasharp"),
+                    ModuleManifestDependencyType.Shared,
+                    node: null
+                ).Wait();
             }
 
             // TODO: we also need to discover what CloudFormation schema version/region is expected
@@ -53,7 +57,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
 
                 // add module reference as a shared dependency
-                AddSharedDependency(node, moduleInfo);
+                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared, node.ModuleName).Wait();
             }
         }
 
@@ -69,16 +73,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     moduleInfo = moduleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
                 }
 
-                // add module reference as a shared dependency
-                AddNestedDependency(node, moduleInfo);
+                // add module reference as a nested dependency
+                _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested, node.Module).Wait();
             }
         }
-
-        public void AddSharedDependency(ADeclaration declaration, ModuleInfo moduleInfo)
-            => throw new NotImplementedException();
-
-        // TODO:
-        public void AddNestedDependency(ADeclaration declaration, ModuleInfo moduleInfo)
-            => throw new NotImplementedException();
-   }
+    }
 }

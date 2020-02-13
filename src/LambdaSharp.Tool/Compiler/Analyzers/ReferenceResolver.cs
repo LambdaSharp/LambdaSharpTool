@@ -51,9 +51,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             DiscoverDeclarations();
             ResolveDeclarations();
             ReportUnresolvedDeclarations();
-            if(_builder.HasErrors) {
-                return;
-            }
 
             // remove declarations that are not reachable and are not required
             DiscardUnreachableDeclarations();

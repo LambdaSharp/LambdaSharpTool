@@ -18,6 +18,7 @@
 
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
@@ -67,7 +68,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // prepare AST for processing
-            var moduleBuilder = new Builder();
+            var moduleBuilder = new Builder(new AmazonBuilderDependencyProvider(
+
+                // TODO: need a console logger here
+                new BuildReportLogger(),
+                new HttpClient()
+            ));
 
             // optionally, override module version
             if(moduleVersion != null) {

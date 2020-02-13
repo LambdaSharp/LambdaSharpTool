@@ -19,6 +19,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
@@ -32,7 +33,7 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
     public abstract class _Init {
 
         //--- Types ---
-        public class DependencyProvider : ILambdaSharpParserDependencyProvider {
+        public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
 
             //--- Properties ---
             public List<string> Messages { get; private set; } = new List<string>();
@@ -45,9 +46,44 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             public string ReadFile(string filePath) => Files[filePath];
         }
 
+        public class BuilderDependencyProvider : IBuilderDependencyProvider {
+
+            //--- Fields ---
+            private readonly List<string> _messages = new List<string>();
+
+            //--- Properties ---
+            public IEnumerable<string> Messages => _messages;
+
+            //--- Methods ---
+            public Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
+
+                // TODO:
+                throw new System.NotImplementedException();
+            }
+
+            public Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix) {
+
+                // TODO:
+                throw new System.NotImplementedException();
+            }
+
+            public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
+
+                // TODO: message should not be captured as strings, which makes further formatting impossible (such as colorization)
+                var label = entry.Severity.ToString().ToUpperInvariant();
+                if(sourceLocation == null) {
+                    _messages.Add($"{label}{entry.Code}: {entry.Message}");
+                } else if(exact) {
+                    _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
+                } else {
+                    _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
+                }
+            }
+        }
+
         //--- Fields ---
         protected readonly ITestOutputHelper Output;
-        protected readonly DependencyProvider Provider = new DependencyProvider();
+        protected readonly ParserDependencyProvider Provider = new ParserDependencyProvider();
 
         //--- Constructors ---
         public _Init(ITestOutputHelper output) => Output = output;
@@ -90,7 +126,7 @@ Items:
             var moduleDeclaration = parser.ParseSyntaxOfType<ModuleDeclaration>();
 
             // act
-            var builder = new Builder();
+            var builder = new Builder(new BuilderDependencyProvider());
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 
