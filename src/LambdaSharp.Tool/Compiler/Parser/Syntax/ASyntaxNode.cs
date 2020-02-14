@@ -31,11 +31,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Class Methods ---
         public static void SetParent(ASyntaxNode? node, ASyntaxNode parent) {
             if(node != null) {
-
-                // TODO: should we enforce this?
-                // if(node.Parent != null) {
-                //     throw new ApplicationException("node already has a parent");
-                // }
                 node.Parent = parent;
             }
         }
