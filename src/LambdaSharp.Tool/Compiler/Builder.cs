@@ -68,6 +68,9 @@ namespace LambdaSharp.Tool.Compiler {
 
     public interface IBuilderDependencyProvider : ILogger {
 
+        //--- Properties ---
+        string ToolDataDirectory { get; }
+
         //--- Methods ---
         Task<string> GetS3ObjectContentsAsync(string bucketName, string key);
         Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix);
@@ -153,7 +156,6 @@ namespace LambdaSharp.Tool.Compiler {
         public VersionInfo CoreServicesReferenceVersion { get; set; }
         public bool AllowCaching { get; set; }
         public string DeploymentBucketName { get; set; }
-        public string ToolCacheDirectory { get; set; }
         public VersionInfo ToolVersion { get; set; }
         public bool NoDependencyValidation { get; set; }
 
@@ -407,6 +409,9 @@ namespace LambdaSharp.Tool.Compiler {
             }
 
             async Task<(string Origin, VersionInfo Version, ModuleManifest Manifest)> FindNewestModuleVersionAsync(string bucketName) {
+                if(bucketName == null) {
+                    return (Origin: null, Version: null, Manifest: null);
+                }
 
                 // enumerate versions in bucket
                 var found = await FindModuleVersionsAsync(bucketName);
@@ -468,6 +473,6 @@ namespace LambdaSharp.Tool.Compiler {
         }
 
         private string GetOriginCacheDirectory(ModuleInfo moduleInfo)
-            => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin, moduleInfo.Namespace, moduleInfo.Name);
+            => Path.Combine(_provider.ToolDataDirectory, ".origin", moduleInfo.Origin, moduleInfo.Namespace, moduleInfo.Name);
     }
 }

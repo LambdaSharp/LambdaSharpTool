@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,7 @@ using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
 using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Internal;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -52,19 +54,46 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             private readonly List<string> _messages = new List<string>();
 
             //--- Properties ---
+            public string ToolDataDirectory => Path.Combine(Environment.GetEnvironmentVariable("LAMBDASHARP") ?? throw new ApplicationException("missing LAMBDASHARP environment variable"), "Tests", "Tests.LambdaSharp.Tool-Test-Output");
             public IEnumerable<string> Messages => _messages;
 
             //--- Methods ---
-            public Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
+            public async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
+                switch(bucketName) {
+                case "lambdasharp":
+                    return GetType().Assembly.ReadManifestResource($"Resources/{key}");
+                default:
 
-                // TODO:
-                throw new System.NotImplementedException();
+                    // nothing to do
+                    break;
+                }
+                return null;
             }
 
-            public Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix) {
+            public async Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix) {
+                switch(bucketName) {
+                case "lambdasharp":
+                    switch(prefix) {
+                    case "lambdasharp/LambdaSharp/Core/":
+                        return new[] {
+                            "0.7.0"
+                        };
+                    case "lambdasharp/LambdaSharp/S3.Subscriber/":
+                        return new[] {
+                            "0.7.3"
+                        };
+                    default:
 
-                // TODO:
-                throw new System.NotImplementedException();
+                        // nothing to do
+                        break;
+                    }
+                    break;
+                default:
+
+                    // nothing to do
+                    break;
+                }
+                return Enumerable.Empty<string>();
             }
 
             public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
@@ -127,6 +156,7 @@ Items:
 
             // act
             var builder = new Builder(new BuilderDependencyProvider());
+            moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
 

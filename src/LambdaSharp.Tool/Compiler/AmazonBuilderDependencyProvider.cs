@@ -45,6 +45,9 @@ namespace LambdaSharp.Tool.Compiler {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         }
 
+        //--- Properties ---
+        public string ToolDataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LambdaSharp");
+
         //--- Methods ---
         public async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
 

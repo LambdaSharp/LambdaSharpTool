@@ -333,7 +333,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             Section?.Visit(this, visitor);
             Label?.Visit(this, visitor);
             Type?.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
             NoEcho?.Visit(this, visitor);
             Default?.Visit(this, visitor);
             ConstraintDescription?.Visit(this, visitor);
@@ -343,7 +343,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             MaxValue?.Visit(this, visitor);
             MinLength?.Visit(this, visitor);
             MinValue?.Visit(this, visitor);
-            Allow?.Visit(this, visitor);
+            _allow?.Visit(this, visitor);
             Properties?.Visit(this, visitor);
             EncryptionContext?.Visit(this, visitor);
             Pragmas?.Visit(this, visitor);
@@ -426,8 +426,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             visitor.VisitStart(parent, this);
             ItemName.Visit(this, visitor);
             Type?.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
-            Allow?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
+            _allow?.Visit(this, visitor);
             Module?.Visit(this, visitor);
             EncryptionContext?.Visit(this, visitor);
             Declarations?.Visit(this, visitor);
@@ -480,7 +480,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             visitor.VisitStart(parent, this);
             ItemName.Visit(this, visitor);
             Type?.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
             Value?.Visit(this, visitor);
             EncryptionContext?.Visit(this, visitor);
             Declarations?.Visit(this, visitor);
@@ -634,7 +634,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             ItemName.Visit(this, visitor);
             If?.Visit(this, visitor);
             Type?.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
             Allow?.Visit(this, visitor);
             Value?.Visit(this, visitor);
             DependsOn?.Visit(this, visitor);
@@ -725,7 +725,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
             ItemName.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
             Files?.Visit(this, visitor);
             Declarations?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
@@ -884,7 +884,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
             ItemName.Visit(this, visitor);
-            Scope?.Visit(this, visitor);
+            _scope?.Visit(this, visitor);
             If?.Visit(this, visitor);
             Memory?.Visit(this, visitor);
             Timeout?.Visit(this, visitor);

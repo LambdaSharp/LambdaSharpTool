@@ -32,4 +32,7 @@
       <LogicalName>$(TargetName).Resources.DecryptSecretFunction.js</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\*" />
+  </ItemGroup>
 </Project>
