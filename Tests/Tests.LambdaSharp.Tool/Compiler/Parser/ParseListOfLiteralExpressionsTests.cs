@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using FluentAssertions;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using Xunit;

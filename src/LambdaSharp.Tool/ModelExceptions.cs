@@ -29,6 +29,6 @@ namespace LambdaSharp.Tool {
     public class ModelLocationException : Exception {
 
         //--- Constructors ---
-        public ModelLocationException(string location, string sourceFilename, Exception innerException): base($"error location near: {location} [{sourceFilename}]", innerException) {}
+        public ModelLocationException(string location, string sourceFilename, Exception innerException) : base($"error location near: {location} [{sourceFilename}]", innerException) {}
     }
 }

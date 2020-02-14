@@ -16,10 +16,7 @@
  * limitations under the License.
  */
 
-#nullable enable
-
 using System;
-using System.Collections.Generic;
 using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {

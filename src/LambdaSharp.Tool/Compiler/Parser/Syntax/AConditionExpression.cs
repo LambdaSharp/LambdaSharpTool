@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#nullable enable
-
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AConditionExpression : AExpression { }

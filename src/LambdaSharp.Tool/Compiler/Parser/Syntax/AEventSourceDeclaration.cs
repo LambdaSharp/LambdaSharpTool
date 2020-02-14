@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#nullable enable
-
 using System;
 using System.Collections.Generic;
 

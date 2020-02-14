@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 namespace LambdaSharp.Tool.Compiler.Parser {
 
     public class SourceLocation {

@@ -16,11 +16,12 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
-using System.Linq;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;

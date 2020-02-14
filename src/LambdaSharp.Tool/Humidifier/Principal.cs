@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+#nullable disable
 
 namespace Humidifier {
 

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using LambdaSharp.Tool.Model;
 

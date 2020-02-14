@@ -6,6 +6,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
+    <Nullable>enable</Nullable>
 
     <PackageId>LambdaSharp.Tool</PackageId>
     <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>

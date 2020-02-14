@@ -16,14 +16,14 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using Amazon.S3.Model;
 
 namespace LambdaSharp.Tool.Cli.Deploy {
     using CloudFormationStack = Amazon.CloudFormation.Model.Stack;
