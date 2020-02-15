@@ -16,10 +16,9 @@
  * limitations under the License.
  */
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -33,7 +32,9 @@ namespace LambdaSharp.Tool.Compiler.Parser {
     public interface ILambdaSharpParserDependencyProvider {
 
         //--- Methods ---
-        void Log(Error error, SourceLocation sourceLocation);
+
+        // TODO: does SourceLocation still needs to be nullable?
+        void Log(Error error, SourceLocation? sourceLocation);
         string ReadFile(string filePath);
     }
 
@@ -78,15 +79,158 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
             //--- Properties ---
             public Type DeclarationType { get; }
-            public string Keyword { get; }
-            public Type KeywordType { get; }
+            public string? Keyword { get; }
+            public Type? KeywordType { get; }
             public Dictionary<string, PropertyInfo> Keys { get; }
             public IEnumerable<string> MandatoryKeys { get; }
         }
 
+        //--- Class Methods ---
+        private static bool TryParseYamlInteger(string value, [NotNullWhen(true)] out string? number) {
+
+            // NOTE (2019-12-10, bjorg): integer literal: https://yaml.org/type/int.html
+            //  [-+]?0b[0-1_]+ # (base 2)
+            //  |[-+]?0[0-7_]+ # (base 8)
+            //  |[-+]?(0|[1-9][0-9_]*) # (base 10)
+            //  |[-+]?0x[0-9a-fA-F_]+ # (base 16)
+            //  |[-+]?[1-9][0-9_]*(:[0-5]?[0-9])+ # (base 60)
+            var index = 0;
+            var negative = false;
+            var radix = 10;
+            number = null;
+
+            // detect leading sign
+            if(value[0] == '-') {
+                ++index;
+                negative = true;
+            } else if(value[0] == '+') {
+                ++index;
+            }
+            if(index == value.Length) {
+                return false;
+            }
+
+            // detect base selector
+            if(string.Compare(value, index, "0b", 0, 2, StringComparison.Ordinal) == 0) {
+                radix = 2;
+                index += 2;
+            } else if(string.Compare(value, index, "0x", 0, 2, StringComparison.Ordinal) == 0) {
+                radix = 16;
+                index += 2;
+            } else if(value[index] == '0') {
+                radix = 8;
+                ++index;
+
+                // special case where we only have a single 0 as number
+                if(index == value.Length) {
+                    number = "0";
+                    return true;
+                }
+            }
+            if(index == value.Length) {
+                return false;
+            }
+
+            // compute result
+            ulong result;
+            if(radix == 10) {
+                result = 0UL;
+
+                // could be decimal or base 60 (sexagesimal)
+                var first = true;
+                foreach(var chunk in value.Substring(index).Split(':')) {
+                    result *= 60UL;
+                    if(!ulong.TryParse(chunk.Replace("_", ""), out var part)) {
+                        return false;
+                    }
+
+                    // trailing chunks must be less than 60
+                    if(!first && (part >= 60)) {
+                        return false;
+                    }
+                    result += part;
+                    first = false;
+                }
+            } else {
+                try {
+                    result = Convert.ToUInt64(value.Substring(index).Replace("_", "").ToString(), radix);
+                } catch {
+                    return false;
+                }
+            }
+
+            // render number as signed integer
+            if(negative) {
+                number = "-" + result.ToString();
+            } else {
+                number = result.ToString();
+            }
+            return true;
+        }
+
+        private static bool TryParseYamlFloat(string value, out double number) {
+
+            // NOTE (2019-12-12, bjorg): float literal: https://yaml.org/type/float.html
+            //  [-+]?([0-9][0-9_]*)?\.[0-9.]*([eE][-+][0-9]+)? (base 10)
+            //  |[-+]?[0-9][0-9_]*(:[0-5]?[0-9])+\.[0-9_]* (base 60)
+            //  |[-+]?\.(inf|Inf|INF) # (infinity)
+            //  |\.(nan|NaN|NAN) # (not a number)
+
+            switch(value) {
+            case "-.inf":
+            case "-.Inf":
+            case "-.INF":
+                number = double.NegativeInfinity;
+                break;
+            case "+.inf":
+            case "+.Inf":
+            case "+.INF":
+            case ".inf":
+            case ".Inf":
+            case ".INF":
+                number = double.PositiveInfinity;
+                break;
+            case ".nan":
+            case ".NaN":
+            case ".NAN":
+                number = double.NaN;
+                break;
+            default:
+                number = 0;
+
+                // could be decimal or base 60 (sexagesimal)
+                var values = value.Split(':');
+                for(var i = 0; i < values.Length; ++i) {
+                    number *= 60.0;
+
+                    // all chunks must be integers, except the last chunk can be a floating-point value
+                    double chunkValue;
+                    if(i != (values.Length - 1)) {
+                        if(!long.TryParse(values[i].Replace("_", ""), out var part)) {
+                            return false;
+                        }
+                        chunkValue = part;
+                    } else {
+                        if(!double.TryParse(values[i].Replace("_", ""), out var part)) {
+                            return false;
+                        }
+                        chunkValue = part;
+                    }
+
+                    // trailing chunks must be less than 60
+                    if((i > 0) && (chunkValue >= 60)) {
+                        return false;
+                    }
+                    number += chunkValue;
+                }
+                break;
+            }
+            return true;
+        }
+
         //--- Fields ---
         private readonly ILambdaSharpParserDependencyProvider _provider;
-        private readonly Dictionary<Type, Func<object>> _typeParsers;
+        private readonly Dictionary<Type, Func<object?>> _typeParsers;
         private readonly Dictionary<Type, SyntaxInfo> _typeToSyntax = new Dictionary<Type, SyntaxInfo>();
         private readonly Dictionary<Type, Dictionary<string, SyntaxInfo>> _syntaxCache = new Dictionary<Type, Dictionary<string, SyntaxInfo>>();
         private readonly Stack<(string FilePath, IEnumerator<ParsingEvent> ParsingEnumerator)> _parsingEvents = new Stack<(string, IEnumerator<ParsingEvent>)>();
@@ -94,7 +238,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         //--- Constructors ---
         public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
-            _typeParsers = new Dictionary<Type, Func<object>> {
+            _typeParsers = new Dictionary<Type, Func<object?>> {
 
                 // expressions
                 [typeof(AExpression)] = () => ParseExpression(),
@@ -138,7 +282,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     MoveNext();
 
                     // parse specified file
-                    ParseFile(Path.Combine(Path.GetDirectoryName(peek.FilePath), scalar.Value));
+                    var directory = Path.GetDirectoryName(peek.FilePath) ?? throw new ShouldNeverHappenException();
+                    ParseFile(Path.Combine(directory, scalar.Value));
                     goto again;
                 }
                 return (FilePath: peek.FilePath, ParsingEvent: peek.ParsingEnumerator.Current);
@@ -211,7 +356,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
         }
 
-        public SyntaxNodeCollection<T> ParseList<T>() where T : ASyntaxNode {
+        public SyntaxNodeCollection<T>? ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
                 Log(Error.ExpectedListExpression, Location());
                 SkipThisAndNestedEvents();
@@ -234,7 +379,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return result;
         }
 
-        public T ParseSyntaxOfType<T>() where T : ASyntaxNode {
+        public T? ParseSyntaxOfType<T>() where T : ASyntaxNode {
 
             // fetch all possible syntax options for specified type
             var syntaxes = GetSyntaxes(typeof(T));
@@ -246,12 +391,12 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
             MoveNext();
-            T result = null;
+            T? result = null;
 
             // parse mappings
             var foundKeys = new HashSet<string>();
-            HashSet<string> mandatoryKeys = null;
-            SyntaxInfo syntax = null;
+            HashSet<string>? mandatoryKeys = null;
+            SyntaxInfo? syntax = null;
             while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                 // parse key
@@ -263,14 +408,22 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     if((syntaxes.Count == 1) && syntaxes.TryGetValue("", out syntax)) {
 
                         // parse using the default syntax
-                        result = (T)Activator.CreateInstance(syntax.DeclarationType);
+                        var instance = Activator.CreateInstance(syntax.DeclarationType);
+                        if(instance == null) {
+                            throw new ApplicationException($"unsupported declaration type: {syntax.DeclarationType.FullName}");
+                        }
+                        result = (T)instance;
                         result.SourceLocation = Location(keyScalar);
                         mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
                     } else if(syntaxes.TryGetValue(key, out syntax)) {
 
                         // parse using the syntax matching the first key (akin to a keyword)
-                        if(TryParse(syntax.KeywordType, out var keywordValue)) {
-                            result = (T)Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
+                        if(TryParse(syntax.KeywordType ?? throw new ShouldNeverHappenException(), out var keywordValue)) {
+                            var instance = Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
+                            if(instance == null) {
+                                throw new ApplicationException($"unsupported declaration type: {syntax.DeclarationType.FullName}");
+                            }
+                            result = (T)instance;
                         } else {
 
                             // skip all remaining key-value pairs
@@ -307,6 +460,9 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
 
                     // remove key from mandatory keys
+                    if(mandatoryKeys == null) {
+                        throw new ShouldNeverHappenException();
+                    }
                     mandatoryKeys.Remove(key);
 
                     // find type appropriate parser and set target property with the parser outcome
@@ -332,16 +488,20 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return result;
         }
 
-        public T ParseExpressionOfType<T>(Error error) where T : AExpression {
+        public T? ParseExpressionOfType<T>(Error error) where T : AExpression {
             var result = ParseExpression();
             if(!(result is T expression)) {
-                Log(error, result.SourceLocation);
+
+                // NOTE (2020-02-15, bjorg): only log if result is not null, otherwise an error was already emitted
+                if(result != null) {
+                    Log(error, result.SourceLocation);
+                }
                 return null;
             }
             return expression;
         }
 
-        public AExpression ParseExpression() {
+        public AExpression? ParseExpression() {
             switch(Current.ParsingEvent) {
             case SequenceStart sequenceStart:
                 return ConvertFunction(sequenceStart.Tag, ParseListExpression());
@@ -356,7 +516,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             }
 
             // local functions
-            AExpression ParseObjectExpression() {
+            AExpression? ParseObjectExpression() {
                 if(!IsEvent<MappingStart>(out var mappingStart, out var filePath)) {
                     Log(Error.ExpectedMapExpression, Location());
                     SkipThisAndNestedEvents();
@@ -394,7 +554,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return result;
             }
 
-            AExpression ParseListExpression() {
+            AExpression? ParseListExpression() {
                 if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
                     Log(Error.ExpectedListExpression, Location());
                     SkipThisAndNestedEvents();
@@ -415,10 +575,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return result;
             }
 
-            AExpression ParseLiteralExpression() {
-
-                // TODO: handle unquoted literals
-
+            AExpression? ParseLiteralExpression() {
                 if(!IsEvent<Scalar>(out var scalar, out var filePath)) {
                     Log(Error.ExpectedLiteralValue, Location());
                     SkipThisAndNestedEvents();
@@ -526,220 +683,86 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return new LiteralExpression(value, type) {
                     SourceLocation = Location(filePath, scalar)
                 };
-
-                // local functions
-                bool TryParseYamlInteger(string value, out string number) {
-
-                    // NOTE (2019-12-10, bjorg): integer literal: https://yaml.org/type/int.html
-                    //  [-+]?0b[0-1_]+ # (base 2)
-                    //  |[-+]?0[0-7_]+ # (base 8)
-                    //  |[-+]?(0|[1-9][0-9_]*) # (base 10)
-                    //  |[-+]?0x[0-9a-fA-F_]+ # (base 16)
-                    //  |[-+]?[1-9][0-9_]*(:[0-5]?[0-9])+ # (base 60)
-                    var index = 0;
-                    var negative = false;
-                    var radix = 10;
-                    number = null;
-
-                    // detect leading sign
-                    if(value[0] == '-') {
-                        ++index;
-                        negative = true;
-                    } else if(value[0] == '+') {
-                        ++index;
-                    }
-                    if(index == value.Length) {
-                        return false;
-                    }
-
-                    // detect base selector
-                    if(string.Compare(value, index, "0b", 0, 2, StringComparison.Ordinal) == 0) {
-                        radix = 2;
-                        index += 2;
-                    } else if(string.Compare(value, index, "0x", 0, 2, StringComparison.Ordinal) == 0) {
-                        radix = 16;
-                        index += 2;
-                    } else if(value[index] == '0') {
-                        radix = 8;
-                        ++index;
-
-                        // special case where we only have a single 0 as number
-                        if(index == value.Length) {
-                            number = "0";
-                            return true;
-                        }
-                    }
-                    if(index == value.Length) {
-                        return false;
-                    }
-
-                    // compute result
-                    ulong result;
-                    if(radix == 10) {
-                        result = 0UL;
-
-                        // could be decimal or base 60 (sexagesimal)
-                        var first = true;
-                        foreach(var chunk in value.Substring(index).Split(':')) {
-                            result *= 60UL;
-                            if(!ulong.TryParse(chunk.Replace("_", ""), out var part)) {
-                                return false;
-                            }
-
-                            // trailing chunks must be less than 60
-                            if(!first && (part >= 60)) {
-                                return false;
-                            }
-                            result += part;
-                            first = false;
-                        }
-                    } else {
-                        try {
-                            result = Convert.ToUInt64(value.Substring(index).Replace("_", "").ToString(), radix);
-                        } catch {
-                            return false;
-                        }
-                    }
-
-                    // render number as signed integer
-                    if(negative) {
-                        number = "-" + result.ToString();
-                    } else {
-                        number = result.ToString();
-                    }
-                    return true;
-                }
-
-                bool TryParseYamlFloat(string value, out double number) {
-
-                    // NOTE (2019-12-12, bjorg): float literal: https://yaml.org/type/float.html
-                    //  [-+]?([0-9][0-9_]*)?\.[0-9.]*([eE][-+][0-9]+)? (base 10)
-                    //  |[-+]?[0-9][0-9_]*(:[0-5]?[0-9])+\.[0-9_]* (base 60)
-                    //  |[-+]?\.(inf|Inf|INF) # (infinity)
-                    //  |\.(nan|NaN|NAN) # (not a number)
-
-                    switch(value) {
-                    case "-.inf":
-                    case "-.Inf":
-                    case "-.INF":
-                        number = double.NegativeInfinity;
-                        break;
-                    case "+.inf":
-                    case "+.Inf":
-                    case "+.INF":
-                    case ".inf":
-                    case ".Inf":
-                    case ".INF":
-                        number = double.PositiveInfinity;
-                        break;
-                    case ".nan":
-                    case ".NaN":
-                    case ".NAN":
-                        number = double.NaN;
-                        break;
-                    default:
-                        number = 0;
-
-                        // could be decimal or base 60 (sexagesimal)
-                        var values = value.Split(':');
-                        for(var i = 0; i < values.Length; ++i) {
-                            number *= 60.0;
-
-                            // all chunks must be integers, except the last chunk can be a floating-point value
-                            double chunkValue;
-                            if(i != (values.Length - 1)) {
-                                if(!long.TryParse(values[i].Replace("_", ""), out var part)) {
-                                    return false;
-                                }
-                                chunkValue = part;
-                            } else {
-                                if(!double.TryParse(values[i].Replace("_", ""), out var part)) {
-                                    return false;
-                                }
-                                chunkValue = part;
-                            }
-
-                            // trailing chunks must be less than 60
-                            if((i > 0) && (chunkValue >= 60)) {
-                                return false;
-                            }
-                            number += chunkValue;
-                        }
-                        break;
-                    }
-                    return true;
-                }
             }
 
-            AExpression ConvertFunction(string tag, AExpression value) {
+            AExpression? ConvertFunction(string tag, AExpression? value) {
+                if(value == null) {
+                    return null;
+                }
 
                 // check if value is a long-form function
+                AExpression? converted = value;
                 if((value is ObjectExpression objectExpression) && (objectExpression.Count == 1)) {
                     var kv = objectExpression.First();
                     switch(kv.Key.Value) {
                     case "Fn::Base64":
-                        value = ConvertToBase64FunctionExpression(kv.Value);
+                        converted = ConvertToBase64FunctionExpression(kv.Value);
                         break;
                     case "Fn::Cidr":
-                        value = ConvertToCidrFunctionExpression(kv.Value);
+                        converted = ConvertToCidrFunctionExpression(kv.Value);
                         break;
                     case "Fn::FindInMap":
-                        value = ConvertToFindInMapFunctionExpression(kv.Value);
+                        converted = ConvertToFindInMapFunctionExpression(kv.Value);
                         break;
                     case "Fn::GetAtt":
-                        value = ConvertToGetAttFunctionExpression(kv.Value);
+                        converted = ConvertToGetAttFunctionExpression(kv.Value);
                         break;
                     case "Fn::GetAZs":
-                        value = ConvertToGetAZsFunctionExpression(kv.Value);
+                        converted = ConvertToGetAZsFunctionExpression(kv.Value);
                         break;
                     case "Fn::If":
-                        value = ConvertToIfFunctionExpression(kv.Value);
+                        converted = ConvertToIfFunctionExpression(kv.Value);
                         break;
                     case "Fn::ImportValue":
-                        value = ConvertToImportValueFunctionExpression(kv.Value);
+                        converted = ConvertToImportValueFunctionExpression(kv.Value);
                         break;
                     case "Fn::Join":
-                        value = ConvertToJoinFunctionExpression(kv.Value);
+                        converted = ConvertToJoinFunctionExpression(kv.Value);
                         break;
                     case "Fn::Select":
-                        value = ConvertToSelectFunctionExpression(kv.Value);
+                        converted = ConvertToSelectFunctionExpression(kv.Value);
                         break;
                     case "Fn::Split":
-                        value = ConvertToSplitFunctionExpression(kv.Value);
+                        converted = ConvertToSplitFunctionExpression(kv.Value);
                         break;
                     case "Fn::Sub":
-                        value = ConvertToSubFunctionExpression(kv.Value);
+                        converted = ConvertToSubFunctionExpression(kv.Value);
                         break;
                     case "Fn::Transform":
-                        value = ConvertToTransformFunctionExpression(kv.Value);
+                        converted = ConvertToTransformFunctionExpression(kv.Value);
                         break;
                     case "Ref":
-                        value = ConvertToRefFunctionExpression(kv.Value);
+                        converted = ConvertToRefFunctionExpression(kv.Value);
                         break;
                     case "Fn::Equals":
-                        value = ConvertToEqualsConditionExpression(kv.Value);
+                        converted = ConvertToEqualsConditionExpression(kv.Value);
                         break;
                     case "Fn::Not":
-                        value = ConvertToNotConditionExpression(kv.Value);
+                        converted = ConvertToNotConditionExpression(kv.Value);
                         break;
                     case "Fn::And":
-                        value = ConvertToAndConditionExpression(kv.Value);
+                        converted = ConvertToAndConditionExpression(kv.Value);
                         break;
                     case "Fn::Or":
-                        value = ConvertToOrConditionExpression(kv.Value);
+                        converted = ConvertToOrConditionExpression(kv.Value);
                         break;
                     case "Condition":
-                        value = ConvertToConditionRefExpression(kv.Value);
+                        converted = ConvertToConditionRefExpression(kv.Value);
                         break;
                     default:
 
                         // leave as is
+                        converted = value;
                         break;
                     }
+                } else {
+
+                    // leave as is
+                    converted = value;
                 }
 
                 // check if there is anything to convert
-                if(value == null) {
+                if(converted == null) {
                     return null;
                 }
 
@@ -748,45 +771,45 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 case null:
 
                     // nothing to do
-                    return value;
+                    return converted;
                 case "!Base64":
-                    return ConvertToBase64FunctionExpression(value);
+                    return ConvertToBase64FunctionExpression(converted);
                 case "!Cidr":
-                    return ConvertToCidrFunctionExpression(value);
+                    return ConvertToCidrFunctionExpression(converted);
                 case "!FindInMap":
-                    return ConvertToFindInMapFunctionExpression(value);
+                    return ConvertToFindInMapFunctionExpression(converted);
                 case "!GetAtt":
-                    return ConvertToGetAttFunctionExpression(value);
+                    return ConvertToGetAttFunctionExpression(converted);
                 case "!GetAZs":
-                    return ConvertToGetAZsFunctionExpression(value);
+                    return ConvertToGetAZsFunctionExpression(converted);
                 case "!If":
-                    return ConvertToIfFunctionExpression(value);
+                    return ConvertToIfFunctionExpression(converted);
                 case "!ImportValue":
-                    return ConvertToImportValueFunctionExpression(value);
+                    return ConvertToImportValueFunctionExpression(converted);
                 case "!Join":
-                    return ConvertToJoinFunctionExpression(value);
+                    return ConvertToJoinFunctionExpression(converted);
                 case "!Select":
-                    return ConvertToSelectFunctionExpression(value);
+                    return ConvertToSelectFunctionExpression(converted);
                 case "!Split":
-                    return ConvertToSplitFunctionExpression(value);
+                    return ConvertToSplitFunctionExpression(converted);
                 case "!Sub":
-                    return ConvertToSubFunctionExpression(value);
+                    return ConvertToSubFunctionExpression(converted);
                 case "!Transform":
-                    return ConvertToTransformFunctionExpression(value);
+                    return ConvertToTransformFunctionExpression(converted);
                 case "!Ref":
-                    return ConvertToRefFunctionExpression(value);
+                    return ConvertToRefFunctionExpression(converted);
                 case "!Equals":
-                    return ConvertToEqualsConditionExpression(value);
+                    return ConvertToEqualsConditionExpression(converted);
                 case "!Not":
-                    return ConvertToNotConditionExpression(value);
+                    return ConvertToNotConditionExpression(converted);
                 case "!And":
-                    return ConvertToAndConditionExpression(value);
+                    return ConvertToAndConditionExpression(converted);
                 case "!Or":
-                    return ConvertToOrConditionExpression(value);
+                    return ConvertToOrConditionExpression(converted);
                 case "!Condition":
-                    return ConvertToConditionRefExpression(value);
+                    return ConvertToConditionRefExpression(converted);
                 default:
-                    Log(Error.UnknownFunctionTag(tag), value.SourceLocation);
+                    Log(Error.UnknownFunctionTag(tag), converted.SourceLocation);
                     return null;
                 }
             }
@@ -800,7 +823,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 };
             }
 
-            AExpression ConvertToCidrFunctionExpression(AExpression value) {
+            AExpression? ConvertToCidrFunctionExpression(AExpression value) {
 
                 // !Cidr [ VALUE, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
@@ -819,7 +842,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToFindInMapFunctionExpression(AExpression value) {
+            AExpression? ConvertToFindInMapFunctionExpression(AExpression value) {
 
                 // !FindInMap [ NAME, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
@@ -844,7 +867,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToGetAttFunctionExpression(AExpression value) {
+            AExpression? ConvertToGetAttFunctionExpression(AExpression value) {
 
                 // !GetAtt STRING
                 if(value is LiteralExpression parameterLiteral) {
@@ -889,7 +912,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 };
             }
 
-            AExpression ConvertToIfFunctionExpression(AExpression value) {
+            AExpression? ConvertToIfFunctionExpression(AExpression value) {
 
                 // !If [ NAME/CONDITION, VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
@@ -926,7 +949,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 };
             }
 
-            AExpression ConvertToJoinFunctionExpression(AExpression value) {
+            AExpression? ConvertToJoinFunctionExpression(AExpression value) {
 
                 // !Join [ STRING, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
@@ -948,7 +971,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToSelectFunctionExpression(AExpression value) {
+            AExpression? ConvertToSelectFunctionExpression(AExpression value) {
 
                 // !Select [ VALUE, [ VALUE, ... ]]
                 if(value is ListExpression parameterList) {
@@ -966,7 +989,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToSplitFunctionExpression(AExpression value) {
+            AExpression? ConvertToSplitFunctionExpression(AExpression value) {
 
                 // !Split [ STRING, VALUE ]
                 if(value is ListExpression parameterList) {
@@ -988,7 +1011,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToSubFunctionExpression(AExpression value) {
+            AExpression? ConvertToSubFunctionExpression(AExpression value) {
 
                 // !Sub STRING
                 if(value is LiteralExpression subLiteral) {
@@ -1025,7 +1048,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToTransformFunctionExpression(AExpression value) {
+            AExpression? ConvertToTransformFunctionExpression(AExpression value) {
 
                 // !Transform { Name: STRING, Parameters: { KEY: VALUE, ... } }
                 if(value is ObjectExpression parameterMap) {
@@ -1037,7 +1060,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         Log(Error.TransformFunctionExpectsLiteralNameParameter, macroNameExpression.SourceLocation);
                         return null;
                     }
-                    ObjectExpression parametersMap = null;
+                    ObjectExpression? parametersMap = null;
                     if(parameterMap.TryGetValue("Parameters", out var parametersExpression)) {
                         if(!(parametersExpression is ObjectExpression)) {
                             Log(Error.TransformFunctionExpectsMapParametersParameter, parametersExpression.SourceLocation);
@@ -1055,7 +1078,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToRefFunctionExpression(AExpression value) {
+            AExpression? ConvertToRefFunctionExpression(AExpression value) {
 
                 // !Ref STRING
                 if(value is LiteralExpression refLiteral) {
@@ -1070,7 +1093,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToEqualsConditionExpression(AExpression value) {
+            AExpression? ConvertToEqualsConditionExpression(AExpression value) {
 
                 // !Equals [ VALUE, VALUE ]
                 if(value is ListExpression parameterList) {
@@ -1088,7 +1111,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToNotConditionExpression(AExpression value) {
+            AExpression? ConvertToNotConditionExpression(AExpression value) {
 
                 // !Not [ CONDITION ]
                 if(value is ListExpression parameterList) {
@@ -1105,7 +1128,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToAndConditionExpression(AExpression value) {
+            AExpression? ConvertToAndConditionExpression(AExpression value) {
 
                 // !And [ CONDITION, CONDITION ]
                 if(value is ListExpression parameterList) {
@@ -1123,7 +1146,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToOrConditionExpression(AExpression value) {
+            AExpression? ConvertToOrConditionExpression(AExpression value) {
 
                 // !Or [ CONDITION, CONDITION ]
                 if(value is ListExpression parameterList) {
@@ -1141,7 +1164,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 return null;
             }
 
-            AExpression ConvertToConditionRefExpression(AExpression value) {
+            AExpression? ConvertToConditionRefExpression(AExpression value) {
 
                 // !Condition STRING
                 if(value is LiteralExpression conditionLiteral) {
@@ -1157,10 +1180,14 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             }
         }
 
-        public SyntaxNodeCollection<LiteralExpression> ParseListOfLiteralExpressions() {
+        public SyntaxNodeCollection<LiteralExpression>? ParseListOfLiteralExpressions() {
             var expression = ParseExpression();
             var result = new SyntaxNodeCollection<LiteralExpression>();
             switch(expression) {
+            case null:
+
+                // nothing to do, error was already reported
+                break;
             case LiteralExpression literalExpression:
 
                 // for strings, check if literal is a comma-delimited list of values
@@ -1229,7 +1256,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         }
 
         // TODO: should take a node instead (where possible)
-        private void Log(Error error, SourceLocation location) => _provider.Log(error, location);
+        private void Log(Error error, SourceLocation? location) => _provider.Log(error, location);
 
         private SourceLocation Location() {
             var current = Current;
@@ -1284,7 +1311,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return syntaxes;
         }
 
-        private bool TryParse(Type type, out object result) {
+        private bool TryParse(Type type, [NotNullWhen(true)] out object? result) {
             if(_typeParsers.TryGetValue(type, out var parser)) {
                 result = parser();
                 return result != null;
@@ -1295,7 +1322,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return false;
         }
 
-        private bool IsEvent<T>(out T parsingEvent, out string filePath) where T : ParsingEvent {
+        private bool IsEvent<T>([NotNullWhen(true)] out T? parsingEvent, [NotNullWhen(true)] out string? filePath) where T : ParsingEvent {
             var current = Current;
             if(current.ParsingEvent is T typedParsingEvent) {
                 parsingEvent = typedParsingEvent;

@@ -22,6 +22,9 @@ namespace LambdaSharp.Tool.Compiler {
 
     public class SourceLocation {
 
+        //--- Class Fields ---
+        public static readonly SourceLocation Empty = new SourceLocation("", 0, 0, 0, 0);
+
         //--- Constructors ---
         public SourceLocation(string filePath, int lineNumberStart, int columnNumberStart, int lineNumberEnd, int columnNumberEnd) {
             FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));

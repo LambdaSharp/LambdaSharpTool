@@ -446,9 +446,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set => _macroName = SetParent(value) ?? throw new ArgumentNullException();
         }
 
-        public ObjectExpression Parameters {
-            get => _parameters ?? throw new InvalidOperationException();
-            set => _parameters = SetParent(value) ?? throw new ArgumentNullException();
+        public ObjectExpression? Parameters {
+            get => _parameters;
+            set => _parameters = SetParent(value);
         }
 
         //--- Methods ---

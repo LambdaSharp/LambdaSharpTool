@@ -63,7 +63,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // parse yaml to module declaration AST
             var moduleDeclaration = new LambdaSharpParser(this, SourceFilename).ParseSyntaxOfType<ModuleDeclaration>();
-            if(HasErrors) {
+            if((moduleDeclaration == null) || HasErrors) {
                 return false;
             }
 

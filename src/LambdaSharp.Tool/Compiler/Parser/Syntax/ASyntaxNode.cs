@@ -39,11 +39,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
         public ASyntaxNode? Parent { get; private set; }
 
-        public SourceLocation? SourceLocation {
+        [AllowNull]
+        public SourceLocation SourceLocation {
 
             // TODO: consider return a default empty location when no source location is found
             // TODO: check Builder.Log implementation and compare
-            get => _sourceLocation ?? Parent?.SourceLocation;
+            get => _sourceLocation ?? Parent?.SourceLocation ?? SourceLocation.Empty;
             set => _sourceLocation = value;
         }
 
