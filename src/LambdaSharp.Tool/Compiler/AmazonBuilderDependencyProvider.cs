@@ -30,7 +30,6 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
-using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool.Compiler {
 

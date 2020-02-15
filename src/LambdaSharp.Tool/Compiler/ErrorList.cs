@@ -20,7 +20,6 @@
 
 using System;
 using System.Collections.Generic;
-using LambdaSharp.Tool.Compiler.Parser;
 
 namespace LambdaSharp.Tool.Compiler {
 

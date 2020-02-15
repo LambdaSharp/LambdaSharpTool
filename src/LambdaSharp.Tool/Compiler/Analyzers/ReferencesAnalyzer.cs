@@ -21,7 +21,6 @@
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
-using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
