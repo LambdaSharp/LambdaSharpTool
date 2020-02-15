@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#nullable disable
-
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using LambdaSharp.Tool.Model;
 
@@ -32,7 +30,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public DiscoverDependenciesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
+        public override void VisitStart(ASyntaxNode? parent, ModuleDeclaration node) {
             if(node.HasModuleRegistration) {
 
                 // add module reference as a shared dependency
@@ -46,7 +44,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // TODO: we also need to discover what CloudFormation schema version/region is expected
         }
 
-        public override void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {
+        public override void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node) {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.ModuleName.Value, out var moduleInfo)) {
@@ -63,10 +61,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
+        public override void VisitStart(ASyntaxNode? parent, NestedModuleDeclaration node) {
 
             // check if module reference is valid
-            if(!ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
+            if(!ModuleInfo.TryParse(node.Module?.Value, out var moduleInfo)) {
                 _builder.Log(Error.ModuleAttributeInvalid, node.Module);
             } else {
 

@@ -16,8 +16,6 @@
  * limitations under the License.
  */
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
 
@@ -26,7 +24,7 @@ namespace LambdaSharp.Tool.Compiler {
     public interface ILogger {
 
         //--- Methods ---
-        void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact);
+        void Log(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact);
     }
 
     public static class ILoggerEx {
@@ -34,9 +32,9 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Methods ---
         public static void Log(this ILogger logger, IBuildReportEntry entry) => logger.Log(entry, sourceLocation: null, exact: true);
         public static void Log(this ILogger logger, IBuildReportEntry entry, SourceLocation sourceLocation) => logger.Log(entry, sourceLocation, exact: true);
-        public static void LogInfoVerbose(this ILogger logger, string message, SourceLocation sourceLocation, bool exact) => logger.Log(new Verbose(message), sourceLocation, exact);
+        public static void LogInfoVerbose(this ILogger logger, string message, SourceLocation? sourceLocation, bool exact) => logger.Log(new Verbose(message), sourceLocation, exact);
         public static void LogInfoVerbose(this ILogger logger, string message) => logger.LogInfoVerbose(message, sourceLocation: null, exact: true);
-        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached, SourceLocation sourceLocation, bool exact) => logger.Log(new Timing(message, duration, cached), sourceLocation, exact);
+        public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached, SourceLocation? sourceLocation, bool exact) => logger.Log(new Timing(message, duration, cached), sourceLocation, exact);
         public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached) => logger.LogInfoPerformance(message, duration, cached, sourceLocation: null, exact: true);
     }
 
@@ -66,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler {
         public IEnumerable<string> Messages => _messages;
 
         //--- Methods ---
-        public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
+        public void Log(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact) {
 
             // TODO: message should not be captured as strings, which makes further formatting impossible (such as colorization)
             var label = entry.Severity.ToString().ToUpperInvariant();
