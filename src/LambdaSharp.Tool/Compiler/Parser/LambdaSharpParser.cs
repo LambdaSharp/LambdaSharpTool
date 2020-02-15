@@ -1189,13 +1189,13 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
                             // add literal value
                             result.Add(new LiteralExpression(item) {
-                                SourceLocation = new SourceLocation {
-                                    FilePath = literalExpression.SourceLocation.FilePath,
-                                    LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,
-                                    LineNumberEnd = literalExpression.SourceLocation.LineNumberStart + endLineOffset,
-                                    ColumnNumberStart = literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
-                                    ColumnNumberEnd = literalExpression.SourceLocation.ColumnNumberStart + endColumnOffset - 1
-                                }
+                                SourceLocation = new SourceLocation(
+                                    literalExpression.SourceLocation.FilePath,
+                                    literalExpression.SourceLocation.LineNumberStart + startLineOffset,
+                                    literalExpression.SourceLocation.LineNumberStart + endLineOffset,
+                                    literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
+                                    literalExpression.SourceLocation.ColumnNumberStart + endColumnOffset - 1
+                                )
                             });
                         }
                         offset = next + 1;
@@ -1240,13 +1240,13 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
         private SourceLocation Location(string filePath, ParsingEvent parsingEvent) => Location(filePath, parsingEvent, parsingEvent);
 
-        private SourceLocation Location(string filePath, ParsingEvent startParsingEvent, ParsingEvent stopParsingEvent) => new SourceLocation {
-            FilePath = filePath,
-            LineNumberStart = startParsingEvent.Start.Line,
-            ColumnNumberStart = startParsingEvent.Start.Column,
-            LineNumberEnd = stopParsingEvent.End.Line,
-            ColumnNumberEnd = stopParsingEvent.End.Column
-        };
+        private SourceLocation Location(string filePath, ParsingEvent startParsingEvent, ParsingEvent stopParsingEvent) => new SourceLocation(
+            filePath,
+            startParsingEvent.Start.Line,
+            startParsingEvent.Start.Column,
+            stopParsingEvent.End.Line,
+            stopParsingEvent.End.Column
+        );
 
         private Dictionary<string, SyntaxInfo> GetSyntaxes(Type type) {
             if(!_syntaxCache.TryGetValue(type, out var syntaxes)) {

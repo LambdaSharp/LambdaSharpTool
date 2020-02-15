@@ -16,17 +16,26 @@
  * limitations under the License.
  */
 
-#nullable disable
+using System;
 
 namespace LambdaSharp.Tool.Compiler.Parser {
 
     public class SourceLocation {
 
+        //--- Constructors ---
+        public SourceLocation(string filePath, int lineNumberStart, int columnNumberStart, int lineNumberEnd, int columnNumberEnd) {
+            FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+            LineNumberStart = lineNumberStart;
+            ColumnNumberStart = columnNumberStart;
+            LineNumberEnd = lineNumberEnd;
+            ColumnNumberEnd = columnNumberEnd;
+        }
+
         //--- Properties ---
-        public string FilePath { get; set; }
-        public int LineNumberStart { get; set; }
-        public int ColumnNumberStart { get; set; }
-        public int LineNumberEnd { get; set; }
-        public int ColumnNumberEnd { get; set; }
+        public string FilePath { get; private set; }
+        public int LineNumberStart { get; private set; }
+        public int ColumnNumberStart { get; private set; }
+        public int LineNumberEnd { get; private set; }
+        public int ColumnNumberEnd { get; private set; }
     }
 }

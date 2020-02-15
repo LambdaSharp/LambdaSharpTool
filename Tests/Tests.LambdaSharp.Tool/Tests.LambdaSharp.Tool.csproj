@@ -27,6 +27,7 @@
     <Compile Include="..\..\src\LambdaSharp.Tool\Compiler\**\*.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\Internal\AssemblyEx.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\Model\ModuleManifest.cs" />
+    <Compile Include="..\..\src\LambdaSharp.Tool\Model\CloudFormationSpec.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="..\..\src\LambdaSharp.Tool\Resources\DecryptSecretFunction.js">

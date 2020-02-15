@@ -31,45 +31,6 @@ namespace LambdaSharp.Tool.Model {
     using System.IO.Compression;
     using static ModelFunctions;
 
-    public class CloudFormationSpec {
-
-        // SEE: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
-
-        //--- Properties ---
-        public string ResourceSpecificationVersion { get; set; }
-        public IDictionary<string, ResourceType> ResourceTypes { get; set; }
-        public IDictionary<string, ResourceType> PropertyTypes { get; set; }
-    }
-
-    public class ResourceType {
-
-        //--- Properties ---
-        public string Documentation { get; set; }
-        public IDictionary<string, AttributeType> Attributes { get; set; }
-        public IDictionary<string, PropertyType> Properties { get; set; }
-    }
-
-    public class AttributeType {
-
-        //--- Properties ---
-        public string ItemType { get; set; }
-        public string PrimitiveItemType { get; set; }
-        public string PrimitiveType { get; set; }
-        public string Type { get; set; }
-    }
-
-    public class PropertyType {
-
-        //--- Properties ---
-
-        public bool DuplicatesAllowed { get; set; }
-        public string ItemType { get; set; }
-        public string PrimitiveItemType { get; set; }
-        public string PrimitiveType { get; set; }
-        public bool Required { get; set; }
-        public string Type { get; set; }
-    }
-
     public static class ResourceMapping {
 
         //--- Fields ---

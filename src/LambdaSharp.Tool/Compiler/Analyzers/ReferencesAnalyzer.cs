@@ -149,13 +149,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 (subReferenceName, subAttributeName, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
 
                     // compute source location based on line/column offsets
-                    var sourceLocation = new SourceLocation {
-                        FilePath = node.FormatString.SourceLocation.FilePath,
-                        LineNumberStart = node.FormatString.SourceLocation.LineNumberStart + startLineOffset,
-                        LineNumberEnd = node.FormatString.SourceLocation.LineNumberStart + endLineOffset,
-                        ColumnNumberStart = node.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
-                        ColumnNumberEnd = node.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
-                    };
+                    var sourceLocation = new SourceLocation(
+                        node.FormatString.SourceLocation.FilePath,
+                        node.FormatString.SourceLocation.LineNumberStart + startLineOffset,
+                        node.FormatString.SourceLocation.LineNumberStart + endLineOffset,
+                        node.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
+                        node.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
+                    );
 
                     // check if reference is to a local !Sub parameter
                     if(node.Parameters.ContainsKey(subReferenceName)) {

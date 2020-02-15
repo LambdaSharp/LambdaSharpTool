@@ -153,6 +153,7 @@ namespace LambdaSharp.Tool.Compiler {
         public string ModuleNamespace { get; set; }
         public string ModuleName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
+        public CloudFormationSpec CloudformationSpec { get; set; }
 
         // TODO: initialize the settings
         public VersionInfo CoreServicesReferenceVersion { get; set; }

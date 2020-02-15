@@ -740,13 +740,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                             // add literal value
                             list.Add(new ListExpression {
-                                SourceLocation = new SourceLocation {
-                                    FilePath = literalExpression.SourceLocation.FilePath,
-                                    LineNumberStart = literalExpression.SourceLocation.LineNumberStart + startLineOffset,
-                                    LineNumberEnd = literalExpression.SourceLocation.LineNumberStart + endLineOffset,
-                                    ColumnNumberStart = literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
-                                    ColumnNumberEnd = literalExpression.SourceLocation.ColumnNumberEnd + endColumnOffset
-                                }
+                                SourceLocation = new SourceLocation(
+                                    literalExpression.SourceLocation.FilePath,
+                                    literalExpression.SourceLocation.LineNumberStart + startLineOffset,
+                                    literalExpression.SourceLocation.LineNumberStart + endLineOffset,
+                                    literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
+                                    literalExpression.SourceLocation.ColumnNumberEnd + endColumnOffset
+                                )
                             });
                         }
                         offset = next + 1;
