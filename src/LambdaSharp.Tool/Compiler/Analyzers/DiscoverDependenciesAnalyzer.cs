@@ -41,7 +41,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 ).Wait();
             }
 
-            // TODO: we also need to discover what CloudFormation schema version/region is expected
+            // load CloudFormation resource specification
+            _builder.LoadCloudFormationSpecAsync(node.CloudFormation).Wait();
         }
 
         public override void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node) {

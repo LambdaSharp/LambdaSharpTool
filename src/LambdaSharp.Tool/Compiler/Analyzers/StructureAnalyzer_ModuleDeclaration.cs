@@ -63,10 +63,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     // try {
                     //     var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
                     //     _secrets.Add(response.KeyMetadata.Arn);
-                    //     return true;
                     // } catch(Exception e) {
                     //     LogError($"failed to resolve key alias: {textSecret}", e);
-                    //     return false;
                     // }
                 } else {
                     _builder.Log(Error.SecreteKeyMustBeValidAlias, secret);

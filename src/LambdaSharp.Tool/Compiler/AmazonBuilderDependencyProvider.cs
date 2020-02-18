@@ -30,6 +30,8 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
+using LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 
 namespace LambdaSharp.Tool.Compiler {
 
@@ -110,6 +112,34 @@ namespace LambdaSharp.Tool.Compiler {
                 }
             } while(request.ContinuationToken != null);
             return result;
+        }
+
+        public async Task<CloudFormationSpec> ReadCloudFormationSpecAsync(RegionEndpoint region, VersionInfo version) {
+            if(region is null) {
+                throw new ArgumentNullException(nameof(region));
+            }
+
+            if(version is null) {
+                throw new ArgumentNullException(nameof(version));
+            }
+
+            // check if cloudformation spec exists in global folder
+            var cloudFormationSpecFile = Path.Combine(ToolDataDirectory, "schemata", region.SystemName, "CloudFormationResourceSpecification.json");
+            if(!File.Exists(cloudFormationSpecFile)) {
+                return null;
+            }
+
+            // read spec from global folder
+            var spec = JsonConvert.DeserializeObject<CloudFormationSpec>(File.ReadAllText(cloudFormationSpecFile));
+            if(!VersionInfo.TryParse(spec.ResourceSpecificationVersion, out var resourceSpecificationVersionInfo)) {
+                throw new ApplicationException($"invalid or corrupt CloudFormation resource specification: {cloudFormationSpecFile}");
+            }
+
+            // validate specification version
+            if(version.CompareToVersion(resourceSpecificationVersionInfo) > 0) {
+                return null;
+            }
+            return spec;
         }
 
         private async Task<IAmazonS3> GetS3ClientByBucketNameAsync(string bucketName) {

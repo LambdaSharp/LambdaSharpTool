@@ -218,6 +218,12 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly ErrorFunc5 ManifestLoaderDeployedDependencyConflict = (p1, p2, p3, p4, p5) => new Error(0, $"version conflict for module '{p1}': module '{p2}' requires v{p3}, but {p4} uses v{p5})");
         #endregion
 
+        #region *** CloudFormation Specfication ***
+        public static readonly Error CloudFormationSpecInvalidRegion = new Error(0, "region is not valid");
+        public static readonly Error CloudFormationSpecInvalidVersion = new Error(0, "version is not valid");
+        public static readonly Error CloudFormationSpecNotFound = new Error(0, "unable to find a matching CloudFormation resource specification");
+        #endregion
+
         // TODO: keep reviewing errors
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
         public static readonly Error DuplicateName = new Error(0, "duplicate name");

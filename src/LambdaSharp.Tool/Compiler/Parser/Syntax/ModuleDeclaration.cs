@@ -26,6 +26,33 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     [SyntaxDeclarationKeyword("Module")]
     public class ModuleDeclaration : ADeclaration {
 
+        //--- Types ---
+        public class CloudFormationSpecExpression : ASyntaxNode {
+
+            //--- Fields ---
+            private LiteralExpression? _version;
+            private LiteralExpression? _region;
+
+            //--- Properties ---
+
+            [SyntaxRequired]
+            public LiteralExpression? Version {
+                get => _version;
+                set => _version = SetParent(value);
+            }
+
+            [SyntaxRequired]
+            public LiteralExpression? Region {
+                get => _region;
+                set => _region = SetParent(value);
+            }
+
+            //--- Methods ---
+            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+                throw new NotImplementedException();
+            }
+        }
+
         //--- Fields ---
         private LiteralExpression _version;
         private LiteralExpression? _description;
@@ -33,6 +60,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private SyntaxNodeCollection<LiteralExpression> _secrets;
         private SyntaxNodeCollection<UsingModuleDeclaration> _using;
         private SyntaxNodeCollection<AItemDeclaration> _items;
+        private CloudFormationSpecExpression? _cloudformation;
 
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
@@ -82,6 +110,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set => _items = SetParent(value) ?? throw new ArgumentNullException();
         }
 
+        [SyntaxOptional]
+        public CloudFormationSpecExpression? CloudFormation {
+            get => _cloudformation;
+            set => _cloudformation = SetParent(value);
+        }
+
         public LiteralExpression ModuleName { get; }
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
@@ -96,6 +130,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             Secrets?.Visit(this, visitor);
             Using?.Visit(this, visitor);
             Items?.Visit(this, visitor);
+            CloudFormation?.Visit(this, visitor);
             visitor.VisitEnd(parent, this);
         }
     }

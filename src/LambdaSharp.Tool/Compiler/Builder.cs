@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Amazon;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -75,6 +76,7 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Methods ---
         Task<string> GetS3ObjectContentsAsync(string bucketName, string key);
         Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix);
+        Task<CloudFormationSpec> ReadCloudFormationSpecAsync(RegionEndpoint region, VersionInfo version);
     }
 
     public static class ILoggerSyntaxNodeEx {
@@ -340,7 +342,7 @@ namespace LambdaSharp.Tool.Compiler {
                     // attempt to identify the newest module version compatible with the tool
                     ModuleManifest manifest = null;
                     var match = VersionInfo.FindLatestMatchingVersion(foundCached, moduleInfo.Version, candidate => {
-                        var candidateManifestText = File.ReadAllText(Path.Combine(GetOriginCacheDirectory(moduleInfo), candidate.ToString()));
+                        var candidateManifestText = File.ReadAllTextAsync(Path.Combine(GetOriginCacheDirectory(moduleInfo), candidate.ToString())).Result;
                         manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                         // check if module is compatible with this tool
@@ -455,6 +457,32 @@ namespace LambdaSharp.Tool.Compiler {
 
             ModuleLocation MakeModuleLocation(string sourceBucketName, ModuleManifest manifest)
                 => new ModuleLocation(sourceBucketName, manifest.ModuleInfo, manifest.TemplateChecksum);
+        }
+
+        public async Task LoadCloudFormationSpecAsync(ModuleDeclaration.CloudFormationSpecExpression cloudFormationSpec) {
+            var (region, version) = (RegionEndpoint.USEast1, VersionInfo.Parse("1.0.0"));
+
+            // validate cloudformation resource specification constraints
+            if((cloudFormationSpec?.Region != null)) {
+                region = RegionEndpoint.GetBySystemName(cloudFormationSpec.Region.Value);
+                if(region == null) {
+                    this.Log(Error.CloudFormationSpecInvalidRegion, cloudFormationSpec.Region);
+                }
+            }
+            if((cloudFormationSpec?.Version != null) && !VersionInfo.TryParse(cloudFormationSpec.Version.Value, out version)) {
+                this.Log(Error.CloudFormationSpecInvalidVersion, cloudFormationSpec.Version);
+            }
+            if((region == null) || (version == null)) {
+                return;
+            }
+
+            // fetch cloudformation resource specification
+            var spec = await _provider.ReadCloudFormationSpecAsync(region, version);
+            if(spec == null) {
+                this.Log(Error.CloudFormationSpecNotFound, cloudFormationSpec);
+                return;
+            }
+            CloudformationSpec = spec;
         }
 
         private ModuleManifest GetManifest(JObject cloudformation) {

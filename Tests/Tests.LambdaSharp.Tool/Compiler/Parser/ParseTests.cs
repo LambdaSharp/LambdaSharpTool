@@ -21,14 +21,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon;
 using FluentAssertions;
+using LambdaSharp.Tool;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
 using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using LambdaSharp.Tool.Internal;
+using LambdaSharp.Tool.Model;
+using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -108,6 +113,15 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
                     _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
                 } else {
                     _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
+                }
+            }
+
+            public async Task<CloudFormationSpec> ReadCloudFormationSpecAsync(RegionEndpoint region, VersionInfo version) {
+                var assembly = GetType().Assembly;
+                using(var specResource = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Resources.CloudFormationResourceSpecification.json.gz"))
+                using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
+                using(var specReader = new StreamReader(specGzipStream)) {
+                    return JsonConvert.DeserializeObject<CloudFormationSpec>(specReader.ReadToEnd());
                 }
             }
         }
