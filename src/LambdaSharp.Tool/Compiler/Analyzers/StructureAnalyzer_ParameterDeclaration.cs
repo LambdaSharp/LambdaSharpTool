@@ -188,7 +188,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     );
                 }
             } else {
-                _builder.Log(Error.TypeAttributeInvalid, node.Type);
+                _builder.Log(Error.ResourceTypeAttributeTypeIsInvalid, node.Type);
             }
         }
     }

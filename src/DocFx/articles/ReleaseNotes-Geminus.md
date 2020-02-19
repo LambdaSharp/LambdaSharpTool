@@ -180,6 +180,13 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### NEW - TBD
+
+#### New Features
+
+* LambdaSharp Module Syntax
+    * Added ability to specify version and region for CloudFormation resource specification.
+
 ### (v0.7.0.7) - 2020-01-31
 
 #### Fixes

@@ -148,36 +148,9 @@ namespace LambdaSharp.Tool.Model {
                     : new object[] { arnReference };
         }
 
-        public static bool HasProperty(string awsType, string property) {
+        public static bool HasAttribute(string awsType, string attribute) => CloudformationSpec.HasAttribute(awsType, attribute);
 
-            // for 'Custom::', allow any property
-            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // check if type exists and contains property
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
-                && (resource.Properties?.ContainsKey(property) == true);
-        }
-
-        public static bool HasAttribute(string awsType, string attribute) {
-
-            // for 'AWS::CloudFormation::Stack', allow attributes starting with "Outputs."
-            if((awsType == "AWS::CloudFormation::Stack") && attribute.StartsWith("Outputs.", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // for 'Custom::', allow any attribute
-            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                return true;
-            }
-
-            // check if type exists and contains attribute
-            return CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)
-                && (resource.Attributes?.ContainsKey(attribute) == true);
-        }
-
-        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.ResourceTypes.ContainsKey(awsType);
+        public static bool IsCloudFormationType(string awsType) => CloudformationSpec.IsAwsType(awsType);
 
         public static string ToCloudFormationParameterType(string type)
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";

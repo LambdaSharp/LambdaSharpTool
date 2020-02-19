@@ -16,12 +16,46 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
+using System.Linq;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public class DiscoverDependenciesAnalyzer : ASyntaxAnalyzer {
+
+        //--- Class Fields ---
+        private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
+            "Alexa",
+            "AMZN",
+            "Amazon",
+            "ASK",
+            "AWS",
+            "Custom",
+            "Dev"
+        };
+
+        //--- Class Methods ---
+        private static bool IsValidCloudFormationType(string type) {
+            switch(type) {
+
+            // CloudFormation primitive types
+            case "String":
+            case "Long":
+            case "Integer":
+            case "Double":
+            case "Boolean":
+            case "Timestamp":
+                return true;
+
+            // LambdaSharp primitive types
+            case "Secret":
+                return true;
+            default:
+                return false;
+            }
+        }
 
         //--- Fields ---
         private readonly Builder _builder;
@@ -76,6 +110,105 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // add module reference as a nested dependency
                 _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested, node.Module).Wait();
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration node) {
+
+            // validate resource type name
+            var resourceTypeNameParts = node.ItemName.Value.Split("::", 2);
+            if(resourceTypeNameParts.Length == 1) {
+                _builder.Log(Error.ResourceTypeNameInvalidFormat, node.ItemName);
+            }
+            if(_reservedResourceTypePrefixes.Contains(resourceTypeNameParts[0])) {
+                _builder.Log(Error.ResourceTypeNameReservedPrefix(resourceTypeNameParts[0]), node.ItemName);
+            }
+
+            // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
+        }
+
+        public override void VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration node) {
+
+            // TODO: better rules for parsing CloudFormation types
+            //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
+
+            // ensure unique property names
+            var names = new HashSet<string>();
+            var properties = new List<ModuleManifestResourceProperty>();
+            if(node.Properties.Any()) {
+                foreach(var property in node.Properties) {
+                    if(names.Add(property.Name.Value)) {
+                        properties.Add(new ModuleManifestResourceProperty {
+                            Name = property.Name.Value,
+                            Description = property.Description?.Value,
+                            Type = property.Type?.Value ?? "String",
+                            Required = property.Required?.AsBool() ?? false
+                        });
+                    } else {
+                        _builder.Log(Error.ResourceTypePropertyDuplicateName(property.Name.Value), property.Name);
+                    }
+                }
+            } else {
+                _builder.Log(Error.ResourceTypePropertiesAttributeIsInvalid, node);
+            }
+
+            // ensure unique attribute names
+            names.Clear();
+            var attributes = new List<ModuleManifestResourceAttribute>();
+            if(node.Attributes.Any()) {
+                foreach(var attribute in node.Attributes) {
+                    if(names.Add(attribute.Name.Value)) {
+                        attributes.Add(new ModuleManifestResourceAttribute {
+                            Name = attribute.Name.Value,
+                            Description = attribute.Description?.Value,
+                            Type = attribute.Type?.Value ?? "String"
+                        });
+                    } else {
+                        _builder.Log(Error.ResourceTypeAttributeDuplicateName(attribute.Name.Value), attribute.Name);
+                    }
+                }
+            } else {
+                _builder.Log(Error.ResourceTypeAttributesAttributeIsInvalid, node);
+            }
+
+            // register custom resource type
+            var resourceType = new ModuleManifestResourceType {
+                Type = node.ItemName.Value,
+                Description = node.Description?.Value,
+                Properties = properties,
+                Attributes = attributes
+            };
+            if(!_builder.LocalResourceTypes.TryAdd(resourceType.Type, resourceType)) {
+                _builder.Log(Error.ResourceTypeDuplicateName(resourceType.Type), node);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
+            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
+                _builder.Log(Error.ResourceTypePropertyNameMustBeAlphanumeric, node);
+            }
+            if(node.Type == null) {
+
+                // default Type is String when omitted
+                node.Type = Literal("String");
+            } else if(!IsValidCloudFormationType(node.Type.Value)) {
+                _builder.Log(Error.ResourceTypePropertyTypeIsInvalid, node.Type);
+            }
+            if((node.Required != null) && !node.Required.IsBool) {
+                _builder.Log(Error.ResourceTypePropertyRequiredMustBeBool, node.Required);
+            }
+        }
+
+        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
+            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
+                _builder.Log(Error.ResourceTypeAttributeNameMustBeAlphanumeric, node);
+            }
+            if(node.Type == null) {
+
+                // default Type is String when omitted
+                node.Type = Literal("String");
+            } else if(!IsValidCloudFormationType(node.Type.Value)) {
+                _builder.Log(Error.ResourceTypeAttributeTypeIsInvalid, node.Type);
             }
         }
     }

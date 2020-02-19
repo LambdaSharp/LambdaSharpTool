@@ -27,8 +27,9 @@ namespace LambdaSharp.Tool.Compiler {
     using ErrorFunc3 = Func<string, string, string, Error>;
     using ErrorFunc5 = Func<string, string, string, string, string, Error>;
     using WarningFunc = Func<string, Warning>;
+    using WarningFunc2 = Func<string, string, Warning>;
 
-    public struct Timing : IBuildReportEntry {
+    public readonly struct Timing : IBuildReportEntry {
 
         //--- Constructors ---
         public Timing(string description, TimeSpan duration, bool? cached)
@@ -43,29 +44,29 @@ namespace LambdaSharp.Tool.Compiler {
         public bool? Cached { get; }
     }
 
-    public struct Verbose : IBuildReportEntry {
+    public readonly struct Verbose : IBuildReportEntry {
 
         //--- Constructors ---
         public Verbose(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
 
         //--- Properties ---
         public int Code => 0;
-        public string Message { get; private set; }
+        public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Verbose;
     }
 
-    public struct Info : IBuildReportEntry {
+    public readonly struct Info : IBuildReportEntry {
 
         //--- Constructors ---
         public Info(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
 
         //--- Properties ---
         public int Code => 0;
-        public string Message { get; private set; }
+        public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Info;
     }
 
-    public struct Warning : IBuildReportEntry {
+    public readonly struct Warning : IBuildReportEntry {
 
         //--- Constants ---
         #region *** Reference Validation ***
@@ -78,6 +79,10 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly WarningFunc ManifestLoaderCouldNotRetrieveModuleVersion = parameter => new Warning(0, $"unable to retrieve module version from CloudFormation stack '{parameter}'");
         #endregion
 
+        #region *** Resource Type Validation ***
+        public static readonly WarningFunc2 ResourceTypeAmbiguousTypeReference = (p1, p2) => new Warning(0, $"ambiguous resource type '{p1}' [{p2}]");
+        #endregion
+
         // TODO: keep reviewing warnings
         public static readonly Warning UnableToValidateDependency = new Warning(0, "unable to validate dependency");
 
@@ -88,12 +93,12 @@ namespace LambdaSharp.Tool.Compiler {
         }
 
         //--- Properties ---
-        public int Code { get; private set; }
-        public string Message { get; private set; }
+        public int Code { get; }
+        public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Warning;
     }
 
-    public struct Error : IBuildReportEntry {
+    public readonly struct Error : IBuildReportEntry {
 
         // TODO: consider having a string as error ID (e.g. "CS1001")
 
@@ -154,12 +159,18 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         #region *** Resource Type Validation ***
-        public static readonly Error ResourceTypeInvalidFormat = new Error(0, "the expected format for the resource type name is: Prefix::Suffix");
-        public static readonly ErrorFunc ResourceTypeReservedPrefix = parameter => new Error(0, $"'{parameter}' is a reserved resource type prefix");
-        public static readonly Error ResourceTypeAttributesAttributeInvalid = new Error(0, "'Attributes' attribute cannot be empty");
-        public static readonly Error ResourceTypePropertiesAttributeInvalid = new Error(0, "'Properties' attribute cannot be empty");
+        public static readonly Error ResourceTypeNameInvalidFormat = new Error(0, "the expected format for the resource type name is: Prefix::Suffix");
+        public static readonly ErrorFunc ResourceTypeNameReservedPrefix = parameter => new Error(0, $"'{parameter}' is a reserved resource type prefix");
+        public static readonly ErrorFunc ResourceTypeDuplicateName = parameter => new Error(0, $"resource type name '{parameter}' is already defined");
+        public static readonly Error ResourceTypePropertyNameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         public static readonly ErrorFunc ResourceTypePropertyDuplicateName = parameter => new Error(0, $"duplicate property name '{parameter}'");
+        public static readonly Error ResourceTypePropertyTypeIsInvalid = new Error(0, "'Type' must be CloudFormation parameter type");
+        public static readonly Error ResourceTypePropertyRequiredMustBeBool = new Error(0, "'Required' must have a boolean value");
+        public static readonly Error ResourceTypeAttributeNameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         public static readonly ErrorFunc ResourceTypeAttributeDuplicateName = parameter => new Error(0, $"duplicate attribute name '{parameter}'");
+        public static readonly Error ResourceTypeAttributeTypeIsInvalid = new Error(0, "'Type' must be CloudFormation parameter type");
+        public static readonly Error ResourceTypeAttributesAttributeIsInvalid = new Error(0, "'Attributes' attribute cannot be empty");
+        public static readonly Error ResourceTypePropertiesAttributeIsInvalid = new Error(0, "'Properties' attribute cannot be empty");
         #endregion
 
         // TODO: assign to specific declaration type
@@ -190,7 +201,6 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
         public static readonly Error RuntimeAttributeMissing = new Error(0, "'Runtime' attribute is required");
         public static readonly Error TimeoutAttributeInvalid = new Error(0, "'Timeout' attribute must have an integer value");
-        public static readonly Error TypeAttributeInvalid = new Error(0, "'Type' attribute must be CloudFormation parameter type");
         public static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
         public static readonly Error VersionAttributeInvalid = new Error(0, "the expected format for the 'Version' attribute is: Major.Minor[.Patch]");
         #endregion
@@ -271,8 +281,8 @@ namespace LambdaSharp.Tool.Compiler {
         }
 
         //--- Properties ---
-        public int Code { get; private set; }
-        public string Message { get; private set; }
+        public int Code { get; }
+        public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Error;
     }
 }

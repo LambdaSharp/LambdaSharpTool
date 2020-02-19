@@ -405,7 +405,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         //--- Fields ---
         private LiteralExpression? _formatString;
-        private ObjectExpression? _parameters;
+        private ObjectExpression _parameters;
+
+        //--- Constructors ---
+        public SubFunctionExpression() {
+            _parameters = SetParent(new ObjectExpression());
+        }
 
         //--- Properties ---
 

@@ -36,15 +36,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private static Regex SecretArnRegex = new Regex(@"^arn:aws:kms:[a-z\-]+-\d:\d{12}:key\/[a-fA-F0-9\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static Regex SecretAliasRegex = new Regex("^[0-9a-zA-Z/_\\-]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
         private static Regex AlphanumericRegex = new Regex("^[0-9a-zA-Z]+$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
-        private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
-            "Alexa",
-            "AMZN",
-            "Amazon",
-            "ASK",
-            "AWS",
-            "Custom",
-            "Dev"
-        };
 
         //--- Class Constructor ---
         static StructureAnalyzer() {
@@ -210,19 +201,24 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         node.Type = Literal("String");
                     }
                 }
-            } else {
+            } else if(node.Type != null) {
+                if(_builder.CloudformationSpec.IsAwsType(node.Type.Value)) {
 
-                // TODO: confirm resource type is defined
-                // TODO: validate resource properties
+                    // validate resource properties for native CloudFormation resource type
+                    if(node.HasTypeValidation) {
 
-                // set reference expression to declaration itself
-                var refExpression = FnRef(node.FullName);
-                refExpression.ReferencedDeclaration = node;
-                node.ReferenceExpression = refExpression;
+                        // TODO:
+                    }
+                } else if(_builder.TryGetResourceType(node.Type.Value, out var resourceType)) {
 
-                // CloudFormation resource must have a type
-                if(node.Type == null) {
-                    _builder.Log(Error.TypeAttributeMissing, node);
+                    // validate resource properties for LambdaSharp custom resource type
+                    if(node.HasTypeValidation) {
+
+                        // TODO:
+                    }
+                } else {
+
+                    // TODO: log unknown type error
                 }
 
                 // check if resource is conditional
@@ -234,6 +230,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     });
                 }
 
+                // TODO: shouldn't we always resolve this to an attribute that returns an ARN?
+                // set reference expression to declaration itself
+                var refExpression = FnRef(node.FullName);
+                refExpression.ReferencedDeclaration = node;
+                node.ReferenceExpression = refExpression;
+
                 // add resource permissions
                 if(node.Allow != null) {
                     AddGrant(
@@ -244,6 +246,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         condition: null
                     );
                 }
+            } else {
+
+                // CloudFormation resource must have a type
+                _builder.Log(Error.TypeAttributeMissing, node);
             }
 
             // local functions
@@ -373,94 +379,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
-
-            // validate resource type name
-            var resourceTypeNameParts = node.ItemName.Value.Split("::", 2);
-            if(resourceTypeNameParts.Length == 1) {
-                _builder.Log(Error.ResourceTypeInvalidFormat, node.ItemName);
-            }
-            if(_reservedResourceTypePrefixes.Contains(resourceTypeNameParts[0])) {
-                _builder.Log(Error.ResourceTypeReservedPrefix(resourceTypeNameParts[0]), node.ItemName);
-            }
-
-            // TODO: check for duplicate resource type definitions
-
-            // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
-        }
-
-        public override void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) {
-
-            // register item declaration
-            _builder.RegisterItemDeclaration(node);
-
-            // TODO: register custom resource so that it is available do the module (maybe in VisitEnd?)
-
-            // // TODO (2018-09-20, bjorg): add custom resource name validation
-            // if(_customResourceTypes.Any(existing => existing.Type == resourceType)) {
-            //     LogError($"Resource type '{resourceType}' is already defined.");
-            // }
-
-            // // add resource type definition
-            // AddItem(new ResourceTypeItem(resourceType, description, handler));
-            // _customResourceTypes.Add(new ModuleManifestResourceType {
-            //     Type = resourceType,
-            //     Description = description,
-            //     Properties = properties ?? Enumerable.Empty<ModuleManifestResourceProperty>(),
-            //     Attributes = attributes ?? Enumerable.Empty<ModuleManifestResourceProperty>()
-            // });
-
-            // TODO: better rules for parsing CloudFormation types
-            //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
-
-            // ensure unique property names
-            var names = new HashSet<string>();
-            if(node.Properties.Any()) {
-                foreach(var property in node.Properties) {
-                    if(!names.Add(property.Name.Value)) {
-                        _builder.Log(Error.ResourceTypePropertyDuplicateName(property.Name.Value), property.Name);
-                    }
-                }
-            } else {
-                _builder.Log(Error.ResourceTypePropertiesAttributeInvalid, node);
-            }
-
-            // ensure unique attribute names
-            names.Clear();
-            if(node.Attributes.Any()) {
-                foreach(var attribute in node.Attributes) {
-                    if(!names.Add(attribute.Name.Value)) {
-                        _builder.Log(Error.ResourceTypeAttributeDuplicateName(attribute.Name.Value), attribute.Name);
-                    }
-                }
-            } else {
-                _builder.Log(Error.ResourceTypeAttributesAttributeInvalid, node);
-            }
-        }
-
-        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
-            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
-                _builder.Log(Error.NameMustBeAlphanumeric, node);
-            }
-            if(node.Type == null) {
-
-                // default Type is String when omitted
-                node.Type = Literal("String");
-            } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.Log(Error.TypeAttributeInvalid, node.Type);
-            }
-        }
-
-        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
-            if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
-                _builder.Log(Error.NameMustBeAlphanumeric, node);
-            }
-            if(node.Type == null) {
-
-                // default Type is String when omitted
-                node.Type = Literal("String");
-            } else if(!IsValidCloudFormationType(node.Type.Value)) {
-                _builder.Log(Error.TypeAttributeInvalid, node.Type);
-            }
         }
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
@@ -625,30 +543,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        private bool IsValidCloudFormationType(string type) {
-            switch(type) {
-
-            // CloudFormation primitive types
-            case "String":
-            case "Long":
-            case "Integer":
-            case "Double":
-            case "Boolean":
-            case "Timestamp":
-                return true;
-
-            // LambdaSharp primitive types
-            case "Secret":
-                return true;
-            default:
-                return false;
-            }
-        }
-
         private bool IsValidCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
 
-        // TODO: check AWS type
-        private bool IsValidCloudFormationResourceType(string type) => throw new NotImplementedException();
+        private bool IsValidCloudFormationResourceType(string awsType) => _builder.CloudformationSpec.IsAwsType(awsType);
 
         private T AddDeclaration<T>(AItemDeclaration parent, T declaration) where T : AItemDeclaration {
             parent.Declarations.Add(declaration);
@@ -702,70 +599,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
-
-        private void ValidateExpressionIsLiteralOrListOfLiteral(ASyntaxNode parent, ref AExpression expression) {
-            switch(expression) {
-            case null:
-                expression = new ListExpression {
-                    SourceLocation = parent.SourceLocation
-                };
-                break;
-            case LiteralExpression literalExpression: {
-                    var list = new ListExpression {
-                        SourceLocation = literalExpression.SourceLocation
-                    };
-                    expression = list;
-
-                    // parse comma-separated items from literal value
-                    var offset = 0;
-                    while(offset < literalExpression.Value.Length) {
-
-                        // skip whitespace at the beginning
-                        for(; (offset < literalExpression.Value.Length) && char.IsWhiteSpace(literalExpression.Value[offset]); ++offset);
-
-                        // find the next separator
-                        var next = literalExpression.Value.IndexOf(',', offset);
-                        if(next < 0) {
-                            next = literalExpression.Value.Length;
-                        }
-                        var item = literalExpression.Value.Substring(offset, next - offset).TrimEnd();
-                        if(!string.IsNullOrWhiteSpace(item)) {
-
-                            // calculate relative position of sub-string in literal expression
-                            var startLineOffset = literalExpression.Value.Take(offset).Count(c => c == '\n');
-                            var endLineOffset = literalExpression.Value.Take(offset + item.Length).Count(c => c == '\n');
-                            var startColumnOffset = literalExpression.Value.Take(offset).Reverse().TakeWhile(c => c != '\n').Count();
-                            var endColumnOffset = literalExpression.Value.Take(offset + item.Length).Reverse().TakeWhile(c => c != '\n').Count();
-
-                            // add literal value
-                            list.Add(new ListExpression {
-                                SourceLocation = new SourceLocation(
-                                    literalExpression.SourceLocation.FilePath,
-                                    literalExpression.SourceLocation.LineNumberStart + startLineOffset,
-                                    literalExpression.SourceLocation.LineNumberStart + endLineOffset,
-                                    literalExpression.SourceLocation.ColumnNumberStart + startColumnOffset,
-                                    literalExpression.SourceLocation.ColumnNumberEnd + endColumnOffset
-                                )
-                            });
-                        }
-                        offset = next + 1;
-                    }
-                }
-                break;
-            case ListExpression listExpression:
-
-                // make sure every item in the list is a literal expression
-                foreach(var item in listExpression) {
-                    if(!(item is LiteralExpression)) {
-                        _builder.Log(Error.ExpectedLiteralValue, item);
-                    }
-                }
-                break;
-            default:
-                _builder.Log(Error.ExpectedLiteralValueOrListOfLiteralValues, expression);
-                break;
-            }
-        }
 
         private void AssertIsConditionExpression(AExpression expression) {
             switch(expression) {

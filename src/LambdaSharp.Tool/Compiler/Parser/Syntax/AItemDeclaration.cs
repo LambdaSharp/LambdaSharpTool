@@ -298,9 +298,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<LiteralExpression> Allow {
-            get => _allow ?? throw new InvalidOperationException();
-            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
+        public SyntaxNodeCollection<LiteralExpression>? Allow {
+            get => _allow;
+            set => _allow = SetParent(value);
         }
 
         [SyntaxOptional]
@@ -400,9 +400,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<LiteralExpression> Allow {
-            get => _allow ?? throw new InvalidOperationException();
-            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
+        public SyntaxNodeCollection<LiteralExpression>? Allow {
+            get => _allow;
+            set => _allow = SetParent(value);
         }
 
         [SyntaxRequired]
@@ -549,7 +549,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _if;
         private LiteralExpression? _type;
         private SyntaxNodeCollection<LiteralExpression> _scope;
-        private SyntaxNodeCollection<LiteralExpression> _allow;
+        private SyntaxNodeCollection<LiteralExpression>? _allow;
         private AExpression? _value;
         private SyntaxNodeCollection<LiteralExpression> _dependsOn;
         private ObjectExpression _properties;
@@ -559,7 +559,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Constructors ---
         public ResourceDeclaration(LiteralExpression itemName) : base(itemName) {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
-            _allow = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _dependsOn = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _properties = SetParent(new ObjectExpression());
             _pragmas = SetParent(new ListExpression());
@@ -586,9 +585,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<LiteralExpression> Allow {
+        public SyntaxNodeCollection<LiteralExpression>? Allow {
             get => _allow;
-            set => _allow = SetParent(value) ?? throw new ArgumentNullException();
+            set => _allow = SetParent(value);
         }
 
         [SyntaxOptional]
@@ -625,6 +624,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
+        public bool HasTypeValidation => !HasPragma("no-type-validation");
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
@@ -935,18 +935,25 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
             //--- Fields ---
             private LiteralExpression? _name;
+            private LiteralExpression? _description;
             private LiteralExpression? _type;
             private LiteralExpression? _required;
 
             //--- Properties ---
 
             [SyntaxRequired]
-            public LiteralExpression? Name {
-                get => _name;
-                set => _name = SetParent(value);
+            public LiteralExpression Name {
+                get => _name ?? throw new InvalidOperationException();
+                set => _name = SetParent(value) ?? throw new ArgumentNullException();
             }
 
-            [SyntaxRequired]
+            [SyntaxOptional]
+            public LiteralExpression? Description {
+                get => _description;
+                set => _description = SetParent(value);
+            }
+
+            [SyntaxOptional]
             public LiteralExpression? Type {
                 get => _type;
                 set => _type = SetParent(value);
@@ -972,17 +979,24 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
             //--- Fields ---
             private LiteralExpression? _name;
+            private LiteralExpression? _description;
             private LiteralExpression? _type;
 
             //--- Properties ---
 
             [SyntaxRequired]
-            public LiteralExpression? Name {
-                get => _name;
-                set => _name = SetParent(value);
+            public LiteralExpression Name {
+                get => _name ?? throw new InvalidOperationException();
+                set => _name = SetParent(value) ?? throw new ArgumentNullException();
             }
 
-            [SyntaxRequired]
+            [SyntaxOptional]
+            public LiteralExpression? Description {
+                get => _description;
+                set => _description = SetParent(value);
+            }
+
+            [SyntaxOptional]
             public LiteralExpression? Type {
                 get => _type;
                 set => _type = SetParent(value);

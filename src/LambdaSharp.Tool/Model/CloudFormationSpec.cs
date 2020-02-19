@@ -18,6 +18,7 @@
 
 #nullable disable
 
+using System;
 using System.Collections.Generic;
 
 namespace LambdaSharp.Tool.Model {
@@ -28,16 +29,48 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string ResourceSpecificationVersion { get; set; }
-        public IDictionary<string, ResourceType> ResourceTypes { get; set; }
-        public IDictionary<string, ResourceType> PropertyTypes { get; set; }
+        public Dictionary<string, ResourceType> ResourceTypes { get; set; }
+        public Dictionary<string, ResourceType> PropertyTypes { get; set; }
+
+        //--- Methods ---
+        public bool IsAwsType(string awsType) => ResourceTypes.ContainsKey(awsType);
+
+        public bool HasProperty(string awsType, string property) {
+
+            // for 'Custom::', allow any property
+            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
+                return true;
+            }
+
+            // check if type exists and contains property
+            return ResourceTypes.TryGetValue(awsType, out var resource)
+                && (resource.Properties?.ContainsKey(property) == true);
+        }
+
+        public bool HasAttribute(string awsType, string attribute) {
+
+            // for 'AWS::CloudFormation::Stack', allow attributes starting with "Outputs."
+            if((awsType == "AWS::CloudFormation::Stack") && attribute.StartsWith("Outputs.", StringComparison.Ordinal)) {
+                return true;
+            }
+
+            // for 'Custom::', allow any attribute
+            if(awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
+                return true;
+            }
+
+            // check if type exists and contains attribute
+            return ResourceTypes.TryGetValue(awsType, out var resource)
+                && (resource.Attributes?.ContainsKey(attribute) == true);
+        }
     }
 
     public class ResourceType {
 
         //--- Properties ---
         public string Documentation { get; set; }
-        public IDictionary<string, AttributeType> Attributes { get; set; }
-        public IDictionary<string, PropertyType> Properties { get; set; }
+        public Dictionary<string, AttributeType> Attributes { get; set; }
+        public Dictionary<string, PropertyType> Properties { get; set; }
     }
 
     public class AttributeType {

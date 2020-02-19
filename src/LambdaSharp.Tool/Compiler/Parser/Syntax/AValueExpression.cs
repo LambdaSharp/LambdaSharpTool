@@ -195,11 +195,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         //--- Properties ---
         public string Value { get; }
         public LiteralType Type { get; }
+        public bool IsString => Type == LiteralType.String;
+        public bool IsInteger => Type == LiteralType.Integer;
+        public bool IsFloat => Type == LiteralType.Float;
+        public bool IsBool => Type == LiteralType.Bool;
+        public bool IsTimestamp => Type == LiteralType.Timestamp;
+        public bool IsNull => Type == LiteralType.Null;
 
         //--- Methods ---
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
             visitor.VisitEnd(parent, this);
         }
+
+        public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;
     }
 }

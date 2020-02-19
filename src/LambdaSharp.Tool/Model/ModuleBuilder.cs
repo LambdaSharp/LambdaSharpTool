@@ -703,62 +703,6 @@ namespace LambdaSharp.Tool.Model {
             }
         }
 
-        public void VisitAll(ModuleVisitorDelegate visitor) {
-            if(visitor == null) {
-                throw new ArgumentNullException(nameof(visitor));
-            }
-
-            // resolve references in secrets
-            AtLocation("Secrets", () => {
-                _secrets = (IList<object>)visitor(null, _secrets);
-            });
-
-            // resolve references in items
-            AtLocation("Items", () => {
-                foreach(var item in _items) {
-                    AtLocation(item.FullName, () => {
-                        item.Visit(visitor);
-                    });
-                }
-            });
-
-            // resolve references in output values
-            AtLocation("ResourceStatements", () => {
-                TryGetItem("Module::Role", out var moduleRole);
-                _resourceStatements = (IList<Humidifier.Statement>)visitor(moduleRole, _resourceStatements);
-            });
-        }
-
-        public bool HasAttribute(AModuleItem item, string attribute) {
-            if(TryGetResourceType(item.Type, out var resourceType)) {
-                return resourceType.Attributes.Any(field => field.Name == attribute);
-            }
-            return ResourceMapping.HasAttribute(item.Type, attribute);
-        }
-
-        public Module ToModule() {
-
-            // update existing resource statements when they exist
-            if(TryGetItem("Module::Role", out var moduleRoleItem)) {
-                var role = (Humidifier.IAM.Role)((ResourceItem)moduleRoleItem).Resource;
-                role.Policies[0].PolicyDocument.Statement = _resourceStatements.ToList();
-            }
-            return new Module {
-                Namespace = _namespace,
-                Name = _name,
-                Version = Version,
-                Description = _description,
-                Pragmas = _pragmas,
-                Secrets = _secrets,
-                Items = _items,
-                Artifacts = _artifacts.OrderBy(value => value).ToList(),
-                Dependencies = _dependencies.OrderBy(kv => kv.Key).ToList(),
-                CustomResourceTypes = _customResourceTypes.OrderBy(resourceType => resourceType.Type).ToList(),
-                MacroNames = _macroNames.OrderBy(value => value).ToList(),
-                ResourceTypeNameMappings = _resourceTypeNameMappings
-            };
-        }
-
         private AModuleItem AddItem(AModuleItem item) {
             Validate(Regex.IsMatch(item.Name, CLOUDFORMATION_ID_PATTERN), "name is not valid");
 

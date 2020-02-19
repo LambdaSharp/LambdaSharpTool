@@ -37,6 +37,9 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 @"Module: My.Module
 Version: 1.2.3.4-DEV
 Description: description
+CloudFormation:
+  Version: 1.2.3
+  Region: us-east-1
 Pragmas:
     - no-module-registration
     - Overrides:

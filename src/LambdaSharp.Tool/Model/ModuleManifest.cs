@@ -83,7 +83,7 @@ namespace LambdaSharp.Tool.Model {
        public string Type { get; set; }
        public string Description { get; set; }
        public IEnumerable<ModuleManifestResourceProperty> Properties { get; set; } = new List<ModuleManifestResourceProperty>();
-       public IEnumerable<ModuleManifestResourceProperty> Attributes { get; set; } = new List<ModuleManifestResourceProperty>();
+       public IEnumerable<ModuleManifestResourceAttribute> Attributes { get; set; } = new List<ModuleManifestResourceAttribute>();
     }
 
     public class ModuleManifestResourceProperty {
@@ -93,6 +93,14 @@ namespace LambdaSharp.Tool.Model {
        public string Description { get; set; }
        public string Type { get; set; } = "String";
        public bool Required { get; set; } = true;
+    }
+
+    public class ModuleManifestResourceAttribute {
+
+       //--- Properties ---
+       public string Name { get; set; }
+       public string Description { get; set; }
+       public string Type { get; set; } = "String";
     }
 
     public class ModuleManifestOutput {

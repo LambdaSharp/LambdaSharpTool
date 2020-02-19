@@ -155,6 +155,7 @@ namespace LambdaSharp.Tool.Compiler {
         public string ModuleName { get; set; }
         public VersionInfo ModuleVersion { get; set; }
         public CloudFormationSpec CloudformationSpec { get; set; }
+        public Dictionary<string, ModuleManifestResourceType> LocalResourceTypes { get; } = new Dictionary<string, ModuleManifestResourceType>();
 
         // TODO: initialize the settings
         public VersionInfo CoreServicesReferenceVersion { get; set; }
@@ -466,11 +467,11 @@ namespace LambdaSharp.Tool.Compiler {
             if((cloudFormationSpec?.Region != null)) {
                 region = RegionEndpoint.GetBySystemName(cloudFormationSpec.Region.Value);
                 if(region == null) {
-                    this.Log(Error.CloudFormationSpecInvalidRegion, cloudFormationSpec.Region);
+                    _provider.Log(Error.CloudFormationSpecInvalidRegion, cloudFormationSpec.Region);
                 }
             }
             if((cloudFormationSpec?.Version != null) && !VersionInfo.TryParse(cloudFormationSpec.Version.Value, out version)) {
-                this.Log(Error.CloudFormationSpecInvalidVersion, cloudFormationSpec.Version);
+                _provider.Log(Error.CloudFormationSpecInvalidVersion, cloudFormationSpec.Version);
             }
             if((region == null) || (version == null)) {
                 return;
@@ -479,10 +480,48 @@ namespace LambdaSharp.Tool.Compiler {
             // fetch cloudformation resource specification
             var spec = await _provider.ReadCloudFormationSpecAsync(region, version);
             if(spec == null) {
-                this.Log(Error.CloudFormationSpecNotFound, cloudFormationSpec);
+                _provider.Log(Error.CloudFormationSpecNotFound, cloudFormationSpec);
                 return;
             }
             CloudformationSpec = spec;
+        }
+
+        public bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
+
+            // check if we have a local resource-type that is matching
+            if(LocalResourceTypes.TryGetValue(resourceTypeName, out resourceType)) {
+
+                // NOTE: local resource types shadow imported resource types
+                return true;
+            }
+
+            // check if any of the imported dependencies have a matching resource type
+            var matches = _dependencies
+                .Where(kv => kv.Value.Type == ModuleManifestDependencyType.Shared)
+                .Select(kv => new {
+                    Found = kv.Value.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == resourceTypeName),
+                    From = kv.Key
+                })
+                .Where(foundResourceType => foundResourceType.Found != null)
+                .ToArray();
+            switch(matches.Length) {
+            case 0:
+
+                // nothing found
+                resourceType = null;
+                return false;
+            case 1:
+
+                // found exactly one match
+                resourceType = matches[0].Found;
+                return true;
+            default:
+
+                // ambiguous match
+                _provider.Log(Warning.ResourceTypeAmbiguousTypeReference(resourceTypeName, string.Join(", ", matches.Select(t => t.From))));
+                resourceType = matches[0].Found;
+                return true;
+            }
         }
 
         private ModuleManifest GetManifest(JObject cloudformation) {
