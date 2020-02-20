@@ -113,6 +113,11 @@ namespace LambdaSharp.ApiGateway {
         /// <param name="request">The <see cref="APIGatewayProxyRequest"/> instance.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<APIGatewayProxyResponse> ProcessMessageAsync(APIGatewayProxyRequest request) {
+
+            // NOTE (2020-02-19, bjorg): we rewrite the headers' dictionary to make it case-insensitive
+            request.Headers = new Dictionary<string, string>(request.Headers, StringComparer.InvariantCultureIgnoreCase);
+
+            // handle request
             CurrentRequest = request;
             APIGatewayProxyResponse response;
             var signature = "<null>";

@@ -187,6 +187,8 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * LambdaSharp CLI
     * Fixed an issue where non-instance, non-public fields/properties were used as query parameters when using the `[FromUri]` parameter attribute.
     * Fixed an issue where the CLI required the `~/.aws/credentials` file to exist even when `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are set.
+* LambdaSharp SDK
+    * Fixed an issue where headers returned by `APIGatewayProxyRequest` where not case-insensitive.
 
 ### (v0.7.0.7) - 2020-01-31
 
