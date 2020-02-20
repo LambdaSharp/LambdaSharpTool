@@ -88,7 +88,13 @@ namespace LambdaSharp.Tool.Cli {
             try {
 
                 // check if .aws/credentials file exists
-                if(!File.Exists(CredentialsFilePath)) {
+                if(
+                    !File.Exists(CredentialsFilePath)
+                    && (
+                        (Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID") == null)
+                        || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
+                    )
+                ) {
                     LogError($"IMPORTANT: run '{Settings.Lash} init' to create an AWS profile");
                     return null;
                 }
