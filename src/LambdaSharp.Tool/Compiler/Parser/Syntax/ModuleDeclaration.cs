@@ -49,7 +49,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
             //--- Methods ---
             public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-                throw new NotImplementedException();
+                visitor.VisitStart(parent, this);
+                Version?.Visit(this, visitor);
+                Region?.Visit(this, visitor);
+                visitor.VisitEnd(parent, this);
             }
         }
 

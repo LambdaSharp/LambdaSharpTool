@@ -83,6 +83,10 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly WarningFunc2 ResourceTypeAmbiguousTypeReference = (p1, p2) => new Warning(0, $"ambiguous resource type '{p1}' [{p2}]");
         #endregion
 
+        #region *** Resource Validation ***
+        public static readonly Warning ResourceContainsTransformAndCannotBeValidated = new Warning(0, "Fn::Transform prevents resource properties to be validated");
+        #endregion
+
         // TODO: keep reviewing warnings
         public static readonly Warning UnableToValidateDependency = new Warning(0, "unable to validate dependency");
 
@@ -173,6 +177,15 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ResourceTypePropertiesAttributeIsInvalid = new Error(0, "'Properties' attribute cannot be empty");
         #endregion
 
+        #region *** Resource Validation ***
+        public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
+        public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
+        public static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
+        public static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
+        public static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
+
+        #endregion
+
         // TODO: assign to specific declaration type
         #region *** Attribute Validation ***
         public static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
@@ -228,7 +241,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly ErrorFunc5 ManifestLoaderDeployedDependencyConflict = (p1, p2, p3, p4, p5) => new Error(0, $"version conflict for module '{p1}': module '{p2}' requires v{p3}, but {p4} uses v{p5})");
         #endregion
 
-        #region *** CloudFormation Specfication ***
+        #region *** CloudFormation Specification ***
         public static readonly Error CloudFormationSpecInvalidRegion = new Error(0, "region is not valid");
         public static readonly Error CloudFormationSpecInvalidVersion = new Error(0, "version is not valid");
         public static readonly Error CloudFormationSpecNotFound = new Error(0, "unable to find a matching CloudFormation resource specification");

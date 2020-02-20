@@ -254,6 +254,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 [typeof(ResourceTypeDeclaration.AttributeTypeExpression)] = () => ParseSyntaxOfType<ResourceTypeDeclaration.AttributeTypeExpression>(),
                 [typeof(AItemDeclaration)] = () => ParseSyntaxOfType<AItemDeclaration>(),
                 [typeof(AEventSourceDeclaration)] = () => ParseSyntaxOfType<AEventSourceDeclaration>(),
+                [typeof(ModuleDeclaration.CloudFormationSpecExpression)] = () => ParseSyntaxOfType<ModuleDeclaration.CloudFormationSpecExpression>(),
 
                 // lists
                 [typeof(SyntaxNodeCollection<AItemDeclaration>)] = () => ParseList<AItemDeclaration>(),

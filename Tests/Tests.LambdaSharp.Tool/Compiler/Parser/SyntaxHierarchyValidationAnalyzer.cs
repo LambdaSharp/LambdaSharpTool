@@ -29,6 +29,8 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
         //--- Methods ---
         public void VisitEnd(ASyntaxNode parent, ModuleDeclaration node) { }
 
+        public void VisitEnd(ASyntaxNode parent, ModuleDeclaration.CloudFormationSpecExpression node) { }
+
         public void VisitEnd(ASyntaxNode parent, UsingModuleDeclaration node) { }
 
         public void VisitEnd(ASyntaxNode parent, ApiEventSourceDeclaration node) { }
@@ -125,6 +127,10 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 
         public void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
             ValidateSyntaxNode(node, validateParent: false);
+        }
+
+        public void VisitStart(ASyntaxNode parent, ModuleDeclaration.CloudFormationSpecExpression node) {
+            ValidateSyntaxNode(node);
         }
 
         public void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {

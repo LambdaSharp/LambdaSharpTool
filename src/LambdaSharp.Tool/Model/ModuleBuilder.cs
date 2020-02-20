@@ -87,10 +87,8 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Properties ---
         public string FullName => $"{_namespace}.{_name}";
-        public string Info => $"{FullName}:{Version}";
         public VersionInfo Version { get; set; }
         public IEnumerable<AModuleItem> Items => _items;
-        public IEnumerable<Humidifier.Statement> ResourceStatements => _resourceStatements;
 
         public bool TryGetLabeledPragma(string key, out object value) {
             foreach(var dictionaryPragma in _pragmas.OfType<IDictionary>()) {
@@ -137,23 +135,6 @@ namespace LambdaSharp.Tool.Model {
                 return item != null;
             }
             return _itemsByFullName.TryGetValue(fullNameOrResourceName, out item);
-        }
-
-        public void RemoveItem(string fullName) {
-            if(TryGetItem(fullName, out var item)) {
-
-                // check if the module role is being removed
-                if(fullName == "Module::Role") {
-
-                    // remove all resource statements
-                    _resourceStatements.Clear();
-
-                    // remove all secrets
-                    _secrets.Clear();
-                }
-                _items.Remove(item);
-                _itemsByFullName.Remove(item.FullName);
-            }
         }
 
         public void AddArtifact(string fullName, string artifact) {
@@ -481,7 +462,7 @@ namespace LambdaSharp.Tool.Model {
 
             // validate resource properties
             if(result.HasTypeValidation) {
-                ValidateProperties(type, customResource);
+                // ValidateProperties(type, customResource);
             }
 
             // add optional grants
@@ -718,154 +699,6 @@ namespace LambdaSharp.Tool.Model {
                 LogError($"duplicate name '{item.FullName}'");
             }
             return item;
-        }
-
-        private void ValidateProperties(
-            string awsType,
-            IDictionary properties
-        ) {
-            if(ResourceMapping.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)) {
-                ValidateProperties("", resource, properties);
-            } else if(!awsType.StartsWith("Custom::", StringComparison.Ordinal)) {
-                var dependency = _dependencies.Values.FirstOrDefault(d => d.Manifest?.ResourceTypes.Any(existing => existing.Type == awsType) ?? false);
-                if(dependency == null) {
-                    if(_dependencies.Values.Any(d => d.Manifest == null)) {
-
-                        // NOTE (2018-12-13, bjorg): one or more manifests were not loaded; give the benefit of the doubt
-                        LogWarn($"unable to validate properties for {awsType}");
-                    } else {
-                        LogError($"unrecognized resource type {awsType}");
-                    }
-                } else if(properties != null) {
-                    var definition = dependency.Manifest?.ResourceTypes.FirstOrDefault(existing => existing.Type == awsType);
-                    if(definition != null) {
-                        foreach(var key in properties.Keys) {
-                            var stringKey = (string)key;
-                            if(
-                                (stringKey != "ServiceToken")
-                                && (stringKey != "ResourceType")
-                                && !definition.Properties.Any(field => field.Name == stringKey)) {
-                                LogError($"unrecognized attribute '{key}' on type {awsType}");
-                            }
-                        }
-                    }
-                }
-            }
-
-            // local functions
-            void ValidateProperties(string prefix, ResourceType currentResource, IDictionary currentProperties) {
-
-                // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
-                if(!currentProperties.Contains("Fn::Transform")) {
-
-                    // check that all required properties are defined
-                    foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
-                        if(currentProperties[property.Key] == null) {
-                            LogError($"missing property '{prefix + property.Key}");
-                        }
-                    }
-                }
-
-                // check that all defined properties exist
-                foreach(DictionaryEntry property in currentProperties) {
-                    if(!currentResource.Properties.TryGetValue((string)property.Key, out var propertyType)) {
-                        LogError($"unrecognized property '{prefix + property.Key}'");
-                    } else {
-                        switch(propertyType.Type) {
-                        case "List": {
-
-                                // check if property value is a function invocation
-                                if(
-                                    (property.Value is IDictionary fnMap)
-                                    && (fnMap.Count == 1)
-                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
-                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
-                                ) {
-
-                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a list
-                                } else if(!(property.Value is IList nestedList)) {
-                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a list [{property.Value?.GetType().Name ?? "<null>"}]");
-                                } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
-                                    ValidateList(prefix + property.Key + ".", nestedResource, ListToEnumerable(nestedList));
-                                } else {
-
-                                    // TODO (2018-12-06, bjorg): validate list items using the primitive type
-                                }
-                            }
-                            break;
-                        case "Map": {
-                                if(
-                                    (property.Value is IDictionary fnMap)
-                                    && (fnMap.Count == 1)
-                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
-                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
-                                ) {
-
-                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
-                                } else if(!(property.Value is IDictionary nestedProperties1)) {
-                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
-                                } else if(propertyType.ItemType != null) {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResource);
-                                    ValidateList(prefix + property.Key + ".", nestedResource, DictionaryToEnumerable(nestedProperties1));
-                                } else {
-
-                                    // TODO (2018-12-06, bjorg): validate map entries using the primitive type
-                                }
-                            }
-                            break;
-                        case null:
-
-                            // TODO (2018-12-06, bjorg): validate property value with the primitive type
-                            break;
-                        default: {
-                                if(
-                                    (property.Value is IDictionary fnMap)
-                                    && (fnMap.Count == 1)
-                                    && (fnMap.Keys.OfType<string>().FirstOrDefault() is string fnName)
-                                    && ((fnName == "Ref") || fnName.StartsWith("Fn::"))
-                                ) {
-
-                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
-                                } else if(!(property.Value is IDictionary nestedProperties2)) {
-                                    LogError($"property type mismatch for '{prefix + property.Key}', expected a map [{property.Value?.GetType().FullName ?? "<null>"}]");
-                                } else {
-                                    ResourceMapping.TryGetPropertyItemType(awsType, propertyType.Type, out var nestedResource);
-                                    ValidateProperties(prefix + property.Key + ".", nestedResource, nestedProperties2);
-                                }
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
-
-            void ValidateList(string prefix, ResourceType currentResource, IEnumerable<KeyValuePair<string, object>> items) {
-                foreach(var item in items) {
-                    if(!(item.Value is IDictionary nestedProperties)) {
-                        LogError($"property type mismatch for '{prefix + item.Key}', expected a map [{item.Value?.GetType().FullName ?? "<null>"}]");
-                    } else {
-                        ValidateProperties(prefix + item.Key + ".", currentResource, nestedProperties);
-                    }
-                }
-            }
-
-            IEnumerable<KeyValuePair<string, object>> DictionaryToEnumerable(IDictionary dictionary) {
-                var result = new List<KeyValuePair<string, object>>();
-                foreach(DictionaryEntry entry in dictionary) {
-                    result.Add(new KeyValuePair<string, object>("." + entry.Key, entry.Value));
-                }
-                return result;
-            }
-
-            IEnumerable<KeyValuePair<string, object>> ListToEnumerable(IList list) {
-                var result = new List<KeyValuePair<string, object>>();
-                var index = 0;
-                foreach(var item in list) {
-                    result.Add(new KeyValuePair<string, object>($"{++index}".ToString(), item));
-                }
-                return result;
-            }
         }
 
         private Humidifier.CustomResource CreateDecryptSecretResourceFor(AModuleItem item)

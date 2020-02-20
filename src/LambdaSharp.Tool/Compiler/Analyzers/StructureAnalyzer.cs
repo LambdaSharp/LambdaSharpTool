@@ -25,6 +25,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
@@ -202,23 +203,27 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
             } else if(node.Type != null) {
+
+                // ensure Properties property is set to an empty object expression when null
+                if(node.Properties == null) {
+                    node.Properties = new ObjectExpression();
+                }
+
+                // check if type is AWS resource type or a LambdaSharp custom resource type
                 if(_builder.CloudformationSpec.IsAwsType(node.Type.Value)) {
 
                     // validate resource properties for native CloudFormation resource type
                     if(node.HasTypeValidation) {
-
-                        // TODO:
+                        ValidateProperties(node.Type.Value, node.Properties);
                     }
-                } else if(_builder.TryGetResourceType(node.Type.Value, out var resourceType)) {
+                } else if(_builder.TryGetCustomResourceType(node.Type.Value, out var resourceType)) {
 
                     // validate resource properties for LambdaSharp custom resource type
                     if(node.HasTypeValidation) {
-
-                        // TODO:
+                        ValidateProperties(resourceType, node.Properties);
                     }
                 } else {
-
-                    // TODO: log unknown type error
+                    _builder.Log(Error.ResourceUnknownType(node.Type.Value), node.Type);
                 }
 
                 // check if resource is conditional
@@ -599,6 +604,140 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         private static AExpression GetModuleArtifactExpression(string filename)
             => FnSub($"{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}/${{Module::Namespace}}/${{Module::Name}}/.artifacts/{filename}");
+
+        private void ValidateProperties(string awsType, ObjectExpression properties) {
+            if(_builder.CloudformationSpec.ResourceTypes.TryGetValue(awsType, out var resource)) {
+                ValidateProperties(resource, properties);
+            }
+
+            // local functions
+            void ValidateProperties(ResourceType currentResource, ObjectExpression currentProperties) {
+
+                // 'Fn::Transform' can add arbitrary properties at deployment time, so we can't validate the properties at compile time
+                if(currentProperties.ContainsKey("Fn::Transform")) {
+                    _builder.Log(Warning.ResourceContainsTransformAndCannotBeValidated, currentProperties);
+                } else {
+
+                    // check that all required properties are defined
+                    foreach(var property in currentResource.Properties.Where(kv => kv.Value.Required)) {
+                        if(!currentProperties.ContainsKey(property.Key)) {
+                            _builder.Log(Error.ResourceMissingProperty(property.Key), currentProperties);
+                        }
+                    }
+                }
+
+                // check that all defined properties exist
+                foreach(var currentProperty in currentProperties) {
+                    if(currentResource.Properties.TryGetValue(currentProperty.Key.Value, out var propertyType)) {
+                        switch(propertyType.Type) {
+                        case "List": {
+                                switch(currentProperty.Value) {
+                                case AFunctionExpression _:
+
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a list
+                                    break;
+                                case ListExpression listExpression:
+                                    if(propertyType.ItemType != null) {
+                                        if(!_builder.CloudformationSpec.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
+                                            throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
+                                        }
+
+                                        // validate all items in list are objects that match the nested resource type
+                                        for(var i = 0; i < listExpression.Count; ++i) {
+                                            var item = listExpression[i];
+                                            if(item is ObjectExpression objectExpressionItem) {
+                                                ValidateProperties(nestedResourceType, objectExpressionItem);
+                                            } else {
+                                                _builder.Log(Error.ResourcePropertyExpectedMap($"[{i}]"), item);
+                                            }
+                                        }
+                                    } else {
+
+                                        // TODO (2018-12-06, bjorg): validate list items using the primitive type
+                                    }
+                                    break;
+                                default:
+                                    _builder.Log(Error.ResourcePropertyExpectedList(currentProperty.Key.Value), currentProperty.Value);
+                                    break;
+                                }
+                            }
+                            break;
+                        case "Map": {
+                                switch(currentProperty.Value) {
+                                case AFunctionExpression _:
+
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                                    break;
+                                case ObjectExpression objectExpression:
+                                    if(propertyType.ItemType != null) {
+                                        if(!_builder.CloudformationSpec.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
+                                            throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
+                                        }
+
+                                        // validate all values in map are objects that match the nested resource type
+                                        foreach(var kv in objectExpression) {
+                                            var item = kv.Value;
+                                            if(item is ObjectExpression objectExpressionItem) {
+                                                ValidateProperties(nestedResourceType, objectExpressionItem);
+                                            } else {
+                                                _builder.Log(Error.ResourcePropertyExpectedMap(kv.Key.Value), item);
+                                            }
+                                        }
+                                    } else {
+
+                                        // TODO (2018-12-06, bjorg): validate map entries using the primitive type
+                                    }
+                                    break;
+                                default:
+                                    _builder.Log(Error.ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                                    break;
+                                }
+                            }
+                            break;
+                        case null:
+
+                            // TODO (2018-12-06, bjorg): validate property value with the primitive type
+                            break;
+                        default: {
+                                switch(currentProperty.Value) {
+                                case AFunctionExpression _:
+
+                                    // TODO (2019-01-25, bjorg): validate the return type of the function is a map
+                                    break;
+                                case ObjectExpression objectExpression:
+                                    if(!_builder.CloudformationSpec.TryGetPropertyItemType(awsType, propertyType.ItemType, out var nestedResourceType)) {
+                                        throw new ShouldNeverHappenException($"unable to find property type for: {awsType}.{propertyType.ItemType}");
+                                    }
+                                    ValidateProperties(nestedResourceType, objectExpression);
+                                    break;
+                                default:
+                                    _builder.Log(Error.ResourcePropertyExpectedMap(currentProperty.Key.Value), currentProperty.Value);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                    } else {
+                        _builder.Log(Error.ResourceUnknownProperty(currentProperty.Key.Value), currentProperty.Key);
+                    }
+                }
+            }
+        }
+
+        private void ValidateProperties(ModuleManifestResourceType resourceType, ObjectExpression properties) {
+
+            // TODO (2020-02-19, bjorg): add support for nested custom resource types checks
+            foreach(var kv in properties) {
+                var key = kv.Key.Value;
+                if(
+                    (key != "ServiceToken")
+                    && (key != "ResourceType")
+                    && !resourceType.Properties.Any(field => field.Name == key)
+                ) {
+                    _builder.Log(Error.ResourceUnknownProperty(key));
+                }
+            }
+        }
 
         private void AssertIsConditionExpression(AExpression expression) {
             switch(expression) {

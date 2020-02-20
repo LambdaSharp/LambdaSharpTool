@@ -102,6 +102,8 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Methods ---
         public virtual void VisitStart(ASyntaxNode? parent, ModuleDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode? parent, ModuleDeclaration node) { }
+        public void VisitStart(ASyntaxNode? parent, ModuleDeclaration.CloudFormationSpecExpression node) { }
+        public void VisitEnd(ASyntaxNode? parent, ModuleDeclaration.CloudFormationSpecExpression node) { }
         public virtual void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node) { }
         public virtual void VisitEnd(ASyntaxNode? parent, UsingModuleDeclaration node) { }
         public virtual void VisitStart(ASyntaxNode? parent, ApiEventSourceDeclaration node) { }

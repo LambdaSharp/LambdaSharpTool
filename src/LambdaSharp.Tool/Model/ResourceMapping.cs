@@ -156,7 +156,6 @@ namespace LambdaSharp.Tool.Model {
             => _cloudFormationParameterTypes.Contains(type) ? type : "String";
 
         public static bool TryGetPropertyItemType(string rootAwsType, string itemTypeName, out ResourceType type)
-            => ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(itemTypeName, out type)
-                || ResourceMapping.CloudformationSpec.PropertyTypes.TryGetValue(rootAwsType + "." + itemTypeName, out type);
+            => ResourceMapping.CloudformationSpec.TryGetPropertyItemType(rootAwsType, itemTypeName, out type);
     }
 }

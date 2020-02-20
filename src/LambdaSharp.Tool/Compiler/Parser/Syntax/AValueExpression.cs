@@ -73,6 +73,9 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
+        //--- Properties ---
+        public int Count => _items.Count;
+
         //--- Methods ---
         public bool TryGetValue(string key, [NotNullWhen(true)] out AExpression? value) {
             var found = _items.FirstOrDefault(item => item.Key.Value == key);
@@ -88,7 +91,6 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public bool ContainsKey(string key) => _items.Any(item => item.Key.Value == key);
-        public int Count => _items.Count;
 
         public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);

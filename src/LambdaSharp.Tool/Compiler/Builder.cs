@@ -486,7 +486,7 @@ namespace LambdaSharp.Tool.Compiler {
             CloudformationSpec = spec;
         }
 
-        public bool TryGetResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
+        public bool TryGetCustomResourceType(string resourceTypeName, out ModuleManifestResourceType resourceType) {
 
             // check if we have a local resource-type that is matching
             if(LocalResourceTypes.TryGetValue(resourceTypeName, out resourceType)) {

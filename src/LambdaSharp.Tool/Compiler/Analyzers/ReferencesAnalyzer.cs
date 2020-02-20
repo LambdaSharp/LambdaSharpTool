@@ -279,8 +279,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         private void ValidateFunctionScope(SyntaxNodeCollection<LiteralExpression> scopeExpression, AItemDeclaration declaration) {
-
-            // NOTE (2019-12-16, bjorg): the structure has already been validated
             foreach(var innerScopeExpression in scopeExpression) {
                 ValidateScope(innerScopeExpression);
             }

@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Model {
         public Dictionary<string, ResourceType> PropertyTypes { get; set; }
 
         //--- Methods ---
-        public bool IsAwsType(string awsType) => ResourceTypes.ContainsKey(awsType);
+        public bool IsAwsType(string awsType) => ResourceTypes.ContainsKey(awsType) || awsType.StartsWith("Custom::", StringComparison.Ordinal);
 
         public bool HasProperty(string awsType, string property) {
 
@@ -63,6 +63,10 @@ namespace LambdaSharp.Tool.Model {
             return ResourceTypes.TryGetValue(awsType, out var resource)
                 && (resource.Attributes?.ContainsKey(attribute) == true);
         }
+
+        public bool TryGetPropertyItemType(string rootAwsType, string itemTypeName, out ResourceType type)
+            => PropertyTypes.TryGetValue(rootAwsType + "." + itemTypeName, out type)
+                || PropertyTypes.TryGetValue(itemTypeName, out type);
     }
 
     public class ResourceType {
