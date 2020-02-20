@@ -117,7 +117,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
                                 // keep first X characters for original project name, append (32-X) characters from the hash
                                 name = name.Substring(0, 32 - PROJECT_HASH_LENGTH)
-                                    + hash.Substring(0, PROJECT_HASH_LENGTH)
+                                    + hash.Substring(0, PROJECT_HASH_LENGTH);
                             }
                         }
                         var project = await _rollbarClient.FindProjectByName(name)
