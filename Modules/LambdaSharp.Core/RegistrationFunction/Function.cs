@@ -17,12 +17,12 @@
  */
 
 using System;
-using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
-using LambdaSharp;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
@@ -75,6 +75,9 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
     public class Function : ALambdaCustomResourceFunction<RegistrationResourceProperties, RegistrationResourceAttributes> {
 
+        //--- Constants ---
+        private const int PROJECT_HASH_LENGTH = 6;
+
         //--- Fields ---
         private RegistrationTable _registrations;
         private RollbarClient _rollbarClient;
@@ -106,6 +109,17 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
                         var name = _rollbarProjectPrefix + request.ResourceProperties.GetModuleFullName();
+
+                        // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
+                        if(name.Length > 32) {
+                            using(var crypto = new SHA256Managed()) {
+                                var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
+
+                                // keep first X characters for original project name, append (32-X) characters from the hash
+                                name = name.Substring(0, 32 - PROJECT_HASH_LENGTH)
+                                    + hash.Substring(0, PROJECT_HASH_LENGTH)
+                            }
+                        }
                         var project = await _rollbarClient.FindProjectByName(name)
                             ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);
