@@ -96,7 +96,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // analyze references in AST
-            moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(moduleBuilder));
+            moduleDeclaration.Visit(parent: null, new LinkReferencesAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }

@@ -25,7 +25,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public class ReferencesAnalyzer : ASyntaxAnalyzer {
+    public class LinkReferencesAnalyzer : ASyntaxAnalyzer {
 
         //--- Constants ---
         private const string SUBVARIABLE_PATTERN = @"\$\{(?!\!)[^\}]+\}";
@@ -48,7 +48,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public ReferencesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        public LinkReferencesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {

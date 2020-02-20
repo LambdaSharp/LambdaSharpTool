@@ -174,7 +174,8 @@ Items:
             var builder = new Builder(new BuilderDependencyProvider());
             moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(builder));
             moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
-            moduleDeclaration.Visit(parent: null, new ReferencesAnalyzer(builder));
+            moduleDeclaration.Visit(parent: null, new LinkReferencesAnalyzer(builder));
+            new ReferenceResolver(builder).Visit();
 
             // assert
             ExpectNoMessages();
