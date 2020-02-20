@@ -1271,8 +1271,8 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         private SourceLocation Location(string filePath, ParsingEvent startParsingEvent, ParsingEvent stopParsingEvent) => new SourceLocation(
             filePath,
             startParsingEvent.Start.Line,
-            startParsingEvent.Start.Column,
             stopParsingEvent.End.Line,
+            startParsingEvent.Start.Column,
             stopParsingEvent.End.Column
         );
 
