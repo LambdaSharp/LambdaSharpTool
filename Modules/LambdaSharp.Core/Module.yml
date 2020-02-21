@@ -127,9 +127,16 @@ Items:
     Scope: RegistrationFunction
     Default: ""
 
+  - Parameter: RollbarProjectPattern
+    Section: Rollbar Settings
+    Label: 'Optional pattern for naming Rollbar projects (e.g. "Lambda-{ModuleFullName}")'
+    Description: Project Pattern
+    Scope: RegistrationFunction
+    Default: ""
+
   - Parameter: RollbarProjectPrefix
     Section: Rollbar Settings
-    Label: Optional prefix when creating Rollbar projects (e.g. "LambdaSharp-")
+    Label: '(Obsolete: use "RollbarProjectPattern" instead) Optional prefix when creating Rollbar projects (e.g. "Lambda-")'
     Description: Project Prefix
     Scope: RegistrationFunction
     Default: ""
