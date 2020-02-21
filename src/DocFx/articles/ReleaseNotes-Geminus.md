@@ -182,6 +182,10 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ### (v0.7.0.8) - TBD
 
+#### New Features
+* LambdaSharp Core Services
+    * Added `RollbarProjectPattern` parameter to provide more flexibility on how Rollbar project names are generated.
+
 #### Fixes
 
 * LambdaSharp CLI
