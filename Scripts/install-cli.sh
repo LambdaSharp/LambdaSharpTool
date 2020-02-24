@@ -9,6 +9,9 @@ if [ -z "$LAMBDASHARP_VERSION" ]; then
     exit 1
 fi
 
+# remove all bin/obj folders from previous builds
+find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
+
 cd $LAMBDASHARP/src/LambdaSharp.Tool
 
 rm *.nupkg

@@ -37,6 +37,9 @@ update() {
         `ls bin/Release/*.nupkg`
 }
 
+# remove all bin/obj folders from previous builds
+find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
+
 # Update LambdaSharp
 cd $LAMBDASHARP/src/LambdaSharp
 update
