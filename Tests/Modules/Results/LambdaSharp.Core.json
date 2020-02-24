@@ -38,6 +38,11 @@
       "Description": "Write Access Token",
       "Default": ""
     },
+    "RollbarProjectPattern": {
+      "Type": "String",
+      "Description": "Project Pattern",
+      "Default": ""
+    },
     "RollbarProjectPrefix": {
       "Type": "String",
       "Description": "Project Prefix",
@@ -84,7 +89,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1809D71277C112163BB286C1B81505ED"
+      "Default": "85289EB8F5E4D97C29E9BC87891FCE6F"
     }
   },
   "Resources": {
@@ -401,6 +406,9 @@
             },
             "SEC_ROLLBARWRITEACCESSTOKEN": {
               "Ref": "RollbarWriteAccessToken"
+            },
+            "STR_ROLLBARPROJECTPATTERN": {
+              "Ref": "RollbarProjectPattern"
             },
             "STR_ROLLBARPROJECTPREFIX": {
               "Ref": "RollbarProjectPrefix"
@@ -945,10 +953,10 @@
       "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1809D71277C112163BB286C1B81505ED"
+      "Value": "85289EB8F5E4D97C29E9BC87891FCE6F"
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.7"
+      "Value": "0.7.0.8"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1048,8 +1056,11 @@
         "RollbarWriteAccessToken": {
           "default": "Account-level token for write operations (leave blank to disable Rollbar integration) [Secret]"
         },
+        "RollbarProjectPattern": {
+          "default": "Optional pattern for naming Rollbar projects (e.g. \"Lambda-{ModuleFullName}\") [String]"
+        },
         "RollbarProjectPrefix": {
-          "default": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\") [String]"
+          "default": "(Obsolete: use \"RollbarProjectPattern\" instead) Optional prefix when creating Rollbar projects (e.g. \"Lambda-\") [String]"
         },
         "ExistingDeploymentBucket": {
           "default": "ARN of an existing S3 bucket for LambdaSharp deployments (leave blank to create a new S3 bucket) [String]"
@@ -1096,6 +1107,7 @@
           "Parameters": [
             "RollbarReadAccessToken",
             "RollbarWriteAccessToken",
+            "RollbarProjectPattern",
             "RollbarProjectPrefix"
           ]
         },
@@ -1134,7 +1146,7 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "1809D71277C112163BB286C1B81505ED",
+      "TemplateChecksum": "85289EB8F5E4D97C29E9BC87891FCE6F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
@@ -1188,9 +1200,15 @@
               "Default": ""
             },
             {
+              "Name": "RollbarProjectPattern",
+              "Type": "String",
+              "Label": "Optional pattern for naming Rollbar projects (e.g. \"Lambda-{ModuleFullName}\")",
+              "Default": ""
+            },
+            {
               "Name": "RollbarProjectPrefix",
               "Type": "String",
-              "Label": "Optional prefix when creating Rollbar projects (e.g. \"LambdaSharp-\")",
+              "Label": "(Obsolete: use \"RollbarProjectPattern\" instead) Optional prefix when creating Rollbar projects (e.g. \"Lambda-\")",
               "Default": ""
             }
           ]
