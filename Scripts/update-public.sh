@@ -9,7 +9,10 @@ find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
 
 # unset any environment variables we don't want to accidentally inherit
 unset AWS_PROFILE
+unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
 unset LAMBDASHARP_TIER
+unset LAMBDASHARP_FEATURE_CACHING
 
 # set the LambdaSharp version
 source $LAMBDASHARP/scripts/set-lash-version.sh
