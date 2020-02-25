@@ -187,6 +187,13 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * LambdaSharp Module Syntax
     * Added ability to specify version and region for CloudFormation resource specification.
 
+### (v0.7.0.10) - TBD
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where content references in _.csproj_ files were attempted to be parsed as XML files.
+
 ### (v0.7.0.9) - 2020-02-25
 
 #### Fixes
