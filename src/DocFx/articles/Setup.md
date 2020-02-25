@@ -15,10 +15,10 @@ To get started, make sure you have signed-up for an AWS account and downloaded .
 1. [AWS Account](https://portal.aws.amazon.com/billing/signup#/start)
 1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
 
-> **IMPORTANT:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
-> ```bash
-> export PATH=$HOME/.dotnet/tools:$PATH
-> ```
+**NOTE for MacOS Users:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
+```bash
+export PATH=$HOME/.dotnet/tools:$PATH
+```
 
 ## Step 1: Installing LambdaSharp CLI
 

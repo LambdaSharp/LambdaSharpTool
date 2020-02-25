@@ -873,13 +873,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(runtime == null) {
                 switch(targetFramework) {
                 case "netcoreapp1.0":
-                    runtime = "dotnetcore1.0";
+                    runtime = Amazon.Lambda.Runtime.Dotnetcore10.ToString();
                     break;
                 case "netcoreapp2.0":
-                    runtime = "dotnetcore2.0";
+                    runtime = Amazon.Lambda.Runtime.Dotnetcore20.ToString();
                     break;
                 case "netcoreapp2.1":
-                    runtime = "dotnetcore2.1";
+                    runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
                     break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
@@ -906,7 +906,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             ref string handler
         ) {
             language = "javascript";
-            runtime = runtime ?? "nodejs8.10";
+            runtime = runtime ?? Amazon.Lambda.Runtime.Nodejs12X.ToString();
             handler = handler ?? "index.handler";
         }
 
