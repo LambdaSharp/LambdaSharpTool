@@ -475,7 +475,7 @@ namespace LambdaSharp.Tool.Cli {
                                 var queryParameterType = parameter.ParameterType;
 
                                 // add complex-type properties
-                                foreach(var property in queryParameterType.GetProperties()) {
+                                foreach(var property in queryParameterType.GetProperties(BindingFlags.Instance | BindingFlags.Public)) {
                                     var name = property.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? property.Name;
                                     var required = (
                                             (Nullable.GetUnderlyingType(property.PropertyType) == null)
@@ -490,7 +490,7 @@ namespace LambdaSharp.Tool.Cli {
                                 }
 
                                 // add complex-type fields
-                                foreach(var field in queryParameterType.GetFields()) {
+                                foreach(var field in queryParameterType.GetFields(BindingFlags.Instance | BindingFlags.Public)) {
                                     var name = field.GetCustomAttribute<JsonPropertyAttribute>()?.PropertyName ?? field.Name;
                                     var required = (
                                             (Nullable.GetUnderlyingType(field.FieldType) == null)

@@ -1030,7 +1030,7 @@ namespace LambdaSharp.Tool.Model {
                     ? description.TrimEnd() + $" (v{Version})"
                     : null,
                 Timeout = timeout,
-                Runtime = "nodejs8.10",
+                Runtime = Amazon.Lambda.Runtime.Nodejs12X.ToString(),
                 MemorySize = memory,
                 Handler = "index.handler",
                 Role = FnGetAtt("Module::Role", "Arn"),
