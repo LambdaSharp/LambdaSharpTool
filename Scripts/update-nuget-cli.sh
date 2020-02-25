@@ -23,6 +23,9 @@ then
     exit 0
 fi
 
+# remove all bin/obj folders from previous builds
+find "$LAMBDASHARP" -name 'bin' -or -name 'obj' | xargs rm -rf
+
 # Update LambdaSharp.Tool
 cd $LAMBDASHARP/src/LambdaSharp.Tool
 rm *.nupkg > /dev/null 2>&1

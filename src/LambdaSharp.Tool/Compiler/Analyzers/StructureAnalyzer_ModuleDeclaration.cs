@@ -324,7 +324,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 },
                 Timeout = Literal(30),
                 Memory = Literal(128),
-                Runtime = Literal("nodejs8.10"),
+                Runtime = Literal(Amazon.Lambda.Runtime.Nodejs12X.ToString()),
                 Handler = Literal("index.handler"),
                 Language = Literal("javascript"),
                 Properties = new ObjectExpression {

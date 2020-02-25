@@ -17,12 +17,13 @@
  */
 
 using System;
-using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.Core;
-using LambdaSharp;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
@@ -59,6 +60,9 @@ namespace LambdaSharp.Core.RegistrationFunction {
             }
             return Module.Substring(0, index);
         }
+
+        public string GetModuleNamespace() => GetModuleFullName().Split('.', 2)[0];
+        public string GetModuleName() => GetModuleFullName().Split('.', 2)[1];
     }
 
     public class RegistrationResourceAttributes {
@@ -75,10 +79,13 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
     public class Function : ALambdaCustomResourceFunction<RegistrationResourceProperties, RegistrationResourceAttributes> {
 
+        //--- Constants ---
+        private const int PROJECT_HASH_LENGTH = 6;
+
         //--- Fields ---
         private RegistrationTable _registrations;
         private RollbarClient _rollbarClient;
-        private string _rollbarProjectPrefix;
+        private string _rollbarProjectPattern;
         private string _coreSecretsKey;
 
         //--- Methods ---
@@ -90,8 +97,14 @@ namespace LambdaSharp.Core.RegistrationFunction {
                 config.ReadText("RollbarWriteAccessToken", defaultValue: null),
                 message => LogInfo(message)
             );
-            _rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
+            _rollbarProjectPattern = config.ReadText("RollbarProjectPattern");
             _coreSecretsKey = config.ReadText("CoreSecretsKey");
+
+            // set default project pattern if none is specified
+            if(_rollbarProjectPattern == "") {
+                var rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
+                _rollbarProjectPattern = $"{rollbarProjectPrefix}{{ModuleFullName}}";
+            }
         }
 
         public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
@@ -105,7 +118,31 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
                     // create new rollbar project
                     if(_rollbarClient.HasTokens) {
-                        var name = _rollbarProjectPrefix + request.ResourceProperties.GetModuleFullName();
+                        var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
+                            var value = match.ToString();
+                            switch(value) {
+                            case "{ModuleFullName}":
+                                return request.ResourceProperties.GetModuleFullName();
+                            case "{ModuleNamespace}":
+                                return request.ResourceProperties.GetModuleNamespace();
+                            case "{ModuleName}":
+                                return request.ResourceProperties.GetModuleName();
+                            default:
+
+                                // remove curly braces for unrecognized placeholders
+                                return value.Substring(1, value.Length - 2);
+                            }
+                        });
+
+                        // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
+                        if(name.Length > 32) {
+                            using(var crypto = new SHA256Managed()) {
+                                var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
+
+                                // keep first X characters for original project name, append (32-X) characters from the hash
+                                name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
+                            }
+                        }
                         var project = await _rollbarClient.FindProjectByName(name)
                             ?? await _rollbarClient.CreateProject(name);
                         var tokens = await _rollbarClient.ListProjectTokens(project.Id);

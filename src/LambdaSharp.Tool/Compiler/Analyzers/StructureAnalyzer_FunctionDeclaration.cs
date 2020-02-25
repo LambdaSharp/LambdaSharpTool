@@ -300,7 +300,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         _builder.Log(Error.UnsupportedVersionOfDotNetCore, node);
                         break;
                     case "netcoreapp2.1":
-                        node.Runtime = new LiteralExpression("dotnetcore2.1");
+                        node.Runtime = new LiteralExpression(Amazon.Lambda.Runtime.Dotnetcore21.ToString());
                         break;
                     default:
                         _builder.Log(Error.UnknownVersionOfDotNetCore, node);
@@ -328,7 +328,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                 // set runtime
                 if(node.Runtime == null) {
-                    node.Runtime = new LiteralExpression("nodejs8.10");
+                    node.Runtime = new LiteralExpression(Amazon.Lambda.Runtime.Nodejs12X.ToString());
                 }
 
                 // set handler

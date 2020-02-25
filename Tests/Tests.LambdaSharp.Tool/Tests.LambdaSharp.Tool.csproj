@@ -10,15 +10,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.4.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="xunit.abstractions" Version="2.0.3" />
-    <PackageReference Include="FluentAssertions" Version="5.6.0" />
+    <PackageReference Include="FluentAssertions" Version="5.10.2" />
     <PackageReference Include="YamlDotNet" Version="6.1.2" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.3.108" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.101.12" />
   </ItemGroup>
   <ItemGroup>

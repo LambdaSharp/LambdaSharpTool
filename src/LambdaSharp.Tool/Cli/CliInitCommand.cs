@@ -65,7 +65,13 @@ namespace LambdaSharp.Tool.Cli {
                     Console.WriteLine($"{app.FullName} - {cmd.Description}");
 
                     // check if .aws/credentials file needs to be created
-                    if(!File.Exists(CredentialsFilePath)) {
+                    if(
+                        !File.Exists(CredentialsFilePath)
+                        && (
+                            (Environment.GetEnvironmentVariable("AWS_ACCESS_KEY_ID") == null)
+                            || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
+                        )
+                    ) {
                         var tmpSettings = new Settings();
 
                         // prompt for AWS credentials information

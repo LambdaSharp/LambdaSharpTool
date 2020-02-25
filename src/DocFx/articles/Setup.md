@@ -15,10 +15,10 @@ To get started, make sure you have signed-up for an AWS account and downloaded .
 1. [AWS Account](https://portal.aws.amazon.com/billing/signup#/start)
 1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
 
-> **IMPORTANT:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
-> ```bash
-> export PATH=$HOME/.dotnet/tools:$PATH
-> ```
+**NOTE for MacOS Users:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
+```bash
+export PATH=$HOME/.dotnet/tools:$PATH
+```
 
 ## Step 1: Installing LambdaSharp CLI
 
@@ -138,7 +138,18 @@ The LambdaSharp Core module expects the access tokens to be encrypted, which can
 |---|---|---|
 |`RollbarReadAccessToken`|Account-level token for read operations|""|
 |`RollbarWriteAccessToken`|Account-level token for write operations|""|
-|`RollbarProjectPrefix`|Optional prefix when creating Rollbar projects|""|
+|`RollbarProjectPattern`|Optional pattern for naming Rollbar projects (see below)|""|
+|`RollbarProjectPrefix`|(Obsolete: use `RollbarProjectPattern` instead) Optional prefix when creating Rollbar projects|""|
+
+### Using `RollbarProjectPattern` Parameter
+The `RollbarProjectPattern` parameter is used to flexibly configure how Rollbar projects are named based on the module information. The following placeholders values are available for the pattern (assuming a module named `Acme.Example.Module:123@origin`):
+* `{ModuleFullName}`: The full module name (e.g. `Acme.Example.Module`)
+* `{ModuleNamespace}`: The module namespace (e.g. `Acme`)
+* `{ModuleName}`: The module name (e.g. `Example.Module`)
+
+During execution, the placeholders values are substituted with information from the module to generate the actual Rollbar project name. Note a Rollbar project name must start with a letter; can contain letters, numbers, spaces, underscores, hyphens, periods, and commas. If the generated Rollbar project name exceeds 32 characters, the last 6 characters in the available project name are substituted with 6 characters from the SHA256 hash of the entire name to ensure uniqueness.
+
+The default pattern is `{ModuleFullName}` when no `RollbarProjectPattern` parameter is specified.
 
 # For LambdaSharp Contributors: Installing LambdaSharp from GitHub
 
