@@ -200,7 +200,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * Fixed an issue where the CLI required the `~/.aws/credentials` file to exist even when `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are set.
 * LambdaSharp SDK
     * Fixed an issue where headers returned by `APIGatewayProxyRequest` where not case-insensitive.
-* LambdaSharp Core Services
+* LambdaSharp Core Module
     * Fixed an issue with Rollbar projects failing to be created because the generated project name exceeded 32 characters.
 
 ### (v0.7.0.7) - 2020-01-31
