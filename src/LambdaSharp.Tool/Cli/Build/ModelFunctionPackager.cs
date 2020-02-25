@@ -503,12 +503,12 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add compile file references
                 foreach(var compile in csproj.Descendants("Compile").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(compile));
+                    AddFileReferences(files, GetFilePathFromIncludeAttribute(compile));
                 }
 
                 // add content file references
                 foreach(var content in csproj.Descendants("Content").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(content));
+                    AddFileReferences(files, GetFilePathFromIncludeAttribute(content));
                 }
 
                 // added embedded resources
