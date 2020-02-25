@@ -181,9 +181,9 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // import module
             var imported = false;
             foreach(var artifact in manifest.Artifacts) {
-                imported = imported | await ImportS3Object(moduleInfo.Origin, artifact, replace: forcePublish);
+                imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, artifact, replace: forcePublish);
             }
-            imported = imported | await ImportS3Object(moduleInfo.Origin, moduleInfo.VersionPath, replace: forcePublish || moduleInfo.Version.IsPreRelease);
+            imported = imported | await ImportS3Object(moduleLocation.ModuleInfo.Origin, moduleLocation.ModuleInfo.VersionPath, replace: forcePublish || moduleLocation.ModuleInfo.Version.IsPreRelease);
             if(imported) {
                 Console.WriteLine($"=> Imported {moduleInfo}");
             } else {
