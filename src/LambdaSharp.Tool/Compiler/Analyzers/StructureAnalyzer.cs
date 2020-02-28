@@ -104,18 +104,23 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public StructureAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, UsingModuleDeclaration node) {
+        public override bool VisitStart(UsingModuleDeclaration node) {
 
             // TODO: load resource types from module
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, PseudoParameterDeclaration node) {
+        public override bool VisitStart(PseudoParameterDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef(node.FullName, resolved: true);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
+        public override bool VisitStart(ImportDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -182,6 +187,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 } else {
                     _builder.Log(Error.DuplicateName(importParameterName), foundDeclaration);
                 }
+                node.ReferenceExpression = FnRef(foundDeclaration.FullName);
             } else {
 
                 // add import declaration as a module parameter
@@ -211,9 +217,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     condition: null
                 );
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
+        public override bool VisitStart(VariableDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -267,22 +274,26 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // if(allow != null) {
             //     AddGrant(result.LogicalId, type, value, allow, condition: null);
             // }
-
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
+        public override bool VisitStart(GroupDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
 
             // set declaration expression
             node.ReferenceExpression = FnRef("AWS::NoValue");
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
+        public override bool VisitStart(ResourceDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef(node.FullName, resolved: true);
 
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
@@ -393,6 +404,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // CloudFormation resource must have a type
                 _builder.Log(Error.TypeAttributeMissing, node);
             }
+            return true;
 
             // local functions
             void ValidateARN(AExpression arn) {
@@ -408,7 +420,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, NestedModuleDeclaration node) {
+        public override bool VisitStart(NestedModuleDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -417,9 +429,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             node.ReferenceExpression = FnRef("AWS::NoValue");
 
             // TODO: validate the parameters and output values from the module
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+        public override bool VisitStart(PackageDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -453,15 +466,22 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // set declaration expression
             node.ReferenceExpression = GetModuleArtifactExpression($"${{{variable.FullName}}}");
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionDeclaration node) {
+        public override bool VisitStart(ConditionDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = new ConditionExpression {
+                ReferenceName = Literal(node.FullName)
+            };
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, MappingDeclaration node) {
+        public override bool VisitStart(MappingDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -516,6 +536,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.MappingDeclarationTopLevelIsMissing, node);
             }
+            return true;
 
             // local functions
             bool IsListOrLiteral(AExpression value)
@@ -523,16 +544,17 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     || ((value is ListExpression listExpression) && listExpression.All(item => IsListOrLiteral(item)));
         }
 
-        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
+        public override bool VisitStart(ResourceTypeDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
 
             // set declaration expression
             node.ReferenceExpression = FnRef("AWS::NoValue");
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
+        public override bool VisitStart(MacroDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -557,44 +579,51 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     ["FunctionName"] = FnRef(node.Handler.Value)
                 }
             });
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, AndConditionExpression node) {
+        public override bool VisitStart(AndConditionExpression node) {
             AssertIsConditionExpression(node.LeftValue);
             AssertIsConditionExpression(node.RightValue);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, Base64FunctionExpression node) { }
+        public override bool VisitStart(Base64FunctionExpression node) => true;
 
-        public override void VisitStart(ASyntaxNode parent, CidrFunctionExpression node) {
+        public override bool VisitStart(CidrFunctionExpression node) {
             AssertIsValueExpression(node.IpBlock);
             AssertIsValueExpression(node.Count);
             AssertIsValueExpression(node.CidrBits);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionExpression node) { }
+        public override bool VisitStart(ConditionExpression node) => true;
 
-        public override void VisitStart(ASyntaxNode parent, EqualsConditionExpression node) {
+        public override bool VisitStart(EqualsConditionExpression node) {
             AssertIsValueExpression(node.LeftValue);
             AssertIsValueExpression(node.RightValue);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
+        public override bool VisitStart(FindInMapFunctionExpression node) {
             AssertIsValueExpression(node.TopLevelKey);
             AssertIsValueExpression(node.SecondLevelKey);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
+        public override bool VisitStart(GetAttFunctionExpression node) {
             AssertIsValueExpression(node.AttributeName);
 
             // TODO: validate the attribute exists on !GetAtt on the given resource type
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, GetAZsFunctionExpression node) {
+        public override bool VisitStart(GetAZsFunctionExpression node) {
             AssertIsValueExpression(node.Region);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, IfFunctionExpression node) {
+        public override bool VisitStart(IfFunctionExpression node) {
 
             // NOTE (2019-11-22, bjorg): we allow literal expression, in addition to condition expression, for the !If condition
             if(node.Condition is LiteralExpression literalExpression) {
@@ -625,55 +654,64 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             AssertIsConditionExpression(node.Condition);
             AssertIsValueExpression(node.IfTrue);
             AssertIsValueExpression(node.IfFalse);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ImportValueFunctionExpression node) {
+        public override bool VisitStart(ImportValueFunctionExpression node) {
             AssertIsValueExpression(node.SharedValueToImport);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, JoinFunctionExpression node) {
+        public override bool VisitStart(JoinFunctionExpression node) {
             AssertIsLiteralString(node.Separator);
             AssertIsValueExpression(node.Values);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ListExpression node) {
+        public override bool VisitStart(ListExpression node) {
             foreach(var item in node) {
                 AssertIsValueExpression(item);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, LiteralExpression node) { }
+        public override bool VisitStart(LiteralExpression node) => true;
 
-        public override void VisitStart(ASyntaxNode parent, NotConditionExpression node) {
+        public override bool VisitStart(NotConditionExpression node) {
             AssertIsConditionExpression(node.Value);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ObjectExpression node) {
+        public override bool VisitStart(ObjectExpression node) {
             foreach(var kv in node) {
                 AssertIsValueExpression(kv.Value);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, OrConditionExpression node) {
+        public override bool VisitStart(OrConditionExpression node) {
             AssertIsConditionExpression(node.LeftValue);
             AssertIsConditionExpression(node.RightValue);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) { }
+        public override bool VisitStart(ReferenceFunctionExpression node) => true;
 
-        public override void VisitStart(ASyntaxNode parent, SelectFunctionExpression node) {
+        public override bool VisitStart(SelectFunctionExpression node) {
             AssertIsValueExpression(node.Index);
             AssertIsValueExpression(node.Values);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SplitFunctionExpression node) {
+        public override bool VisitStart(SplitFunctionExpression node) {
             AssertIsLiteralString(node.Delimiter);
             AssertIsValueExpression(node.SourceString);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SubFunctionExpression node) { }
+        public override bool VisitStart(SubFunctionExpression node) => true;
 
-        public override void VisitStart(ASyntaxNode parent, TransformFunctionExpression node) { }
+        public override bool VisitStart(TransformFunctionExpression node) => true;
 
         private void ValidateAllowAttribute(ADeclaration node, LiteralExpression type, SyntaxNodeCollection<LiteralExpression> allow) {
             if(allow != null) {

@@ -226,7 +226,7 @@ Items:
 
             // assert
             ExpectNoMessages();
-            module!.Visit(null, new SyntaxHierarchyValidationAnalyzer());
+            module!.Visit(new SyntaxHierarchyValidationAnalyzer());
         }
     }
 }

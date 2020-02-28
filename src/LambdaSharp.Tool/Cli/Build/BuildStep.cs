@@ -102,7 +102,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // resolve references in AST
-            new ReferenceResolver(moduleBuilder).Visit();
+            new ResolveReferences(moduleBuilder).Resolve(moduleDeclaration);
             if(HasErrors) {
                 return false;
             }

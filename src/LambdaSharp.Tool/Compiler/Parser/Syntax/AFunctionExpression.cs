@@ -37,10 +37,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Value = Value?.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Value = Value?.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new Base64FunctionExpression {
@@ -77,12 +79,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            IpBlock = IpBlock.Visit(this, visitor) ?? throw new NullValueException();
-            Count = Count.Visit(this, visitor) ?? throw new NullValueException();
-            CidrBits = CidrBits.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            IpBlock = IpBlock.Visit(visitor) ?? throw new NullValueException();
+            Count = Count.Visit(visitor) ?? throw new NullValueException();
+            CidrBits = CidrBits.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new CidrFunctionExpression {
@@ -137,12 +141,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            MapName = MapName.Visit(this, visitor) ?? throw new NullValueException();
-            TopLevelKey = TopLevelKey.Visit(this, visitor) ?? throw new NullValueException();
-            SecondLevelKey = SecondLevelKey.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            MapName = MapName.Visit(visitor) ?? throw new NullValueException();
+            TopLevelKey = TopLevelKey.Visit(visitor) ?? throw new NullValueException();
+            SecondLevelKey = SecondLevelKey.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new FindInMapFunctionExpression {
@@ -191,11 +197,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            ReferenceName = ReferenceName.Visit(this, visitor) ?? throw new NullValueException();
-            AttributeName = AttributeName.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
+            AttributeName = AttributeName.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new GetAttFunctionExpression {
@@ -220,10 +228,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Region = Region.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Region = Region.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new GetAZsFunctionExpression {
@@ -267,12 +277,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Condition = Condition.Visit(this, visitor) ?? throw new NullValueException();
-            IfTrue = IfTrue.Visit(this, visitor) ?? throw new NullValueException();
-            IfFalse = IfFalse.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Condition = Condition.Visit(visitor) ?? throw new NullValueException();
+            IfTrue = IfTrue.Visit(visitor) ?? throw new NullValueException();
+            IfFalse = IfFalse.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new IfFunctionExpression {
@@ -305,10 +317,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            SharedValueToImport = SharedValueToImport.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            SharedValueToImport = SharedValueToImport.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new ImportValueFunctionExpression {
@@ -351,11 +365,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Separator = Separator.Visit(this, visitor) ?? throw new NullValueException();
-            Values = Values.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Separator = Separator.Visit(visitor) ?? throw new NullValueException();
+            Values = Values.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new JoinFunctionExpression {
@@ -393,11 +409,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Index = Index.Visit(this, visitor) ?? throw new NullValueException();
-            Values = Values?.Visit(this, visitor);
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Index = Index.Visit(visitor) ?? throw new NullValueException();
+            Values = Values?.Visit(visitor);
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new SelectFunctionExpression {
@@ -440,11 +458,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Delimiter = Delimiter.Visit(this, visitor) ?? throw new NullValueException();
-            SourceString = SourceString.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Delimiter = Delimiter.Visit(visitor) ?? throw new NullValueException();
+            SourceString = SourceString.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new SplitFunctionExpression {
@@ -492,11 +512,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            FormatString = FormatString.Visit(this, visitor) ?? throw new NullValueException();
-            Parameters = Parameters.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            FormatString = FormatString.Visit(visitor) ?? throw new NullValueException();
+            Parameters = Parameters.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new SubFunctionExpression {
@@ -528,11 +550,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            MacroName = MacroName.Visit(this, visitor) ?? throw new NullValueException();
-            Parameters = Parameters?.Visit(this, visitor);
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            MacroName = MacroName.Visit(visitor) ?? throw new NullValueException();
+            Parameters = Parameters?.Visit(visitor);
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new TransformFunctionExpression {
@@ -574,10 +598,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool Resolved { get; set; }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            ReferenceName = ReferenceName.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new ReferenceFunctionExpression {

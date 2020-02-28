@@ -51,7 +51,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         };
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
+        public override bool VisitStart(FunctionDeclaration node) {
 
             // validate attributes
             ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
@@ -109,7 +109,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 }
                 if(project == null) {
                     _builder.Log(Error.ProjectAttributeInvalid, node);
-                    return;
+                    return true;
                 }
 
                 // update 'Project' attribute with known project file that exists
@@ -266,6 +266,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     });
                 }
             }
+            return true;
 
             // local function
             string DetermineProjectFileLocation(string folderPath)
@@ -360,7 +361,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        public override void VisitStart(ASyntaxNode parent, ApiEventSourceDeclaration node) {
+        public override bool VisitStart(ApiEventSourceDeclaration node) {
 
             // extract HTTP method from route
             var api = node.EventSource.Value.Trim();
@@ -406,14 +407,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 _builder.Log(Error.ApiEventSourceUnsupportedIntegrationType, node.Integration);
             }
             node.ApiIntegrationType = integration;
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SchedulEventSourceDeclaration node) {
+        public override bool VisitStart(SchedulEventSourceDeclaration node) {
 
             // TODO: validate 'node.Schedule' is either valid cron or rate expression
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, S3EventSourceDeclaration node) {
+        public override bool VisitStart(S3EventSourceDeclaration node) {
 
             // validate events
             if(node.Events == null) {
@@ -430,9 +433,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             foreach(var unrecognizedEvent in unrecognizedEvents) {
                 _builder.Log(Error.S3EventSourceUnrecognizedEventType(unrecognizedEvent.Value), unrecognizedEvent);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) {
+        public override bool VisitStart(SlackCommandEventSourceDeclaration node) {
 
             // extract the API path
             node.SlackPath = node.EventSource.Value.Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -444,9 +448,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             ).Any()) {
                 _builder.Log(Error.SlackCommandEventSourceInvalidRestPath, node.EventSource);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, TopicEventSourceDeclaration node) {
+        public override bool VisitStart(TopicEventSourceDeclaration node) {
 
             // TODO: validate 'node.Filters'; see https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html
 
@@ -477,9 +482,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             //  - The total combination of values must not exceed 150. Calculate the total combination by multiplying the number of values in each array.
             //  - A filter policy can have a maximum of 5 attribute names.
             //  - The maximum size of a policy is 256 KB.
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SqsEventSourceDeclaration node) {
+        public override bool VisitStart(SqsEventSourceDeclaration node) {
 
             // validate 'BatchSize' for SQS source
             if(node.BatchSize == null) {
@@ -489,14 +495,16 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.SqsEventSourceInvalidBatchSize, node.BatchSize);
                 }
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, AlexaEventSourceDeclaration node) {
+        public override bool VisitStart(AlexaEventSourceDeclaration node) {
 
             // nothing to do
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, DynamoDBEventSourceDeclaration node) {
+        public override bool VisitStart(DynamoDBEventSourceDeclaration node) {
 
             // validate 'BatchSize' for DynamoDB stream source
             if(node.BatchSize == null) {
@@ -529,9 +537,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.DynamoDBEventSourceInvalidMaximumBatchingWindowInSeconds, node.BatchSize);
                 }
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, KinesisEventSourceDeclaration node) {
+        public override bool VisitStart(KinesisEventSourceDeclaration node) {
 
             // validate 'BatchSize' for Kinesis stream source
             if(node.BatchSize == null) {
@@ -565,9 +574,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.KinesisEventSourceInvalidMaximumBatchingWindowInSeconds, node.BatchSize);
                 }
             }
+            return true;
        }
 
-        public override void VisitStart(ASyntaxNode parent, WebSocketEventSourceDeclaration node) {
+        public override bool VisitStart(WebSocketEventSourceDeclaration node) {
 
             // see https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-apigatewayv2-route.html
 
@@ -619,6 +629,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if((node.AuthorizationType != null) && (node.EventSource.Value != "$connect")) {
                 _builder.Log(Error.WebSocketEventSourceInvalidAuthorizationConfigurationForRoute, node.AuthorizationType);
             }
+            return true;
         }
     }
 }

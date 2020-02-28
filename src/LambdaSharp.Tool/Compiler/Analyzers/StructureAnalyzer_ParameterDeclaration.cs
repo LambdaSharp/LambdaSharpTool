@@ -27,7 +27,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
     public partial class StructureAnalyzer {
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
+        public override bool VisitStart(ParameterDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
@@ -208,7 +208,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 node.ReferenceExpression = FnIf(
                     conditionDeclaration.FullName,
                     FnImportValue(FnSub("${DeploymentPrefix}${Import}", new ObjectExpression {
-                        ["Import"] = FnSelect("1", FnSplit("$", FnRef(node.FullName)))
+                        ["Import"] = FnSelect("1", FnSplit("$", node.ReferenceExpression))
                     })),
                     node.ReferenceExpression
                 );
@@ -284,6 +284,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ResourceTypeAttributeTypeIsInvalid, node.Type);
             }
+            return true;
         }
     }
 }

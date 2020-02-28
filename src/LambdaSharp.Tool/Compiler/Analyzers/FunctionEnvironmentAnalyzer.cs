@@ -32,11 +32,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public FunctionEnvironmentAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
+        public override bool VisitStart(FunctionDeclaration node) {
             var environment = node.Properties.GetOrCreate<ObjectExpression>("Environment", expression => _builder.Log(Error.FunctionPropertiesEnvironmentMustBeMap, expression));
             var variables = environment.GetOrCreate<ObjectExpression>("Variables", expression => _builder.Log(Error.FunctionPropertiesEnvironmentVariablesMustBeMap, expression));
             if(variables == null) {
-                return;
+                return true;
             }
 
             // set default environment variables
@@ -78,6 +78,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 var fullEnvName = "STR_" + kv.Key.Value.Replace("::", "_").ToUpperInvariant();
                 variables[fullEnvName] = kv.Value;
             }
+            return true;
         }
     }
 }

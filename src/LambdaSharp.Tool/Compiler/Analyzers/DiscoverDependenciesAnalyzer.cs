@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public DiscoverDependenciesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode? parent, ModuleDeclaration node) {
+        public override bool VisitStart(ModuleDeclaration node) {
             if(node.HasModuleRegistration) {
 
                 // add module reference as a shared dependency
@@ -77,9 +77,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // load CloudFormation resource specification
             _builder.LoadCloudFormationSpecAsync(node.CloudFormation).Wait();
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node) {
+        public override bool VisitStart(UsingModuleDeclaration node) {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.ModuleName.Value, out var moduleInfo)) {
@@ -94,9 +95,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // add module reference as a shared dependency
                 _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Shared, node.ModuleName).Wait();
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode? parent, NestedModuleDeclaration node) {
+        public override bool VisitStart(NestedModuleDeclaration node) {
 
             // check if module reference is valid
             if(!ModuleInfo.TryParse(node.Module?.Value, out var moduleInfo)) {
@@ -111,9 +113,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 // add module reference as a nested dependency
                 _builder.AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested, node.Module).Wait();
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration node) {
+        public override bool VisitStart(ResourceTypeDeclaration node) {
 
             // validate resource type name
             var resourceTypeNameParts = node.ItemName.Value.Split("::", 2);
@@ -125,9 +128,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
+            return true;
         }
 
-        public override ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration node) {
+        public override ASyntaxNode? VisitEnd(ResourceTypeDeclaration node) {
 
             // TODO: better rules for parsing CloudFormation types
             //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
@@ -184,7 +188,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             return node;
         }
 
-        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.PropertyTypeExpression node) {
+        public override bool VisitStart(ResourceTypeDeclaration.PropertyTypeExpression node) {
             if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
                 _builder.Log(Error.ResourceTypePropertyNameMustBeAlphanumeric, node);
             }
@@ -198,9 +202,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if((node.Required != null) && !node.Required.IsBool) {
                 _builder.Log(Error.ResourceTypePropertyRequiredMustBeBool, node.Required);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.AttributeTypeExpression node) {
+        public override bool VisitStart(ResourceTypeDeclaration.AttributeTypeExpression node) {
             if(!_builder.IsValidCloudFormationName(node.Name.Value)) {
                 _builder.Log(Error.ResourceTypeAttributeNameMustBeAlphanumeric, node);
             }
@@ -211,6 +216,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
                 _builder.Log(Error.ResourceTypeAttributeTypeIsInvalid, node.Type);
             }
+            return true;
         }
     }
 }

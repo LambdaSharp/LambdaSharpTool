@@ -102,16 +102,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
         public bool ContainsKey(string key) => _pairs.Any(item => item.Key.Value == key);
 
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
             for(var i = 0; i < _pairs.Count; ++i) {
                 var kv = _pairs[i];
                 _pairs[i] = new KeyValuePair(
-                    kv.Key.Visit(this, visitor) ?? throw new NullValueException(),
-                    kv.Value.Visit(this, visitor) ?? throw new NullValueException()
+                    kv.Key.Visit(visitor) ?? throw new NullValueException(),
+                    kv.Value.Visit(visitor) ?? throw new NullValueException()
                 );
             }
-            return visitor.VisitEnd(parent, this);
+            return visitor.VisitEnd(this);
         }
 
         public T? GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
@@ -164,12 +166,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            for(var i = 0; i < _items.Count; ++i) {
-                _items[i] = _items[i].Visit(this, visitor) ?? throw new NullValueException();
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
             }
-            return visitor.VisitEnd(parent, this);
+            for(var i = 0; i < _items.Count; ++i) {
+                _items[i] = _items[i].Visit(visitor) ?? throw new NullValueException();
+            }
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));
@@ -218,9 +222,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool IsNull => Type == LiteralType.Null;
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            return visitor.VisitEnd(this);
         }
 
         public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;

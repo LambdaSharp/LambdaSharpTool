@@ -54,16 +54,16 @@ Items:
             // act
             var builder = new Builder(new BuilderDependencyProvider(Messages));
             builder.ToolVersion = VersionInfo.Parse(Environment.GetEnvironmentVariable("LAMBDASHARP_VERSION"));
-            moduleDeclaration = moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(builder));
-            moduleDeclaration = moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
-            moduleDeclaration = moduleDeclaration.Visit(parent: null, new LinkReferencesAnalyzer(builder));
+            moduleDeclaration = moduleDeclaration.Visit(new DiscoverDependenciesAnalyzer(builder));
+            moduleDeclaration = moduleDeclaration.Visit(new StructureAnalyzer(builder));
+            moduleDeclaration = moduleDeclaration.Visit(new LinkReferencesAnalyzer(builder));
 
 // TODO: debugging only
 foreach(var item in builder.ItemDeclarations.OrderBy(item => item.FullName)) {
     builder.Log(new Debug($"{item.FullName} -> {item.GetType().Name} @ {item.SourceLocation}"));
 }
 
-            new ReferenceResolver(builder).Visit();
+            new ResolveReferences(builder).Resolve(moduleDeclaration);
 
             // assert
             ExpectNoMessages();

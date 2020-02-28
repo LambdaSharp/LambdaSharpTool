@@ -50,10 +50,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            ReferenceName = ReferenceName.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new ConditionExpression {
@@ -87,11 +89,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
-            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            LeftValue = LeftValue.Visit(visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new EqualsConditionExpression {
@@ -119,10 +123,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            Value = Value.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            Value = Value.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new NotConditionExpression {
@@ -155,11 +161,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
-            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            LeftValue = LeftValue.Visit(visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new AndConditionExpression {
@@ -193,11 +201,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
-            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            LeftValue = LeftValue.Visit(visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new OrConditionExpression {

@@ -74,7 +74,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ModuleDeclaration ParentModuleDeclaration => Parents.OfType<ModuleDeclaration>().First();
 
         //--- Abstract Methods ---
-        public abstract ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor);
+        public abstract ASyntaxNode? VisitNode(ISyntaxVisitor visitor);
 
         //--- Methods ---
         [return: NotNullIfNotNull("node") ]
@@ -106,8 +106,8 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public static class ASyntaxNodeEx {
 
         //--- Extension Methods ---
-        public static T? Visit<T>(this T node, ASyntaxNode? parent, ISyntaxVisitor visitor) where T : ASyntaxNode {
-            var result = (T?)node.VisitNode(parent, visitor);
+        public static T? Visit<T>(this T node, ISyntaxVisitor visitor) where T : ASyntaxNode {
+            var result = (T?)node.VisitNode(visitor);
             if(result != null) {
                 result.SourceLocation = node.SourceLocation;
             }
@@ -156,12 +156,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public SyntaxNodeCollection<T> Visit(ASyntaxNode? parent, ISyntaxVisitor visitor) {
+        public SyntaxNodeCollection<T> Visit(ISyntaxVisitor visitor) {
             var start = 0;
             do {
                 var count = _nodes.Count;
                 for(var i = start; i < count; ++i) {
-                    _nodes[i] = _nodes[i].Visit(Parent, visitor) ?? throw new NullValueException();
+                    _nodes[i] = _nodes[i].Visit(visitor) ?? throw new NullValueException();
                 }
                 start = count;
             } while(start < _nodes.Count);

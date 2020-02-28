@@ -25,7 +25,107 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
-    public class ReferenceResolver {
+    public class ResolveReferences {
+
+        //--- Types ---
+        private class Analyzer : ASyntaxAnalyzer {
+
+            //--- Fields ---
+            private readonly ResolveReferences _logic;
+            private readonly AItemDeclaration _declaration;
+            private readonly Action<string, ASyntaxNode> _missing;
+
+            //--- Constructors ---
+            public Analyzer(ResolveReferences logic, AItemDeclaration declaration, Action<string, ASyntaxNode> missing) {
+                _logic = logic ?? throw new ArgumentNullException(nameof(logic));
+                _declaration = declaration;
+                _missing = missing;
+            }
+
+            //--- Methods ---
+            public override bool VisitStart(ReferenceFunctionExpression node) {
+
+                // attempt to resolve resource reference
+                if(!node.Resolved && !_logic._freeDeclarations.ContainsKey(node.ReferenceName.Value)) {
+                    _logic.DebugWriteLine(() => _logic._boundDeclarations.ContainsKey(node.ReferenceName.Value) ? null : $"NOT FOUND => {node.ReferenceName.Value}");
+                    _missing?.Invoke(node.ReferenceName.Value, node.ReferenceName);
+                }
+
+                // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
+
+                // // check if we're accessing a conditional resource from a resource with a different condition or no condition
+                // var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
+                // if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
+                //     _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
+                //     if(resourceItem.Condition == null) {
+                //         LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
+                //     } else if(resourceItem.Condition != freeItemConditionName) {
+                //          _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
+                //         LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
+                //     }
+                // }
+                return true;
+            }
+
+            public override bool VisitStart(GetAttFunctionExpression node) {
+
+                // attempt to resolve resource reference
+                if(!_logic._freeDeclarations.ContainsKey(node.ReferenceName.Value)) {
+                    _logic.DebugWriteLine(() => _logic._boundDeclarations.ContainsKey(node.ReferenceName.Value) ? null : $"NOT FOUND => {node.ReferenceName.Value}");
+                    _missing?.Invoke(node.ReferenceName.Value, node.ReferenceName);
+                }
+
+                // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
+
+                // // check if we're accessing a conditional resource from a resource with a different condition or no condition
+                // var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
+                // if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
+                //     _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
+                //     if(resourceItem.Condition == null) {
+                //         LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
+                //     } else if(resourceItem.Condition != freeItemConditionName) {
+                //          _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
+                //         LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
+                //     }
+                // }
+                return true;
+            }
+
+            public override bool VisitStart(ConditionExpression node) {
+
+                // attempt to resolve condition reference
+                if(!_logic._freeDeclarations.ContainsKey(node.ReferenceName.Value)) {
+                    _logic.DebugWriteLine(() => _logic._boundDeclarations.ContainsKey(node.ReferenceName.Value) ? null : $"NOT FOUND => {node.ReferenceName.Value}");
+                    _missing?.Invoke(node.ReferenceName.Value, node.ReferenceName);
+                }
+                return true;
+            }
+
+            public override bool VisitStart(FindInMapFunctionExpression node) {
+
+                // attempt to resolve mapping reference
+                if(!_logic._freeDeclarations.ContainsKey(node.MapName.Value)) {
+                    _logic.DebugWriteLine(() => _logic._boundDeclarations.ContainsKey(node.MapName.Value) ? null : $"NOT FOUND => {node.MapName.Value}");
+                    _missing?.Invoke(node.MapName.Value, node.MapName);
+                }
+                return true;
+            }
+
+            public override bool VisitStart(ParameterDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(PseudoParameterDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(ImportDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(VariableDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(GroupDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(ConditionDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(ResourceDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(NestedModuleDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(PackageDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(FunctionDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(FunctionDeclaration.VpcExpression node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(MappingDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(ResourceTypeDeclaration node) => object.ReferenceEquals(node, _declaration);
+            public override bool VisitStart(MacroDeclaration node) => object.ReferenceEquals(node, _declaration);
+        }
 
         //--- Fields ---
         private readonly Builder _builder;
@@ -33,15 +133,15 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private Dictionary<string, AItemDeclaration> _boundDeclarations = new Dictionary<string, AItemDeclaration>();
 
         //--- Constructors ---
-        public ReferenceResolver(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+        public ResolveReferences(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public void Visit() {
+        public void Resolve(ModuleDeclaration module) {
             _freeDeclarations.Clear();
             _boundDeclarations.Clear();
             DiscoverDeclarations();
             ResolveDeclarations();
-            ReportUnresolvedDeclarations();
+            ReportUnresolvedDeclarations(module);
 
             // remove declarations that are not reachable and are not required
             DiscardUnreachableDeclarations();
@@ -64,6 +164,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private void ResolveDeclarations() {
             bool progress;
             do {
+                DebugWriteLine(() => "RESOLVING...");
                 progress = false;
                 foreach(var item in new List<AItemDeclaration>(_boundDeclarations.Values)) {
 
@@ -74,10 +175,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     //  a circular dependency and we stop.
 
                     var doesNotContainBoundItems = true;
-                    item.ReferenceExpression = Substitute(item, (missingName, _) => {
+                    item.Visit(new Analyzer(this, item, (missingName, node) => {
                         DebugWriteLine(() => $"BOUND REF => {item.FullName} -> {missingName}");
                         doesNotContainBoundItems = false;
-                    });
+                    }));
                     if(doesNotContainBoundItems) {
 
                         // capture that progress towards resolving all bound items has been made;
@@ -94,19 +195,14 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } while(progress);
         }
 
-        private void ReportUnresolvedDeclarations() {
-            foreach(var declaration in _builder.ItemDeclarations) {
-                Substitute(declaration, ReportMissingReference);
-            }
-
-            // local functions
-            void ReportMissingReference(string missingName, ASyntaxNode node) {
+        private void ReportUnresolvedDeclarations(ModuleDeclaration module) {
+            module.Visit(new Analyzer(this, declaration: null, (missingName, node) => {
                 if(_boundDeclarations.TryGetValue(missingName, out var declaration)) {
                     _builder.Log(Error.ReferenceWithCircularDependency(missingName), node);
                 } else {
                     _builder.Log(Error.ReferenceDoesNotExist(missingName), node);
                 }
-            }
+            }));
         }
 
         private void DiscardUnreachableDeclarations() {
@@ -131,168 +227,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             ) {
                 _builder.Log(Warning.ReferenceIsUnreachable(declaration.FullName), declaration);
             }
-        }
-
-        private AExpression Substitute(AItemDeclaration declaration, Action<string, ASyntaxNode> missing = null) {
-
-            // TODO: I think we can do this much cleaner
-            if(declaration.ReferenceExpression == null) {
-                declaration.ReferenceExpression = ASyntaxAnalyzer.FnRef(declaration.FullName, resolved: true);
-                return declaration.ReferenceExpression;
-            } else if((declaration.ReferenceExpression is ReferenceFunctionExpression referenceFunctionExpression) && referenceFunctionExpression.Resolved) {
-                return declaration.ReferenceExpression;
-            }
-
-            return Visit(declaration.ReferenceExpression, value => {
-                switch(value) {
-                case ReferenceFunctionExpression referenceFunctionExpression:
-
-                    // attempt to resolve resource reference
-                    if(!_freeDeclarations.ContainsKey(referenceFunctionExpression.ReferenceName.Value)) {
-                        DebugWriteLine(() => _boundDeclarations.ContainsKey(referenceFunctionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {referenceFunctionExpression.ReferenceName.Value}");
-                        missing?.Invoke(referenceFunctionExpression.ReferenceName.Value, referenceFunctionExpression.ReferenceName);
-                    }
-                    return value;
-                case GetAttFunctionExpression getAttFunctionExpression:
-
-                    // attempt to resolve resource reference
-                    if(!_freeDeclarations.ContainsKey(getAttFunctionExpression.ReferenceName.Value)) {
-                        DebugWriteLine(() => _boundDeclarations.ContainsKey(getAttFunctionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {getAttFunctionExpression.ReferenceName.Value}");
-                        missing?.Invoke(getAttFunctionExpression.ReferenceName.Value, getAttFunctionExpression.ReferenceName);
-                    }
-                    return value;
-                case ConditionExpression conditionExpression:
-
-                    // attempt to resolve condition reference
-                    if(!_freeDeclarations.ContainsKey(conditionExpression.ReferenceName.Value)) {
-                        DebugWriteLine(() => _boundDeclarations.ContainsKey(conditionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {conditionExpression.ReferenceName.Value}");
-                        missing?.Invoke(conditionExpression.ReferenceName.Value, conditionExpression.ReferenceName);
-                    }
-                    return value;
-                case FindInMapFunctionExpression findInMapFunctionExpression:
-
-                    // attempt to resolve mapping reference
-                    if(!_freeDeclarations.ContainsKey(findInMapFunctionExpression.MapName.Value)) {
-                        DebugWriteLine(() => _boundDeclarations.ContainsKey(findInMapFunctionExpression.MapName.Value) ? null : $"NOT FOUND => {findInMapFunctionExpression.MapName.Value}");
-                        missing?.Invoke(findInMapFunctionExpression.MapName.Value, findInMapFunctionExpression.MapName);
-                    }
-                    return value;
-                default:
-                    return value;
-                }
-
-                // TODO (2019-01-10, bjorg): we need to follow 'Fn::If' expressions to make a better determination
-
-                // // check if we're accessing a conditional resource from a resource with a different condition or no condition
-                // var freeItemConditionName = (freeItem as AResourceItem)?.Condition;
-                // if((freeItemConditionName != null) && (item is AResourceItem resourceItem)) {
-                //     _builder.TryGetItem(freeItemConditionName, out var freeItemCondition);
-                //     if(resourceItem.Condition == null) {
-                //         LogWarn($"possible reference to conditional item {freeItem.FullName} from non-conditional item");
-                //     } else if(resourceItem.Condition != freeItemConditionName) {
-                //          _builder.TryGetItem(resourceItem.Condition, out var resourceItemCondition);
-                //         LogWarn($"conditional item {freeItem.FullName} with condition '{freeItemCondition?.FullName ?? freeItemConditionName}' is accessed by item with condition '{resourceItemCondition.FullName ?? resourceItem.Condition}'");
-                //     }
-                // }
-            });
-        }
-
-        private AExpression Visit(AExpression value, Func<AExpression, AExpression> visitor) {
-
-            // recursively visit all members of each expression and substitute them
-            switch(value) {
-            case LiteralExpression _:
-
-                // nothing to do
-                break;
-            case ListExpression listExpression:
-                for(var i = 0; i < listExpression.Count; ++i) {
-                    listExpression[i] = Visit(listExpression[i], visitor);
-                }
-                break;
-            case ObjectExpression objectExpression:
-                foreach(var item in objectExpression) {
-                    item.Value = Visit(item.Value, visitor);
-                }
-                break;
-            case Base64FunctionExpression base64FunctionExpression:
-                base64FunctionExpression.Value = Visit(base64FunctionExpression.Value, visitor);
-                break;
-            case CidrFunctionExpression cidrFunctionExpression:
-                cidrFunctionExpression.IpBlock = Visit(cidrFunctionExpression.IpBlock, visitor);
-                cidrFunctionExpression.Count = Visit(cidrFunctionExpression.Count, visitor);
-                cidrFunctionExpression.CidrBits = Visit(cidrFunctionExpression.CidrBits, visitor);
-                break;
-            case FindInMapFunctionExpression findInMapFunctionExpression:
-                findInMapFunctionExpression.TopLevelKey = Visit(findInMapFunctionExpression.TopLevelKey, visitor);
-                findInMapFunctionExpression.SecondLevelKey = Visit(findInMapFunctionExpression.SecondLevelKey, visitor);
-                break;
-            case GetAttFunctionExpression getAttFunctionExpression:
-                getAttFunctionExpression.AttributeName = Visit(getAttFunctionExpression.AttributeName, visitor);
-                break;
-            case GetAZsFunctionExpression getAZsFunctionExpression:
-                getAZsFunctionExpression.Region = Visit(getAZsFunctionExpression.Region, visitor);
-                break;
-            case IfFunctionExpression ifFunctionExpression:
-                ifFunctionExpression.Condition = Visit(ifFunctionExpression.Condition, visitor);
-                ifFunctionExpression.IfTrue = Visit(ifFunctionExpression.IfTrue, visitor);
-                ifFunctionExpression.IfFalse = Visit(ifFunctionExpression.IfFalse, visitor);
-                break;
-            case ImportValueFunctionExpression importValueFunctionExpression:
-                importValueFunctionExpression.SharedValueToImport = Visit(importValueFunctionExpression.SharedValueToImport, visitor);
-                break;
-            case JoinFunctionExpression joinFunctionExpression:
-                joinFunctionExpression.Separator = (LiteralExpression)Visit(joinFunctionExpression.Separator, visitor);
-                joinFunctionExpression.Values = Visit(joinFunctionExpression.Values, visitor);
-                break;
-            case SelectFunctionExpression selectFunctionExpression:
-                selectFunctionExpression.Index = Visit(selectFunctionExpression.Index, visitor);
-                selectFunctionExpression.Values = Visit(selectFunctionExpression.Values, visitor);
-                break;
-            case SplitFunctionExpression splitFunctionExpression:
-                splitFunctionExpression.Delimiter = (LiteralExpression)Visit(splitFunctionExpression.Delimiter, visitor);
-                splitFunctionExpression.SourceString = Visit(splitFunctionExpression.SourceString, visitor);
-                break;
-            case SubFunctionExpression subFunctionExpression:
-                subFunctionExpression.Parameters = (ObjectExpression)Visit(subFunctionExpression.Parameters, visitor);
-                break;
-            case TransformFunctionExpression transformFunctionExpression:
-                if(transformFunctionExpression.Parameters != null) {
-                    transformFunctionExpression.Parameters = (ObjectExpression)Visit(transformFunctionExpression.Parameters, visitor);
-                }
-                break;
-            case ReferenceFunctionExpression referenceFunctionExpression:
-
-                // nothing to do
-                break;
-            case ConditionExpression conditionExpression:
-
-                // nothing to do
-                break;
-            case EqualsConditionExpression equalsConditionExpression:
-                equalsConditionExpression.LeftValue = Visit(equalsConditionExpression.LeftValue, visitor);
-                equalsConditionExpression.RightValue = Visit(equalsConditionExpression.RightValue, visitor);
-                break;
-            case NotConditionExpression notConditionExpression:
-                notConditionExpression.Value = Visit(notConditionExpression.Value, visitor);
-                break;
-            case AndConditionExpression andConditionExpression:
-                andConditionExpression.LeftValue = Visit(andConditionExpression.LeftValue, visitor);
-                andConditionExpression.RightValue = Visit(andConditionExpression.RightValue, visitor);
-                break;
-            case OrConditionExpression orConditionExpression:
-                orConditionExpression.LeftValue = Visit(orConditionExpression.LeftValue, visitor);
-                orConditionExpression.RightValue = Visit(orConditionExpression.RightValue, visitor);
-                break;
-            case null:
-                throw new NullValueException();
-            default:
-                _builder.Log(Error.UnrecognizedExpressionType(value), value);
-                return value;
-            }
-
-            // visit item itself
-            return visitor(value);
         }
 
         private void DebugWriteLine(Func<string> lazyMessage) {

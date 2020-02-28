@@ -27,7 +27,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
     public partial class StructureAnalyzer {
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
+        public override bool VisitStart(ModuleDeclaration node) {
             _builder.ModuleDeclaration = node;
 
             // ensure module version is present and valid
@@ -428,9 +428,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     If = FnCondition("UseCoreServices")
                 });
             }
+            return true;
         }
 
-        public override ASyntaxNode VisitEnd(ASyntaxNode parent, ModuleDeclaration node) {
+        public override ASyntaxNode VisitEnd(ModuleDeclaration node) {
 
             // permissions needed for lambda functions to exist in a VPC
             if(_builder.ItemDeclarations.OfType<FunctionDeclaration>().Any()) {

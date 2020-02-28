@@ -48,11 +48,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Methods ---
-            public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-                visitor.VisitStart(parent, this);
-                Version = Version?.Visit(this, visitor);
-                Region = Region?.Visit(this, visitor);
-                return visitor.VisitEnd(parent, this);
+            public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+                if(!visitor.VisitStart(this)) {
+                return this;
+            }
+                Version = Version?.Visit(visitor);
+                Region = Region?.Visit(visitor);
+                return visitor.VisitEnd(this);
             }
         }
 
@@ -125,16 +127,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            AssertIsSame(ModuleName, ModuleName.Visit(this, visitor));
-            Version = Version.Visit(this, visitor) ?? throw new NullValueException();
-            Description = Description?.Visit(this, visitor);
-            Secrets = Secrets.Visit(this, visitor);
-            Using = Using.Visit(this, visitor);
-            Items = Items.Visit(this, visitor);
-            CloudFormation = CloudFormation?.Visit(this, visitor);
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            AssertIsSame(ModuleName, ModuleName.Visit(visitor));
+            Version = Version.Visit(visitor) ?? throw new NullValueException();
+            Description = Description?.Visit(visitor);
+            Secrets = Secrets.Visit(visitor);
+            Using = Using.Visit(visitor);
+            Items = Items.Visit(visitor);
+            CloudFormation = CloudFormation?.Visit(visitor);
+            return visitor.VisitEnd(this);
         }
     }
 
@@ -158,11 +162,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression ModuleName { get; }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
-            visitor.VisitStart(parent, this);
-            AssertIsSame(ModuleName, ModuleName.Visit(this, visitor));
-            Description = Description?.Visit(this, visitor);
-            return visitor.VisitEnd(parent, this);
+        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
+            if(!visitor.VisitStart(this)) {
+                return this;
+            }
+            AssertIsSame(ModuleName, ModuleName.Visit(visitor));
+            Description = Description?.Visit(visitor);
+            return visitor.VisitEnd(this);
         }
     }
 }

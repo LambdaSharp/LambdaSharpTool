@@ -116,105 +116,105 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         //--- Methods ---
-        public virtual void VisitStart(ASyntaxNode? parent, ModuleDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ModuleDeclaration node) => node;
-        public void VisitStart(ASyntaxNode? parent, ModuleDeclaration.CloudFormationSpecExpression node) { }
-        public ASyntaxNode? VisitEnd(ASyntaxNode? parent, ModuleDeclaration.CloudFormationSpecExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, UsingModuleDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, UsingModuleDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ApiEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ApiEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SchedulEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SchedulEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, S3EventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, S3EventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SlackCommandEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SlackCommandEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, TopicEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, TopicEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SqsEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SqsEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, AlexaEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, AlexaEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, DynamoDBEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, DynamoDBEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, KinesisEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, KinesisEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, WebSocketEventSourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, WebSocketEventSourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, Base64FunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, Base64FunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, CidrFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, CidrFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, FindInMapFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, FindInMapFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, GetAttFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, GetAttFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, GetAZsFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, GetAZsFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, IfFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, IfFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ImportValueFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ImportValueFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, JoinFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, JoinFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SelectFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SelectFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SplitFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SplitFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, SubFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, SubFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, TransformFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, TransformFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ReferenceFunctionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ReferenceFunctionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ParameterDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ParameterDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, PseudoParameterDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, PseudoParameterDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ImportDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ImportDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, VariableDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, VariableDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, GroupDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, GroupDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ConditionDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ConditionDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ResourceDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, NestedModuleDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, NestedModuleDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, PackageDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, PackageDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, FunctionDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, FunctionDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, FunctionDeclaration.VpcExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, FunctionDeclaration.VpcExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, MappingDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, MappingDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.PropertyTypeExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration.PropertyTypeExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.AttributeTypeExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration.AttributeTypeExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, MacroDeclaration node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, MacroDeclaration node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ObjectExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ObjectExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ListExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ListExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, LiteralExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, LiteralExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, ConditionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, ConditionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, EqualsConditionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, EqualsConditionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, NotConditionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, NotConditionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, AndConditionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, AndConditionExpression node) => node;
-        public virtual void VisitStart(ASyntaxNode? parent, OrConditionExpression node) { }
-        public virtual ASyntaxNode? VisitEnd(ASyntaxNode? parent, OrConditionExpression node) => node;
+        public virtual bool VisitStart(ModuleDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ModuleDeclaration node) => node;
+        public bool VisitStart(ModuleDeclaration.CloudFormationSpecExpression node) => true;
+        public ASyntaxNode? VisitEnd(ModuleDeclaration.CloudFormationSpecExpression node) => node;
+        public virtual bool VisitStart(UsingModuleDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(UsingModuleDeclaration node) => node;
+        public virtual bool VisitStart(ApiEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ApiEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(SchedulEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(SchedulEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(S3EventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(S3EventSourceDeclaration node) => node;
+        public virtual bool VisitStart(SlackCommandEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(SlackCommandEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(TopicEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(TopicEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(SqsEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(SqsEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(AlexaEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(AlexaEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(DynamoDBEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(DynamoDBEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(KinesisEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(KinesisEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(WebSocketEventSourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(WebSocketEventSourceDeclaration node) => node;
+        public virtual bool VisitStart(Base64FunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(Base64FunctionExpression node) => node;
+        public virtual bool VisitStart(CidrFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(CidrFunctionExpression node) => node;
+        public virtual bool VisitStart(FindInMapFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(FindInMapFunctionExpression node) => node;
+        public virtual bool VisitStart(GetAttFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(GetAttFunctionExpression node) => node;
+        public virtual bool VisitStart(GetAZsFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(GetAZsFunctionExpression node) => node;
+        public virtual bool VisitStart(IfFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(IfFunctionExpression node) => node;
+        public virtual bool VisitStart(ImportValueFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ImportValueFunctionExpression node) => node;
+        public virtual bool VisitStart(JoinFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(JoinFunctionExpression node) => node;
+        public virtual bool VisitStart(SelectFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(SelectFunctionExpression node) => node;
+        public virtual bool VisitStart(SplitFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(SplitFunctionExpression node) => node;
+        public virtual bool VisitStart(SubFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(SubFunctionExpression node) => node;
+        public virtual bool VisitStart(TransformFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(TransformFunctionExpression node) => node;
+        public virtual bool VisitStart(ReferenceFunctionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ReferenceFunctionExpression node) => node;
+        public virtual bool VisitStart(ParameterDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ParameterDeclaration node) => node;
+        public virtual bool VisitStart(PseudoParameterDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(PseudoParameterDeclaration node) => node;
+        public virtual bool VisitStart(ImportDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ImportDeclaration node) => node;
+        public virtual bool VisitStart(VariableDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(VariableDeclaration node) => node;
+        public virtual bool VisitStart(GroupDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(GroupDeclaration node) => node;
+        public virtual bool VisitStart(ConditionDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ConditionDeclaration node) => node;
+        public virtual bool VisitStart(ResourceDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ResourceDeclaration node) => node;
+        public virtual bool VisitStart(NestedModuleDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(NestedModuleDeclaration node) => node;
+        public virtual bool VisitStart(PackageDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(PackageDeclaration node) => node;
+        public virtual bool VisitStart(FunctionDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(FunctionDeclaration node) => node;
+        public virtual bool VisitStart(FunctionDeclaration.VpcExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(FunctionDeclaration.VpcExpression node) => node;
+        public virtual bool VisitStart(MappingDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(MappingDeclaration node) => node;
+        public virtual bool VisitStart(ResourceTypeDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(ResourceTypeDeclaration node) => node;
+        public virtual bool VisitStart(ResourceTypeDeclaration.PropertyTypeExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ResourceTypeDeclaration.PropertyTypeExpression node) => node;
+        public virtual bool VisitStart(ResourceTypeDeclaration.AttributeTypeExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ResourceTypeDeclaration.AttributeTypeExpression node) => node;
+        public virtual bool VisitStart(MacroDeclaration node) => true;
+        public virtual ASyntaxNode? VisitEnd(MacroDeclaration node) => node;
+        public virtual bool VisitStart(ObjectExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ObjectExpression node) => node;
+        public virtual bool VisitStart(ListExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ListExpression node) => node;
+        public virtual bool VisitStart(LiteralExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(LiteralExpression node) => node;
+        public virtual bool VisitStart(ConditionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(ConditionExpression node) => node;
+        public virtual bool VisitStart(EqualsConditionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(EqualsConditionExpression node) => node;
+        public virtual bool VisitStart(NotConditionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(NotConditionExpression node) => node;
+        public virtual bool VisitStart(AndConditionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(AndConditionExpression node) => node;
+        public virtual bool VisitStart(OrConditionExpression node) => true;
+        public virtual ASyntaxNode? VisitEnd(OrConditionExpression node) => node;
     }
 }

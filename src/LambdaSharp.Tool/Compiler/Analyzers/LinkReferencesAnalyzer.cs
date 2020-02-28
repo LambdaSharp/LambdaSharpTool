@@ -51,7 +51,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         public LinkReferencesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
-        public override void VisitStart(ASyntaxNode parent, GetAttFunctionExpression node) {
+        public override bool VisitStart(GetAttFunctionExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference
@@ -73,9 +73,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ReferenceFunctionExpression node) {
+        public override bool VisitStart(ReferenceFunctionExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference
@@ -132,9 +133,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, SubFunctionExpression node) {
+        public override bool VisitStart(SubFunctionExpression node) {
 
             // NOTE (2019-12-07, bjorg): convert all nested !Ref and !GetAtt expressions into
             //  explit expressions using local !Sub parameters; this allows us track these
@@ -197,9 +199,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             )) {
                 SourceLocation = node.FormatString.SourceLocation
             };
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ConditionExpression node) {
+        public override bool VisitStart(ConditionExpression node) {
             var referenceName = node.ReferenceName;
 
             // validate reference
@@ -212,9 +215,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, FindInMapFunctionExpression node) {
+        public override bool VisitStart(FindInMapFunctionExpression node) {
             var referenceName = node.MapName;
 
             // validate reference
@@ -227,33 +231,40 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(referenceName.Value), node);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
+        public override bool VisitStart(ParameterDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
+        public override bool VisitStart(ImportDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
+        public override bool VisitStart(VariableDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
+        public override bool VisitStart(ResourceDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, PackageDeclaration node) {
+        public override bool VisitStart(PackageDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, FunctionDeclaration node) {
+        public override bool VisitStart(FunctionDeclaration node) {
             ValidateFunctionScope(node.Scope, node);
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, ResourceTypeDeclaration node) {
+        public override bool VisitStart(ResourceTypeDeclaration node) {
             if(_builder.TryGetItemDeclaration(node.Handler.Value, out var referencedDeclaration)) {
                 if(referencedDeclaration is FunctionDeclaration) {
 
@@ -267,9 +278,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
+            return true;
         }
 
-        public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
+        public override bool VisitStart(MacroDeclaration node) {
             if(_builder.TryGetItemDeclaration(node.Handler.Value, out var referencedDeclaration)) {
                 if(!(referencedDeclaration is FunctionDeclaration)) {
                     _builder.Log(Error.HandlerMustBeAFunction, node.Handler);
@@ -277,6 +289,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else {
                 _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
+            return true;
         }
 
         private void ValidateFunctionScope(SyntaxNodeCollection<LiteralExpression> scopeExpression, AItemDeclaration declaration) {
