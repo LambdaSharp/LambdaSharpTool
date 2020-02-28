@@ -40,5 +40,19 @@ namespace LambdaSharp.Tool.Compiler {
         public int ColumnNumberStart { get; private set; }
         public int LineNumberEnd { get; private set; }
         public int ColumnNumberEnd { get; private set; }
+
+        //--- Methods ---
+        public override string ToString() {
+            if(FilePath == "") {
+                return "";
+            }
+            if(LineNumberStart == 0) {
+                return FilePath;
+            }
+            if(ColumnNumberStart == 0) {
+                return $"{FilePath}({LineNumberStart})";
+            }
+            return $"{FilePath}({LineNumberStart},{ColumnNumberStart})";
+        }
     }
 }

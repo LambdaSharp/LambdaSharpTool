@@ -127,7 +127,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // NOTE (2019-11-05, bjorg): additional processing happens in VisitEnd() after the property and attribute nodes have been processed
         }
 
-        public override void VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration node) {
+        public override ASyntaxNode? VisitEnd(ASyntaxNode? parent, ResourceTypeDeclaration node) {
 
             // TODO: better rules for parsing CloudFormation types
             //  - https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html
@@ -181,6 +181,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(!_builder.LocalResourceTypes.TryAdd(resourceType.Type, resourceType)) {
                 _builder.Log(Error.ResourceTypeDuplicateName(resourceType.Type), node);
             }
+            return node;
         }
 
         public override void VisitStart(ASyntaxNode? parent, ResourceTypeDeclaration.PropertyTypeExpression node) {

@@ -25,10 +25,21 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public abstract class AItemDeclaration : ADeclaration {
 
         //--- Types ---
+        public readonly struct ConditionBranch {
+
+            //--- Constructors ---
+            public ConditionBranch(bool condition, AExpression expression)
+                => (IfBranch, Expression) = (condition, expression ?? throw new ArgumentNullException(nameof(expression)));
+
+            //--- Properties ---
+            public bool IfBranch { get; }
+            public AExpression Expression { get; }
+        }
+
         public class DependencyRecord {
 
             //--- Constructors ---
-            public DependencyRecord(AItemDeclaration referencedDeclaration, IEnumerable<AExpression> conditions, AExpression expression) {
+            public DependencyRecord(AItemDeclaration referencedDeclaration, IEnumerable<ConditionBranch> conditions, AExpression expression) {
                 ReferencedDeclaration = referencedDeclaration ?? throw new ArgumentNullException(nameof(referencedDeclaration));
                 Conditions = conditions ?? throw new ArgumentNullException(nameof(conditions));
                 Expression = expression ?? throw new ArgumentNullException(nameof(expression));
@@ -36,20 +47,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
             //--- Properties ---
             public AItemDeclaration ReferencedDeclaration { get; }
-            public IEnumerable<AExpression> Conditions { get; }
+            public IEnumerable<ConditionBranch> Conditions { get; }
             public AExpression Expression { get; }
         }
 
         //--- Fields ---
         private string? _logicalId;
         private LiteralExpression? _description;
+        private AExpression? _referenceExpression;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
         private readonly List<AExpression> _reverseDependencies = new List<AExpression>();
+        private SyntaxNodeCollection<AItemDeclaration> _declarations;
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
             ItemName = SetParent(itemName) ?? throw new ArgumentNullException(nameof(itemName));
-            Declarations = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
+            _declarations = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -69,12 +82,19 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public bool DiscardIfNotReachable { get; set; }
-        public SyntaxNodeCollection<AItemDeclaration> Declarations { get; }
+
+        public SyntaxNodeCollection<AItemDeclaration> Declarations {
+            get => _declarations ?? throw new InvalidOperationException();
+            set => _declarations = SetParent(value) ?? throw new ArgumentNullException();
+        }
 
         /// <summary>
         /// CloudFormation expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
         /// </summary>
-        public AExpression? ReferenceExpression { get; set; }
+        public AExpression? ReferenceExpression {
+            get => _referenceExpression;
+            set => _referenceExpression = SetParent(value);
+        }
 
         /// <summary>
         /// List of declarations on which this declaration depends on.
@@ -104,31 +124,27 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             referencedDeclaration._reverseDependencies.Add(dependentExpression);
 
             // local functions
-            IEnumerable<AExpression> FindConditions(ASyntaxNode node) {
-                var conditions = new List<AExpression>();
-                ASyntaxNode? previousParent = null;
+            IEnumerable<ConditionBranch> FindConditions(ASyntaxNode node) {
+                var conditions = new List<ConditionBranch>();
+                ASyntaxNode? child = node;
                 foreach(var parent in node.Parents) {
 
                     // check if parent is an !If expression
                     if(parent is IfFunctionExpression ifParent) {
 
                         // determine if reference came from IfTrue or IfFalse path
-                        if(object.ReferenceEquals(ifParent.IfTrue, previousParent)) {
-                            conditions.Add(ifParent.Condition);
-                        } else if(object.ReferenceEquals(ifParent.IfFalse, previousParent)) {
+                        if(object.ReferenceEquals(child, ifParent.Condition)) {
 
-                            // TODO: review this one more time
-
-                            // for IfFalse, create a !Not intermediary node
-                            conditions.Add(new NotConditionExpression {
-                                SourceLocation = ifParent.Condition.SourceLocation,
-                                Value = ifParent.Condition
-                            });
+                            // nothing to do
+                        } else if(object.ReferenceEquals(child, ifParent.IfTrue)) {
+                            conditions.Add(new ConditionBranch(condition: true, ifParent.Condition));
+                        } else if(object.ReferenceEquals(child, ifParent.IfFalse)) {
+                            conditions.Add(new ConditionBranch(condition: false, ifParent.Condition));
                         } else {
                             throw new ShouldNeverHappenException();
                         }
                     }
-                    previousParent = parent;
+                    child = parent;
                 }
                 conditions.Reverse();
                 return conditions;
@@ -210,6 +226,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private ObjectExpression? _properties;
         private ObjectExpression? _encryptionContext;
         private ListExpression _pragmas;
+        private LiteralExpression? _import;
 
         //--- Constructors ---
         public ParameterDeclaration(LiteralExpression itemName) : base(itemName) {
@@ -322,32 +339,37 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             set => _pragmas = SetParent(value);
         }
 
+        public LiteralExpression? Import {
+            get => _import;
+            set => _import = SetParent(value);
+        }
+
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Section?.Visit(this, visitor);
-            Label?.Visit(this, visitor);
-            Type?.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            NoEcho?.Visit(this, visitor);
-            Default?.Visit(this, visitor);
-            ConstraintDescription?.Visit(this, visitor);
-            AllowedPattern?.Visit(this, visitor);
-            AllowedValues?.Visit(this, visitor);
-            MaxLength?.Visit(this, visitor);
-            MaxValue?.Visit(this, visitor);
-            MinLength?.Visit(this, visitor);
-            MinValue?.Visit(this, visitor);
-            _allow?.Visit(this, visitor);
-            Properties?.Visit(this, visitor);
-            EncryptionContext?.Visit(this, visitor);
-            Pragmas?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Section = Section?.Visit(this, visitor);
+            Label = Label?.Visit(this, visitor);
+            Type = Type?.Visit(this, visitor);
+            Scope = Scope.Visit(this, visitor);
+            NoEcho = NoEcho?.Visit(this, visitor);
+            Default = Default?.Visit(this, visitor);
+            ConstraintDescription = ConstraintDescription?.Visit(this, visitor);
+            AllowedPattern = AllowedPattern?.Visit(this, visitor);
+            AllowedValues = AllowedValues.Visit(this, visitor);
+            MaxLength = MaxLength?.Visit(this, visitor);
+            MaxValue = MaxValue?.Visit(this, visitor);
+            MinLength = MinLength?.Visit(this, visitor);
+            MinValue = MinValue?.Visit(this, visitor);
+            _allow = _allow?.Visit(this, visitor);
+            Properties = Properties?.Visit(this, visitor);
+            EncryptionContext = EncryptionContext?.Visit(this, visitor);
+            Pragmas = Pragmas.Visit(this, visitor) ?? throw new NullValueException();
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -357,20 +379,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     /// </summary>
     public class PseudoParameterDeclaration : AItemDeclaration {
 
-        //--- Fields ---
-        private LiteralExpression? pseudoParameter;
-
         //--- Constructors ---
         public PseudoParameterDeclaration(LiteralExpression itemName) : base(itemName) { }
 
-        //--- Properties ---
-        public LiteralExpression? PseudoParameter {
-            get => pseudoParameter;
-            set => pseudoParameter = SetParent(value);
-        }
-
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) { }
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
+            visitor.VisitStart(parent, this);
+            return visitor.VisitEnd(parent, this);
+        }
     }
 
     [SyntaxDeclarationKeyword("Import")]
@@ -423,16 +439,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Type?.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            _allow?.Visit(this, visitor);
-            Module?.Visit(this, visitor);
-            EncryptionContext?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Type = Type?.Visit(this, visitor);
+            Scope = Scope.Visit(this, visitor);
+            Allow = Allow?.Visit(this, visitor);
+            Module = Module?.Visit(this, visitor);
+            EncryptionContext = EncryptionContext?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -479,44 +495,38 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasSecretType => Type!.Value == "Secret";
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Type?.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            Value?.Visit(this, visitor);
-            EncryptionContext?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Type = Type?.Visit(this, visitor);
+            Scope = Scope.Visit(this, visitor);
+            Value = Value?.Visit(this, visitor);
+            EncryptionContext = EncryptionContext?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
     [SyntaxDeclarationKeyword("Group")]
     public class GroupDeclaration : AItemDeclaration {
 
-        //--- Fields ---
-        private SyntaxNodeCollection<AItemDeclaration> _items;
-
         //--- Constructors ---
-        public GroupDeclaration(LiteralExpression itemName) : base(itemName) {
-            _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
-        }
+        public GroupDeclaration(LiteralExpression itemName) : base(itemName) { }
 
         //--- Properties ---
 
         [SyntaxRequired]
         public SyntaxNodeCollection<AItemDeclaration> Items {
-            get => _items;
-            set => _items = SetParent(value);
+            get => Declarations;
+            set => Declarations = value ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Items?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Declarations = Declarations?.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -538,12 +548,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Value?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Value = Value?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -632,20 +642,20 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasTypeValidation => !HasPragma("no-type-validation");
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            If?.Visit(this, visitor);
-            Type?.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            Allow?.Visit(this, visitor);
-            Value?.Visit(this, visitor);
-            DependsOn?.Visit(this, visitor);
-            Properties?.Visit(this, visitor);
-            DefaultAttribute?.Visit(this, visitor);
-            Pragmas?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            If = If?.Visit(this, visitor);
+            Type = Type?.Visit(this, visitor);
+            Scope = Scope.Visit(this, visitor);
+            Allow = Allow?.Visit(this, visitor);
+            Value = Value?.Visit(this, visitor);
+            DependsOn = DependsOn.Visit(this, visitor);
+            Properties = Properties.Visit(this, visitor) ?? throw new NullValueException();
+            DefaultAttribute = DefaultAttribute?.Visit(this, visitor);
+            Pragmas = Pragmas.Visit(this, visitor) ?? throw new NullValueException();
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -685,14 +695,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public string CloudFormationType => "AWS::CloudFormation::Stack";
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Module?.Visit(this, visitor);
-            DependsOn?.Visit(this, visitor);
-            Parameters?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Module = Module?.Visit(this, visitor);
+            DependsOn = DependsOn.Visit(this, visitor);
+            Parameters = Parameters?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -727,13 +737,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasSecretType => false;
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            Files?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Scope = Scope.Visit(this, visitor);
+            Files = Files?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -762,11 +772,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Methods ---
-            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
                 visitor.VisitStart(parent, this);
-                SecurityGroupIds?.Visit(this, visitor);
-                SubnetIds?.Visit(this, visitor);
-                visitor.VisitEnd(parent, this);
+                SecurityGroupIds = SecurityGroupIds?.Visit(this, visitor);
+                SubnetIds = SubnetIds?.Visit(this, visitor);
+                return visitor.VisitEnd(parent, this);
             }
         }
 
@@ -887,24 +897,24 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            _scope?.Visit(this, visitor);
-            If?.Visit(this, visitor);
-            Memory?.Visit(this, visitor);
-            Timeout?.Visit(this, visitor);
-            Project?.Visit(this, visitor);
-            Runtime?.Visit(this, visitor);
-            Language?.Visit(this, visitor);
-            Handler?.Visit(this, visitor);
-            Vpc?.Visit(this, visitor);
-            Environment?.Visit(this, visitor);
-            Properties?.Visit(this, visitor);
-            Sources?.Visit(this, visitor);
-            Pragmas?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Scope = Scope.Visit(this, visitor);
+            If = If?.Visit(this, visitor);
+            Memory = Memory?.Visit(this, visitor);
+            Timeout = Timeout?.Visit(this, visitor);
+            Project = Project?.Visit(this, visitor);
+            Runtime = Runtime?.Visit(this, visitor);
+            Language = Language?.Visit(this, visitor);
+            Handler = Handler?.Visit(this, visitor);
+            Vpc = Vpc?.Visit(this, visitor);
+            Environment = Environment.Visit(this, visitor) ?? throw new NullValueException();
+            Properties = Properties.Visit(this, visitor) ?? throw new NullValueException();
+            Sources = Sources.Visit(this, visitor);
+            Pragmas = Pragmas.Visit(this, visitor) ?? throw new NullValueException();
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -926,12 +936,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Value?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Value = Value?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -974,12 +984,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Methods ---
-            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
                 visitor.VisitStart(parent, this);
-                Name?.Visit(this, visitor);
-                Type?.Visit(this, visitor);
-                Required?.Visit(this, visitor);
-                visitor.VisitEnd(parent, this);
+                Name = Name.Visit(this, visitor) ?? throw new NullValueException();
+                Type = Type?.Visit(this, visitor);
+                Required = Required?.Visit(this, visitor);
+                return visitor.VisitEnd(parent, this);
             }
         }
 
@@ -1011,11 +1021,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Methods ---
-            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
                 visitor.VisitStart(parent, this);
-                Name?.Visit(this, visitor);
-                Type?.Visit(this, visitor);
-                visitor.VisitEnd(parent, this);
+                Name = Name.Visit(this, visitor) ?? throw new NullValueException();
+                Type = Type?.Visit(this, visitor);
+                return visitor.VisitEnd(parent, this);
             }
         }
 
@@ -1051,14 +1061,14 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Handler?.Visit(this, visitor);
-            Properties?.Visit(this, visitor);
-            Attributes?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Handler = Handler?.Visit(this, visitor);
+            Properties = Properties.Visit(this, visitor) ?? throw new NullValueException();
+            Attributes = Attributes.Visit(this, visitor) ?? throw new NullValueException();
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -1082,12 +1092,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public string CloudFormationType => "AWS::CloudFormation::Macro";
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ItemName.Visit(this, visitor);
-            Handler?.Visit(this, visitor);
-            Declarations?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ItemName, ItemName.Visit(this, visitor));
+            Handler = Handler?.Visit(this, visitor);
+            Declarations = Declarations.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 }

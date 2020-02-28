@@ -94,17 +94,17 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public IntegrationType ApiIntegrationType { get; set; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            Integration?.Visit(this, visitor);
-            OperationName?.Visit(this, visitor);
-            ApiKeyRequired?.Visit(this, visitor);
-            AuthorizationType?.Visit(this, visitor);
-            AuthorizationScopes?.Visit(this, visitor);
-            AuthorizerId?.Visit(this, visitor);
-            Invoke?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            Integration = Integration?.Visit(this, visitor);
+            OperationName = OperationName?.Visit(this, visitor);
+            ApiKeyRequired = ApiKeyRequired?.Visit(this, visitor);
+            AuthorizationType = AuthorizationType?.Visit(this, visitor);
+            AuthorizationScopes = AuthorizationScopes?.Visit(this, visitor);
+            AuthorizerId = AuthorizerId?.Visit(this, visitor);
+            Invoke = Invoke?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -128,11 +128,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            Name?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            Name = Name?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -170,13 +170,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            Events?.Visit(this, visitor);
-            Prefix?.Visit(this, visitor);
-            Suffix?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            Events = Events?.Visit(this, visitor);
+            Prefix = Prefix?.Visit(this, visitor);
+            Suffix = Suffix?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -191,10 +191,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -218,11 +218,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            Filters?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            Filters = Filters?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -247,11 +247,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            BatchSize?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            BatchSize = BatchSize?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -264,10 +264,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -305,12 +305,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            BatchSize?.Visit(this, visitor);
-            StartingPosition?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            BatchSize = BatchSize?.Visit(this, visitor);
+            StartingPosition = StartingPosition?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -348,12 +348,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public AExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            BatchSize?.Visit(this, visitor);
-            StartingPosition?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            BatchSize = BatchSize?.Visit(this, visitor);
+            StartingPosition = StartingPosition?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -412,16 +412,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression EventSource { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            EventSource.Visit(this, visitor);
-            OperationName?.Visit(this, visitor);
-            ApiKeyRequired?.Visit(this, visitor);
-            AuthorizationType?.Visit(this, visitor);
-            AuthorizationScopes?.Visit(this, visitor);
-            AuthorizerId?.Visit(this, visitor);
-            Invoke?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(EventSource, EventSource.Visit(this, visitor));
+            OperationName = OperationName?.Visit(this, visitor);
+            ApiKeyRequired = ApiKeyRequired?.Visit(this, visitor);
+            AuthorizationType = AuthorizationType?.Visit(this, visitor);
+            AuthorizationScopes = AuthorizationScopes?.Visit(this, visitor);
+            AuthorizerId = AuthorizerId?.Visit(this, visitor);
+            Invoke = Invoke?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 }

@@ -109,16 +109,114 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // TODO: load resource types from module
         }
 
+        public override void VisitStart(ASyntaxNode parent, PseudoParameterDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+        }
+
         public override void VisitStart(ASyntaxNode parent, ImportDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
 
+            // extract optional export name from module reference
+            var export = node.ItemName.Value;
+            var module = node.Module.Value;
+            var moduleParts = module.Split("::", 2);
+            if(moduleParts.Length == 2) {
+                module = moduleParts[0];
+                export = moduleParts[1];
+            }
+            var import = $"{module}::{export}";
+
+            // validate module name
+            if(ModuleInfo.TryParse(node.Module.Value, out var moduleInfo)) {
+                if(moduleInfo.Version != null) {
+
+                    // TODO: move to Error.cs
+                    _builder.Log(new Error(0, "'Module' attribute cannot have a version"), node.Module);
+                }
+                if(moduleInfo.Origin != null) {
+
+                    // TODO: move to Error.cs
+                    _builder.Log(new Error(0, "'Module' attribute cannot have an origin"), node.Module);
+                }
+            } else {
+
+                // TODO: move to Error.cs
+                _builder.Log(new Error(0, "invalid 'Module' attribute"), node.Module);
+            }
+
+            // validate import type
+            if(node.Type == null) {
+                node.Type = Literal("String");
+            } else if(node.Type?.Value != "Secret") {
+
+                // TODO: validate the import type
+                if(node.EncryptionContext != null) {
+                    _builder.Log(Error.EncryptionContextAttributeRequiresSecretType, node);
+                }
+            }
+
             // validate attributes
             ValidateAllowAttribute(node, node.Type, node.Allow);
+
+            // check if an import parameter for this reference exists already
+            var importParameterName = module.ToIdentifier() + export.ToIdentifier();
+            var foundDeclaration = _builder.ItemDeclarations.FirstOrDefault(item => item.FullName == importParameterName);
+            if(foundDeclaration != null) {
+                if(foundDeclaration is ParameterDeclaration existingParameterDeclaration) {
+
+                    // NOTE (2020-02-27, bjorg): if an import declaration already exists for this value, it must be identical in every way; such duplicates
+                    //  are allowed, because it is not possible to know ahead of time if a value was already imported
+                    if(existingParameterDeclaration.Import?.Value != import) {
+
+                        // TODO: move to Error.cs
+                        _builder.Log(new Error(0, $"import declaration '{importParameterName}' is already defined with a different binding"), foundDeclaration);
+                    } else if(existingParameterDeclaration.Type.Value != node.Type.Value) {
+
+                        // TODO: move to Error.cs
+                        _builder.Log(new Error(0, $"import declaration '{importParameterName}' is already defined with a different type"), foundDeclaration);
+                    }
+                } else {
+                    _builder.Log(Error.DuplicateName(importParameterName), foundDeclaration);
+                }
+            } else {
+
+                // add import declaration as a module parameter
+                var importParameterDeclaration = AddDeclaration(node.ParentModuleDeclaration, new ParameterDeclaration(Literal(importParameterName)) {
+                    Type = Literal(node.Type.Value),
+                    Description = Literal($"Cross-module reference for {module}::{export}"),
+                    EncryptionContext = node.EncryptionContext,
+
+                    // set default settings for import parameters
+                    AllowedPattern = Literal("^.+$"),
+                    ConstraintDescription = Literal("must either be a cross-module reference or a non-empty value"),
+                    Section = Literal($"{module} Imports"),
+                    Label = Literal(export),
+                    Import = Literal($"{module}::{export}"),
+                    DiscardIfNotReachable = true
+                });
+                node.ReferenceExpression = FnRef(importParameterDeclaration.FullName);
+            }
+
+            // add optional grants
+            if(node.Allow != null) {
+                AddGrant(
+                    name: node.FullName,
+                    awsType: node.Type.Value,
+                    reference: node.ReferenceExpression,
+                    allow: node.Allow,
+                    condition: null
+                );
+            }
         }
 
         public override void VisitStart(ASyntaxNode parent, VariableDeclaration node) {
+
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
 
             // validate Value attribute
             if(node.Type?.Value == "Secret") {
@@ -128,12 +226,57 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             } else if(node.EncryptionContext != null) {
                 _builder.Log(Error.EncryptionContextAttributeRequiresSecretType, node);
             }
+
+            // set declaration expression
+            AExpression declarationExpression;
+            if(node.EncryptionContext != null) {
+                declarationExpression = FnJoin(
+                    "|",
+                    new AExpression[] {
+                        node.Value
+                    }.Union(
+                        node.EncryptionContext.Select(kv => Literal($"{kv.Key}={kv.Value}"))
+                    ).ToArray()
+                );
+            } else {
+                declarationExpression = (node.Value is ListExpression values)
+                    ? FnJoin(",", values)
+                    : node.Value;
+            }
+            node.ReferenceExpression = declarationExpression;
+
+
+            // // check if value must be decrypted
+            // if(result.HasSecretType) {
+            //     var decoder = AddResource(
+            //         parent: result,
+            //         name: "Plaintext",
+            //         description: null,
+            //         scope: null,
+            //         resource: CreateDecryptSecretResourceFor(result),
+            //         resourceExportAttribute: null,
+            //         dependsOn: null,
+            //         condition: null,
+            //         pragmas: null
+            //     );
+            //     decoder.Reference = FnGetAtt(decoder.ResourceName, "Plaintext");
+            //     decoder.DiscardIfNotReachable = true;
+            // }
+
+            // // add optional grants
+            // if(allow != null) {
+            //     AddGrant(result.LogicalId, type, value, allow, condition: null);
+            // }
+
         }
 
         public override void VisitStart(ASyntaxNode parent, GroupDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef("AWS::NoValue");
         }
 
         public override void VisitStart(ASyntaxNode parent, ResourceDeclaration node) {
@@ -235,12 +378,6 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     });
                 }
 
-                // TODO: shouldn't we always resolve this to an attribute that returns an ARN?
-                // set reference expression to declaration itself
-                var refExpression = FnRef(node.FullName);
-                refExpression.ReferencedDeclaration = node;
-                node.ReferenceExpression = refExpression;
-
                 // add resource permissions
                 if(node.Allow != null) {
                     AddGrant(
@@ -275,6 +412,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef("AWS::NoValue");
 
             // TODO: validate the parameters and output values from the module
         }
@@ -311,7 +451,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 Value = Literal($"{node.LogicalId}-DRYRUN.zip")
             });
 
-            // update 'Package' reference
+            // set declaration expression
             node.ReferenceExpression = GetModuleArtifactExpression($"${{{variable.FullName}}}");
         }
 
@@ -325,6 +465,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef("AWS::NoValue");
 
             // check if object expression is valid (must have first- and second-level keys)
             if(node.Value.Any()) {
@@ -384,12 +527,18 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef("AWS::NoValue");
         }
 
         public override void VisitStart(ASyntaxNode parent, MacroDeclaration node) {
 
             // register item declaration
             _builder.RegisterItemDeclaration(node);
+
+            // set declaration expression
+            node.ReferenceExpression = FnRef("AWS::NoValue");
 
             // check if a root macros collection needs to be created
             if(!_builder.TryGetItemDeclaration("Macros", out var macrosItem)) {

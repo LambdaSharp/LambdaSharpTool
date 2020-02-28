@@ -48,11 +48,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
 
             //--- Methods ---
-            public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+            public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
                 visitor.VisitStart(parent, this);
-                Version?.Visit(this, visitor);
-                Region?.Visit(this, visitor);
-                visitor.VisitEnd(parent, this);
+                Version = Version?.Visit(this, visitor);
+                Region = Region?.Visit(this, visitor);
+                return visitor.VisitEnd(parent, this);
             }
         }
 
@@ -125,16 +125,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode? parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ModuleName.Visit(this, visitor);
-            Version?.Visit(this, visitor);
-            Description?.Visit(this, visitor);
-            Secrets?.Visit(this, visitor);
-            Using?.Visit(this, visitor);
-            Items?.Visit(this, visitor);
-            CloudFormation?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ModuleName, ModuleName.Visit(this, visitor));
+            Version = Version.Visit(this, visitor) ?? throw new NullValueException();
+            Description = Description?.Visit(this, visitor);
+            Secrets = Secrets.Visit(this, visitor);
+            Using = Using.Visit(this, visitor);
+            Items = Items.Visit(this, visitor);
+            CloudFormation = CloudFormation?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 
@@ -158,11 +158,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public LiteralExpression ModuleName { get; }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ModuleName.Visit(this, visitor);
-            Description?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            AssertIsSame(ModuleName, ModuleName.Visit(this, visitor));
+            Description = Description?.Visit(this, visitor);
+            return visitor.VisitEnd(parent, this);
         }
     }
 }

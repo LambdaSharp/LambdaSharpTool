@@ -27,21 +27,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
     public class ReferenceResolver {
 
-        //--- Class Methods ---
-        private static void DebugWriteLine(Func<string> lazyMessage) {
-#if false
-            var text = lazyMessage();
-            if(text != null) {
-                Console.WriteLine(text);
-            }
-#endif
-        }
-
         //--- Fields ---
         private readonly Builder _builder;
         private Dictionary<string, AItemDeclaration> _freeDeclarations = new Dictionary<string, AItemDeclaration>();
         private Dictionary<string, AItemDeclaration> _boundDeclarations = new Dictionary<string, AItemDeclaration>();
-        private HashSet<AExpression> _freeExpressions = new HashSet<AExpression>();
 
         //--- Constructors ---
         public ReferenceResolver(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
@@ -64,10 +53,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     // a literal expression is dependency free
                     _freeDeclarations[declaration.FullName] = declaration;
-                    DebugWriteLine(() => $"FREE => {declaration.FullName}");
+                    DebugWriteLine(() => $"FREE => {declaration.FullName} [{declaration.GetType().Name}]");
                 } else {
                     _boundDeclarations[declaration.FullName] = declaration;
-                    DebugWriteLine(() => $"BOUND => {declaration.FullName}");
+                    DebugWriteLine(() => $"BOUND => {declaration.FullName} [{declaration.GetType().Name}]");
                 }
             }
         }
@@ -76,7 +65,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             bool progress;
             do {
                 progress = false;
-                foreach(var item in _boundDeclarations.Values.ToList()) {
+                foreach(var item in new List<AItemDeclaration>(_boundDeclarations.Values)) {
 
                     // NOTE (2018-10-04, bjorg): each iteration, we loop over a bound item;
                     //  in the iteration, we attempt to substitute all references with free items;
@@ -86,12 +75,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
                     var doesNotContainBoundItems = true;
                     item.ReferenceExpression = Substitute(item, (missingName, _) => {
-                        doesNotContainBoundItems = doesNotContainBoundItems && !_boundDeclarations.ContainsKey(missingName);
+                        DebugWriteLine(() => $"BOUND REF => {item.FullName} -> {missingName}");
+                        doesNotContainBoundItems = false;
                     });
                     if(doesNotContainBoundItems) {
 
                         // capture that progress towards resolving all bound items has been made;
-                        // if ever an iteration does not produce progress, we need to stop; otherwise
+                        // if an iteration does not produce progress, we need to stop; otherwise
                         // we will loop forever
                         progress = true;
 
@@ -109,8 +99,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 Substitute(declaration, ReportMissingReference);
             }
 
+            // local functions
             void ReportMissingReference(string missingName, ASyntaxNode node) {
-                if(_boundDeclarations.ContainsKey(missingName)) {
+                if(_boundDeclarations.TryGetValue(missingName, out var declaration)) {
                     _builder.Log(Error.ReferenceWithCircularDependency(missingName), node);
                 } else {
                     _builder.Log(Error.ReferenceDoesNotExist(missingName), node);
@@ -124,13 +115,12 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             bool foundDeclarationsToRemove;
             do {
                 foundDeclarationsToRemove = false;
-                foreach(var declaration in _builder.ItemDeclarations
-                    .Where(declaration => declaration.DiscardIfNotReachable && !declaration.ReverseDependencies.Any())
-                    .ToList()
-                ) {
+                foreach(var declaration in new List<AItemDeclaration>(
+                    _builder.ItemDeclarations.Where(declaration => declaration.DiscardIfNotReachable && !declaration.ReverseDependencies.Any())
+                )) {
                     foundDeclarationsToRemove = true;
                     DebugWriteLine(() => $"DISCARD '{declaration.FullName}'");
-                    declaration.UntrackAllDependencies();
+                    _builder.RemoveItemDeclaraion(declaration);
                 }
             } while(foundDeclarationsToRemove);
 
@@ -144,45 +134,46 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         private AExpression Substitute(AItemDeclaration declaration, Action<string, ASyntaxNode> missing = null) {
+
+            // TODO: I think we can do this much cleaner
+            if(declaration.ReferenceExpression == null) {
+                declaration.ReferenceExpression = ASyntaxAnalyzer.FnRef(declaration.FullName, resolved: true);
+                return declaration.ReferenceExpression;
+            } else if((declaration.ReferenceExpression is ReferenceFunctionExpression referenceFunctionExpression) && referenceFunctionExpression.Resolved) {
+                return declaration.ReferenceExpression;
+            }
+
             return Visit(declaration.ReferenceExpression, value => {
                 switch(value) {
-                case ReferenceFunctionExpression referenceFunctionExpression when !_freeExpressions.Contains(value):
+                case ReferenceFunctionExpression referenceFunctionExpression:
 
                     // attempt to resolve resource reference
-                    if(_freeDeclarations.ContainsKey(referenceFunctionExpression.ReferenceName.Value)) {
-                        _freeExpressions.Add(value);
-                    } else {
-                        DebugWriteLine(() => $"NOT FOUND => {referenceFunctionExpression.ReferenceName.Value}");
+                    if(!_freeDeclarations.ContainsKey(referenceFunctionExpression.ReferenceName.Value)) {
+                        DebugWriteLine(() => _boundDeclarations.ContainsKey(referenceFunctionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {referenceFunctionExpression.ReferenceName.Value}");
                         missing?.Invoke(referenceFunctionExpression.ReferenceName.Value, referenceFunctionExpression.ReferenceName);
                     }
                     return value;
-                case GetAttFunctionExpression getAttFunctionExpression when !_freeExpressions.Contains(value):
+                case GetAttFunctionExpression getAttFunctionExpression:
 
                     // attempt to resolve resource reference
-                    if(_freeDeclarations.ContainsKey(getAttFunctionExpression.ReferenceName.Value)) {
-                        _freeExpressions.Add(value);
-                    } else {
-                        DebugWriteLine(() => $"NOT FOUND => {getAttFunctionExpression.ReferenceName.Value}");
+                    if(!_freeDeclarations.ContainsKey(getAttFunctionExpression.ReferenceName.Value)) {
+                        DebugWriteLine(() => _boundDeclarations.ContainsKey(getAttFunctionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {getAttFunctionExpression.ReferenceName.Value}");
                         missing?.Invoke(getAttFunctionExpression.ReferenceName.Value, getAttFunctionExpression.ReferenceName);
                     }
                     return value;
-                case ConditionExpression conditionExpression when !_freeExpressions.Contains(value):
+                case ConditionExpression conditionExpression:
 
                     // attempt to resolve condition reference
-                    if(_freeDeclarations.ContainsKey(conditionExpression.ReferenceName.Value)) {
-                        _freeExpressions.Add(value);
-                    } else {
-                        DebugWriteLine(() => $"NOT FOUND => {conditionExpression.ReferenceName.Value}");
+                    if(!_freeDeclarations.ContainsKey(conditionExpression.ReferenceName.Value)) {
+                        DebugWriteLine(() => _boundDeclarations.ContainsKey(conditionExpression.ReferenceName.Value) ? null : $"NOT FOUND => {conditionExpression.ReferenceName.Value}");
                         missing?.Invoke(conditionExpression.ReferenceName.Value, conditionExpression.ReferenceName);
                     }
                     return value;
-                case FindInMapFunctionExpression findInMapFunctionExpression when !_freeExpressions.Contains(value):
+                case FindInMapFunctionExpression findInMapFunctionExpression:
 
                     // attempt to resolve mapping reference
-                    if(_freeDeclarations.ContainsKey(findInMapFunctionExpression.MapName.Value)) {
-                        _freeExpressions.Add(value);
-                    } else {
-                        DebugWriteLine(() => $"NOT FOUND => {findInMapFunctionExpression.MapName.Value}");
+                    if(!_freeDeclarations.ContainsKey(findInMapFunctionExpression.MapName.Value)) {
+                        DebugWriteLine(() => _boundDeclarations.ContainsKey(findInMapFunctionExpression.MapName.Value) ? null : $"NOT FOUND => {findInMapFunctionExpression.MapName.Value}");
                         missing?.Invoke(findInMapFunctionExpression.MapName.Value, findInMapFunctionExpression.MapName);
                     }
                     return value;
@@ -302,6 +293,17 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // visit item itself
             return visitor(value);
+        }
+
+        private void DebugWriteLine(Func<string> lazyMessage) {
+
+            // TODO: check if logging mode allow debug messages
+#if true
+            var text = lazyMessage();
+            if(text != null) {
+                _builder.Log(new Debug(text));
+            }
+#endif
         }
     }
 }

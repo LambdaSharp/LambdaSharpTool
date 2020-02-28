@@ -29,6 +29,17 @@ namespace LambdaSharp.Tool.Compiler {
     using WarningFunc = Func<string, Warning>;
     using WarningFunc2 = Func<string, string, Warning>;
 
+    public readonly struct Debug : IBuildReportEntry {
+
+        //--- Constructors ---
+        public Debug(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
+
+        //--- Properties ---
+        public int Code => 0;
+        public string Message { get; }
+        public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Debug;
+    }
+
     public readonly struct Timing : IBuildReportEntry {
 
         //--- Constructors ---
@@ -143,7 +154,6 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         #region *** Identifier Validation ***
-        public static readonly Error NameIsReservedAws = new Error(0, "'AWS' is a reserved name");
         public static readonly Error NameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         #endregion
 
@@ -249,7 +259,7 @@ namespace LambdaSharp.Tool.Compiler {
 
         // TODO: keep reviewing errors
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
-        public static readonly Error DuplicateName = new Error(0, "duplicate name");
+        public static readonly ErrorFunc DuplicateName = parameter => new Error(0, $"duplicate name '{parameter}'");
         public static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");
         public static readonly Error SecretKeyMustBeValidARN = new Error(0, "secret key must be a valid ARN");
         public static readonly Error SecreteKeyMustBeValidAlias = new Error(0, "secret key must be a valid alias");

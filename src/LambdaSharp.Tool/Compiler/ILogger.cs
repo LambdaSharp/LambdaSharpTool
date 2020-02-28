@@ -39,6 +39,7 @@ namespace LambdaSharp.Tool.Compiler {
     }
 
     public enum BuildReportEntrySeverity {
+        Debug,
         Timing,
         Verbose,
         Info,

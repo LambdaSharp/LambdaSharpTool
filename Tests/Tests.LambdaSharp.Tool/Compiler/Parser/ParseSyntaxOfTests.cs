@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using FluentAssertions;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
 using Xunit;
 using Xunit.Abstractions;
@@ -225,7 +226,7 @@ Items:
 
             // assert
             ExpectNoMessages();
-            module.Visit(null, new SyntaxHierarchyValidationAnalyzer());
+            module!.Visit(null, new SyntaxHierarchyValidationAnalyzer());
         }
     }
 }

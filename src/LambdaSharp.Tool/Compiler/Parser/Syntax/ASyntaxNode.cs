@@ -27,10 +27,22 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
     public abstract class ASyntaxNode {
 
         //--- Class Methods ---
-        public static void SetParent(ASyntaxNode? node, ASyntaxNode parent) {
+        [return: NotNullIfNotNull("node")]
+        public static ASyntaxNode? SetParent(ASyntaxNode? node, ASyntaxNode parent) {
             if(node != null) {
+
+                // declaration nodes must have another declaration node as their parent
+                if((parent != null) && (node is ADeclaration) && !(parent is ADeclaration)) {
+                    throw new ApplicationException("declarations must have another declaration as parent");
+                }
+
+                // check if node needs to be cloned
+                if((node is AExpression expression) && (node.Parent != null) && !object.ReferenceEquals(node.Parent, parent)) {
+                    node = expression.Clone();
+                }
                 node.Parent = parent;
             }
+            return node;
         }
 
         //--- Fields ---
@@ -62,14 +74,11 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public ModuleDeclaration ParentModuleDeclaration => Parents.OfType<ModuleDeclaration>().First();
 
         //--- Abstract Methods ---
-        public abstract void Visit(ASyntaxNode parent, ISyntaxVisitor visitor);
+        public abstract ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor);
 
         //--- Methods ---
         [return: NotNullIfNotNull("node") ]
-        protected T? SetParent<T>(T? node) where T : ASyntaxNode {
-            SetParent(node, this);
-            return node;
-        }
+        protected T? SetParent<T>(T? node) where T : ASyntaxNode => (T?)SetParent(node, this);
 
         [return: NotNullIfNotNull("list") ]
         protected SyntaxNodeCollection<T>? SetParent<T>(SyntaxNodeCollection<T>? list) where T : ASyntaxNode {
@@ -86,13 +95,38 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
             return list;
         }
+
+        protected void AssertIsSame(ASyntaxNode? originalValue, ASyntaxNode? newValue) {
+            if(!object.ReferenceEquals(originalValue, newValue)) {
+                throw new ApplicationException("attempt to change immutable value");
+            }
+        }
+    }
+
+    public static class ASyntaxNodeEx {
+
+        //--- Extension Methods ---
+        public static T? Visit<T>(this T node, ASyntaxNode? parent, ISyntaxVisitor visitor) where T : ASyntaxNode {
+            var result = (T?)node.VisitNode(parent, visitor);
+            if(result != null) {
+                result.SourceLocation = node.SourceLocation;
+            }
+            return result;
+        }
+
+        // TODO: generalize to ASyntaxNode
+        public static T Clone<T>(this T node) where T : AExpression {
+            var result = (T)node.CloneNode();
+            result.SourceLocation = node.SourceLocation;
+            return result;
+        }
     }
 
     public sealed class SyntaxNodeCollection<T> : IEnumerable, IEnumerable<T> where T : ASyntaxNode {
 
         //--- Fields ---
         private ASyntaxNode? _parent;
-        private readonly List<T> _nodes;
+        private List<T> _nodes;
 
         //--- Constructors ---
         public SyntaxNodeCollection() => _nodes = new List<T>();
@@ -101,10 +135,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             if(nodes is null) {
                 throw new ArgumentNullException(nameof(nodes));
             }
-            _nodes = new List<T>(nodes);
-            foreach(var node in _nodes) {
-                ImportNode(node);
-            }
+            _nodes = nodes.Select(node => SetParent(node)).ToList();
         }
 
         //--- Properties ---
@@ -114,33 +145,35 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             get => _parent ?? throw new ArgumentNullException(nameof(Parent));
             set {
                 _parent = value ?? throw new ArgumentNullException(nameof(Parent));
-                foreach(var node in _nodes) {
-                    ImportNode(node);
-                }
+                _nodes = _nodes.Select(node => SetParent(node)).ToList();
             }
         }
-
-        public bool HasParent => _parent != null;
 
         //--- Operators ---
         public T this[int index] {
             get => _nodes[index];
-            set => _nodes[index] = ImportNode(value) ?? throw new ArgumentNullException(nameof(value));
+            set => _nodes[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Methods ---
-        public void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
-            foreach(var node in _nodes) {
-                node?.Visit(Parent, visitor);
-            }
+        public SyntaxNodeCollection<T> Visit(ASyntaxNode? parent, ISyntaxVisitor visitor) {
+            var start = 0;
+            do {
+                var count = _nodes.Count;
+                for(var i = start; i < count; ++i) {
+                    _nodes[i] = _nodes[i].Visit(Parent, visitor) ?? throw new NullValueException();
+                }
+                start = count;
+            } while(start < _nodes.Count);
+            return this;
         }
 
-        public void Add(T expression) => _nodes.Add(ImportNode(expression) ??  throw new ArgumentNullException(nameof(expression)));
+        public void Add(T expression) => _nodes.Add(SetParent(expression) ??  throw new ArgumentNullException(nameof(expression)));
 
         [return: NotNullIfNotNull("node")]
-        private T ImportNode(T node) {
-            if(HasParent) {
-                ASyntaxNode.SetParent(node, Parent);
+        private T? SetParent(T? node) {
+            if((node != null) && (_parent != null)) {
+                return (T)ASyntaxNode.SetParent(node, _parent);
             }
             return node;
         }
@@ -152,9 +185,10 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => _nodes.GetEnumerator();
     }
 
-    public static class SyntaxNodesEx {
+    public static class SyntaxNodeCollectionEx {
 
         //--- Extension Methods ---
-        public static SyntaxNodeCollection<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode => new SyntaxNodeCollection<T>(enumerable);
+        public static SyntaxNodeCollection<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode
+            => new SyntaxNodeCollection<T>(enumerable);
     }
 }

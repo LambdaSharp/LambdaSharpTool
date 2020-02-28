@@ -115,6 +115,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         _builder.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
                         break;
                     case ParameterDeclaration _:
+                    case PseudoParameterDeclaration _:
                     case VariableDeclaration _:
                     case PackageDeclaration _:
                     case FunctionDeclaration _:

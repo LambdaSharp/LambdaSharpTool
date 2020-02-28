@@ -67,6 +67,7 @@ namespace LambdaSharp.Tool.Compiler {
     //  - replace `new ArgumentNullException(nameof(value))` with `new ArgumentNullException()` in properties
     //  - throw `InvalidOperationException` when accessing a null property with a non-nullable type
     //  - rename 'Builder' to 'BuildContext'
+    //  - test what two "Import" declarations for the same source look like in the generated CloudFormation
 
     public interface IBuilderDependencyProvider : ILogger {
 
@@ -178,22 +179,17 @@ namespace LambdaSharp.Tool.Compiler {
 
         public void RegisterItemDeclaration(AItemDeclaration declaration) {
 
-            // TODO: we shouldn't always assign this expression, because it's not always the correct thing to do
-            // assign default reference expression
-            declaration.ReferenceExpression = ASyntaxAnalyzer.FnRef(declaration.FullName);
-
             // check for reserved names
             if(!ValidResourceNameRegex.IsMatch(declaration.ItemName.Value)) {
                 _provider.Log(Error.NameMustBeAlphanumeric, declaration);
-            } else if(declaration.FullName == "AWS") {
-                _provider.Log(Error.NameIsReservedAws, declaration);
             }
 
             // store properties per-node and per-fullname
             if(!_fullNameDeclarations.TryAdd(declaration.FullName, declaration)) {
-                _provider.Log(Error.DuplicateName, declaration);
+                _provider.Log(Error.DuplicateName(declaration.FullName), declaration);
             }
 
+            // TODO: it might be better to just report a conflict instead
             // find a valid CloudFormation logical ID
             var baseLogicalId = declaration.FullName.Replace("::", "");
             var logicalIdSuffix = 0;
@@ -205,6 +201,11 @@ namespace LambdaSharp.Tool.Compiler {
             declaration.LogicalId = logicalId;
         }
 
+        public void RemoveItemDeclaraion(AItemDeclaration itemDeclaration) {
+            itemDeclaration.UntrackAllDependencies();
+            _fullNameDeclarations.Remove(itemDeclaration.FullName);
+        }
+
         public AExpression GetExportReference(IResourceDeclaration resourceDeclaration) {
 
             // TODO:
@@ -213,9 +214,13 @@ namespace LambdaSharp.Tool.Compiler {
 
         public bool IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
 
-        // TODO: validate grants
-        public void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition)
-            => _grants.Add(new Grant(name, awsType, reference, allow, condition));
+        public void AddGrant(string name, string awsType, AExpression reference, SyntaxNodeCollection<LiteralExpression> allow, AExpression condition) {
+
+            // TODO: validate grants
+
+            // TODO: create policy document when a condition exists (look for "SecretsPolicy" as an example)
+            _grants.Add(new Grant(name, awsType, reference, allow, condition));
+        }
 
         public async Task<Dependency> AddDependencyAsync(ModuleInfo moduleInfo, ModuleManifestDependencyType dependencyType, ASyntaxNode node) {
             string moduleKey;

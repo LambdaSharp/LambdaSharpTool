@@ -19,135 +19,16 @@
 #nullable disable
 
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
-using System.Threading.Tasks;
-using Amazon;
-using FluentAssertions;
 using LambdaSharp.Tool;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
-using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Compiler.Parser.Syntax;
-using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Model;
-using Newtonsoft.Json;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
-
-    public abstract class _Init {
-
-        //--- Types ---
-        public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
-
-            //--- Properties ---
-            public List<string> Messages { get; private set; } = new List<string>();
-            public Dictionary<string, string> Files { get; private set; } = new Dictionary<string, string>();
-
-            //--- Methods ---
-            public void Log(Error error, SourceLocation sourceLocation)
-                => Messages.Add($"ERROR{error.Code}: {error.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
-
-            public string ReadFile(string filePath) => Files[filePath];
-        }
-
-        public class BuilderDependencyProvider : IBuilderDependencyProvider {
-
-            //--- Fields ---
-            private readonly List<string> _messages = new List<string>();
-
-            //--- Properties ---
-            public string ToolDataDirectory => Path.Combine(Environment.GetEnvironmentVariable("LAMBDASHARP") ?? throw new ApplicationException("missing LAMBDASHARP environment variable"), "Tests", "Tests.LambdaSharp.Tool-Test-Output");
-            public IEnumerable<string> Messages => _messages;
-
-            //--- Methods ---
-            public async Task<string> GetS3ObjectContentsAsync(string bucketName, string key) {
-                switch(bucketName) {
-                case "lambdasharp":
-                    return GetType().Assembly.ReadManifestResource($"Resources/{key}");
-                default:
-
-                    // nothing to do
-                    break;
-                }
-                return null;
-            }
-
-            public async Task<IEnumerable<string>> ListS3BucketObjects(string bucketName, string prefix) {
-                switch(bucketName) {
-                case "lambdasharp":
-                    switch(prefix) {
-                    case "lambdasharp/LambdaSharp/Core/":
-                        return new[] {
-                            "0.7.0"
-                        };
-                    case "lambdasharp/LambdaSharp/S3.Subscriber/":
-                        return new[] {
-                            "0.7.3"
-                        };
-                    default:
-
-                        // nothing to do
-                        break;
-                    }
-                    break;
-                default:
-
-                    // nothing to do
-                    break;
-                }
-                return Enumerable.Empty<string>();
-            }
-
-            public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
-
-                // TODO: message should not be captured as strings, which makes further formatting impossible (such as colorization)
-                var label = entry.Severity.ToString().ToUpperInvariant();
-                if(sourceLocation == null) {
-                    _messages.Add($"{label}{entry.Code}: {entry.Message}");
-                } else if(exact) {
-                    _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
-                } else {
-                    _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
-                }
-            }
-
-            public async Task<CloudFormationSpec> ReadCloudFormationSpecAsync(RegionEndpoint region, VersionInfo version) {
-                var assembly = GetType().Assembly;
-                using(var specResource = assembly.GetManifestResourceStream($"{assembly.GetName().Name}.Resources.CloudFormationResourceSpecification.json.gz"))
-                using(var specGzipStream = new GZipStream(specResource, CompressionMode.Decompress))
-                using(var specReader = new StreamReader(specGzipStream)) {
-                    return JsonConvert.DeserializeObject<CloudFormationSpec>(specReader.ReadToEnd());
-                }
-            }
-        }
-
-        //--- Fields ---
-        protected readonly ITestOutputHelper Output;
-        protected readonly ParserDependencyProvider Provider = new ParserDependencyProvider();
-
-        //--- Constructors ---
-        public _Init(ITestOutputHelper output) => Output = output;
-
-        //--- Methods ---
-        protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
-
-        protected LambdaSharpParser NewParser(string source) {
-            AddSource("test.yml", source);
-            return new LambdaSharpParser(Provider, "test.yml");
-        }
-
-        protected void ExpectNoMessages() {
-            foreach(var message in Provider.Messages) {
-                Output.WriteLine(message);
-            }
-            Provider.Messages.Any().Should().Be(false);
-        }
-    }
 
     public class ParseTests : _Init {
 
@@ -163,18 +44,25 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
             var parser = NewParser(
 @"Module: My.Module
 Items:
-    - Resource: FooResource
-      Type: AWS::SNS::Topic
     - Variable: BarVariable
       Value: !Ref FooResource
+    - Resource: FooResource
+      Type: AWS::SNS::Topic
 ");
             var moduleDeclaration = parser.ParseSyntaxOfType<ModuleDeclaration>();
 
             // act
-            var builder = new Builder(new BuilderDependencyProvider());
-            moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(builder));
-            moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
-            moduleDeclaration.Visit(parent: null, new LinkReferencesAnalyzer(builder));
+            var builder = new Builder(new BuilderDependencyProvider(Messages));
+            builder.ToolVersion = VersionInfo.Parse(Environment.GetEnvironmentVariable("LAMBDASHARP_VERSION"));
+            moduleDeclaration = moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(builder));
+            moduleDeclaration = moduleDeclaration.Visit(parent: null, new StructureAnalyzer(builder));
+            moduleDeclaration = moduleDeclaration.Visit(parent: null, new LinkReferencesAnalyzer(builder));
+
+// TODO: debugging only
+foreach(var item in builder.ItemDeclarations.OrderBy(item => item.FullName)) {
+    builder.Log(new Debug($"{item.FullName} -> {item.GetType().Name} @ {item.SourceLocation}"));
+}
+
             new ReferenceResolver(builder).Visit();
 
             // assert

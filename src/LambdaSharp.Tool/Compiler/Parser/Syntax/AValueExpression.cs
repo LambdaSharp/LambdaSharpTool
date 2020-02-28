@@ -24,7 +24,11 @@ using System.Linq;
 
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
-    public abstract class AExpression : ASyntaxNode { }
+    public abstract class AExpression : ASyntaxNode {
+
+        //--- Methods ---
+        public abstract ASyntaxNode CloneNode();
+    }
 
     public abstract class AValueExpression : AExpression { }
 
@@ -45,12 +49,18 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Fields ---
-        private readonly List<KeyValuePair> _items = new List<KeyValuePair>();
+        private readonly List<KeyValuePair> _pairs = new List<KeyValuePair>();
+
+        //--- Constructors ---
+        public ObjectExpression() => _pairs = new List<KeyValuePair>();
+
+        public ObjectExpression(IEnumerable<KeyValuePair> pairs)
+            => _pairs = pairs.Select(pair => new KeyValuePair(SetParent(pair.Key), SetParent(pair.Value))).ToList();
 
         //--- Operators ---
         public AExpression this[string key] {
-            get => this[new LiteralExpression(key)];
-            set => this[new LiteralExpression(key)] = value;
+            get => this[ASyntaxAnalyzer.Literal(key)];
+            set => this[ASyntaxAnalyzer.Literal(key)] = value;
         }
 
         public AExpression this[LiteralExpression key] {
@@ -58,7 +68,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 if(key == null) {
                     throw new ArgumentNullException(nameof(key));
                 }
-                return _items.First(item => item.Key.Value == key.Value).Value;
+                return _pairs.First(item => item.Key.Value == key.Value).Value;
             }
             set {
                 if(key == null) {
@@ -69,16 +79,16 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
                 }
                 Remove(key.Value);
-                _items.Add(new KeyValuePair(SetParent(key), SetParent(value)));
+                _pairs.Add(new KeyValuePair(SetParent(key), SetParent(value)));
             }
         }
 
         //--- Properties ---
-        public int Count => _items.Count;
+        public int Count => _pairs.Count;
 
         //--- Methods ---
         public bool TryGetValue(string key, [NotNullWhen(true)] out AExpression? value) {
-            var found = _items.FirstOrDefault(item => item.Key.Value == key);
+            var found = _pairs.FirstOrDefault(item => item.Key.Value == key);
             value = found?.Value;
             return found != null;
         }
@@ -87,18 +97,21 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             if(key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
-            return _items.RemoveAll(kv => kv.Key.Value == key) > 0;
+            return _pairs.RemoveAll(kv => kv.Key.Value == key) > 0;
         }
 
-        public bool ContainsKey(string key) => _items.Any(item => item.Key.Value == key);
+        public bool ContainsKey(string key) => _pairs.Any(item => item.Key.Value == key);
 
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            foreach(var kv in _items) {
-                kv.Key.Visit(this, visitor);
-                kv.Value.Visit(this, visitor);
+            for(var i = 0; i < _pairs.Count; ++i) {
+                var kv = _pairs[i];
+                _pairs[i] = new KeyValuePair(
+                    kv.Key.Visit(this, visitor) ?? throw new NullValueException(),
+                    kv.Value.Visit(this, visitor) ?? throw new NullValueException()
+                );
             }
-            visitor.VisitEnd(parent, this);
+            return visitor.VisitEnd(parent, this);
         }
 
         public T? GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
@@ -121,27 +134,25 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             }
         }
 
+        public override ASyntaxNode CloneNode() => new ObjectExpression(_pairs.Select(item => new KeyValuePair(item.Key.Clone(), item.Value.Clone())));
+
         //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => _items.GetEnumerator();
+        IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();
 
         //--- IEnumerable<AExpression> Members ---
-        IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => _items.GetEnumerator();
+        IEnumerator<KeyValuePair> IEnumerable<KeyValuePair>.GetEnumerator() => _pairs.GetEnumerator();
     }
 
     public class ListExpression : AValueExpression, IEnumerable, IEnumerable<AExpression> {
 
         //--- Fields ---
-        private readonly List<AExpression> _items = new List<AExpression>();
+        private readonly List<AExpression> _items;
 
         //--- Constructors ---
-        public ListExpression() { }
+        public ListExpression() => _items = new List<AExpression>();
 
-        public ListExpression(IEnumerable<AExpression> items) {
-            _items.AddRange(items);
-            foreach(var item in items) {
-                SetParent(item);
-            }
-        }
+        public ListExpression(IEnumerable<AExpression> items)
+            => _items = items.Select(item => SetParent(item)).ToList();
 
         //--- Properties ---
         public int Count => _items.Count;
@@ -153,13 +164,15 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            foreach(var item in _items) {
-                item?.Visit(this, visitor);
+            for(var i = 0; i < _items.Count; ++i) {
+                _items[i] = _items[i].Visit(this, visitor) ?? throw new NullValueException();
             }
-            visitor.VisitEnd(parent, this);
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));
 
         public void Add(AExpression expression) => _items.Add(SetParent(expression));
 
@@ -205,11 +218,12 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         public bool IsNull => Type == LiteralType.Null;
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            visitor.VisitEnd(parent, this);
+            return visitor.VisitEnd(parent, this);
         }
 
         public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;
+        public override ASyntaxNode CloneNode() => new LiteralExpression(Value, Type);
     }
 }

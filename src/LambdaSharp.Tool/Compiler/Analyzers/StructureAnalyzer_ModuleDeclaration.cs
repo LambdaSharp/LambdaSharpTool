@@ -402,7 +402,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // permissions needed for X-Ray lambda daemon to upload tracing information
             AddGrant(
-                name: "AWSXRay",
+                name: "AWS-XRay",
                 awsType: null,
                 reference: Literal("*"),
                 allow: new SyntaxNodeCollection<LiteralExpression> {
@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
         }
 
-        public override void VisitEnd(ASyntaxNode parent, ModuleDeclaration node) {
+        public override ASyntaxNode VisitEnd(ASyntaxNode parent, ModuleDeclaration node) {
 
             // permissions needed for lambda functions to exist in a VPC
             if(_builder.ItemDeclarations.OfType<FunctionDeclaration>().Any()) {
@@ -448,6 +448,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // TODO: this might be a good spot to compute the effective role permissions
+            return node;
         }
     }
 }

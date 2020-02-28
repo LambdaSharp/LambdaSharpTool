@@ -27,103 +27,105 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
     public class SyntaxHierarchyValidationAnalyzer : ISyntaxVisitor {
 
         //--- Methods ---
-        public void VisitEnd(ASyntaxNode parent, ModuleDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ModuleDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ModuleDeclaration.CloudFormationSpecExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ModuleDeclaration.CloudFormationSpecExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, UsingModuleDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, UsingModuleDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ApiEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ApiEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SchedulEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SchedulEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, S3EventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, S3EventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SlackCommandEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, TopicEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, TopicEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SqsEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SqsEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, AlexaEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, AlexaEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, DynamoDBEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, DynamoDBEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, KinesisEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, KinesisEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, WebSocketEventSourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, WebSocketEventSourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, Base64FunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, Base64FunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, CidrFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, CidrFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, FindInMapFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, FindInMapFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, GetAttFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, GetAttFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, GetAZsFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, GetAZsFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, IfFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, IfFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ImportValueFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ImportValueFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, JoinFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, JoinFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SelectFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SelectFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SplitFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SplitFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, SubFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, SubFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, TransformFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, TransformFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ReferenceFunctionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ReferenceFunctionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ParameterDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ParameterDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ImportDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, PseudoParameterDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, VariableDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ImportDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, GroupDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, VariableDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ConditionDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, GroupDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ResourceDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ConditionDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, NestedModuleDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ResourceDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, PackageDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, NestedModuleDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, FunctionDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, PackageDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, FunctionDeclaration.VpcExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, FunctionDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, MappingDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, FunctionDeclaration.VpcExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, MappingDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.PropertyTypeExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, MacroDeclaration node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ResourceTypeDeclaration.AttributeTypeExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ObjectExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, MacroDeclaration node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ListExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ObjectExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, LiteralExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ListExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, ConditionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, LiteralExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, EqualsConditionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, ConditionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, NotConditionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, EqualsConditionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, AndConditionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, NotConditionExpression node) => node;
 
-        public void VisitEnd(ASyntaxNode parent, OrConditionExpression node) { }
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, AndConditionExpression node) => node;
+
+        public ASyntaxNode VisitEnd(ASyntaxNode parent, OrConditionExpression node) => node;
 
         public void VisitStart(ASyntaxNode parent, ModuleDeclaration node) {
             ValidateSyntaxNode(node, validateParent: false);
@@ -230,6 +232,10 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
         }
 
         public void VisitStart(ASyntaxNode parent, ParameterDeclaration node) {
+            ValidateSyntaxNode(node);
+        }
+
+        public void VisitStart(ASyntaxNode parent, PseudoParameterDeclaration node) {
             ValidateSyntaxNode(node);
         }
 

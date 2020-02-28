@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System;
+
 namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
 
     public abstract class AConditionExpression : AExpression { }
@@ -29,22 +31,35 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private ConditionDeclaration? _referencedDeclaration;
 
         //--- Properties ---
-        public LiteralExpression? ReferenceName {
-            get => _referenceName;
-            set => _referenceName = SetParent(value);
+        public LiteralExpression ReferenceName {
+            get => _referenceName ?? throw new InvalidOperationException();
+            set => _referenceName = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         public ConditionDeclaration? ReferencedDeclaration {
             get => _referencedDeclaration;
-            set => _referencedDeclaration = SetParent(value);
+            set {
+                if(_referencedDeclaration != null) {
+                    _referencedDeclaration.UntrackDependency(this);
+                }
+                _referencedDeclaration = value;
+                if(_referencedDeclaration != null) {
+                    ParentItemDeclaration?.TrackDependency(_referencedDeclaration, this);
+                }
+            }
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            ReferenceName?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            ReferenceName = ReferenceName.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new ConditionExpression {
+            ReferenceName = ReferenceName.Clone(),
+            ReferencedDeclaration = ReferencedDeclaration
+        };
     }
 
     public class EqualsConditionExpression : AConditionExpression {
@@ -61,23 +76,28 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _rightValue;
 
         //--- Properties ---
-        public AExpression? LeftValue {
-            get => _leftValue;
-            set => _leftValue = SetParent(value);
+        public AExpression LeftValue {
+            get => _leftValue ?? throw new InvalidOperationException();
+            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
-        public AExpression? RightValue {
-            get => _rightValue;
-            set => _rightValue = SetParent(value);
+        public AExpression RightValue {
+            get => _rightValue ?? throw new InvalidOperationException();
+            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            LeftValue?.Visit(this, visitor);
-            RightValue?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new EqualsConditionExpression {
+            LeftValue = LeftValue.Clone(),
+            RightValue = RightValue.Clone()
+        };
     }
 
     public class NotConditionExpression : AConditionExpression {
@@ -93,17 +113,21 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _value;
 
         //--- Properties ---
-        public AExpression? Value {
-            get => _value;
-            set => _value = SetParent(value);
+        public AExpression Value {
+            get => _value ?? throw new InvalidOperationException();
+            set => _value = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            Value?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            Value = Value.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new NotConditionExpression {
+            Value = Value.Clone()
+        };
     }
 
     public class AndConditionExpression : AConditionExpression {
@@ -120,23 +144,28 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _rightValue;
 
         //--- Properties ---
-        public AExpression? LeftValue {
-            get => _leftValue;
-            set => _leftValue = SetParent(value);
+        public AExpression LeftValue {
+            get => _leftValue ?? throw new InvalidOperationException();
+            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
-        public AExpression? RightValue {
-            get => _rightValue;
-            set => _rightValue = SetParent(value);
+        public AExpression RightValue {
+            get => _rightValue ?? throw new InvalidOperationException();
+            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            LeftValue?.Visit(this, visitor);
-            RightValue?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new AndConditionExpression {
+            LeftValue = LeftValue.Clone(),
+            RightValue = RightValue.Clone()
+        };
     }
 
     public class OrConditionExpression : AConditionExpression {
@@ -153,22 +182,27 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private AExpression? _rightValue;
 
         //--- Properties ---
-        public AExpression? LeftValue {
-            get => _leftValue;
-            set => _leftValue = SetParent(value);
+        public AExpression LeftValue {
+            get => _leftValue ?? throw new InvalidOperationException();
+            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
-        public AExpression? RightValue {
-            get => _rightValue;
-            set => _rightValue = SetParent(value);
+        public AExpression RightValue {
+            get => _rightValue ?? throw new InvalidOperationException();
+            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
-        public override void Visit(ASyntaxNode parent, ISyntaxVisitor visitor) {
+        public override ASyntaxNode? VisitNode(ASyntaxNode? parent, ISyntaxVisitor visitor) {
             visitor.VisitStart(parent, this);
-            LeftValue?.Visit(this, visitor);
-            RightValue?.Visit(this, visitor);
-            visitor.VisitEnd(parent, this);
+            LeftValue = LeftValue.Visit(this, visitor) ?? throw new NullValueException();
+            RightValue = RightValue.Visit(this, visitor) ?? throw new NullValueException();
+            return visitor.VisitEnd(parent, this);
         }
+
+        public override ASyntaxNode CloneNode() => new OrConditionExpression {
+            LeftValue = LeftValue.Clone(),
+            RightValue = RightValue.Clone()
+        };
     }
 }
