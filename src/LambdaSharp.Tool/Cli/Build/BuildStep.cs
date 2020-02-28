@@ -84,19 +84,19 @@ namespace LambdaSharp.Tool.Cli.Build {
             Console.WriteLine($"Compiling: {moduleDeclaration.ModuleName} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
 
             // download dependencies and cloudformation specification
-            moduleDeclaration = moduleDeclaration.Visit(parent: null, new DiscoverDependenciesAnalyzer(moduleBuilder));
+            moduleDeclaration = moduleDeclaration.Visit(new DiscoverDependenciesAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
 
             // analyze structure of AST
-            moduleDeclaration = moduleDeclaration!.Visit(parent: null, new StructureAnalyzer(moduleBuilder));
+            moduleDeclaration = moduleDeclaration!.Visit(new StructureAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
 
             // analyze references in AST
-            moduleDeclaration = moduleDeclaration!.Visit(parent: null, new LinkReferencesAnalyzer(moduleBuilder));
+            moduleDeclaration = moduleDeclaration!.Visit(new LinkReferencesAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }
@@ -108,7 +108,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // generate function environment based on scoped resources
-            moduleDeclaration = moduleDeclaration!.Visit(parent: null, new FunctionEnvironmentAnalyzer(moduleBuilder));
+            moduleDeclaration = moduleDeclaration!.Visit(new FunctionEnvironmentAnalyzer(moduleBuilder));
             if(HasErrors) {
                 return false;
             }

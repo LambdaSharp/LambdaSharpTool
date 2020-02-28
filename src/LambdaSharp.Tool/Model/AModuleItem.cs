@@ -261,7 +261,7 @@ namespace LambdaSharp.Tool.Model {
             Function = (Humidifier.Lambda.Function)visitor(this, Function);
             ExportReference = visitor(this, ExportReference);
             foreach(var source in Sources) {
-                source.Visit(visitor);
+                source.Visit(this, visitor);
             }
         }
 
