@@ -905,7 +905,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             break;
                         }
                     } else {
-                        _builder.Log(Error.ResourceUnknownProperty(currentProperty.Key.Value), currentProperty.Key);
+                        _builder.Log(Error.ResourceUnknownProperty(currentProperty.Key.Value, awsType), currentProperty.Key);
                     }
                 }
             }
@@ -921,7 +921,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     && (key != "ResourceType")
                     && !resourceType.Properties.Any(field => field.Name == key)
                 ) {
-                    _builder.Log(Error.ResourceUnknownProperty(key));
+                    _builder.Log(Error.ResourceUnknownProperty(key, resourceType.Type));
                 }
             }
         }

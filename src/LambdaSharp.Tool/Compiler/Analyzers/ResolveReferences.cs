@@ -25,6 +25,7 @@ using LambdaSharp.Tool.Compiler.Parser.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
+    // TODO: rename class; this class is about iterating through declarations and resolving any dependencies
     public class ResolveReferences {
 
         //--- Types ---
@@ -46,7 +47,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             public override bool VisitStart(ReferenceFunctionExpression node) {
 
                 // attempt to resolve resource reference
-                if(!node.Resolved && !_logic._freeDeclarations.ContainsKey(node.ReferenceName.Value)) {
+                if(!_logic._freeDeclarations.ContainsKey(node.ReferenceName.Value)) {
                     _logic.DebugWriteLine(() => _logic._boundDeclarations.ContainsKey(node.ReferenceName.Value) ? null : $"NOT FOUND => {node.ReferenceName.Value}");
                     _missing?.Invoke(node.ReferenceName.Value, node.ReferenceName);
                 }

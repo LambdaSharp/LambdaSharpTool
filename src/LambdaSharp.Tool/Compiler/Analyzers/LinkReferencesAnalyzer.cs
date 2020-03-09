@@ -71,6 +71,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
             return true;
@@ -131,6 +133,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     }
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
             return true;
@@ -192,6 +196,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                         // substitute found value as new argument
                         return $"${{{argName}}}";
                     } else {
+
+                        // TODO: track missing references
                         _builder.Log(Error.ReferenceDoesNotExist(subReferenceName), sourceLocation);
                     }
                     return null;
@@ -213,6 +219,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
             }
             return true;
@@ -229,6 +237,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(referenceName.Value), node);
             }
             return true;
@@ -276,6 +286,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.HandlerMustBeAFunctionOrSnsTopic, node.Handler);
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
             return true;
@@ -287,6 +299,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     _builder.Log(Error.HandlerMustBeAFunction, node.Handler);
                 }
             } else {
+
+                // TODO: track missing references
                 _builder.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
             }
             return true;
@@ -317,7 +331,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                             _builder.Log(Error.ReferenceCannotBeSelf(scope.Value), scope);
                         }
                     } else {
-                            _builder.Log(Error.ReferenceDoesNotExist(scope.Value), scope);
+
+                        // TODO: track missing references
+                        _builder.Log(Error.ReferenceDoesNotExist(scope.Value), scope);
                     }
                     break;
                 }

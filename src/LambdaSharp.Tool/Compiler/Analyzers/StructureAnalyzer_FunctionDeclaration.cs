@@ -53,6 +53,10 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         //--- Methods ---
         public override bool VisitStart(FunctionDeclaration node) {
 
+            // register item declaration
+            _builder.RegisterItemDeclaration(node);
+            node.ReferenceExpression = FnRef(node.FullName, resolved: true);
+
             // validate attributes
             ValidateExpressionIsNumber(node, node.Memory, Error.MemoryAttributeInvalid);
             ValidateExpressionIsNumber(node, node.Timeout, Error.TimeoutAttributeInvalid);

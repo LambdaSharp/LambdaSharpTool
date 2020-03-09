@@ -529,6 +529,60 @@ namespace LambdaSharp.Tool.Compiler {
             }
         }
 
+        public bool DetectCircularDependencies() {
+            var visited = new HashSet<AItemDeclaration>();
+            var found = new List<AItemDeclaration>();
+
+            // build list of discovered declarations in reverse discovery order
+            foreach(var declaration in ItemDeclarations) {
+                Visit(
+                    declaration,
+                    current => current.Dependencies,
+                    visited,
+                    found
+                );
+            }
+
+            // revisit discovered delcarations in reverse order to determine circular dependencies
+            visited.Clear();
+            var result = false;
+            foreach(var declaration in ((IEnumerable<AItemDeclaration>)found).Reverse()) {
+                var circularDependencies = new List<AItemDeclaration>();
+                Visit(
+                    declaration,
+                    current => declaration.ReverseDependencies,
+                    visited,
+                    circularDependencies
+                );
+                if(circularDependencies.Count > 1) {
+                    var circularPath = string.Join(" -> ", circularDependencies.Select(dependency => dependency.FullName));
+                    this.Log(Error.CircularDependencyDetected(circularPath), circularDependencies.First());
+                    result = true;
+                }
+            }
+            return result;
+
+            // local functions
+            void Visit(
+                AItemDeclaration declaration,
+                Func<AItemDeclaration, IEnumerable<AItemDeclaration.DependencyRecord>> getDependencies,
+                HashSet<AItemDeclaration> visited,
+                List<AItemDeclaration> finished
+            ) {
+
+                // check if declaration has already been visited
+                if(!visited.Add(declaration)) {
+                    return;
+                }
+
+                // recurse over all declarations this declaration is dependent on
+                foreach(var dependency in getDependencies(declaration)) {
+                    Visit(dependency.ReferencedDeclaration, getDependencies, visited, finished);
+                }
+                finished.Add(declaration);
+            }
+        }
+
         private ModuleManifest GetManifest(JObject cloudformation) {
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)

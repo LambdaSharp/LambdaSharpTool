@@ -56,7 +56,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         private LiteralExpression? _description;
         private AExpression? _referenceExpression;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
-        private readonly List<AExpression> _reverseDependencies = new List<AExpression>();
+        private readonly List<DependencyRecord> _reverseDependencies = new List<DependencyRecord>();
         private SyntaxNodeCollection<AItemDeclaration> _declarations;
 
         //--- Constructors ---
@@ -110,7 +110,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         /// </summary>
         /// <typeparam name="ASyntaxNode"></typeparam>
         /// <returns></returns>
-        public IEnumerable<AExpression> ReverseDependencies => _reverseDependencies;
+        public IEnumerable<DependencyRecord> ReverseDependencies => _reverseDependencies;
 
         //--- Methods ---
         public void TrackDependency(AItemDeclaration referencedDeclaration, AExpression dependentExpression) {
@@ -120,8 +120,13 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
             if(dependentExpression is null) {
                 throw new ArgumentNullException(nameof(dependentExpression));
             }
-            _dependencies.Add(new AItemDeclaration.DependencyRecord(referencedDeclaration, FindConditions(dependentExpression), dependentExpression));
-            referencedDeclaration._reverseDependencies.Add(dependentExpression);
+            var conditions = FindConditions(dependentExpression);
+            _dependencies.Add(new AItemDeclaration.DependencyRecord(referencedDeclaration, conditions, dependentExpression));
+            referencedDeclaration._reverseDependencies.Add(new AItemDeclaration.DependencyRecord(
+                dependentExpression.ParentItemDeclaration ?? throw new ShouldNeverHappenException(),
+                conditions,
+                dependentExpression
+            ));
 
             // local functions
             IEnumerable<ConditionBranch> FindConditions(ASyntaxNode node) {
@@ -152,7 +157,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
         }
 
         public void UntrackDependency(AExpression dependentExpression)
-            => _reverseDependencies.RemoveAll(reverseDependency => reverseDependency == dependentExpression);
+            => _reverseDependencies.RemoveAll(reverseDependency => reverseDependency.Expression == dependentExpression);
 
         public void UntrackAllDependencies() {
 
@@ -163,7 +168,7 @@ namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
                 // dependency.Expression.ReferencedDeclaration = null;
                 dependency.ReferencedDeclaration
                     ._reverseDependencies
-                    .RemoveAll(expression => expression.ParentItemDeclaration == this);
+                    .RemoveAll(reverseDependency => reverseDependency.ReferencedDeclaration == this);
             }
             _dependencies.Clear();
         }

@@ -190,7 +190,7 @@ namespace LambdaSharp.Tool.Compiler {
         #region *** Resource Validation ***
         public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
         public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
-        public static readonly ErrorFunc ResourceUnknownProperty = parameter => new Error(0, $"unrecognized property '{parameter}'");
+        public static readonly ErrorFunc2 ResourceUnknownProperty = (p1, p2) => new Error(0, $"unrecognized property '{p1}' on resource type {p2}");
         public static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
         public static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
 
@@ -258,6 +258,7 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         // TODO: keep reviewing errors
+        public static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
         public static readonly ErrorFunc DuplicateName = parameter => new Error(0, $"duplicate name '{parameter}'");
         public static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");

@@ -33,7 +33,14 @@ namespace Tests.LambdaSharp.Tool.Compiler.Parser {
     public class ParseTests : _Init {
 
         //--- Constructors ---
-        public ParseTests(ITestOutputHelper output) : base(output) { }
+        public ParseTests(ITestOutputHelper output) : base(output) {
+
+            // NOTE (2020-03-09, bjorg): the LAMBDASHARP_VERSION environment variable is used to
+            //  avoid hard-coding the tool version into the tests.
+            if(Environment.GetEnvironmentVariable("LAMBDASHARP_VERSION") == null) {
+                throw new ApplicationException("LAMBDASHARP_VERSION environment variable not initialized");
+            }
+        }
 
         //--- Methods ---
 
@@ -63,6 +70,7 @@ foreach(var item in builder.ItemDeclarations.OrderBy(item => item.FullName)) {
     builder.Log(new Debug($"{item.FullName} -> {item.GetType().Name} @ {item.SourceLocation}"));
 }
 
+            builder.DetectCircularDependencies();
             new ResolveReferences(builder).Resolve(moduleDeclaration);
 
             // assert
@@ -109,7 +117,7 @@ Items:
 
             while(parser.MoveNext()) {
                 var current = parser.Current;
-                Output.WriteLine(current.ToString());
+                Output.WriteLine($"{current.ToString()} ({current.Start.Line}, {current.Start.Column})");
             }
         }
     }
