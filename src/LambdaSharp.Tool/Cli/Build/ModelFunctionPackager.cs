@@ -252,9 +252,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var files = new HashSet<string>();
                     AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
 
-                    // check if any of the files has been modified more recently than hte function package
+                    // check if any of the files has been modified more recently than the function package
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
-                    var file = files.FirstOrDefault(file => File.GetLastWriteTime(file) > functionPackageDate);
+                    var file = files.FirstOrDefault(f => File.GetLastWriteTime(f) > functionPackageDate);
                     if(file == null) {
                         Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
                         if(mappings.Any()) {
