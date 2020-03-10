@@ -18,7 +18,7 @@
     ```
 
 ## Install .NET Core 3.1 on Amazon Linux 2
-1. Open the _Amazon Linux 2_ in _Windows Terminal_.
+1. Open _Amazon Linux 2_ in _Windows Terminal_.
 1. Register the Microsoft package repository.
     ```bash
     rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
@@ -27,5 +27,5 @@
     ```
     yum install dotnet-sdk-3.1
     ```
-## TODO: mount C:\ drive
-Need to figure out how to mount the C:\ drive on the Amazon Linux 2 in WSL.
+## Limitations
+* The Amazon Linux 2 shell does not have access to local files as the `/mnt/c/` folder is empty.
