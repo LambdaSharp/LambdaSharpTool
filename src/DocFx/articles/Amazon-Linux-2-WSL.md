@@ -13,7 +13,8 @@
         "guid": "{3dffc929-1f2e-44cc-8253-9635e0298f6b}",
         "hidden": false,
         "name": "Amazon Linux 2",
-        "commandline": "wsl.exe -d Amazon2"
+        "commandline": "wsl.exe -d Amazon2",
+        "startingDirectory" : "C:\\"
     }
     ```
 
