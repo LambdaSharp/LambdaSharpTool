@@ -24,8 +24,16 @@
     rpm -Uvh https://packages.microsoft.com/config/centos/7/packages-microsoft-prod.rpm
     ```
 1. Install .NET Core 3.1
-    ```
+    ```bash
     yum install dotnet-sdk-3.1
     ```
-## Limitations
-* The Amazon Linux 2 shell does not have access to local files as the `/mnt/c/` folder is empty.
+
+## Enable access C:\ from Amazon Linux 2
+1. Install package with `mount` utility
+    ```bash
+    yum install util-linux-ng
+    ```
+1. Mount C:\ drive
+    ```bash
+    mount -t drvfs C: /mnt/c
+    ```
