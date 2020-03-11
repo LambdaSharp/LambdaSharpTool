@@ -460,7 +460,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             // TODO: validate 'node.Filters'; see https://docs.aws.amazon.com/sns/latest/dg/sns-subscription-filter-policies.html
 
             // key: name of attribute to filter on
-            // value: list of possible matches (OR'ed together)
+            // value: list of possible matches (or-ed together)
             //  "text": exact match with 'text'
             //  { "anything-but": "text" }
             //  { "anything-but": number }
