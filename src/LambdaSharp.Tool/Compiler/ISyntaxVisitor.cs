@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Compiler {
 

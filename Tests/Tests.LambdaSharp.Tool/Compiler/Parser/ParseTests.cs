@@ -24,7 +24,7 @@ using System.Linq;
 using LambdaSharp.Tool;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 

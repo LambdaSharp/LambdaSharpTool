@@ -21,7 +21,7 @@
 using System.Linq;
 using FluentAssertions;
 using LambdaSharp.Tool.Compiler.Parser;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 

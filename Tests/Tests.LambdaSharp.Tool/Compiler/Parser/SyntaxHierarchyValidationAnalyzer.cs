@@ -20,7 +20,7 @@
 
 using FluentAssertions;
 using LambdaSharp.Tool.Compiler;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 

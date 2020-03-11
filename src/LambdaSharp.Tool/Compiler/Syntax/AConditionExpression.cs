@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Syntax {
 
     public abstract class AConditionExpression : AExpression { }
 

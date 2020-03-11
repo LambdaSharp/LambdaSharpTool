@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
 using LambdaSharp.Tool.Compiler.Parser;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

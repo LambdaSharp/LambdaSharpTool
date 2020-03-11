@@ -19,7 +19,7 @@
 using System;
 using System.Linq;
 
-namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Syntax {
 
     public abstract class ADeclaration : ASyntaxNode { }
 

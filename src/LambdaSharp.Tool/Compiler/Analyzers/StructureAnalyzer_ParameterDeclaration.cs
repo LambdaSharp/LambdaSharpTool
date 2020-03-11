@@ -20,7 +20,7 @@
 
 using System.Linq;
 using System.Text.RegularExpressions;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 

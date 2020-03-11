@@ -26,7 +26,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon;
-using LambdaSharp.Tool.Compiler.Parser.Syntax;
+using LambdaSharp.Tool.Compiler.Syntax;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

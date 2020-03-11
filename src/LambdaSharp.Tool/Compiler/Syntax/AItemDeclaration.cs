@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LambdaSharp.Tool.Compiler.Parser.Syntax {
+namespace LambdaSharp.Tool.Compiler.Syntax {
 
     public abstract class AItemDeclaration : ADeclaration {
 
