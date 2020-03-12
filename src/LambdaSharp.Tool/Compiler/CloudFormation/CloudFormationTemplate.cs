@@ -60,7 +60,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         public string? Type { get; set; }
         public CloudFormationObjectExpression Properties { get; set; } = new CloudFormationObjectExpression();
         public List<string> DependsOn { get; set; } = new List<string>();
-        public Dictionary<string, CloudFormationObjectExpression> Metadata { get; } = new Dictionary<string, CloudFormationObjectExpression>();
+        public Dictionary<string, CloudFormationObjectExpression> Metadata { get; set; } = new Dictionary<string, CloudFormationObjectExpression>();
         public string? Condition { get; set; }
         public string? DeletionPolicy { get; set; }
     }
