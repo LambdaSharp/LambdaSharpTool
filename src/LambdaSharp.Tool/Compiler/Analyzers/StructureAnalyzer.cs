@@ -663,7 +663,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         }
 
         public override bool VisitStart(JoinFunctionExpression node) {
-            AssertIsLiteralString(node.Separator);
+            AssertIsLiteralString(node.Delimiter);
             AssertIsValueExpression(node.Values);
             return true;
         }

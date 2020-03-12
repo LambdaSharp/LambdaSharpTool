@@ -348,15 +348,15 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         //  - Ref
 
         //--- Fields ---
-        private LiteralExpression? _separator;
+        private LiteralExpression? _delimiter;
         private AExpression? _values;
 
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
-        public LiteralExpression Separator {
-            get => _separator ?? throw new InvalidOperationException();
-            set => _separator = SetParent(value) ?? throw new ArgumentNullException();
+        public LiteralExpression Delimiter {
+            get => _delimiter ?? throw new InvalidOperationException();
+            set => _delimiter = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         public AExpression Values {
@@ -369,13 +369,13 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
             if(!visitor.VisitStart(this)) {
                 return this;
             }
-            Separator = Separator.Visit(visitor) ?? throw new NullValueException();
+            Delimiter = Delimiter.Visit(visitor) ?? throw new NullValueException();
             Values = Values.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
         }
 
         public override ASyntaxNode CloneNode() => new JoinFunctionExpression {
-            Separator = Separator.Clone(),
+            Delimiter = Delimiter.Clone(),
             Values = Values.Clone()
         };
     }
@@ -403,9 +403,9 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         }
 
         // TODO: use [DisallowNull] or make non-null?
-        public AExpression? Values {
-            get => _values;
-            set => _values = SetParent(value);
+        public AExpression Values {
+            get => _values ?? throw new InvalidOperationException();
+            set => _values = SetParent(value) ?? throw new ArgumentNullException();
         }
 
         //--- Methods ---
@@ -414,7 +414,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
                 return this;
             }
             Index = Index.Visit(visitor) ?? throw new NullValueException();
-            Values = Values?.Visit(visitor);
+            Values = Values?.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
         }
 
@@ -595,6 +595,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
             }
         }
 
+        // TODO: I don't think we need this anymore
         public bool Resolved { get; set; }
 
         //--- Methods ---

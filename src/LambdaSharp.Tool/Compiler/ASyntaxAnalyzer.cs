@@ -53,7 +53,7 @@ namespace LambdaSharp.Tool.Compiler {
         };
 
         public static JoinFunctionExpression FnJoin(string separator, IEnumerable<AExpression> values) => new JoinFunctionExpression {
-            Separator = Literal(separator),
+            Delimiter = Literal(separator),
             Values = new ListExpression(values ?? throw new ArgumentNullException(nameof(values))),
         };
 

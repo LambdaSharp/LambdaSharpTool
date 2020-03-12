@@ -964,7 +964,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
                     return new JoinFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Separator = separatorLiteral,
+                        Delimiter = separatorLiteral,
                         Values = parameterList[1]
                     };
                 }
