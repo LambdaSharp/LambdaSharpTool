@@ -252,9 +252,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var files = new HashSet<string>();
                     AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
 
-                    // check if any of the files has been modified more recently than hte function package
+                    // check if any of the files has been modified more recently than the function package
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
-                    var file = files.FirstOrDefault(file => File.GetLastWriteTime(file) > functionPackageDate);
+                    var file = files.FirstOrDefault(f => File.GetLastWriteTime(f) > functionPackageDate);
                     if(file == null) {
                         Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
                         if(mappings.Any()) {
@@ -503,12 +503,12 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // add compile file references
                 foreach(var compile in csproj.Descendants("Compile").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(compile));
+                    AddFileReferences(GetFilePathFromIncludeAttribute(compile));
                 }
 
                 // add content file references
                 foreach(var content in csproj.Descendants("Content").Where(node => node.Attribute("Include") != null)) {
-                    AddProjectFiles(files, GetFilePathFromIncludeAttribute(content));
+                    AddFileReferences(GetFilePathFromIncludeAttribute(content));
                 }
 
                 // added embedded resources
