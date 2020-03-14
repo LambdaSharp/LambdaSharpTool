@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.9) - 2020-02-25
+# LambdaSharp "Geminus" Release (v0.7.0.10) - 2020-03-13
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,6 +180,13 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.10) - 2020-03-13
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where content references in _.csproj_ files were always parsed as XML files.
+
 ### (v0.7.0.9) - 2020-02-25
 
 #### Fixes
@@ -200,7 +207,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * Fixed an issue where the CLI required the `~/.aws/credentials` file to exist even when `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` environment variables are set.
 * LambdaSharp SDK
     * Fixed an issue where headers returned by `APIGatewayProxyRequest` where not case-insensitive.
-* LambdaSharp Core Services
+* LambdaSharp Core Module
     * Fixed an issue with Rollbar projects failing to be created because the generated project name exceeded 32 characters.
 
 ### (v0.7.0.7) - 2020-01-31
