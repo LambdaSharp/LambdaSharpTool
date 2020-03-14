@@ -7,14 +7,15 @@
 
 ## Add Amazon Linux 2 to Windows Terminal
 1. Open _Windows Terminal_ settings.
-1. Add the following snippet to _Windows Terminal_ settings.
+1. Add the following snippet to _Windows Terminal_ settings. The icon path is assuming _Amazon2.zip_ was extracted into _C:\Amazon2_ folder.
     ```json
     {
         "guid": "{3dffc929-1f2e-44cc-8253-9635e0298f6b}",
         "hidden": false,
         "name": "Amazon Linux 2",
         "commandline": "wsl.exe -d Amazon2",
-        "startingDirectory" : "C:\\"
+        "startingDirectory" : "C:\\",
+        "icon": "C:\\Amazon2\\assets\\AWS-icon.png"
     }
     ```
 
@@ -27,14 +28,4 @@
 1. Install .NET Core 3.1
     ```bash
     yum install dotnet-sdk-3.1
-    ```
-
-## Enable access C:\ from Amazon Linux 2
-1. Install package with `mount` utility
-    ```bash
-    yum install util-linux-ng
-    ```
-1. Mount C:\ drive
-    ```bash
-    mount -t drvfs C: /mnt/c
     ```
