@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Tool.Compiler.Syntax;
 using Microsoft.CSharp.RuntimeBinder;
@@ -26,8 +27,8 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
     public class CloudFormationGenerator {
 
         //--- Class Methods ---
-        public static CloudFormationTemplate Translate(Builder builder)
-            => throw new NotImplementedException();
+        public static CloudFormationTemplate Translate(ModuleDeclaration module, Builder builder)
+            => new CloudFormationGenerator(builder).Translate(module);
 
         private static ACloudFormationExpression CreateFunction(string functionName, params ACloudFormationExpression[] parameters)
             => new CloudFormationObjectExpression {
@@ -41,6 +42,84 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         private CloudFormationGenerator(Builder builder) => _builder = builder ?? throw new ArgumentNullException(nameof(builder));
 
         //--- Methods ---
+        private CloudFormationTemplate Translate(ModuleDeclaration module) {
+            var template = new CloudFormationTemplate {
+                Description = (module.Description != null)
+                    ? module.Description.Value.TrimEnd() + $" (v{_builder.ModuleVersion})"
+                    : null
+            };
+
+            // check if we need to add the SAM transform to the output template
+            if(module.HasSamTransform) {
+                template.Transforms.Add("AWS::Serverless-2016-10-31");
+            }
+
+            // add declarations
+            foreach(var declaration in _builder.ItemDeclarations) {
+                Translate(template, declaration);
+
+                // check if declaration is public and needs to be exported
+                if((declaration is IScopedDeclaration scopedDeclaration) && (scopedDeclaration.IsPublic)) {
+                    template.Outputs.Add(declaration.LogicalId,  new CloudFormationOutput {
+                        Description = declaration.Description?.Value,
+                        Value = Translate(scopedDeclaration.ReferenceExpression ?? throw new NullValueException()),
+                        Export = new Dictionary<string, ACloudFormationExpression> {
+                            ["Name"] = Translate(ASyntaxAnalyzer.FnSub($"${{AWS::StackName}}::{declaration.FullName}"))
+                        }
+                    });
+                }
+            }
+
+            // add module manifest
+            var manifest = new CloudFormationModuleManifest {
+                ModuleInfo = _builder.ModuleInfo,
+                Description = module.Description?.Value,
+                CoreServicesVersion = _builder.CoreServicesReferenceVersion,
+                ParameterSections = _builder.ItemDeclarations.OfType<ParameterDeclaration>()
+                    .GroupBy(input => input.Section?.Value ?? "Module Settings")
+                    .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
+                    .Select(group => new CloudFormationModuleManifestParameterSection {
+                        Title = group.Key,
+                        Parameters = group.Select(input => new CloudFormationModuleManifestParameter {
+                            Name = input.LogicalId,
+                            Type = input.Type?.Value ?? "String",
+                            Label = input.Label?.Value,
+                            Default = input.Default?.Value,
+                            Import = input.Import?.Value,
+                            AllowedValues = input.AllowedValues.Any()
+                                ? input.AllowedValues.Select(allowedValue => allowedValue.Value).ToList()
+                                : null,
+                            AllowedPattern = input.AllowedPattern?.Value,
+                            ConstraintDescription = input.ConstraintDescription?.Value
+                        }).ToList()
+                    }).ToList(),
+                Artifacts = _builder.Artifacts.ToList(),
+                Dependencies = _builder.Dependencies
+
+                    // no need to store LambdaSharp.Core dependency since the manifest already has a CoreServicesVersion property
+                    .Where(dependency => dependency.ModuleLocation.ModuleInfo.FullName != "LambdaSharp.Core")
+                    .Select(dependency => new CloudFormationModuleManifestDependency {
+                        ModuleInfo = dependency.ModuleLocation.ModuleInfo,
+                        Type = dependency.Type
+                    })
+                    .OrderBy(dependency => dependency.ModuleInfo.ToString())
+                    .ToList(),
+                ResourceTypes = _builder.CustomResourceTypes.ToList(),
+                Outputs = _builder.ItemDeclarations
+                    .OfType<IScopedDeclaration>()
+                    .Where(item => item.IsPublic)
+                    .Select(item => new CloudFormationModuleManifestOutput {
+                        Name = item.FullName,
+                        Description = item.Description?.Value,
+                        Type = item.Type?.Value ?? "String"
+                    })
+                    .OrderBy(output => output.Name)
+                    .ToList(),
+            };
+            template.Metadata.Add("LambdaSharp::Manifest", manifest);
+
+            return template;
+        }
 
         #region *** Translate Declarations ***
         private void Translate(CloudFormationTemplate template, AItemDeclaration declaration) {
@@ -72,10 +151,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
 
         private void TranslateDeclaration(CloudFormationTemplate template, ImportDeclaration declaration) { }
 
-        private void TranslateDeclaration(CloudFormationTemplate template, VariableDeclaration declaration) {
-
-            // TODO: check for export scope
-        }
+        private void TranslateDeclaration(CloudFormationTemplate template, VariableDeclaration declaration) { }
 
         private void TranslateDeclaration(CloudFormationTemplate template, GroupDeclaration declaration) { }
 
@@ -90,7 +166,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                 Condition = declaration.IfConditionName,
 
                 // TODO (2020-02-12, bjorg): ability to set Metadata and DeletionPolicy
-                Metadata = new System.Collections.Generic.Dictionary<string, CloudFormationObjectExpression>(),
+                Metadata = new Dictionary<string, ACloudFormationExpression>(),
                 DeletionPolicy = null
             });
 

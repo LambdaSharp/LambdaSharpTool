@@ -125,6 +125,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
+        public bool HasSamTransform => HasPragma("sam-transform");
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {

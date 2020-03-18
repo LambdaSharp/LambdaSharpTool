@@ -26,6 +26,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon;
+using LambdaSharp.Tool.Compiler.CloudFormation;
 using LambdaSharp.Tool.Compiler.Syntax;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
@@ -129,7 +130,7 @@ namespace LambdaSharp.Tool.Compiler {
         //--- Properties ---
         public ModuleManifest Manifest { get; set; }
         public ModuleLocation ModuleLocation { get; set; }
-        public ModuleManifestDependencyType Type;
+        public CloudFormationModuleManifestDependencyType Type;
     }
 
     // TODO: rename class since it's not really used for building the final result; it's more about tracking meta-data of the module
@@ -157,6 +158,7 @@ namespace LambdaSharp.Tool.Compiler {
         public VersionInfo ModuleVersion { get; set; }
         public CloudFormationSpec CloudformationSpec { get; set; }
         public Dictionary<string, ModuleManifestResourceType> LocalResourceTypes { get; } = new Dictionary<string, ModuleManifestResourceType>();
+        public IEnumerable<Dependency> Dependencies => _dependencies.Values;
 
         // TODO: initialize the settings
         public VersionInfo CoreServicesReferenceVersion { get; set; }

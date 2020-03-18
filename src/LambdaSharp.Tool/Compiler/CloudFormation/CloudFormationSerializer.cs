@@ -52,7 +52,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                 writer.WriteStartObject();
                 WriteItem("AWSTemplateFormatVersion", template.AWSTemplateFormatVersion);
                 WriteItem("Description", template.Description);
-                WriteCollection("Transform", template.Transform);
+                WriteCollection("Transform", template.Transforms);
                 WriteCollection("Parameters", template.Parameters);
                 WriteCollection("Mappings", template.Mappings);
                 WriteCollection("Conditions", template.Conditions);

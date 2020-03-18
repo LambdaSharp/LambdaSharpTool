@@ -182,10 +182,13 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
 
         //--- Properties ---
         string FullName { get; }
+        LiteralExpression? Type { get; }
+        LiteralExpression? Description { get; }
         SyntaxNodeCollection<LiteralExpression>? Scope { get; }
-        IEnumerable<string>? ScopeValues => Scope.Select(item => item.Value).ToList();
+        IEnumerable<string>? ScopeValues => Scope?.Select(item => item.Value).ToList();
         bool HasSecretType { get; }
         AExpression? ReferenceExpression { get; }
+        bool IsPublic => Scope?.Any(item => item.Value == "public") ?? false;
     }
 
     /// <summary>
@@ -756,6 +759,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
         public bool HasSecretType => false;
+        public LiteralExpression? Type => ASyntaxAnalyzer.Literal("String");
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
@@ -920,6 +924,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
+        public LiteralExpression? Type => ASyntaxAnalyzer.Literal("AWS::Lambda::Function");
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {

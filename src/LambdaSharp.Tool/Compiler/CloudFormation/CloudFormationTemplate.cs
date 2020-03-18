@@ -21,6 +21,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace LambdaSharp.Tool.Compiler.CloudFormation {
 
@@ -29,13 +31,13 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         //--- Properties ---
         public string AWSTemplateFormatVersion => "2010-09-09";
         public string? Description { get; set; }
-        public List<string> Transform { get; } = new List<string>();
-        public Dictionary<string, CloudFormationParameter> Parameters { get; } = new Dictionary<string, CloudFormationParameter>();
-        public Dictionary<string, Dictionary<string, string>> Mappings { get; } = new Dictionary<string, Dictionary<string, string>>();
-        public Dictionary<string, CloudFormationObjectExpression> Conditions { get; } = new Dictionary<string, CloudFormationObjectExpression>();
-        public Dictionary<string, CloudFormationResource> Resources { get; } = new Dictionary<string, CloudFormationResource>();
-        public Dictionary<string, CloudFormationOutput> Outputs { get; } = new Dictionary<string, CloudFormationOutput>();
-        public Dictionary<string, CloudFormationObjectExpression> Metadata { get; } = new Dictionary<string, CloudFormationObjectExpression>();
+        public List<string> Transforms { get; set; } = new List<string>();
+        public Dictionary<string, CloudFormationParameter> Parameters { get; set; } = new Dictionary<string, CloudFormationParameter>();
+        public Dictionary<string, Dictionary<string, string>> Mappings { get; set; } = new Dictionary<string, Dictionary<string, string>>();
+        public Dictionary<string, CloudFormationObjectExpression> Conditions { get; set; } = new Dictionary<string, CloudFormationObjectExpression>();
+        public Dictionary<string, CloudFormationResource> Resources { get; set; } = new Dictionary<string, CloudFormationResource>();
+        public Dictionary<string, CloudFormationOutput> Outputs { get; set; } = new Dictionary<string, CloudFormationOutput>();
+        public Dictionary<string, ACloudFormationExpression> Metadata { get; set; } = new Dictionary<string, ACloudFormationExpression>();
     }
 
     public class CloudFormationParameter {
@@ -60,7 +62,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         public string? Type { get; set; }
         public CloudFormationObjectExpression Properties { get; set; } = new CloudFormationObjectExpression();
         public List<string> DependsOn { get; set; } = new List<string>();
-        public Dictionary<string, CloudFormationObjectExpression> Metadata { get; set; } = new Dictionary<string, CloudFormationObjectExpression>();
+        public Dictionary<string, ACloudFormationExpression> Metadata { get; set; } = new Dictionary<string, ACloudFormationExpression>();
         public string? Condition { get; set; }
         public string? DeletionPolicy { get; set; }
     }
@@ -69,7 +71,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
 
         //--- Properties ---
         public ACloudFormationExpression? Value { get; set; }
-        public ACloudFormationExpression? Export { get; set; }
+        public Dictionary<string, ACloudFormationExpression>? Export { get; set; }
         public string? Description { get; set; }
         public string? Condition { get; set; }
     }
@@ -186,5 +188,140 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
 
         //--- Properties ---
         public string Value { get; }
+    }
+
+    public class CloudFormationModuleNameMappings {
+
+        //--- Constants ---
+        public const string CurrentVersion = "2019-07-04";
+
+
+        //--- Properties ---
+        public string Version { get; set; } = CurrentVersion;
+        public IDictionary<string, string> ResourceNameMappings { get; set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> TypeNameMappings { get; set; } = new Dictionary<string, string>();
+    }
+
+    public class CloudFormationModuleManifest : ACloudFormationExpression {
+
+        //--- Constants ---
+        public const string CurrentVersion = "2019-07-04";
+
+        //--- Fields ---
+
+        [JsonIgnore]
+        private ModuleInfo? _moduleInfo;
+
+        //--- Properties ---
+        public string Version { get; set; } = CurrentVersion;
+
+        [JsonProperty("Module")]
+        public ModuleInfo ModuleInfo {
+            get => _moduleInfo ?? throw new InvalidOperationException();
+            set => _moduleInfo = value ?? throw new ArgumentNullException();
+        }
+
+        public string? Description { get; set; }
+        public string? TemplateChecksum { get; set; }
+        public DateTime Date { get; set; }
+        public VersionInfo? CoreServicesVersion { get; set; }
+        public List<CloudFormationModuleManifestParameterSection> ParameterSections { get; set; } = new List<CloudFormationModuleManifestParameterSection>();
+        public CloudFormationModuleManifestGitInfo? Git { get; set; }
+        public IList<string> Artifacts { get; set; } = new List<string>();
+        public IList<CloudFormationModuleManifestDependency> Dependencies { get; set; } = new List<CloudFormationModuleManifestDependency>();
+        public IList<CloudFormationModuleManifestResourceType> ResourceTypes { get; set; } = new List<CloudFormationModuleManifestResourceType>();
+        public IList<CloudFormationModuleManifestOutput> Outputs { get; set; } = new List<CloudFormationModuleManifestOutput>();
+
+        //--- Methods ---
+        public string GetModuleTemplatePath() => ModuleInfo.GetArtifactPath($"cloudformation_{ModuleInfo.FullName}_{TemplateChecksum}.json");
+        public string GetFullName() => ModuleInfo.FullName;
+        public string GetNamespace() => ModuleInfo.Namespace;
+        public string GetName() => ModuleInfo.Name;
+        public VersionInfo GetVersion() => ModuleInfo.Version;
+
+        public IEnumerable<CloudFormationModuleManifestParameter> GetAllParameters()
+            => ParameterSections.SelectMany(section => section.Parameters);
+    }
+
+    public class CloudFormationModuleManifestGitInfo {
+
+        //--- Properties ---
+        public string? Branch { get; set; }
+        public string? SHA { get; set; }
+    }
+
+    public class CloudFormationModuleManifestResourceType {
+
+       //--- Properties ---
+       public string? Type { get; set; }
+       public string? Description { get; set; }
+       public IEnumerable<CloudFormationModuleManifestResourceProperty> Properties { get; set; } = new List<CloudFormationModuleManifestResourceProperty>();
+       public IEnumerable<CloudFormationModuleManifestResourceAttribute> Attributes { get; set; } = new List<CloudFormationModuleManifestResourceAttribute>();
+    }
+
+    public class CloudFormationModuleManifestResourceProperty {
+
+       //--- Properties ---
+       public string? Name { get; set; }
+       public string? Description { get; set; }
+       public string Type { get; set; } = "String";
+       public bool Required { get; set; } = true;
+    }
+
+    public class CloudFormationModuleManifestResourceAttribute {
+
+       //--- Properties ---
+       public string? Name { get; set; }
+       public string? Description { get; set; }
+       public string Type { get; set; } = "String";
+    }
+
+    public class CloudFormationModuleManifestOutput {
+
+        //--- Properties ---
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string? Type { get; set; }
+    }
+
+    public class CloudFormationModuleManifestMacro {
+
+        //--- Properties ---
+        public string? Name { get; set; }
+    }
+
+    [JsonConverter(typeof(StringEnumConverter))]
+    public enum CloudFormationModuleManifestDependencyType {
+        Unknown,
+        Root,
+        Nested,
+        Shared
+    }
+
+    public class CloudFormationModuleManifestDependency {
+
+        //--- Properties ---
+        public ModuleInfo? ModuleInfo { get; set; }
+        public CloudFormationModuleManifestDependencyType Type { get; set; }
+    }
+
+    public class CloudFormationModuleManifestParameterSection {
+
+        //--- Properties ---
+        public string? Title { get; set; }
+        public List<CloudFormationModuleManifestParameter> Parameters { get; set; } = new List<CloudFormationModuleManifestParameter>();
+    }
+
+    public class CloudFormationModuleManifestParameter {
+
+        //--- Properties ---
+        public string? Name { get; set; }
+        public string? Type { get; set; }
+        public string? Label { get; set; }
+        public string? Default { get; set; }
+        public string? Import { get; set; }
+        public List<string>? AllowedValues { get; set; }
+        public string? AllowedPattern { get; set; }
+        public string? ConstraintDescription { get; set; }
     }
 }
