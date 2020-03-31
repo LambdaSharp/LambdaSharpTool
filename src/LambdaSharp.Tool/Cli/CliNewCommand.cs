@@ -106,7 +106,7 @@ namespace LambdaSharp.Tool.Cli {
                             settings,
                             functionName,
                             namespaceOption.Value(),
-                            frameworkOption.Value() ?? "netcoreapp2.1",
+                            frameworkOption.Value() ?? "netcoreapp3.1",
                             workingDirectory,
                             Path.Combine(workingDirectory, inputFileOption.Value() ?? "Module.yml"),
                             languageOption.Value() ?? "csharp",

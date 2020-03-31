@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export LAMBDASHARP_VERSION_PREFIX=0.7.0.10
+export LAMBDASHARP_VERSION_PREFIX=0.7.0.11
 export LAMBDASHARP_VERSION_SUFFIX=
 
 # create full version text

@@ -34,7 +34,7 @@ lash new function MyNewFunction
 <dt><code>--framework|-f &lt;VALUE&gt;</code></dt>
 <dd>
 
-(optional) Target .NET framework (default: 'netcoreapp2.1')
+(optional) Target .NET framework (default: 'netcoreapp3.1')
 </dd>
 
 <dt><code>--language|-l &lt;LANGUAGE&gt;</code></dt>

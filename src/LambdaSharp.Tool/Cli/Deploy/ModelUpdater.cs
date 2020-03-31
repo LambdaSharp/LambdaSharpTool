@@ -141,6 +141,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         new CloudFormationParameter {
                             ParameterKey = "DeploymentBucketName",
                             ParameterValue = Settings.DeploymentBucketName
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentChecksum",
+                            ParameterValue = manifest.TemplateChecksum
                         }
                     },
                     StackName = stackName,

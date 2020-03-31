@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.10) - 2020-03-13
+# LambdaSharp "Geminus" Release (v0.7.0.11) - 2020-03-31
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,6 +180,21 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
+### (v0.7.0.11) - 2020-03-31
+
+#### New Features
+
+* LambdaSharp CLI
+    * Added support for .NET Core 3.1 runtime.
+    * Updated embedded CloudFormation spec to 12.0.0.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where the module manifest was not updated properly when republishing a previously published CloudFormation template.
+    * Fixed an issue to make sure `ModuleChecksum` is always set to `DeploymentChecksum` and `DeploymentChecksum` is explicitly set to ensure it has the proper template checksum value.
+    * Fixed an issue where a function project was not being recompiled even when the API invocation schema generation failed.
+
 ### (v0.7.0.10) - 2020-03-13
 
 #### Fixes
@@ -197,6 +212,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 ### (v0.7.0.8) - 2020-02-25
 
 #### New Features
+
 * LambdaSharp Core Services
     * Added `RollbarProjectPattern` parameter to provide more flexibility on how Rollbar project names are generated.
 

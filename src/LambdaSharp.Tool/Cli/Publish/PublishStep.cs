@@ -121,6 +121,23 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // upload CloudFormation template
             var templateKey = await UploadTemplateFileAsync(manifest, "template");
 
+            // NOTE (2020-03-31, bjorg): it's possible that only the manifest changes, but we can't detect that without comparing them
+            if(!_changesDetected) {
+                var existingManifestText = await Settings.S3Client.GetS3ObjectContentsAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath);
+                if(existingManifestText != null) {
+                    try {
+                        var existingManifest = JsonConvert.DeserializeObject<ModuleManifest>(existingManifestText);
+                        if(manifest.TemplateChecksum != existingManifest.TemplateChecksum) {
+                            _changesDetected = true;
+                        }
+                    } catch {
+
+                        // something went wrong during deserialization; upload a new manifest
+                        _changesDetected = true;
+                    }
+                }
+            }
+
             // upload manifest under version number
             if(_changesDetected) {
                 var request = new TransferUtilityUploadRequest {
@@ -130,9 +147,11 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     }))),
                     BucketName = Settings.DeploymentBucketName,
                     ContentType = "application/json",
-                    Key = moduleInfo.VersionPath
+                    Key = moduleInfo.VersionPath,
+                    Metadata = {
+                        [AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName
+                    }
                 };
-                request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
                 await _transferUtility.UploadAsync(request);
             } else {
                 Settings.WriteAnsiLine($"=> No changes found to upload", AnsiTerminal.BrightBlack);

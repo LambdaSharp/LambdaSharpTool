@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
@@ -277,6 +278,7 @@ namespace LambdaSharp.Tool.Internal {
 
         public static async Task<(bool Success, Stack Stack)> GetStackAsync(this IAmazonCloudFormation cfnClient, string stackName, LogErrorDelegate logError) {
             Stack stack = null;
+            var attempts = 0;
             try {
                 var describe = await cfnClient.DescribeStacksAsync(new DescribeStacksRequest {
                     StackName = stackName
@@ -300,11 +302,17 @@ namespace LambdaSharp.Tool.Internal {
             } catch(AmazonCloudFormationException) {
 
                 // stack not found; nothing to do
+            } catch(HttpRequestException e) when(e.Message == "The requested name is valid, but no data of the requested type was found") {
+
+                // NOTE (2020-03-31, bjorg): avoid sporadic DNS issues by waiting an trying again
+                if(++attempts < 3) {
+                    await Task.Delay(TimeSpan.FromSeconds(attempts));
+                }
             }
             return (true, stack);
         }
 
-        public static async Task<string> GetS3ObjectContents(this IAmazonS3 s3Client, string bucketName, string key) {
+        public static async Task<string> GetS3ObjectContentsAsync(this IAmazonS3 s3Client, string bucketName, string key) {
             try {
                 var response = await s3Client.GetObjectAsync(new GetObjectRequest {
                     BucketName = bucketName,
