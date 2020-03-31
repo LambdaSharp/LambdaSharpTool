@@ -881,6 +881,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                 case "netcoreapp2.1":
                     runtime = Amazon.Lambda.Runtime.Dotnetcore21.ToString();
                     break;
+                case "netcoreapp3.1":
+                    runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                    break;
                 default:
                     LogError($"could not determine runtime from target framework: {targetFramework}; specify 'Runtime' attribute explicitly");
                     break;
