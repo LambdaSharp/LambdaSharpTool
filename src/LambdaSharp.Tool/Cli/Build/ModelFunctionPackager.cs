@@ -949,13 +949,16 @@ namespace LambdaSharp.Tool.Cli.Build {
             _existingPackages.Remove(schemaFile);
             var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
                 .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
+            var hasErrors = false;
             foreach(var mapping in mappings) {
                 if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
                     LogError($"failed to resolve method '{mapping.Method}'");
+                    hasErrors = true;
                     continue;
                 }
                 if(invocationTarget.Error != null) {
                     LogError(invocationTarget.Error);
+                    hasErrors = true;
                     continue;
                 }
 
@@ -1023,6 +1026,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }
                 }
+            }
+
+            // delete schema file if it contained errors (no point in caching those)
+            if(hasErrors) {
+                try {
+                    File.Delete(schemaFile);
+                } catch { }
             }
         }
     }

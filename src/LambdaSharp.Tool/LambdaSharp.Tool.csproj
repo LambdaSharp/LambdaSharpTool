@@ -3,7 +3,7 @@
     <Error Condition="'$(LAMBDASHARP_VERSION_PREFIX)' == ''" Text="Run '$LAMBDASHARP/Scripts/set-lash-version.sh' before building." />
   </Target>
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>LambdaSharp.Tool</RootNamespace>
     <NoWarn>CS1998</NoWarn>
 

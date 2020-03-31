@@ -193,6 +193,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * LambdaSharp CLI
     * Fixed an issue where the module manifest was not updated properly when republishing a previously published CloudFormation template.
     * Fixed an issue to make sure `ModuleChecksum` is always set to `DeploymentChecksum` and `DeploymentChecksum` is explicitly set to ensure it has the proper template checksum value.
+    * Fixed an issue where a function project was not being recompiled even when the API invocation schema generation failed.
 
 ### (v0.7.0.10) - 2020-03-13
 
