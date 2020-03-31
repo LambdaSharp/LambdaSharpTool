@@ -186,7 +186,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 * LambdaSharp CLI
     * Added support for .NET Core 3.1 runtime.
-    * Updated embedded CloudFormation spec to 12.0.0
+    * Updated embedded CloudFormation spec to 12.0.0.
 
 #### Fixes
 
