@@ -430,7 +430,7 @@ namespace LambdaSharp.Tool {
                     // nothing to do; GetS3ClientByBucketName already emitted an error
                     return null;
                 }
-                return await s3Client.GetS3ObjectContents(bucketName, key);
+                return await s3Client.GetS3ObjectContentsAsync(bucketName, key);
             } finally {
                 LogInfoPerformance($"GetS3ObjectContentsAsync() for s3://{bucketName}/{key}", stopwatch.Elapsed);
             }

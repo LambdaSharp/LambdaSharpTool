@@ -304,7 +304,7 @@ namespace LambdaSharp.Tool.Internal {
             return (true, stack);
         }
 
-        public static async Task<string> GetS3ObjectContents(this IAmazonS3 s3Client, string bucketName, string key) {
+        public static async Task<string> GetS3ObjectContentsAsync(this IAmazonS3 s3Client, string bucketName, string key) {
             try {
                 var response = await s3Client.GetObjectAsync(new GetObjectRequest {
                     BucketName = bucketName,
