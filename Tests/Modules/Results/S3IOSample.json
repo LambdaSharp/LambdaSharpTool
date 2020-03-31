@@ -175,10 +175,12 @@
       "Value": "Sample.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "74F09C79A2FBAE49E218B8336D46142A"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {

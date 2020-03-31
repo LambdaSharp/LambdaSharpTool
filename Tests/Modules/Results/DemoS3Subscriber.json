@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2EB660DCD19F606FEC57FB94264210CF"
+      "Default": "CA1FA7D110C9B2428DF72B0705D8103B"
     }
   },
   "Resources": {
@@ -133,7 +133,7 @@
             },
             "MODULE_INFO": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
             "LAMBDA_NAME": "Subscriber",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -207,7 +207,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -513,7 +513,7 @@
           "Fn::Sub": "/aws/lambda/${Subscriber}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -714,10 +714,12 @@
       "Value": "LambdaSharp.DemoS3Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "2EB660DCD19F606FEC57FB94264210CF"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -991,7 +993,7 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "2EB660DCD19F606FEC57FB94264210CF",
+      "TemplateChecksum": "CA1FA7D110C9B2428DF72B0705D8103B",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

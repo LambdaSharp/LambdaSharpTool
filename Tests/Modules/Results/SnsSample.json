@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6DD562239FF3E1E145FE0D5E0564FD23"
+      "Default": "DD448E1132B826695DF6EF1C269FBB7A"
     }
   },
   "Resources": {
@@ -132,7 +132,7 @@
             },
             "MODULE_INFO": "Sample.Sns:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -206,7 +206,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -445,7 +445,7 @@
           "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -575,10 +575,12 @@
       "Value": "Sample.Sns:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "6DD562239FF3E1E145FE0D5E0564FD23"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -808,7 +810,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "6DD562239FF3E1E145FE0D5E0564FD23",
+      "TemplateChecksum": "DD448E1132B826695DF6EF1C269FBB7A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

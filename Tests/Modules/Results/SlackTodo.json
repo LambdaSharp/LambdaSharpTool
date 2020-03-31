@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D55C0DD5CA9BB406D4777E825239D01B"
+      "Default": "DB45B17691D3E41FA3198FBC22A5AAC9"
     }
   },
   "Resources": {
@@ -151,7 +151,7 @@
             },
             "MODULE_INFO": "Demo.SlackTodo:1.0-DEV",
             "LAMBDA_NAME": "SlackCommand",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -234,7 +234,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -517,7 +517,7 @@
           "Fn::Sub": "/aws/lambda/${SlackCommand}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -763,10 +763,12 @@
       "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "D55C0DD5CA9BB406D4777E825239D01B"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1007,7 +1009,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "D55C0DD5CA9BB406D4777E825239D01B",
+      "TemplateChecksum": "DB45B17691D3E41FA3198FBC22A5AAC9",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

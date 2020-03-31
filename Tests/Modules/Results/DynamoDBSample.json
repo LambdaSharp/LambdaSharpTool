@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "1EA7AB164F158A1A98137205BE9C2165"
+      "Default": "368701BE9EC6403A38CD50482AA5BE83"
     }
   },
   "Resources": {
@@ -149,7 +149,7 @@
             },
             "MODULE_INFO": "Sample.DynamoDB:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -229,7 +229,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -504,7 +504,7 @@
           "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -622,10 +622,12 @@
       "Value": "Sample.DynamoDB:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "1EA7AB164F158A1A98137205BE9C2165"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -855,7 +857,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "1EA7AB164F158A1A98137205BE9C2165",
+      "TemplateChecksum": "368701BE9EC6403A38CD50482AA5BE83",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

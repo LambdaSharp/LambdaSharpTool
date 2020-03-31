@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "041B939466EFBBED03B243821506E76B"
+      "Default": "FF68811EFA467766405BC86021EBDB6A"
     }
   },
   "Resources": {
@@ -237,7 +237,7 @@
             },
             "MODULE_INFO": "Demo.TwitterNotifier:1.0-DEV",
             "LAMBDA_NAME": "NotifyFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -323,7 +323,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -575,7 +575,7 @@
           "Fn::Sub": "/aws/lambda/${NotifyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
@@ -710,10 +710,12 @@
       "Value": "Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "041B939466EFBBED03B243821506E76B"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1000,7 +1002,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "041B939466EFBBED03B243821506E76B",
+      "TemplateChecksum": "FF68811EFA467766405BC86021EBDB6A",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [

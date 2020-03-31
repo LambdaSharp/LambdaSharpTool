@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B3A39525BF182B02B8D47F0E74524517"
+      "Default": "C12AA767C6310527359CCCDC52CE02E8"
     }
   },
   "Resources": {
@@ -136,7 +136,7 @@
             },
             "MODULE_INFO": "Sample.Sqs:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -210,7 +210,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -479,7 +479,7 @@
           "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -612,10 +612,12 @@
       "Value": "Sample.Sqs:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "B3A39525BF182B02B8D47F0E74524517"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.0.11"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -845,7 +847,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
-      "TemplateChecksum": "B3A39525BF182B02B8D47F0E74524517",
+      "TemplateChecksum": "C12AA767C6310527359CCCDC52CE02E8",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.7.0",
       "ParameterSections": [
