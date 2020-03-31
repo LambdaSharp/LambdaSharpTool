@@ -39,7 +39,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         //--- Constants ---
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
-        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "3.2.3";
+        private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
 
         //--- Types ---
         private class CustomAssemblyResolver : BaseAssemblyResolver {
