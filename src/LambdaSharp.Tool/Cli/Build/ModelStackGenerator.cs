@@ -156,7 +156,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("ModuleChecksum", new Humidifier.Output {
-                Value = templateHash
+                Value = Fn.Ref("DeploymentChecksum")
             });
             _stack.Add("LambdaSharpTool", new Humidifier.Output {
                 Value = Settings.ToolVersion.ToString()
