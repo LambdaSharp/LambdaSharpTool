@@ -114,7 +114,8 @@ echo "*** Deploy Samples ***"
 echo "**********************"
 
 cd $LAMBDASHARP
-lash deploy \
+lash deploy  \
+    --verbose:exceptions \
     Samples/AlexaSample/bin/cloudformation.json \
     Samples/ApiSample/bin/cloudformation.json \
     Samples/CustomResourceTypeSample/bin/cloudformation.json \
