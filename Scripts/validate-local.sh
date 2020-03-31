@@ -81,7 +81,8 @@ LAMBDASHARP_TIER=TestContrib$SUFFIX
 lash init \
     --core-services enabled \
     --existing-s3-bucket-name="" \
-    --parameters $LAMBDASHARP/Scripts/lash-init-parameters.yml
+    --parameters $LAMBDASHARP/Scripts/lash-init-parameters.yml \
+    --verbose:exceptions
 if [ $? -ne 0 ]; then
     exit $?
 fi
