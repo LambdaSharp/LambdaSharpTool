@@ -3249,7 +3249,7 @@
         },
         "Memory": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "MountPoints": {
           "ItemType": "MountPoints",
@@ -3280,7 +3280,7 @@
         },
         "Vcpus": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "Volumes": {
           "ItemType": "Volumes",
@@ -4374,6 +4374,11 @@
           "Required": true
         }
       }
+    },
+    "AWS::CloudWatch::InsightRule.Tags": {
+      "ItemType": "Tag",
+      "Required": false,
+      "Type": "List"
     },
     "AWS::CodeBuild::Project.Artifacts": {
       "Properties": {
@@ -6760,6 +6765,14 @@
         }
       }
     },
+    "AWS::EC2::EC2Fleet.CapacityReservationOptionsRequest": {
+      "Properties": {
+        "UsageStrategy": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::EC2::EC2Fleet.FleetLaunchTemplateConfigRequest": {
       "Properties": {
         "LaunchTemplateSpecification": {
@@ -6786,6 +6799,10 @@
         "MaxPrice": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Placement": {
+          "Required": false,
+          "Type": "Placement"
         },
         "Priority": {
           "PrimitiveType": "Double",
@@ -6822,6 +6839,62 @@
         "AllocationStrategy": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "CapacityReservationOptions": {
+          "Required": false,
+          "Type": "CapacityReservationOptionsRequest"
+        },
+        "MaxTotalPrice": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MinTargetCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SingleAvailabilityZone": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "SingleInstanceType": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::EC2Fleet.Placement": {
+      "Properties": {
+        "Affinity": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AvailabilityZone": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GroupName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "HostId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "HostResourceGroupArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PartitionNumber": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SpreadDomain": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tenancy": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -6838,17 +6911,21 @@
         "InstancePoolsToUseCount": {
           "PrimitiveType": "Integer",
           "Required": false
-        }
-      }
-    },
-    "AWS::EC2::EC2Fleet.TagRequest": {
-      "Properties": {
-        "Key": {
+        },
+        "MaxTotalPrice": {
           "PrimitiveType": "String",
           "Required": false
         },
-        "Value": {
-          "PrimitiveType": "String",
+        "MinTargetCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SingleAvailabilityZone": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "SingleInstanceType": {
+          "PrimitiveType": "Boolean",
           "Required": false
         }
       }
@@ -6860,7 +6937,7 @@
           "Required": false
         },
         "Tags": {
-          "ItemType": "TagRequest",
+          "ItemType": "Tag",
           "Required": false,
           "Type": "List"
         }
@@ -14456,6 +14533,10 @@
     },
     "AWS::IoTEvents::DetectorModel.SetTimer": {
       "Properties": {
+        "DurationExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "Seconds": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -20386,6 +20467,14 @@
         }
       }
     },
+    "AWS::StepFunctions::StateMachine.TracingConfiguration": {
+      "Properties": {
+        "Enabled": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
     "AWS::Transfer::Server.EndpointDetails": {
       "Properties": {
         "AddressAllocationIds": {
@@ -21762,7 +21851,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "12.0.0",
+  "ResourceSpecificationVersion": "12.2.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -25427,6 +25516,10 @@
         "RuleState": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "Required": false,
+          "Type": "Tags"
         }
       }
     },
@@ -25540,6 +25633,11 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         },
         "Type": {
           "PrimitiveType": "String",
@@ -26804,6 +26902,36 @@
           "PrimitiveItemType": "String",
           "Required": true,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::Detective::Graph": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-detective-graph.html",
+      "Properties": {}
+    },
+    "AWS::Detective::MemberInvitation": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-detective-memberinvitation.html",
+      "Properties": {
+        "GraphArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MemberEmailAddress": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MemberId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Message": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -31132,6 +31260,10 @@
           "PrimitiveType": "Integer",
           "Required": false
         },
+        "StorageType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "SubnetIds": {
           "PrimitiveItemType": "String",
           "Required": true,
@@ -33196,6 +33328,11 @@
         "ServiceExecutionRole": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -38699,6 +38836,10 @@
           "ItemType": "TagsEntry",
           "Required": false,
           "Type": "List"
+        },
+        "TracingConfiguration": {
+          "Required": false,
+          "Type": "TracingConfiguration"
         }
       }
     },

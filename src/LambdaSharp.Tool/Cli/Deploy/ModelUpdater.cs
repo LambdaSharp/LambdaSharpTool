@@ -121,7 +121,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
                 : "";
-            Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset} {capabilities}");
+            } else {
+                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
+            }
             CreateChangeSetResponse response;
             try {
                 response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {

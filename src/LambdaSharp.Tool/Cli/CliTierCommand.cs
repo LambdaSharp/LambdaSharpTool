@@ -115,7 +115,11 @@ namespace LambdaSharp.Tool.Cli {
             if(!modulesToUpdate.Any()) {
                 return;
             }
-            Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier '{settings.TierName}'");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {settings.TierName}");
+            }
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter
             };
@@ -208,7 +212,11 @@ namespace LambdaSharp.Tool.Cli {
             var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(module.StackName);
             var changeSetName = $"{module.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
             Console.WriteLine();
-            Console.WriteLine($"=> Stack update initiated for {module.StackName}");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{module.StackName}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"=> Stack update initiated for {module.StackName}");
+            }
             var response = await settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
                 Capabilities = module.Stack.Capabilities,
                 ChangeSetName = changeSetName,
@@ -237,9 +245,9 @@ namespace LambdaSharp.Tool.Cli {
                 });
                 var outcome = await settings.CfnClient.TrackStackUpdateAsync(module.StackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
                 if(outcome.Success) {
-                    Console.WriteLine($"=> Stack update finished");
+                    Console.WriteLine("=> Stack update finished");
                 } else {
-                    Console.WriteLine($"=> Stack update FAILED");
+                    Console.WriteLine("=> Stack update FAILED");
                     LogError($"unable to update {module.ModuleDeploymentName}");
                 }
             } finally {

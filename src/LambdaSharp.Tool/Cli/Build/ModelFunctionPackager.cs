@@ -40,6 +40,7 @@ namespace LambdaSharp.Tool.Cli.Build {
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
+        private static string SYSTEM_OS_INFORMATION = "/etc/system-release";
 
         //--- Types ---
         private class CustomAssemblyResolver : BaseAssemblyResolver {
@@ -89,6 +90,26 @@ namespace LambdaSharp.Tool.Cli.Build {
             public RestApiSource RestApiSource;
             public WebSocketSource WebSocketSource;
         }
+
+        //--- Class Fields ---
+        private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
+
+            // check if running on Linux OS
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+
+                // check if OS information file contains Amazon Linux string
+                try {
+                    if(File.Exists(SYSTEM_OS_INFORMATION)) {
+                        var osRelease = File.ReadAllText(SYSTEM_OS_INFORMATION);
+                        return osRelease.StartsWith("Amazon Linux release 2", StringComparison.Ordinal);
+                    }
+                } catch { }
+            }
+            return false;
+        });
+
+        //--- Class Methods ---
+        private static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
         //--- Fields ---
         private ModuleBuilder _builder;
@@ -256,24 +277,33 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var functionPackageDate = File.GetLastWriteTime(functionPackage);
                     var file = files.FirstOrDefault(f => File.GetLastWriteTime(f) > functionPackageDate);
                     if(file == null) {
-                        Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
+                        var success = true;
                         if(mappings.Any()) {
 
                             // apply function schema to generate REST API and WebSocket models
                             try {
-                                ApplyInvocationSchemas(function, mappings, schemaFile);
+                                success = ApplyInvocationSchemas(function, mappings, schemaFile);
                             } catch(Exception e) {
                                 LogError("unable to read create-invoke-methods-schema output", e);
                                 return;
                             }
                         }
 
-                        // keep the existing package
-                        _existingPackages.Remove(functionPackage);
+                        // only skip compilation if we were able to apply the invocation schemas (or didn't have to)
+                        if(success) {
+                            if(Settings.UseAnsiConsole) {
+                                Console.WriteLine($"=> Skipping function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} (no changes found)");
+                            } else {
+                                Console.WriteLine($"=> Skipping function {function.Name} (no changes found)");
+                            }
 
-                        // set the module variable to the final package name
-                        _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
-                        return;
+                            // keep the existing package
+                            _existingPackages.Remove(functionPackage);
+
+                            // set the module variable to the final package name
+                            _builder.AddArtifact($"{function.FullName}::PackageName", functionPackage);
+                            return;
+                        }
                     } else {
                         LogInfoVerbose($"... change detected in {file}");
                     }
@@ -288,7 +318,15 @@ namespace LambdaSharp.Tool.Cli.Build {
             var projectName = mainPropertyGroup?.Element("AssemblyName")?.Value ?? Path.GetFileNameWithoutExtension(function.Project);
 
             // compile function project
-            Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}]");
+            var isNetCore31OrLater = targetFramework.CompareTo("netcoreapp3.") >= 0;
+            var isAmazonLinux2 = IsAmazonLinux2();
+            var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
+            var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Building function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
+            } else {
+                Console.WriteLine($"=> Building function {function.Name} [{targetFramework}, {buildConfiguration}{readyToRunText}]");
+            }
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
             if(forceBuild) {
@@ -379,7 +417,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // build project with AWS dotnet CLI lambda tool
-            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild)) {
+            if(!DotNetLambdaPackage(targetFramework, buildConfiguration, temporaryPackage, projectDirectory, forceBuild, isNetCore31OrLater, isAmazonLinux2, isReadyToRun)) {
 
                 // nothing to do; error was already reported
                 return;
@@ -566,12 +604,36 @@ namespace LambdaSharp.Tool.Cli.Build {
             });
         }
 
-        private bool DotNetLambdaPackage(string targetFramework, string buildConfiguration, string outputPackagePath, string projectDirectory, bool forceBuild) {
+        private bool DotNetLambdaPackage(
+            string targetFramework,
+            string buildConfiguration,
+            string outputPackagePath,
+            string projectDirectory,
+            bool forceBuild,
+            bool isNetCore31OrLater,
+            bool isAmazonLinux2,
+            bool isReadyToRun
+        ) {
             var dotNetExe = ProcessLauncher.DotNetExe;
             if(string.IsNullOrEmpty(dotNetExe)) {
                 LogError("failed to find the \"dotnet\" executable in path.");
                 return false;
             }
+
+            // set MSBuild optimization parameters
+            var msBuildParametersList = new List<string>();
+            if(isNetCore31OrLater) {
+
+                // allows disable tiered compilation since Lambda functions are generally short lived
+                msBuildParametersList.Add("/p:TieredCompilation=false");
+                msBuildParametersList.Add("/p:TieredCompilationQuickJit=false");
+            }
+
+            // enable Ready2Run when compiling on Amazon Linux 2
+            if(isReadyToRun) {
+                msBuildParametersList.Add("/p:PublishReadyToRun=true");
+            }
+            var msBuildParameters = string.Join(" ", msBuildParametersList);
 
             // NOTE: with --force-build, we need to explicitly invoke `dotnet build` to pass in the `--no-incremental` and `--force` options;
             //  we do this to ensure that `dotnet build` doesn't create an invalid executable when environment variables, such as LAMBDASHARP, change between builds.
@@ -582,7 +644,9 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "--force",
                     "--no-incremental",
                     "--configuration", buildConfiguration,
-                    "--framework", targetFramework
+                    "--framework", targetFramework,
+                    "--runtime", isNetCore31OrLater ? "linux-x64" : "rhel.7.2-x64",
+                    msBuildParameters
                 },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
@@ -597,7 +661,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "--configuration", buildConfiguration,
                     "--framework", targetFramework,
                     "--output-package", outputPackagePath,
-                    "--disable-interactive", "true"
+                    "--disable-interactive", "true",
+                    "--msbuild-parameters", $"\"{msBuildParameters}\""
                 },
                 projectDirectory,
                 Settings.VerboseLevel >= VerboseLevel.Detailed
@@ -696,7 +761,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             if(noCompile) {
                 return;
             }
-            Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Building function {AnsiTerminal.Yellow}{function.Name}{AnsiTerminal.Reset} [{function.Function.Runtime}]");
+            } else {
+                Console.WriteLine($"=> Building function {function.Name} [{function.Function.Runtime}]");
+            }
             var buildFolder = Path.GetDirectoryName(function.Project);
             var hash = Directory.GetFiles(buildFolder, "*", SearchOption.AllDirectories).ComputeHashForFiles(file => Path.GetRelativePath(buildFolder, file));
             var package = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_{hash}.zip");
@@ -941,7 +1010,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             return true;
         }
 
-        private void ApplyInvocationSchemas(
+        private bool ApplyInvocationSchemas(
             FunctionItem function,
             IEnumerable<ApiGatewayInvocationMapping> mappings,
             string schemaFile
@@ -949,16 +1018,16 @@ namespace LambdaSharp.Tool.Cli.Build {
             _existingPackages.Remove(schemaFile);
             var schemas = (Dictionary<string, InvocationTargetDefinition>)JsonConvert.DeserializeObject<Dictionary<string, InvocationTargetDefinition>>(File.ReadAllText(schemaFile))
                 .ConvertJTokenToNative(type => type == typeof(InvocationTargetDefinition));
-            var hasErrors = false;
+            var success = true;
             foreach(var mapping in mappings) {
                 if(!schemas.TryGetValue(mapping.Method, out var invocationTarget)) {
                     LogError($"failed to resolve method '{mapping.Method}'");
-                    hasErrors = true;
+                    success = false;
                     continue;
                 }
                 if(invocationTarget.Error != null) {
                     LogError(invocationTarget.Error);
-                    hasErrors = true;
+                    success = false;
                     continue;
                 }
 
@@ -1027,13 +1096,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     }
                 }
             }
-
-            // delete schema file if it contained errors (no point in caching those)
-            if(hasErrors) {
-                try {
-                    File.Delete(schemaFile);
-                } catch { }
-            }
+            return success;
         }
     }
 }

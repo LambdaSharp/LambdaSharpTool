@@ -76,7 +76,12 @@ namespace LambdaSharp.Finalizer {
         /// <returns>The task object representing the asynchronous operation.</returns>
         public virtual async Task DeleteDeployment(FinalizerProperties current) { }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="ProcessCreateResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to create a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
@@ -88,7 +93,12 @@ namespace LambdaSharp.Finalizer {
             };
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="ProcessDeleteResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to delete a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
@@ -121,8 +131,13 @@ namespace LambdaSharp.Finalizer {
             return new Response<FinalizerAttributes>();
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
+         /// <summary>
+        /// The <see cref="ProcessUpdateResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to update a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+       /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessUpdateResourceAsync(Request<FinalizerProperties> request) {

@@ -471,7 +471,11 @@ namespace LambdaSharp.Tool.Cli {
 
                 // create/update cloudformation stack
                 if(createNewTier) {
-                    Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                    if(Settings.UseAnsiConsole) {
+                        Console.WriteLine($"=> Stack creation initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
+                    } else {
+                        Console.WriteLine($"=> Stack creation initiated for {stackName}");
+                    }
                     var response = await settings.CfnClient.CreateStackAsync(new CreateStackRequest {
                         StackName = stackName,
                         Capabilities = new List<string> { },
@@ -489,7 +493,11 @@ namespace LambdaSharp.Tool.Cli {
                         return false;
                     }
                 } else {
-                    Console.WriteLine($"=> Stack update initiated for {stackName}");
+                    if(Settings.UseAnsiConsole) {
+                        Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
+                    } else {
+                        Console.WriteLine($"=> Stack update initiated for {stackName}");
+                    }
                     try {
                         var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
                         var response = await settings.CfnClient.UpdateStackAsync(new UpdateStackRequest {
@@ -619,7 +627,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // update API Gateway Account role if needed
             if(account.CloudwatchRoleArn != role.Arn) {
-                Console.WriteLine($"=> Updating API Gateway role");
+                Console.WriteLine("=> Updating API Gateway role");
                 while(true) {
                     try {
                         var response = await settings.ApiGatewayClient.UpdateAccountAsync(new UpdateAccountRequest {
@@ -633,9 +641,9 @@ namespace LambdaSharp.Tool.Cli {
                         });
                         break;
                     } catch(BadRequestException) {
-                        Console.WriteLine($"=> Waiting for new API Gateway role to become available, trying again in 5 seconds (this may take up 30 seconds)");
+                        Console.WriteLine("=> Waiting for new API Gateway role to become available, trying again in 5 seconds (this may take up 30 seconds)");
                     } catch(TooManyRequestsException) {
-                        Console.WriteLine($"=> Waiting for API Gateway to stop throttling, trying again in 5 seconds (this may take up 30 seconds)");
+                        Console.WriteLine("=> Waiting for API Gateway to stop throttling, trying again in 5 seconds (this may take up 30 seconds)");
                     }
                     await Task.Delay(TimeSpan.FromSeconds(5));
                 }

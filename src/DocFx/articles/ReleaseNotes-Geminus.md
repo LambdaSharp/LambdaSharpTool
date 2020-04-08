@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.11) - 2020-03-31
+# LambdaSharp "Geminus" Release (v0.7.0.12) - 2020-04-01
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -179,6 +179,24 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
 ## Releases
+
+### (v0.7.0.12) - 2020-04-10
+
+#### New Features
+
+* LambdaSharp CLI
+    * Enabled projects to be compiled with [_ReadyToRun_](https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images) optimization when targeting .NET Core 3.1 and running on _Amazon Linux 2_.
+    * Ensure compiled projects don't use [_Tiered Compilation/Quick JIT_](https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#tiered-compilation) for more consistent performance.
+    * Added support for creating Lambda functions using .NET Core 3.1.
+    * Highlight name of module, functions, and packages in console output for easier tracking (requires ANSI terminal compatibility).
+    * Updated embedded CloudFormation spec to 12.2.0.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue were a project would skip compilation even when the invocation schema generation had failed previously.
+* LambdaSharp SDK
+    * Fixed missing documentation XML comments.
 
 ### (v0.7.0.11) - 2020-03-31
 

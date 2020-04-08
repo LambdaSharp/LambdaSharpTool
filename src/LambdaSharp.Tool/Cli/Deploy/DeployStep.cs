@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // check version of previously deployed module
                 if(!deployOnlyIfExists) {
-                    Console.WriteLine($"=> Validating module for deployment tier");
+                    Console.WriteLine("=> Validating module for deployment tier");
                 }
                 var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest, showError: !deployOnlyIfExists);
                 if(!forceDeploy && !updateValidation.Success) {
@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!forceDeploy && !parameters.Any()) {
                     var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
                     if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
-                        Settings.WriteAnsiLine($"=> No changes found to deploy", AnsiTerminal.BrightBlack);
+                        Settings.WriteAnsiLine("=> No changes found to deploy", AnsiTerminal.BrightBlack);
                         return true;
                     }
                 }

@@ -48,13 +48,28 @@ namespace LambdaSharp.ConfigSource {
 
         //--- Methods ---
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="Open(string)"/> method returns an interface to read
+        /// configuration values from the requested nested section. Section names
+        /// are not case-sensitive.
+        /// </summary>
+        /// <param name="name">The name of the nested section.</param>
+        /// <returns>The <see cref="ILambdaConfigSource"/> implementation of the nested section.</returns>
         public ILambdaConfigSource Open(string name) => new LambdaSystemEnvironmentSource(CombinePrefixWithKey(name));
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="Read(string)"/> method returns the configuration value
+        /// of the specified key or <c>null</c> if the key does not exist. Configuration
+        /// keys are not case-sensitive.
+        /// </summary>
+        /// <param name="key">The configuration key.</param>
+        /// <returns>The configuration value or <c>null</c> if the key does not exist.</returns>
         public string Read(string key) => Environment.GetEnvironmentVariable(CombinePrefixWithKey(key));
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="ReadAllKeys()"/> method returns all defined configuration keys.
+        /// </summary>
+        /// <returns>Enumeration of defined configuration keys.</returns>
         public IEnumerable<string> ReadAllKeys() {
             var subpath = CombinePrefixWithKey("");
             return Environment.GetEnvironmentVariables().Keys.Cast<string>()

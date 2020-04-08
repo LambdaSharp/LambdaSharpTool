@@ -154,7 +154,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
                 };
                 await _transferUtility.UploadAsync(request);
             } else {
-                Settings.WriteAnsiLine($"=> No changes found to upload", AnsiTerminal.BrightBlack);
+                Settings.WriteAnsiLine("=> No changes found to upload", AnsiTerminal.BrightBlack);
             }
             Console.WriteLine();
             if(Settings.UseAnsiConsole) {
