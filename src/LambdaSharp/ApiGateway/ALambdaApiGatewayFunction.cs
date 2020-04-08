@@ -81,7 +81,11 @@ namespace LambdaSharp.ApiGateway {
 
         //--- Methods ---
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="InitializeEpilogueAsync()"/> method is invoked to complet the initialization of the
+        /// Lambda function. This is the last of three methods that are invoked to initialize the Lambda function.
+        /// </summary>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         protected override async Task InitializeEpilogueAsync() {
             await base.InitializeEpilogueAsync();
 

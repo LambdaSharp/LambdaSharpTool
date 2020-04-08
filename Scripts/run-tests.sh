@@ -25,7 +25,7 @@ if [ -z "$1" ]; then
     fi
 
     rm $LAMBDASHARP/Tests/Modules/Results/*.json > /dev/null 2>&1
-    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp2.1/LambdaSharp.Tool.dll deploy \
+    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/ \

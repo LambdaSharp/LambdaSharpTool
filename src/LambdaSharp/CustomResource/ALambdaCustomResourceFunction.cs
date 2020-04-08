@@ -201,7 +201,17 @@ namespace LambdaSharp.CustomResource {
         /// </example>
         protected Exception Abort(string message) => throw new CustomResourceAbortException(message);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="HandleFailedInitializationAsync(Stream)"/> method is only invoked when an error occurs during the
+        /// Lambda function initialization. This method can be overridden to provide custom behavior for how to handle such
+        /// failures more gracefully.
+        /// </summary>
+        /// <remarks>
+        /// Regardless of what this method does. Once completed, the Lambda function exits by rethrowing the original exception
+        /// that occurred during initialization.
+        /// </remarks>
+        /// <param name="stream">The stream with the request payload.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         protected override async Task HandleFailedInitializationAsync(Stream stream) {
 
             // NOTE (2018-12-12, bjorg): function initialization failed; attempt to notify

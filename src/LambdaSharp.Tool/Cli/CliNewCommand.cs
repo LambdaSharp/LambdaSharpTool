@@ -69,7 +69,7 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     var namespaceOption = subCmd.Option("--namespace <NAME>", "(optional) Root namespace for project (default: same as function name)", CommandOptionType.SingleValue);
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New function project parent directory (default: current directory)", CommandOptionType.SingleValue);
-                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp2.1')", CommandOptionType.SingleValue);
+                    var frameworkOption = subCmd.Option("--framework|-f <NAME>", "(optional) Target .NET framework (default: 'netcoreapp3.1')", CommandOptionType.SingleValue);
                     var languageOption = subCmd.Option("--language|-l <LANGUAGE>", "(optional) Select programming language for generated code (default: csharp)", CommandOptionType.SingleValue);
                     var inputFileOption = subCmd.Option("--input <FILE>", "(optional) File path to YAML module definition (default: Module.yml)", CommandOptionType.SingleValue);
                     inputFileOption.ShowInHelpText = false;
@@ -358,11 +358,18 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // create function project
+            var isNetCore31OrLater = (framework.CompareTo("netcoreapp3.") >= 0);
             var projectFile = Path.Combine(projectDirectory, functionName + ".csproj");
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion()
+                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion(),
+                ["JSON_SERIALIZER_PACKAGE"] = isNetCore31OrLater
+                    ? "<PackageReference Include=\"Amazon.Lambda.Serialization.SystemTextJson\" Version=\"1.0.0\" />"
+                    : "<PackageReference Include=\"Amazon.Lambda.Serialization.Json\" Version=\"1.7.0\"/>",
+                ["JSON_SERIALIZER_TYPE"] = isNetCore31OrLater
+                    ? "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer"
+                    : "Amazon.Lambda.Serialization.Json.JsonSerializer"
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
@@ -580,7 +587,7 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // update bucket to require requester pays
-            Console.WriteLine($"=> Updating S3 Bucket for Requester Pays access");
+            Console.WriteLine("=> Updating S3 Bucket for Requester Pays access");
             await settings.S3Client.PutBucketRequestPaymentAsync(bucketName, new RequestPaymentConfiguration {
                 Payer = "Requester"
             });

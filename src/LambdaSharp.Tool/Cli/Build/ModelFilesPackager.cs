@@ -131,7 +131,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(!_existingPackages.Remove(package)) {
 
                     // create zip package
-                    Console.WriteLine($"=> Building package {parameter.Name}");
+                    if(Settings.UseAnsiConsole) {
+                        Console.WriteLine($"=> Building package {AnsiTerminal.Yellow}{parameter.Name}{AnsiTerminal.Reset}");
+                    } else {
+                        Console.WriteLine($"=> Building package {parameter.Name}");
+                    }
                     if(containsElfExecutable) {
 
                         // compress package contents with executable permissions
