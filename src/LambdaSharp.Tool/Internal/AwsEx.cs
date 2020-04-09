@@ -48,7 +48,10 @@ namespace LambdaSharp.Tool.Internal {
             "ROLLBACK_FAILED",
             "UPDATE_COMPLETE",
             "UPDATE_ROLLBACK_COMPLETE",
-            "UPDATE_ROLLBACK_FAILED"
+            "UPDATE_ROLLBACK_FAILED",
+            "IMPORT_COMPLETE",
+            "IMPORT_ROLLBACK_COMPLETE",
+            "IMPORT_ROLLBACK_FAILED"
         };
 
         private static Dictionary<string, string> _ansiStatusColorCodes = new Dictionary<string, string> {
@@ -65,7 +68,6 @@ namespace LambdaSharp.Tool.Internal {
             ["DELETE_COMPLETE"] = AnsiTerminal.Green,
 
             ["UPDATE_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
-            ["UPDATE_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["UPDATE_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
             ["UPDATE_COMPLETE"] = AnsiTerminal.Green,
 
@@ -73,6 +75,12 @@ namespace LambdaSharp.Tool.Internal {
             ["UPDATE_ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
             ["UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
             ["UPDATE_ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
+
+            ["IMPORT_IN_PROGRESS"] = AnsiTerminal.BrightYellow,
+            ["IMPORT_COMPLETE"] = AnsiTerminal.Green,
+            ["IMPORT_ROLLBACK_IN_PROGRESS"] = AnsiTerminal.BackgroundRed + AnsiTerminal.White,
+            ["IMPORT_ROLLBACK_COMPLETE"] = AnsiTerminal.BackgroundRed + AnsiTerminal.Black,
+            ["IMPORT_ROLLBACK_FAILED"] = AnsiTerminal.BackgroundBrightRed + AnsiTerminal.BrightWhite,
 
             ["REVIEW_IN_PROGRESS"] = ""
         };
@@ -120,6 +128,7 @@ namespace LambdaSharp.Tool.Internal {
             string stackId,
             string mostRecentStackEventId,
             ModuleNameMappings nameMappings = null,
+            ModuleNameMappings oldNameMappings = null,
             LogErrorDelegate logError = null
         ) {
             var seenEventIds = new HashSet<string>();
@@ -192,13 +201,17 @@ namespace LambdaSharp.Tool.Internal {
             // local function
             string TranslateLogicalIdToFullName(string logicalId) {
                 var fullName = logicalId;
-                nameMappings?.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
+                if(!(nameMappings?.ResourceNameMappings?.TryGetValue(logicalId, out fullName) ?? false)) {
+                    oldNameMappings?.ResourceNameMappings?.TryGetValue(logicalId, out fullName);
+                }
                 return fullName ?? logicalId;
             }
 
             string TranslateResourceTypeToFullName(string awsType) {
                 var fullName = awsType;
-                nameMappings?.TypeNameMappings?.TryGetValue(awsType, out fullName);
+                if(!(nameMappings?.TypeNameMappings?.TryGetValue(awsType, out fullName) ?? false)) {
+                    oldNameMappings?.TypeNameMappings?.TryGetValue(awsType, out fullName);
+                }
                 return fullName ?? awsType;
             }
 
@@ -261,8 +274,10 @@ namespace LambdaSharp.Tool.Internal {
                 case "DELETE_FAILED":
                 case "UPDATE_ROLLBACK_FAILED":
                 case "UPDATE_ROLLBACK_IN_PROGRESS":
+                case "IMPORT_ROLLBACK_FAILED":
+                case "IMPORT_ROLLBACK_IN_PROGRESS":
                     if(evt.ResourceStatusReason != "Resource creation cancelled") {
-                        logError?.Invoke($"{evt.ResourceStatus} {TranslateLogicalIdToFullName(evt.LogicalResourceId)} [{TranslateResourceTypeToFullName(evt.ResourceType)}]: {evt.ResourceStatusReason}", /*Exception*/ null);
+                        logError?.Invoke($"{evt.ResourceStatus} {TranslateLogicalIdToFullName(evt.LogicalResourceId)} [{TranslateResourceTypeToFullName(evt.ResourceType)}]: {evt.ResourceStatusReason}", exception: null);
                     }
                     break;
                 }

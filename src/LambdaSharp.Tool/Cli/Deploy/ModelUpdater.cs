@@ -86,7 +86,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // verify if we need to remove the old CloudFormation notification ARNs that were created by LambdaSharp config before v0.7
             List<string> notificationARNs = null;
+            ModuleNameMappings oldNameMappings = null;
             if(mostRecentStackEventId != null) {
+
+                // fetch name mappings for current template; this is needed to properly map logical IDs to their original names when they get deleted
+                oldNameMappings = await new ModelManifestLoader(Settings, "source").GetNameMappingsFromCloudFormationStackAsync(stackName);
 
                 // NOTE (2019-09-19, bjorg): this is a HACK to remove the old notification ARNs, because doing it part
                 //  of the change set is not working for some reason.
@@ -104,7 +108,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         NotificationARNs = notificationARNs,
                         Capabilities = validation.Capabilities
                     });
-                    var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, LogError);
+                    var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, oldNameMappings, LogError);
                     if(!outcome.Success) {
                         LogError("failed to remove legacy stack notification ARN; remove manually and try again");
                         return false;
@@ -187,7 +191,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(
+                    stackName,
+                    response.StackId,
+                    mostRecentStackEventId,
+                    nameMappings,
+                    oldNameMappings,
+                    LogError
+                );
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);

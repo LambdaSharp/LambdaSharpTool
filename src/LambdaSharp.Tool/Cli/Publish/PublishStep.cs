@@ -265,7 +265,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // upload minified json
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
+                Console.WriteLine($"=> Uploading {description}: {Path.GetFileName(destinationKey)}");
                 var request = new TransferUtilityUploadRequest {
                     InputStream = new MemoryStream(Encoding.UTF8.GetBytes(minified)),
                     BucketName = Settings.DeploymentBucketName,
@@ -291,7 +291,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // only upload files that don't exist
             var destinationKey = manifest.ModuleInfo.GetArtifactPath(Path.GetFileName(filePath));
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
+                Console.WriteLine($"=> Uploading {description}: {Path.GetFileName(destinationKey)}");
                 var request = new TransferUtilityUploadRequest {
                     FilePath = filePath,
                     BucketName = Settings.DeploymentBucketName,

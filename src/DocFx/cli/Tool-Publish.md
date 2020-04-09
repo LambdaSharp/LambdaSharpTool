@@ -114,7 +114,7 @@ lash new function MyNewFunction
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>

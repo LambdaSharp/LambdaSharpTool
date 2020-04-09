@@ -165,7 +165,7 @@ namespace LambdaSharp.Tool.Cli {
                 awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-            var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
+            var noAnsiOutputOption = cmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);

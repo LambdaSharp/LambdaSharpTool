@@ -109,6 +109,7 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+                // create JSON schema definition for API Gateway methods
                 cmd.Command("create-invoke-methods-schema", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Create JSON schemas for API Gateway invoke methods";

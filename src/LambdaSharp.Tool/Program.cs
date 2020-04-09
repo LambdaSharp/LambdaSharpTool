@@ -69,6 +69,7 @@ namespace LambdaSharp.Tool {
             new CliBuildPublishDeployCommand().Register(app);
             new CliEncryptCommand().Register(app);
             new CliUtilCommand().Register(app);
+            new CliNukeCommand().Register(app);
 
             // no command
             var showHelp = false;
