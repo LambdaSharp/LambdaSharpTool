@@ -11,7 +11,7 @@ The `util delete-orphan-logs` command is used to delete CloudWatch log groups th
 
 <dl>
 
-<dt><code>--dryrun;</code></dt>
+<dt><code>--dryrun</code></dt>
 <dd>
 
 (optional) Show the result of the clean-up operation without deleting anything

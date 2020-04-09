@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.12) - 2020-04-01
+# LambdaSharp "Geminus" Release (v0.7.0.13) - 2020-04-09
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,7 +180,23 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
-### (v0.7.0.12) - 2020-04-10
+### (v0.7.0.13) - 2020-04-09
+
+#### New Features
+
+* LambdaSharp CLI
+    * Added `lash nuke` to delete an entire deployment tier.
+    * Added `Module::RestApi.EndpointConfiguration` and `Module::RestApi.Policy` as override pragmas.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue the REST API description was static due to a missing `Fn::Sub` function call.
+    * Fixed an issue where using the same invocation methods for two different REST API routes would cause a CloudFormation failure.
+    * Fixed an issue where changing a REST API route would sometimes not update the deployment.
+    * Fixed an issue where the Logical IDs for deleted resources were not properly mapped to their hierarchical module names.
+
+### (v0.7.0.12) - 2020-04-08
 
 #### New Features
 

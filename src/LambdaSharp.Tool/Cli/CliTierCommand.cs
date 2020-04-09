@@ -203,7 +203,8 @@ namespace LambdaSharp.Tool.Cli {
 
             // retrieve name mappings for template
             var template = (await settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
-                StackName = module.Stack.StackName
+                StackName = module.Stack.StackName,
+                TemplateStage = TemplateStage.Original
             })).TemplateBody;
             var nameMappings = new ModelManifestLoader(settings, module.Stack.StackName).GetNameMappingsFromTemplate(template);
 
@@ -243,7 +244,14 @@ namespace LambdaSharp.Tool.Cli {
                     ChangeSetName = changeSetName,
                     StackName = module.StackName
                 });
-                var outcome = await settings.CfnClient.TrackStackUpdateAsync(module.StackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
+                var outcome = await settings.CfnClient.TrackStackUpdateAsync(
+                    module.StackName,
+                    response.StackId,
+                    mostRecentStackEventId,
+                    nameMappings,
+                    oldNameMappings: null,
+                    LogError
+                );
                 if(outcome.Success) {
                     Console.WriteLine("=> Stack update finished");
                 } else {

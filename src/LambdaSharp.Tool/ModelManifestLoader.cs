@@ -25,6 +25,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Tool.Internal;
@@ -388,6 +390,14 @@ namespace LambdaSharp.Tool {
 
         public async Task<ModuleNameMappings> GetNameMappingsFromLocationAsync(ModuleLocation moduleLocation) {
             var template = await GetS3ObjectContentsAsync(moduleLocation.SourceBucketName, moduleLocation.ModuleTemplateKey);
+            return GetNameMappingsFromTemplate(template);
+        }
+
+        public async Task<ModuleNameMappings> GetNameMappingsFromCloudFormationStackAsync(string stackName) {
+            var template = (await Settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
+                StackName = stackName,
+                TemplateStage = TemplateStage.Original
+            })).TemplateBody;
             return GetNameMappingsFromTemplate(template);
         }
 

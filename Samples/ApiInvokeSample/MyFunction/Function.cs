@@ -18,10 +18,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using LambdaSharp;
 using LambdaSharp.ApiGateway;
