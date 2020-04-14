@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -150,8 +150,13 @@ namespace LambdaSharp.Tool.Cli {
                     if(dependencies[stackName].Any()) {
                         continue;
                     }
+                    if(!dryRun && (module.DeploymentBucketArn != null) && (moduleDetails.Count > 1)) {
 
-                    // delete stack
+                        // don't delete the LambdaSharp.Core stack until all other modules have been deleted
+                        continue;
+                    }
+
+                    // show progress
                     if(Settings.UseAnsiConsole) {
                         Console.WriteLine($"=> Deleting {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
                     } else {
@@ -161,13 +166,10 @@ namespace LambdaSharp.Tool.Cli {
 
                         // delete contents of deployment bucket
                         if(module.DeploymentBucketArn != null) {
-
-                            // don't delete the LambdaSharp.Core stack until all other modules have been deleted
-                            if(moduleDetails.Count > 1) {
-                                continue;
-                            }
                             await DeleteBucketContentsAsync(settings, module.DeploymentBucketArn);
                         }
+
+                        // delete stack
                         var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(stackName);
                         var oldNameMappings = await new ModelManifestLoader(settings, "source").GetNameMappingsFromCloudFormationStackAsync(stackName);
                         await settings.CfnClient.DeleteStackAsync(new DeleteStackRequest {

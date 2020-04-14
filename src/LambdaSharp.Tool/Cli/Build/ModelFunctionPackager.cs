@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,7 +40,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
-        private static string SYSTEM_OS_INFORMATION = "/etc/system-release";
 
         //--- Types ---
         private class CustomAssemblyResolver : BaseAssemblyResolver {
@@ -90,26 +89,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             public RestApiSource RestApiSource;
             public WebSocketSource WebSocketSource;
         }
-
-        //--- Class Fields ---
-        private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
-
-            // check if running on Linux OS
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
-
-                // check if OS information file contains Amazon Linux string
-                try {
-                    if(File.Exists(SYSTEM_OS_INFORMATION)) {
-                        var osRelease = File.ReadAllText(SYSTEM_OS_INFORMATION);
-                        return osRelease.StartsWith("Amazon Linux release 2", StringComparison.Ordinal);
-                    }
-                } catch { }
-            }
-            return false;
-        });
-
-        //--- Class Methods ---
-        private static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
         //--- Fields ---
         private ModuleBuilder _builder;
@@ -319,7 +298,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // compile function project
             var isNetCore31OrLater = targetFramework.CompareTo("netcoreapp3.") >= 0;
-            var isAmazonLinux2 = IsAmazonLinux2();
+            var isAmazonLinux2 = Settings.IsAmazonLinux2();
             var isReadyToRun = isNetCore31OrLater && isAmazonLinux2;
             var readyToRunText = isReadyToRun ? ", ReadyToRun" : "";
             if(Settings.UseAnsiConsole) {
