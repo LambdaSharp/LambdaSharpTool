@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,6 +100,7 @@ namespace LambdaSharp.Tool.Cli {
             Console.WriteLine($"    .NET Core CLI Version: {GetDotNetVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Git CLI Version: {GetGitVersion() ?? "<NOT FOUND>"}");
             Console.WriteLine($"    Amazon.Lambda.Tools: {GetAmazonLambdaToolVersion() ?? "<NOT FOUND>"}");
+            Console.WriteLine($"    ReadyToRun Compilation: {(Settings.IsAmazonLinux2() ? "Yes" : "No")}");
 
             // local functions
             string ConcealAwsAccountId(string text) {

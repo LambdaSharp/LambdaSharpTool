@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -402,6 +402,13 @@ namespace LambdaSharp.Tool {
         }
 
         public ModuleNameMappings GetNameMappingsFromTemplate(string template) {
+
+            // NOTE (2020-04-12, bjorg): some templates (like the bootstrap) are written in YAML instead of JSON
+            if(!template.TrimStart().StartsWith("{")) {
+                return new ModuleNameMappings();
+            }
+
+            // parse template as a JSON object
             var cloudformation = JObject.Parse(template);
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
