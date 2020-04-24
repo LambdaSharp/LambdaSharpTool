@@ -209,6 +209,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * Fixed an issue were recreating a _LambdaSharp.Core_ deployment from scratch would not update existing deployed modules with the new deployment bucket name.
     * Removed package reference to `Amazon.Lambda.Serialization.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
     * Removed package reference to `Newtonsoft.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
+    * Let CloudFormation determine the name for `AWS::ApiGateway::Model` resources.
 * LambdaSharp Core Module
     * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
