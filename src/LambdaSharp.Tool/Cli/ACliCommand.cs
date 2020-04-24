@@ -59,7 +59,8 @@ namespace LambdaSharp.Tool.Cli {
     public abstract class ACliCommand : CliBase {
 
         //--- Class Properties ---
-        public static string CredentialsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "credentials");
+        public static string CredentialsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws");
+        public static string CredentialsFilePath = Path.Combine(CredentialsFolder, "credentials");
 
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)

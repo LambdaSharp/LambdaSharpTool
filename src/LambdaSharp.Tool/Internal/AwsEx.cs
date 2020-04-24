@@ -311,7 +311,7 @@ namespace LambdaSharp.Tool.Internal {
                     // we're good to go
                     break;
                 default:
-                    logError?.Invoke($"{stackName} is not in a valid state; module deployment must be complete and successful (status: {stack?.StackStatus})", null);
+                    logError?.Invoke($"{stackName} is not in a valid state; CloudFormation stack must be complete and successful (status: {stack?.StackStatus})", null);
                     return (false, null);
                 }
             } catch(AmazonCloudFormationException) {

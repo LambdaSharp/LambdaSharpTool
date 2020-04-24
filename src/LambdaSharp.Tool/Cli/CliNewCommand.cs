@@ -364,12 +364,8 @@ namespace LambdaSharp.Tool.Cli {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
                 ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion(),
-                ["JSON_SERIALIZER_PACKAGE"] = isNetCore31OrLater
-                    ? "<PackageReference Include=\"Amazon.Lambda.Serialization.SystemTextJson\" Version=\"1.0.0\" />"
-                    : "<PackageReference Include=\"Amazon.Lambda.Serialization.Json\" Version=\"1.7.0\"/>",
-                ["JSON_SERIALIZER_TYPE"] = isNetCore31OrLater
-                    ? "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer"
-                    : "Amazon.Lambda.Serialization.Json.JsonSerializer"
+                ["JSON_SERIALIZER_PACKAGE"] = "<PackageReference Include=\"Amazon.Lambda.Serialization.Json\" Version=\"1.7.0\"/>",
+                ["JSON_SERIALIZER_TYPE"] = "Amazon.Lambda.Serialization.Json.JsonSerializer"
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);

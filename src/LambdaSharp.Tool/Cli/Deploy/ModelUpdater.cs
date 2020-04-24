@@ -267,12 +267,16 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             if(outputs.Any()) {
                 Console.WriteLine("Stack output values:");
                 foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
-                    var line = $"=> {output.OutputKey}";
+                    var line = Settings.UseAnsiConsole
+                        ? $"=> {AnsiTerminal.Green}{output.OutputKey}"
+                        : $"=> {output.OutputKey}";
                     if(!string.IsNullOrEmpty(output.Description)) {
                         line += $": {output.Description}";
                     }
-                    line += $" = {output.OutputValue}";
-                    Settings.WriteAnsiLine(line, AnsiTerminal.Green);
+                    line += Settings.UseAnsiConsole
+                        ? $" = {AnsiTerminal.Yellow}{output.OutputValue}{AnsiTerminal.Reset}"
+                        : $" = {output.OutputValue}";
+                    Console.WriteLine(line);
                 }
             }
         }

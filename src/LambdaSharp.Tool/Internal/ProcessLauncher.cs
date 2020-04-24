@@ -34,33 +34,42 @@ namespace LambdaSharp.Tool.Internal {
         public static string Lash => FindExecutableInPath("lash");
 
         //--- Class methods ---
-        public static bool Execute(string application, IEnumerable<string> arguments, string workingFolder, bool showOutput) {
+        public static bool Execute(string application, IEnumerable<string> arguments, string workingFolder, bool showOutput, Func<string, string> processOutputLine = null) {
             using(var process = new Process()) {
                 process.StartInfo = new ProcessStartInfo {
                     FileName = application,
                     Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
                     WorkingDirectory = workingFolder,
                     UseShellExecute = false,
-                    RedirectStandardOutput = !showOutput,
-                    RedirectStandardError = !showOutput
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
                 };
                 process.Start();
                 process.EnableRaisingEvents = true;
-                Task<string> output = null;
-                Task<string> error = null;
-                if(!showOutput) {
-
-                    // make sure to drain the redirected output
-                    output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
-                    error = Task.Run(() => process.StandardError.ReadToEndAsync());
-                }
+                var output = Task.Run(() => process.StandardOutput.ReadToEndAsync());
+                var error = Task.Run(() => process.StandardError.ReadToEndAsync());;
                 process.WaitForExit();
                 var success = (process.ExitCode == 0);
-                if(!success && !showOutput) {
-                    Console.WriteLine(output.Result);
-                    Console.WriteLine(error.Result);
+                if(showOutput || !success) {
+                    PrintLines(output.Result);
+                    PrintLines(error.Result);
                 }
                 return success;
+            }
+
+            // local functions
+            void PrintLines(string buffer) {
+                var currentPosition = 0;
+                int lineBreakPosition;
+                while(currentPosition < buffer.Length) {
+                    lineBreakPosition = buffer.IndexOf('\n', currentPosition);
+                    if(lineBreakPosition < 0) {
+                        lineBreakPosition = buffer.Length - 1;
+                    }
+                    var line = buffer.Substring(currentPosition, lineBreakPosition - currentPosition + 1);
+                    Console.Write(processOutputLine?.Invoke(line) ?? line);
+                    currentPosition = lineBreakPosition + 1;
+                }
             }
         }
 
