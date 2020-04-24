@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.14) - 2020-04-14
+# LambdaSharp "Geminus" Release (v0.7.0.15) - 2020-04-24
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -179,6 +179,22 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
 ## Releases
+
+### (v0.7.0.15) - 2020-04-24
+
+#### New Features
+
+* LambdaSharp CLI
+    * Enhanced `--force-build` to delete the build folders for all dependencies to ensure a clean build.
+    * Enhanced rendering of stack output values to distinguish the value from its description (requires ANSI terminal compatibility).
+    * Added error and warning colorization for the `dotnet` build results (requires ANSI terminal compatibility).
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where the creation of the AWS credentials file would fail when the `.aws` folder doesn't exit.
+    * Fixed an issue in WebSocket support where `AWS::ApiGatewayV2::Model` resources are not tracked as a dependencies by `AWS::ApiGatewayV2::Route` resources.
+    * Reverted a change that used `Amazon.Lambda.Serialization.SystemTextJson` as thew function serializer for new .NET Core 3.1 projects.
 
 ### (v0.7.0.14) - 2020-04-14
 

@@ -287,6 +287,30 @@ namespace LambdaSharp.Tool.Cli.Build {
                         LogInfoVerbose($"... change detected in {file}");
                     }
                 }
+            } else {
+                LogInfoVerbose($"=> Analyzing function {function.Name} dependencies");
+
+                // find all files used to create the function package
+                var files = new HashSet<string>();
+                AddProjectFiles(files, MsBuildFileUtilities.MaybeAdjustFilePath("", function.Project));
+
+                // loop over all project folders
+                foreach(var projectFolder in files.Where(file => file.EndsWith(".csproj", StringComparison.Ordinal)).Select(file => Path.GetDirectoryName(file))) {
+                    LogInfoVerbose($"... deleting build folders for {projectFolder}");
+                    DeleteFolder(Path.Combine(projectFolder, "obj"));
+                    DeleteFolder(Path.Combine(projectFolder, "bin"));
+
+                    // local functions
+                    void DeleteFolder(string folder) {
+                        if(Directory.Exists(folder)) {
+                            try {
+                                Directory.Delete(folder, recursive: true);
+                            } catch {
+                                LogWarn($"unable to delete: {folder}");
+                            }
+                        }
+                    }
+                }
             }
 
             // read settings from project file
@@ -308,21 +332,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
             var projectDirectory = Path.Combine(Settings.WorkingDirectory, Path.GetFileNameWithoutExtension(function.Project));
             var temporaryPackage = Path.Combine(Settings.OutputDirectory, $"function_{_builder.FullName}_{function.LogicalId}_temporary.zip");
-            if(forceBuild) {
-
-                // delete 'bin' and 'obj' folders
-                var projectFolder = Path.GetDirectoryName(function.Project);
-                DeleteDirectory(Path.Combine(projectFolder, "bin"));
-                DeleteDirectory(Path.Combine(projectFolder, "obj"));
-
-                // local functions
-                void DeleteDirectory(string path) {
-                    LogInfoVerbose($"... deleting '{path}'");
-                    try {
-                        Directory.Delete(path, recursive: true);
-                    } catch { }
-                }
-            }
 
             // check if the project contains an obsolete AWS Lambda Tools extension: <DotNetCliToolReference Include="Amazon.Lambda.Tools"/>
             var obsoleteNodes = csproj.Descendants()
@@ -628,7 +637,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     msBuildParameters
                 },
                 projectDirectory,
-                Settings.VerboseLevel >= VerboseLevel.Detailed
+                Settings.VerboseLevel >= VerboseLevel.Detailed,
+                ColorizeOutput
             )) {
                 LogError("'dotnet build' command failed");
                 return false;
@@ -644,12 +654,23 @@ namespace LambdaSharp.Tool.Cli.Build {
                     "--msbuild-parameters", $"\"{msBuildParameters}\""
                 },
                 projectDirectory,
-                Settings.VerboseLevel >= VerboseLevel.Detailed
+                Settings.VerboseLevel >= VerboseLevel.Detailed,
+                ColorizeOutput
             )) {
                 LogError("'dotnet lambda package' command failed");
                 return false;
             }
             return true;
+
+            // local functions
+            string ColorizeOutput(string line)
+                => !Settings.UseAnsiConsole
+                    ? line
+                    : line.Contains(": error ", StringComparison.Ordinal)
+                    ? $"{AnsiTerminal.BrightRed}{line}{AnsiTerminal.Reset}"
+                    : line.Contains(": warning ", StringComparison.Ordinal)
+                    ? $"{AnsiTerminal.BrightYellow}{line}{AnsiTerminal.Reset}"
+                    : line;
         }
 
         private bool CheckDotNetLambdaToolIsInstalled() {

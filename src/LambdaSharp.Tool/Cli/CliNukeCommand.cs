@@ -87,7 +87,12 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine($"=> Found no modules to delete");
                 return;
             }
-            Console.WriteLine($"=> Found {moduleDetails.Count():N0} module deployments to delete");
+            var count = moduleDetails.Count();
+            if(count == 1) {
+                Console.WriteLine($"=> Found 1 CloudFormation stack to delete");
+            } else {
+                Console.WriteLine($"=> Found {count:N0} CloudFormation stacks to delete");
+            }
 
             // confirm action with user if not already confirmed and this is not a dry run
             if(!confirmed && !dryRun) {
@@ -104,7 +109,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // confirm deployment tier name
                 Console.WriteLine();
-                if(settings.PromptString("Confirm the deployment tier name to delete") != settings.Tier)  {
+                if(settings.PromptString("Confirm the deployment tier name to delete") != settings.TierName)  {
                     LogError("deployment tier name does not match");
                     return;
                 }

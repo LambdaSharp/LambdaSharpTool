@@ -309,14 +309,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["OperationName"] = webSocketRoute.Source.OperationName,
                         ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                     };
-                    var route = _builder.AddResource(
+                    var route = (ResourceItem)_builder.AddResource(
                         parent: webSocketRoute.Function,
                         name: routeName + "Route",
                         description: $"WebSocket Route for '{webSocketRoute.Source.RouteKey}'",
                         scope: null,
                         resource: routeResource,
                         resourceExportAttribute: null,
-                        dependsOn: null,
+                        dependsOn: new List<string>(),
                         condition: webSocketRoute.Function.Condition,
                         pragmas: null
                     );
@@ -354,7 +354,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
                                     ["ApiId"] = FnRef(webSocket.FullName),
                                     ["ContentType"] = webSocketRoute.Source.RequestContentType,
-                                    ["Name"] = $"{route.LogicalId}Request",
+                                    ["Name"] = $"{route.LogicalId}RequestModel",
                                     ["Schema"] = webSocketRoute.Source.RequestSchema
                                 },
                                 resourceExportAttribute: null,
@@ -363,11 +363,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 pragmas: null
                             );
                             webSocketResources.Add(model.FullName, webSocketRoute.Source.RequestSchema);
+                            route.DependsOn.Add(model.FullName);
 
                             // update the route to require request validation
                             routeResource["ModelSelectionExpression"] = "default";
                             routeResource["RequestModels"] = new Dictionary<string, object> {
-                                ["default"] = $"{route.LogicalId}Request"
+                                ["default"] = $"{route.LogicalId}RequestModel"
                             };
                             break;
                         default:
@@ -423,7 +424,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
                                     ["ApiId"] = FnRef(webSocket.FullName),
                                     ["ContentType"] = webSocketRoute.Source.ResponseContentType,
-                                    ["Name"] = $"{webSocketRoute.Source.OperationName}Response",
+                                    ["Name"] = $"{route.LogicalId}ResponseModel",
                                     ["Schema"] = webSocketRoute.Source.ResponseSchema
                                 },
                                 resourceExportAttribute: null,
@@ -440,7 +441,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 ["RouteResponseKey"] = "$default",
                                 ["ModelSelectionExpression"] = "default",
                                 ["ResponseModels"] = new Dictionary<string, object> {
-                                    ["default"] = $"{webSocketRoute.Source.OperationName}Response"
+                                    ["default"] = $"{route.LogicalId}ResponseModel"
                                 }
                             };
                             routeResponse = _builder.AddResource(
@@ -450,7 +451,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 scope: null,
                                 resource: routeResponseResource,
                                 resourceExportAttribute: null,
-                                dependsOn: null,
+                                dependsOn: new[] { model.FullName },
                                 condition: webSocketRoute.Function.Condition,
                                 pragmas: null
                             );

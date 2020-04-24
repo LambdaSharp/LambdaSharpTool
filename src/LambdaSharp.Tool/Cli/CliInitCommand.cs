@@ -86,6 +86,9 @@ namespace LambdaSharp.Tool.Cli {
                             ["SECRETACCESSKEY"] = secretAccessKey
                         });
                         try {
+                            if(!Directory.Exists(CredentialsFolder)) {
+                                Directory.CreateDirectory(CredentialsFolder);
+                            }
                             File.WriteAllText(CredentialsFilePath, credentialsTemplate);
                         } catch {
                             LogError("unable to create .aws/credentials file");
