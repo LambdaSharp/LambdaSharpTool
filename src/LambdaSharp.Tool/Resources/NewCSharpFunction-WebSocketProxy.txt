@@ -7,7 +7,7 @@ using LambdaSharp;
 using LambdaSharp.ApiGateway;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(%%JSON_SERIALIZER_TYPE%%))]
+[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace %%ROOTNAMESPACE%% {
 

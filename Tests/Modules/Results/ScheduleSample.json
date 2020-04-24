@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6CF20380D00A6B534A828E5D3A30CEAF"
+      "Default": "142264E5C1FB275A6D4DC4B6EDFD16EA"
     }
   },
   "Resources": {
@@ -129,6 +129,19 @@
             "MODULE_INFO": "Sample.ScheduledEvent:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -657,7 +670,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -887,9 +900,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.ScheduledEvent:1.0-DEV",
       "Description": "A sample module using schedule events",
-      "TemplateChecksum": "6CF20380D00A6B534A828E5D3A30CEAF",
+      "TemplateChecksum": "142264E5C1FB275A6D4DC4B6EDFD16EA",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

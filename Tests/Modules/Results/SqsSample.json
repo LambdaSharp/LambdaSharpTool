@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C12AA767C6310527359CCCDC52CE02E8"
+      "Default": "F6449B22A0CBAE9FF17E749EFDB903AB"
     }
   },
   "Resources": {
@@ -137,6 +137,19 @@
             "MODULE_INFO": "Sample.Sqs:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -617,7 +630,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -847,9 +860,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sqs:1.0-DEV",
       "Description": "A sample module using SQS queues",
-      "TemplateChecksum": "C12AA767C6310527359CCCDC52CE02E8",
+      "TemplateChecksum": "F6449B22A0CBAE9FF17E749EFDB903AB",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

@@ -748,7 +748,7 @@ namespace LambdaSharp.Tool.Model {
                         var manifest = dependency.Manifest;
 
                         // update stack resource source with hashed cloudformation key
-                        stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{dependency.ModuleLocation.ModuleTemplateKey}";
+                        stack.TemplateURL = FnSub($"https://${{DeploymentBucketName}}.s3.amazonaws.com/{dependency.ModuleLocation.ModuleTemplateKey}");
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);

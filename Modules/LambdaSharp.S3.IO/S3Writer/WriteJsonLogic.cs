@@ -38,10 +38,10 @@ namespace LambdaSharp.S3.IO.S3Writer {
         private readonly ILambdaSerializer _jsonSerializer;
 
         //--- Constructors ---
-        public WriteJsonLogic(ILambdaLogLevelLogger logger, IAmazonS3 s3Client) {
-            _logger = logger;
-            _s3Client = s3Client;
-            _jsonSerializer = new JsonSerializer();
+        public WriteJsonLogic(ILambdaLogLevelLogger logger, IAmazonS3 s3Client, ILambdaSerializer jsonSerializer) {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _s3Client = s3Client ?? throw new ArgumentNullException(nameof(s3Client));
+            _jsonSerializer = jsonSerializer ?? throw new ArgumentNullException(nameof(jsonSerializer));
         }
 
         //--- Methods ---

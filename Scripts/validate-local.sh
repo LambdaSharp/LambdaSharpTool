@@ -38,7 +38,7 @@ if ! git diff-index --quiet HEAD -- Tests/; then
     exit 1
 fi
 
-Scripts/runtests.sh
+Scripts/run-tests.sh
 
 git update-index -q --refresh
 if ! git diff-index --quiet HEAD -- Tests/; then

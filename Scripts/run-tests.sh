@@ -104,6 +104,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/DynamoDBSample \
         $LAMBDASHARP/Samples/FinalizerSample \
         $LAMBDASHARP/Samples/KinesisSample \
+        $LAMBDASHARP/Samples/MetricSample \
         $LAMBDASHARP/Samples/MacroSample \
         $LAMBDASHARP/Samples/S3IOSample \
         $LAMBDASHARP/Samples/S3SubscriptionSample \

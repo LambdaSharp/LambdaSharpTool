@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5B14FD2C1B48FCFD53CDA6479F085943"
+      "Default": "42E7273C2AA788FA1334ECE2E5B222B6"
     }
   },
   "Resources": {
@@ -129,6 +129,19 @@
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -529,11 +542,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Test.TestModule API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiItemsResource": {
@@ -692,18 +705,20 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment205C4114DCC4EBCDF14064D1920931CE": {
+    "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [205C4114DCC4EBCDF14064D1920931CE]"
+          "Fn::Sub": "${AWS::StackName} API [0B453647CBD379B4A07F20EAF725C320]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiItemsResource",
         "ModuleRestApiItemsResourceGET",
+        "ModuleRestApiItemsResourceIdResource",
         "ModuleRestApiItemsResourceIdResourceDELETE",
         "ModuleRestApiItemsResourceIdResourceGET",
         "ModuleRestApiItemsResourceIdResourcePUT",
@@ -714,7 +729,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment205C4114DCC4EBCDF14064D1920931CE"
+          "Ref": "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320"
         },
         "MethodSettings": [
           {
@@ -751,7 +766,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -981,9 +996,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "5B14FD2C1B48FCFD53CDA6479F085943",
+      "TemplateChecksum": "42E7273C2AA788FA1334ECE2E5B222B6",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1079,7 +1094,7 @@
         "ModuleRestApiItemsResourceIdResourcePUT": "Module::RestApi::ItemsResource::IdResource::PUT",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment205C4114DCC4EBCDF14064D1920931CE": "Module::RestApi::Deployment205C4114DCC4EBCDF14064D1920931CE",
+        "ModuleRestApiDeployment0B453647CBD379B4A07F20EAF725C320": "Module::RestApi::Deployment0B453647CBD379B4A07F20EAF725C320",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

@@ -53,7 +53,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3C6B0A38BE6F4D09846424FFB71E232D"
+      "Default": "D1B486E695BF480B8692985CDC324935"
     }
   },
   "Resources": {
@@ -79,6 +79,19 @@
             "MODULE_INFO": "Sample.Finalizer:1.0-DEV",
             "LAMBDA_NAME": "Finalizer",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -437,7 +450,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -591,9 +604,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Finalizer:1.0-DEV",
       "Description": "A sample module with a finalizer function",
-      "TemplateChecksum": "3C6B0A38BE6F4D09846424FFB71E232D",
+      "TemplateChecksum": "D1B486E695BF480B8692985CDC324935",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

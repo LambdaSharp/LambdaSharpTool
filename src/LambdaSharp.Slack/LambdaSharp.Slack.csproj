@@ -19,9 +19,6 @@
     <PackageTags>AWS;Lambda;LambdaSharp;Serverless;Slack</PackageTags>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\LambdaSharp\LambdaSharp.csproj" />
   </ItemGroup>
 </Project>

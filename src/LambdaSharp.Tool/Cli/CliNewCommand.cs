@@ -363,9 +363,7 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion(),
-                ["JSON_SERIALIZER_PACKAGE"] = "<PackageReference Include=\"Amazon.Lambda.Serialization.Json\" Version=\"1.7.0\"/>",
-                ["JSON_SERIALIZER_TYPE"] = "Amazon.Lambda.Serialization.Json.JsonSerializer"
+                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion()
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);

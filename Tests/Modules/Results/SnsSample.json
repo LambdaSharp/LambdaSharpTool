@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DD448E1132B826695DF6EF1C269FBB7A"
+      "Default": "2B5D2AA7EE6DC82B50047AE4AAE12C37"
     }
   },
   "Resources": {
@@ -133,6 +133,19 @@
             "MODULE_INFO": "Sample.Sns:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -580,7 +593,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -810,9 +823,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "DD448E1132B826695DF6EF1C269FBB7A",
+      "TemplateChecksum": "2B5D2AA7EE6DC82B50047AE4AAE12C37",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

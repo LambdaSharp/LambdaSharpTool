@@ -76,7 +76,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "C88F61C249A6F080D97C5214A2B07827"
+      "Default": "2ED9E3EC07C517B5249FCB59BD7CB88A"
     }
   },
   "Resources": {
@@ -138,6 +138,19 @@
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -552,7 +565,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -797,9 +810,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "C88F61C249A6F080D97C5214A2B07827",
+      "TemplateChecksum": "2ED9E3EC07C517B5249FCB59BD7CB88A",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Plain Input Parameters",

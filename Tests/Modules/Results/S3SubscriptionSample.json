@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DF438920C59FD3B825907FF79893FBF1"
+      "Default": "5A51631A64B68B6021811E618182765F"
     }
   },
   "Resources": {
@@ -137,6 +137,19 @@
             "MODULE_INFO": "Sample.S3.Subscription:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -756,7 +769,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -986,9 +999,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "DF438920C59FD3B825907FF79893FBF1",
+      "TemplateChecksum": "5A51631A64B68B6021811E618182765F",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1062,7 +1075,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.1@lambdasharp",
           "Type": "Shared"
         }
       ],

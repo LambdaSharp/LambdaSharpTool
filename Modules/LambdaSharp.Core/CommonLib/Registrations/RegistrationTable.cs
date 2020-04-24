@@ -29,9 +29,8 @@ namespace LambdaSharp.Core.Registrations {
         private readonly Table _table;
 
         //--- Constructors ---
-        public RegistrationTable(IAmazonDynamoDB dynamoClient, string tableName) {
-            _table = Table.LoadTable(dynamoClient, tableName);
-        }
+        public RegistrationTable(IAmazonDynamoDB dynamoClient, string tableName)
+            => _table = Table.LoadTable(dynamoClient, tableName);
 
         public async Task<OwnerMetaData> GetOwnerMetaDataAsync(string id) {
             var document = await _table.GetItemAsync(id);

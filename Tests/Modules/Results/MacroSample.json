@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "24C6AC382FA2793997B637AE2808127A"
+      "Default": "76FFDFDFB651A2CAB6FF6AD4D461D0EE"
     }
   },
   "Resources": {
@@ -151,6 +151,19 @@
             "MODULE_INFO": "Sample.Macro:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -559,7 +572,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -789,9 +802,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Macro:1.0-DEV",
       "Description": "A sample module defining CloudFormation macros",
-      "TemplateChecksum": "24C6AC382FA2793997B637AE2808127A",
+      "TemplateChecksum": "76FFDFDFB651A2CAB6FF6AD4D461D0EE",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

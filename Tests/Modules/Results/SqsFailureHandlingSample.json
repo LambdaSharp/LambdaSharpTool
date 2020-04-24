@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0AAE51A16BC2AB4D866400D2F031F900"
+      "Default": "F190ED98B4C18AB2AABC9EB50ACB0EC8"
     }
   },
   "Resources": {
@@ -148,6 +148,19 @@
             "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsProducer",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -307,6 +320,19 @@
             "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsConsumer",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -875,7 +901,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1105,9 +1131,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "0AAE51A16BC2AB4D866400D2F031F900",
+      "TemplateChecksum": "F190ED98B4C18AB2AABC9EB50ACB0EC8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

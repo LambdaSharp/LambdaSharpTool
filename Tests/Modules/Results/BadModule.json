@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3D3482B493810EAE09233D59977BA726"
+      "Default": "457E681BD8798B1DDF394F38FE6A7017"
     }
   },
   "Resources": {
@@ -129,6 +129,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "NearTimeout",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -282,6 +295,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "NearOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -435,6 +461,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailBadEntryPoint",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -588,6 +627,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailError",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -741,6 +793,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailTimeout",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -894,6 +959,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1047,6 +1125,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailConstructor",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1200,6 +1291,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsBadSyntax",
             "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1353,6 +1457,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsError",
             "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1506,6 +1623,19 @@
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsThrow",
             "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -2958,7 +3088,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3188,9 +3318,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "3D3482B493810EAE09233D59977BA726",
+      "TemplateChecksum": "457E681BD8798B1DDF394F38FE6A7017",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

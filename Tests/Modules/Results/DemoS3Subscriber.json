@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "CA1FA7D110C9B2428DF72B0705D8103B"
+      "Default": "25C6138783BFF66B54B097A7DCC8E198"
     }
   },
   "Resources": {
@@ -134,6 +134,19 @@
             "MODULE_INFO": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
             "LAMBDA_NAME": "Subscriber",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -719,7 +732,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -993,9 +1006,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "CA1FA7D110C9B2428DF72B0705D8103B",
+      "TemplateChecksum": "25C6138783BFF66B54B097A7DCC8E198",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Demo.S3Bucket Imports",
@@ -1083,7 +1096,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.1@lambdasharp",
           "Type": "Shared"
         }
       ],

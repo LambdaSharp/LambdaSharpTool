@@ -34,7 +34,7 @@ using Demo.WebSocketsChat.Common;
 using LambdaSharp.ApiGateway;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
+[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace WebSocketsSample.MessageFunction {
 
@@ -75,7 +75,7 @@ namespace WebSocketsSample.MessageFunction {
             LogInfo($"Found {connections.Count()} open connection(s)");
 
             // attempt to send message on all open connections
-            var messageBytes = Encoding.UTF8.GetBytes(SerializeJson(new Message {
+            var messageBytes = Encoding.UTF8.GetBytes(LambdaSerializer.Serialize(new Message {
                 From = request.From,
                 Text = request.Text
             }));

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "072996A8A055EB386969DC14A130E959"
+      "Default": "91CFFAE5FDF349FE9FF8516706DF78E8"
     }
   },
   "Resources": {
@@ -129,6 +129,19 @@
             "MODULE_INFO": "Sample.CustomResourceType:1.0-DEV",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -551,7 +564,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -781,9 +794,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "072996A8A055EB386969DC14A130E959",
+      "TemplateChecksum": "91CFFAE5FDF349FE9FF8516706DF78E8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

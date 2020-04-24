@@ -121,7 +121,10 @@ namespace LambdaSharp.Tool.Cli {
                 Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {settings.TierName}");
             }
             var parameters = new Dictionary<string, string> {
-                ["LambdaSharpCoreServices"] = coreServicesParameter
+                ["LambdaSharpCoreServices"] = coreServicesParameter,
+
+                // NOTE (2020-04-23, bjorg): deployment bucket might change if the LambdaSharp.Core is recreated
+                ["DeploymentBucketName"] = settings.DeploymentBucketName
             };
             foreach(var module in modulesToUpdate) {
                 await UpdateStackParameters(settings, module, parameters);
@@ -186,7 +189,7 @@ namespace LambdaSharp.Tool.Cli {
 
         private async Task UpdateStackParameters(Settings settings, TierModuleDetails module, Dictionary<string, string> parameters) {
 
-            // keep all original parameter values except for 'LambdaSharpCoreServices'
+            // keep all original parameter values except for 'LambdaSharpCoreServices' and 'DeploymentBucketName'
             var stackParameters = module.Stack.Parameters
                 .Select(parameter => {
                     if(parameters.TryGetValue(parameter.ParameterKey, out var value)) {

@@ -6,6 +6,8 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Amazon.Lambda.APIGatewayEvents" Version="1.3.0" />
+    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.7.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
     <PackageReference Include="xunit" Version="2.4.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
@@ -13,7 +15,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="xunit.abstractions" Version="2.0.3" />
-    <PackageReference Include="FluentAssertions" Version="5.10.2" />
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
@@ -21,8 +23,11 @@
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayAsyncEndpointException.cs" Link="ApiGatewayAsyncEndpointException.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetDirectory.cs" Link="ApiGatewayInvocationTargetDirectory.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetParameterException.cs" Link="ApiGatewayInvocationTargetParameterException.cs" />
-    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetUnsupportedException.cs" Link="ApiGatewayInvocationTargetUnsupportedException.cs" />
+    <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayInvocationTargetReturnException.cs" Link="ApiGatewayInvocationTargetReturnException.cs" />
     <Compile Include="..\..\src\LambdaSharp\Exceptions\ALambdaException.cs" Link="ALambdaException.cs" />
     <Compile Include="..\..\src\LambdaSharp\Exceptions\ILambdaExceptionFingerprinter.cs" Link="ILambdaExceptionFingerprinter.cs" />
+    <Compile Include="..\..\src\LambdaSharp\Exceptions\ShouldNeverHappenException.cs" Link="ShouldNeverHappenException.cs" />
+    <Compile Include="..\..\src\LambdaSharp\ILambdaSerializerEx.cs" Link="ILambdaSerializerEx.cs" />
+    <Compile Include="..\..\src\LambdaSharp\Serialization\LambdaJsonSerializer.cs" Link="LambdaJsonSerializer.cs" />
   </ItemGroup>
 </Project>

@@ -21,7 +21,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.ErrorReports;
-using Newtonsoft.Json;
+using LambdaSharp.Records.Events;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -43,9 +43,6 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             }
 
             //--- Methods ---
-            public LambdaErrorReport DeserializeErrorReport(string jsonReport)
-                => JsonConvert.DeserializeObject<LambdaErrorReport>(jsonReport);
-
             public Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
                 ErrorReport.Should().BeNull();
                 ErrorReport = report;
@@ -60,6 +57,10 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
             public void LogProcessingError(Exception exception) {
                 _output.WriteLine(exception.ToString());
+            }
+
+            public Task SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
+                return Task.CompletedTask;
             }
         }
 
@@ -81,7 +82,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
                 FunctionPlatform = "Platform",
                 FunctionFramework = "Framework",
                 FunctionLanguage = "Language",
-                FunctionMaxDuration = TimeSpan.FromMilliseconds(10000),
+                FunctionMaxDuration = TimeSpan.FromMilliseconds(10_000),
                 FunctionMaxMemory = 128
             };
         }
@@ -89,7 +90,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
         //--- Methods ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
@@ -99,7 +100,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void LambdaException() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.: LambdaException", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.: LambdaException", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.");
@@ -109,7 +110,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void Timeout() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "2018-10-11T07:00:40.906Z 546933ad-cd23-11e8-bb5d-7f3682cfa000 Task timed out after 15.02 seconds", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "2018-10-11T07:00:40.906Z 546933ad-cd23-11e8-bb5d-7f3682cfa000 Task timed out after 15.02 seconds", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("Lambda timed out after 15.02 seconds");
@@ -119,7 +120,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void ProcessExitedBeforeCompletion() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
@@ -129,14 +130,14 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void ExecutionReport() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB\t", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             _provider.UsageReport.Should().NotBeNull();
             _provider.ErrorReport.Should().BeNull();
             _provider.UsageReport.UsedDuration.Should().Be(TimeSpan.FromMilliseconds(0.58));
             _provider.UsageReport.BilledDuration.Should().Be(TimeSpan.FromMilliseconds(100));
             _provider.UsageReport.MaxDuration.Should().Be(TimeSpan.FromSeconds(10));
-            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.0001F, 0.00001F);
+            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.000058F, 0.000001F);
             _provider.UsageReport.MaxMemory.Should().Be(128);
             _provider.UsageReport.UsedMemory.Should().Be(20);
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(0.15625F, 0.0001F);
@@ -144,7 +145,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void ExecutionReportOutOfMemory() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", "1539238963679").Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             _provider.UsageReport.Should().NotBeNull();
             _provider.UsageReport.UsedDuration.Should().Be(TimeSpan.FromMilliseconds(1062.06));
@@ -154,11 +155,28 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
             _provider.UsageReport.MaxMemory.Should().Be(128);
             _provider.UsageReport.UsedMemory.Should().Be(128);
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
+            _provider.UsageReport.InitDuration.Should().Be(TimeSpan.Zero);
 
             CommonErrorReportAsserts(usageReportCheck: false);
             _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        }
+
+        [Fact]
+        public void ExecutionReportWithInitDuration() {
+            var success = _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB\tInit Duration: 419.31 ms", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
+            success.Should().Be(true);
+            _provider.UsageReport.Should().NotBeNull();
+            _provider.ErrorReport.Should().BeNull();
+            _provider.UsageReport.UsedDuration.Should().Be(TimeSpan.FromMilliseconds(0.58));
+            _provider.UsageReport.BilledDuration.Should().Be(TimeSpan.FromMilliseconds(100));
+            _provider.UsageReport.MaxDuration.Should().Be(TimeSpan.FromSeconds(10));
+            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.000058F, 0.000001F);
+            _provider.UsageReport.MaxMemory.Should().Be(128);
+            _provider.UsageReport.UsedMemory.Should().Be(20);
+            _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(0.15625F, 0.0001F);
+            _provider.UsageReport.InitDuration.Should().Be(TimeSpan.FromMilliseconds(419.31));
         }
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {

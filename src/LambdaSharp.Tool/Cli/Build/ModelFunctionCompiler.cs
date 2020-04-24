@@ -182,7 +182,10 @@ namespace LambdaSharp.Tool.Cli.Build {
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]")
+                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]"),
+                    StageDescription = new Humidifier.ApiGateway.DeploymentTypes.StageDescription {
+                        MetricsEnabled = true
+                    }
                 },
                 resourceExportAttribute: null,
                 dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
@@ -662,7 +665,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.RequestContentType,
-                            Name = $"{method.LogicalId}Request",
+                            Name = $"{method.LogicalId}RequestModel",
                             RestApiId = restApiId,
                             Schema = route.Source.RequestSchema
                         },
@@ -770,7 +773,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.ResponseContentType,
-                            Name = $"{method.LogicalId}Response",
+                            Name = $"{method.LogicalId}ResponseModel",
                             RestApiId = restApiId,
                             Schema = route.Source.ResponseSchema
                         },

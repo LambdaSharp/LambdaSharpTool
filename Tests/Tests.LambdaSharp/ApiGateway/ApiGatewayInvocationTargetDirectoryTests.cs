@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using FluentAssertions;
 using LambdaSharp.ApiGateway.Internal;
+using LambdaSharp.Serialization;
 using Newtonsoft.Json;
 using Xunit;
 
@@ -226,7 +227,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("unknown");
-            exception.Message.Should().Be("missing value");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodDefaultValueType parameter 'unknown': missing value");
         }
 
         public SimpleResponse MethodDefaultValueType(int unknown) {
@@ -243,7 +244,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("unknown");
-            exception.Message.Should().Be("missing value");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodRequiredStringType parameter 'unknown': missing value");
         }
 
         public SimpleResponse MethodRequiredStringType(string unknown) {
@@ -314,7 +315,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("request");
-            exception.Message.Should().Be("invalid JSON document in request body");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodRequestBody parameter 'request': invalid JSON document in request body");
         }
 
         [Fact]
@@ -329,7 +330,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("request");
-            exception.Message.Should().Be("invalid JSON document in request body");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodRequestBodyAsync parameter 'request': invalid JSON document in request body");
         }
 
         public async Task<SimpleResponse> MethodRequestBodyAsync(SimpleRequest request) {
@@ -347,7 +348,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("request");
-            exception.Message.Should().Be("invalid JSON document in request body");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodRequestBody parameter 'request': invalid JSON document in request body");
         }
 
         [Fact]
@@ -367,7 +368,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("id");
-            exception.Message.Should().Be("invalid parameter format");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodPathParameter parameter 'id': invalid parameter format");
         }
 
         [Fact]
@@ -387,7 +388,7 @@ namespace Tests.LambdaSharp.ApiGateway {
                 );
             });
             exception.ParameterName.Should().Be("id");
-            exception.Message.Should().Be("invalid parameter format");
+            exception.Message.Should().Be("invocation target Tests.LambdaSharp.ApiGateway.ApiGatewayInvocationTargetDirectoryTests::MethodPathParameterAsync parameter 'id': invalid parameter format");
         }
 
         public async Task<SimpleResponse> MethodPathParameterAsync(int id) {
@@ -398,7 +399,7 @@ namespace Tests.LambdaSharp.ApiGateway {
         private void Test(string methodName, APIGatewayProxyRequest request, APIGatewayProxyResponse expectedResponse) {
 
             // Arrange
-            var invocationTargetDirectory = new ApiGatewayInvocationTargetDirectory(type => (type == GetType()) ? this : Activator.CreateInstance(type, new[] { this }));
+            var invocationTargetDirectory = new ApiGatewayInvocationTargetDirectory(type => (type == GetType()) ? this : Activator.CreateInstance(type, new[] { this }), new LambdaJsonSerializer());
             invocationTargetDirectory.Add("test", $"{GetType().Assembly.FullName}::{GetType().FullName}::{methodName}");
 
             // Act

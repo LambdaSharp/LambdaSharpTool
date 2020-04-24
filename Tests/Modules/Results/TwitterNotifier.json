@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FF68811EFA467766405BC86021EBDB6A"
+      "Default": "9F35F66D1A8F13A20836A9F1D5FBB2C2"
     }
   },
   "Resources": {
@@ -238,6 +238,19 @@
             "MODULE_INFO": "Demo.TwitterNotifier:1.0-DEV",
             "LAMBDA_NAME": "NotifyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -715,7 +728,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1002,9 +1015,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "FF68811EFA467766405BC86021EBDB6A",
+      "TemplateChecksum": "9F35F66D1A8F13A20836A9F1D5FBB2C2",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",

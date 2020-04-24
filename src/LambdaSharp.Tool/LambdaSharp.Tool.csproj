@@ -27,18 +27,18 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="AWSSDK.APIGateway" Version="3.3.103.58" />
-    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.3.104.27" />
-    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.104.3" />
-    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.101.84" />
-    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.3.105.7" />
-    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.3" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.3.109" />
-    <PackageReference Include="AWSSDK.S3" Version="3.3.110.25" />
-    <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.104.33" />
-    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.118.5" />
-    <PackageReference Include="Humidifier.Json" Version="0.3.0" />
-    <PackageReference Include="Humidifier" Version="0.3.0" />
+    <PackageReference Include="AWSSDK.APIGateway" Version="3.3.103.86" />
+    <PackageReference Include="AWSSDK.ApiGatewayV2" Version="3.3.106.14" />
+    <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.104.30" />
+    <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.101.111" />
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.3.105.34" />
+    <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.30" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.3.109.8" />
+    <PackageReference Include="AWSSDK.S3" Version="3.3.110.52" />
+    <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.104.60" />
+    <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.119.18" />
+    <PackageReference Include="Humidifier.Json" Version="0.3.1" />
+    <PackageReference Include="Humidifier" Version="0.3.1" />
     <PackageReference Include="JsonDiffPatch" Version="2.0.49" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.3.4" />
     <PackageReference Include="Mono.Cecil" Version="0.11.2" />

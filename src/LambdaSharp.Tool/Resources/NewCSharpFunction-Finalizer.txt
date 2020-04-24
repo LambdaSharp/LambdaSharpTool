@@ -5,7 +5,7 @@ using LambdaSharp;
 using LambdaSharp.Finalizer;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(%%JSON_SERIALIZER_TYPE%%))]
+[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace %%ROOTNAMESPACE%% {
 
@@ -19,17 +19,17 @@ namespace %%ROOTNAMESPACE%% {
 
         public override async Task CreateDeployment(FinalizerProperties current) {
 
-            // TO-DO: add business logic when creating a module deployment
+            // TO-DO: add business logic when creating a CloudFormation stack
         }
 
         public override async Task UpdateDeployment(FinalizerProperties next, FinalizerProperties previous) {
 
-            // TO-DO: add business logic when updating a module deployment
+            // TO-DO: add business logic when updating a CloudFormation stack
         }
 
         public override async Task DeleteDeployment(FinalizerProperties current) {
 
-            // TO-DO: add business logic when deleting a module deployment
+            // TO-DO: add business logic when deleting a CloudFormation stack
         }
     }
 }

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "B5F38D0EBC876658094B7BAAFAE22358"
+      "Default": "BE0B6F9D7871A7A045975B959E120B88"
     }
   },
   "Resources": {
@@ -129,6 +129,19 @@
             "MODULE_INFO": "Sample.ApiGateway:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -529,11 +542,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Sample.ApiGateway API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiItemsResource": {
@@ -669,18 +682,20 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment67FCB84688ECF145AAC6952FD0792CC9": {
+    "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [67FCB84688ECF145AAC6952FD0792CC9]"
+          "Fn::Sub": "${AWS::StackName} API [C96C506347CF556FAD9935D5B698EF1C]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiItemsResource",
         "ModuleRestApiItemsResourceGET",
+        "ModuleRestApiItemsResourceIdResource",
         "ModuleRestApiItemsResourceIdResourceDELETE",
         "ModuleRestApiItemsResourceIdResourceGET",
         "ModuleRestApiItemsResourcePOST"
@@ -690,7 +705,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment67FCB84688ECF145AAC6952FD0792CC9"
+          "Ref": "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C"
         },
         "MethodSettings": [
           {
@@ -727,7 +742,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -957,9 +972,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "B5F38D0EBC876658094B7BAAFAE22358",
+      "TemplateChecksum": "BE0B6F9D7871A7A045975B959E120B88",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1054,7 +1069,7 @@
         "ModuleRestApiItemsResourceIdResourceGET": "Module::RestApi::ItemsResource::IdResource::GET",
         "ModuleRestApiItemsResourceIdResourceDELETE": "Module::RestApi::ItemsResource::IdResource::DELETE",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment67FCB84688ECF145AAC6952FD0792CC9": "Module::RestApi::Deployment67FCB84688ECF145AAC6952FD0792CC9",
+        "ModuleRestApiDeploymentC96C506347CF556FAD9935D5B698EF1C": "Module::RestApi::DeploymentC96C506347CF556FAD9935D5B698EF1C",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {
