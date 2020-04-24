@@ -16,14 +16,17 @@
  * limitations under the License.
  */
 
+#nullable disable
+
 using System;
 using System.Collections.Generic;
+using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using FluentAssertions;
 using LambdaSharp.ApiGateway.Internal;
 using LambdaSharp.Serialization;
-using Newtonsoft.Json;
 using Xunit;
 
 namespace Tests.LambdaSharp.ApiGateway {
@@ -35,7 +38,6 @@ namespace Tests.LambdaSharp.ApiGateway {
 
             //--- Properties ---
             public string Text { get; set; }
-
         }
 
         public class SimpleResponse {
@@ -65,7 +67,10 @@ namespace Tests.LambdaSharp.ApiGateway {
         };
 
         //--- Class Methods ---
-        private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
+        private static string SerializeJson(object value) => JsonSerializer.Serialize(value, new JsonSerializerOptions {
+            IgnoreNullValues = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+        });
 
         private static SimpleResponse CreateSimpleResponse(params object[] values)
             => new SimpleResponse {

@@ -17,47 +17,47 @@
  */
 
 using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.Slack {
 
     public class SlackRequest {
 
         //--- Properties ---
-        [JsonProperty("token")]
+        [JsonPropertyName("token")]
         public string Token { get; set; }
 
-        [JsonProperty("team_id")]
+        [JsonPropertyName("team_id")]
         public string TeamId { get; set; }
 
-        [JsonProperty("team_domain")]
+        [JsonPropertyName("team_domain")]
         public string TeamDomain { get; set; }
 
-        [JsonProperty("enterprise_id")]
+        [JsonPropertyName("enterprise_id")]
         public string EnterpriseId { get; set; }
 
-        [JsonProperty("enterprise_name")]
+        [JsonPropertyName("enterprise_name")]
         public string EnterpriseName { get; set; }
 
-        [JsonProperty("channel_id")]
+        [JsonPropertyName("channel_id")]
         public string ChannelId { get; set; }
 
-        [JsonProperty("channel_name")]
+        [JsonPropertyName("channel_name")]
         public string ChannelName { get; set; }
 
-        [JsonProperty("user_id")]
+        [JsonPropertyName("user_id")]
         public string UserId { get; set; }
 
-        [JsonProperty("user_name")]
+        [JsonPropertyName("user_name")]
         public string UserName { get; set; }
 
-        [JsonProperty("command")]
+        [JsonPropertyName("command")]
         public string Command { get; set; }
 
-        [JsonProperty("text")]
+        [JsonPropertyName("text")]
         public string Text { get; set; }
 
-        [JsonProperty("response_url")]
+        [JsonPropertyName("response_url")]
         public string ResponseUrl { get; set; }
 
         //--- Methods ---

@@ -36,7 +36,7 @@ namespace LambdaSharp.Schedule {
         /// they move through rules to targets, and are processed.
         /// </summary>
         /// <value>Unique event identifier</value>
-        public string Id { get; set; }
+        public string? Id { get; set; }
 
         /// <summary>
         /// The event timestamp, which can be specified by the service originating the event.
@@ -50,6 +50,6 @@ namespace LambdaSharp.Schedule {
         /// The name corresponds to the optional name defined in the <c>Schedule</c> source using the <c>Name</c> attribute.
         /// </summary>
         /// <value>Event name</value>
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 }

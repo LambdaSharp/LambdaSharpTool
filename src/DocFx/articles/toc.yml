@@ -38,6 +38,9 @@
 - name: Releases
   items:
 
+    - name: Hicetas (v0.8.0.0)
+      href: ReleaseNotes-Hicetas.md
+
     - name: Geminus (v0.7.0.15)
       href: ReleaseNotes-Geminus.md
 

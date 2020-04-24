@@ -69,7 +69,7 @@ namespace LambdaSharp.Logger {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         /// <seealso cref="LambdaLogLevel"/>
-        public static void LogError(this ILambdaLogLevelLogger logger, Exception exception, string format, params object[] arguments)
+        public static void LogError(this ILambdaLogLevelLogger logger, Exception exception, string? format, params object[] arguments)
             => logger.Log(LambdaLogLevel.ERROR, exception, format, arguments);
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace LambdaSharp.Logger {
         /// <param name="type">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="jsonDetails">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS resources, identified by Amazon Resource Name (ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        public static void LogEventJson(this ILambdaLogLevelLogger logger, string source, string type, string jsonDetails = null, IEnumerable<string> resources = null)
+        public static void LogEventJson(this ILambdaLogLevelLogger logger, string source, string type, string? jsonDetails = null, IEnumerable<string>? resources = null)
             => logger.LogRecord(new LambdaEventRecord {
                 App = source,
                 Type = type,
@@ -238,7 +238,24 @@ namespace LambdaSharp.Logger {
                             Dimensions = metricDimensions,
                             Metrics = metrics.Select(metric => new CloudWatchMetricValue {
                                 Name = metric.Name,
-                                Unit = ConvertUnit(metric.Unit)
+                                Unit = metric.Unit switch {
+
+                                    // these enum names need to be mapped to their correct CloudWatch metrics unit counterpart
+                                    LambdaMetricUnit.BytesPerSecond => "Bytes/Second",
+                                    LambdaMetricUnit.KilobytesPerSecond => "Kilobytes/Second",
+                                    LambdaMetricUnit.MegabytesPerSecond => "Megabytes/Second",
+                                    LambdaMetricUnit.GigabytesPerSecond => "Gigabytes/Second",
+                                    LambdaMetricUnit.TerabytesPerSecond => "Terabytes/Second",
+                                    LambdaMetricUnit.BitsPerSecond => "Bits/Second",
+                                    LambdaMetricUnit.KilobitsPerSecond => "Kilobits/Second",
+                                    LambdaMetricUnit.MegabitsPerSecond => "Megabits/Second",
+                                    LambdaMetricUnit.GigabitsPerSecond => "Gigabits/Second",
+                                    LambdaMetricUnit.TerabitsPerSecond => "Terabits/Second",
+                                    LambdaMetricUnit.CountPerSecond => "Count/Second",
+
+                                    // the remaining enums are good as is
+                                    _ => metric.Unit.ToString()
+                                }
                             }).ToList()
                         }
                     }
@@ -258,39 +275,6 @@ namespace LambdaSharp.Logger {
                     throw new ArgumentException($"{parameterType} name cannot be named '{name}'");
                 default:
                     break;
-                }
-            }
-
-            string ConvertUnit(LambdaMetricUnit unit) {
-                switch(unit) {
-
-                // these enum names need to be mapped to their correct CloudWatch metrics unit counterpart
-                case LambdaMetricUnit.BytesPerSecond:
-                    return "Bytes/Second";
-                case LambdaMetricUnit.KilobytesPerSecond:
-                    return "Kilobytes/Second";
-                case LambdaMetricUnit.MegabytesPerSecond:
-                    return "Megabytes/Second";
-                case LambdaMetricUnit.GigabytesPerSecond:
-                    return "Gigabytes/Second";
-                case LambdaMetricUnit.TerabytesPerSecond:
-                    return "Terabytes/Second";
-                case LambdaMetricUnit.BitsPerSecond:
-                    return "Bits/Second";
-                case LambdaMetricUnit.KilobitsPerSecond:
-                    return "Kilobits/Second";
-                case LambdaMetricUnit.MegabitsPerSecond:
-                    return "Megabits/Second";
-                case LambdaMetricUnit.GigabitsPerSecond:
-                    return "Gigabits/Second";
-                case LambdaMetricUnit.TerabitsPerSecond:
-                    return "Terabits/Second";
-                case LambdaMetricUnit.CountPerSecond:
-                    return "Count/Second";
-
-                // the remaining enums are good as is
-                default:
-                    return unit.ToString();
                 }
             }
         }

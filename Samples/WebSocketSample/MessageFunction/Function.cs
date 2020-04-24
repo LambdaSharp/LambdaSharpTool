@@ -28,10 +28,11 @@ using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using Amazon.Runtime;
 using LambdaSharp;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using Demo.WebSocketsChat.Common;
 using LambdaSharp.ApiGateway;
+using System.Text.Json.Serialization;
+using System.Runtime.Serialization;
+using System.Text.Json;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
@@ -41,13 +42,16 @@ namespace WebSocketsSample.MessageFunction {
     public class Message {
 
         //--- Properties ---
-        [JsonProperty("action"), JsonRequired]
+        [JsonPropertyName("action")]
+        [DataMember(IsRequired = true)]
         public string Action { get; set; } = "send";
 
-        [JsonProperty("from"), JsonRequired]
+        [JsonPropertyName("from")]
+        [DataMember(IsRequired = true)]
         public string From { get; set; }
 
-        [JsonProperty("text"), JsonRequired]
+        [JsonPropertyName("text")]
+        [DataMember(IsRequired = true)]
         public string Text { get; set; }
     }
 
@@ -101,12 +105,12 @@ namespace WebSocketsSample.MessageFunction {
 
         public APIGatewayProxyResponse UnrecognizedRequest(APIGatewayProxyRequest request) {
             try {
-                var json = JObject.Parse(request.Body);
-                var action = (string)json["action"];
-                if(action != null) {
-                    return CreateResponse(404, $"Unrecognized action '{action}'");
-                } else {
-                    return CreateResponse(404, $"Request is missing 'action' field");
+                using(var json = JsonDocument.Parse(request.Body)) {
+                    if(json.RootElement.TryGetProperty("action", out var actionJsonElement)) {
+                        return CreateResponse(404, $"Unrecognized action '{actionJsonElement.GetString()}'");
+                    } else {
+                        return CreateResponse(404, $"Request is missing 'action' field");
+                    }
                 }
             } catch {
                 return CreateResponse(404, $"Request must be a JSON object");

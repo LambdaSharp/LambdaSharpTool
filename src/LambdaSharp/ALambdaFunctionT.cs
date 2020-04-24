@@ -16,12 +16,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 
 namespace LambdaSharp {
 
@@ -31,7 +27,10 @@ namespace LambdaSharp {
     /// </summary>
     /// <typeparam name="TRequest">The request payload type.</typeparam>
     /// <typeparam name="TResponse">The response payload type.</typeparam>
-    public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction {
+    public abstract class ALambdaFunction<TRequest, TResponse> : ALambdaFunction
+        where TRequest : notnull
+        where TResponse : notnull
+    {
 
         //--- Constructors ---
 
@@ -46,7 +45,7 @@ namespace LambdaSharp {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
         //--- Abstract Methods ---
 

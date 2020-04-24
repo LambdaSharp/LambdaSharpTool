@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LambdaSharp.ErrorReports {
+namespace LambdaSharp.Records.ErrorReports {
 
     /// <summary>
     /// The <see cref="LambdaErrorReportStackTrace"/> class describes an exception trace, which
@@ -36,13 +36,13 @@ namespace LambdaSharp.ErrorReports {
         /// The <see cref="Exception"/> property holds information about the exception.
         /// </summary>
         /// <value>The exception details.</value>
-        public LambdaErrorReportExceptionInfo Exception { get; set; }
+        public LambdaErrorReportExceptionInfo? Exception { get; set; }
 
         /// <summary>
         /// The <see cref="Frames"/> property holds the stack frames between where the exception
         /// was thrown and where it was caught.
         /// </summary>
         /// <value>The exception stack frames.</value>
-        public IEnumerable<LambdaErrorReportStackFrame> Frames { get; set; }
+        public IEnumerable<LambdaErrorReportStackFrame>? Frames { get; set; }
     }
 }

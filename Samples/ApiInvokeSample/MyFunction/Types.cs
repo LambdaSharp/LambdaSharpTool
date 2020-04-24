@@ -17,56 +17,55 @@
  */
 
 using System.Collections.Generic;
-using Amazon.Lambda.Core;
-using Newtonsoft.Json;
+using System.Runtime.Serialization;
 
 namespace ApiInvokeSample.MyFunction {
 
     public class Item {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Id { get; set; }
 
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Value { get; set; }
     }
 
     public class AddItemRequest {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Value { get; set; }
     }
 
     public class AddItemResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Id { get; set; }
     }
 
     public class GetItemsResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public List<Item> Items = new List<Item>();
     }
 
     public class GetItemResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Id { get; set; }
 
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public string Value { get; set; }
     }
 
     public class DeleteItemResponse {
 
         //--- Properties ---
-        [JsonRequired]
+        [DataMember(IsRequired = true)]
         public bool Deleted;
     }
 }

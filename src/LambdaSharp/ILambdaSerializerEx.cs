@@ -19,9 +19,9 @@
 using System;
 using System.IO;
 using System.Text;
+using System.Text.Json;
 using Amazon.Lambda.Core;
 using LambdaSharp.Serialization;
-using Newtonsoft.Json;
 
 namespace LambdaSharp {
 
@@ -65,7 +65,7 @@ namespace LambdaSharp {
             if(serializer is LambdaJsonSerializer lambdaJsonSerializer) {
                 return lambdaJsonSerializer.Deserialize(new MemoryStream(Encoding.UTF8.GetBytes(json)), type);
             } else {
-                return JsonConvert.DeserializeObject(json, type);
+                return JsonSerializer.Deserialize(json, type);
             }
         }
     }

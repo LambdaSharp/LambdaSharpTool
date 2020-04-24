@@ -1,4 +1,4 @@
-﻿/*
+/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -19,20 +19,16 @@
 namespace LambdaSharp.Exceptions {
 
     /// <summary>
-    /// The <see cref="ILambdaExceptionFingerprinter"/> interface is used to indicate that
-    /// an exception type has custom fingerprinting logic. The exception fingerprint is used
-    /// by the <see cref="LambdaSharp.Records.ErrorReports.LambdaErrorReportGenerator"/> instance to allow a log
-    /// aggregator to group together related errors.
+    /// The <see cref="LambdaMissingLambdaSerializerAttributeException"/> exception is thrown when now
+    /// Lambda serializer is defined in the assembly containing the Lambda function.
     /// </summary>
-    public interface ILambdaExceptionFingerprinter {
+    public class LambdaMissingLambdaSerializerAttributeException : ALambdaException {
 
-        //--- Properties ---
+        //--- Constructors ---
 
         /// <summary>
-        /// The <see cref="FingerprintValue"/> property returns a deterministic fingerprint value
-        /// that can be used to group related exceptions together.
+        /// Initialize a new instance.
         /// </summary>
-        /// <value>The fingerprint value.</value>
-        string FingerprintValue { get; }
+        public LambdaMissingLambdaSerializerAttributeException() : base("could not find Amazon.Lambda.Core.LambdaSerializerAttribute on assembly") { }
     }
 }

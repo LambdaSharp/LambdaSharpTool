@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.ErrorReports {
+namespace LambdaSharp.Records.ErrorReports {
 
     /// <summary>
     /// The <see cref="LambdaErrorReportExceptionInfo"/> class describes a runtime exception.
@@ -31,18 +31,18 @@ namespace LambdaSharp.ErrorReports {
         /// The <see cref="Type"/> property holds the full exception type name.
         /// </summary>
         /// <value>The type name of the exception.</value>
-        public string Type { get; set; }
+        public string? Type { get; set; }
 
         /// <summary>
         /// The <see cref="Message"/> property holds the exception message.
         /// </summary>
         /// <value>The exception message.</value>
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         /// <summary>
         /// The <see cref="StackTrace"/> property holds the unparsed exception stack trace.
         /// </summary>
         /// <value>The exception stack trace.</value>
-        public string StackTrace { get; set; }
+        public string? StackTrace { get; set; }
     }
 }

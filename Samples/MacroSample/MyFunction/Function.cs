@@ -18,11 +18,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 using LambdaSharp;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.

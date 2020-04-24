@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Amazon.Lambda.Core;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
 using LambdaSharp.ApiGateway;
-using Newtonsoft.Json;
 
 namespace ApiInvokeSample.MyFunction {
 
@@ -37,13 +37,16 @@ namespace ApiInvokeSample.MyFunction {
         public class FilterOptions {
 
             //--- Properties ---
-            [JsonProperty(PropertyName = "contains", Required = Required.DisallowNull)]
+            [JsonPropertyName("contains")]
+            [DataMember(IsRequired = true)]
             public string Contains { get; set; }
 
-            [JsonProperty(PropertyName = "offset", Required = Required.DisallowNull)]
+            [JsonPropertyName("offset")]
+            [DataMember(IsRequired = true)]
             public int Offset { get; set; } = 0;
 
-            [JsonProperty(PropertyName = "limit", Required = Required.DisallowNull)]
+            [JsonPropertyName("limit")]
+            [DataMember(IsRequired = true)]
             public int Limit { get; set; } = 10;
         }
 

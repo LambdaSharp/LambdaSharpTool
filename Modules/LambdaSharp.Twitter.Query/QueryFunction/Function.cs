@@ -29,7 +29,10 @@ using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using LambdaSharp.Schedule;
 using Newtonsoft.Json;
+
+// TODO: use System.Text.Json instead
 using Newtonsoft.Json.Linq;
+
 using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Parameters;

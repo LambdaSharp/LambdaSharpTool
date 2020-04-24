@@ -20,6 +20,7 @@ using System;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
@@ -28,6 +29,7 @@ using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
 using LambdaSharp.Exceptions;
+using LambdaSharp.Serialization;
 
 // Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
 [assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
@@ -37,20 +39,24 @@ namespace LambdaSharp.Core.RegistrationFunction {
     public class RegistrationResourceProperties {
 
         //--- Properties ---
-        public string ResourceType { get; set; }
-        public string Module { get; set; }
-        public string ModuleId { get; set; }
-        public string FunctionId { get; set; }
-        public string FunctionName { get; set; }
-        public string FunctionLogGroupName { get; set; }
+        public string? ResourceType { get; set; }
+        public string? Module { get; set; }
+        public string? ModuleId { get; set; }
+        public string? FunctionId { get; set; }
+        public string? FunctionName { get; set; }
+        public string? FunctionLogGroupName { get; set; }
+
+        [JsonConverter(typeof(JsonIntConverter))]
         public int FunctionMaxMemory { get; set; }
+
+        [JsonConverter(typeof(JsonIntConverter))]
         public int FunctionMaxDuration { get; set; }
-        public string FunctionPlatform { get; set; }
-        public string FunctionFramework { get; set; }
-        public string FunctionLanguage { get; set; }
+        public string? FunctionPlatform { get; set; }
+        public string? FunctionFramework { get; set; }
+        public string? FunctionLanguage { get; set; }
 
         //--- Methods ---
-        public string GetModuleFullName() {
+        public string? GetModuleFullName() {
             if(Module == null) {
                 return null;
             }
@@ -61,14 +67,14 @@ namespace LambdaSharp.Core.RegistrationFunction {
             return Module.Substring(0, index);
         }
 
-        public string GetModuleNamespace() => GetModuleFullName().Split('.', 2)[0];
-        public string GetModuleName() => GetModuleFullName().Split('.', 2)[1];
+        public string? GetModuleNamespace() => GetModuleFullName()?.Split('.', 2)[0];
+        public string? GetModuleName() => GetModuleFullName()?.Split('.', 2)[1];
     }
 
     public class RegistrationResourceAttributes {
 
         //--- Properties ---
-        public string Registration { get; set; }
+        public string? Registration { get; set; }
     }
 
     public class RegistrarException : ALambdaException {
@@ -83,10 +89,10 @@ namespace LambdaSharp.Core.RegistrationFunction {
         private const int PROJECT_HASH_LENGTH = 6;
 
         //--- Fields ---
-        private RegistrationTable _registrations;
-        private RollbarClient _rollbarClient;
-        private string _rollbarProjectPattern;
-        private string _coreSecretsKey;
+        private RegistrationTable? _registrations;
+        private RollbarClient? _rollbarClient;
+        private string? _rollbarProjectPattern;
+        private string? _coreSecretsKey;
 
         //--- Properties ---
         private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
@@ -263,7 +269,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
                 }
             };
 
-        private OwnerMetaData PopulateOwnerMetaData(RegistrationResourceProperties properties, OwnerMetaData owner = null) {
+        private OwnerMetaData PopulateOwnerMetaData(RegistrationResourceProperties properties, OwnerMetaData? owner = null) {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }

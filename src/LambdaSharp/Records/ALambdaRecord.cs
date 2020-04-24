@@ -30,12 +30,12 @@ namespace LambdaSharp.Records {
         /// The <see cref="Source"/> property determines the source of the Lambda record.
         /// </summary>
         /// <value>The source of the Lambda record.</value>
-        public string Source { get; set; }
+        public string? Source { get; set; }
 
         /// <summary>
         /// The <see cref="Version"/> property determines the format version of the Lambda record.
         /// </summary>
         /// <value>The format version.</value>
-        public string Version { get; set; }
+        public string? Version { get; set; }
     }
 }

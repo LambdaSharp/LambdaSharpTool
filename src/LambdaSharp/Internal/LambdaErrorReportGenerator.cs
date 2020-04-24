@@ -19,15 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using LambdaSharp.Exceptions;
 
-namespace LambdaSharp.ErrorReports {
+namespace LambdaSharp.Records.ErrorReports {
 
     /// <summary>
     /// The <see cref="LambdaErrorReportGenerator"/> class is used to create
@@ -38,7 +35,7 @@ namespace LambdaSharp.ErrorReports {
     /// the initialized <see cref="LambdaErrorReportGenerator"/> instance in the
     /// Lambda function.
     /// </summary>
-    public class LambdaErrorReportGenerator : ILambdaErrorReportGenerator {
+    internal class LambdaErrorReportGenerator : ILambdaErrorReportGenerator {
 
         //--- Constants ---
         private const string LANGUAGE = "csharp";
@@ -53,7 +50,7 @@ namespace LambdaSharp.ErrorReports {
             return string.Concat(hash.Select(x => x.ToString("X2")));
         }
 
-        private IEnumerable<Exception> FlattenExceptions(Exception exception) {
+        private IEnumerable<Exception>? FlattenExceptions(Exception? exception) {
             if(exception == null) {
                 return null;
             }
@@ -61,40 +58,11 @@ namespace LambdaSharp.ErrorReports {
 
             // local functions
             IEnumerable<Exception> Enumerate() {
-                var current = exception;
+                Exception? current = exception;
                 do {
                     yield return current;
                     current = current.InnerException;
                 } while(current != null);
-            }
-        }
-
-        /// <summary>
-        /// The <see cref="FormatMessage(string,object[])"/> method behaves identically to the <see cref="string.Format(string,object[])"/> method
-        /// when the <paramref name="format"/> parameter is not <c>null</c> and the <paramref name="args"/> parameter is non-empty.
-        /// If the <paramref name="format"/> parameter is <c>null</c>, this method returns <c>null</c>. If the <paramref name="args"/> parameter is empty,
-        /// this method return the value of the <paramref name="format"/> parameter.
-        /// </summary>
-        /// <param name="format">An optional message.</param>
-        /// <param name="args">Optional arguments for the error message.</param>
-        /// <returns>The formatted string.</returns>
-        public static string FormatMessage(string format, object[] args) {
-            if(format == null) {
-                return null;
-            }
-            if(args.Length == 0) {
-                return format;
-            }
-            try {
-                return string.Format(format, args);
-            } catch {
-                return format + "(" + string.Join(", ", args.Select(arg => {
-                    try {
-                        return arg.ToString();
-                    } catch {
-                        return "<ERROR>";
-                    }
-                })) + ")";
             }
         }
 
@@ -104,8 +72,8 @@ namespace LambdaSharp.ErrorReports {
         private readonly string _functionId;
         private readonly string _functionName;
         private readonly string _framework;
-        private readonly string _gitSha;
-        private readonly string _gitBranch;
+        private readonly string? _gitSha;
+        private readonly string? _gitBranch;
         private readonly string _platform;
 
         //--- Constructors ---
@@ -126,8 +94,8 @@ namespace LambdaSharp.ErrorReports {
             string functionId,
             string functionName,
             string framework,
-            string gitSha,
-            string gitBranch
+            string? gitSha,
+            string? gitBranch
         ) {
             _moduleId = moduleId ?? throw new ArgumentNullException(nameof(moduleId));
             _moduleInfo = moduleInfo ?? throw new ArgumentNullException(nameof(moduleInfo));
@@ -155,8 +123,8 @@ namespace LambdaSharp.ErrorReports {
         /// <param name="format">An optional message.</param>
         /// <param name="args">Optional arguments for the error message.</param>
         /// <returns>A new <see cref="LambdaErrorReport"/> instance.</returns>
-        public LambdaErrorReport CreateReport(string requestId, string level, Exception exception, string format = null, params object[] args) {
-            var message = FormatMessage(format, args) ?? exception?.Message;
+        public LambdaErrorReport? CreateReport(string requestId, string level, Exception exception, string? format = null, params object[] args) {
+            var message = ILambdaErrorReportGenerator.FormatMessage(format, args) ?? exception?.Message;
             if(message == null) {
                 return null;
             }
@@ -197,10 +165,16 @@ namespace LambdaSharp.ErrorReports {
                     Message = exception.Message,
                     StackTrace = exception.StackTrace
                 },
-                Frames = stackFrames?.Select(frame => {
+                Frames = stackFrames
+                    ?.Where(frame => frame != null)
+
+                    // NOTE (2020-04-02, bjorg): this Cast() operation is only needed to indicate the references are non-null
+                    .Cast<StackFrame>()
+
+                    .Select(frame => {
 
                     // capture information about invoked method
-                    string methodName = null;
+                    string? methodName = null;
                     var method = frame.GetMethod();
                     if(method != null) {
                         var methodParams = method.GetParameters();

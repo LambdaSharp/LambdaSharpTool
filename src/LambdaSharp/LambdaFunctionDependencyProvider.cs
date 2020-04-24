@@ -20,12 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using LambdaSharp.ConfigSource;
@@ -58,21 +56,18 @@ namespace LambdaSharp {
         /// <param name="utcNowCallback">A function that return the current <c>DateTime</c> in UTC timezone. Defaults to <see cref="DateTime.UtcNow"/> when <c>null</c>.</param>
         /// <param name="logCallback">An action that logs a string message. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="configSource">A <see cref="ILambdaConfigSource"/> instance from which the Lambda function configuration is read. Defaults to <see cref="LambdaSystemEnvironmentSource"/> instance when <c>null</c>.</param>
-        /// <param name="jsonSerializer">A <see cref="ILambdaSerializer"/> instance for serializing and deserializing JSON data. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="kmsClient">A <see cref="IAmazonKeyManagementService"/> client instance. Defaults to <see cref="AmazonKeyManagementServiceClient"/> when <c>null</c>.</param>
         /// <param name="sqsClient">A <see cref="IAmazonSQS"/> client instance. Defaults to <see cref="AmazonSQSClient"/> when <c>null</c>.</param>
         public LambdaFunctionDependencyProvider(
-            Func<DateTime> utcNowCallback = null,
-            Action<string> logCallback = null,
-            ILambdaConfigSource configSource = null,
-            ILambdaSerializer jsonSerializer = null,
-            IAmazonKeyManagementService kmsClient = null,
-            IAmazonSQS sqsClient = null
+            Func<DateTime>? utcNowCallback = null,
+            Action<string>? logCallback = null,
+            ILambdaConfigSource? configSource = null,
+            IAmazonKeyManagementService? kmsClient = null,
+            IAmazonSQS? sqsClient = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
             ConfigSource = configSource ?? new LambdaSystemEnvironmentSource();
-            JsonSerializer = jsonSerializer ?? new JsonSerializer();
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
         }
@@ -90,12 +85,6 @@ namespace LambdaSharp {
         /// </summary>
         /// <value>The <see cref="ILambdaConfigSource"/> instance.</value>
         public ILambdaConfigSource ConfigSource { get; private set; }
-
-        /// <summary>
-        /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
-        /// </summary>
-        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
-        public ILambdaSerializer JsonSerializer { get; private set; }
 
         /// <summary>
         /// Retrieves the <see cref="IAmazonKeyManagementService"/> instance used for communicating with the
@@ -126,7 +115,7 @@ namespace LambdaSharp {
         /// <param name="secretBytes">Array containing the encrypted bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual async Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string> encryptionContext)
+        public virtual async Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string>? encryptionContext)
             => (await KmsClient.DecryptAsync(new DecryptRequest {
                     CiphertextBlob = new MemoryStream(secretBytes),
                     EncryptionContext = encryptionContext
@@ -140,7 +129,7 @@ namespace LambdaSharp {
         /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
         /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual async Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string> encryptionContext)
+        public virtual async Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string>? encryptionContext)
             => (await KmsClient.EncryptAsync(new EncryptRequest {
                     KeyId = encryptionKeyId,
                     Plaintext = new MemoryStream(plaintextBytes),
@@ -155,7 +144,7 @@ namespace LambdaSharp {
         /// <param name="message">The message to send.</param>
         /// <param name="messageAttributes">Optional attributes for the message.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public virtual Task SendMessageToQueueAsync(string deadLetterQueueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes)
+        public virtual Task SendMessageToQueueAsync(string deadLetterQueueUrl, string message, IEnumerable<KeyValuePair<string, string>>? messageAttributes)
             => SqsClient.SendMessageAsync(new SendMessageRequest {
                 QueueUrl = deadLetterQueueUrl,
                 MessageBody = message,

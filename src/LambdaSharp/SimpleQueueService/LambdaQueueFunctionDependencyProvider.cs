@@ -42,17 +42,15 @@ namespace LambdaSharp.SimpleQueueService {
         /// <param name="utcNowCallback">A function that return the current <c>DateTime</c> in UTC timezone. Defaults to <see cref="DateTime.UtcNow"/> when <c>null</c>.</param>
         /// <param name="logCallback">An action that logs a string message. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="configSource">A <see cref="ILambdaConfigSource"/> instance from which the Lambda function configuration is read. Defaults to <see cref="LambdaSystemEnvironmentSource"/> instance when <c>null</c>.</param>
-        /// <param name="jsonSerializer">A <see cref="ILambdaSerializer"/> instance for serializing and deserializing JSON data. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="kmsClient">A <see cref="IAmazonKeyManagementService"/> client instance. Defaults to <see cref="AmazonKeyManagementServiceClient"/> when <c>null</c>.</param>
         /// <param name="sqsClient">A <see cref="IAmazonSQS"/> client instance. Defaults to <see cref="AmazonSQSClient"/> when <c>null</c>.</param>
         public LambdaQueueFunctionDependencyProvider(
-            Func<DateTime> utcNowCallback = null,
-            Action<string> logCallback = null,
-            ILambdaConfigSource configSource = null,
-            ILambdaSerializer jsonSerializer = null,
-            IAmazonKeyManagementService kmsClient = null,
-            IAmazonSQS sqsClient = null
-        ) : base(utcNowCallback, logCallback, configSource, jsonSerializer, kmsClient, sqsClient) { }
+            Func<DateTime>? utcNowCallback = null,
+            Action<string>? logCallback = null,
+            ILambdaConfigSource? configSource = null,
+            IAmazonKeyManagementService? kmsClient = null,
+            IAmazonSQS? sqsClient = null
+        ) : base(utcNowCallback, logCallback, configSource, kmsClient, sqsClient) { }
 
         //--- Methods ---
 

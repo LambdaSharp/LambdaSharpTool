@@ -25,7 +25,7 @@ namespace LambdaSharp.Exceptions {
     /// The <see cref="ALambdaException"/> abstract class is the recommended base class
     /// for all runtime exceptions. It implements the <see cref="ILambdaExceptionFingerprinter.FingerprintValue"/>
     /// property to create a unique fingerprint from the exception type and the unformatted exception message.
-    /// This allows the generated <see cref="ErrorReports.LambdaErrorReport"/> instances to be grouped together by a
+    /// This allows the generated <see cref="LambdaSharp.Records.ErrorReports.LambdaErrorReport"/> instances to be grouped together by a
     /// log aggregator.
     /// </summary>
     public abstract class ALambdaException : Exception, ILambdaExceptionFingerprinter {

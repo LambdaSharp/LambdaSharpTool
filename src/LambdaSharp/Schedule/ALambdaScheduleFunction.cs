@@ -39,7 +39,7 @@ namespace LambdaSharp.Schedule {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaScheduleFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaScheduleFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
         //--- Abstract Methods ---
 

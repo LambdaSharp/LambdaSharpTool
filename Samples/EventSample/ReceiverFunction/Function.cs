@@ -29,7 +29,7 @@ namespace Sample.Event.ReceiverFunction {
     public class EventDetails {
 
         //--- Properties ---
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 
     public class FunctionResponse { }

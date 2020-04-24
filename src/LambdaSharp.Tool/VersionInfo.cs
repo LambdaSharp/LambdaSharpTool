@@ -258,18 +258,36 @@ namespace LambdaSharp.Tool {
         public bool IsGreaterOrEqualThanVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) >= 0;
         public bool IsEqualToVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) == 0;
 
-        public string GetLambdaSharpAssemblyWildcardVersion() {
+        public string GetLambdaSharpAssemblyWildcardVersion(string framework) {
+            var major = Major;
+            var minor = Minor;
+            var patch = Patch;
+            switch(framework) {
+                case "netcoreapp1.0":
+                case "netcoreapp2.0":
+
+                    // TODO (2020-04-02, bjorg): determine correct LambdaSharp.dll version for .NET Core 1.0 & 2.0
+                case "netcoreapp2.1":
+                    major = 0;
+                    minor = 7;
+                    patch = 0;
+                    break;
+                case "netcoreapp3.1":
+                    break;
+                default:
+                    throw new ApplicationException($"unsupported framework: {framework}");
+            }
             if(IsPreRelease) {
 
                 // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
                 return ToString();
             }
-            if(Major == 0) {
+            if(major == 0) {
 
                 // when Major version is 0, the build number is relevant
-                return $"{Major}.{Minor}.{Patch ?? 0}.*";
+                return $"{major}.{minor}.{patch ?? 0}.*";
             }
-            return $"{Major}.{Minor}.*";
+            return $"{major}.{minor}.*";
         }
 
         public VersionInfo GetCoreServicesReferenceVersion() {

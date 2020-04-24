@@ -20,7 +20,7 @@ using System;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Core.Registrations;
-using LambdaSharp.ErrorReports;
+using LambdaSharp.Records.ErrorReports;
 using LambdaSharp.Records.Events;
 using Xunit;
 using Xunit.Abstractions;

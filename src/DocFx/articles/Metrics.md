@@ -141,7 +141,7 @@ Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be rep
 
 ## LambdaSharp.Core Metrics Events
 
-When the _Core Services_ are enabled, the emitted LambdaSharp metrics are also published as events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
+When the _Core Services_ are enabled, the emitted LambdaSharp metrics are also published as events on the default event bus by the _LambdaSharp.Core_ module.
 
 The following is an example of a `LambdaMetrics` event:
 ```json

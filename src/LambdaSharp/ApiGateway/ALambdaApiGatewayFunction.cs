@@ -18,7 +18,9 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
@@ -42,20 +44,20 @@ namespace LambdaSharp.ApiGateway {
         private class ApiGatewayInvocationMappings {
 
             //--- Properties ---
-            public List<ApiGatewayInvocationMapping> Mappings { get; set; }
+            public List<ApiGatewayInvocationMapping>? Mappings { get; set; }
         }
 
         private class ApiGatewayInvocationMapping {
 
             //--- Properties ---
-            public string RestApi { get; set; }
-            public string WebSocket { get; set; }
-            public string Method { get; set; }
+            public string? RestApi { get; set; }
+            public string? WebSocket { get; set; }
+            public string? Method { get; set; }
         }
 
         //--- Fields ---
-        private ApiGatewayInvocationTargetDirectory _directory;
-        private APIGatewayProxyRequest _currentRequest;
+        private ApiGatewayInvocationTargetDirectory? _directory;
+        private APIGatewayProxyRequest? _currentRequest;
 
         //--- Constructors ---
 
@@ -68,7 +70,7 @@ namespace LambdaSharp.ApiGateway {
         /// Initializes a new <see cref="ALambdaApiGatewayFunction"/> instance using a custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaApiGatewayFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaApiGatewayFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
         //--- Properties ---
 
@@ -76,10 +78,10 @@ namespace LambdaSharp.ApiGateway {
         /// Retrieve the current <see cref="APIGatewayProxyRequest"/> for the request.
         /// </summary>
         /// <remarks>
-        /// This property is only set during the invocation of <see cref="ProcessMessageAsync(APIGatewayProxyRequest)"/>. Otherwise, it returns <c>null</c>.
+        /// This property is only set during the invocation of <see cref="ProcessMessageAsync(APIGatewayProxyRequest)"/>. Otherwise, it throws an <see cref="InvalidOperationException" />.
         /// </remarks>
         /// <value>The <see cref="APIGatewayProxyRequest"/> instance.</value>
-        protected APIGatewayProxyRequest CurrentRequest => _currentRequest;
+        protected APIGatewayProxyRequest CurrentRequest => _currentRequest ?? throw new InvalidOperationException();
 
         //--- Methods ---
 
@@ -139,7 +141,7 @@ namespace LambdaSharp.ApiGateway {
             APIGatewayProxyResponse response;
             var signature = "<null>";
             try {
-                ApiGatewayInvocationTargetDirectory.InvocationTargetDelegate invocationTarget;
+                ApiGatewayInvocationTargetDirectory.InvocationTargetDelegate? invocationTarget;
                 var requestContext = request.RequestContext;
 
                 // check if this invocation is a REST API request

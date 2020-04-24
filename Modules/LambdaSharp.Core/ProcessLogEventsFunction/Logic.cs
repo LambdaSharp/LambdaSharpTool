@@ -22,13 +22,13 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.Core.Registrations;
-using LambdaSharp.ErrorReports;
 using LambdaSharp.Records;
 using LambdaSharp.Records.Events;
-using Newtonsoft.Json;
+using LambdaSharp.Records.ErrorReports;
 
 namespace LambdaSharp.Core.ProcessLogEvents {
 
@@ -51,9 +51,9 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         private class JavascriptException {
 
             //--- Properties ---
-            public string ErrorMessage { get; set; }
-            public string ErrorType { get; set; }
-            public List<string> StackTrace { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? ErrorType { get; set; }
+            public List<string>? StackTrace { get; set; }
         }
 
         //--- Class Fields ---
@@ -301,6 +301,6 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         private string ToRfc3339Timestamp(DateTimeOffset timestamp)
             => timestamp.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo);
 
-        private T DeserializeJson<T>(string json) => JsonConvert.DeserializeObject<T>(json);
+        private T DeserializeJson<T>(string json) =>  JsonSerializer.Deserialize<T>(json);
     }
 }

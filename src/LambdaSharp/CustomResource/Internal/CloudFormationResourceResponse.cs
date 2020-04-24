@@ -16,18 +16,19 @@
  * limitations under the License.
  */
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
+using System.Text.Json.Serialization;
 
 namespace LambdaSharp.CustomResource.Internal {
 
-    [JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     internal enum CloudFormationResourceResponseStatus {
         SUCCESS,
         FAILED
     }
 
-    internal class CloudFormationResourceResponse<TAttributes> {
+    internal class CloudFormationResourceResponse<TAttributes>
+        where TAttributes : class
+    {
 
         //--- Properties ---
 
@@ -38,27 +39,27 @@ namespace LambdaSharp.CustomResource.Internal {
         /// Describes the reason for a failure response.
         ///
         /// Required: Required if Status is FAILED. It's optional otherwise.
-        public string Reason { get; set; }
+        public string? Reason { get; set; }
 
         /// The Amazon Resource Name (ARN) that identifies the stack that
         /// contains the custom resource. This response value should be copied
         /// verbatim from the request.
-        public string StackId { get; set; }
+        public string? StackId { get; set; }
 
         /// This value should be an identifier unique to the custom resource
         /// vendor, and can be up to 1 Kb in size. The value must be a
         /// non-empty string and must be identical for all responses for the
         /// same resource.
-        public string PhysicalResourceId { get; set; }
+        public string? PhysicalResourceId { get; set; }
 
         /// A unique ID for the request. This response value should be copied
         /// verbatim from the request.
-        public string RequestId { get; set; }
+        public string? RequestId { get; set; }
 
         /// The template developer-chosen name (logical ID) of the custom
         /// resource in the AWS CloudFormation template. This response
         /// value should be copied verbatim from the request.
-        public string LogicalResourceId { get; set; }
+        public string? LogicalResourceId { get; set; }
 
         /// Optional. Indicates whether to mask the output of the custom
         /// resource when retrieved by using the Fn::GetAtt function. If set to
@@ -69,6 +70,6 @@ namespace LambdaSharp.CustomResource.Internal {
         /// Optional. The custom resource provider-defined name-value pairs to
         /// send with the response. You can access the values provided here by
         /// name in the template with Fn::GetAtt.
-        public TAttributes Data;
+        public TAttributes? Data;
     }
 }

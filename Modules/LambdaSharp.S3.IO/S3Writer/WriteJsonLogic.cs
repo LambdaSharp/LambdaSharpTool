@@ -18,11 +18,9 @@
 
 using System;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.CustomResource;

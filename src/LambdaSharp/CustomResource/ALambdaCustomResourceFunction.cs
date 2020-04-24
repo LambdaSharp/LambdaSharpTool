@@ -22,13 +22,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.SNSEvents;
 using LambdaSharp.CustomResource.Internal;
 using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.CustomResource {
 
@@ -44,7 +43,10 @@ namespace LambdaSharp.CustomResource {
     /// </summary>
     /// <typeparam name="TProperties">The request properties for the custom resource.</typeparam>
     /// <typeparam name="TAttributes">The response attributes for the custom resource.</typeparam>
-    public abstract class ALambdaCustomResourceFunction<TProperties, TAttributes> : ALambdaFunction {
+    public abstract class ALambdaCustomResourceFunction<TProperties, TAttributes> : ALambdaFunction
+        where TProperties : class
+        where TAttributes : class
+    {
 
         //--- Constants ---
         private const int MAX_SEND_ATTEMPTS = 3;
@@ -69,7 +71,7 @@ namespace LambdaSharp.CustomResource {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaCustomResourceFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaCustomResourceFunction(ILambdaFunctionDependencyProvider? provider) : base(provider) { }
 
 
         //--- Abstract Methods ---
@@ -241,26 +243,23 @@ namespace LambdaSharp.CustomResource {
 
             // deserialize stream into a generic JSON object
             LogInfo("deserializing request");
-            var json = JsonConvert.DeserializeObject<JObject>(body);
+            using var json = JsonDocument.Parse(body);
 
             // determine if the custom resource request is wrapped in an SNS message
             // or if it is a direct invocation by the CloudFormation service
-            if(json.TryGetValue("Records", out _)) {
-
-                // deserialize SNS event
-                LogInfo("deserializing SNS event");
-                var snsEvent = json.ToObject<SNSEvent>();
+            if(json.RootElement.TryGetProperty("Records", out var recordsElement)) {
 
                 // extract message from SNS event
-                LogInfo("deserializing message");
-                var messageBody = snsEvent.Records.First().Sns.Message;
+                LogInfo("deserializing SNS event");
+                var messageBody = recordsElement.EnumerateArray().First().GetProperty("Sns").GetProperty("Message").GetString();
 
                 // deserialize message into a cloudformation request
+                LogInfo("deserializing message");
                 return LambdaSerializer.Deserialize<CloudFormationResourceRequest<TProperties>>(messageBody);
             } else {
 
                 // deserialize generic JSON into a cloudformation request
-                return json.ToObject<CloudFormationResourceRequest<TProperties>>();
+                return LambdaSerializer.Deserialize<CloudFormationResourceRequest<TProperties>>(body);
             }
         }
 
@@ -268,7 +267,7 @@ namespace LambdaSharp.CustomResource {
             CloudFormationResourceRequest<TProperties> rawRequest,
             CloudFormationResourceResponse<TAttributes> rawResponse
         ) {
-            Exception exception = null;
+            Exception? exception = null;
             var backoff = TimeSpan.FromMilliseconds(100);
 
             // write response to pre-signed S3 URL
