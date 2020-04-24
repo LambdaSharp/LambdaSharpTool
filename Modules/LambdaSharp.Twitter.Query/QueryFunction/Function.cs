@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,7 +23,6 @@ using Amazon.Comprehend;
 using Amazon.Comprehend.Model;
 using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.DocumentModel;
-using Amazon.Lambda.Core;
 using Amazon.SimpleNotificationService;
 using Amazon.SimpleNotificationService.Model;
 using LambdaSharp.Schedule;
@@ -33,9 +31,6 @@ using Newtonsoft.Json.Linq;
 using Tweetinvi;
 using Tweetinvi.Models;
 using Tweetinvi.Parameters;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace LambdaSharp.Twitter.QueryFunction {
     using TwitterSearch = Tweetinvi.Search;

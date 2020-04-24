@@ -29,7 +29,7 @@ TODO:
     * Beware of `string` properties to deserialize a JSON number. That won't work anymore.
 * Removed `SerializeJson()` and `DeserializeJson()`; use `LambdaSerialize.Serialize()` and `LambdaSerializer.Deserialize()` respectively.
 * Removed `Newtonsoft.Json` dependency from `LambdaSharp.dll`
-* Replace `[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]` with `[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]`
+* Remove `[assembly: LambdaSerializer(...)]` attribute. It's no longer needed as the `LambdaSharp.ALambdaFunction` automatically defines already `[LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]` on the handler entry point.
 
 
 ## New LambdaSharp CLI Features

@@ -18,19 +18,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.S3.Model;
-using Amazon.S3.Transfer;
 using LambdaSharp;
 using LambdaSharp.CustomResource;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace LambdaSharpS3Subscriber.ResourceHandler {
     using LambdaSubscription = Amazon.S3.Model.LambdaFunctionConfiguration;

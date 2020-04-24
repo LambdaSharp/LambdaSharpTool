@@ -16,14 +16,9 @@
  * limitations under the License.
  */
 
-using System.IO;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using LambdaSharp;
 using LambdaSharp.Finalizer;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace LambdaSharpTestModule.Finalizer {
 
