@@ -37,7 +37,7 @@ TODO:
 ## New LambdaSharp Assembly Features
 
 ### LambdaSharp.Core
-    ...
+    TODO: ...
 
 ### (v0.8.0.0) - TBD
 
@@ -54,6 +54,9 @@ TODO:
     * Added CloudWatch metrics to `ALambdaTopicFunction<T>` base class.
     * Marked `JsonSerializer` property as obsolete. Use `LambdaSerializer` instead.
     * Marked `SerializeJson()` and `DeserializeJson()` methods as obsolete. Use `LambdaSerialize.Serialize()` and `LambdaSerializer.Deserialize()` respectively.
+    * Check for redundant `[assembly: LambdaSerializer(typeof(...))]` definition.
+    * Added `--no-ansi` option to `util delete-orphan-logs`, `util download-cloudformation-spec`, and `util create-invoke-methods-schema`.
+    * Added `util validate-assembly` command.
 * LambdaSharp Core Module
     * Added metrics to _LambdaSharp.Core_ module.
     * Ported `LambdaSharp.Core` to .NET Core 3.1 with null-aware support.

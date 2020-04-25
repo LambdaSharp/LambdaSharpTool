@@ -183,9 +183,7 @@ namespace LambdaSharp.Tool.Cli {
             return async () => {
 
                 // check if ANSI console output needs to be disabled
-                if(noAnsiOutputOption.HasValue()) {
-                    Settings.UseAnsiConsole = false;
-                }
+                Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
 
                 // check if experimental caching feature is enabled
                 Settings.AllowCaching = string.Equals((Environment.GetEnvironmentVariable("LAMBDASHARP_FEATURE_CACHING") ?? "false"), "true", StringComparison.OrdinalIgnoreCase);
