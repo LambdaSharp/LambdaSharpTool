@@ -44,6 +44,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             variables["MODULE_INFO"] = Literal(_builder.ModuleInfo.ToString());
             variables["LAMBDA_NAME"] = Literal(node.FullName);
             variables["LAMBDA_RUNTIME"] = Literal(node.Runtime.Value);
+            variables["DEPLOYMENT_TIER"] = FnSelect("0", FnSplit("-", FnRef("DeploymentPrefix")));
             variables["DEPLOYMENTBUCKETNAME"] = FnRef("DeploymentBucketName");
             if(node.HasDeadLetterQueue && _builder.TryGetItemDeclaration("Module::DeadLetterQueue", out var _))  {
                 variables["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");

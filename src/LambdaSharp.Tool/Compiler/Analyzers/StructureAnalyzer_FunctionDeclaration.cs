@@ -305,6 +305,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     case "netcoreapp2.1":
                         node.Runtime = Literal(Amazon.Lambda.Runtime.Dotnetcore21.ToString());
                         break;
+                    case "netcoreapp3.1":
+                        runtime = Amazon.Lambda.Runtime.Dotnetcore31.ToString();
+                        break;
                     default:
                         _builder.Log(Error.UnknownVersionOfDotNetCore, node);
                         break;
