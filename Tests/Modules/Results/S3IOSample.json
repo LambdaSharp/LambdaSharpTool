@@ -46,7 +46,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "74F09C79A2FBAE49E218B8336D46142A"
+      "Default": "E80FFB4831F0E7012D0AAEB316A21A6E"
     }
   },
   "Resources": {
@@ -175,10 +175,12 @@
       "Value": "Sample.S3.IO:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "74F09C79A2FBAE49E218B8336D46142A"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -274,9 +276,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.S3.IO:1.0-DEV",
       "Description": "Showcase how to write files to an S3 bucket",
-      "TemplateChecksum": "74F09C79A2FBAE49E218B8336D46142A",
+      "TemplateChecksum": "E80FFB4831F0E7012D0AAEB316A21A6E",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Website Settings",

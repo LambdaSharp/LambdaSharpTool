@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.9) - 2020-02-25
+# LambdaSharp "Geminus" Release (v0.7.0.15) - 2020-04-24
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -194,6 +194,86 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * LambdaSharp CLI
     * Fixed an issue where content references in _.csproj_ files were attempted to be parsed as XML files.
 
+### (v0.7.0.15) - 2020-04-24
+
+#### New Features
+
+* LambdaSharp CLI
+    * Enhanced `--force-build` to delete the build folders for all dependencies to ensure a clean build.
+    * Enhanced rendering of stack output values to distinguish the value from its description (requires ANSI terminal compatibility).
+    * Added error and warning colorization for the `dotnet` build results (requires ANSI terminal compatibility).
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where the creation of the AWS credentials file would fail when the `.aws` folder doesn't exit.
+    * Fixed an issue in WebSocket support where `AWS::ApiGatewayV2::Model` resources are not tracked as a dependencies by `AWS::ApiGatewayV2::Route` resources.
+    * Reverted a change that used `Amazon.Lambda.Serialization.SystemTextJson` as thew function serializer for new .NET Core 3.1 projects.
+
+### (v0.7.0.14) - 2020-04-14
+
+#### New Features
+
+* LambdaSharp CLI
+    * Enhanced `lash info` to show if build environment supports _ReadyToRun_ compilation.
+    * Fixed an issue with `lash nuke` not properly deleting a _quick-start_ deployment tier.
+
+### (v0.7.0.13) - 2020-04-09
+
+#### New Features
+
+* LambdaSharp CLI
+    * Added `lash nuke` to delete an entire deployment tier.
+    * Added `Module::RestApi.EndpointConfiguration` and `Module::RestApi.Policy` as override pragmas.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue the REST API description was static due to a missing `Fn::Sub` function call.
+    * Fixed an issue where using the same invocation methods for two different REST API routes would cause a CloudFormation failure.
+    * Fixed an issue where changing a REST API route would sometimes not update the deployment.
+    * Fixed an issue where the Logical IDs for deleted resources were not properly mapped to their hierarchical module names.
+
+### (v0.7.0.12) - 2020-04-08
+
+#### New Features
+
+* LambdaSharp CLI
+    * Enabled projects to be compiled with [_ReadyToRun_](https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images) optimization when targeting .NET Core 3.1 and running on _Amazon Linux 2_.
+    * Ensure compiled projects don't use [_Tiered Compilation/Quick JIT_](https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#tiered-compilation) for more consistent performance.
+    * Added support for creating Lambda functions using .NET Core 3.1.
+    * Highlight name of module, functions, and packages in console output for easier tracking (requires ANSI terminal compatibility).
+    * Updated embedded CloudFormation spec to 12.2.0.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue were a project would skip compilation even when the invocation schema generation had failed previously.
+* LambdaSharp SDK
+    * Fixed missing documentation XML comments.
+
+### (v0.7.0.11) - 2020-03-31
+
+#### New Features
+
+* LambdaSharp CLI
+    * Added support for .NET Core 3.1 runtime.
+    * Updated embedded CloudFormation spec to 12.0.0.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where the module manifest was not updated properly when republishing a previously published CloudFormation template.
+    * Fixed an issue to make sure `ModuleChecksum` is always set to `DeploymentChecksum` and `DeploymentChecksum` is explicitly set to ensure it has the proper template checksum value.
+    * Fixed an issue where a function project was not being recompiled even when the API invocation schema generation failed.
+
+### (v0.7.0.10) - 2020-03-13
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue where content references in _.csproj_ files were always parsed as XML files.
+
 ### (v0.7.0.9) - 2020-02-25
 
 #### Fixes
@@ -204,6 +284,7 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 ### (v0.7.0.8) - 2020-02-25
 
 #### New Features
+
 * LambdaSharp Core Services
     * Added `RollbarProjectPattern` parameter to provide more flexibility on how Rollbar project names are generated.
 

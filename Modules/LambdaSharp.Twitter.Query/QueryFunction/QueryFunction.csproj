@@ -8,11 +8,10 @@
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.Core" Version="1.1.0" />
-    <PackageReference Include="Amazon.Lambda.Serialization.Json" Version="1.7.0" />
-    <PackageReference Include="AWSSDK.Comprehend" Version="3.3.108.14" />
-    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.1" />
-    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.123" />
+    <PackageReference Include="AWSSDK.Comprehend" Version="3.3.108.41" />
+    <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.101.150" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="TweetinviAPI" Version="4.0.3" />
   </ItemGroup>
   <ItemGroup>

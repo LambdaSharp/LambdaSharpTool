@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -88,7 +88,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
             // verify if we need to remove the old CloudFormation notification ARNs that were created by LambdaSharp config before v0.7
             List<string> notificationARNs = null;
+            ModuleNameMappings oldNameMappings = null;
             if(mostRecentStackEventId != null) {
+
+                // fetch name mappings for current template; this is needed to properly map logical IDs to their original names when they get deleted
+                oldNameMappings = await new ModelManifestLoader(Settings, "source").GetNameMappingsFromCloudFormationStackAsync(stackName);
 
                 // NOTE (2019-09-19, bjorg): this is a HACK to remove the old notification ARNs, because doing it part
                 //  of the change set is not working for some reason.
@@ -106,7 +110,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         NotificationARNs = notificationARNs,
                         Capabilities = validation.Capabilities
                     });
-                    var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, LogError);
+                    var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, update.StackId, mostRecentStackEventId, nameMappings, oldNameMappings, LogError);
                     if(!outcome.Success) {
                         LogError("failed to remove legacy stack notification ARN; remove manually and try again");
                         return false;
@@ -123,7 +127,11 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             var capabilities = validation.Capabilities.Any()
                 ? "[" + string.Join(", ", validation.Capabilities) + "]"
                 : "";
-            Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset} {capabilities}");
+            } else {
+                Console.WriteLine($"=> Stack {updateOrCreate} initiated for {stackName} {capabilities}");
+            }
             CreateChangeSetResponse response;
             try {
                 response = await Settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
@@ -143,6 +151,10 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                         new CloudFormationParameter {
                             ParameterKey = "DeploymentBucketName",
                             ParameterValue = Settings.DeploymentBucketName
+                        },
+                        new CloudFormationParameter {
+                            ParameterKey = "DeploymentChecksum",
+                            ParameterValue = manifest.TemplateChecksum
                         }
                     },
                     StackName = stackName,
@@ -181,7 +193,14 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     ChangeSetName = changeSetName,
                     StackName = stackName
                 });
-                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(stackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
+                var outcome = await Settings.CfnClient.TrackStackUpdateAsync(
+                    stackName,
+                    response.StackId,
+                    mostRecentStackEventId,
+                    nameMappings,
+                    oldNameMappings,
+                    LogError
+                );
                 if(outcome.Success) {
                     Console.WriteLine($"=> Stack {updateOrCreate} finished");
                     ShowStackResult(outcome.Stack);
@@ -250,12 +269,16 @@ namespace LambdaSharp.Tool.Cli.Deploy {
             if(outputs.Any()) {
                 Console.WriteLine("Stack output values:");
                 foreach(var output in outputs.OrderBy(output => output.OutputKey)) {
-                    var line = $"=> {output.OutputKey}";
+                    var line = Settings.UseAnsiConsole
+                        ? $"=> {AnsiTerminal.Green}{output.OutputKey}"
+                        : $"=> {output.OutputKey}";
                     if(!string.IsNullOrEmpty(output.Description)) {
                         line += $": {output.Description}";
                     }
-                    line += $" = {output.OutputValue}";
-                    Settings.WriteAnsiLine(line, AnsiTerminal.Green);
+                    line += Settings.UseAnsiConsole
+                        ? $" = {AnsiTerminal.Yellow}{output.OutputValue}{AnsiTerminal.Reset}"
+                        : $" = {output.OutputValue}";
+                    Console.WriteLine(line);
                 }
             }
         }

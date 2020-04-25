@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3E0DC41103038664AC27C9AA559042CE"
+      "Default": "457E681BD8798B1DDF394F38FE6A7017"
     }
   },
   "Resources": {
@@ -128,7 +128,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "NearTimeout",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -202,7 +215,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -281,7 +294,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "NearOutOfMemory",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -355,7 +381,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -434,7 +460,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailBadEntryPoint",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -508,7 +547,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -587,7 +626,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailError",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -661,7 +713,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -740,7 +792,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailTimeout",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -814,7 +879,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -893,7 +958,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailOutOfMemory",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -967,7 +1045,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -1046,7 +1124,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "FailConstructor",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1120,7 +1211,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -1199,7 +1290,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsBadSyntax",
-            "LAMBDA_RUNTIME": "nodejs8.10",
+            "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1273,7 +1377,7 @@
             "Arn"
           ]
         },
-        "Runtime": "nodejs8.10",
+        "Runtime": "nodejs12.x",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -1352,7 +1456,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsError",
-            "LAMBDA_RUNTIME": "nodejs8.10",
+            "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1426,7 +1543,7 @@
             "Arn"
           ]
         },
-        "Runtime": "nodejs8.10",
+        "Runtime": "nodejs12.x",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -1505,7 +1622,20 @@
             },
             "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
             "LAMBDA_NAME": "JsThrow",
-            "LAMBDA_RUNTIME": "nodejs8.10",
+            "LAMBDA_RUNTIME": "nodejs12.x",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -1579,7 +1709,7 @@
             "Arn"
           ]
         },
-        "Runtime": "nodejs8.10",
+        "Runtime": "nodejs12.x",
         "Timeout": "15",
         "TracingConfig": {
           "Mode": {
@@ -1808,7 +1938,7 @@
           "Fn::Sub": "/aws/lambda/${NearTimeout}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -1924,7 +2054,7 @@
           "Fn::Sub": "/aws/lambda/${NearOutOfMemory}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -2040,7 +2170,7 @@
           "Fn::Sub": "/aws/lambda/${FailBadEntryPoint}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -2156,7 +2286,7 @@
           "Fn::Sub": "/aws/lambda/${FailError}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2272,7 +2402,7 @@
           "Fn::Sub": "/aws/lambda/${FailTimeout}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2388,7 +2518,7 @@
           "Fn::Sub": "/aws/lambda/${FailOutOfMemory}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2504,7 +2634,7 @@
           "Fn::Sub": "/aws/lambda/${FailConstructor}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2620,7 +2750,7 @@
           "Fn::Sub": "/aws/lambda/${JsBadSyntax}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "nodejs8.10",
+        "FunctionFramework": "nodejs12.x",
         "FunctionLanguage": "javascript",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2736,7 +2866,7 @@
           "Fn::Sub": "/aws/lambda/${JsError}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "nodejs8.10",
+        "FunctionFramework": "nodejs12.x",
         "FunctionLanguage": "javascript",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2852,7 +2982,7 @@
           "Fn::Sub": "/aws/lambda/${JsThrow}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "nodejs8.10",
+        "FunctionFramework": "nodejs12.x",
         "FunctionLanguage": "javascript",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "15"
@@ -2953,10 +3083,12 @@
       "Value": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "3E0DC41103038664AC27C9AA559042CE"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3186,9 +3318,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "3E0DC41103038664AC27C9AA559042CE",
+      "TemplateChecksum": "457E681BD8798B1DDF394F38FE6A7017",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

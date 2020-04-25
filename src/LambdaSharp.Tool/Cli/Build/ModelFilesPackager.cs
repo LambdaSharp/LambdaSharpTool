@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -133,7 +133,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(!_existingPackages.Remove(package)) {
 
                     // create zip package
-                    Console.WriteLine($"=> Building package {parameter.Name}");
+                    if(Settings.UseAnsiConsole) {
+                        Console.WriteLine($"=> Building package {AnsiTerminal.Yellow}{parameter.Name}{AnsiTerminal.Reset}");
+                    } else {
+                        Console.WriteLine($"=> Building package {parameter.Name}");
+                    }
                     if(containsElfExecutable) {
 
                         // compress package contents with executable permissions

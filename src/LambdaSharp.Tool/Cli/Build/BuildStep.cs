@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,7 +81,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // prepare compilation
-            Console.WriteLine($"Compiling: {moduleDeclaration.ModuleName} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"Compiling: {AnsiTerminal.Yellow}{module.FullName}{AnsiTerminal.Reset} (v{module.Version})");
+            } else {
+                Console.WriteLine($"Compiling: {module.FullName} (v{module.Version})");
+            }
 
             // download dependencies and cloudformation specification
             moduleDeclaration = moduleDeclaration.Visit(new DiscoverDependenciesAnalyzer(moduleBuilder));

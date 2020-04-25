@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,6 @@ namespace LambdaSharp.Tool.Model {
 
         //--- Constants ---
         public const string CurrentVersion = "2019-07-04";
-
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;

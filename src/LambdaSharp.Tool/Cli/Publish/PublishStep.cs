@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -123,6 +123,23 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // upload CloudFormation template
             var templateKey = await UploadTemplateFileAsync(manifest, "template");
 
+            // NOTE (2020-03-31, bjorg): it's possible that only the manifest changes, but we can't detect that without comparing them
+            if(!_changesDetected) {
+                var existingManifestText = await Settings.S3Client.GetS3ObjectContentsAsync(Settings.DeploymentBucketName, moduleInfo.VersionPath);
+                if(existingManifestText != null) {
+                    try {
+                        var existingManifest = JsonConvert.DeserializeObject<ModuleManifest>(existingManifestText);
+                        if(manifest.TemplateChecksum != existingManifest.TemplateChecksum) {
+                            _changesDetected = true;
+                        }
+                    } catch {
+
+                        // something went wrong during deserialization; upload a new manifest
+                        _changesDetected = true;
+                    }
+                }
+            }
+
             // upload manifest under version number
             if(_changesDetected) {
                 var request = new TransferUtilityUploadRequest {
@@ -132,12 +149,14 @@ namespace LambdaSharp.Tool.Cli.Publish {
                     }))),
                     BucketName = Settings.DeploymentBucketName,
                     ContentType = "application/json",
-                    Key = moduleInfo.VersionPath
+                    Key = moduleInfo.VersionPath,
+                    Metadata = {
+                        [AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName
+                    }
                 };
-                request.Metadata[AMAZON_METADATA_ORIGIN] = Settings.DeploymentBucketName;
                 await _transferUtility.UploadAsync(request);
             } else {
-                Settings.WriteAnsiLine($"=> No changes found to upload", AnsiTerminal.BrightBlack);
+                Settings.WriteAnsiLine("=> No changes found to upload", AnsiTerminal.BrightBlack);
             }
             Console.WriteLine();
             if(Settings.UseAnsiConsole) {
@@ -248,7 +267,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
 
             // upload minified json
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
+                Console.WriteLine($"=> Uploading {description}: {Path.GetFileName(destinationKey)}");
                 var request = new TransferUtilityUploadRequest {
                     InputStream = new MemoryStream(Encoding.UTF8.GetBytes(minified)),
                     BucketName = Settings.DeploymentBucketName,
@@ -274,7 +293,7 @@ namespace LambdaSharp.Tool.Cli.Publish {
             // only upload files that don't exist
             var destinationKey = manifest.ModuleInfo.GetArtifactPath(Path.GetFileName(filePath));
             if(_forcePublish || !await DoesS3ObjectExistsAsync(destinationKey)) {
-                Console.WriteLine($"=> Uploading {description}: s3://{Settings.DeploymentBucketName}/{destinationKey}");
+                Console.WriteLine($"=> Uploading {description}: {Path.GetFileName(destinationKey)}");
                 var request = new TransferUtilityUploadRequest {
                     FilePath = filePath,
                     BucketName = Settings.DeploymentBucketName,

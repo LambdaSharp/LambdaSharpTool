@@ -13,7 +13,7 @@ keywords: video, tutorial, getting started, overview, setup, install
 To get started, make sure you have signed-up for an AWS account and downloaded .NET Core.
 
 1. [AWS Account](https://portal.aws.amazon.com/billing/signup#/start)
-1. [.NET Core 2.1+](https://www.microsoft.com/net/download)
+1. [.NET Core 3.1+](https://www.microsoft.com/net/download)
 
 **NOTE for MacOS Users:** If you run `zsh` shell (default on MacOS Catalina and later), you must add `dotnet` to your environment path variable manually by adding the following line to your `~/.zshrc` file.
 ```bash

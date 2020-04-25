@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,9 +29,8 @@ namespace LambdaSharp.Core.Registrations {
         private readonly Table _table;
 
         //--- Constructors ---
-        public RegistrationTable(IAmazonDynamoDB dynamoClient, string tableName) {
-            _table = Table.LoadTable(dynamoClient, tableName);
-        }
+        public RegistrationTable(IAmazonDynamoDB dynamoClient, string tableName)
+            => _table = Table.LoadTable(dynamoClient, tableName);
 
         public async Task<OwnerMetaData> GetOwnerMetaDataAsync(string id) {
             var document = await _table.GetItemAsync(id);

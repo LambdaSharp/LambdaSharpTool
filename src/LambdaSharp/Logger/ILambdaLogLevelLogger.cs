@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
  */
 
 using System;
+using LambdaSharp.Records;
 
 namespace LambdaSharp.Logger {
 
@@ -40,5 +41,11 @@ namespace LambdaSharp.Logger {
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         void Log(LambdaLogLevel level, Exception exception, string format, params object[] arguments);
+
+        /// <summary>
+        /// Log a <see cref="ALambdaRecord"/> record instance.
+        /// </summary>
+        /// <param name="record">The record to log.</param>
+        void LogRecord(ALambdaRecord record);
     }
 }

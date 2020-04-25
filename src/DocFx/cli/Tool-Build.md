@@ -118,7 +118,7 @@ lash build
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>
@@ -138,8 +138,8 @@ LambdaSharp CLI (v0.5) - Build LambdaSharp module
 
 Reading module: Module.yml
 Compiling: Demo.SlackTodo (v1.0-DEV)
-=> Building function RecordMessage [netcoreapp2.1, Release]
-=> Building function SlackCommand [netcoreapp2.1, Release]
+=> Building function RecordMessage [netcoreapp3.1, Release]
+=> Building function SlackCommand [netcoreapp3.1, Release]
 => Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
 
 Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)
@@ -158,8 +158,8 @@ LambdaSharp CLI (v0.5) - Build LambdaSharp module
 
 Reading module: Module.yml
 Compiling: Demo.SlackTodo (v1.0-DEV)
-=> Building function RecordMessage [netcoreapp2.1, Release]
-=> Building function SlackCommand [netcoreapp2.1, Release]
+=> Building function RecordMessage [netcoreapp3.1, Release]
+=> Building function SlackCommand [netcoreapp3.1, Release]
 => Module compilation done: C:\LambdaSharpTool\Demos\Demo\bin\cloudformation.json
 
 Done (finished: 1/17/2019 3:57:27 PM; duration: 00:00:21.2642565)

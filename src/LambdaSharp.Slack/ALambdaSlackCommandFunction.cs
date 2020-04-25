@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,13 +20,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
-
-using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
-using LambdaSharp.ConfigSource;
-
 
 namespace LambdaSharp.Slack {
 
@@ -60,7 +54,7 @@ namespace LambdaSharp.Slack {
             LogInfo("reading message stream");
             SlackRequest request;
             try {
-                request = DeserializeJson<SlackRequest>(stream);
+                request = LambdaSerializer.Deserialize<SlackRequest>(stream);
             } catch(Exception e) {
                 LogError(e, "failed during Slack request deserialization");
                 return $"ERROR: {e.Message}".ToStream();
@@ -117,7 +111,7 @@ namespace LambdaSharp.Slack {
             var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                 RequestUri = new Uri(request.ResponseUrl),
                 Method = HttpMethod.Post,
-                Content = new StringContent(SerializeJson(response))
+                Content = new StringContent(LambdaSerializer.Serialize(response))
             });
             return httpResponse.StatusCode == HttpStatusCode.OK;
         }

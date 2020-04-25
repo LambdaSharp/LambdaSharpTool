@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -117,9 +117,16 @@ namespace LambdaSharp.Tool.Cli {
             if(!modulesToUpdate.Any()) {
                 return;
             }
-            Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier '{settings.TierName}'");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {settings.TierName}");
+            }
             var parameters = new Dictionary<string, string> {
-                ["LambdaSharpCoreServices"] = coreServicesParameter
+                ["LambdaSharpCoreServices"] = coreServicesParameter,
+
+                // NOTE (2020-04-23, bjorg): deployment bucket might change if the LambdaSharp.Core is recreated
+                ["DeploymentBucketName"] = settings.DeploymentBucketName
             };
             foreach(var module in modulesToUpdate) {
                 await UpdateStackParameters(settings, module, parameters);
@@ -184,7 +191,7 @@ namespace LambdaSharp.Tool.Cli {
 
         private async Task UpdateStackParameters(Settings settings, TierModuleDetails module, Dictionary<string, string> parameters) {
 
-            // keep all original parameter values except for 'LambdaSharpCoreServices'
+            // keep all original parameter values except for 'LambdaSharpCoreServices' and 'DeploymentBucketName'
             var stackParameters = module.Stack.Parameters
                 .Select(parameter => {
                     if(parameters.TryGetValue(parameter.ParameterKey, out var value)) {
@@ -201,7 +208,8 @@ namespace LambdaSharp.Tool.Cli {
 
             // retrieve name mappings for template
             var template = (await settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
-                StackName = module.Stack.StackName
+                StackName = module.Stack.StackName,
+                TemplateStage = TemplateStage.Original
             })).TemplateBody;
             var nameMappings = new ModelManifestLoader(settings, module.Stack.StackName).GetNameMappingsFromTemplate(template);
 
@@ -210,7 +218,11 @@ namespace LambdaSharp.Tool.Cli {
             var mostRecentStackEventId = await settings.CfnClient.GetMostRecentStackEventIdAsync(module.StackName);
             var changeSetName = $"{module.ModuleDeploymentName}-{now:yyyy-MM-dd-hh-mm-ss}";
             Console.WriteLine();
-            Console.WriteLine($"=> Stack update initiated for {module.StackName}");
+            if(Settings.UseAnsiConsole) {
+                Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{module.StackName}{AnsiTerminal.Reset}");
+            } else {
+                Console.WriteLine($"=> Stack update initiated for {module.StackName}");
+            }
             var response = await settings.CfnClient.CreateChangeSetAsync(new CreateChangeSetRequest {
                 Capabilities = module.Stack.Capabilities,
                 ChangeSetName = changeSetName,
@@ -237,11 +249,18 @@ namespace LambdaSharp.Tool.Cli {
                     ChangeSetName = changeSetName,
                     StackName = module.StackName
                 });
-                var outcome = await settings.CfnClient.TrackStackUpdateAsync(module.StackName, response.StackId, mostRecentStackEventId, nameMappings, LogError);
+                var outcome = await settings.CfnClient.TrackStackUpdateAsync(
+                    module.StackName,
+                    response.StackId,
+                    mostRecentStackEventId,
+                    nameMappings,
+                    oldNameMappings: null,
+                    LogError
+                );
                 if(outcome.Success) {
-                    Console.WriteLine($"=> Stack update finished");
+                    Console.WriteLine("=> Stack update finished");
                 } else {
-                    Console.WriteLine($"=> Stack update FAILED");
+                    Console.WriteLine("=> Stack update FAILED");
                     LogError($"unable to update {module.ModuleDeploymentName}");
                 }
             } finally {

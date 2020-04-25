@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D55C0DD5CA9BB406D4777E825239D01B"
+      "Default": "65E3870244FC080D780551D7DA35D67D"
     }
   },
   "Resources": {
@@ -151,7 +151,20 @@
             },
             "MODULE_INFO": "Demo.SlackTodo:1.0-DEV",
             "LAMBDA_NAME": "SlackCommand",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -234,7 +247,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -517,7 +530,7 @@
           "Fn::Sub": "/aws/lambda/${SlackCommand}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -615,11 +628,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Demo.SlackTodo API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiSlackResource": {
@@ -702,17 +715,18 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment48BDBB7F2CFECB525DA5E89C8DF7A0E7": {
+    "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [48BDBB7F2CFECB525DA5E89C8DF7A0E7]"
+          "Fn::Sub": "${AWS::StackName} API [429A5A7BE3B2A3C04BB31F7D99D3FE97]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiSlackResource",
         "ModuleRestApiSlackResourcePOST"
       ]
     },
@@ -720,7 +734,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment48BDBB7F2CFECB525DA5E89C8DF7A0E7"
+          "Ref": "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97"
         },
         "MethodSettings": [
           {
@@ -763,10 +777,12 @@
       "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "D55C0DD5CA9BB406D4777E825239D01B"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1007,9 +1023,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "D55C0DD5CA9BB406D4777E825239D01B",
+      "TemplateChecksum": "65E3870244FC080D780551D7DA35D67D",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1116,7 +1132,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "SlackCommandRestApiPermission": "SlackCommand::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment48BDBB7F2CFECB525DA5E89C8DF7A0E7": "Module::RestApi::Deployment48BDBB7F2CFECB525DA5E89C8DF7A0E7",
+        "ModuleRestApiDeployment429A5A7BE3B2A3C04BB31F7D99D3FE97": "Module::RestApi::Deployment429A5A7BE3B2A3C04BB31F7D99D3FE97",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

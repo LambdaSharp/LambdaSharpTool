@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,6 +27,8 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Amazon;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Tool.Internal;
@@ -393,7 +395,22 @@ namespace LambdaSharp.Tool {
             return GetNameMappingsFromTemplate(template);
         }
 
+        public async Task<ModuleNameMappings> GetNameMappingsFromCloudFormationStackAsync(string stackName) {
+            var template = (await Settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
+                StackName = stackName,
+                TemplateStage = TemplateStage.Original
+            })).TemplateBody;
+            return GetNameMappingsFromTemplate(template);
+        }
+
         public ModuleNameMappings GetNameMappingsFromTemplate(string template) {
+
+            // NOTE (2020-04-12, bjorg): some templates (like the bootstrap) are written in YAML instead of JSON
+            if(!template.TrimStart().StartsWith("{")) {
+                return new ModuleNameMappings();
+            }
+
+            // parse template as a JSON object
             var cloudformation = JObject.Parse(template);
             if(
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
@@ -432,7 +449,7 @@ namespace LambdaSharp.Tool {
                     // nothing to do; GetS3ClientByBucketName already emitted an error
                     return null;
                 }
-                return await s3Client.GetS3ObjectContents(bucketName, key);
+                return await s3Client.GetS3ObjectContentsAsync(bucketName, key);
             } finally {
                 LogInfoPerformance($"GetS3ObjectContentsAsync() for s3://{bucketName}/{key}", stopwatch.Elapsed);
             }

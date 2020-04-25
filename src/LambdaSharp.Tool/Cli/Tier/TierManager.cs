@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ namespace LambdaSharp.Tool.Cli.Tier {
         public TierManager(Settings settings) : base(settings) { }
 
         //--- Methods ---
-        public async Task<IEnumerable<TierModuleDetails>> GetModuleDetailsAsync() {
+        public async Task<IEnumerable<TierModuleDetails>> GetModuleDetailsAsync(bool includeCoreModule = false) {
             var prefix = Settings.TierPrefix;
             var stacks = new List<Stack>();
             var request = new DescribeStacksRequest();
@@ -78,9 +78,10 @@ namespace LambdaSharp.Tool.Cli.Tier {
                     .FirstOrDefault(parameter => parameter.ParameterKey == "LambdaSharpCoreServices")
                     ?.ParameterValue,
                 HasDefaultSecretKeyParameter = stack.Parameters.Any(parameter => parameter.ParameterKey == "LambdaSharpCoreDefaultSecretKey"),
-                IsRoot = stack.RootId == null
+                IsRoot = stack.RootId == null,
+                DeploymentBucketArn = stack.Outputs.FirstOrDefault(output => output.OutputKey == "DeploymentBucket")?.OutputValue
             })
-                .Where(module => !module.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))
+                .Where(module => includeCoreModule || !module.ModuleReference.StartsWith("LambdaSharp.Core", StringComparison.Ordinal))
                 .OrderBy(module => module.DeploymentDate)
                 .ToList();
 

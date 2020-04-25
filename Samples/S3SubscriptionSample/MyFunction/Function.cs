@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,14 +16,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.S3Events;
 using LambdaSharp;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace S3Sample.MyFunction {
 

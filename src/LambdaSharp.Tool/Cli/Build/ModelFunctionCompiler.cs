@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,16 +79,22 @@ namespace LambdaSharp.Tool.Cli.Build {
         private void AddRestApiResources(IEnumerable<FunctionItem> functions) {
             var moduleItem = _builder.GetItem("Module");
 
+            // read WebSocket configuration
+            _builder.TryGetOverride("Module::RestApi.EndpointConfiguration", out var endpointConfiguration);
+            _builder.TryGetOverride("Module::RestApi.Policy", out var policy);
+
             // create a REST API
             var restApi = _builder.AddResource(
                 parent: moduleItem,
                 name: "RestApi",
                 description: "Module REST API",
                 scope: null,
-                resource: new Humidifier.ApiGateway.RestApi {
-                    Name = FnSub("${AWS::StackName} Module API"),
-                    Description = "${Module::FullName} API (v${Module::Version})",
-                    FailOnWarnings = true
+                resource: new Humidifier.CustomResource("AWS::ApiGateway::RestApi") {
+                    ["Name"] = FnSub("${AWS::StackName} Module API"),
+                    ["Description"] = FnSub("${Module::FullName} API (v${Module::Version})"),
+                    ["FailOnWarnings"] = true,
+                    ["EndpointConfiguration"] = endpointConfiguration,
+                    ["Policy"] = policy
                 },
                 resourceExportAttribute: null,
                 dependsOn: null,
@@ -97,13 +103,13 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // recursively create resources as needed
-            var apiMethodDeclarations = new Dictionary<string, object>();
-            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethodDeclarations);
+            var apiDeclarations = new Dictionary<string, object>();
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
-            string apiMethodDeclarationsHash = string.Join("\n", apiMethodDeclarations
+            string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
                 .OrderBy(kv => kv.Key)
-                .Select(kv => JsonConvert.SerializeObject(kv.Value))
+                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
             ).ToMD5Hash();
 
             // add RestApi url
@@ -171,17 +177,20 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // NOTE (2018-06-21, bjorg): the RestApi deployment resource depends on ALL methods resources having been created;
             //  a new name is used for the deployment to force the stage to be updated
-            var deploymentWithHash = _builder.AddResource(
+            var deploymentWithChecksum = _builder.AddResource(
                 parent: restApi,
-                name: "Deployment" + apiMethodDeclarationsHash,
+                name: "Deployment" + apiDeclarationsChecksum,
                 description: "Module REST API Deployment",
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiMethodDeclarationsHash}]")
+                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]"),
+                    StageDescription = new Humidifier.ApiGateway.DeploymentTypes.StageDescription {
+                        MetricsEnabled = true
+                    }
                 },
                 resourceExportAttribute: null,
-                dependsOn: apiMethodDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
+                dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
                 condition: null,
                 pragmas: null
             );
@@ -191,7 +200,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module REST API Deployment",
                 type: "String",
                 scope: null,
-                value: FnRef(deploymentWithHash.FullName),
+                value: FnRef(deploymentWithChecksum.FullName),
                 allow: null,
                 encryptionContext: null
             );
@@ -253,7 +262,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Api") {
                     ["Name"] = FnSub("${AWS::StackName} Module WebSocket"),
                     ["ProtocolType"] = "WEBSOCKET",
-                    ["Description"] = "${Module::FullName} WebSocket (v${Module::Version})",
+                    ["Description"] = FnSub("${Module::FullName} WebSocket (v${Module::Version})"),
                     ["RouteSelectionExpression"] = routeSelectionExpression
                 },
                 resourceExportAttribute: null,
@@ -305,14 +314,14 @@ namespace LambdaSharp.Tool.Cli.Build {
                         ["OperationName"] = webSocketRoute.Source.OperationName,
                         ["Target"] = FnSub($"integrations/${{{integration.FullName}}}")
                     };
-                    var route = _builder.AddResource(
+                    var route = (ResourceItem)_builder.AddResource(
                         parent: webSocketRoute.Function,
                         name: routeName + "Route",
                         description: $"WebSocket Route for '{webSocketRoute.Source.RouteKey}'",
                         scope: null,
                         resource: routeResource,
                         resourceExportAttribute: null,
-                        dependsOn: null,
+                        dependsOn: new List<string>(),
                         condition: webSocketRoute.Function.Condition,
                         pragmas: null
                     );
@@ -350,7 +359,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
                                     ["ApiId"] = FnRef(webSocket.FullName),
                                     ["ContentType"] = webSocketRoute.Source.RequestContentType,
-                                    ["Name"] = $"{webSocketRoute.Source.OperationName}Request",
+                                    ["Name"] = $"{route.LogicalId}RequestModel",
                                     ["Schema"] = webSocketRoute.Source.RequestSchema
                                 },
                                 resourceExportAttribute: null,
@@ -359,11 +368,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 pragmas: null
                             );
                             webSocketResources.Add(model.FullName, webSocketRoute.Source.RequestSchema);
+                            route.DependsOn.Add(model.FullName);
 
                             // update the route to require request validation
                             routeResource["ModelSelectionExpression"] = "default";
                             routeResource["RequestModels"] = new Dictionary<string, object> {
-                                ["default"] = $"{webSocketRoute.Source.OperationName}Request"
+                                ["default"] = $"{route.LogicalId}RequestModel"
                             };
                             break;
                         default:
@@ -419,7 +429,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Model") {
                                     ["ApiId"] = FnRef(webSocket.FullName),
                                     ["ContentType"] = webSocketRoute.Source.ResponseContentType,
-                                    ["Name"] = $"{webSocketRoute.Source.OperationName}Response",
+                                    ["Name"] = $"{route.LogicalId}ResponseModel",
                                     ["Schema"] = webSocketRoute.Source.ResponseSchema
                                 },
                                 resourceExportAttribute: null,
@@ -436,7 +446,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 ["RouteResponseKey"] = "$default",
                                 ["ModelSelectionExpression"] = "default",
                                 ["ResponseModels"] = new Dictionary<string, object> {
-                                    ["default"] = $"{webSocketRoute.Source.OperationName}Response"
+                                    ["default"] = $"{route.LogicalId}ResponseModel"
                                 }
                             };
                             routeResponse = _builder.AddResource(
@@ -446,7 +456,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 scope: null,
                                 resource: routeResponseResource,
                                 resourceExportAttribute: null,
-                                dependsOn: null,
+                                dependsOn: new[] { model.FullName },
                                 condition: webSocketRoute.Function.Condition,
                                 pragmas: null
                             );
@@ -487,9 +497,9 @@ namespace LambdaSharp.Tool.Cli.Build {
             // WebSocket deployment depends on all methods and their hash (to force redeployment in case of change)
             var resourcesSignature = string.Join("\n", webSocketResources
                 .OrderBy(kv => kv.Key)
-                .Select(kv => JsonConvert.SerializeObject(kv.Value))
+                .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
             );
-            string methodsHash = resourcesSignature.ToMD5Hash();
+            string methodsChecksum = resourcesSignature.ToMD5Hash();
 
             // add WebSocket url
             var webSocketDomainName = _builder.AddVariable(
@@ -515,14 +525,14 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // NOTE (2018-06-21, bjorg): the WebSocket deployment depends on ALL route resources having been created;
             //  a new name is used for the deployment to force the stage to be updated
-            var deploymentWithHash = _builder.AddResource(
+            var deploymentWithChecksum = _builder.AddResource(
                 parent: webSocket,
-                name: "Deployment" + methodsHash,
+                name: "Deployment" + methodsChecksum,
                 description: "Module WebSocket Deployment",
                 scope: null,
                 resource: new Humidifier.CustomResource("AWS::ApiGatewayV2::Deployment") {
                     ["ApiId"] = FnRef("Module::WebSocket"),
-                    ["Description"] = FnSub($"${{AWS::StackName}} WebSocket [{methodsHash}]")
+                    ["Description"] = FnSub($"${{AWS::StackName}} WebSocket [{methodsChecksum}]")
                 },
                 resourceExportAttribute: null,
                 dependsOn: webSocketResources.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
@@ -535,7 +545,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 description: "Module WebSocket Deployment",
                 type: "String",
                 scope: null,
-                value: FnRef(deploymentWithHash.FullName),
+                value: FnRef(deploymentWithChecksum.FullName),
                 allow: null,
                 encryptionContext: null
             );
@@ -578,7 +588,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
         }
 
-        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiMethodDeclarations) {
+        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiDeclarations) {
 
             // create methods at this route level to parent id
             foreach(var route in routes.Where(route => route.Source.Path.Length == level)) {
@@ -608,7 +618,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: route.Function.Condition,
                     pragmas: null
                 );
-                apiMethodDeclarations.Add(method.FullName, apiMethodResource);
+                apiDeclarations.Add(method.FullName, apiMethodResource);
                 integration.PassthroughBehavior = "WHEN_NO_TEMPLATES";
 
                 // set list of expected query parameters (if any)
@@ -657,7 +667,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.RequestContentType,
-                            Name = $"{route.Source.OperationName}Request",
                             RestApiId = restApiId,
                             Schema = route.Source.RequestSchema
                         },
@@ -666,7 +675,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         condition: route.Function.Condition,
                         pragmas: null
                     );
-                    apiMethodDeclarations.Add(model.FullName, route.Source.RequestSchema);
+                    apiDeclarations.Add(model.FullName, route.Source.RequestSchema);
 
                     // update API method to require request validation
                     apiMethodResource.RequestModels = new Dictionary<string, dynamic> {
@@ -765,7 +774,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.ResponseContentType,
-                            Name = $"{route.Source.OperationName}Response",
                             RestApiId = restApiId,
                             Schema = route.Source.ResponseSchema
                         },
@@ -774,7 +782,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         condition: route.Function.Condition,
                         pragmas: null
                     );
-                    apiMethodDeclarations.Add(model.FullName, route.Source.ResponseSchema);
+                    apiDeclarations.Add(model.FullName, route.Source.ResponseSchema);
 
                     // update the API method with the response schema
                     if(route.Source.ResponseContentType != null) {
@@ -823,16 +831,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 var partName = subRoute.Key.ToPascalIdentifier();
 
                 // create a new parent resource to attach methods or sub-resource to
+                var apiResourceResource = new Humidifier.ApiGateway.Resource {
+                    RestApiId = restApiId,
+                    ParentId = parentId,
+                    PathPart = subRoute.Key
+                };
                 var resource = _builder.AddResource(
                     parent: parent,
                     name: partName + "Resource",
                     description: null,
                     scope: null,
-                    resource: new Humidifier.ApiGateway.Resource {
-                        RestApiId = restApiId,
-                        ParentId = parentId,
-                        PathPart = subRoute.Key
-                    },
+                    resource: apiResourceResource,
                     resourceExportAttribute: null,
                     dependsOn: null,
 
@@ -840,9 +849,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: null,
                     pragmas: null
                 );
-                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethodDeclarations);
+                apiDeclarations.Add(resource.FullName, apiResourceResource);
+                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiDeclarations);
             }
 
+            // local functions
             Humidifier.ApiGateway.Method CreateRequestResponseApiMethod(FunctionItem function, RestApiSource source) {
                 return new Humidifier.ApiGateway.Method {
                     HttpMethod = source.HttpMethod,

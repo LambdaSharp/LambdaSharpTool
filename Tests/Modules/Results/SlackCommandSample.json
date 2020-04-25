@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "79C1242C15DC2F17B8D46EE145B17C49"
+      "Default": "1683A64B4204661A686A3EEDA02F03F1"
     }
   },
   "Resources": {
@@ -133,7 +133,20 @@
             },
             "MODULE_INFO": "Sample.SlackCommand:1.0-DEV",
             "LAMBDA_NAME": "MyFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -210,7 +223,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -439,7 +452,7 @@
           "Fn::Sub": "/aws/lambda/${MyFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -537,11 +550,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Sample.SlackCommand API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiSlackResource": {
@@ -624,17 +637,18 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment3E4F6D4D3C41C8DBB568516EEDA1A515": {
+    "ModuleRestApiDeploymentA4B093EE5E3052637662448790B6AE5C": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [3E4F6D4D3C41C8DBB568516EEDA1A515]"
+          "Fn::Sub": "${AWS::StackName} API [A4B093EE5E3052637662448790B6AE5C]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiSlackResource",
         "ModuleRestApiSlackResourcePOST"
       ]
     },
@@ -642,7 +656,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment3E4F6D4D3C41C8DBB568516EEDA1A515"
+          "Ref": "ModuleRestApiDeploymentA4B093EE5E3052637662448790B6AE5C"
         },
         "MethodSettings": [
           {
@@ -674,10 +688,12 @@
       "Value": "Sample.SlackCommand:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "79C1242C15DC2F17B8D46EE145B17C49"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -918,9 +934,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "79C1242C15DC2F17B8D46EE145B17C49",
+      "TemplateChecksum": "1683A64B4204661A686A3EEDA02F03F1",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1021,7 +1037,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "MyFunctionRestApiPermission": "MyFunction::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment3E4F6D4D3C41C8DBB568516EEDA1A515": "Module::RestApi::Deployment3E4F6D4D3C41C8DBB568516EEDA1A515",
+        "ModuleRestApiDeploymentA4B093EE5E3052637662448790B6AE5C": "Module::RestApi::DeploymentA4B093EE5E3052637662448790B6AE5C",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

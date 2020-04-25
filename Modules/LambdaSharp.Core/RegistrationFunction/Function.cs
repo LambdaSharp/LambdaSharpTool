@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,14 +23,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Amazon.DynamoDBv2;
-using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.CustomResource;
 using LambdaSharp.Exceptions;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace LambdaSharp.Core.RegistrationFunction {
 
@@ -88,6 +84,12 @@ namespace LambdaSharp.Core.RegistrationFunction {
         private string _rollbarProjectPattern;
         private string _coreSecretsKey;
 
+        //--- Properties ---
+        private RegistrationTable Registrations => _registrations ?? throw new InvalidOperationException();
+        private RollbarClient RollbarClient => _rollbarClient ?? throw new InvalidOperationException();
+        private string CoreSecretsKey => _coreSecretsKey ?? throw new InvalidOperationException();
+        private string RollbarProjectPattern => _rollbarProjectPattern ?? throw new InvalidOperationException();
+
         //--- Methods ---
         public async override Task InitializeAsync(LambdaConfig config) {
             var tableName = config.ReadDynamoDBTableName("RegistrationTable");
@@ -110,23 +112,34 @@ namespace LambdaSharp.Core.RegistrationFunction {
         public override async Task<Response<RegistrationResourceAttributes>> ProcessCreateResourceAsync(Request<RegistrationResourceProperties> request) {
             var properties = request.ResourceProperties;
 
+            // request validation
+            if(properties == null) {
+                throw new RegistrarException("missing resource properties");
+            }
+            if(properties.ModuleId == null) {
+                throw new RegistrarException("missing module ID");
+            }
+            if(properties.ResourceType == null) {
+                throw new RegistrarException("missing resource type");
+            }
+
             // determine the kind of registration that is requested
-            switch(request.ResourceProperties.ResourceType) {
+            switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
                     LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.Module}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
-                    if(_rollbarClient.HasTokens) {
+                    if(RollbarClient.HasTokens) {
                         var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
                             var value = match.ToString();
                             switch(value) {
                             case "{ModuleFullName}":
-                                return request.ResourceProperties.GetModuleFullName();
+                                return properties.GetModuleFullName();
                             case "{ModuleNamespace}":
-                                return request.ResourceProperties.GetModuleNamespace();
+                                return properties.GetModuleNamespace();
                             case "{ModuleName}":
-                                return request.ResourceProperties.GetModuleName();
+                                return properties.GetModuleName();
                             default:
 
                                 // remove curly braces for unrecognized placeholders
@@ -143,36 +156,52 @@ namespace LambdaSharp.Core.RegistrationFunction {
                                 name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
                             }
                         }
-                        var project = await _rollbarClient.FindProjectByName(name)
-                            ?? await _rollbarClient.CreateProject(name);
-                        var tokens = await _rollbarClient.ListProjectTokens(project.Id);
-                        var token = tokens.First(t => t.Name == "post_server_item").AccessToken;
+                        var project = await RollbarClient.FindProjectByName(name)
+                            ?? await RollbarClient.CreateProject(name);
+                        var tokens = await RollbarClient.ListProjectTokens(project.Id);
+                        var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
+                        if(token == null) {
+                            throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
+                        }
                         owner.RollbarProjectId = project.Id;
-                        owner.RollbarAccessToken = await EncryptSecretAsync(token, _coreSecretsKey);
+                        owner.RollbarAccessToken = await EncryptSecretAsync(token, CoreSecretsKey);
                     }
 
                     // create owner record
-                    await _registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
                     return Respond($"registration:module:{properties.ModuleId}");
                 }
             case "LambdaSharp::Registration::Function": {
+                    if(properties.FunctionId == null) {
+                        throw new RegistrarException("missing function ID");
+                    }
                     LogInfo($"Adding Function: Id={properties.FunctionId}, Name={properties.FunctionName}");
-                    var owner = await _registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    var owner = await Registrations.GetOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     if(owner == null) {
                         throw new RegistrarException("no registration found for module {0}", properties.ModuleId);
                     }
                     owner = PopulateOwnerMetaData(properties, owner);
-                    await _registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
+                    await Registrations.PutOwnerMetaDataAsync($"F:{owner.FunctionId}", owner);
                     return Respond($"registration:function:{properties.FunctionId}");
                 }
             default:
-                throw new RegistrarException("unrecognized resource type: {0}", request.ResourceType);
+                throw new RegistrarException("unrecognized resource type: {0}", properties.ResourceType);
             }
         }
 
         public override async Task<Response<RegistrationResourceAttributes>> ProcessDeleteResourceAsync(Request<RegistrationResourceProperties> request) {
             var properties = request.ResourceProperties;
-            switch(request.ResourceProperties.ResourceType) {
+
+            // request validation
+            if(properties == null) {
+                throw new RegistrarException("missing resource properties");
+            }
+            if(properties.ModuleId == null) {
+                throw new RegistrarException("missing module ID");
+            }
+
+            // determine the kind of de-registration that is requested
+            switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
                     LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.Module}");
 
@@ -192,12 +221,15 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     // }
 
                     // delete owner record
-                    await _registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
+                    await Registrations.DeleteOwnerMetaDataAsync($"M:{properties.ModuleId}");
                     break;
                 }
             case "LambdaSharp::Registration::Function": {
+                    if(properties.FunctionId == null) {
+                        throw new RegistrarException("missing function ID");
+                    }
                     LogInfo($"Removing Function: Id={properties.FunctionId}, Name={properties.FunctionName}, LogGroup={properties.FunctionLogGroupName}");
-                    await _registrations.DeleteOwnerMetaDataAsync($"F:{properties.FunctionId}");
+                    await Registrations.DeleteOwnerMetaDataAsync($"F:{properties.FunctionId}");
                     break;
                 }
             default:
@@ -208,8 +240,16 @@ namespace LambdaSharp.Core.RegistrationFunction {
             return new Response<RegistrationResourceAttributes>();
         }
 
-        public override async Task<Response<RegistrationResourceAttributes>> ProcessUpdateResourceAsync(Request<RegistrationResourceProperties> request)
-            => Respond(request.PhysicalResourceId);
+        public override async Task<Response<RegistrationResourceAttributes>> ProcessUpdateResourceAsync(Request<RegistrationResourceProperties> request) {
+
+            // request validation
+            if(request.PhysicalResourceId == null) {
+                throw new RegistrarException("missing physical id");
+            }
+
+            // nothing to do
+            return Respond(request.PhysicalResourceId);
+        }
 
         private Response<RegistrationResourceAttributes> Respond(string registration)
             => new Response<RegistrationResourceAttributes> {

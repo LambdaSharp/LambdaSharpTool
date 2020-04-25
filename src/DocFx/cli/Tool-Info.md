@@ -23,12 +23,6 @@ The `info` command is used to show information about the current CLI profile, La
 (optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)
 </dd>
 
-<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
-<dd>
-
-(optional) Use a specific LambdaSharp CLI profile (default: Default)
-</dd>
-
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>
 
@@ -50,7 +44,7 @@ The `info` command is used to show information about the current CLI profile, La
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>
@@ -66,27 +60,25 @@ lash info --tier Sandbox
 
 Output:
 ```
-LambdaSharp CLI (v0.5) - Show LambdaSharp information
-LambdaSharp CLI
-    Profile: Sandbox
-    Version: 0.5
-    Module Deployment S3 Bucket: lambdasharp-bucket-name
-    Deployment Notifications Topic: arn:aws:sns:us-east-1:************:LambdaSharpTool-Sandbox-DeploymentNotificationTopicResource-QMM6DIP3K4N4
-    Module S3 Buckets:
-        - lambdasharp-bucket-name
-        - lambdasharp-us-east-1
+LambdaSharp CLI (v0.7.0.11) - Show LambdaSharp information
 LambdaSharp Deployment Tier
     Name: Sandbox
-    Version: 0.5
+    Version: 0.7.0.11
+    Core Services: Enabled
+    Deployment S3 Bucket: lambdasharp-bucket-name
+    API Gateway Role: arn:aws:iam::************:role/LambdaSharp-ApiGatewayRole
 Git
-    Branch: Docs
-    SHA: ae537bc2214710eed89f5c3b5819d809c065856f
+    Branch: master
+    SHA: DIRTY-887d4fa82845aa09118aba5fda7b2e884f8fe28e
 AWS
     Region: us-east-1
     Account Id: ************
+    Lambda Storage: 0.54GB of 75GB (0.71%)
+    Lambda Reserved Executions: 14 of 1,000 (1.40%)
 Tools
-    .NET Core CLI Version: 2.1.403
+    .NET Core CLI Version: 3.1.100
     Git CLI Version: 2.18.0.windows.1
+    Amazon.Lambda.Tools: 4.0.0
 
-Done (finished: 1/17/2019 4:27:54 PM; duration: 00:00:06.2172050)
+Done (finished: 3/31/2020 4:38:00 PM; duration: 00:00:02.7928772)
 ```

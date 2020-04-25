@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,19 +16,16 @@
  * limitations under the License.
  */
 
-using System;
+using System.Reflection;
+using LambdaSharp.Exceptions;
 
-namespace LambdaSharp.Core.ProcessLogEvents {
+namespace LambdaSharp.ApiGateway.Internal {
 
-    public class UsageReport {
+    internal class ApiGatewayInvocationTargetReturnException : ALambdaException {
 
-        //--- Properties ---
-        public TimeSpan BilledDuration { get; set; }
-        public TimeSpan UsedDuration { get; set; }
-        public float UsedDurationPercent { get; set; }
-        public TimeSpan MaxDuration { get; set; }
-        public int MaxMemory { get; set; }
-        public int UsedMemory { get; set; }
-        public float UsedMemoryPercent { get; set; }
+        //--- Constructors ---
+        public ApiGatewayInvocationTargetReturnException(MethodInfo method, string reason) : base(
+            $"invocation target {method.ReflectedType?.FullName ?? "<MISSING>"}::{method.Name} return value: {reason}"
+        ) { }
     }
 }

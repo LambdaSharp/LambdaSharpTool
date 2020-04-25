@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,13 +16,20 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Exceptions;
+using System;
 
-namespace LambdaSharp.ApiGateway.Internal {
+namespace LambdaSharp.Core.ProcessLogEvents {
 
-    internal class ApiGatewayInvocationTargetUnsupportedException : ALambdaException {
+    public class UsageReport {
 
-        //--- Constructors ---
-        public ApiGatewayInvocationTargetUnsupportedException(string invocationTarget, string reason) : base("invocation target {0} is not supported: {1}", invocationTarget, reason) { }
+        //--- Properties ---
+        public TimeSpan BilledDuration { get; set; }
+        public TimeSpan UsedDuration { get; set; }
+        public float UsedDurationPercent { get; set; }
+        public TimeSpan MaxDuration { get; set; }
+        public int MaxMemory { get; set; }
+        public int UsedMemory { get; set; }
+        public float UsedMemoryPercent { get; set; }
+        public TimeSpan InitDuration { get; set; }
     }
 }

@@ -29,12 +29,6 @@ The `tier coreservices` command is used to show and updates the LambdaSharp Core
 (optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)
 </dd>
 
-<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
-<dd>
-
-(optional) Use a specific LambdaSharp CLI profile (default: Default)
-</dd>
-
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>
 
@@ -56,7 +50,7 @@ The `tier coreservices` command is used to show and updates the LambdaSharp Core
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>

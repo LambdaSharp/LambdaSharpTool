@@ -25,7 +25,7 @@ if [ -z "$1" ]; then
     fi
 
     rm $LAMBDASHARP/Tests/Modules/Results/*.json > /dev/null 2>&1
-    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp2.1/LambdaSharp.Tool.dll deploy \
+    dotnet $LAMBDASHARP/src/LambdaSharp.Tool/bin/Debug/netcoreapp3.1/LambdaSharp.Tool.dll deploy \
         --verbose:exceptions \
         --tier Test \
         --cfn-output $LAMBDASHARP/Tests/Modules/Results/ \
@@ -104,6 +104,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/DynamoDBSample \
         $LAMBDASHARP/Samples/FinalizerSample \
         $LAMBDASHARP/Samples/KinesisSample \
+        $LAMBDASHARP/Samples/MetricSample \
         $LAMBDASHARP/Samples/MacroSample \
         $LAMBDASHARP/Samples/S3IOSample \
         $LAMBDASHARP/Samples/S3SubscriptionSample \

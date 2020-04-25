@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -70,10 +70,39 @@ namespace LambdaSharp {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
-            var request = DeserializeJson<TRequest>(stream);
-            LogInfo($"deserialized stream as {typeof(TRequest)}");
+#if DEBUG_LAMBDASHARP
+
+            // copy request stream to an in-memory stream
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            memoryStream.Position = 0;
+
+            // log the received data verbatim
+            LogInfo($"received data {LambdaSerializer.GetType().FullName}: {System.Text.Encoding.UTF8.GetString(memoryStream.ToArray())}");
+            stream = memoryStream;
+
+            // deserialize request
+            var request = LambdaSerializer.Deserialize<TRequest>(stream);
+
+            // log how the request was deserialized
+            LogInfo($"deserialized to {System.Text.Json.JsonSerializer.Serialize(request)}");
+
+            // process request
             var response = await ProcessMessageAsync(request);
-            return SerializeJson(response).ToStream();
+
+            //
+            var responseStream = new MemoryStream();
+            LambdaSerializer.Serialize(response, responseStream);
+            responseStream.Position = 0;
+            LogInfo($"responded data: {System.Text.Encoding.UTF8.GetString(responseStream.ToArray())}");
+#else
+            var request = LambdaSerializer.Deserialize<TRequest>(stream);
+            var response = await ProcessMessageAsync(request);
+            var responseStream = new MemoryStream();
+            LambdaSerializer.Serialize(response, responseStream);
+            responseStream.Position = 0;
+#endif
+            return responseStream;
         }
     }
 }

@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "A6CCBCE0442555AC34FE509E9E6E30D2"
+      "Default": "16C1B11727EF7FFCB34C60EBB3A0407B"
     }
   },
   "Resources": {
@@ -189,6 +189,19 @@
             "MODULE_INFO": "LambdaSharp.Twitter.Query:1.0-DEV",
             "LAMBDA_NAME": "QueryFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -741,10 +754,12 @@
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "A6CCBCE0442555AC34FE509E9E6E30D2"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1012,9 +1027,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "A6CCBCE0442555AC34FE509E9E6E30D2",
+      "TemplateChecksum": "16C1B11727EF7FFCB34C60EBB3A0407B",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,16 +25,12 @@ using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Core;
 using Amazon.Runtime;
 using LambdaSharp;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Demo.WebSocketsChat.Common;
 using LambdaSharp.ApiGateway;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace WebSocketsSample.MessageFunction {
 
@@ -75,7 +71,7 @@ namespace WebSocketsSample.MessageFunction {
             LogInfo($"Found {connections.Count()} open connection(s)");
 
             // attempt to send message on all open connections
-            var messageBytes = Encoding.UTF8.GetBytes(SerializeJson(new Message {
+            var messageBytes = Encoding.UTF8.GetBytes(LambdaSerializer.Serialize(new Message {
                 From = request.From,
                 Text = request.Text
             }));

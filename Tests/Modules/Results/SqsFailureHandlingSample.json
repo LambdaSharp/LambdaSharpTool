@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AEF4F4F7A493B70206357778C20498CA"
+      "Default": "F190ED98B4C18AB2AABC9EB50ACB0EC8"
     }
   },
   "Resources": {
@@ -147,7 +147,20 @@
             },
             "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsProducer",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -227,7 +240,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -306,7 +319,20 @@
             },
             "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
             "LAMBDA_NAME": "SqsConsumer",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -386,7 +412,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "10",
         "TracingConfig": {
           "Mode": {
@@ -637,7 +663,7 @@
           "Fn::Sub": "/aws/lambda/${SqsProducer}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
@@ -753,7 +779,7 @@
           "Fn::Sub": "/aws/lambda/${SqsConsumer}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "10"
@@ -870,10 +896,12 @@
       "Value": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "AEF4F4F7A493B70206357778C20498CA"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1103,9 +1131,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "AEF4F4F7A493B70206357778C20498CA",
+      "TemplateChecksum": "F190ED98B4C18AB2AABC9EB50ACB0EC8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

@@ -142,25 +142,30 @@ Items:
     Default: ""
 
   # CloudWatch Log Events Processing
-  - Function: ProcessLogEvents
+  - Function: ProcessLogEventsFunction
     Description: Process log events from all LambdaSharp module functions
     Memory: 256
     Timeout: 30
     Sources:
       - Kinesis: LoggingStream
 
+  - Resource: EventBus
+    Description: Grant permission to post events to to the default eventbus
+    Value: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+    Allow: events:PutEvents
+
   # Module & Function Registrations
   - Resource: ErrorReportTopic
     Scope: public
     Description: SNS topic for LambdaSharp module errors
-    Scope: ProcessLogEvents
+    Scope: ProcessLogEventsFunction
     Type: AWS::SNS::Topic
     Allow: Publish
 
   - Resource: UsageReportTopic
     Scope: public
     Description: SNS topic for LambdaSharp function usage reports
-    Scope: ProcessLogEvents
+    Scope: ProcessLogEventsFunction
     Type: AWS::SNS::Topic
     Allow: Publish
 

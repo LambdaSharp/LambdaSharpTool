@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -76,19 +76,29 @@ namespace LambdaSharp.Finalizer {
         /// <returns>The task object representing the asynchronous operation.</returns>
         public virtual async Task DeleteDeployment(FinalizerProperties current) { }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="ProcessCreateResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to create a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessCreateResourceAsync(Request<FinalizerProperties> request) {
-            await CreateDeployment(request.ResourceProperties);
+            await CreateDeployment(request.ResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes> {
                 PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()
             };
         }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="ProcessDeleteResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to delete a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
@@ -115,18 +125,23 @@ namespace LambdaSharp.Finalizer {
                     return new Response<FinalizerAttributes>();
                 }
             } catch(Exception e) {
-                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId);
+                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId ?? "<MISSING>");
             }
-            await DeleteDeployment(request.ResourceProperties);
+            await DeleteDeployment(request.ResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes>();
         }
 
-        /// <inheritdoc/>
-        /// <remarks>
+         /// <summary>
+        /// The <see cref="ProcessUpdateResourceAsync(Request{FinalizerProperties})"/> method is invoked
+        /// when AWS CloudFormation attempts to update a custom resource.
+        /// </summary>
+        /// <param name="request">The CloudFormation request instance.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+       /// <remarks>
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessUpdateResourceAsync(Request<FinalizerProperties> request) {
-            await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
+            await UpdateDeployment(request.ResourceProperties ?? new FinalizerProperties(), request.OldResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes> {
                 PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()

@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "5CB2FFCE5503768D2627F24ED3725B8B"
+      "Default": "22B879AF59ACA15DD780C6897C49D537"
     }
   },
   "Resources": {
@@ -144,7 +144,20 @@
             },
             "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "ConnectionFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -227,7 +240,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -305,7 +318,20 @@
             },
             "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
             "LAMBDA_NAME": "MessageFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -388,7 +414,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -681,7 +707,7 @@
           "Fn::Sub": "/aws/lambda/${ConnectionFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
@@ -797,7 +823,7 @@
           "Fn::Sub": "/aws/lambda/${MessageFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
@@ -899,7 +925,7 @@
           "Fn::Sub": "${AWS::StackName} Module WebSocket"
         },
         "ProtocolType": "WEBSOCKET",
-        "Description": "${Module::FullName} WebSocket (v${Module::Version})",
+        "Description": "Sample.WebSockets WebSocket (v1.0-DEV)",
         "RouteSelectionExpression": "$request.body.action"
       }
     },
@@ -1009,14 +1035,14 @@
         }
       }
     },
-    "ModuleWebSocketDeployment0157CF5BCA5B2B4803CEE311823612E7": {
+    "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A": {
       "Type": "AWS::ApiGatewayV2::Deployment",
       "Properties": {
         "ApiId": {
           "Ref": "ModuleWebSocket"
         },
         "Description": {
-          "Fn::Sub": "${AWS::StackName} WebSocket [0157CF5BCA5B2B4803CEE311823612E7]"
+          "Fn::Sub": "${AWS::StackName} WebSocket [0AD1D65879DDB5B7294C652C9B4E6C6A]"
         }
       },
       "DependsOn": [
@@ -1049,7 +1075,7 @@
         "StageName": "LATEST",
         "Description": "Module WebSocket LATEST Stage",
         "DeploymentId": {
-          "Ref": "ModuleWebSocketDeployment0157CF5BCA5B2B4803CEE311823612E7"
+          "Ref": "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A"
         }
       },
       "DependsOn": [
@@ -1073,10 +1099,12 @@
       "Value": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "5CB2FFCE5503768D2627F24ED3725B8B"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1305,9 +1333,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "5CB2FFCE5503768D2627F24ED3725B8B",
+      "TemplateChecksum": "22B879AF59ACA15DD780C6897C49D537",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1411,7 +1439,7 @@
         "MessageFunctionDefaultRoute": "MessageFunction::DefaultRoute",
         "MessageFunctionWebSocketPermission": "MessageFunction::WebSocketPermission",
         "MessageFunctionSendRoute": "MessageFunction::SendRoute",
-        "ModuleWebSocketDeployment0157CF5BCA5B2B4803CEE311823612E7": "Module::WebSocket::Deployment0157CF5BCA5B2B4803CEE311823612E7",
+        "ModuleWebSocketDeployment0AD1D65879DDB5B7294C652C9B4E6C6A": "Module::WebSocket::Deployment0AD1D65879DDB5B7294C652C9B4E6C6A",
         "ModuleWebSocketLogGroup": "Module::WebSocket::LogGroup",
         "ModuleWebSocketStage": "Module::WebSocket::Stage"
       },

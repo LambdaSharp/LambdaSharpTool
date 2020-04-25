@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -69,6 +69,7 @@ namespace LambdaSharp.Tool {
             new CliBuildPublishDeployCommand().Register(app);
             new CliEncryptCommand().Register(app);
             new CliUtilCommand().Register(app);
+            new CliNukeCommand().Register(app);
 
             // no command
             var showHelp = false;
@@ -89,13 +90,17 @@ namespace LambdaSharp.Tool {
                         LogError(e);
                     }
                     if(Settings.HasErrors) {
-                        Console.WriteLine();
-                        Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                        if(!Quiet) {
+                            Console.WriteLine();
+                            Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                        }
                         Settings.ShowErrors();
                         return -1;
                     }
                     if(Settings.HasWarnings) {
-                        Console.WriteLine();
+                        if(!Quiet) {
+                            Console.WriteLine();
+                        }
                         Settings.ShowErrors();
                     }
                     return 0;

@@ -17,12 +17,6 @@ The `list` command is used to list all deployed modules on a deployment tier.
 (optional) Name of deployment tier (default: <code>LAMBDASHARP_TIER</code> environment variable)
 </dd>
 
-<dt><code>--cli-profile|-C &lt;NAME&gt;</code></dt>
-<dd>
-
-(optional) Use a specific LambdaSharp CLI profile (default: Default)
-</dd>
-
 <dt><code>--aws-profile|-P &lt;NAME&gt;</code></dt>
 <dd>
 
@@ -44,7 +38,7 @@ The `list` command is used to list all deployed modules on a deployment tier.
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>

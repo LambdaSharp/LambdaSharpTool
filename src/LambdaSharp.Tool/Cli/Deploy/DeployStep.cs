@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
 
                 // check version of previously deployed module
                 if(!deployOnlyIfExists) {
-                    Console.WriteLine($"=> Validating module for deployment tier");
+                    Console.WriteLine("=> Validating module for deployment tier");
                 }
                 var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest, showError: !deployOnlyIfExists);
                 if(!forceDeploy && !updateValidation.Success) {
@@ -98,7 +98,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!forceDeploy && !parameters.Any()) {
                     var existingChecksum = existing?.Outputs.FirstOrDefault(output => output.OutputKey == "ModuleChecksum");
                     if(existingChecksum?.OutputValue == manifest.TemplateChecksum) {
-                        Settings.WriteAnsiLine($"=> No changes found to deploy", AnsiTerminal.BrightBlack);
+                        Settings.WriteAnsiLine("=> No changes found to deploy", AnsiTerminal.BrightBlack);
                         return true;
                     }
                 }
@@ -228,6 +228,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     };
                 }
             }
+
+            // deployment bucket must always be set to match deployment tier in case it changed because LambdaSharp.Core was recreated
+            stackParameters["DeploymentBucketName"] = new CloudFormationParameter {
+                ParameterKey = "DeploymentBucketName",
+                ParameterValue = Settings.DeploymentBucketName
+            };
 
             // add all provided parameters
             if(parameters != null) {

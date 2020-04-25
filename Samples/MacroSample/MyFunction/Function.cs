@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,15 +18,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 using LambdaSharp;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]
 
 namespace MacroSample.MyFunction {
 
@@ -59,11 +52,11 @@ namespace MacroSample.MyFunction {
         public override async Task<MacroResponse> ProcessMessageAsync(MacroRequest request) {
             LogInfo($"AwsRegion = {request.Region}");
             LogInfo($"AccountID = {request.AccountId}");
-            LogInfo($"Fragment = {SerializeJson(request.Fragment)}");
+            LogInfo($"Fragment = {LambdaSerializer.Serialize(request.Fragment)}");
             LogInfo($"TransformID = {request.TransformId}");
-            LogInfo($"Params = {SerializeJson(request.Params)}");
+            LogInfo($"Params = {LambdaSerializer.Serialize(request.Params)}");
             LogInfo($"RequestID = {request.RequestId}");
-            LogInfo($"TemplateParameterValues = {SerializeJson(request.TemplateParameterValues)}");
+            LogInfo($"TemplateParameterValues = {LambdaSerializer.Serialize(request.TemplateParameterValues)}");
 
             // macro for string operations
             try {

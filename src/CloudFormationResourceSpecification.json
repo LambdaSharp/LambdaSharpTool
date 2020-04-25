@@ -1008,6 +1008,14 @@
         }
       }
     },
+    "AWS::ApiGatewayV2::Integration.TlsConfig": {
+      "Properties": {
+        "ServerNameToVerify": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::ApiGatewayV2::Route.ParameterConstraints": {
       "Properties": {
         "Required": {
@@ -1671,6 +1679,39 @@
         }
       }
     },
+    "AWS::AppMesh::VirtualNode.BackendDefaults": {
+      "Properties": {
+        "ClientPolicy": {
+          "Required": false,
+          "Type": "ClientPolicy"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ClientPolicy": {
+      "Properties": {
+        "TLS": {
+          "Required": false,
+          "Type": "ClientPolicyTls"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ClientPolicyTls": {
+      "Properties": {
+        "Enforce": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "Ports": {
+          "PrimitiveItemType": "Integer",
+          "Required": false,
+          "Type": "List"
+        },
+        "Validation": {
+          "Required": true,
+          "Type": "TlsValidationContext"
+        }
+      }
+    },
     "AWS::AppMesh::VirtualNode.DnsServiceDiscovery": {
       "Properties": {
         "Hostname": {
@@ -1728,6 +1769,54 @@
         "PortMapping": {
           "Required": true,
           "Type": "PortMapping"
+        },
+        "TLS": {
+          "Required": false,
+          "Type": "ListenerTls"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ListenerTls": {
+      "Properties": {
+        "Certificate": {
+          "Required": true,
+          "Type": "ListenerTlsCertificate"
+        },
+        "Mode": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ListenerTlsAcmCertificate": {
+      "Properties": {
+        "CertificateArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ListenerTlsCertificate": {
+      "Properties": {
+        "ACM": {
+          "Required": false,
+          "Type": "ListenerTlsAcmCertificate"
+        },
+        "File": {
+          "Required": false,
+          "Type": "ListenerTlsFileCertificate"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.ListenerTlsFileCertificate": {
+      "Properties": {
+        "CertificateChain": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "PrivateKey": {
+          "PrimitiveType": "String",
+          "Required": true
         }
       }
     },
@@ -1763,8 +1852,49 @@
         }
       }
     },
+    "AWS::AppMesh::VirtualNode.TlsValidationContext": {
+      "Properties": {
+        "Trust": {
+          "Required": true,
+          "Type": "TlsValidationContextTrust"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.TlsValidationContextAcmTrust": {
+      "Properties": {
+        "CertificateAuthorityArns": {
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.TlsValidationContextFileTrust": {
+      "Properties": {
+        "CertificateChain": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::AppMesh::VirtualNode.TlsValidationContextTrust": {
+      "Properties": {
+        "ACM": {
+          "Required": false,
+          "Type": "TlsValidationContextAcmTrust"
+        },
+        "File": {
+          "Required": false,
+          "Type": "TlsValidationContextFileTrust"
+        }
+      }
+    },
     "AWS::AppMesh::VirtualNode.VirtualNodeSpec": {
       "Properties": {
+        "BackendDefaults": {
+          "Required": false,
+          "Type": "BackendDefaults"
+        },
         "Backends": {
           "ItemType": "Backend",
           "Required": false,
@@ -1787,6 +1917,10 @@
     },
     "AWS::AppMesh::VirtualNode.VirtualServiceBackend": {
       "Properties": {
+        "ClientPolicy": {
+          "Required": false,
+          "Type": "ClientPolicy"
+        },
         "VirtualServiceName": {
           "PrimitiveType": "String",
           "Required": true
@@ -2268,6 +2402,111 @@
         "LambdaConflictHandlerConfig": {
           "Required": false,
           "Type": "LambdaConflictHandlerConfig"
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.EncryptionConfiguration": {
+      "Properties": {
+        "EncryptionOption": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "KmsKey": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.ResultConfiguration": {
+      "Properties": {
+        "EncryptionConfiguration": {
+          "Required": false,
+          "Type": "EncryptionConfiguration"
+        },
+        "OutputLocation": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.ResultConfigurationUpdates": {
+      "Properties": {
+        "EncryptionConfiguration": {
+          "Required": false,
+          "Type": "EncryptionConfiguration"
+        },
+        "OutputLocation": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RemoveEncryptionConfiguration": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "RemoveOutputLocation": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.Tags": {
+      "Properties": {
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.WorkGroupConfiguration": {
+      "Properties": {
+        "BytesScannedCutoffPerQuery": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "EnforceWorkGroupConfiguration": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "PublishCloudWatchMetricsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "RequesterPaysEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ResultConfiguration": {
+          "Required": false,
+          "Type": "ResultConfiguration"
+        }
+      }
+    },
+    "AWS::Athena::WorkGroup.WorkGroupConfigurationUpdates": {
+      "Properties": {
+        "BytesScannedCutoffPerQuery": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "EnforceWorkGroupConfiguration": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "PublishCloudWatchMetricsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "RemoveBytesScannedCutoffPerQuery": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "RequesterPaysEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "ResultConfigurationUpdates": {
+          "Required": false,
+          "Type": "ResultConfigurationUpdates"
         }
       }
     },
@@ -3010,7 +3249,7 @@
         },
         "Memory": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "MountPoints": {
           "ItemType": "MountPoints",
@@ -3041,7 +3280,7 @@
         },
         "Vcpus": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "Volumes": {
           "ItemType": "Volumes",
@@ -3362,6 +3601,54 @@
         }
       }
     },
+    "AWS::Cassandra::Table.BillingMode": {
+      "Properties": {
+        "Mode": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ProvisionedThroughput": {
+          "Required": false,
+          "Type": "ProvisionedThroughput"
+        }
+      }
+    },
+    "AWS::Cassandra::Table.ClusteringKeyColumn": {
+      "Properties": {
+        "Column": {
+          "Required": true,
+          "Type": "Column"
+        },
+        "OrderBy": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Cassandra::Table.Column": {
+      "Properties": {
+        "ColumnName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ColumnType": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Cassandra::Table.ProvisionedThroughput": {
+      "Properties": {
+        "ReadCapacityUnits": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        },
+        "WriteCapacityUnits": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
     "AWS::CertificateManager::Certificate.DomainValidationOption": {
       "Properties": {
         "DomainName": {
@@ -3625,6 +3912,10 @@
           "Required": false,
           "Type": "Logging"
         },
+        "OriginGroups": {
+          "Required": false,
+          "Type": "OriginGroups"
+        },
         "Origins": {
           "ItemType": "Origin",
           "Required": true,
@@ -3687,6 +3978,10 @@
       "Properties": {
         "EventType": {
           "PrimitiveType": "String",
+          "Required": false
+        },
+        "IncludeBody": {
+          "PrimitiveType": "Boolean",
           "Required": false
         },
         "LambdaFunctionARN": {
@@ -3752,6 +4047,64 @@
         }
       }
     },
+    "AWS::CloudFront::Distribution.OriginGroup": {
+      "Properties": {
+        "FailoverCriteria": {
+          "Required": true,
+          "Type": "OriginGroupFailoverCriteria"
+        },
+        "Id": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Members": {
+          "Required": true,
+          "Type": "OriginGroupMembers"
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.OriginGroupFailoverCriteria": {
+      "Properties": {
+        "StatusCodes": {
+          "Required": true,
+          "Type": "StatusCodes"
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.OriginGroupMember": {
+      "Properties": {
+        "OriginId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.OriginGroupMembers": {
+      "Properties": {
+        "Items": {
+          "ItemType": "OriginGroupMember",
+          "Required": true,
+          "Type": "List"
+        },
+        "Quantity": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.OriginGroups": {
+      "Properties": {
+        "Items": {
+          "ItemType": "OriginGroup",
+          "Required": false,
+          "Type": "List"
+        },
+        "Quantity": {
+          "PrimitiveType": "Integer",
+          "Required": true
+        }
+      }
+    },
     "AWS::CloudFront::Distribution.Restrictions": {
       "Properties": {
         "GeoRestriction": {
@@ -3765,6 +4118,19 @@
         "OriginAccessIdentity": {
           "PrimitiveType": "String",
           "Required": false
+        }
+      }
+    },
+    "AWS::CloudFront::Distribution.StatusCodes": {
+      "Properties": {
+        "Items": {
+          "PrimitiveItemType": "Integer",
+          "Required": true,
+          "Type": "List"
+        },
+        "Quantity": {
+          "PrimitiveType": "Integer",
+          "Required": true
         }
       }
     },
@@ -4008,6 +4374,11 @@
           "Required": true
         }
       }
+    },
+    "AWS::CloudWatch::InsightRule.Tags": {
+      "ItemType": "Tag",
+      "Required": false,
+      "Type": "List"
     },
     "AWS::CodeBuild::Project.Artifacts": {
       "Properties": {
@@ -6078,6 +6449,18 @@
         }
       }
     },
+    "AWS::DMS::Endpoint.KafkaSettings": {
+      "Properties": {
+        "Broker": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Topic": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::DMS::Endpoint.KinesisSettings": {
       "Properties": {
         "MessageFormat": {
@@ -6382,6 +6765,14 @@
         }
       }
     },
+    "AWS::EC2::EC2Fleet.CapacityReservationOptionsRequest": {
+      "Properties": {
+        "UsageStrategy": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::EC2::EC2Fleet.FleetLaunchTemplateConfigRequest": {
       "Properties": {
         "LaunchTemplateSpecification": {
@@ -6408,6 +6799,10 @@
         "MaxPrice": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Placement": {
+          "Required": false,
+          "Type": "Placement"
         },
         "Priority": {
           "PrimitiveType": "Double",
@@ -6444,6 +6839,62 @@
         "AllocationStrategy": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "CapacityReservationOptions": {
+          "Required": false,
+          "Type": "CapacityReservationOptionsRequest"
+        },
+        "MaxTotalPrice": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "MinTargetCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SingleAvailabilityZone": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "SingleInstanceType": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        }
+      }
+    },
+    "AWS::EC2::EC2Fleet.Placement": {
+      "Properties": {
+        "Affinity": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AvailabilityZone": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GroupName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "HostId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "HostResourceGroupArn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PartitionNumber": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SpreadDomain": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tenancy": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -6460,17 +6911,21 @@
         "InstancePoolsToUseCount": {
           "PrimitiveType": "Integer",
           "Required": false
-        }
-      }
-    },
-    "AWS::EC2::EC2Fleet.TagRequest": {
-      "Properties": {
-        "Key": {
+        },
+        "MaxTotalPrice": {
           "PrimitiveType": "String",
           "Required": false
         },
-        "Value": {
-          "PrimitiveType": "String",
+        "MinTargetCapacity": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "SingleAvailabilityZone": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "SingleInstanceType": {
+          "PrimitiveType": "Boolean",
           "Required": false
         }
       }
@@ -6482,7 +6937,7 @@
           "Required": false
         },
         "Tags": {
-          "ItemType": "TagRequest",
+          "ItemType": "Tag",
           "Required": false,
           "Type": "List"
         }
@@ -8584,6 +9039,27 @@
         "TransitionToIA": {
           "PrimitiveType": "String",
           "Required": true
+        }
+      }
+    },
+    "AWS::EKS::Cluster.EncryptionConfig": {
+      "Properties": {
+        "Provider": {
+          "Required": false,
+          "Type": "Provider"
+        },
+        "Resources": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::EKS::Cluster.Provider": {
+      "Properties": {
+        "KeyArn": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -12436,6 +12912,18 @@
         }
       }
     },
+    "AWS::Greengrass::ResourceDefinition.ResourceDownloadOwnerSetting": {
+      "Properties": {
+        "GroupOwner": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "GroupPermission": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::Greengrass::ResourceDefinition.ResourceInstance": {
       "Properties": {
         "Id": {
@@ -12458,6 +12946,10 @@
           "PrimitiveType": "String",
           "Required": true
         },
+        "OwnerSetting": {
+          "Required": false,
+          "Type": "ResourceDownloadOwnerSetting"
+        },
         "S3Uri": {
           "PrimitiveType": "String",
           "Required": true
@@ -12469,6 +12961,10 @@
         "DestinationPath": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "OwnerSetting": {
+          "Required": false,
+          "Type": "ResourceDownloadOwnerSetting"
         },
         "SageMakerJobArn": {
           "PrimitiveType": "String",
@@ -12553,6 +13049,18 @@
         }
       }
     },
+    "AWS::Greengrass::ResourceDefinitionVersion.ResourceDownloadOwnerSetting": {
+      "Properties": {
+        "GroupOwner": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "GroupPermission": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::Greengrass::ResourceDefinitionVersion.ResourceInstance": {
       "Properties": {
         "Id": {
@@ -12575,6 +13083,10 @@
           "PrimitiveType": "String",
           "Required": true
         },
+        "OwnerSetting": {
+          "Required": false,
+          "Type": "ResourceDownloadOwnerSetting"
+        },
         "S3Uri": {
           "PrimitiveType": "String",
           "Required": true
@@ -12586,6 +13098,10 @@
         "DestinationPath": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "OwnerSetting": {
+          "Required": false,
+          "Type": "ResourceDownloadOwnerSetting"
         },
         "SageMakerJobArn": {
           "PrimitiveType": "String",
@@ -12777,9 +13293,21 @@
           "Required": false,
           "Type": "FirehoseAction"
         },
+        "Http": {
+          "Required": false,
+          "Type": "HttpAction"
+        },
         "IotAnalytics": {
           "Required": false,
           "Type": "IotAnalyticsAction"
+        },
+        "IotEvents": {
+          "Required": false,
+          "Type": "IotEventsAction"
+        },
+        "IotSiteWise": {
+          "Required": false,
+          "Type": "IotSiteWiseAction"
         },
         "Kinesis": {
           "Required": false,
@@ -12808,6 +13336,54 @@
         "StepFunctions": {
           "Required": false,
           "Type": "StepFunctionsAction"
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.AssetPropertyTimestamp": {
+      "Properties": {
+        "OffsetInNanos": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "TimeInSeconds": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.AssetPropertyValue": {
+      "Properties": {
+        "Quality": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Timestamp": {
+          "Required": true,
+          "Type": "AssetPropertyTimestamp"
+        },
+        "Value": {
+          "Required": true,
+          "Type": "AssetPropertyVariant"
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.AssetPropertyVariant": {
+      "Properties": {
+        "BooleanValue": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "DoubleValue": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "IntegerValue": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "StringValue": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -12951,11 +13527,83 @@
         }
       }
     },
+    "AWS::IoT::TopicRule.HttpAction": {
+      "Properties": {
+        "Auth": {
+          "Required": false,
+          "Type": "HttpAuthorization"
+        },
+        "ConfirmationUrl": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Headers": {
+          "DuplicatesAllowed": false,
+          "ItemType": "HttpActionHeader",
+          "Required": false,
+          "Type": "List"
+        },
+        "Url": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.HttpActionHeader": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Value": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.HttpAuthorization": {
+      "Properties": {
+        "Sigv4": {
+          "Required": false,
+          "Type": "SigV4Authorization"
+        }
+      }
+    },
     "AWS::IoT::TopicRule.IotAnalyticsAction": {
       "Properties": {
         "ChannelName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.IotEventsAction": {
+      "Properties": {
+        "InputName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MessageId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.IotSiteWiseAction": {
+      "Properties": {
+        "PutAssetPropertyValueEntries": {
+          "DuplicatesAllowed": false,
+          "ItemType": "PutAssetPropertyValueEntry",
+          "Required": true,
+          "Type": "List"
         },
         "RoleArn": {
           "PrimitiveType": "String",
@@ -12987,6 +13635,32 @@
         }
       }
     },
+    "AWS::IoT::TopicRule.PutAssetPropertyValueEntry": {
+      "Properties": {
+        "AssetId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "EntryId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PropertyAlias": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PropertyId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "PropertyValues": {
+          "DuplicatesAllowed": false,
+          "ItemType": "AssetPropertyValue",
+          "Required": true,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::IoT::TopicRule.PutItemInput": {
       "Properties": {
         "TableName": {
@@ -12997,6 +13671,10 @@
     },
     "AWS::IoT::TopicRule.RepublishAction": {
       "Properties": {
+        "Qos": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
         "RoleArn": {
           "PrimitiveType": "String",
           "Required": true
@@ -13018,6 +13696,22 @@
           "Required": true
         },
         "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::IoT::TopicRule.SigV4Authorization": {
+      "Properties": {
+        "RoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ServiceName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SigningRegion": {
           "PrimitiveType": "String",
           "Required": true
         }
@@ -13839,6 +14533,10 @@
     },
     "AWS::IoTEvents::DetectorModel.SetTimer": {
       "Properties": {
+        "DurationExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "Seconds": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -15348,6 +16046,15 @@
         }
       }
     },
+    "AWS::LakeFormation::Permissions.ColumnWildcard": {
+      "Properties": {
+        "ExcludedColumnNames": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::LakeFormation::Permissions.DatabaseResource": {
       "Properties": {
         "Name": {
@@ -15364,20 +16071,57 @@
         }
       }
     },
+    "AWS::LakeFormation::Permissions.DataLocationResource": {
+      "Properties": {
+        "S3Resource": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::LakeFormation::Permissions.Resource": {
       "Properties": {
         "DatabaseResource": {
           "Required": false,
           "Type": "DatabaseResource"
         },
+        "DataLocationResource": {
+          "Required": false,
+          "Type": "DataLocationResource"
+        },
         "TableResource": {
           "Required": false,
           "Type": "TableResource"
+        },
+        "TableWithColumnsResource": {
+          "Required": false,
+          "Type": "TableWithColumnsResource"
         }
       }
     },
     "AWS::LakeFormation::Permissions.TableResource": {
       "Properties": {
+        "DatabaseName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::LakeFormation::Permissions.TableWithColumnsResource": {
+      "Properties": {
+        "ColumnNames": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "ColumnWildcard": {
+          "Required": false,
+          "Type": "ColumnWildcard"
+        },
         "DatabaseName": {
           "PrimitiveType": "String",
           "Required": false
@@ -15689,6 +16433,22 @@
         "Mode": {
           "PrimitiveType": "String",
           "Required": true
+        }
+      }
+    },
+    "AWS::MediaConvert::JobTemplate.HopDestination": {
+      "Properties": {
+        "Priority": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Queue": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "WaitMinutes": {
+          "PrimitiveType": "Integer",
+          "Required": false
         }
       }
     },
@@ -16133,6 +16893,22 @@
         }
       }
     },
+    "AWS::MSK::Cluster.BrokerLogs": {
+      "Properties": {
+        "CloudWatchLogs": {
+          "Required": false,
+          "Type": "CloudWatchLogs"
+        },
+        "Firehose": {
+          "Required": false,
+          "Type": "Firehose"
+        },
+        "S3": {
+          "Required": false,
+          "Type": "S3"
+        }
+      }
+    },
     "AWS::MSK::Cluster.BrokerNodeGroupInfo": {
       "Properties": {
         "BrokerAZDistribution": {
@@ -16164,6 +16940,18 @@
         "Tls": {
           "Required": false,
           "Type": "Tls"
+        }
+      }
+    },
+    "AWS::MSK::Cluster.CloudWatchLogs": {
+      "Properties": {
+        "Enabled": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        },
+        "LogGroup": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -16219,11 +17007,31 @@
         }
       }
     },
+    "AWS::MSK::Cluster.Firehose": {
+      "Properties": {
+        "DeliveryStream": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Enabled": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        }
+      }
+    },
     "AWS::MSK::Cluster.JmxExporter": {
       "Properties": {
         "EnabledInBroker": {
           "PrimitiveType": "Boolean",
           "Required": true
+        }
+      }
+    },
+    "AWS::MSK::Cluster.LoggingInfo": {
+      "Properties": {
+        "BrokerLogs": {
+          "Required": true,
+          "Type": "BrokerLogs"
         }
       }
     },
@@ -16255,6 +17063,22 @@
         }
       }
     },
+    "AWS::MSK::Cluster.S3": {
+      "Properties": {
+        "Bucket": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Enabled": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        },
+        "Prefix": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::MSK::Cluster.StorageInfo": {
       "Properties": {
         "EBSStorageInfo": {
@@ -16269,6 +17093,50 @@
           "PrimitiveItemType": "String",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::NetworkManager::Device.Location": {
+      "Properties": {
+        "Address": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Latitude": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Longitude": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::NetworkManager::Link.Bandwidth": {
+      "Properties": {
+        "DownloadSpeed": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "UploadSpeed": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        }
+      }
+    },
+    "AWS::NetworkManager::Site.Location": {
+      "Properties": {
+        "Address": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Latitude": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Longitude": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -17576,6 +18444,49 @@
         "ParameterValue": {
           "PrimitiveType": "String",
           "Required": true
+        }
+      }
+    },
+    "AWS::ResourceGroups::Group.Query": {
+      "Properties": {
+        "ResourceTypeFilters": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "StackIdentifier": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "TagFilters": {
+          "ItemType": "TagFilter",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::ResourceGroups::Group.ResourceQuery": {
+      "Properties": {
+        "Query": {
+          "Required": false,
+          "Type": "Query"
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::ResourceGroups::Group.TagFilter": {
+      "Properties": {
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Values": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -19474,11 +20385,18 @@
         }
       }
     },
+    "AWS::SSM::PatchBaseline.PatchStringDate": {
+      "PrimitiveType": "String"
+    },
     "AWS::SSM::PatchBaseline.Rule": {
       "Properties": {
         "ApproveAfterDays": {
           "PrimitiveType": "Integer",
           "Required": false
+        },
+        "ApproveUntilDate": {
+          "Required": false,
+          "Type": "PatchStringDate"
         },
         "ComplianceLevel": {
           "PrimitiveType": "String",
@@ -19614,6 +20532,14 @@
         },
         "Value": {
           "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::StepFunctions::StateMachine.TracingConfiguration": {
+      "Properties": {
+        "Enabled": {
+          "PrimitiveType": "Boolean",
           "Required": true
         }
       }
@@ -20994,7 +21920,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "11.1.0",
+  "ResourceSpecificationVersion": "13.0.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -22244,6 +23170,10 @@
           "PrimitiveType": "String",
           "Required": true
         },
+        "ConnectionId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "ConnectionType": {
           "PrimitiveType": "String",
           "Required": false
@@ -22295,6 +23225,10 @@
         "TimeoutInMillis": {
           "PrimitiveType": "Integer",
           "Required": false
+        },
+        "TlsConfig": {
+          "Required": false,
+          "Type": "TlsConfig"
         }
       }
     },
@@ -22724,6 +23658,12 @@
         "MeshName": {
           "PrimitiveType": "String"
         },
+        "MeshOwner": {
+          "PrimitiveType": "String"
+        },
+        "ResourceOwner": {
+          "PrimitiveType": "String"
+        },
         "Uid": {
           "PrimitiveType": "String"
         }
@@ -22753,6 +23693,12 @@
         "MeshName": {
           "PrimitiveType": "String"
         },
+        "MeshOwner": {
+          "PrimitiveType": "String"
+        },
+        "ResourceOwner": {
+          "PrimitiveType": "String"
+        },
         "RouteName": {
           "PrimitiveType": "String"
         },
@@ -22768,6 +23714,10 @@
         "MeshName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "MeshOwner": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "RouteName": {
           "PrimitiveType": "String",
@@ -22796,6 +23746,12 @@
         "MeshName": {
           "PrimitiveType": "String"
         },
+        "MeshOwner": {
+          "PrimitiveType": "String"
+        },
+        "ResourceOwner": {
+          "PrimitiveType": "String"
+        },
         "Uid": {
           "PrimitiveType": "String"
         },
@@ -22808,6 +23764,10 @@
         "MeshName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "MeshOwner": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "Spec": {
           "Required": true,
@@ -22832,6 +23792,12 @@
         "MeshName": {
           "PrimitiveType": "String"
         },
+        "MeshOwner": {
+          "PrimitiveType": "String"
+        },
+        "ResourceOwner": {
+          "PrimitiveType": "String"
+        },
         "Uid": {
           "PrimitiveType": "String"
         },
@@ -22844,6 +23810,10 @@
         "MeshName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "MeshOwner": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "Spec": {
           "Required": true,
@@ -22868,6 +23838,12 @@
         "MeshName": {
           "PrimitiveType": "String"
         },
+        "MeshOwner": {
+          "PrimitiveType": "String"
+        },
+        "ResourceOwner": {
+          "PrimitiveType": "String"
+        },
         "Uid": {
           "PrimitiveType": "String"
         },
@@ -22880,6 +23856,10 @@
         "MeshName": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "MeshOwner": {
+          "PrimitiveType": "String",
+          "Required": false
         },
         "Spec": {
           "Required": true,
@@ -23474,6 +24454,44 @@
         }
       }
     },
+    "AWS::Athena::WorkGroup": {
+      "Attributes": {
+        "CreationTime": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-athena-workgroup.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RecursiveDeleteOption": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "State": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "Required": false,
+          "Type": "Tags"
+        },
+        "WorkGroupConfiguration": {
+          "Required": false,
+          "Type": "WorkGroupConfiguration"
+        },
+        "WorkGroupConfigurationUpdates": {
+          "Required": false,
+          "Type": "WorkGroupConfigurationUpdates"
+        }
+      }
+    },
     "AWS::AutoScaling::AutoScalingGroup": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-as-group.html",
       "Properties": {
@@ -23526,6 +24544,10 @@
           "PrimitiveItemType": "String",
           "Required": false,
           "Type": "List"
+        },
+        "MaxInstanceLifetime": {
+          "PrimitiveType": "Integer",
+          "Required": false
         },
         "MaxSize": {
           "PrimitiveType": "String",
@@ -23979,6 +25001,50 @@
         }
       }
     },
+    "AWS::Cassandra::Keyspace": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cassandra-keyspace.html",
+      "Properties": {
+        "KeyspaceName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Cassandra::Table": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cassandra-table.html",
+      "Properties": {
+        "BillingMode": {
+          "Required": false,
+          "Type": "BillingMode"
+        },
+        "ClusteringKeyColumns": {
+          "DuplicatesAllowed": false,
+          "ItemType": "ClusteringKeyColumn",
+          "Required": false,
+          "Type": "List"
+        },
+        "KeyspaceName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "PartitionKeyColumns": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Column",
+          "Required": true,
+          "Type": "List"
+        },
+        "RegularColumns": {
+          "DuplicatesAllowed": false,
+          "ItemType": "Column",
+          "Required": false,
+          "Type": "List"
+        },
+        "TableName": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::CDK::Metadata": {
       "Documentation": "https://docs.aws.amazon.com/cdk/latest/guide/tools.html",
       "Properties": {
@@ -24016,6 +25082,40 @@
         "ValidationMethod": {
           "PrimitiveType": "String",
           "Required": false
+        }
+      }
+    },
+    "AWS::Chatbot::SlackChannelConfiguration": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-chatbot-slackchannelconfiguration.html",
+      "Properties": {
+        "Arn": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "ConfigurationName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "IamRoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "LoggingLevel": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SlackChannelId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SlackWorkspaceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "SnsTopicArns": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -24409,6 +25509,47 @@
         }
       }
     },
+    "AWS::CloudWatch::CompositeAlarm": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudwatch-compositealarm.html",
+      "Properties": {
+        "ActionsEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
+        "AlarmActions": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "AlarmDescription": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "AlarmName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "AlarmRule": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "InsufficientDataActions": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
+        "OKActions": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::CloudWatch::Dashboard": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-cloudwatch-dashboard.html",
       "Properties": {
@@ -24444,6 +25585,10 @@
         "RuleState": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "Required": false,
+          "Type": "Tags"
         }
       }
     },
@@ -24557,6 +25702,11 @@
         "Name": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         },
         "Type": {
           "PrimitiveType": "String",
@@ -24725,6 +25875,20 @@
         }
       }
     },
+    "AWS::CodeGuruProfiler::ProfilingGroup": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codeguruprofiler-profilinggroup.html",
+      "Properties": {
+        "ProfilingGroupName": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
     "AWS::CodePipeline::CustomActionType": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codepipeline-customactiontype.html",
       "Properties": {
@@ -24887,6 +26051,30 @@
           "Required": true
         },
         "RepositoryOwner": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::CodeStarConnections::Connection": {
+      "Attributes": {
+        "ConnectionArn": {
+          "PrimitiveType": "String"
+        },
+        "ConnectionStatus": {
+          "PrimitiveType": "String"
+        },
+        "OwnerAccountId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-codestarconnections-connection.html",
+      "Properties": {
+        "ConnectionName": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ProviderType": {
           "PrimitiveType": "String",
           "Required": true
         }
@@ -25786,6 +26974,36 @@
         }
       }
     },
+    "AWS::Detective::Graph": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-detective-graph.html",
+      "Properties": {}
+    },
+    "AWS::Detective::MemberInvitation": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-detective-memberinvitation.html",
+      "Properties": {
+        "GraphArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MemberEmailAddress": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "MemberId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Message": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
     "AWS::DirectoryService::MicrosoftAD": {
       "Attributes": {
         "Alias": {
@@ -25956,6 +27174,10 @@
         "ExtraConnectionAttributes": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "KafkaSettings": {
+          "Required": false,
+          "Type": "KafkaSettings"
         },
         "KinesisSettings": {
           "Required": false,
@@ -26218,6 +27440,10 @@
         },
         "DBSubnetGroupName": {
           "PrimitiveType": "String",
+          "Required": false
+        },
+        "DeletionProtection": {
+          "PrimitiveType": "Boolean",
           "Required": false
         },
         "EnableCloudwatchLogsExports": {
@@ -26552,6 +27778,11 @@
           "Required": false,
           "Type": "List"
         },
+        "SecurityGroupIds": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
         "ServerCertificateArn": {
           "PrimitiveType": "String",
           "Required": true
@@ -26566,6 +27797,10 @@
           "Type": "List"
         },
         "TransportProtocol": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "VpcId": {
           "PrimitiveType": "String",
           "Required": false
         },
@@ -27886,6 +29121,10 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "MultiAttachEnabled": {
+          "PrimitiveType": "Boolean",
+          "Required": false
+        },
         "Size": {
           "PrimitiveType": "Integer",
           "Required": false
@@ -28609,12 +29848,20 @@
         "ClusterSecurityGroupId": {
           "PrimitiveType": "String"
         },
+        "EncryptionConfigKeyArn": {
+          "PrimitiveType": "String"
+        },
         "Endpoint": {
           "PrimitiveType": "String"
         }
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-eks-cluster.html",
       "Properties": {
+        "EncryptionConfig": {
+          "ItemType": "EncryptionConfig",
+          "Required": false,
+          "Type": "List"
+        },
         "Name": {
           "PrimitiveType": "String",
           "Required": false
@@ -30086,6 +31333,10 @@
           "PrimitiveType": "Integer",
           "Required": false
         },
+        "StorageType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "SubnetIds": {
           "PrimitiveItemType": "String",
           "Required": true,
@@ -30528,6 +31779,11 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "PublicKeys": {
+          "PrimitiveItemType": "String",
+          "Required": false,
+          "Type": "List"
+        },
         "RoleArn": {
           "PrimitiveType": "String",
           "Required": true
@@ -30666,6 +31922,10 @@
         "Role": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "PrimitiveType": "Json",
+          "Required": false
         },
         "Timeout": {
           "PrimitiveType": "Integer",
@@ -32150,6 +33410,11 @@
         "ServiceExecutionRole": {
           "PrimitiveType": "String",
           "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
         }
       }
     },
@@ -32799,6 +34064,11 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "HopDestinations": {
+          "ItemType": "HopDestination",
+          "Required": false,
+          "Type": "List"
+        },
         "Name": {
           "PrimitiveType": "String",
           "Required": false
@@ -33082,6 +34352,10 @@
           "PrimitiveType": "String",
           "Required": true
         },
+        "LoggingInfo": {
+          "Required": false,
+          "Type": "LoggingInfo"
+        },
         "NumberOfBrokerNodes": {
           "PrimitiveType": "Integer",
           "Required": true
@@ -33317,6 +34591,201 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::NetworkManager::CustomerGatewayAssociation": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-customergatewayassociation.html",
+      "Properties": {
+        "CustomerGatewayArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "DeviceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "LinkId": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::NetworkManager::Device": {
+      "Attributes": {
+        "DeviceArn": {
+          "PrimitiveType": "String"
+        },
+        "DeviceId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-device.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Location": {
+          "Required": false,
+          "Type": "Location"
+        },
+        "Model": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SerialNumber": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SiteId": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Vendor": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::NetworkManager::GlobalNetwork": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "Id": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-globalnetwork.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::NetworkManager::Link": {
+      "Attributes": {
+        "LinkArn": {
+          "PrimitiveType": "String"
+        },
+        "LinkId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-link.html",
+      "Properties": {
+        "Bandwidth": {
+          "Required": true,
+          "Type": "Bandwidth"
+        },
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Provider": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SiteId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
+        "Type": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::NetworkManager::LinkAssociation": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-linkassociation.html",
+      "Properties": {
+        "DeviceId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "LinkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::NetworkManager::Site": {
+      "Attributes": {
+        "SiteArn": {
+          "PrimitiveType": "String"
+        },
+        "SiteId": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-site.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Location": {
+          "Required": false,
+          "Type": "Location"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
+    "AWS::NetworkManager::TransitGatewayRegistration": {
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-networkmanager-transitgatewayregistration.html",
+      "Properties": {
+        "GlobalNetworkId": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "TransitGatewayArn": {
+          "PrimitiveType": "String",
+          "Required": true
         }
       }
     },
@@ -35374,6 +36843,33 @@
         }
       }
     },
+    "AWS::ResourceGroups::Group": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-resourcegroups-group.html",
+      "Properties": {
+        "Description": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "ResourceQuery": {
+          "Required": false,
+          "Type": "ResourceQuery"
+        },
+        "Tags": {
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        }
+      }
+    },
     "AWS::RoboMaker::Fleet": {
       "Attributes": {
         "Arn": {
@@ -35623,7 +37119,7 @@
           "Required": false
         },
         "TTL": {
-          "PrimitiveType": "String",
+          "PrimitiveType": "Long",
           "Required": false
         },
         "Type": {
@@ -36444,6 +37940,10 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "LocalRoleName": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "PortfolioId": {
           "PrimitiveType": "String",
           "Required": true
@@ -36454,7 +37954,7 @@
         },
         "RoleArn": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         }
       }
     },
@@ -37423,6 +38923,10 @@
           "ItemType": "TagsEntry",
           "Required": false,
           "Type": "List"
+        },
+        "TracingConfiguration": {
+          "Required": false,
+          "Type": "TracingConfiguration"
         }
       }
     },

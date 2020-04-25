@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -79,13 +79,22 @@ namespace LambdaSharp {
 
         //--- Properties ---
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Retrieves the current date-time in UTC timezone.
+        /// </summary>
+        /// <returns>Current <see cref="DateTime"/> in UTC timezone</returns>
         public DateTime UtcNow => _nowCallback();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Retrieves the <see cref="ILambdaConfigSource"/> instance used for initializing the Lambda function.
+        /// </summary>
+        /// <value>The <see cref="ILambdaConfigSource"/> instance.</value>
         public ILambdaConfigSource ConfigSource { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
+        /// </summary>
+        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
         public ILambdaSerializer JsonSerializer { get; private set; }
 
         /// <summary>
@@ -102,17 +111,35 @@ namespace LambdaSharp {
 
         //--- Methods ---
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Write a message to the log stream. In production, this should be the CloudWatch log associated with
+        /// the Lambda function.
+        /// </summary>
+        /// <param name="message">Message to write to the log stream.</param>
         public virtual void Log(string message) => _logCallback(message);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Decrypt a sequence of bytes with an optional encryption context. The Lambda function
+        /// requires permission to use the <c>kms:Decrypt</c> operation on the KMS key used to
+        /// encrypt the original message.
+        /// </summary>
+        /// <param name="secretBytes">Array containing the encrypted bytes.</param>
+        /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public virtual async Task<byte[]> DecryptSecretAsync(byte[] secretBytes, Dictionary<string, string> encryptionContext)
             => (await KmsClient.DecryptAsync(new DecryptRequest {
                     CiphertextBlob = new MemoryStream(secretBytes),
                     EncryptionContext = encryptionContext
                 })).Plaintext.ToArray();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Encrypt a sequence of bytes using the specified KMS key. The Lambda function requires
+        /// permission to use the <c>kms:Encrypt</c> opeartion on the specified KMS key.
+        /// </summary>
+        /// <param name="plaintextBytes">Array containing plaintext byte to encrypt.</param>
+        /// <param name="encryptionKeyId">The KMS key ID used encrypt the plaintext bytes.</param>
+        /// <param name="encryptionContext">An optional encryption context. Can be <c>null</c>.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public virtual async Task<byte[]> EncryptSecretAsync(byte[] plaintextBytes, string encryptionKeyId, Dictionary<string, string> encryptionContext)
             => (await KmsClient.EncryptAsync(new EncryptRequest {
                     KeyId = encryptionKeyId,
@@ -120,7 +147,14 @@ namespace LambdaSharp {
                     EncryptionContext = encryptionContext
                 })).CiphertextBlob.ToArray();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Send a message to the specified SQS queue. The Lambda function requires <c>sqs:SendMessage</c> permission
+        /// on the specified SQS queue.
+        /// </summary>
+        /// <param name="deadLetterQueueUrl">The SQS queue URL.</param>
+        /// <param name="message">The message to send.</param>
+        /// <param name="messageAttributes">Optional attributes for the message.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         public virtual Task SendMessageToQueueAsync(string deadLetterQueueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes)
             => SqsClient.SendMessageAsync(new SendMessageRequest {
                 QueueUrl = deadLetterQueueUrl,

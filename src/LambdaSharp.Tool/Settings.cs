@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using Amazon.APIGateway;
@@ -87,6 +88,7 @@ namespace LambdaSharp.Tool {
 
         //--- Constants ---
         public const string Lash = "lash";
+        private static string SYSTEM_OS_INFORMATION = "/etc/system-release";
 
         //--- Class Fields ---
         public static VerboseLevel VerboseLevel = Tool.VerboseLevel.Exceptions;
@@ -96,6 +98,21 @@ namespace LambdaSharp.Tool {
         private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
         private static string PromptColor = AnsiTerminal.Cyan;
         private static string LabelColor = AnsiTerminal.BrightCyan;
+        private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
+
+            // check if running on Linux OS
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) {
+
+                // check if OS information file contains Amazon Linux string
+                try {
+                    if(File.Exists(SYSTEM_OS_INFORMATION)) {
+                        var osRelease = File.ReadAllText(SYSTEM_OS_INFORMATION);
+                        return osRelease.StartsWith("Amazon Linux release 2", StringComparison.Ordinal);
+                    }
+                } catch { }
+            }
+            return false;
+        });
 
         //--- Class Properties ---
         public static int ErrorCount => _errors.Count(entry => entry.Error);
@@ -201,6 +218,8 @@ namespace LambdaSharp.Tool {
                 Console.WriteLine(text);
             }
         }
+
+        public static bool IsAmazonLinux2() => _isAmazonLinux2.Value;
 
         private static void WriteAnsi(string text, string ansiColor) {
             if(UseAnsiConsole) {

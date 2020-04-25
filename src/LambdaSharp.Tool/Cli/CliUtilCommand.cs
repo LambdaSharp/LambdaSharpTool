@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -71,9 +71,11 @@ namespace LambdaSharp.Tool.Cli {
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
                     var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
+                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
                         await DeleteOrphanLogsAsync(
                             dryRunOption.HasValue(),
@@ -87,7 +89,11 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("download-cloudformation-spec", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Download CloudFormation JSON specification";
+                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+
+                    // run command
                     subCmd.OnExecute(async () => {
+                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
                         Console.WriteLine($"{app.FullName} - {subCmd.Description}");
 
                         // determine destination folder
@@ -111,6 +117,7 @@ namespace LambdaSharp.Tool.Cli {
                     });
                 });
 
+                // create JSON schema definition for API Gateway methods
                 cmd.Command("create-invoke-methods-schema", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Create JSON schemas for API Gateway invoke methods";
@@ -119,7 +126,11 @@ namespace LambdaSharp.Tool.Cli {
                     var defaultNamespaceOption = subCmd.Option("--default-namespace|-ns", "(optional) Default namespace for resolving class names", CommandOptionType.SingleValue);
                     var outputFileOption = subCmd.Option("--out|-o", "(optional) Output schema file location (default: console out)", CommandOptionType.SingleValue);
                     var noBannerOption = subCmd.Option("--quiet", "Don't show banner or execution time", CommandOptionType.NoValue);
+                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+
+                    // run command
                     subCmd.OnExecute(async () => {
+                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
                         Program.Quiet = noBannerOption.HasValue();
                         if(!Program.Quiet) {
                             Console.WriteLine($"{app.FullName} - {subCmd.Description}");
@@ -139,6 +150,42 @@ namespace LambdaSharp.Tool.Cli {
                             defaultNamespaceOption.Value(),
                             methodOption.Values,
                             outputFileOption.Value()
+                        );
+                    });
+                });
+
+                // validate assembly as Lambda function
+                cmd.Command("validate-assembly", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "Validate Lambda assembly";
+                    var directoryOption = subCmd.Option("--directory|-d", "Directory where .NET assemblies are located", CommandOptionType.SingleValue);
+                    var entryPointOption = subCmd.Option("--entry-point|-e", "Name of entry-point method to analyze", CommandOptionType.SingleValue);
+                    var outputFileOption = subCmd.Option("--out|-o", "(optional) Output schema file location (default: console out)", CommandOptionType.SingleValue);
+                    var noBannerOption = subCmd.Option("--quiet", "Don't show banner or execution time", CommandOptionType.NoValue);
+                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        Program.Quiet = noBannerOption.HasValue();
+                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
+                        if(!Program.Quiet) {
+                            Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        }
+
+                        // validate options
+                        if(directoryOption.Value() == null) {
+                            LogError("missing --assembly option");
+                            return;
+                        }
+                        if(!entryPointOption.Values.Any()) {
+                            LogError("missing --entry-point option(s)");
+                            return;
+                        }
+                        ValidateAssembly(
+                            directoryOption.Value(),
+                            entryPointOption.Value(),
+                            outputFileOption.Value(),
+                            noBannerOption.HasValue()
                         );
                     });
                 });
@@ -640,6 +687,72 @@ namespace LambdaSharp.Tool.Cli {
                     return Tuple.Create((JToken)JObject.Parse(schema.ToJson()), "application/json");
                 }
                 return Tuple.Create(JToken.FromObject("Proxy"), (string)null);
+            }
+        }
+
+        public void ValidateAssembly(string directory, string methodReference, string outputFile, bool quiet) {
+            try {
+                if(!StringEx.TryParseAssemblyClassMethodReference(methodReference, out var assemblyName, out var typeName, out var methodName)) {
+                    throw new ProcessTargetInvocationException($"method reference '{methodReference}' is not well formed");
+                }
+                var output = quiet ? null : Console.Out;
+
+                // load assembly
+                Assembly assembly;
+                var assemblyFilepath = Path.Combine(directory, assemblyName + ".dll");
+                try {
+                    assembly = Assembly.LoadFrom(assemblyFilepath);
+                } catch(FileNotFoundException) {
+                    throw new ProcessTargetInvocationException($"could not find assembly '{assemblyFilepath}'");
+                } catch(Exception e) {
+                    throw new ProcessTargetInvocationException($"error loading assembly '{assemblyFilepath}': {e.Message}");
+                }
+
+                // check for Lambda serialization assembly attribute
+                var lambdaSerializationAssemblyAttribute = assembly
+                    .GetCustomAttributes(typeof(Amazon.Lambda.Core.LambdaSerializerAttribute), false)
+                    .OfType<Amazon.Lambda.Core.LambdaSerializerAttribute>()
+                    .FirstOrDefault();
+                if(lambdaSerializationAssemblyAttribute != null) {
+                    switch(lambdaSerializationAssemblyAttribute.SerializerType.FullName) {
+                    case "LambdaSharp.Serialization.LambdaJsonSerializer":
+                    case "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer":
+                    case "Amazon.Lambda.Serialization.Json.JsonSerializer":
+                        throw new ProcessTargetInvocationException($"remove Lambda serializer attribute: [assembly: LambdaSerializer(typeof(...))]");
+                    default:
+                        var current = lambdaSerializationAssemblyAttribute.SerializerType;
+                        while(current.BaseType != null) {
+                            current = current.BaseType;
+                            var name = current.FullName;
+                            if(name == "LambdaSharp.Serialization.LambdaJsonSerializer") {
+
+                                // custom serializer derives from LambdaSharp serializer, which is okay
+                                output?.WriteLine("=> Custom Lambda serializer is derived from LambdaSharp.Serialization.LambdaJsonSerializer");
+                                break;
+                            } else if((name == "Amazon.Lambda.Serialization.SystemTextJson.LambdaJsonSerializer") || (name == "Amazon.Lambda.Serialization.Json.JsonSerializer")) {
+                                throw new ProcessTargetInvocationException($"custom Lambda serializer must derive from LambdaSharp.Serialization.LambdaJsonSerializer");
+                            }
+                        }
+                        break;
+                    }
+                } else {
+                    output?.WriteLine("=> Default Lambda serializer used");
+                }
+
+                // load Lambda function class
+                var type = assembly.GetType(typeName);
+                if(type == null) {
+                    throw new ProcessTargetInvocationException($"could not find type '{typeName}'");
+                }
+
+                // find the Lambda entry point method
+                var method = type.GetMethod(methodName, BindingFlags.Public | BindingFlags.FlattenHierarchy | BindingFlags.Instance);
+                if(method == null) {
+                    throw new ProcessTargetInvocationException($"could not find method '{methodName}' in class '{typeName}'");
+                }
+                output?.WriteLine("=> Entry-point class and method are valid");
+            } catch(ProcessTargetInvocationException e) {
+                LogError(e.Message);
             }
         }
     }

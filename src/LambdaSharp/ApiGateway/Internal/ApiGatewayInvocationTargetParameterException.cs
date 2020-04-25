@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Reflection;
 using LambdaSharp.Exceptions;
 
 namespace LambdaSharp.ApiGateway.Internal {
@@ -26,8 +27,10 @@ namespace LambdaSharp.ApiGateway.Internal {
         public readonly string ParameterName;
 
         //--- Constructors ---
-        public ApiGatewayInvocationTargetParameterException(string message, string parameterName) : base(message) {
-            ParameterName = parameterName;
+        public ApiGatewayInvocationTargetParameterException(MethodInfo method, ParameterInfo parameter, string reason) : base(
+            $"invocation target {method.ReflectedType?.FullName ?? "<MISSING>"}::{method.Name} parameter '{parameter.Name ?? "<MISSING>"}': {reason}"
+        )  {
+            ParameterName = parameter.Name ?? "<MISSING>";
         }
     }
 }

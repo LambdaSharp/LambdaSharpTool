@@ -114,7 +114,7 @@ lash new function MyNewFunction
 <dt><code>--no-ansi</code></dt>
 <dd>
 
-Disable colored ANSI terminal output
+(optional) Disable colored ANSI terminal output
 </dd>
 
 </dl>
@@ -134,7 +134,7 @@ LambdaSharp CLI (v0.7.0) - Publish LambdaSharp module
 
 Reading module: Module.yml
 Compiling: Demo.SlackTodo (v1.0-DEV)
-=> Building function SlackCommand [netcoreapp2.1, Release]
+=> Building function SlackCommand [netcoreapp3.1, Release]
 => Module compilation done: bin\cloudformation.json
 Publishing module: Demo.SlackTodo
 => Uploading artifact: s3://lambdasharp-bucket-name/lambdasharp-bucket-name/LambdaSharp/Demo.SlackTodo/.artifacts/function_Demo.SlackTodo_SlackCommand_E0F4477DDAFDC152C8B66343657E9425.zip

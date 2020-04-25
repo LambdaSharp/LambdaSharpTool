@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -38,7 +38,7 @@ namespace LambdaSharp.ErrorReports {
     /// the initialized <see cref="LambdaErrorReportGenerator"/> instance in the
     /// Lambda function.
     /// </summary>
-    public class LambdaErrorReportGenerator {
+    public class LambdaErrorReportGenerator : ILambdaErrorReportGenerator {
 
         //--- Constants ---
         private const string LANGUAGE = "csharp";
@@ -221,7 +221,7 @@ namespace LambdaSharp.ErrorReports {
 
                     // file names aren't always available, so use the type name instead, if possible
                     var fileName = frame.GetFileName();
-                    if(string.IsNullOrEmpty(fileName)) {
+                    if(string.IsNullOrEmpty(fileName) && (method?.ReflectedType != null)) {
                         fileName = method.ReflectedType.ToString();
                     }
                     return new LambdaErrorReportStackFrame {

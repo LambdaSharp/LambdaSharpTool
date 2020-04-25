@@ -50,21 +50,21 @@ Don't show banner or execution time
 __Using Bash:__
 ```bash
 lash util create-invoke-methods-schema \
-    --directory MessageFunction/bin/Release/netcoreapp2.1/publish/ \
+    --directory MessageFunction/bin/Release/netcoreapp3.1/publish/ \
     --method MessageFunction::WebSocketsSample.MessageFunction.Function::SendMessageAsync
 ```
 
 __Using PowerShell:__
 ```powershell
 lash util create-invoke-methods-schema ^
-    --assembly MessageFunction/bin/Release/netcoreapp2.1/publish/ ^
+    --assembly MessageFunction/bin/Release/netcoreapp3.1/publish/ ^
     --method MessageFunction::WebSocketsSample.MessageFunction.Function::SendMessageAsync
 ```
 
 Output:
 ```
 LambdaSharp CLI (v0.6) - Create JSON schemas for API Gateway invoke methods
-Inspecting method invocation targets in MessageFunction/bin/Release/netcoreapp2.1/publish/MessageFunction.dll
+Inspecting method invocation targets in MessageFunction/bin/Release/netcoreapp3.1/publish/MessageFunction.dll
 ... WebSocketsSample.MessageFunction.Function::SendMessageAsync: Message -> (void)
 {
   "WebSocketsSample.MessageFunction.Function::SendMessageAsync": {

@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -61,7 +61,8 @@ namespace LambdaSharp.Tool.Cli {
     public abstract class ACliCommand : CliBase {
 
         //--- Class Properties ---
-        public static string CredentialsFilePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws", "credentials");
+        public static string CredentialsFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".aws");
+        public static string CredentialsFilePath = Path.Combine(CredentialsFolder, "credentials");
 
         //--- Class Methods ---
         public static CommandOption AddTierOption(CommandLineApplication cmd)
@@ -167,7 +168,7 @@ namespace LambdaSharp.Tool.Cli {
                 awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             }
             var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-            var noAnsiOutputOption = cmd.Option("--no-ansi", "Disable colored ANSI terminal output", CommandOptionType.NoValue);
+            var noAnsiOutputOption = cmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -184,9 +185,7 @@ namespace LambdaSharp.Tool.Cli {
             return async () => {
 
                 // check if ANSI console output needs to be disabled
-                if(noAnsiOutputOption.HasValue()) {
-                    Settings.UseAnsiConsole = false;
-                }
+                Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
 
                 // check if experimental caching feature is enabled
                 Settings.AllowCaching = string.Equals((Environment.GetEnvironmentVariable("LAMBDASHARP_FEATURE_CACHING") ?? "false"), "true", StringComparison.OrdinalIgnoreCase);
@@ -437,15 +436,18 @@ namespace LambdaSharp.Tool.Cli {
                 gitSha = process.StandardOutput.ReadToEnd().Trim();
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
+                    gitSha = null;
                     if(showWarningOnFailure) {
                         LogWarn($"unable to get git-sha 'git rev-parse HEAD' failed with exit code = {process.ExitCode}");
                     }
-                    gitSha = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
                     LogWarn("git is not installed; skipping git-sha detection");
                 }
+            }
+            if(gitSha == null) {
+                return null;
             }
 
             // check if folder contains uncommitted/untracked changes

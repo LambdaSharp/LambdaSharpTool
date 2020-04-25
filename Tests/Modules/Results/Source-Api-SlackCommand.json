@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "51DCD6E787663F6A96F9A8882C46D535"
+      "Default": "B26A89E1C6FCF734E9FE7229FACEB7BF"
     }
   },
   "Resources": {
@@ -133,7 +133,20 @@
             },
             "MODULE_INFO": "Test.TestModule:1.0-DEV",
             "LAMBDA_NAME": "Function",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -210,7 +223,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -439,7 +452,7 @@
           "Fn::Sub": "/aws/lambda/${Function}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -537,11 +550,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Test.TestModule API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiSlackResource": {
@@ -624,17 +637,18 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F": {
+    "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [62311F0212357E487E01F9D9BE890A0F]"
+          "Fn::Sub": "${AWS::StackName} API [1D1D317CDC4C2886ADBCC3C5E5DC5FF1]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiSlackResource",
         "ModuleRestApiSlackResourcePOST"
       ]
     },
@@ -642,7 +656,7 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F"
+          "Ref": "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1"
         },
         "MethodSettings": [
           {
@@ -674,10 +688,12 @@
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "51DCD6E787663F6A96F9A8882C46D535"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -918,9 +934,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "51DCD6E787663F6A96F9A8882C46D535",
+      "TemplateChecksum": "B26A89E1C6FCF734E9FE7229FACEB7BF",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1021,7 +1037,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "FunctionRestApiPermission": "Function::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F": "Module::RestApi::Deployment62311F0212357E487E01F9D9BE890A0F",
+        "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": "Module::RestApi::Deployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

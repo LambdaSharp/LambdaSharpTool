@@ -1,0 +1,42 @@
+# The Module Name is used as prefix for all contained resources.
+Module: Sample.Event
+
+# The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
+Version: 1.0-DEV
+
+# The Module Description is shown in the AWS CloudFormation console with the version number.
+Description: Module description
+
+# The Items section defines values and resources for the module.
+Items:
+
+  - Function: SenderFunction
+    Description: Lambda function sending a CloudWatch event
+    Memory: 256
+    Timeout: 30
+
+  - Function: ReceiverFunction
+    Description: Lambda function for receiving CloudWatch events
+    Memory: 256
+    Timeout: 30
+    # Sources:
+    #   - Rule: ReceiverFunction
+    #     Pattern:
+    #       source: [ LambdaSharp.Sample ]
+
+  - Resource: ReceiverEventRule
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source: [ LambdaSharp.Sample ]
+      Targets:
+         - Id: Lambda
+           Arn: !GetAtt [ ReceiverFunction, Arn ]
+
+  - Resource: PermissionForEventsToInvokeLambda
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref ReceiverFunction
+      Action: lambda:InvokeFunction
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt [ ReceiverEventRule, Arn ]

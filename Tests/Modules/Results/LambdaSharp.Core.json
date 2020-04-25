@@ -89,7 +89,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "85289EB8F5E4D97C29E9BC87891FCE6F"
+      "Default": "AF413F1557D56F2D4668947EB2CF07F9"
     }
   },
   "Resources": {
@@ -224,6 +224,19 @@
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
             "LAMBDA_NAME": "ProcessLogEvents",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -370,6 +383,19 @@
             "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
             "LAMBDA_NAME": "RegistrationFunction",
             "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -953,10 +979,12 @@
       "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
-      "Value": "85289EB8F5E4D97C29E9BC87891FCE6F"
+      "Value": {
+        "Ref": "DeploymentChecksum"
+      }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.8"
+      "Value": "0.7.1.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1146,9 +1174,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "85289EB8F5E4D97C29E9BC87891FCE6F",
+      "TemplateChecksum": "AF413F1557D56F2D4668947EB2CF07F9",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.7.1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",

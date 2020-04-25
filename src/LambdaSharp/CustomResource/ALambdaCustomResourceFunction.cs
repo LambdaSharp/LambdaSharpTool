@@ -1,6 +1,6 @@
 ﻿/*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -201,7 +201,17 @@ namespace LambdaSharp.CustomResource {
         /// </example>
         protected Exception Abort(string message) => throw new CustomResourceAbortException(message);
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// The <see cref="HandleFailedInitializationAsync(Stream)"/> method is only invoked when an error occurs during the
+        /// Lambda function initialization. This method can be overridden to provide custom behavior for how to handle such
+        /// failures more gracefully.
+        /// </summary>
+        /// <remarks>
+        /// Regardless of what this method does. Once completed, the Lambda function exits by rethrowing the original exception
+        /// that occurred during initialization.
+        /// </remarks>
+        /// <param name="stream">The stream with the request payload.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
         protected override async Task HandleFailedInitializationAsync(Stream stream) {
 
             // NOTE (2018-12-12, bjorg): function initialization failed; attempt to notify
@@ -246,7 +256,7 @@ namespace LambdaSharp.CustomResource {
                 var messageBody = snsEvent.Records.First().Sns.Message;
 
                 // deserialize message into a cloudformation request
-                return DeserializeJson<CloudFormationResourceRequest<TProperties>>(messageBody);
+                return LambdaSerializer.Deserialize<CloudFormationResourceRequest<TProperties>>(messageBody);
             } else {
 
                 // deserialize generic JSON into a cloudformation request
@@ -264,21 +274,27 @@ namespace LambdaSharp.CustomResource {
             // write response to pre-signed S3 URL
             for(var i = 0; i < MAX_SEND_ATTEMPTS; ++i) {
                 try {
+                    if(rawRequest.ResponseURL == null) {
+                        throw new InvalidOperationException("ResponseURL is missing");
+                    }
                     var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                         RequestUri = new Uri(rawRequest.ResponseURL),
                         Method = HttpMethod.Put,
-                        Content = new ByteArrayContent(Encoding.UTF8.GetBytes(SerializeJson(rawResponse)))
+                        Content = new ByteArrayContent(Encoding.UTF8.GetBytes(LambdaSerializer.Serialize(rawResponse)))
                     });
                     if(httpResponse.StatusCode != HttpStatusCode.OK) {
                         throw new LambdaCustomResourceException(
                             "PUT operation to pre-signed S3 URL failed with status code: {0} [{1} {2}] = {3}",
                             httpResponse.StatusCode,
                             rawRequest.RequestType,
-                            rawRequest.ResourceType,
+                            rawRequest.ResourceType ?? "<MISSING>",
                             await httpResponse.Content.ReadAsStringAsync()
                         );
                     }
                     return;
+                } catch(InvalidOperationException e) {
+                    exception = e;
+                    break;
                 } catch(Exception e) {
                     exception = e;
                     LogErrorAsWarning(e, "writing response to pre-signed S3 URL failed");
@@ -286,10 +302,13 @@ namespace LambdaSharp.CustomResource {
                     backoff = backoff * 2;
                 }
             }
+            if(exception == null) {
+                exception = new ShouldNeverHappenException($"ALambdaCustomResourceFunction.WriteResponse failed w/o an explicit");
+            }
 
             // max attempts have been reached; fail permanently and record the failed request for playback
             LogError(exception);
-            await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.CloudFormation, SerializeJson(rawRequest), exception);
+            await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.CloudFormation, LambdaSerializer.Serialize(rawRequest), exception);
         }
     }
 }
