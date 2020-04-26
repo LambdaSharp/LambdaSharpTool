@@ -35,25 +35,7 @@ namespace LambdaSharp.Serialization {
     /// </summary>
     public class LambdaJsonSerializer : DefaultLambdaJsonSerializer {
 
-        //--- Fields ---
-
-        // TODO: make instance field once 'Options` is exposed by the base class
-        private static JsonSerializerOptions _staticOptions = new JsonSerializerOptions() {
-            IgnoreNullValues = true,
-            PropertyNameCaseInsensitive = true,
-            Converters = {
-                new DateTimeConverter(),
-                new MemoryStreamConverter(),
-                new ConstantClassConverter()
-            }
-        };
-
         //--- Constructors ---
-
-        /// <summary>
-        /// Constructs instance of serializer.
-        /// </summary>
-        public LambdaJsonSerializer() : base(options => _staticOptions = options) { }
 
         /// <summary>
         /// The <see cref="Deserialize(Stream, Type)"/> method deserializes the JSON object from a <c>string</c>.
@@ -72,7 +54,7 @@ namespace LambdaSharp.Serialization {
                         utf8Json = copy.ToArray();
                     }
                 }
-                return System.Text.Json.JsonSerializer.Deserialize(utf8Json, type, _staticOptions);
+                return System.Text.Json.JsonSerializer.Deserialize(utf8Json, type, SerializerOptions);
             } catch(Exception e) {
                 string message;
                 if(type == typeof(string)) {
