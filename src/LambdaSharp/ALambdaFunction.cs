@@ -333,6 +333,7 @@ namespace LambdaSharp {
         /// <see cref="CurrentContext"/> property.
         /// </param>
         /// <returns>The task object representing the asynchronous operation.</returns>
+        [LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
         public async Task<Stream> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
             _currentContext = context;
             Exception? foregroundException = null;

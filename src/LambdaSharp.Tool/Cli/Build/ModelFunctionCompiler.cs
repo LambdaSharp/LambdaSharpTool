@@ -665,7 +665,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.RequestContentType,
-                            Name = $"{method.LogicalId}RequestModel",
                             RestApiId = restApiId,
                             Schema = route.Source.RequestSchema
                         },
@@ -773,7 +772,6 @@ namespace LambdaSharp.Tool.Cli.Build {
                         scope: null,
                         resource: new Humidifier.ApiGateway.Model {
                             ContentType = route.Source.ResponseContentType,
-                            Name = $"{method.LogicalId}ResponseModel",
                             RestApiId = restApiId,
                             Schema = route.Source.ResponseSchema
                         },

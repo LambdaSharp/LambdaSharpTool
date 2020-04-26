@@ -19,12 +19,8 @@
 using System;
 using System.Threading.Tasks;
 using System.Linq;
-using Amazon.Lambda.Core;
 using LambdaSharp;
 using LambdaSharp.Slack;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace Demo.SlackTodo {
 

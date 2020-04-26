@@ -25,7 +25,6 @@ using Amazon.ApiGatewayManagementApi;
 using Amazon.ApiGatewayManagementApi.Model;
 using Amazon.DynamoDBv2;
 using Amazon.Lambda.APIGatewayEvents;
-using Amazon.Lambda.Core;
 using Amazon.Runtime;
 using LambdaSharp;
 using Demo.WebSocketsChat.Common;
@@ -33,9 +32,6 @@ using LambdaSharp.ApiGateway;
 using System.Text.Json.Serialization;
 using System.Runtime.Serialization;
 using System.Text.Json;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace WebSocketsSample.MessageFunction {
 

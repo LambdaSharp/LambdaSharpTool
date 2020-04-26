@@ -27,7 +27,6 @@ using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
 using Amazon.CloudWatchEvents.Model;
 using Amazon.DynamoDBv2;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.KinesisEvents;
 using Amazon.SimpleNotificationService;
 using LambdaSharp.Core.Registrations;
@@ -35,9 +34,6 @@ using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.ErrorReports;
 using LambdaSharp.Logger;
 using LambdaSharp.Records.Events;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace LambdaSharp.Core.ProcessLogEvents {
 
@@ -347,13 +343,15 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         }
 
         private void ReportMetrics() {
+            var metrics = new List<LambdaMetric>();
             LogInfo($"metrics summary: errors-reported: {_errorsReportsCount}, warnings-reported: {_warningsReportsCount}");
-            if((_errorsReportsCount > 0) || (_warningsReportsCount > 0)) {
-                LogMetric(new LambdaMetric[] {
-                    ("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count),
-                    ("WarningReport.Count", _warningsReportsCount, LambdaMetricUnit.Count)
-                });
+            if(_errorsReportsCount > 0) {
+                metrics.Add(("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count));
             }
+            if(_warningsReportsCount > 0) {
+                metrics.Add(("WarningReport.Count", _warningsReportsCount, LambdaMetricUnit.Count));
+            }
+            LogMetric(metrics);
         }
 
         private void SendAccumulatedEvents() {

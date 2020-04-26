@@ -19,14 +19,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp;
 using LambdaSharp.Finalizer;
-
-// Assembly attribute to enable the Lambda function's JSON input to be converted into a .NET class.
-[assembly: LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
 
 namespace FinalizerSample.Finalizer {
 

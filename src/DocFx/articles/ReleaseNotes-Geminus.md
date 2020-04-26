@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.15) - TBD
+# LambdaSharp "Geminus" Release (v0.7.0.15) - 2020-04-24
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -180,36 +180,21 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 
 ## Releases
 
-### (v0.7.0.15) - TBD
-
-**IMPORTANT:** In preparation of switching `LambdaSharp` assembly to .NET Core 3.1 and using `System.Text.Json` in a future release, it is highly advised to remove all references to `Amazon.Lambda.Serialization.Json` and `Newtonsoft.Json` from all _.csproj_ files. These package are currently inherited via the `LambdaSharp` assembly anyway. This change will ensure that these obsolete references are no longer included once a project is upgraded to using the future release of `LambdaSharp`. Additionally, the default assembly serializer should be switched from `Amazon.Lambda.Serialization.Json.JsonSerializer` to `LambdaSharp.Serialization.LambdaJsonSerializer`.
+### (v0.7.0.15) - 2020-04-24
 
 #### New Features
 
 * LambdaSharp CLI
-    * Enhanced `--force-build` to delete the build folders to ensure a clean build.
+    * Enhanced `--force-build` to delete the build folders for all dependencies to ensure a clean build.
     * Enhanced rendering of stack output values to distinguish the value from its description (requires ANSI terminal compatibility).
     * Added error and warning colorization for the `dotnet` build results (requires ANSI terminal compatibility).
-* LambdaSharp SDK
-    * Added `LogMetric(...)` methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
-    * Added `LambdaSharp.Serialization.LambdaJsonSerializer`, which derives from the prescribed JSON serializer (i.e. `Newtonsoft.Json` until a future release).
-    * Updated embedded CloudFormation spec to 13.0.0.
-    * Added metrics to `ALambdaQueueFunction<T>` base class.
-    * Added metrics to `ALambdaTopicFunction<T>` base class.
-* LambdaSharp Core Module
-    * Added metrics to _LambdaSharp.Core_ module.
 
 #### Fixes
 
 * LambdaSharp CLI
     * Fixed an issue where the creation of the AWS credentials file would fail when the `.aws` folder doesn't exit.
     * Fixed an issue in WebSocket support where `AWS::ApiGatewayV2::Model` resources are not tracked as a dependencies by `AWS::ApiGatewayV2::Route` resources.
-    * Fixed an issue were recreating a _LambdaSharp.Core_ deployment from scratch would not update existing deployed modules with the new deployment bucket name.
     * Reverted a change that used `Amazon.Lambda.Serialization.SystemTextJson` as thew function serializer for new .NET Core 3.1 projects.
-    * Removed package reference to `Amazon.Lambda.Serialization.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
-    * Removed package reference to `Newtonsoft.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
-* LambdaSharp Core Module
-    * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
 ### (v0.7.0.14) - 2020-04-14
 
@@ -220,6 +205,8 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
     * Fixed an issue with `lash nuke` not properly deleting a _quick-start_ deployment tier.
 
 ### (v0.7.0.13) - 2020-04-09
+
+#### New Features
 
 * LambdaSharp CLI
     * Added `lash nuke` to delete an entire deployment tier.
