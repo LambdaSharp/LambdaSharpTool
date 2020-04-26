@@ -335,13 +335,15 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         }
 
         private void ReportMetrics() {
+            var metrics = new List<LambdaMetric>();
             LogInfo($"metrics summary: errors-reported: {_errorsReportsCount}, warnings-reported: {_warningsReportsCount}");
-            if((_errorsReportsCount > 0) || (_warningsReportsCount > 0)) {
-                LogMetric(new LambdaMetric[] {
-                    ("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count),
-                    ("WarningReport.Count", _warningsReportsCount, LambdaMetricUnit.Count)
-                });
+            if(_errorsReportsCount > 0) {
+                metrics.Add(("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count));
             }
+            if(_warningsReportsCount > 0) {
+                metrics.Add(("WarningReport.Count", _warningsReportsCount, LambdaMetricUnit.Count));
+            }
+            LogMetric(metrics);
         }
 
         private void SendAccumulatedEvents() {
