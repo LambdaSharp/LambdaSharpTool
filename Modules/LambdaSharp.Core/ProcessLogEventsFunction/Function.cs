@@ -31,8 +31,8 @@ using Amazon.Lambda.KinesisEvents;
 using Amazon.SimpleNotificationService;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
-using LambdaSharp.ErrorReports;
 using LambdaSharp.Logger;
+using LambdaSharp.Records.ErrorReports;
 using LambdaSharp.Records.Events;
 
 namespace LambdaSharp.Core.ProcessLogEvents {
