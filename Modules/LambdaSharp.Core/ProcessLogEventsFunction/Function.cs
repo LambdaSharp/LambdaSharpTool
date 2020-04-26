@@ -40,20 +40,20 @@ namespace LambdaSharp.Core.ProcessLogEvents {
     public class LogEventsMessage {
 
         //--- Properties ---
-        public string Owner { get; set; }
-        public string LogGroup { get; set; }
-        public string LogStream { get; set; }
-        public string MessageType { get; set; }
-        public List<string> SubscriptionFilters { get; set; }
-        public List<LogEventEntry> LogEvents { get; set; }
+        public string? Owner { get; set; }
+        public string? LogGroup { get; set; }
+        public string? LogStream { get; set; }
+        public string? MessageType { get; set; }
+        public List<string>? SubscriptionFilters { get; set; }
+        public List<LogEventEntry>? LogEvents { get; set; }
     }
 
     public class LogEventEntry {
 
         //--- Properties ---
-        public string Id { get; set; }
+        public string? Id { get; set; }
         public long Timestamp { get; set; }
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 
     public class Function : ALambdaFunction<KinesisEvent, string>, ILogicDependencyProvider {
@@ -63,16 +63,16 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         private const int MAX_EVENTS_BATCHSIZE = 256 * 1024;
 
         //--- Fields ---
-        private Logic _logic;
-        private IAmazonSimpleNotificationService _snsClient;
-        private string _errorTopic;
-        private string _usageTopic;
-        private RegistrationTable _registrations;
-        private Dictionary<string, OwnerMetaData> _cachedRegistrations;
-        private RollbarClient _rollbarClient;
+        private Logic? _logic;
+        private IAmazonSimpleNotificationService? _snsClient;
+        private string? _errorTopic;
+        private string? _usageTopic;
+        private RegistrationTable? _registrations;
+        private Dictionary<string, OwnerMetaData>? _cachedRegistrations;
+        private RollbarClient? _rollbarClient;
         private int _errorsReportsCount;
         private int _warningsReportsCount;
-        private IAmazonCloudWatchEvents _eventsClient;
+        private IAmazonCloudWatchEvents? _eventsClient;
         private List<PutEventsRequestEntry> _eventEntries = new List<PutEventsRequestEntry>();
         private int _eventsEntriesTotalSize = 0;
 
@@ -197,8 +197,8 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             }
         }
 
-        private async Task<OwnerMetaData> GetOwnerMetaDataAsync(string id) {
-            OwnerMetaData result;
+        private async Task<OwnerMetaData?> GetOwnerMetaDataAsync(string id) {
+            OwnerMetaData? result;
             if(!CachedRegistrations.TryGetValue(id, out result)) {
                 result = await Registrations.GetOwnerMetaDataAsync(id);
                 if(result != null) {
@@ -211,7 +211,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             return result;
         }
 
-        private async Task SendErrorExceptionAsync(Exception exception, string format = null, params object[] args) {
+        private async Task SendErrorExceptionAsync(Exception exception, string? format = null, params object[] args) {
             try {
                 var report = ErrorReportGenerator.CreateReport(CurrentContext.AwsRequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
                 if(report != null) {
@@ -224,7 +224,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             }
         }
 
-        private Task PublishErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
+        private Task PublishErrorReportAsync(OwnerMetaData? owner, LambdaErrorReport report) {
 
             // capture reporting metrics
             switch(report.Level) {
@@ -235,6 +235,14 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                 ++_warningsReportsCount;
                 break;
             }
+
+            // TODO: convert error report into an event
+            // await _provider.SendEventAsync(owner, new LambdaEventRecord {
+            //     Time = ToRfc3339Timestamp(timestamp),
+            //     App = "LambdaSharp.Core/Logs",
+            //     Type = record.Source,
+            //     Details = text
+            // });
 
             // send error report
             try {
@@ -418,7 +426,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                 return size;
             }
 
-            int GetUtf8Length(string text) => (text != null) ? Encoding.UTF8.GetByteCount(text) : 0;
+            int GetUtf8Length(string? text) => (text != null) ? Encoding.UTF8.GetByteCount(text) : 0;
         }
 
         void ILogicDependencyProvider.LogProcessingError(Exception exception)

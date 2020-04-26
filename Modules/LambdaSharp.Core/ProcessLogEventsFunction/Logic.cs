@@ -51,9 +51,9 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         private class JavascriptException {
 
             //--- Properties ---
-            public string ErrorMessage { get; set; }
-            public string ErrorType { get; set; }
-            public List<string> StackTrace { get; set; }
+            public string? ErrorMessage { get; set; }
+            public string? ErrorType { get; set; }
+            public List<string>? StackTrace { get; set; }
         }
 
         //--- Class Fields ---

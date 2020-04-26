@@ -23,17 +23,17 @@ namespace LambdaSharp.Core.Registrations {
     public class OwnerMetaData {
 
         //--- Properties ---
-        public string Module { get; set; }
-        public string ModuleId { get; set; }
-        public string FunctionId { get; set; }
-        public string FunctionName { get; set; }
-        public string FunctionLogGroupName { get; set; }
-        public string FunctionPlatform { get; set; }
-        public string FunctionFramework { get; set; }
-        public string FunctionLanguage { get; set; }
+        public string? Module { get; set; }
+        public string? ModuleId { get; set; }
+        public string? FunctionId { get; set; }
+        public string? FunctionName { get; set; }
+        public string? FunctionLogGroupName { get; set; }
+        public string? FunctionPlatform { get; set; }
+        public string? FunctionFramework { get; set; }
+        public string? FunctionLanguage { get; set; }
         public int FunctionMaxMemory { get; set; }
         public TimeSpan FunctionMaxDuration { get; set; }
         public int RollbarProjectId { get; set; }
-        public string RollbarAccessToken { get; set; }
+        public string? RollbarAccessToken { get; set; }
     }
 }

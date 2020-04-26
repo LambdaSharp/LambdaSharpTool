@@ -42,20 +42,20 @@ namespace LambdaSharp.Core.RollbarApi {
         public int Error { get; set; }
 
         [JsonProperty("result")]
-        public object Result { get; set; }
+        public object? Result { get; set; }
 
         [JsonProperty("message")]
-        public string Message { get; set; }
+        public string? Message { get; set; }
     }
 
     public class RollbarCreateProjectRequest {
 
         //--- Properties ---
         [JsonProperty("access_token")]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
     }
 
     public class RollbarProject {
@@ -65,18 +65,18 @@ namespace LambdaSharp.Core.RollbarApi {
         public int Id { get; set; }
 
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         [JsonProperty("date_created")]
         [JsonConverter(typeof(UnixDateTimeConverter))]
-        public DateTime Created { get; set; }
+        public DateTimeOffset Created { get; set; }
 
         [JsonProperty("date_modified")]
         [JsonConverter(typeof(UnixDateTimeConverter))]
-        public DateTime Modified { get; set; }
+        public DateTimeOffset Modified { get; set; }
     }
 
     public class RollbarProjectToken {
@@ -86,13 +86,13 @@ namespace LambdaSharp.Core.RollbarApi {
         public int ProjectId { get; set; }
 
         [JsonProperty("access_token")]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         [JsonProperty("name")]
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         [JsonProperty("status")]
-        public string Status { get; set; }
+        public string? Status { get; set; }
 
         [JsonProperty("date_created")]
         [JsonConverter(typeof(UnixDateTimeConverter))]
@@ -109,12 +109,12 @@ namespace LambdaSharp.Core.RollbarApi {
         public static HttpClient HttpClient = new HttpClient();
 
         //--- Fields ---
-        private readonly string _accountReadAccessToken;
-        private readonly string _accountWriteAccessToken;
+        private readonly string? _accountReadAccessToken;
+        private readonly string? _accountWriteAccessToken;
         private readonly Action<string> _logInfo;
 
         //--- Constructors ---
-        public RollbarClient(string accountReadAccessToken, string accountWriteAccessToken, Action<string> logInfo) {
+        public RollbarClient(string? accountReadAccessToken, string? accountWriteAccessToken, Action<string> logInfo) {
             _accountReadAccessToken = accountReadAccessToken;
             _accountWriteAccessToken = accountWriteAccessToken;
             _logInfo = logInfo;

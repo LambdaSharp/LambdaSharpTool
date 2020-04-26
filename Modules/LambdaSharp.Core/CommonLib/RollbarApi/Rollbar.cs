@@ -24,99 +24,99 @@ namespace LambdaSharp.Core.RollbarApi {
 
         //--- Properties ---
         [JsonProperty("access_token")]
-        public string AccessToken { get; set; }
+        public string? AccessToken { get; set; }
 
         [JsonProperty("data")]
-        public Data Data { get; set; }
+        public Data? Data { get; set; }
     }
 
     public class Data {
 
         //--- Properties ---
         [JsonProperty("environment")]
-        public string Environment { get; set; }
+        public string? Environment { get; set; }
 
         [JsonProperty("body")]
-        public DataBody Body { get; set; }
+        public DataBody? Body { get; set; }
 
         [JsonProperty("level")]
-        public string Level { get; set; }
+        public string? Level { get; set; }
 
         [JsonProperty("timestamp")]
         public long Timestamp { get; set; }
 
         [JsonProperty("code_version")]
-        public string CodeVersion { get; set; }
+        public string? CodeVersion { get; set; }
 
         [JsonProperty("platform")]
-        public string Platform { get; set; }
+        public string? Platform { get; set; }
 
         [JsonProperty("language")]
-        public string Language { get; set; }
+        public string? Language { get; set; }
 
         [JsonProperty("framework")]
-        public string Framework { get; set; }
+        public string? Framework { get; set; }
 
         [JsonProperty("custom")]
-        public object Custom { get; set; }
+        public object? Custom { get; set; }
 
         [JsonProperty("fingerprint")]
-        public string Fingerprint { get; set; }
+        public string? Fingerprint { get; set; }
 
         [JsonProperty("title")]
-        public string Title { get; set; }
+        public string? Title { get; set; }
     }
 
     public class DataBody {
 
         //--- Properties ---
         [JsonProperty("trace_chain")]
-        public Trace[] TraceChain { get; set; }
+        public Trace[]? TraceChain { get; set; }
 
         [JsonProperty("message")]
-        public Message Message { get; set; }
+        public Message? Message { get; set; }
     }
 
     public class Message {
 
         //--- Properties ---
         [JsonProperty("body")]
-        public string Body { get; set; }
+        public string? Body { get; set; }
     }
 
     public class Trace {
 
         //--- Properties ---
         [JsonProperty("frames")]
-        public Frame[] Frames { get; set; }
+        public Frame[]? Frames { get; set; }
 
         [JsonProperty("exception")]
-        public ExceptionClass Exception { get; set; }
+        public ExceptionClass? Exception { get; set; }
     }
 
     public class ExceptionClass {
 
         //--- Properties ---
         [JsonProperty("class")]
-        public string Class { get; set; }
+        public string? Class { get; set; }
 
         [JsonProperty("message")]
-        public string Message { get; set; }
+        public string? Message { get; set; }
 
         [JsonProperty("description")]
-        public string Description { get; set; }
+        public string? Description { get; set; }
     }
 
     public class Frame {
 
         //--- Properties ---
         [JsonProperty("filename")]
-        public string Filename { get; set; }
+        public string? Filename { get; set; }
 
         [JsonProperty("lineno")]
         public int? Lineno { get; set; }
 
         [JsonProperty("method")]
-        public string Method { get; set; }
+        public string? Method { get; set; }
     }
 }
