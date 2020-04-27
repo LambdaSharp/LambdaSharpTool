@@ -24,7 +24,7 @@ API Gateway V2 allows you to build a fully managed, serverless Web Socket API. T
 
 ## SNS Topic
 
-The Simple Notification Service (SNS) is provides pub-sub capabilities at scale. The base class handles deserialization of incoming messages and automatic handling of permanent failures.
+The Simple Notification Service (SNS) provides pub-sub capabilities at scale. The base class handles deserialization of incoming messages and automatic handling of permanent failures.
 
 **Related**:
 * Base class: [LambdaSharp.SimpleNotificationService.ALambdaTopicFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleNotificationService.ALambdaTopicFunction`1)
@@ -32,7 +32,7 @@ The Simple Notification Service (SNS) is provides pub-sub capabilities at scale.
 
 ## SQS Queue
 
-The Simple Queue Service (SQS) is provides reliable, discrete message delivery. The base class handles deserialization of incoming messages, automatic handling of permanent failures, and improved handling of partial failures for batched messages.
+The Simple Queue Service (SQS) provides reliable, discrete message delivery. The base class handles deserialization of incoming messages, automatic handling of permanent failures, and improved handling of partial failures for batched messages.
 
 **Related**:
 * Base class: [LambdaSharp.SimpleQueueService.ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
