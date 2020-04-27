@@ -17,7 +17,6 @@
  */
 
 using System.Collections.Generic;
-using Amazon.Lambda.Core;
 using Newtonsoft.Json;
 
 namespace ApiInvokeSample.MyFunction {

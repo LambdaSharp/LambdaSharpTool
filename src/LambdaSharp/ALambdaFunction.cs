@@ -227,10 +227,10 @@ namespace LambdaSharp {
             Provider = provider ?? new LambdaFunctionDependencyProvider();
             ErrorReportGenerator = new LogErrorReportGenerator(Provider);
 
-            // instantiate the assembly serializer
+            // instantiate the assembly serializer or default LambdaJsonSerializer
             var serializerAttribute = GetType().Assembly
-                .GetCustomAttributes(typeof(Amazon.Lambda.Core.LambdaSerializerAttribute), false)
-                .OfType<Amazon.Lambda.Core.LambdaSerializerAttribute>()
+                .GetCustomAttributes(typeof(LambdaSerializerAttribute), false)
+                .OfType<LambdaSerializerAttribute>()
                 .FirstOrDefault();
             LambdaSerializer = (serializerAttribute != null)
                 ? (ILambdaSerializer)(Activator.CreateInstance(serializerAttribute.SerializerType) ?? throw new ShouldNeverHappenException())

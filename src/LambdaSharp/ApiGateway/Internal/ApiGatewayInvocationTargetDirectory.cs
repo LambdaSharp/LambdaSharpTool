@@ -25,7 +25,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using LambdaSharp.Exceptions;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.ApiGateway.Internal {
 
@@ -134,10 +133,10 @@ namespace LambdaSharp.ApiGateway.Internal {
         private readonly CreateTargetInstanceDelegate _createInstance;
         private readonly Dictionary<string, InvocationTargetDelegate> _mappings = new Dictionary<string, InvocationTargetDelegate>();
         private readonly Dictionary<Type, object> _targets = new Dictionary<Type, object>();
-        private readonly Amazon.Lambda.Core.ILambdaSerializer _serializer;
+        private readonly ILambdaSerializer _serializer;
 
         //--- Constructors ---
-        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance, Amazon.Lambda.Core.ILambdaSerializer serializer) {
+        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance, ILambdaSerializer serializer) {
             _createInstance = createInstance ?? throw new ArgumentNullException(nameof(createInstance));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
