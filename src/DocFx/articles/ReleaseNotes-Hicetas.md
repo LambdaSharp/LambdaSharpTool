@@ -57,10 +57,12 @@ TODO:
     * Check for redundant `[assembly: LambdaSerializer(typeof(...))]` definition.
     * Added `--no-ansi` option to `util delete-orphan-logs`, `util download-cloudformation-spec`, and `util create-invoke-methods-schema`.
     * Added `util validate-assembly` command.
+
 * LambdaSharp Core Module
     * Added metrics to _LambdaSharp.Core_ module.
-    * Ported `LambdaSharp.Core` to .NET Core 3.1 with null-aware support.
-    * Published `LambdaSharp.Core` module with _ReadyToRun_ support for shorter cold-start times.
+    * Ported module to .NET Core 3.1 with null-aware support.
+    * Published module with _ReadyToRun_ support for shorter cold-start times.
+
 * Samples
     * `Samples/EventSample` shows how to use the new [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.LogEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
     * `Samples/MetricSample` shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) method for sending CloudWatch Events.
