@@ -180,7 +180,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                 }
 
                 // send accumulated events
-                SendAccumulatedEvents();
+                PurgeEventEntries();
                 return "Ok";
             } catch(Exception e) {
                 await SendErrorExceptionAsync(e);
@@ -354,9 +354,15 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             LogMetric(metrics);
         }
 
-        private void SendAccumulatedEvents() {
+        private void PurgeEventEntries() {
             if(_eventEntries.Count > 0) {
                 var eventEntries = _eventEntries;
+
+                // log metric latencies
+                var now = DateTimeOffset.UtcNow;
+                foreach(var entry in eventEntries) {
+                    LogMetric("Event.Latency", (now - new DateTimeOffset(entry.Time)).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
+                }
 
                 // send accumulated events
                 RunTask(async () => {
@@ -373,6 +379,35 @@ namespace LambdaSharp.Core.ProcessLogEvents {
                 _eventEntries = new List<PutEventsRequestEntry>();
                 _eventsEntriesTotalSize = 0;
             }
+        }
+
+        private void AddEventEntry(PutEventsRequestEntry entry) {
+
+            // calculate size of new event entry
+            var entrySize = GetEventEntrySize(entry);
+            if((_eventsEntriesTotalSize + entrySize) > MAX_EVENTS_BATCHSIZE) {
+
+                // too many pending events; send events now
+                PurgeEventEntries();
+            }
+            _eventEntries.Add(entry);
+
+            // local functions
+            int GetEventEntrySize(PutEventsRequestEntry eventEntry) {
+                var size = 0;
+                if(eventEntry.Time != null) {
+                    size += 14;
+                }
+                size += GetUtf8Length(eventEntry.Source);
+                size += GetUtf8Length(eventEntry.DetailType);
+                size += GetUtf8Length(eventEntry.Detail);
+                foreach(var resource in eventEntry.Resources) {
+                    size += GetUtf8Length(resource);
+                }
+                return size;
+            }
+
+            int GetUtf8Length(string? text) => (text != null) ? Encoding.UTF8.GetByteCount(text) : 0;
         }
 
         //--- ILogicDependencyProvider Members ---
@@ -401,32 +436,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             if(DateTime.TryParse(record.Time, out var timestamp)) {
                 entry.Time = timestamp;
             }
-
-            // calculate size of new event entry
-            var entrySize = GetEventEntrySize(entry);
-            if((_eventsEntriesTotalSize + entrySize) > MAX_EVENTS_BATCHSIZE) {
-
-                // too many pending events; send events now
-                SendAccumulatedEvents();
-            }
-            _eventEntries.Add(entry);
-
-            // local functions
-            int GetEventEntrySize(PutEventsRequestEntry eventEntry) {
-                var size = 0;
-                if(eventEntry.Time != null) {
-                    size += 14;
-                }
-                size += GetUtf8Length(eventEntry.Source);
-                size += GetUtf8Length(eventEntry.DetailType);
-                size += GetUtf8Length(eventEntry.Detail);
-                foreach(var resource in eventEntry.Resources) {
-                    size += GetUtf8Length(resource);
-                }
-                return size;
-            }
-
-            int GetUtf8Length(string? text) => (text != null) ? Encoding.UTF8.GetByteCount(text) : 0;
+            AddEventEntry(entry);
         }
 
         void ILogicDependencyProvider.LogProcessingError(Exception exception)

@@ -22,13 +22,13 @@ The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 * `Stack` is the CloudFormation stack name.
 * `Function` is the Lambda function name.
 
-|Name                       |Unit        |Description                                                                    |
-|---------------------------|------------|-------------------------------------------------------------------------------|
+|Name                       |Unit        |Description                                                                       |
+|---------------------------|------------|----------------------------------------------------------------------------------|
 |MessageAttempt.Count       |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
 |MessageFailure.Count       |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
-|MessageSuccess.Count       |Count       |Number of successfully processed messages.                                     |
-|MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.             |
-|MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created.|
+|MessageSuccess.Count       |Count       |Number of successfully processed messages.                                        |
+|MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.           |
+|MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created. |
 
 **NOTE:** The lifespan of a message is determined by first checking for a custom `SentTimestamp` message attribute. If none is found, the built-in SQS `SentTimestamp` message attribute is used instead to determine when the message was created. The custom `SentTimestamp` attribute must a UNIX epoch timestamp in milliseconds stored as a `String` value.
 
@@ -57,13 +57,13 @@ The `ALambdaTopicFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 * `Stack` is the CloudFormation stack name.
 * `Function` is the Lambda function name.
 
-|Name                       |Unit        |Description                                                                    |
-|---------------------------|------------|-------------------------------------------------------------------------------|
+|Name                       |Unit        |Description                                                                       |
+|---------------------------|------------|----------------------------------------------------------------------------------|
 |MessageAttempt.Count       |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
 |MessageFailure.Count       |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
-|MessageSuccess.Count       |Count       |Number of successfully processed messages.                                     |
-|MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.             |
-|MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created.|
+|MessageSuccess.Count       |Count       |Number of successfully processed messages.                                        |
+|MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.           |
+|MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created. |
 
 **NOTE:** The lifespan of a message is determined by first checking for a custom `SentTimestamp` message attribute. If none is found, the built-in SNS `Timestamp` is used instead to determine when the message was created. The custom `SentTimestamp` attribute must a UNIX epoch timestamp in milliseconds stored as a `String` value.
 
@@ -105,7 +105,7 @@ The `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Method
 |AsyncRequestAttempt.Count  |Count  |Number of asynchronous messages that failed processing, but have not been forwarded to the dead-letter queue.|
 |AsyncRequestFailure.Count  |Count  |Number of asynchronous requests that failed and have been forwarded to the dead-letter queue.|
 |AsyncRequestSuccess.Count  |Count  |Number of successfully processed asynchronous requests.                        |
-|AsyncRequestSuccess.Latency|Milliseconds|Number of seconds to successfully process an asynchronous request.             |
+|AsyncRequestSuccess.Latency|Milliseconds|Number of milliseconds to successfully process an asynchronous request.             |
 
 #### AWS Metrics
 
@@ -134,10 +134,11 @@ For more details, consult the [Amazon API Gateway metrics documentation](https:/
 
 Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be reported.
 
-|Name                   |Unit   |Description                                                    |
-|-----------------------|-------|---------------------------------------------------------------|
-|ErrorReport.Count      |Count  |Number of errors reported while processing CloudWatch logs.    |
-|WarningReport.Count    |Count  |Number of warnings reported while processing CloudWatch logs.  |
+|Name                   |Unit        |Description                                                    |
+|-----------------------|------------|---------------------------------------------------------------|
+|ErrorReport.Count      |Count       |Number of errors reported while processing CloudWatch logs.    |
+|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch logs.  |
+|Event.Latency          |Milliseconds|Number of milliseconds to send an event once logged.           |
 
 ## LambdaSharp.Core Metrics Events
 
