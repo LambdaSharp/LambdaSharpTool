@@ -39,7 +39,6 @@ namespace LambdaSharp.Serialization {
         /// </summary>
         public LambdaJsonSerializer() : base(settings => _staticSettings = settings) { }
 
-
         /// <summary>
         /// The <see cref="Deserialize(Stream, Type)"/> method deserializes the JSON object from a <c>string</c>.
         /// </summary>

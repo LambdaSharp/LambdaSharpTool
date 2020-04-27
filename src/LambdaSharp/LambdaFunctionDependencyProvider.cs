@@ -20,15 +20,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 using Amazon.SQS;
 using Amazon.SQS.Model;
 using LambdaSharp.ConfigSource;
+using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
 
@@ -72,7 +71,7 @@ namespace LambdaSharp {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
             ConfigSource = configSource ?? new LambdaSystemEnvironmentSource();
-            JsonSerializer = jsonSerializer ?? new JsonSerializer();
+            JsonSerializer = jsonSerializer ?? new LambdaJsonSerializer();
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
         }
