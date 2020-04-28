@@ -108,6 +108,11 @@ namespace LambdaSharp {
             public string FunctionName => _function._functionName;
 
             /// <summary>
+            /// The framework used by the AWS Lambda function.
+            /// </summary>
+            public string FunctionFramework => _function._functionFramework;
+
+            /// <summary>
             /// The URL of the dead-letter queue for the AWS Lambda function. This value can be <c>null</c> if the module has no dead-letter queue.
             /// </summary>
             public string DeadLetterQueueUrl => _function._deadLetterQueueUrl;
@@ -200,6 +205,7 @@ namespace LambdaSharp {
         private string _moduleVersion;
         private string _functionId;
         private string _functionName;
+        private string _functionFramework;
         private string _gitSha;
         private string _gitBranch;
         private bool _initialized;
@@ -483,7 +489,7 @@ namespace LambdaSharp {
             // read Lambda runtime environment variables
             _functionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
             _functionName = envSource.Read("LAMBDA_NAME");
-            var framework = envSource.Read("LAMBDA_RUNTIME");
+            _functionFramework = envSource.Read("LAMBDA_RUNTIME");
 
             // read LambdaSharp provided environment variables
             _moduleId = envSource.Read("MODULE_ID");
@@ -526,7 +532,7 @@ namespace LambdaSharp {
                 $"{_moduleNamespace}.{_moduleName}:{_moduleVersion}",
                 _functionId ?? "<MISSING>",
                 _functionName ?? "<MISSING>",
-                framework ?? "<MISSING>",
+                _functionFramework ?? "<MISSING>",
                 _gitSha,
                 _gitBranch
             );

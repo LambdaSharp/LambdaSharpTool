@@ -17,19 +17,14 @@
  */
 
 using System;
+using System.Globalization;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction {
+namespace LambdaSharp.Core {
 
-    public class UsageReport {
+    public static class DateTimeOffsetEx {
 
-        //--- Properties ---
-        public TimeSpan BilledDuration { get; set; }
-        public TimeSpan UsedDuration { get; set; }
-        public float UsedDurationPercent { get; set; }
-        public TimeSpan MaxDuration { get; set; }
-        public int MaxMemory { get; set; }
-        public int UsedMemory { get; set; }
-        public float UsedMemoryPercent { get; set; }
-        public TimeSpan InitDuration { get; set; }
+        //--- Extensions ---
+        public static string ToRfc3339Timestamp(this DateTimeOffset timestamp)
+            => timestamp.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo);
     }
 }

@@ -18,19 +18,19 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.ErrorReports;
+using LambdaSharp.Exceptions;
 using LambdaSharp.Records;
 using LambdaSharp.Records.Events;
-using Newtonsoft.Json;
 
-namespace LambdaSharp.Core.ProcessLogEvents {
+namespace LambdaSharp.Core.ProcessLogEventsFunction {
 
     public interface ILogicDependencyProvider {
 
@@ -38,7 +38,6 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report);
         Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
         Task SendEventAsync(OwnerMetaData owner, LambdaEventRecord record);
-        void LogProcessingError(Exception exception);
     }
 
     public class LambdaLogRecord : ALambdaRecord { }
@@ -85,22 +84,24 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             return report;
         }
 
-        public static string ToMD5Hash(string text) {
+        private static string ToMD5Hash(string text) {
             using(var md5 = MD5.Create()) {
                 return ToHexString(md5.ComputeHash(Encoding.UTF8.GetBytes(text)));
             }
         }
 
-        public static string ToHexString(IEnumerable<byte> bytes)
+        private static string ToHexString(IEnumerable<byte> bytes)
             => string.Concat(bytes.Select(x => x.ToString("X2")));
 
         //--- Fields ---
-        private ILogicDependencyProvider _provider;
-        private IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)> _mappings;
+        private readonly ILogicDependencyProvider _provider;
+        private readonly IEnumerable<(Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)> _mappings;
+        private readonly ILambdaSerializer _serializer;
 
         //--- Constructors ---
-        public Logic(ILogicDependencyProvider provider) {
+        public Logic(ILogicDependencyProvider provider, ILambdaSerializer serializer) {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             _mappings = new (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern)[] {
 
                 // Lambda report entries
@@ -126,24 +127,14 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         }
 
         //--- Methods ---
-        public async Task<bool> ProgressLogEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp) {
+        public async Task<bool> ProgressLogEntryAsync(OwnerMetaData owner, string? message, DateTimeOffset timestamp) {
+            if((message == null) || (timestamp == DateTimeOffset.UnixEpoch)) {
+                return false;
+            }
             foreach(var mapping in _mappings) {
                 var match = mapping.Regex.Match(message);
                 if(match.Success) {
-
-                    // have handler fill in the rest from the matched error line
-                    try {
-                        await mapping.HandlerAsync(owner, message, timestamp, match, mapping.Pattern);
-                    } catch(Exception e) {
-
-                        // set a generic message; it will look ugly, but all the information will be sent in the 'Raw' property
-                        var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, mapping.Pattern);
-                        report.Message = $"(unable to parse log message)";
-                        await _provider.SendErrorReportAsync(owner, report);
-
-                        // log the processing error separately
-                        _provider.LogProcessingError(e);
-                    }
+                    await mapping.HandlerAsync(owner, message, timestamp, match, mapping.Pattern);
                     return true;
                 }
             }
@@ -158,37 +149,37 @@ namespace LambdaSharp.Core.ProcessLogEvents {
 
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var text = match.ToString();
-            var record = DeserializeJson<LambdaLogRecord>(text);
+            var record = _serializer.Deserialize<LambdaLogRecord>(text);
             switch(record.Source) {
             case "LambdaError":
-                var errorReport = DeserializeJson<LambdaErrorReport>(text);
+
+                // report error record
+                var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
                 await _provider.SendErrorReportAsync(owner, errorReport);
                 break;
             case "LambdaEvent":
-                var eventRecord = DeserializeJson<LambdaEventRecord>(text);
-                eventRecord.Time = ToRfc3339Timestamp(timestamp);
+
+                // report event record
+                var eventRecord = _serializer.Deserialize<LambdaEventRecord>(text);
+                if(eventRecord.Time == null) {
+                    eventRecord.Time = timestamp.ToRfc3339Timestamp();
+                }
                 await _provider.SendEventAsync(owner, eventRecord);
                 break;
             case "LambdaMetrics":
 
                 // convert embedded CloudWatch metric record into an event
                 await _provider.SendEventAsync(owner, new LambdaEventRecord {
-                    Time = ToRfc3339Timestamp(timestamp),
+                    Time = timestamp.ToRfc3339Timestamp(),
                     App = "LambdaSharp.Core/Logs",
                     Type = "LambdaMetrics",
                     Details = text
                 });
                 break;
             case null:
-
-                // TODO: should this be forwarded as an event as well?
-                _provider.LogProcessingError(new ApplicationException("missing record source"));
-                break;
+                throw new ProcessLogEventsException("missing record 'Source' property");
             default:
-
-                // TODO: should this be forwarded as an event as well?
-                _provider.LogProcessingError(new ApplicationException($"unrecognized record source: {record.Source}"));
-                break;
+                throw new ProcessLogEventsException($"unrecognized record 'Source' property: {record.Source}");
             }
         }
 
@@ -265,7 +256,7 @@ namespace LambdaSharp.Core.ProcessLogEvents {
         private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.RequestId = match.Groups["RequestId"].Value;
-            var error = DeserializeJson<JavascriptException>(match.Groups["ErrorMessage"].Value);
+            var error = _serializer.Deserialize<JavascriptException>(match.Groups["ErrorMessage"].Value);
             report.Message = error.ErrorMessage;
             if(error.StackTrace?.Any() == true) {
                 report.Traces = new List<LambdaErrorReportStackTrace> {
@@ -297,10 +288,5 @@ namespace LambdaSharp.Core.ProcessLogEvents {
             report.RequestId = match.Groups["RequestId"].Value;
             return _provider.SendErrorReportAsync(owner, report);
         }
-
-        private string ToRfc3339Timestamp(DateTimeOffset timestamp)
-            => timestamp.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo);
-
-        private T DeserializeJson<T>(string json) => JsonConvert.DeserializeObject<T>(json);
     }
 }

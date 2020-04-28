@@ -25,7 +25,7 @@ using LambdaSharp.Records.Events;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace LambdaSharp.Core.ProcessLogEvents.Tests {
+namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
 
     public class ProgressLogEntryAsync {
 
@@ -72,7 +72,7 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
         //--- Constructors ---
         public ProgressLogEntryAsync(ITestOutputHelper output) {
             _provider = new MockDependencyProvider(output);
-            _logic = new Logic(_provider);
+            _logic = new Logic(_provider, new LambdaSharp.Serialization.LambdaJsonSerializer());
             _owner = new OwnerMetaData {
                 Module = "Test.Module:1.0@origin",
                 ModuleId = "ModuleId",
@@ -100,10 +100,10 @@ namespace LambdaSharp.Core.ProcessLogEvents.Tests {
 
         [Fact]
         public void LambdaException() {
-            var success = _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.: LambdaException", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
+            var success = _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.: LambdaException", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).Result;
             success.Should().Be(true);
             CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEvents.Function' from assembly 'ProcessLogEvents'.");
+            _provider.ErrorReport.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("");
         }
