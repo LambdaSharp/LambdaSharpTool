@@ -936,6 +936,23 @@ namespace LambdaSharp {
                 Provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{PrintException()}");
             }
 
+            // record metrics on warnings, errors, and fatal errors being logged
+            switch(level) {
+            case LambdaLogLevel.WARNING:
+                LogMetric("LogWarning.Count", 1, LambdaMetricUnit.Count);
+                break;
+            case LambdaLogLevel.ERROR:
+                LogMetric("LogError.Count", 1, LambdaMetricUnit.Count);
+                break;
+            case LambdaLogLevel.FATAL:
+                LogMetric("LogFatal.Count", 1, LambdaMetricUnit.Count);
+                break;
+            default:
+
+                // nothing to do
+                break;
+            }
+
             // local functions
             string PrintException() => (exception != null) ? exception.ToString() + "\n" : "";
         }

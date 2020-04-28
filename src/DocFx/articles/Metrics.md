@@ -16,6 +16,42 @@ LambdaSharp modules can report custom metrics using the built-in [`LogMetric(str
 
 ## Standard Function Metrics
 
+### Class [LambdaSharp.ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
+
+The `ALambdaFunction` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
+* `Stack` is the CloudFormation stack name.
+* `Function` is the Lambda function name.
+
+|Name               |Unit   |Description                                                                        |
+|-------------------|-------|-----------------------------------------------------------------------------------|
+|LogError.Count     |Count  |Number of error statements logged.                                                 |
+|LogFatal.Count     |Count  |Number of fatal error statements logged.                                           |
+|LogWarning.Count   |Count  |Number of warning statements logged. This count includes errors logged as warnings.|
+
+#### AWS Metrics
+
+In addition, Lambda emits the following metrics organized by [`FunctionName`], [`Resource`], [`ExecutedVersion`], and [`(none)`] dimension where:
+* `FunctionName` is the aggregate metrics for all versions and aliases of a function.
+* `Resource` is the metrics for a version or alias of a function.
+* `ExecutedVersion` is metrics for a combination of alias and version. Use the `ExecutedVersion` dimension to compare error rates for two versions of a function that are both targets of a weighted alias.
+* `(none)` is the aggregate metrics for all functions in the current AWS Region.
+
+|Name                               |Unit   |Description                                                                        |
+|-----------------------------------|-------|-----------------------------------------------------------------------------------|
+|ConcurrentExecutions                       |Count          |The number of function instances that are processing events. If this number reaches your concurrent executions limit for the Region, or the reserved concurrency limit that you configured on the function, additional invocation requests are throttled.|
+|DeadLetterErrors                           |Count          |For asynchronous invocation, the number of times Lambda attempts to send an event to a dead-letter queue but fails. Dead-letter errors can occur due to permissions errors, misconfigured resources, or size limits.|
+|DestinationDeliveryFailures                |Count          |For asynchronous invocation, the number of times Lambda attempts to send an event to a destination but fails. Delivery errors can occur due to permissions errors, misconfigured resources, or size limits.|
+|Duration                                   |Milliseconds   |The amount of time that your function code spends processing an event. For the first event processed by an instance of your function, this includes initialization time. The billed duration for an invocation is the value of _Duration_ rounded up to the nearest 100 milliseconds.|
+|Errors                                     |Count          |The number of invocations that result in a function error. Function errors include exceptions thrown by your code and exceptions thrown by the Lambda runtime. The runtime returns errors for issues such as timeouts and configuration errors. To calculate the error rate, divide the value of Errors by the value of Invocations.|
+|Invocations                                |Count          |The number of times your function code is executed, including successful executions and executions that result in a function error. Invocations aren't recorded if the invocation request is throttled or otherwise resulted in an invocation error. This equals the number of requests billed.|
+|IteratorAge                                |Milliseconds   |For event source mappings that read from streams, the age of the last record in the event. The age is the amount of time between when the stream receives the record and when the event source mapping sends the event to the function.|
+|ProvisionedConcurrencyInvocations          |Count          |The number of times your function code is executed on provisioned concurrency.|
+|ProvisionedConcurrencySpilloverInvocations |Count          |The number of times your function code is executed on standard concurrency when all provisioned concurrency is in use.|
+|ProvisionedConcurrencyUtilization          |Percent        |For a version or alias, the value of ProvisionedConcurrentExecutions divided by the total amount of provisioned concurrency allocated. For example, .5 indicates that 50 percent of allocated provisioned concurrency is in use.|
+|ProvisionedConcurrentExecutions            |Count          |The number of function instances that are processing events on provisioned concurrency. For each invocation of an alias or version with provisioned concurrency, Lambda emits the current count.|
+|Throttles                                  |Count          |The number of invocation requests that are throttled. When all function instances are processing requests and no concurrency is available to scale up, Lambda rejects additional requests with `TooManyRequestsException`. Throttled requests and other invocation errors don't count as Invocations or Errors.|
+|UnreservedConcurrentExecutions             |Count          |For an AWS Region, the number of events that are being processed by functions that don't have reserved concurrency.|
+
 ### Class [LambdaSharp.SimpleQueueService.ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
 
 The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
