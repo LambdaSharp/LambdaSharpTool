@@ -824,8 +824,8 @@ namespace LambdaSharp {
         /// <param name="source">The source application of the event.</param>
         /// <param name="type">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
-        /// <param name="resources">Optional AWS resources, identified by Amazon Resource Name (ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void LogEvent(string source, string type, object details, IEnumerable<string> resources = null)
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        protected virtual void LogEvent(string source, string type, object details, IEnumerable<string> resources = null)
             => Logger.LogEventJson(source, type, LambdaSerializer.Serialize(details), resources);
 
         /// <summary>
@@ -860,7 +860,7 @@ namespace LambdaSharp {
         /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
-        public void LogMetric(IEnumerable<LambdaMetric> metrics)
+        protected void LogMetric(IEnumerable<LambdaMetric> metrics)
             => LogMetric(metrics, new string[0], new Dictionary<string, string>());
 
         /// <summary>
@@ -869,7 +869,7 @@ namespace LambdaSharp {
         /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
         /// <param name="dimensionNames">Metric dimensions as comma-separated list (e.g. [ "A", "A,B" ]).</param>
         /// <param name="dimensionValues">Dictionary of dimesion name-value pairs.</param>
-        public void LogMetric(
+        protected virtual void LogMetric(
             IEnumerable<LambdaMetric> metrics,
             IEnumerable<string> dimensionNames,
             Dictionary<string, string> dimensionValues
