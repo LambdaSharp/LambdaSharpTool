@@ -109,6 +109,35 @@ namespace LambdaSharp.Tool.Cli.Build {
             AtLocation("Package", () => {
                 var containsElfExecutable = false;
 
+                // check if a command needs to be executed to prepare the package
+                if(!string.IsNullOrEmpty(parameter.Build)) {
+                    var cmdLine = parameter.Build.Split(' ', 2);
+                    if(!ProcessLauncher.Execute(
+                        cmdLine[0],
+                        (cmdLine.Length > 1) ? cmdLine[1] : "",
+                        Settings.WorkingDirectory,
+                        Settings.VerboseLevel >= VerboseLevel.Detailed,
+
+                        // use .NET output colorizer if the command is 'dotnet'
+                        (cmdLine[0] == "dotnet")
+                            ? ColorizeOutput
+                            : (Func<string, string>)null
+                    )) {
+                        LogError($"package build command '{parameter.Build}' failed");
+                        return;
+                    }
+
+                    // local functions
+                    string ColorizeOutput(string line)
+                        => !Settings.UseAnsiConsole
+                            ? line
+                            : line.Contains(": error ", StringComparison.Ordinal)
+                            ? $"{AnsiTerminal.BrightRed}{line}{AnsiTerminal.Reset}"
+                            : line.Contains(": warning ", StringComparison.Ordinal)
+                            ? $"{AnsiTerminal.BrightYellow}{line}{AnsiTerminal.Reset}"
+                            : line;
+                }
+
                 // compute MD5 hash for package
                 var bytes = new List<byte>();
                 foreach(var file in parameter.Files) {
