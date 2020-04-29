@@ -24,6 +24,7 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 1. [SNS Topic Source Example](SnsSample/)
 1. [SQS Queue Source Example](SqsSample/)
 1. [SQS Queue Failure Handling Example](SqsFailureHandlingSample/)
+1. [CloudWatch Event Example](EventSample/)
 
 ## Miscellaneous Examples
 1. [Lambda Function in VPC](VpcFunctionSample/)

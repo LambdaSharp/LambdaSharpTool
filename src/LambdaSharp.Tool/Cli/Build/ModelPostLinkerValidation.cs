@@ -88,6 +88,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     case KinesisSource kinesisSource:
                         ValidateSourceParameter(kinesisSource.Kinesis, "AWS::Kinesis::Stream");
                         break;
+                    case CloudWatchEventSource cloudWatchRuleSource:
+                        break;
                     }
                 });
             }

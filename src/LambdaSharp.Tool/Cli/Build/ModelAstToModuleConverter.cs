@@ -130,7 +130,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 "Alexa",
                 "DynamoDB",
                 "Kinesis",
-                "WebSocket"
+                "WebSocket",
+                "EventBus"
             });
             switch(type) {
             case "Api":
@@ -225,6 +226,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     AuthorizationScopes =  source.AuthorizationScopes,
                     AuthorizerId = source.AuthorizerId,
                     Invoke = source.Invoke
+                });
+            case "EventBus":
+                return AtLocation("EventBus", () => new CloudWatchEventSource {
+                    EventBus = source.EventBus,
+                    Pattern = source.Pattern
                 });
             }
             return null;
@@ -721,6 +727,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     } else if(source.WebSocket != null) {
 
                         // TODO (2019-03-13, bjorg): validate WebSocket route expression
+                    } else if(source.EventBus != null) {
+                        AtLocation("Pattern", () => {
+                            if(source.Pattern == null) {
+                                LogError("missing rule pattern");
+                            }
+                        });
                     } else {
                         LogError("unknown source type");
                     }

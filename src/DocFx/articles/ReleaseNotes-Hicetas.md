@@ -45,6 +45,9 @@ TODO:
 
 #### New Features
 
+* LambdaSharp CLI
+    * Added support for _CloudWatch Events_ as an event source.
+
 * LambdaSharp SDK
     * Added [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
     * Added [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.LogEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).

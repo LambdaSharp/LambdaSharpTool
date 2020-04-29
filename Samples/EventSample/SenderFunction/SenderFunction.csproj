@@ -6,6 +6,7 @@
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
     <RootNamespace>Sample.Event.MyFunction</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
+    <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>

@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp;
@@ -36,7 +37,15 @@ namespace Sample.Event.ReceiverFunction {
         public override async Task InitializeAsync(LambdaConfig config) { }
 
         public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
-            LogInfo($"Received: {LambdaSerializer.Serialize<object>(request)}");
+            LogInfo($"Version = {request.Version}");
+            LogInfo($"Account = {request.Account}");
+            LogInfo($"Region = {request.Region}");
+            LogInfo($"Detail = {LambdaSerializer.Serialize(request.Detail)}");
+            LogInfo($"DetailType = {request.DetailType}");
+            LogInfo($"Source = {request.Source}");
+            LogInfo($"Time = {request.Time}");
+            LogInfo($"Id = {request.Id}");
+            LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
             return new FunctionResponse();
         }
     }
