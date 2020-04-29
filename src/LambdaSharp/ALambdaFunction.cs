@@ -407,20 +407,20 @@ namespace LambdaSharp {
                 while(true) {
 
                     // check if any pending tasks exist
-                    Task[] pendingTasksCopy;
+                    List<Task> pendingTasks;
                     lock(_pendingTasksSyncRoot) {
                         if(_pendingTasks.Count == 0) {
                             break;
                         }
 
-                        // copy pending tasks and recent accumulator list
-                        pendingTasksCopy = _pendingTasks.ToArray();
-                        _pendingTasks.Clear();
+                        // replace pending tasks with fresh list
+                        pendingTasks = _pendingTasks;
+                        _pendingTasks = new List<Task>();
                     }
 
                     // wait for copied tasks to finish and report exceptions as appropriate
                     try {
-                        await Task.WhenAll(pendingTasksCopy);
+                        await Task.WhenAll(pendingTasks);
                     } catch(AggregateException e) {
                         foreach(var innerException in e.Flatten().InnerExceptions) {
 

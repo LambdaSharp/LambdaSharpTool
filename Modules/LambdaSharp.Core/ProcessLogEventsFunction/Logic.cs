@@ -26,9 +26,9 @@ using System.Threading.Tasks;
 using Amazon.Lambda.Core;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.ErrorReports;
-using LambdaSharp.Exceptions;
 using LambdaSharp.Records;
 using LambdaSharp.Records.Events;
+using LambdaSharp.Records.Metrics;
 
 namespace LambdaSharp.Core.ProcessLogEventsFunction {
 
@@ -38,6 +38,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report);
         Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
         Task SendEventAsync(OwnerMetaData owner, LambdaEventRecord record);
+        Task SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record);
     }
 
     public class LambdaLogRecord : ALambdaRecord { }
@@ -168,13 +169,9 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                 break;
             case "LambdaMetrics":
 
-                // convert embedded CloudWatch metric record into an event
-                await _provider.SendEventAsync(owner, new LambdaEventRecord {
-                    Time = timestamp.ToRfc3339Timestamp(),
-                    App = "LambdaSharp.Core/Logs",
-                    Type = "LambdaMetrics",
-                    Details = text
-                });
+                // report metrics record
+                var metricsRecord = _serializer.Deserialize<LambdaMetricsRecord>(text);
+                await _provider.SendMetricsAsync(owner, metricsRecord);
                 break;
             case null:
                 throw new ProcessLogEventsException("missing record 'Source' property");

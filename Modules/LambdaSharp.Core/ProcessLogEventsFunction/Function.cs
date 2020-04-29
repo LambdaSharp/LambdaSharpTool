@@ -33,6 +33,7 @@ using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.ErrorReports;
 using LambdaSharp.Logger;
 using LambdaSharp.Records.Events;
+using LambdaSharp.Records.Metrics;
 
 namespace LambdaSharp.Core.ProcessLogEventsFunction {
 
@@ -60,6 +61,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         //--- Constants ---
         private const string LOG_GROUP_PREFIX = "/aws/lambda/";
         private const int MAX_EVENTS_BATCHSIZE = 256 * 1024;
+        private const int MAX_EVENTS_COUNT = 10;
 
         //--- Fields ---
         private Logic? _logic;
@@ -361,7 +363,6 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
 
         private void ReportMetrics() {
             var metrics = new List<LambdaMetric>();
-            LogInfo($"metrics summary: errors-reported: {_errorsReportsCount}, warnings-reported: {_warningsReportsCount}");
             if(_errorsReportsCount > 0) {
                 metrics.Add(("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count));
             }
@@ -375,14 +376,10 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
             if(_eventEntries.Count > 0) {
                 var eventEntries = _eventEntries;
 
-                // log metric latencies
-                var now = DateTimeOffset.UtcNow;
-                foreach(var entry in eventEntries) {
-                    LogMetric("Event.Latency", (now - new DateTimeOffset(entry.Time)).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
-                }
-
                 // send accumulated events
                 RunTask(async () => {
+
+                    // send events
                     try {
                         await EventsClient.PutEventsAsync(new PutEventsRequest {
                             Entries = eventEntries
@@ -403,11 +400,12 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
             // calculate size of new event entry
             var entrySize = GetEventEntrySize(entry);
             if((_eventsEntriesTotalSize + entrySize) > MAX_EVENTS_BATCHSIZE) {
-
-                // too many pending events; send events now
                 PurgeEventEntries();
             }
             _eventEntries.Add(entry);
+            if(_eventEntries.Count == MAX_EVENTS_COUNT) {
+                PurgeEventEntries();
+            }
 
             // local functions
             int GetEventEntrySize(PutEventsRequestEntry eventEntry) {
@@ -484,7 +482,19 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                 Details = LambdaSerializer.Serialize(report)
             });
 
-        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, LambdaEventRecord record)
-            => SendEvent(owner, record);
+        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
+            SendEvent(owner, record);
+            if((record.Time != null) && DateTimeOffset.TryParse(record.Time, out var sentTime)) {
+                LogMetric("Event.Latency", (DateTimeOffset.UtcNow - sentTime).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
+            }
+        }
+
+        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record)
+            => SendEvent(owner, new LambdaEventRecord {
+                Time = DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp(),
+                App = "LambdaSharp.Core/Logs",
+                Type = "LambdaMetrics",
+                Details = LambdaSerializer.Serialize(record)
+            });
     }
 }
