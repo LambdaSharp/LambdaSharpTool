@@ -100,16 +100,13 @@ namespace LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            IList<KeyValuePair<string, string>> files,
-            string build
+            IList<KeyValuePair<string, string>> files
         ) : base(parent, name, description, "String", scope, false) {
             Files = files ?? throw new ArgumentNullException(nameof(files));
-            Build = build;
         }
 
         //--- Properties ---
         public IList<KeyValuePair<string, string>> Files { get; }
-        public string Build { get; }
     }
 
     public class ParameterItem : AModuleItem {

@@ -40,19 +40,11 @@ namespace LambdaSharp.Tool.Internal {
             string workingFolder,
             bool showOutput,
             Func<string, string> processOutputLine = null
-        ) => Execute(application, ArgumentEscaper.EscapeAndConcatenate(arguments), workingFolder, showOutput, processOutputLine);
-
-        public static bool Execute(
-            string application,
-            string arguments,
-            string workingFolder,
-            bool showOutput,
-            Func<string, string> processOutputLine = null
         ) {
             using(var process = new Process()) {
                 process.StartInfo = new ProcessStartInfo {
                     FileName = application,
-                    Arguments = arguments,
+                    Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
                     WorkingDirectory = workingFolder,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,

@@ -480,8 +480,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: node.Package,
                         description: node.Description,
                         scope: ConvertScope(node.Scope),
-                        files: files,
-                        build: node.Build
+                        files: files
                     );
                 });
                 break;

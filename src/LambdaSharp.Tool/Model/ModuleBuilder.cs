@@ -821,8 +821,7 @@ namespace LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            IList<KeyValuePair<string, string>> files,
-            string build
+            IList<KeyValuePair<string, string>> files
         ) {
 
             // create variable corresponding to the package definition
@@ -831,8 +830,7 @@ namespace LambdaSharp.Tool.Model {
                 name: name,
                 description: description,
                 scope: scope,
-                files: files,
-                build: build
+                files: files
             );
             AddItem(package);
 
