@@ -20536,11 +20536,65 @@
         }
       }
     },
-    "AWS::StepFunctions::StateMachine.TracingConfiguration": {
+    "AWS::Synthetics::Canary.Code": {
       "Properties": {
-        "Enabled": {
-          "PrimitiveType": "Boolean",
+        "Handler": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "S3Bucket": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "S3Key": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "S3ObjectVersion": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "Script": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::Synthetics::Canary.RunConfig": {
+      "Properties": {
+        "TimeoutInSeconds": {
+          "PrimitiveType": "Integer",
           "Required": true
+        }
+      }
+    },
+    "AWS::Synthetics::Canary.Schedule": {
+      "Properties": {
+        "DurationInSeconds": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Expression": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::Synthetics::Canary.VPCConfig": {
+      "Properties": {
+        "SecurityGroupIds": {
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List"
+        },
+        "SubnetIds": {
+          "PrimitiveItemType": "String",
+          "Required": true,
+          "Type": "List"
+        },
+        "VpcId": {
+          "PrimitiveType": "String",
+          "Required": false
         }
       }
     },
@@ -20577,6 +20631,9 @@
           "Required": true
         }
       }
+    },
+    "AWS::Transfer::Server.Protocol": {
+      "PrimitiveType": "String"
     },
     "AWS::Transfer::User.HomeDirectoryMapEntry": {
       "Properties": {
@@ -20987,7 +21044,7 @@
         },
         "SearchString": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "SearchStringBase64": {
           "PrimitiveType": "String",
@@ -21405,7 +21462,7 @@
         },
         "SearchString": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "SearchStringBase64": {
           "PrimitiveType": "String",
@@ -21920,7 +21977,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "13.0.0",
+  "ResourceSpecificationVersion": "14.0.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -25049,6 +25106,31 @@
       "Documentation": "https://docs.aws.amazon.com/cdk/latest/guide/tools.html",
       "Properties": {
         "Modules": {
+          "PrimitiveType": "String",
+          "Required": true
+        }
+      }
+    },
+    "AWS::CE::CostCategory": {
+      "Attributes": {
+        "Arn": {
+          "PrimitiveType": "String"
+        },
+        "EffectiveStart": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ce-costcategory.html",
+      "Properties": {
+        "Name": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Rules": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "RuleVersion": {
           "PrimitiveType": "String",
           "Required": true
         }
@@ -31306,6 +31388,11 @@
       }
     },
     "AWS::FSx::FileSystem": {
+      "Attributes": {
+        "LustreMountName": {
+          "PrimitiveType": "String"
+        }
+      },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-fsx-filesystem.html",
       "Properties": {
         "BackupId": {
@@ -38923,10 +39010,68 @@
           "ItemType": "TagsEntry",
           "Required": false,
           "Type": "List"
+        }
+      }
+    },
+    "AWS::Synthetics::Canary": {
+      "Attributes": {
+        "Id": {
+          "PrimitiveType": "String"
         },
-        "TracingConfiguration": {
+        "Name": {
+          "PrimitiveType": "String"
+        },
+        "State": {
+          "PrimitiveType": "String"
+        }
+      },
+      "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-synthetics-canary.html",
+      "Properties": {
+        "ArtifactS3Location": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Code": {
+          "Required": true,
+          "Type": "Code"
+        },
+        "ExecutionRoleArn": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "FailureRetentionPeriod": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "RunConfig": {
           "Required": false,
-          "Type": "TracingConfiguration"
+          "Type": "RunConfig"
+        },
+        "RuntimeVersion": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Schedule": {
+          "Required": true,
+          "Type": "Schedule"
+        },
+        "StartCanaryAfterCreation": {
+          "PrimitiveType": "Boolean",
+          "Required": true
+        },
+        "SuccessRetentionPeriod": {
+          "PrimitiveType": "Integer",
+          "Required": false
+        },
+        "Tags": {
+          "DuplicatesAllowed": true,
+          "ItemType": "Tag",
+          "Required": false,
+          "Type": "List"
+        },
+        "VPCConfig": {
+          "Required": false,
+          "Type": "VPCConfig"
         }
       }
     },
@@ -38941,6 +39086,10 @@
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-transfer-server.html",
       "Properties": {
+        "Certificate": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "EndpointDetails": {
           "Required": false,
           "Type": "EndpointDetails"
@@ -38960,6 +39109,11 @@
         "LoggingRole": {
           "PrimitiveType": "String",
           "Required": false
+        },
+        "Protocols": {
+          "ItemType": "Protocol",
+          "Required": false,
+          "Type": "List"
         },
         "Tags": {
           "ItemType": "Tag",
