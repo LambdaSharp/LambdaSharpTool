@@ -89,5 +89,15 @@ namespace LambdaSharp {
         /// <param name="messageAttributes">Optional attributes for the message.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         Task SendMessageToQueueAsync(string queueUrl, string message, IEnumerable<KeyValuePair<string, string>> messageAttributes = null);
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
+        /// </summary>
+        /// <param name="eventbus">The event bus that will receive the event.</param>
+        /// <param name="source">The source application of the event.</param>
+        /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
+        /// <param name="detail">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        Task SendEventAsync(string eventbus, string source, string detailType, string detail, IEnumerable<string> resources);
     }
 }

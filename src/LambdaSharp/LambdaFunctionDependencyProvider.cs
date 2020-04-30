@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.CloudWatchEvents;
+using Amazon.CloudWatchEvents.Model;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using Amazon.Lambda.Core;
@@ -60,13 +62,15 @@ namespace LambdaSharp {
         /// <param name="jsonSerializer">A <see cref="ILambdaSerializer"/> instance for serializing and deserializing JSON data. Defaults to <see cref="LambdaLogger.Log"/> when <c>null</c>.</param>
         /// <param name="kmsClient">A <see cref="IAmazonKeyManagementService"/> client instance. Defaults to <see cref="AmazonKeyManagementServiceClient"/> when <c>null</c>.</param>
         /// <param name="sqsClient">A <see cref="IAmazonSQS"/> client instance. Defaults to <see cref="AmazonSQSClient"/> when <c>null</c>.</param>
+        /// <param name="eventsClient">A <see cref="IAmazonCloudWatchEvents"/> client instance. Defaults to <see cref="AmazonCloudWatchEventsClient"/> when <c>null</c>.</param>
         public LambdaFunctionDependencyProvider(
             Func<DateTime> utcNowCallback = null,
             Action<string> logCallback = null,
             ILambdaConfigSource configSource = null,
             ILambdaSerializer jsonSerializer = null,
             IAmazonKeyManagementService kmsClient = null,
-            IAmazonSQS sqsClient = null
+            IAmazonSQS sqsClient = null,
+            IAmazonCloudWatchEvents eventsClient = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
@@ -74,6 +78,7 @@ namespace LambdaSharp {
             JsonSerializer = jsonSerializer ?? new LambdaJsonSerializer();
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
+            EventsClient = eventsClient ?? new AmazonCloudWatchEventsClient();
         }
 
         //--- Properties ---
@@ -88,25 +93,31 @@ namespace LambdaSharp {
         /// Retrieves the <see cref="ILambdaConfigSource"/> instance used for initializing the Lambda function.
         /// </summary>
         /// <value>The <see cref="ILambdaConfigSource"/> instance.</value>
-        public ILambdaConfigSource ConfigSource { get; private set; }
+        public ILambdaConfigSource ConfigSource { get; }
 
         /// <summary>
         /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
         /// </summary>
         /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
-        public ILambdaSerializer JsonSerializer { get; private set; }
+        public ILambdaSerializer JsonSerializer { get; }
 
         /// <summary>
         /// Retrieves the <see cref="IAmazonKeyManagementService"/> instance used for communicating with the
         /// <a href="https://aws.amazon.com/kms/">AWS Key Management Service (KMS)</a> service.
         /// </summary>
-        public IAmazonKeyManagementService KmsClient { get; private set; }
+        public IAmazonKeyManagementService KmsClient { get; }
 
         /// <summary>
         /// Retrieves the <see cref="IAmazonSQS"/> instance used for communicating with the
         /// <a href="https://aws.amazon.com/sqs/">Amazon Simple Queue Service (SQS)</a> service.
         /// </summary>
-        public IAmazonSQS SqsClient { get; private set; }
+        public IAmazonSQS SqsClient { get; }
+
+        /// <summary>
+        /// Retrieves the <see cref="IAmazonCloudWatchEvents"/> instance used for communicating with
+        /// <a href="https://aws.amazon.com/eventbridge/">Amazon EventBridge</a> service.
+        /// </summary>
+        public IAmazonCloudWatchEvents EventsClient { get; }
 
         //--- Methods ---
 
@@ -162,6 +173,28 @@ namespace LambdaSharp {
                     DataType = "String",
                     StringValue = kv.Value
                 }) ?? new Dictionary<string, MessageAttributeValue>()
+            });
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
+        /// </summary>
+        /// <param name="eventbus">The event bus that will receive the event.</param>
+        /// <param name="source">The source application of the event.</param>
+        /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
+        /// <param name="detail">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        public virtual Task SendEventAsync(string eventbus, string source, string detailType, string detail, IEnumerable<string> resources)
+            => EventsClient.PutEventsAsync(new PutEventsRequest {
+                Entries = {
+                    new PutEventsRequestEntry {
+                        Time = DateTime.UtcNow,
+                        EventBusName =  eventbus,
+                        Source = source,
+                        DetailType = detailType,
+                        Detail = detail,
+                        Resources = resources?.ToList() ?? new List<string>()
+                    }
+                }
             });
     }
 }

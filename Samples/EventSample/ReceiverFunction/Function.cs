@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.CloudWatchEvents;
@@ -46,6 +47,7 @@ namespace Sample.Event.ReceiverFunction {
             LogInfo($"Time = {request.Time}");
             LogInfo($"Id = {request.Id}");
             LogInfo($"Resources = [{string.Join(",", request.Resources ?? Enumerable.Empty<string>())}]");
+            LogInfo($"Latency = {DateTime.UtcNow - request.Time}");
             return new FunctionResponse();
         }
     }

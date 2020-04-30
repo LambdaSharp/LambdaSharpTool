@@ -27,6 +27,7 @@ using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.CloudWatchEvents.Model;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
@@ -35,6 +36,7 @@ using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
 using LambdaSharp.Records;
 using LambdaSharp.Records.ErrorReports;
+using LambdaSharp.Records.Events;
 using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
@@ -210,7 +212,7 @@ namespace LambdaSharp {
         private string _gitBranch;
         private bool _initialized;
         private LambdaConfig _appConfig;
-        private Dictionary<Exception, LambdaLogLevel> _reportedExceptions = new Dictionary<Exception, LambdaLogLevel>();
+        private readonly Dictionary<Exception, LambdaLogLevel> _reportedExceptions = new Dictionary<Exception, LambdaLogLevel>();
         private List<Task> _pendingTasks = new List<Task>();
         private object _pendingTasksSyncRoot = new object();
         private ILambdaContext _currentContext;
@@ -253,7 +255,7 @@ namespace LambdaSharp {
         /// satisfy its required dependencies.
         /// </summary>
         /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
-        protected ILambdaFunctionDependencyProvider Provider { get; private set; }
+        protected ILambdaFunctionDependencyProvider Provider { get; }
 
         /// <summary>
         /// Retrieves the current date-time in UTC timezone.
@@ -819,16 +821,6 @@ namespace LambdaSharp {
             => Logger.LogFatal(exception, format, arguments);
 
         /// <summary>
-        /// Log a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
-        /// </summary>
-        /// <param name="source">The source application of the event.</param>
-        /// <param name="type">Free-form string used to decide what fields to expect in the event detail.</param>
-        /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
-        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected virtual void LogEvent(string source, string type, object details, IEnumerable<string> resources = null)
-            => Logger.LogEventJson(source, type, LambdaSerializer.Serialize(details), resources);
-
-        /// <summary>
         /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="name">Metric name.</param>
@@ -904,6 +896,27 @@ namespace LambdaSharp {
                 newDimensionValues["GitBranch"] = Info.GitBranch;
             }
             Logger.LogMetric($"Module:{Info.ModuleFullName}", metrics, newDimensionNames, newDimensionValues);
+        }
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
+        /// </summary>
+        /// <param name="source">The source application of the event.</param>
+        /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
+        /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string> resources = null) {
+            var lambdaResources = new List<string> {
+                $"lambdasharp:stack:{Info.ModuleId}",
+                $"lambdasharp:module:{Info.ModuleFullName}",
+                $"lambdasharp:tier:{Info.DeploymentTier}"
+            };
+            if(resources?.Any() ?? false) {
+                lambdaResources.AddRange(resources);
+            }
+
+            // TODO: allow setting the event bus
+            RunTask(() => Provider.SendEventAsync("default", source, detailType, LambdaSerializer.Serialize(details), lambdaResources));
         }
         #endregion
 

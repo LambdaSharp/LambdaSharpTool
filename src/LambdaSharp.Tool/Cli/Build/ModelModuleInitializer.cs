@@ -576,6 +576,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 condition: null
             );
 
+            // permission needed for posting events to the default event bus
+            _builder.AddGrant(
+                name: "EventBus",
+                awsType: null,
+                reference: FnSub("arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"),
+                allow: new[] {
+                    "events:PutEvents"
+                },
+                condition: null
+            );
+
             // check if lambdasharp specific resources need to be initialized
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(_builder.TryGetItem("Module::DeadLetterQueue", out _)) {
