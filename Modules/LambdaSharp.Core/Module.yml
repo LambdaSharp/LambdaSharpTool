@@ -149,11 +149,6 @@ Items:
     Sources:
       - Kinesis: LoggingStream
 
-  - Resource: EventBus
-    Description: Grant permission to post events to to the default eventbus
-    Value: !Sub "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
-    Allow: events:PutEvents
-
   # Module & Function Registrations
   - Resource: ErrorReportTopic
     Scope: public
