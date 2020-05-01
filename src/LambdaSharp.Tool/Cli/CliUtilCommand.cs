@@ -30,6 +30,8 @@ using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
 using Amazon.ApiGatewayV2;
 using Amazon.ApiGatewayV2.Model;
+using Amazon.CloudFormation;
+using Amazon.CloudFormation.Model;
 using Amazon.CloudWatchLogs;
 using Amazon.CloudWatchLogs.Model;
 using Amazon.Lambda;
@@ -138,6 +140,25 @@ namespace LambdaSharp.Tool.Cli {
                             defaultNamespaceOption.Value(),
                             methodOption.Values,
                             outputFileOption.Value()
+                        );
+                    });
+                });
+
+                // delete orphaned logs sub-command
+                cmd.Command("list-lambdas", subCmd => {
+                    subCmd.HelpOption();
+                    subCmd.Description = "List all Lambda functions by CloudFormation stack";
+                    var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+
+                    // run command
+                    subCmd.OnExecute(async () => {
+                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
+                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        await ListLambdasAsync(
+                            awsProfileOption.Value(),
+                            awsRegionOption.Value()
                         );
                     });
                 });
@@ -639,6 +660,179 @@ namespace LambdaSharp.Tool.Cli {
                     return Tuple.Create((JToken)JObject.Parse(schema.ToJson()), "application/json");
                 }
                 return Tuple.Create(JToken.FromObject("Proxy"), (string)null);
+            }
+        }
+
+        public async Task ListLambdasAsync(string awsProfile, string awsRegion) {
+            Console.WriteLine();
+
+            // initialize AWS profile
+            await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
+            var cfnClient = new AmazonCloudFormationClient();
+            var lambdaClient = new AmazonLambdaClient();
+            var logsClient = new AmazonCloudWatchLogsClient();
+
+            // fetch all Lambda functions on account
+            var globalFunctions = (await ListLambdasAsync())
+                .ToDictionary(function => function.FunctionName, function => function);
+
+            // fetch all stacks on account
+            var stacks = await ListStacksAsync();
+            Console.WriteLine($"Analyzing {stacks.Count():N0} CloudFormation stacks and {globalFunctions.Count():N0} Lambda functions");
+
+            // fetch most recent CloudWatch log stream for each Lambda function
+            var logStreamsTask = Task.Run(async () => (await Task.WhenAll(globalFunctions.Select(async kv => {
+                    try {
+                        var response = await logsClient.DescribeLogStreamsAsync(new DescribeLogStreamsRequest {
+                            Descending = true,
+                            LogGroupName = $"/aws/lambda/{kv.Value.FunctionName}",
+                            OrderBy = OrderBy.LastEventTime,
+                            Limit = 1
+                        });
+                        return (Name: kv.Value.FunctionName, Streams: response.LogStreams.FirstOrDefault());
+                    } catch {
+
+                        // log group doesn't exist
+                        return (Name: kv.Value.FunctionName, Streams: null);
+                    }
+                }))).ToDictionary(tuple => tuple.Name, tuple => tuple.Streams)
+            );
+
+            // fetch all functions belonging to a CloudFormation stack
+            var stacksWithFunctionsTask = Task.Run(async () => stacks.Zip(
+                    await Task.WhenAll(stacks.Select(stack => ListStackFunctionsAsync(stack.StackId))),
+                    (stack, stackFunctions) => (Stack: stack, Functions: stackFunctions)
+                ).ToList()
+            );
+
+            // wait for both fetch operations to finish
+            await Task.WhenAll(logStreamsTask, stacksWithFunctionsTask);
+            var logStreams = logStreamsTask.Result;
+            var stacksWithFunctions = stacksWithFunctionsTask.Result;
+
+            // remove all the functions that were discovered inside a stack from the orphaned list of functions
+            foreach(var function in stacksWithFunctions.SelectMany(stackWithFunctions => stackWithFunctions.Functions)) {
+                globalFunctions.Remove(function.Configuration.FunctionName);
+            }
+
+            // compute the max width for the function name (use logical ID if it belongs to the stack)
+            var maxFunctionNameWidth = stacksWithFunctions
+                .SelectMany(stackWithFunctions => stackWithFunctions.Functions)
+                .Select(function => function.Name.Length)
+                .Union(globalFunctions.Values.Select(function => function.FunctionName.Length))
+                .Append(0)
+                .Max();
+
+            // compute max width for the function runtime name
+            var maxRuntimeWidth = stacksWithFunctions
+                .SelectMany(stackWithFunctions => stackWithFunctions.Functions)
+                .Select(stackFunction => stackFunction.Configuration.Runtime.ToString().Length)
+                .Union(globalFunctions.Values.Select(function => function.Runtime.ToString().Length))
+                .Append(0)
+                .Max();
+
+            // print Lambda functions belonging to stacks
+            var showAsteriskExplanation = false;
+            foreach(var stackWithFunctions in stacksWithFunctions
+                .Where(stackWithFunction => stackWithFunction.Functions.Any())
+                .OrderBy(stackWithFunction => stackWithFunction.Stack.StackName)
+            ) {
+                Console.WriteLine();
+
+                // check if CloudFormation stack was deployed by LambdaSharp
+                var moduleInfoOutput = stackWithFunctions.Stack.Outputs
+                    .FirstOrDefault(output => output.OutputKey == "Module")
+                    ?.OutputValue;
+                Console.Write($"{Settings.OutputColor}{stackWithFunctions.Stack.StackName}{Settings.ResetColor}");
+                if(ModuleInfo.TryParse(moduleInfoOutput, out var moduleInfo)) {
+                    var lambdaSharpToolOutput = stackWithFunctions.Stack.Outputs
+                        .FirstOrDefault(output => output.OutputKey == "LambdaSharpTool")
+                        ?.OutputValue;
+                    Console.Write($" ({Settings.InfoColor}{moduleInfo.FullName}:{moduleInfo.Version}{Settings.ResetColor}) [lash {lambdaSharpToolOutput ?? "pre-0.6.1"}]");
+                }
+                Console.WriteLine(":");
+
+                foreach(var function in stackWithFunctions.Functions.OrderBy(function => function.Name)) {
+                    PrintFunction(function.Name, function.Configuration);
+                }
+            }
+
+            // print orphan Lambda functions
+            if(globalFunctions.Any()) {
+                Console.WriteLine();
+                Console.WriteLine("ORPHANS:");
+                foreach(var function in globalFunctions.Values.OrderBy(function => function.FunctionName)) {
+                    PrintFunction(function.FunctionName, function);
+                }
+            }
+
+            // show optional (*) explanation if it was printed
+            if(showAsteriskExplanation) {
+                Console.WriteLine();
+                Console.WriteLine("(*) Showing Lambda last-modified date, because last event timestamp in CloudWatch log stream is not available");
+            }
+
+            // local functions
+            async Task<IEnumerable<FunctionConfiguration>> ListLambdasAsync() {
+                var result = new List<FunctionConfiguration>();
+                var request = new ListFunctionsRequest();
+                do {
+                    var response = await lambdaClient.ListFunctionsAsync(request);
+                    result.AddRange(response.Functions);
+                    request.Marker = response.NextMarker;
+                } while(request.Marker != null);
+                return result;
+            }
+
+            async Task<IEnumerable<Stack>> ListStacksAsync() {
+                var result = new List<Stack>();
+                var request = new DescribeStacksRequest();
+                do {
+                    var response = await cfnClient.DescribeStacksAsync(request);
+                    result.AddRange(response.Stacks);
+                    request.NextToken = response.NextToken;
+                } while(request.NextToken != null);
+                return result;
+            }
+
+            async Task<IEnumerable<(string Name, FunctionConfiguration Configuration)>> ListStackFunctionsAsync(string stackName) {
+                var result = new List<(string, FunctionConfiguration)>();
+                var request = new ListStackResourcesRequest {
+                    StackName = stackName
+                };
+                do {
+                    var response = await cfnClient.ListStackResourcesAsync(request);
+                    result.AddRange(
+                        response.StackResourceSummaries
+                            .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
+                            .Select(summary => {
+                                globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
+                                return (Name: summary.LogicalResourceId, Configuration: configuration);
+                            })
+                            .Where(tuple => tuple.Configuration != null)
+                    );
+                    request.NextToken = response.NextToken;
+                } while(request.NextToken != null);
+                return result;
+            }
+
+            void PrintFunction(string name, FunctionConfiguration function) {
+                Console.Write("    ");
+                Console.Write(name);
+                Console.Write("".PadRight(maxFunctionNameWidth - name.Length + 4));
+                Console.Write(function.Runtime);
+                Console.Write("".PadRight(maxRuntimeWidth - function.Runtime.ToString().Length + 4));
+                if(
+                    !logStreams.TryGetValue(function.FunctionName, out var logStream)
+                    || (logStream?.LastEventTimestamp == null)
+                ) {
+                    Console.Write(DateTimeOffset.Parse(function.LastModified).ToString("yyyy-MM-dd"));
+                    Console.Write("(*)");
+                    showAsteriskExplanation = true;
+                } else {
+                    Console.Write(logStream.LastEventTimestamp.ToString("yyyy-MM-dd"));
+                }
+                Console.WriteLine();
             }
         }
     }

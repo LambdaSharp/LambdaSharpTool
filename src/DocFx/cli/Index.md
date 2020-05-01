@@ -33,3 +33,4 @@ The LambdaSharp CLI is used to process the module definition, compile the C# pro
 1. [`util create-invoke-methods-schema`](Tool-Util-CreateInvokeMethodsSchema.md): create JSON schema for compiled methods
 1. [`util delete-orphan-logs`](Tool-Util-DeleteOrphanLogs.md): delete orphaned Lambda CloudWatch logs
 1. [`util download-cloudformation-spec`](Tool-Util-DownloadCloudFormationSpec.md): download the CloudFormation types specification
+1. [`util list-lambdas`](Tool-Util-ListLambdas.md): list Lambda function by CloudFormation stack
