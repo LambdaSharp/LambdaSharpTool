@@ -4,7 +4,7 @@ description: Release notes for LambdaSharp "Geminus" (v0.7)
 keywords: release, notes, geminus
 ---
 
-# LambdaSharp "Geminus" Release (v0.7.0.15) - 2020-04-24
+# LambdaSharp "Geminus" Release (v0.7.0.16) - 2020-05-01
 
 > Geminus of Rhodes, was a Greek astronomer and mathematician, who flourished in the 1st century BC. An astronomy work of his, the Introduction to the Phenomena, still survives; it was intended as an introductory astronomy book for students. He also wrote a work on mathematics, of which only fragments quoted by later authors survive. [(Wikipedia)](https://en.wikipedia.org/wiki/Geminus)
 
@@ -179,6 +179,19 @@ The `lash encrypt` command now has a support for decrypting an encrypted secret 
 * The `ALambdaFinalizerFunction` class now checks confirms the CloudFormation stack is being deleted before triggering the [DeleteDeployment(FinalizerProperties)] method. This change allows a `Finalizer` to be removed from a module without triggering its delete logic.
 
 ## Releases
+
+### (v0.7.0.16) - 2020-05-01
+
+#### New Features
+
+* LambdaSharp CLI
+    * Added `util list-lambdas` command to list all Lambda functions by CloudFormation stack with their last used timestamp.
+    * Enhanced rendering of resource updated that could lead to potential data loss.
+
+#### Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue with updating CloudFormation stacks deployed with _LambdaSharp.Tool_ v0.6.0 and earlier.
 
 ### (v0.7.0.15) - 2020-04-24
 

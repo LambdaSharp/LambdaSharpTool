@@ -178,10 +178,36 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     var lossyChanges = DetectLossyChanges(changes);
                     if(lossyChanges.Any()) {
                         LogError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
-                        Console.WriteLine("=> WARNING: detected potential replacement and data-loss in the following resources");
-                        foreach(var lossy in lossyChanges) {
-                            Console.WriteLine($"{(lossy.ResourceChange.Replacement == Replacement.True ? "ALWAYS" : "CONDITIONAL"),-12} {lossy.ResourceChange.ResourceType,-55} {TranslateLogicalIdToFullName(lossy.ResourceChange.LogicalResourceId)}");
+                        Console.WriteLine();
+                        if(Settings.UseAnsiConsole) {
+                            Console.WriteLine($"{AnsiTerminal.Black}{AnsiTerminal.BackgroundRed}CAUTION:{AnsiTerminal.Reset} detected potential replacement and data-loss in the following resources");
+                        } else {
+                            Console.WriteLine("CAUTION: detected potential replacement and data-loss in the following resources");
                         }
+                        var maxResourceTypeWidth = lossyChanges.Select(change => change.ResourceChange.ResourceType.Length).Max();
+                        foreach(var lossy in lossyChanges) {
+                            if(Settings.UseAnsiConsole) {
+                                if(lossy.ResourceChange.Replacement == Replacement.True) {
+                                    Console.Write(AnsiTerminal.Red);
+                                    Console.Write("ALWAYS         ");
+                                } else {
+                                    Console.Write(AnsiTerminal.Yellow);
+                                    Console.Write("CONDITIONAL    ");
+                                }
+                                Console.Write(AnsiTerminal.Reset);
+                            } else {
+                                Console.WriteLine(
+                                    (lossy.ResourceChange.Replacement == Replacement.True)
+                                        ? "ALWAYS         "
+                                        : "CONDITIONAL    "
+                                );
+                            }
+                            Console.Write(lossy.ResourceChange.ResourceType);
+                            Console.Write("".PadRight(maxResourceTypeWidth - lossy.ResourceChange.ResourceType.Length + 4));
+                            Console.Write(TranslateLogicalIdToFullName(lossy.ResourceChange.LogicalResourceId));
+                            Console.WriteLine();
+                        }
+                        Console.WriteLine();
                         return false;
                     }
                 }
