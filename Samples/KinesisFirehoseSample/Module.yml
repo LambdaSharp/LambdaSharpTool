@@ -12,7 +12,7 @@ Items:
       LifecycleConfiguration:
         Rules:
           - Status: Enabled
-            ExpirationInDays:
+            ExpirationInDays: 90
 
             # Use 'intelligent tiering' to move rarely accessed records to a lower cost tier
             Transitions:
