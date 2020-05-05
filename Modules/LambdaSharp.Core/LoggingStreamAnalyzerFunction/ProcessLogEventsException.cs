@@ -18,7 +18,7 @@
 
 using LambdaSharp.Exceptions;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction {
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
     public class ProcessLogEventsException : ALambdaException {
 

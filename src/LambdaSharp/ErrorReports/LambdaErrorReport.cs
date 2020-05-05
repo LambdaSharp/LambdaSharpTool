@@ -16,10 +16,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
+using LambdaSharp.Records;
 
 namespace LambdaSharp.ErrorReports {
 
@@ -27,24 +25,19 @@ namespace LambdaSharp.ErrorReports {
     /// The <see cref="LambdaErrorReport"/> class defines a structured Lambda log entry
     /// for runtime errors and warnings.
     /// </summary>
-    public class LambdaErrorReport {
+    public class LambdaErrorReport : ALambdaRecord {
+
+        //--- Constructors ---
+
+        /// <summary>
+        /// Create a new <see cref="LambdaErrorReport"/> instance.
+        /// </summary>
+        public LambdaErrorReport() {
+            Source = "LambdaError";
+            Version = "2018-12-31";
+        }
 
         //--- Properties ---
-
-        // Report
-
-        /// <summary>
-        /// The <see cref="Source"/> property determines the source of the log entry.
-        /// The value is always <c>"LambdaError"</c> for instance of <see cref="LambdaErrorReport"/>.
-        /// </summary>
-        /// <value>The source of the log entry.</value>
-        public string Source { get; set; } = "LambdaError";
-
-        /// <summary>
-        /// The <see cref="Version"/> property determines the format version of the Lambda error log entry.
-        /// </summary>
-        /// <value>The format version.</value>
-        public string Version { get; set; } = "2018-12-31";
 
         // Origin
 

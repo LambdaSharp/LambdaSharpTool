@@ -30,7 +30,7 @@ using LambdaSharp.Records;
 using LambdaSharp.Records.Events;
 using LambdaSharp.Records.Metrics;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction {
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
     public interface ILogicDependencyProvider {
 
@@ -128,18 +128,21 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         }
 
         //--- Methods ---
-        public async Task<bool> ProgressLogEntryAsync(OwnerMetaData owner, string? message, DateTimeOffset timestamp) {
-            if((message == null) || (timestamp == DateTimeOffset.UnixEpoch)) {
-                return false;
+        public async Task ProgressLogEntryAsync(OwnerMetaData owner, string? message, DateTimeOffset timestamp) {
+            if(message == null) {
+                throw new ArgumentNullException(nameof(message));
+            }
+            if(timestamp == DateTimeOffset.UnixEpoch) {
+                throw new ArgumentException("timestamp not set", nameof(timestamp));
             }
             foreach(var mapping in _mappings) {
                 var match = mapping.Regex.Match(message);
                 if(match.Success) {
                     await mapping.HandlerAsync(owner, message, timestamp, match, mapping.Pattern);
-                    return true;
+                    return;
                 }
             }
-            return false;
+            throw new ProcessLogEventsException("invalid or unrecognized log event entry");
         }
 
         private Task IgnoreEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
@@ -212,10 +215,10 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                 ? TimeSpan.FromMilliseconds(double.Parse(match.Groups["InitDuration"].Value))
                 : TimeSpan.Zero;
             var usage = new UsageReport {
-                BilledDuration = billedDuration,
-                UsedDuration = usedDuration,
-                UsedDurationPercent = (float)usedDuration.TotalMilliseconds / (float)owner.FunctionMaxDuration.TotalMilliseconds,
-                MaxDuration = owner.FunctionMaxDuration,
+                BilledDuration = (float)billedDuration.TotalSeconds,
+                UsedDuration = (float)usedDuration.TotalSeconds,
+                UsedDurationPercent = (float)(usedDuration.TotalSeconds / owner.FunctionMaxDuration.TotalSeconds),
+                MaxDuration = (float)owner.FunctionMaxDuration.TotalSeconds,
                 MaxMemory = maxMemory,
                 UsedMemory = usedMemory,
                 UsedMemoryPercent = (float)usedMemory / (float)owner.FunctionMaxMemory,

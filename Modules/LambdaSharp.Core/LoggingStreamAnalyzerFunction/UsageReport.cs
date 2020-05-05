@@ -17,16 +17,23 @@
  */
 
 using System;
+using LambdaSharp.Records;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction {
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
-    public class UsageReport {
+    public class UsageReport : ALambdaRecord {
+
+        //--- Constructors ---
+        public UsageReport() {
+            Source = "UsageReport";
+            Version = "2020-05-04";
+        }
 
         //--- Properties ---
-        public TimeSpan BilledDuration { get; set; }
-        public TimeSpan UsedDuration { get; set; }
+        public float BilledDuration { get; set; }
+        public float UsedDuration { get; set; }
         public float UsedDurationPercent { get; set; }
-        public TimeSpan MaxDuration { get; set; }
+        public float MaxDuration { get; set; }
         public int MaxMemory { get; set; }
         public int UsedMemory { get; set; }
         public float UsedMemoryPercent { get; set; }

@@ -22,11 +22,11 @@ Pragmas:
   - Overrides:
       Module::DeadLetterQueue: !Ref DeadLetterQueue
       Module::LoggingStream: !Ref LoggingStream
-      Module::LoggingStreamRole: !GetAtt LoggingStreamRole.Arn
+      Module::LoggingStreamRole: !Ref LoggingStreamRole
 
 Items:
 
-  # Resource for LambdaSharp Tier
+  # Resource for LambdaSharp Deployment Tier
   - Parameter: DeadLetterQueue
     Scope: public
     Section: LambdaSharp Tier Settings
@@ -38,29 +38,36 @@ Items:
   - Parameter: LoggingStream
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: Logging Kinesis stream for functions (leave blank to create a new stream)
+    Label: Logging stream for functions (leave blank to create a new stream)
     Description: Logging Stream (ARN)
-    Type: AWS::Kinesis::Stream
-    Allow: Subscribe
+    Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
-      RetentionPeriodHours: !Ref LoggingStreamRetentionPeriodHours
-      ShardCount: !Ref LoggingStreamShardCount
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        RoleARN: !GetAtt LoggingStreamDeliveryRole.Arn
+        BucketARN: !Ref LoggingBucket
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 1
 
-  - Parameter: LoggingStreamRetentionPeriodHours
-    Section: LambdaSharp Tier Settings
-    Label: Size of the Logging stream buffer (in hours)
-    Description: Retention period (hours)
-    Type: Number
-    Default: 24
-    MinValue: 1
+        # Storage format for processed records
+        # TODO:
+        CompressionFormat: GZIP
 
-  - Parameter: LoggingStreamShardCount
-    Section: LambdaSharp Tier Settings
-    Label: Number of Kinesis shards for the logging streams
-    Description: Number of Kinesis shards
-    Type: Number
-    Default: 1
-    MinValue: 1
+        # Store successfully transformed records here
+        Prefix: !Ref LoggingRecordsSuccessPrefix
+
+        # Store failed records here
+        ErrorOutputPrefix: !Ref LoggingRecordsFailurePrefix
+
+        # Register the Lambda function to process all records
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt LoggingStreamAnalyzerFunction.Arn
 
   - Parameter: CoreSecretsKey
     Scope: all
@@ -87,9 +94,11 @@ Items:
             Resource: "*"
 
   # Every CloudWatch log subscription needs a role that allows it to write to the Kinesis stream
-  - Resource: LoggingStreamRole
+  - Parameter: LoggingStreamRole
     Scope: public
-    Description: CloudWatch Logs Role for writing to logging stream (ARN)
+    Section: LambdaSharp Tier Settings
+    Label: IAM role used by CloudWatch Log to write records to logging stream (leave blank to create a new role)
+    Description: CloudWatch Logs IAM Role (ARN)
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -101,72 +110,127 @@ Items:
               Service: !Sub "logs.${AWS::Region}.amazonaws.com"
             Action: sts:AssumeRole
       Policies:
-        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsFirehosePolicy"
           PolicyDocument:
             Version: 2012-10-17
             Statement:
-              - Sid: CloudWatchLogsKinesisPermissions
+              - Sid: CloudWatchLogsFirehosePermissions
                 Effect: Allow
-                Action: kinesis:PutRecord
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
                 Resource: !Ref LoggingStream
+
+  # CloudWatch Logs Processing
+  - Parameter: LoggingBucket
+    Section: LambdaSharp Tier Settings
+    Label: S3 bucket for storing ingested log records (leave blank to create a new S3 bucket)
+    Description: Logging S3 Bucket (ARN)
+    Type: AWS::S3::Bucket
+    Properties:
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 90
+            Transitions:
+              - StorageClass: INTELLIGENT_TIERING
+                TransitionInDays: 1
+
+  - Parameter: LoggingRecordsSuccessPrefix
+    Section: LambdaSharp Tier Settings
+    Label: Destination S3 bucket prefix for records successfully processed by logging stream
+    Description: S3 Object Prefix
+    Type: String
+    Default: "logging-success/"
+
+  - Parameter: LoggingRecordsFailurePrefix
+    Section: LambdaSharp Tier Settings
+    Label: Destination S3 bucket prefix for records unsuccessfully processed processed by logging stream
+    Description: S3 Object Prefix
+    Type: String
+    Default: "logging-failed/"
+
+  - Resource: LoggingStreamDeliveryRole
+    Description: IAM role for logging stream to interact with other resources in this module
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: FirehosePrincipal
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+
+        # Give Firehose access to S3 bucket
+        - PolicyName: !Sub "${AWS::StackName}FirehoseS3Policy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:PutObject
+                Resource:
+                  - !Ref LoggingBucket
+                  - !Sub "${LoggingBucket}/*"
+
+        # Give Firehose access to invoking the Lambda function
+        - PolicyName: !Sub "${AWS::StackName}FirehoseLambdaPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
+                Resource: !GetAtt LoggingStreamAnalyzerFunction.Arn
+
+  - Function: LoggingStreamAnalyzerFunction
+    Memory: 256
+    Timeout: 300
 
   # Rollbar Settings
   - Parameter: RollbarReadAccessToken
+    Scope: RegistrationFunction
     Section: Rollbar Settings
     Label: Account-level token for read operations (leave blank to disable Rollbar integration)
     Description: Read Access Token
     Type: Secret
-    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarWriteAccessToken
+    Scope: RegistrationFunction
     Section: Rollbar Settings
     Label: Account-level token for write operations (leave blank to disable Rollbar integration)
     Description: Write Access Token
     Type: Secret
-    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarProjectPattern
+    Scope: RegistrationFunction
     Section: Rollbar Settings
     Label: 'Optional pattern for naming Rollbar projects (e.g. "Lambda-{ModuleFullName}")'
     Description: Project Pattern
-    Scope: RegistrationFunction
     Default: ""
 
   - Parameter: RollbarProjectPrefix
+    Scope: RegistrationFunction
     Section: Rollbar Settings
     Label: '(Obsolete: use "RollbarProjectPattern" instead) Optional prefix when creating Rollbar projects (e.g. "Lambda-")'
     Description: Project Prefix
-    Scope: RegistrationFunction
     Default: ""
 
-  # CloudWatch Log Events Processing
-  - Function: ProcessLogEventsFunction
-    Description: Process log events from all LambdaSharp module functions
-    Memory: 256
-    Timeout: 30
-    Sources:
-      - Kinesis: LoggingStream
-
   # Module & Function Registrations
-  - Resource: ErrorReportTopic
-    Scope: public
-    Description: SNS topic for LambdaSharp module errors
-    Scope: ProcessLogEventsFunction
-    Type: AWS::SNS::Topic
-    Allow: Publish
-
-  - Resource: UsageReportTopic
-    Scope: public
-    Description: SNS topic for LambdaSharp function usage reports
-    Scope: ProcessLogEventsFunction
-    Type: AWS::SNS::Topic
-    Allow: Publish
-
   - Resource: RegistrationTable
-    Description: DynamoDb table for storing function registrations
     Scope: all
+    Description: DynamoDb table for storing function registrations
     Type: AWS::DynamoDB::Table
     Allow: ReadWrite
     Properties:
@@ -302,8 +366,8 @@ Items:
             Resource: !Sub "${DeploymentBucketResource.Arn}/*"
 
   - Resource: DeploymentBucket
-    Description: S3 bucket for published modules (ARN)
     Scope: public
+    Description: S3 bucket for published modules (ARN)
     Value: !If
       - CreateDeploymentBucket
       - !GetAtt DeploymentBucketResource.Arn

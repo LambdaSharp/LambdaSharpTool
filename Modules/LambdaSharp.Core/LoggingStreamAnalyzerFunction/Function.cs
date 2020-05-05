@@ -27,15 +27,15 @@ using System.Threading.Tasks;
 using Amazon.CloudWatchEvents;
 using Amazon.CloudWatchEvents.Model;
 using Amazon.DynamoDBv2;
-using Amazon.Lambda.KinesisEvents;
+using Amazon.Lambda.KinesisFirehoseEvents;
 using LambdaSharp.Core.Registrations;
 using LambdaSharp.Core.RollbarApi;
 using LambdaSharp.ErrorReports;
-using LambdaSharp.Logger;
+using LambdaSharp.Records;
 using LambdaSharp.Records.Events;
 using LambdaSharp.Records.Metrics;
 
-namespace LambdaSharp.Core.ProcessLogEventsFunction {
+namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
     public class LogEventsMessage {
 
@@ -56,7 +56,16 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         public string? Message { get; set; }
     }
 
-    public class Function : ALambdaFunction<KinesisEvent, string>, ILogicDependencyProvider {
+    public class LogRecord : ALambdaRecord {
+
+        //--- Properties ---
+        public string? Module { get; set; }
+        public string? ModuleId { get; set; }
+        public string? Function { get; set; }
+        public string? Record { get; set; }
+    }
+
+    public class Function : ALambdaFunction<KinesisFirehoseEvent, KinesisFirehoseResponse>, ILogicDependencyProvider {
 
         //--- Constants ---
         private const string LOG_GROUP_PREFIX = "/aws/lambda/";
@@ -74,6 +83,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         private List<PutEventsRequestEntry> _eventEntries = new List<PutEventsRequestEntry>();
         private int _eventsEntriesTotalSize = 0;
         private OwnerMetaData? _selfMetaData;
+        private List<string> _convertedRecords = new List<string>();
 
         //--- Properties ---
         private Logic Logic => _logic ?? throw new InvalidOperationException();
@@ -104,26 +114,28 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
             };
         }
 
-        public override async Task<string> ProcessMessageAsync(KinesisEvent kinesis) {
+        public override async Task<KinesisFirehoseResponse> ProcessMessageAsync(KinesisFirehoseEvent request) {
 
             // NOTE (2018-12-11, bjorg): this function is responsible for error logs parsing; therefore, it CANNOT error out itself;
             //  instead, it must rely on aggressive exception handling and redirect those message where appropriate.
 
             ResetMetrics();
+            var response = new KinesisFirehoseResponse {
+                Records = new List<KinesisFirehoseResponse.FirehoseRecord>()
+            };
             try {
-                var recordIndex = -1;
-                foreach(var record in kinesis.Records) {
-                    ++recordIndex;
+                foreach(var record in request.Records) {
                     try {
 
                         // deserialize kinesis record into a CloudWatch Logs event
                         LogEventsMessage logEvent;
-                        using(var stream = new MemoryStream()) {
-                            using(var gzip = new GZipStream(record.Kinesis.Data, CompressionMode.Decompress)) {
-                                gzip.CopyTo(stream);
-                                stream.Position = 0;
+                        using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
+                        using(var destinationStream = new MemoryStream()) {
+                            using(var gzip = new GZipStream(sourceStream, CompressionMode.Decompress)) {
+                                gzip.CopyTo(destinationStream);
+                                destinationStream.Position = 0;
                             }
-                            logEvent = LambdaSerializer.Deserialize<LogEventsMessage>(stream);
+                            logEvent = LambdaSerializer.Deserialize<LogEventsMessage>(Encoding.UTF8.GetString(destinationStream.ToArray()));
                         }
 
                         // validate log event
@@ -132,29 +144,34 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                             || (logEvent.MessageType == null)
                             || (logEvent.LogEvents == null)
                         ) {
-                            LogWarn("invalid kinesis record #{0}\n{1}", recordIndex, LambdaSerializer.Serialize(logEvent));
+                            LogWarn("invalid record (record-id: {0})", record.RecordId);
+                            RecordFailed(record);
                             continue;
                         }
 
                         // skip log event from own module
                         if(logEvent.LogGroup.Contains(Info.FunctionName)) {
-                            LogInfo("skipping event from own event log");
+                            LogInfo("skipping event from own event log (record-id: {0})", record.RecordId);
+                            RecordDropped(record);
                             continue;
                         }
 
                         // skip control log event
                         if(logEvent.MessageType == "CONTROL_MESSAGE") {
-                            LogInfo("skipping control message");
+                            LogInfo("skipping control message (record-id: {0})", record.RecordId);
+                            RecordDropped(record);
                             continue;
                         }
 
                         // check if this log event is expected
                         if(logEvent.MessageType != "DATA_MESSAGE") {
-                            LogWarn("unknown message type\n{0}", LambdaSerializer.Serialize(logEvent));
+                            LogWarn("unknown message type '{1}' (record-id: {0})", record.RecordId, logEvent.MessageType);
+                            RecordFailed(record);
                             continue;
                         }
                         if(!logEvent.LogGroup.StartsWith(LOG_GROUP_PREFIX, StringComparison.Ordinal)) {
-                            LogWarn("unexpected log group\n{0}", LambdaSerializer.Serialize(logEvent));
+                            LogWarn("unexpected log group '{1}' (record-id: {0})", record.RecordId, logEvent.LogGroup);
+                            RecordFailed(record);
                             continue;
                         }
 
@@ -164,29 +181,48 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
 
                         // check if the log event owner was found
                         if(owner != null) {
+                            _convertedRecords.Clear();
 
                             // process entries in log event
+                            var success = true;
+                            var logEventIndex = -1;
                             foreach(var entry in logEvent.LogEvents) {
+                                ++logEventIndex;
                                 try {
-                                    if(!await Logic.ProgressLogEntryAsync(
+                                    await Logic.ProgressLogEntryAsync(
                                         owner,
                                         entry.Message,
                                         DateTimeOffset.FromUnixTimeMilliseconds(entry.Timestamp)
-                                    )) {
-                                        throw new ProcessLogEventsException("invalid or unrecognized log event entry");
-                                    }
+                                    );
                                 } catch(Exception e) {
-                                    LogError(e, "processing log event entry failed: {0}\n{1}", functionId, LambdaSerializer.Serialize(entry));
+                                    LogError(e, "log event entry [{1}] processing failed (record-id: {0})", record.RecordId, logEventIndex);
+                                    success = false;
+                                    break;
                                 }
+                            }
+
+                            // record outcome
+                            if(success) {
+                                if(_convertedRecords.Any()) {
+                                    LogInfo($"finished log events record (converted {_convertedRecords.Count:N0}, skipped {logEvent.LogEvents.Count - _convertedRecords.Count:N0}, record-id: {record.RecordId})");
+                                    RecordSuccess(record, string.Join("", _convertedRecords.Select(convertedRecord => convertedRecord + "\n")));
+                                } else {
+                                    LogInfo($"dropped record (record-id: {record.RecordId}");
+                                    RecordDropped(record);
+                                }
+                            } else {
+
+                                // nothing to log since error was already logged
+                                RecordFailed(record);
                             }
                         } else {
                             throw new ProcessLogEventsException("unable to retrieve registration for log event entry");
                         }
                     } catch(Exception e) {
-                        LogError(e, "processing kinesis record #{0} failed\n{1}", recordIndex, LambdaSerializer.Serialize(record));
+                        LogError(e, "record failed (record-id: {0})", record.RecordId);
+                        RecordFailed(record);
                     }
                 }
-                return "Ok";
             } finally {
 
                 // NOTE (2020-04-21, bjorg): we don't expect this to fail; but since it's done at the end of the processing function, we
@@ -204,6 +240,27 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                     Provider.Log($"EXCEPTION: {exception}\n");
                 }
             }
+            return response;
+
+            // local functions
+            void RecordSuccess(KinesisFirehoseEvent.FirehoseRecord record, string data)
+                => response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
+                    RecordId = record.RecordId,
+                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_OK,
+                    Base64EncodedData = Convert.ToBase64String(Encoding.UTF8.GetBytes(data))
+                });
+
+            void RecordFailed(KinesisFirehoseEvent.FirehoseRecord record)
+                => response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
+                    RecordId = record.RecordId,
+                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_PROCESSINGFAILED
+                });
+
+            void RecordDropped(KinesisFirehoseEvent.FirehoseRecord record)
+                => response.Records.Add(new KinesisFirehoseResponse.FirehoseRecord {
+                    RecordId = record.RecordId,
+                    Result = KinesisFirehoseResponse.TRANSFORMED_STATE_DROPPED
+                });
         }
 
         private async Task<OwnerMetaData?> GetOwnerMetaDataAsync(string functionId) {
@@ -224,59 +281,6 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
                 }
             }
             return result;
-        }
-
-        private async Task SendErrorExceptionAsync(Exception exception, string? format = null, params object[] args) {
-            try {
-                var report = ErrorReportGenerator.CreateReport(CurrentContext.AwsRequestId, LambdaLogLevel.ERROR.ToString(), exception, format, args);
-                if(report != null) {
-                    await PublishErrorReportAsync(null, report);
-                }
-            } catch {
-
-                // log the error; it's the best we can do
-                LogError(exception, format, args);
-            }
-        }
-
-        private Task PublishErrorReportAsync(OwnerMetaData? owner, LambdaErrorReport report) {
-
-            // capture reporting metrics
-            switch(report.Level) {
-            case "ERROR":
-                ++_errorsReportsCount;
-                break;
-            case "WARNING":
-                ++_warningsReportsCount;
-                break;
-            }
-
-            // send error report as event
-            try {
-                SendEvent(owner ?? SelfMetaData, new LambdaEventRecord {
-                    App = (owner == null)
-                        ? "LambdaSharp.Core"
-                        : "LambdaSharp.Core/Logs",
-                    Type = "LambdaError",
-                    Details = LambdaSerializer.Serialize(report)
-                });
-            } catch {
-
-                // capture error report in log; it's the next best thing we can do
-                Provider.Log(LambdaSerializer.Serialize<LambdaErrorReport>(report) + "\n");
-            }
-
-            // TODO: consider moving this functionality to another Lambda function
-            if(owner != null) {
-                try {
-                    return PublishErrorReportToRollbarAsync(owner, report);
-                } catch {
-
-                    // capture error report in log; it's the next best thing we can do
-                    Provider.Log(LambdaSerializer.Serialize<LambdaErrorReport>(report) + "\n");
-                }
-            }
-            return Task.CompletedTask;
         }
 
         private async Task PublishErrorReportToRollbarAsync(OwnerMetaData owner, LambdaErrorReport report) {
@@ -452,49 +456,111 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction {
         protected override void RecordErrorReport(LambdaErrorReport report) {
             base.RecordErrorReport(report);
 
-            // publish error to the event bus
-            PublishErrorReportAsync(owner: null, report).GetAwaiter().GetResult();
+            // publish error report to the event bus
+            try {
+                SendEvent(SelfMetaData, new LambdaEventRecord {
+                    App =  "LambdaSharp.Core",
+                    Type = "LambdaError",
+                    Details = LambdaSerializer.Serialize(report)
+                });
+            } catch {
+
+                // nothing to do; error report was already sent to logs
+            }
         }
 
         protected override void RecordException(Exception exception) {
             base.RecordException(exception);
 
             // publish exception to the event bus
-            SendEvent(SelfMetaData, new LambdaEventRecord {
-                App = "LambdaSharp.Core",
-                Type = "InternalError",
-                Details = LambdaSerializer.Serialize(new {
-                    Message = exception?.Message,
-                    Type = exception?.GetType().FullName,
-                    Raw = exception?.ToString()
-                })
-            });
+            try {
+                SendEvent(SelfMetaData, new LambdaEventRecord {
+                    App = "LambdaSharp.Core",
+                    Type = "InternalError",
+                    Details = LambdaSerializer.Serialize(new {
+                        Message = exception?.Message,
+                        Type = exception?.GetType().FullName,
+                        Raw = exception?.ToString()
+                    })
+                });
+            } catch {
+
+                // nothing to do; error report was already sent to logs
+            }
         }
 
-        //--- ILogicDependencyProvider Members ---
-        Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report)
-            => PublishErrorReportAsync(owner, report);
+        private void AddConvertedRecord(OwnerMetaData owner, ALambdaRecord record)
+            => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
+                Source = record.Source,
+                Version = record.Version,
+                ModuleId = owner.ModuleId,
+                Module = owner.Module,
+                Function = owner.FunctionName,
+                Record = LambdaSerializer.Serialize<object>(record)
+            }));
 
-        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report)
-            => SendEvent(owner, new LambdaEventRecord {
+        //--- ILogicDependencyProvider Members ---
+        async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
+
+            // send parsed error report to event bus
+            SendEvent(owner, new LambdaEventRecord {
+                App = "LambdaSharp.Core/Logs",
+                Type = "LambdaError",
+                Details = LambdaSerializer.Serialize(report)
+            });
+
+            // capture reporting metrics
+            switch(report.Level) {
+            case "ERROR":
+                ++_errorsReportsCount;
+                break;
+            case "WARNING":
+                ++_warningsReportsCount;
+                break;
+            }
+
+            // capture error report as converted record
+            AddConvertedRecord(owner, report);
+
+            // TODO: consider moving this functionality to another Lambda function
+            try {
+                await PublishErrorReportToRollbarAsync(owner, report);
+            } catch(Exception e) {
+                LogErrorAsWarning(e, "failed sending error report to Rollbar");
+            }
+        }
+
+        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report) {
+
+            // publish usage report to the event bus
+            SendEvent(owner, new LambdaEventRecord {
                 App = "LambdaSharp.Core/Logs",
                 Type = "UsageReport",
                 Details = LambdaSerializer.Serialize(report)
             });
 
-        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
-            SendEvent(owner, record);
-            if((record.Time != null) && DateTimeOffset.TryParse(record.Time, out var sentTime)) {
-                LogMetric("Event.Latency", (DateTimeOffset.UtcNow - sentTime).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
-            }
+            // capture usage report as converted record
+            AddConvertedRecord(owner, report);
         }
 
-        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record)
-            => SendEvent(owner, new LambdaEventRecord {
+        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
+
+            // capture event as converted record
+            AddConvertedRecord(owner, record);
+        }
+
+        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record) {
+
+            // publish metrics to the event bus
+            SendEvent(owner, new LambdaEventRecord {
                 Time = DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp(),
                 App = "LambdaSharp.Core/Logs",
                 Type = "LambdaMetrics",
                 Details = LambdaSerializer.Serialize(record)
             });
+
+            // capture metrics as converted record
+            AddConvertedRecord(owner, record);
+        }
     }
 }

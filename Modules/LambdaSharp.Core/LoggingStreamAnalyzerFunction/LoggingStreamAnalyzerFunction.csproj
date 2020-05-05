@@ -3,13 +3,13 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <Deterministic>true</Deterministic>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
-    <RootNamespace>LambdaSharp.Core.ProcessLogEventsFunction</RootNamespace>
+    <RootNamespace>LambdaSharp.Core.LoggingStreamAnalyzerFunction</RootNamespace>
     <AWSProjectType>Lambda</AWSProjectType>
     <Nullable>enable</Nullable>
     <NoWarn>CS1998</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Amazon.Lambda.KinesisEvents" Version="1.1.0" />
+    <PackageReference Include="Amazon.Lambda.KinesisFirehoseEvents" Version="1.1.0"/>
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.3.105.28" />
     <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.3.102.27" />
   </ItemGroup>
