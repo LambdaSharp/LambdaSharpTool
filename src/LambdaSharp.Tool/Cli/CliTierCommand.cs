@@ -115,6 +115,7 @@ namespace LambdaSharp.Tool.Cli {
             if(!modulesToUpdate.Any()) {
                 return;
             }
+            Console.WriteLine();
             if(Settings.UseAnsiConsole) {
                 Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
             } else {
@@ -129,7 +130,6 @@ namespace LambdaSharp.Tool.Cli {
             foreach(var module in modulesToUpdate) {
                 await UpdateStackParameters(settings, module, parameters);
             }
-            Console.WriteLine();
 
             // show updated state
             if(showModules) {
