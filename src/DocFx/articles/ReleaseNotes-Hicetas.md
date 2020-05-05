@@ -39,6 +39,8 @@ TODO:
 ### LambdaSharp.Core
     TODO: ...
 
+TODO: document the JSON format for log records
+
 ### (v0.8.0.0) - TBD
 
 **IMPORTANT:** In preparation of switching `LambdaSharp` assembly to .NET Core 3.1 and using `System.Text.Json` in a future release, it is highly advised to remove all references to `Amazon.Lambda.Serialization.Json` and `Newtonsoft.Json` from all _.csproj_ files. These package are currently inherited via the `LambdaSharp` assembly anyway. This change will ensure that these obsolete references are no longer included once a project is upgraded to using the future release of `LambdaSharp`. Additionally, the default assembly serializer should be switched from `Amazon.Lambda.Serialization.Json.JsonSerializer` to `LambdaSharp.Serialization.LambdaJsonSerializer`.
@@ -84,3 +86,23 @@ TODO:
 * LambdaSharp Core Module
     * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
+# Create an Athena Table to Query ingested CloudWatch Logs
+
+```sql
+CREATE EXTERNAL TABLE IF NOT EXISTS `<ATHENA-DATABASE>`.Logs (
+  `Timestamp` bigint,
+  `Type` string,
+  `Version` string,
+  `ModuleInfo` string,
+  `Module` string,
+  `ModuleId` string,
+  `Function` string,
+  `FunctionId` string,
+  `Record` string
+)
+ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
+WITH SERDEPROPERTIES (
+  'serialization.format' = '1'
+) LOCATION 's3://<LOGGING-BUCKET>/logging-success/'
+TBLPROPERTIES ('has_encrypted_data'='false');
+```
