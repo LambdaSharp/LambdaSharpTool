@@ -59,6 +59,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
     public class LogRecord : ALambdaRecord {
 
         //--- Properties ---
+        public long Timestamp { get; set; }
         public string? ModuleInfo { get; set; }
         public string? Module { get; set; }
         public string? ModuleId { get; set; }
@@ -208,7 +209,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                             if(success) {
                                 if(_convertedRecords.Any()) {
                                     LogInfo($"finished log events record (converted {_convertedRecords.Count:N0}, skipped {logEvent.LogEvents.Count - _convertedRecords.Count:N0}, record-id: {record.RecordId})");
-                                    RecordSuccess(record, string.Join("", _convertedRecords.Select(convertedRecord => convertedRecord + "\n")));
+                                    RecordSuccess(record, _convertedRecords.Aggregate("", (accumulator, convertedRecord) => accumulator + convertedRecord + "\n"));
                                 } else {
                                     LogInfo($"dropped record (record-id: {record.RecordId}");
                                     RecordDropped(record);
@@ -496,10 +497,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
         }
 
-        private void AddConvertedRecord(OwnerMetaData owner, ALambdaRecord record)
+        private void AddConvertedRecord(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaRecord record)
             => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
                 Type = record.Type,
                 Version = record.Version,
+                Timestamp = timestamp.ToUnixTimeMilliseconds(),
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
                 ModuleId = owner.ModuleId,
@@ -509,10 +511,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }));
 
         //--- ILogicDependencyProvider Members ---
-        async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
+        async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report) {
 
             // send parsed error report to event bus
             SendEvent(owner, new LambdaEventRecord {
+                Time = timestamp.ToRfc3339Timestamp(),
                 Source = owner.Module,
                 DetailType = "LambdaError",
                 Detail = LambdaSerializer.Serialize(report)
@@ -529,7 +532,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
 
             // capture error report as converted record
-            AddConvertedRecord(owner, report);
+            AddConvertedRecord(owner, timestamp, report);
 
             // TODO: consider moving this functionality to another Lambda function
             try {
@@ -539,7 +542,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
         }
 
-        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, UsageReport report) {
+        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report) {
 
             // publish usage report to the event bus
             SendEvent(owner, new LambdaEventRecord {
@@ -549,16 +552,16 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             });
 
             // capture usage report as converted record
-            AddConvertedRecord(owner, report);
+            AddConvertedRecord(owner, timestamp, report);
         }
 
-        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
+        async Task ILogicDependencyProvider.SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record) {
 
             // capture event as converted record
-            AddConvertedRecord(owner, record);
+            AddConvertedRecord(owner, timestamp, record);
         }
 
-        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record) {
+        async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record) {
 
             // publish metrics to the event bus
             SendEvent(owner, new LambdaEventRecord {
@@ -569,7 +572,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             });
 
             // capture metrics as converted record
-            AddConvertedRecord(owner, record);
+            AddConvertedRecord(owner, timestamp, record);
         }
     }
 }

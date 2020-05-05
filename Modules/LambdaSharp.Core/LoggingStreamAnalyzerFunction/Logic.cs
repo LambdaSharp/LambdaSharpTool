@@ -35,10 +35,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
     public interface ILogicDependencyProvider {
 
         //--- Methods ---
-        Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report);
-        Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report);
-        Task SendEventAsync(OwnerMetaData owner, LambdaEventRecord record);
-        Task SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record);
+        Task SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report);
+        Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report);
+        Task SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record);
+        Task SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record);
     }
 
     public class LambdaLogRecord : ALambdaRecord {
@@ -171,7 +171,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                     // convert old format into new
                     errorReport.ModuleInfo = errorReport.Module;
                     errorReport.Module = errorReport.Module?.Split(':', 2)[0];
-                    await _provider.SendErrorReportAsync(owner, errorReport);
+                    await _provider.SendErrorReportAsync(owner, timestamp, errorReport);
                 } else {
                     throw new ProcessLogEventsException($"unrecognized record 'Source' property: {record.Source}");
                 }
@@ -181,22 +181,19 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                     // report error record
                     var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
-                    await _provider.SendErrorReportAsync(owner, errorReport);
+                    await _provider.SendErrorReportAsync(owner, timestamp, errorReport);
                     break;
                 case "LambdaEvent":
 
                     // report event record
                     var eventRecord = _serializer.Deserialize<LambdaEventRecord>(text);
-                    if(eventRecord.Time == null) {
-                        eventRecord.Time = timestamp.ToRfc3339Timestamp();
-                    }
-                    await _provider.SendEventAsync(owner, eventRecord);
+                    await _provider.SendEventAsync(owner, timestamp, eventRecord);
                     break;
                 case "LambdaMetrics":
 
                     // report metrics record
                     var metricsRecord = _serializer.Deserialize<LambdaMetricsRecord>(text);
-                    await _provider.SendMetricsAsync(owner, metricsRecord);
+                    await _provider.SendMetricsAsync(owner, timestamp, metricsRecord);
                     break;
                 case null:
                     throw new ProcessLogEventsException($"missing record '{nameof(record.Type)}' property");
@@ -210,21 +207,21 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(owner, report);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchTimeoutAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = $"Lambda timed out after {match.Groups["Duration"].Value} seconds";
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(owner, report);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = "Lambda exited before completing request";
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(owner, report);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchExecutionReportAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
@@ -253,7 +250,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 InitDuration = (float)initDuration.TotalSeconds
             };
             var tasks = new List<Task> {
-                _provider.SendUsageReportAsync(owner, usage)
+                _provider.SendUsageReportAsync(owner, timestamp, usage)
             };
 
             // send error report if usage is near or exceeding limits
@@ -276,7 +273,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda nearing execution limits");
             }
             if(report.Message != null) {
-                tasks.Add(_provider.SendErrorReportAsync(owner, report));
+                tasks.Add(_provider.SendErrorReportAsync(owner, timestamp, report));
             }
             return Task.WhenAll(tasks);
         }
@@ -307,14 +304,14 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                     }
                 };
             }
-            return _provider.SendErrorReportAsync(owner, report);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchJavascriptSyntaxErrorAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
-            return _provider.SendErrorReportAsync(owner, report);
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
     }
 }
