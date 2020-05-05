@@ -929,7 +929,7 @@ namespace LambdaSharp {
                 lambdaResources.AddRange(resources);
             }
 
-            // TODO: allow setting the event bus
+            // TODO (2020-05-05, bjorg): allow setting the event bus
             AddPendingTask(Provider.SendEventAsync("default", Info.ModuleFullName, detailType, LambdaSerializer.Serialize(details), lambdaResources));
         }
         #endregion

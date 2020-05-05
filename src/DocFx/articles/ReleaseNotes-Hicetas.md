@@ -4,90 +4,84 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
+> TODO: document the JSON format for log records
+
+
 # LambdaSharp "Hicetas" Release (v0.8.0.0) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
+
 ## What's New
 
-TODO:
+This release introduces some key new capabilities for Lambda functions and the _LambdaSharp.Core_ module. The [`ALambdaFunction`](xref:Lambdasharp.ALambdaFunction) base class now has new methods for sending events and recording metrics.
 
-* LambdaSharp SDK
-    * Ported `LambdaSharp` assembly to .NET Core 3.1 with null-aware support.
+> TODO: more text here
+
+### Upgrading from v0.7 to v0.8
+1. Ensure all modules are deployed with v0.6.1 or later
+1. Upgrade LambdaSharp CLI to v0.8
+    1. `dotnet tool update -g LambdaSharp.Tool`
+1. Disable _Core Services_ for all deployed modules to allow _LambdaSharp.Core_ to update the logging stream.
+    1. `lash tier coreservices --disabled`
+1. Upgrade LambdaSharp Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
+    1. `lash init --tier Sandbox --allow-upgrade`
+1. Re-enable _Core Services_ for all deployed modules.
+    1. `lash tier coreservices --enabled`
+
 
 ## BREAKING CHANGES
 
-* Switched to `System.Text.Json` for serialization.
-    * Replace `[JsonProperty]` with `[JsonPropertyName()]` (requires `using System.Text.Json.Serialization;`).
-    * Replace `[JsonRequired]` with `[DataMember(IsRequired = true)]` (requires `using System.Runtime.Serialization;`).
-    * Replace `[JsonProperty(Required = Required.DisallowNull)]` with `[DataMember(IsRequired = true)]` (requires `using System.Runtime.Serialization;`).
-    * Replace `<TargetFramework>netcoreapp2.1</TargetFramework>` with `<TargetFramework>netcoreapp3.1</TargetFramework>`.
-    * Replace `[JsonConverter(typeof(JsonStringEnumConverter))]` with `[JsonConverter(typeof(JsonStringEnumConverter))]` (requires `using System.Text.Json.Serialization;`).
-    * Replace `SerializeJson` with `LambdaSerializer.Serialize`.
-    * Replace `DeserializeJson` with `LambdaSerializer.Serialize`.
-    * Replace fields with properties! (SUPER IMPORTANT!!!)
-    * Beware of `string` properties to deserialize a JSON number. That won't work anymore.
-* Removed `SerializeJson()` and `DeserializeJson()`; use `LambdaSerialize.Serialize()` and `LambdaSerializer.Deserialize()` respectively.
-* Removed `Newtonsoft.Json` dependency from `LambdaSharp.dll`
-* Remove `[assembly: LambdaSerializer(...)]` attribute. It's no longer needed as the `LambdaSharp.ALambdaFunction` automatically defines already `[LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]` on the handler entry point.
+### LambdaSharp Core Services
 
+### LambdaSharp CLI
+* Check for redundant `[assembly: LambdaSerializer(typeof(...))]` definition.
 
-## New LambdaSharp CLI Features
-
-## New LambdaSharp Assembly Features
-
-### LambdaSharp.Core
-    TODO: ...
-
-TODO: document the JSON format for log records
-
-### (v0.8.0.0) - TBD
+### LambdaSharp SDK
 
 **IMPORTANT:** In preparation of switching `LambdaSharp` assembly to .NET Core 3.1 and using `System.Text.Json` in a future release, it is highly advised to remove all references to `Amazon.Lambda.Serialization.Json` and `Newtonsoft.Json` from all _.csproj_ files. These package are currently inherited via the `LambdaSharp` assembly anyway. This change will ensure that these obsolete references are no longer included once a project is upgraded to using the future release of `LambdaSharp`. Additionally, the default assembly serializer should be switched from `Amazon.Lambda.Serialization.Json.JsonSerializer` to `LambdaSharp.Serialization.LambdaJsonSerializer`.
 
-#### New Features
+* Removed package reference to `Amazon.Lambda.Serialization.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
+* Removed package reference to `Newtonsoft.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
+* Remove `[assembly: LambdaSerializer(...)]` attribute. It's no longer needed as the `LambdaSharp.ALambdaFunction` automatically defines already `[LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]` on the handler entry point.
+* Marked `SerializeJson()` and `DeserializeJson()` methods as obsolete. Use `LambdaSerialize.Serialize()` and `LambdaSerializer.Deserialize()` respectively.
 
-* LambdaSharp CLI
-    * Added support for _CloudWatch Events_ as an event source.
-    * Enhanced `lash init` to highlight deployment tier name during stack updates.
-    * Enhanced `lash init` to automatically force build and force publish in _LambdaSharp_ contributor mode.
+## New LambdaSharp Module Syntax
 
-* LambdaSharp SDK
-    * Added [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
-    * Added [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.LogEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
-    * Added `LambdaSharp.Serialization.LambdaJsonSerializer`, which derives from the prescribed JSON serializer (i.e. `Newtonsoft.Json` until a future release).
-    * Updated embedded CloudFormation spec to 13.0.0.
-    * Added CloudWatch metrics to `ALambdaQueueFunction<T>` base class.
-    * Added CloudWatch metrics to `ALambdaTopicFunction<T>` base class.
-    * Marked `JsonSerializer` property as obsolete. Use `LambdaSerializer` instead.
-    * Marked `SerializeJson()` and `DeserializeJson()` methods as obsolete. Use `LambdaSerialize.Serialize()` and `LambdaSerializer.Deserialize()` respectively.
-    * Check for redundant `[assembly: LambdaSerializer(typeof(...))]` definition.
-    * Added `--no-ansi` option to `util delete-orphan-logs`, `util download-cloudformation-spec`, and `util create-invoke-methods-schema`.
-    * Added `util validate-assembly` command.
+> TODO: CloudWatch events as event source
 
-* LambdaSharp Core Module
-    * Added metrics to _LambdaSharp.Core_ module.
-    * Ported module to .NET Core 3.1 with null-aware support.
-    * Published module with _ReadyToRun_ support for shorter cold-start times.
-    * Use Kinesis Firehose stream for CloudWatch Logs ingestion.
-    * Store ingested CloudWatch Log events in S3 bucket as queryable JSON records.
+## New LambdaSharp CLI Features
 
-* Samples
-    * `Samples/EventSample` shows how to use the new [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.LogEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
-    * `Samples/MetricSample` shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) method for sending CloudWatch Events.
+* Enhanced `lash init` to highlight deployment tier name during stack updates.
+* Enhanced `lash init` for _LambdaSharp_ contributors to automatically force build and force publish.
 
-#### Fixes
+## New LambdaSharp SDK Features
 
-* LambdaSharp CLI
-    * Fixed an issue were recreating a _LambdaSharp.Core_ deployment from scratch would not update existing deployed modules with the new deployment bucket name.
-    * Removed package reference to `Amazon.Lambda.Serialization.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
-    * Removed package reference to `Newtonsoft.Json` from all _.csproj_ files as this package is inherited via the `LambdaSharp` reference.
-    * Let CloudFormation determine the name for `AWS::ApiGateway::Model` resources.
-* LambdaSharp Core Module
-    * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
+> TODO: talk about new emitted metrics and link to docs
+> * Added CloudWatch metrics to `ALambdaQueueFunction<T>` base class.
+> * Added CloudWatch metrics to `ALambdaTopicFunction<T>` base class.
 
-# Create an Athena Table to Query ingested CloudWatch Logs
+* Added [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
+* Added [`ALambdaFunction.SendEvent(...)`](xref:ALambdaFunction.SendEvent(string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
+* Added `LambdaSharp.Serialization.LambdaJsonSerializer`, which derives from the prescribed JSON serializer (i.e. `Newtonsoft.Json` until a future release).
+* Updated embedded CloudFormation spec to 13.0.0.
+* Marked `JsonSerializer` property as obsolete. Use `LambdaSerializer` instead.
+* Added `--no-ansi` option to `util delete-orphan-logs`, `util download-cloudformation-spec`, and `util create-invoke-methods-schema`.
+* Added `util validate-assembly` command.
 
+
+## New LambdaSharp Core Services Features
+
+* Added metrics to _LambdaSharp.Core_ module.
+* Ported module to .NET Core 3.1 with null-aware support.
+* Published module with _ReadyToRun_ support for shorter cold-start times.
+* Use Kinesis Firehose stream for CloudWatch Logs ingestion.
+* Store ingested CloudWatch Log events in S3 bucket as queryable JSON records.
+
+### Logging Bucket
+> TODO: describe the purpose of the logging bucket
+
+### Create an Athena Table to Query ingested CloudWatch Logs
 ```sql
 CREATE EXTERNAL TABLE IF NOT EXISTS `<ATHENA-DATABASE>`.Logs (
   `Timestamp` bigint,
@@ -103,6 +97,26 @@ CREATE EXTERNAL TABLE IF NOT EXISTS `<ATHENA-DATABASE>`.Logs (
 ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
 WITH SERDEPROPERTIES (
   'serialization.format' = '1'
-) LOCATION 's3://<LOGGING-BUCKET>/logging-success/'
-TBLPROPERTIES ('has_encrypted_data'='false');
+) LOCATION 's3://<LOGGING-BUCKET>/logging-success/';
 ```
+
+### Logging Records
+> TODO: describe format for log records
+
+
+## New Samples
+
+### Samples/EventSample
+This sample shows how to use the new [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.LogEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
+
+### Samples/MetricSample
+This sample shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) method for sending CloudWatch Events.
+
+## Bug Fixes
+
+* LambdaSharp CLI
+    * Fixed an issue were recreating a _LambdaSharp.Core_ deployment from scratch would not update existing deployed modules with the new deployment bucket name.
+    * Let CloudFormation determine the name for `AWS::ApiGateway::Model` resources.
+* LambdaSharp Core Module
+    * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
+

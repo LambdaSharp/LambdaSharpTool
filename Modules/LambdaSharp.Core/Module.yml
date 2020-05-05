@@ -49,18 +49,9 @@ Items:
         BufferingHints:
           IntervalInSeconds: 60
           SizeInMBs: 1
-
-        # Storage format for processed records
-        # TODO:
         CompressionFormat: GZIP
-
-        # Store successfully transformed records here
         Prefix: !Ref LoggingRecordsSuccessPrefix
-
-        # Store failed records here
         ErrorOutputPrefix: !Ref LoggingRecordsFailurePrefix
-
-        # Register the Lambda function to process all records
         ProcessingConfiguration:
           Enabled: true
           Processors:

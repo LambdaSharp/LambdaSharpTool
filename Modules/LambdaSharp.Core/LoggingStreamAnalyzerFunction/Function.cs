@@ -534,7 +534,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             // capture error report as converted record
             AddConvertedRecord(owner, timestamp, report);
 
-            // TODO: consider moving this functionality to another Lambda function
+            // publish error report to Rollbar
             try {
                 await PublishErrorReportToRollbarAsync(owner, report);
             } catch(Exception e) {
