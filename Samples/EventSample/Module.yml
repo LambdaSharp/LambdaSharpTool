@@ -31,3 +31,4 @@ Items:
       - EventBus: default
         Pattern:
           source: [ Sample.Event ]
+          detail-type: [ MyFirstEvent ]
