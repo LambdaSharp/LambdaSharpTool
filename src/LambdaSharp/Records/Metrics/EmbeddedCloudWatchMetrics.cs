@@ -36,8 +36,8 @@ namespace LambdaSharp.Records.Metrics {
         /// Create a new <see cref="LambdaMetricsRecord"/> instance.
         /// </summary>
         public LambdaMetricsRecord() {
-            Source = "LambdaMetrics";
-            Version = "2020-04-16";
+            Type = "LambdaMetrics";
+            Version = "2020-05-05";
         }
 
         //--- Properties ---

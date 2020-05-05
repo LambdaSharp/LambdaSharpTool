@@ -25,11 +25,16 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         //--- Constructors ---
         public UsageReport() {
-            Source = "UsageReport";
-            Version = "2020-05-04";
+            Type = "UsageReport";
+            Version = "2020-05-05";
         }
 
         //--- Properties ---
+        public string? ModuleInfo { get; set; }
+        public string? FunctionId { get; set; }
+        public string? ModuleId { get; set; }
+        public string? Module { get; set; }
+        public string? Function { get; set; }
         public float BilledDuration { get; set; }
         public float UsedDuration { get; set; }
         public float UsedDurationPercent { get; set; }
@@ -37,6 +42,6 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public int MaxMemory { get; set; }
         public int UsedMemory { get; set; }
         public float UsedMemoryPercent { get; set; }
-        public TimeSpan InitDuration { get; set; }
+        public float InitDuration { get; set; }
     }
 }

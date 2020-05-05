@@ -79,7 +79,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 if(!deployOnlyIfExists) {
                     Console.WriteLine("=> Validating module for deployment tier");
                 }
-                var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest, showError: !deployOnlyIfExists);
+                var updateValidation = await IsValidModuleUpdateAsync(stackName, manifest, showError: !forceDeploy && !deployOnlyIfExists);
                 if(!forceDeploy && !updateValidation.Success) {
                     return false;
                 }

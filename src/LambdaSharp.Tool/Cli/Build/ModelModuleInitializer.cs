@@ -627,7 +627,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     properties: new Dictionary<string, object> {
-                        ["Module"] = _builder.Info,
+                        ["ModuleInfo"] = _builder.ModuleInfo.ToString(),
                         ["ModuleId"] = FnRef("AWS::StackName")
                     },
                     dependsOn: null,

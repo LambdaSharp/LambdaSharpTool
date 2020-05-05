@@ -33,8 +33,8 @@ namespace LambdaSharp.ErrorReports {
         /// Create a new <see cref="LambdaErrorReport"/> instance.
         /// </summary>
         public LambdaErrorReport() {
-            Source = "LambdaError";
-            Version = "2018-12-31";
+            Type = "LambdaError";
+            Version = "2020-05-05";
         }
 
         //--- Properties ---
@@ -42,12 +42,22 @@ namespace LambdaSharp.ErrorReports {
         // Origin
 
         /// <summary>
-        /// The <see cref="Module"/> property describes the LambdaSharp module name, version, and origin.
+        /// The <see cref="ModuleInfo"/> property describes the LambdaSharp module name, version, and origin.
         /// </summary>
         /// <value>The LambdaSharp module name and version.</value>
         /// <example>
         /// Sample module name and version:
         /// <code>My.AcmeModule:1.0-Dev@origin</code>
+        /// </example>
+        public string ModuleInfo { get; set; }
+
+        /// <summary>
+        /// The <see cref="Module"/> property describes the LambdaSharp module name.
+        /// </summary>
+        /// <value>The LambdaSharp module name.</value>
+        /// <example>
+        /// Sample module name:
+        /// <code>My.AcmeModule</code>
         /// </example>
         public string Module { get; set; }
 
@@ -148,9 +158,9 @@ namespace LambdaSharp.ErrorReports {
         public string Fingerprint { get; set; }
 
         /// <summary>
-        /// The <see cref="Timestamp"/> property holds the UNIX epoch when the error log entry was generated.
+        /// The <see cref="Timestamp"/> property holds the UNIX epoch in milliseconds when the error log entry was generated.
         /// </summary>
-        /// <value>The UNIX epoch timestamp.</value>
+        /// <value>The UNIX epoch in milliseconds timestamp.</value>
         public long Timestamp { get; set; }
 
         /// <summary>

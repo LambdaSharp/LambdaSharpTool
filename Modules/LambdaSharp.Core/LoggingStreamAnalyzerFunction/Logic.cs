@@ -41,7 +41,13 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         Task SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record);
     }
 
-    public class LambdaLogRecord : ALambdaRecord { }
+    public class LambdaLogRecord : ALambdaRecord {
+
+        //--- Properties ---
+
+        // NOTE (2020-05-05, bjorg): 'Type' used to be called 'Source' pre-0.8
+        public string? Source { get; set; }
+    }
 
     public class Logic {
 
@@ -70,7 +76,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private static LambdaErrorReport PopulateLambdaErrorReport(LambdaErrorReport report, OwnerMetaData owner, string message, DateTimeOffset timestamp, string pattern) {
 
             // fill-in error report with owner information
-            report.Module = owner.Module;
+            report.ModuleInfo = owner.ModuleInfo;
             report.Module = owner.Module;
             report.ModuleId = owner.ModuleId;
             report.FunctionId = owner.FunctionId;
@@ -154,32 +160,49 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private async Task MatchLambdaSharpJsonLogEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var text = match.ToString();
             var record = _serializer.Deserialize<LambdaLogRecord>(text);
-            switch(record.Source) {
-            case "LambdaError":
 
-                // report error record
-                var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
-                await _provider.SendErrorReportAsync(owner, errorReport);
-                break;
-            case "LambdaEvent":
+            // check for pre-0.8 log record
+            if((record.Type == null) && (record.Source != null)) {
+                if(record.Source == "LambdaError") {
 
-                // report event record
-                var eventRecord = _serializer.Deserialize<LambdaEventRecord>(text);
-                if(eventRecord.Time == null) {
-                    eventRecord.Time = timestamp.ToRfc3339Timestamp();
+                    // report error record
+                    var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
+
+                    // convert old format into new
+                    errorReport.ModuleInfo = errorReport.Module;
+                    errorReport.Module = errorReport.Module?.Split(':', 2)[0];
+                    await _provider.SendErrorReportAsync(owner, errorReport);
+                } else {
+                    throw new ProcessLogEventsException($"unrecognized record 'Source' property: {record.Source}");
                 }
-                await _provider.SendEventAsync(owner, eventRecord);
-                break;
-            case "LambdaMetrics":
+            } else {
+                switch(record.Type) {
+                case "LambdaError":
 
-                // report metrics record
-                var metricsRecord = _serializer.Deserialize<LambdaMetricsRecord>(text);
-                await _provider.SendMetricsAsync(owner, metricsRecord);
-                break;
-            case null:
-                throw new ProcessLogEventsException("missing record 'Source' property");
-            default:
-                throw new ProcessLogEventsException($"unrecognized record 'Source' property: {record.Source}");
+                    // report error record
+                    var errorReport = _serializer.Deserialize<LambdaErrorReport>(text);
+                    await _provider.SendErrorReportAsync(owner, errorReport);
+                    break;
+                case "LambdaEvent":
+
+                    // report event record
+                    var eventRecord = _serializer.Deserialize<LambdaEventRecord>(text);
+                    if(eventRecord.Time == null) {
+                        eventRecord.Time = timestamp.ToRfc3339Timestamp();
+                    }
+                    await _provider.SendEventAsync(owner, eventRecord);
+                    break;
+                case "LambdaMetrics":
+
+                    // report metrics record
+                    var metricsRecord = _serializer.Deserialize<LambdaMetricsRecord>(text);
+                    await _provider.SendMetricsAsync(owner, metricsRecord);
+                    break;
+                case null:
+                    throw new ProcessLogEventsException($"missing record '{nameof(record.Type)}' property");
+                default:
+                    throw new ProcessLogEventsException($"unrecognized record '{nameof(record.Type)}' property: {record.Type}");
+                }
             }
         }
 
@@ -215,6 +238,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 ? TimeSpan.FromMilliseconds(double.Parse(match.Groups["InitDuration"].Value))
                 : TimeSpan.Zero;
             var usage = new UsageReport {
+                ModuleInfo = owner.ModuleInfo,
+                Module = owner.Module,
+                ModuleId = owner.ModuleId,
+                FunctionId = owner.FunctionId,
+                Function = owner.FunctionName,
                 BilledDuration = (float)billedDuration.TotalSeconds,
                 UsedDuration = (float)usedDuration.TotalSeconds,
                 UsedDurationPercent = (float)(usedDuration.TotalSeconds / owner.FunctionMaxDuration.TotalSeconds),
@@ -222,7 +250,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 MaxMemory = maxMemory,
                 UsedMemory = usedMemory,
                 UsedMemoryPercent = (float)usedMemory / (float)owner.FunctionMaxMemory,
-                InitDuration = initDuration
+                InitDuration = (float)initDuration.TotalSeconds
             };
             var tasks = new List<Task> {
                 _provider.SendUsageReportAsync(owner, usage)

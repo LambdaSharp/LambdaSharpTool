@@ -25,6 +25,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.CloudWatchEvents.Model;
@@ -74,6 +75,11 @@ namespace LambdaSharp {
             public DateTime Started => _function._started;
 
             /// <summary>
+            /// The module full name, version, and origin.
+            /// </summary>
+            public string ModuleInfo => _function._moduleInfo;
+
+            /// <summary>
             /// The namespace of the module.
             /// </summary>
             public string ModuleNamespace => _function._moduleNamespace;
@@ -98,6 +104,11 @@ namespace LambdaSharp {
             /// The version of the module.
             /// </summary>
             public string ModuleVersion => _function._moduleVersion;
+
+            /// <summary>
+            /// The origin of the module.
+            /// </summary>
+            public string ModuleOrigin => _function._moduleOrigin;
 
             /// <summary>
             /// The ID of the AWS Lambda function. This value corresponds to the Physical ID of the AWS Lambda function in the CloudFormation template.
@@ -170,29 +181,29 @@ namespace LambdaSharp {
         //--- Class Fields ---
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
         private static int Invocations;
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        private static void ParseModuleString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion) {
-            moduleNamespace = null;
-            moduleName = null;
-            moduleVersion = null;
-            if(moduleInfo == null) {
-                return;
-            }
+        private static void ParseModuleInfoString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion, out string moduleOrigin) {
 
-            // extract module version
-            var colon = moduleInfo.IndexOf(':');
-            if(colon >= 0) {
-                moduleVersion = moduleInfo.Substring(colon + 1);
+            // try parsing module reference
+            var match = ModuleKeyPattern.Match(moduleInfo);
+            if(match.Success) {
+                moduleNamespace = GetMatchValue("Namespace");
+                moduleName = GetMatchValue("Name");
+                moduleOrigin = GetMatchValue("Origin");
+                moduleVersion = GetMatchValue("Version");
             } else {
-                colon = moduleInfo.Length;
+                moduleNamespace = null;
+                moduleName = null;
+                moduleVersion = null;
+                moduleOrigin = null;
             }
 
-            // extract module namespace and module name
-            var dot = moduleInfo.IndexOf('.');
-            if(dot >= 0) {
-                moduleNamespace = moduleInfo.Substring(0, dot);
-                moduleName = moduleInfo.Substring(dot + 1, colon - dot - 1);
+            // local function
+            string GetMatchValue(string groupName) {
+                var group = match.Groups[groupName];
+                return group.Success ? group.Value : null;
             }
         }
 
@@ -201,10 +212,12 @@ namespace LambdaSharp {
         private string _deploymentTier;
         private string _deploymentBucketName;
         private string _deadLetterQueueUrl;
+        private string _moduleInfo;
         private string _moduleNamespace;
         private string _moduleName;
         private string _moduleId;
         private string _moduleVersion;
+        private string _moduleOrigin;
         private string _functionId;
         private string _functionName;
         private string _functionFramework;
@@ -495,8 +508,8 @@ namespace LambdaSharp {
 
             // read LambdaSharp provided environment variables
             _moduleId = envSource.Read("MODULE_ID");
-            var moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleString(moduleInfo, out var moduleNamespace, out var moduleName, out var moduleVersion);
+            _moduleInfo = envSource.Read("MODULE_INFO");
+            ParseModuleInfoString(_moduleInfo, out var moduleNamespace, out var moduleName, out var moduleVersion, out var moduleOrigin);
             _moduleNamespace = moduleNamespace;
             _moduleName = moduleName;
             _moduleVersion = moduleVersion;
@@ -509,13 +522,13 @@ namespace LambdaSharp {
 
             // log function start-up information
             var info = new Dictionary<string, string> {
-                ["MODULE_ID"] = _moduleId ?? "<MISSING>",
-                ["MODULE_INFO"] = moduleInfo ?? "<MISSING>",
-                ["FUNCTION_NAME"] = _functionName ?? "<MISSING>",
-                ["FUNCTION_ID"] = _functionId ?? "<MISSING>",
-                ["DEPLOYMENT_TIER"] = _deploymentTier ?? "<MISSING>",
-                ["DEPLOYMENTBUCKETNAME"] = _deploymentBucketName ?? "<MISSING>",
-                ["DEADLETTERQUEUE"] = _deadLetterQueueUrl ?? "<NONE>",
+                ["MODULE_ID"] = _moduleId,
+                ["MODULE_INFO"] = _moduleInfo,
+                ["FUNCTION_NAME"] = _functionName,
+                ["FUNCTION_ID"] = _functionId,
+                ["DEPLOYMENT_TIER"] = _deploymentTier,
+                ["DEPLOYMENTBUCKETNAME"] = _deploymentBucketName,
+                ["DEADLETTERQUEUE"] = _deadLetterQueueUrl,
             };
 
             // read optional git-info file
@@ -523,15 +536,17 @@ namespace LambdaSharp {
                 var git = LambdaSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
                 _gitSha = git.SHA;
                 _gitBranch = git.Branch;
-                info["GIT-SHA"] = _gitSha ?? "<NONE>";
-                info["GIT-BRANCH"] = _gitBranch ?? "<NONE>";
+                info["GIT-SHA"] = _gitSha;
+                info["GIT-BRANCH"] = _gitBranch;
             }
-            LogInfo("function startup information\n{0}", LambdaSerializer.Serialize(info));
+            if(info.Any()) {
+                LogInfo("function startup information\n{0}", LambdaSerializer.Serialize(info));
+            }
 
             // initialize error/warning reporter
             ErrorReportGenerator = new LambdaErrorReportGenerator(
                 _moduleId ?? "<MISSING>",
-                $"{_moduleNamespace}.{_moduleName}:{_moduleVersion}",
+                _moduleInfo ?? "<MISSING>",
                 _functionId ?? "<MISSING>",
                 _functionName ?? "<MISSING>",
                 _functionFramework ?? "<MISSING>",
@@ -901,11 +916,10 @@ namespace LambdaSharp {
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
         /// </summary>
-        /// <param name="source">The source application of the event.</param>
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string> resources = null) {
+        protected void SendEvent<T>(string detailType, T details, IEnumerable<string> resources = null) {
             var lambdaResources = new List<string> {
                 $"lambdasharp:stack:{Info.ModuleId}",
                 $"lambdasharp:module:{Info.ModuleFullName}",
@@ -916,7 +930,7 @@ namespace LambdaSharp {
             }
 
             // TODO: allow setting the event bus
-            RunTask(() => Provider.SendEventAsync("default", source, detailType, LambdaSerializer.Serialize(details), lambdaResources));
+            AddPendingTask(Provider.SendEventAsync("default", Info.ModuleFullName, detailType, LambdaSerializer.Serialize(details), lambdaResources));
         }
         #endregion
 

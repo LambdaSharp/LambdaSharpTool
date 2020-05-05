@@ -80,7 +80,8 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider = new MockDependencyProvider(output);
             _logic = new Logic(_provider, new LambdaSharp.Serialization.LambdaJsonSerializer());
             _owner = new OwnerMetaData {
-                Module = "Test.Module:1.0@origin",
+                ModuleInfo = "Test.Module:1.0@origin",
+                Module = "Test.Module",
                 ModuleId = "ModuleId",
                 FunctionId = "ModuleName-FunctionName-NT5EUXTNTXXD",
                 FunctionName = "FunctionName",
@@ -96,10 +97,19 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         //--- Methods ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
-            _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539361232,\"Message\":\"failed during message stream processing\"}", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            _logic.ProgressLogEntryAsync(_owner, "{\"Type\":\"LambdaError\",\"Version\":\"2018-09-27\",\"ModuleInfo\":\"Test.Module:1.0@origin\",\"Module\":\"Test.Module\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539238963879,\"Message\":\"failed during message stream processing\"}", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
-            _provider.ErrorReport.Timestamp.Should().Be(1539361232);
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963879L);
+            _provider.ErrorReport.RequestId.Should().Be("RequestId");
+        }
+
+        [Fact]
+        public void LambdaSharpLegacyJsonLogEntry() {
+            _logic.ProgressLogEntryAsync(_owner, "{\"Source\":\"LambdaError\",\"Version\":\"2018-09-27\",\"Module\":\"Test.Module:1.0@origin\",\"ModuleName\":\"ModuleName\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539238963879,\"Message\":\"failed during message stream processing\"}", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("failed during message stream processing");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963879L);
             _provider.ErrorReport.RequestId.Should().Be("RequestId");
         }
 
@@ -155,7 +165,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.UsageReport.MaxMemory.Should().Be(128);
             _provider.UsageReport.UsedMemory.Should().Be(128);
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
-            _provider.UsageReport.InitDuration.Should().Be(TimeSpan.Zero);
+            _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.Zero.TotalSeconds);
 
             CommonErrorReportAsserts(usageReportCheck: false);
             _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
@@ -175,12 +185,13 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.UsageReport.MaxMemory.Should().Be(128);
             _provider.UsageReport.UsedMemory.Should().Be(20);
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(0.15625F, 0.0001F);
-            _provider.UsageReport.InitDuration.Should().Be(TimeSpan.FromMilliseconds(419.31));
+            _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.FromMilliseconds(419.31).TotalSeconds);
         }
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
-            _provider.ErrorReport.Module.Should().Be("Test.Module:1.0@origin");
+            _provider.ErrorReport.ModuleInfo.Should().Be("Test.Module:1.0@origin");
+            _provider.ErrorReport.Module.Should().Be("Test.Module");
             _provider.ErrorReport.ModuleId.Should().Be("ModuleId");
             _provider.ErrorReport.FunctionId.Should().Be("ModuleName-FunctionName-NT5EUXTNTXXD");
             _provider.ErrorReport.FunctionName.Should().Be("FunctionName");

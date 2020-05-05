@@ -34,6 +34,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
 
         //--- Properties ---
         public string? ResourceType { get; set; }
+        public string? ModuleInfo { get; set; }
         public string? Module { get; set; }
         public string? ModuleId { get; set; }
         public string? FunctionId { get; set; }
@@ -46,15 +47,18 @@ namespace LambdaSharp.Core.RegistrationFunction {
         public string? FunctionLanguage { get; set; }
 
         //--- Methods ---
+        public string? GetModuleInfo() => ModuleInfo ?? Module;
+
         public string? GetModuleFullName() {
-            if(Module == null) {
+            var moduleInfo = GetModuleInfo();
+            if(moduleInfo == null) {
                 return null;
             }
-            var index = Module.IndexOfAny(new[] { ':', '@' });
+            var index = moduleInfo.IndexOfAny(new[] { ':', '@' });
             if(index < 0) {
-                return Module;
+                return moduleInfo;
             }
-            return Module.Substring(0, index);
+            return moduleInfo.Substring(0, index);
         }
 
         public string? GetModuleNamespace() => GetModuleFullName()?.Split('.', 2)[0];
@@ -126,7 +130,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             // determine the kind of registration that is requested
             switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.Module}");
+                    LogInfo($"Adding Module: Id={properties.ModuleId}, Info={properties.GetModuleInfo()}");
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
@@ -203,7 +207,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             // determine the kind of de-registration that is requested
             switch(properties.ResourceType) {
             case "LambdaSharp::Registration::Module": {
-                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.Module}");
+                    LogInfo($"Removing Module: Id={properties.ModuleId}, Info={properties.GetModuleInfo()}");
 
                     // delete old rollbar project
 
@@ -263,8 +267,22 @@ namespace LambdaSharp.Core.RegistrationFunction {
             if(owner == null) {
                 owner = new OwnerMetaData();
             }
+
+            // support pre-0.8 notation where only 'Module' is present in the properties (no 'ModuleInfo')
+            string? moduleInfo = null;
+            string? module = null;
+            if(properties.ModuleInfo != null) {
+                moduleInfo = properties.ModuleInfo;
+                module = properties.ModuleInfo.Split(':', 2)[0];
+            } else if(properties.Module != null) {
+                moduleInfo = properties.Module;
+                module = properties.Module?.Split(':', 2)[0];
+            }
+
+            // create/update owner record
             owner.ModuleId = properties.ModuleId ?? owner.ModuleId;
-            owner.Module = properties.Module ?? owner.Module;
+            owner.Module = module ?? owner.Module;
+            owner.ModuleInfo = moduleInfo ?? owner.ModuleInfo;
             owner.FunctionId = properties.FunctionId ?? owner.FunctionId;
             owner.FunctionName = properties.FunctionName ?? owner.FunctionName;
             owner.FunctionLogGroupName = properties.FunctionLogGroupName ?? owner.FunctionLogGroupName;

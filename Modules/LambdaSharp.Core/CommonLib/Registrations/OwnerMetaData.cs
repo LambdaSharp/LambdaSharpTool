@@ -23,6 +23,7 @@ namespace LambdaSharp.Core.Registrations {
     public class OwnerMetaData {
 
         //--- Properties ---
+        public string? ModuleInfo { get; set; }
         public string? Module { get; set; }
         public string? ModuleId { get; set; }
         public string? FunctionId { get; set; }

@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Model {
         public string Name => _name;
         public string FullName => $"{_namespace}.{_name}";
         public string Info => $"{FullName}:{Version}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(_namespace, _name, Version, origin: null);
+        public ModuleInfo ModuleInfo => new ModuleInfo(Namespace, Name, Version, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;

@@ -59,9 +59,11 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
     public class LogRecord : ALambdaRecord {
 
         //--- Properties ---
+        public string? ModuleInfo { get; set; }
         public string? Module { get; set; }
         public string? ModuleId { get; set; }
         public string? Function { get; set; }
+        public string? FunctionId { get; set; }
         public string? Record { get; set; }
     }
 
@@ -103,7 +105,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             _rollbarClient = new RollbarClient(null, null, message => LogInfo(message));
             _eventsClient = new AmazonCloudWatchEventsClient();
             _selfMetaData = new OwnerMetaData {
-                Module = $"{Info.ModuleFullName}:{Info.ModuleVersion}",
+                ModuleInfo = Info.ModuleInfo,
+                Module = Info.ModuleFullName,
                 ModuleId = Info.ModuleId,
                 FunctionId = Info.FunctionId,
                 FunctionName = Info.FunctionName,
@@ -303,6 +306,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                     Title = $"{report.FunctionName}: {report.Message}",
                     Custom = new {
                         Message = report.Message,
+                        ModuleInfo = report.ModuleInfo,
                         Module = report.Module,
                         ModuleId = report.ModuleId,
                         FunctionId = report.FunctionId,
@@ -430,19 +434,18 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         }
 
         private void SendEvent(OwnerMetaData owner, LambdaEventRecord record) {
-            var moduleFullName = owner?.Module?.Split(':', 2)[0] ?? "";
             var resources = new List<string> {
                 $"lambdasharp:stack:{owner?.ModuleId}",
-                $"lambdasharp:module:{moduleFullName}",
+                $"lambdasharp:module:{owner?.Module}",
                 $"lambdasharp:tier:{Info.DeploymentTier}"
             };
             if(record.Resources != null) {
                 resources.AddRange(resources);
             }
             var entry = new PutEventsRequestEntry {
-                Source = record.App,
-                DetailType = record.Type,
-                Detail = record.Details,
+                Source = record.Source,
+                DetailType = record.DetailType,
+                Detail = record.Detail,
                 Resources = resources
             };
             if(DateTime.TryParse(record.Time, out var timestamp)) {
@@ -459,9 +462,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             // publish error report to the event bus
             try {
                 SendEvent(SelfMetaData, new LambdaEventRecord {
-                    App =  "LambdaSharp.Core",
-                    Type = "LambdaError",
-                    Details = LambdaSerializer.Serialize(report)
+                    Source =  Info.ModuleFullName,
+                    DetailType = "LambdaError",
+                    Detail = LambdaSerializer.Serialize(report)
                 });
             } catch {
 
@@ -470,14 +473,18 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         }
 
         protected override void RecordException(Exception exception) {
+
+            // NOTE (2020-05-05, bjorg): RecordException(Exception) is ONLY invoked when
+            //  RecordErrorReport(LambdaErrorReport) fails. Therefore, this method MUST remain
+            //  as basic as possible.
             base.RecordException(exception);
 
             // publish exception to the event bus
             try {
                 SendEvent(SelfMetaData, new LambdaEventRecord {
-                    App = "LambdaSharp.Core",
-                    Type = "InternalError",
-                    Details = LambdaSerializer.Serialize(new {
+                    Source = Info.ModuleFullName,
+                    DetailType = "Exception",
+                    Detail = LambdaSerializer.Serialize(new {
                         Message = exception?.Message,
                         Type = exception?.GetType().FullName,
                         Raw = exception?.ToString()
@@ -491,11 +498,13 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         private void AddConvertedRecord(OwnerMetaData owner, ALambdaRecord record)
             => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
-                Source = record.Source,
+                Type = record.Type,
                 Version = record.Version,
-                ModuleId = owner.ModuleId,
+                ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
+                ModuleId = owner.ModuleId,
                 Function = owner.FunctionName,
+                FunctionId = owner.FunctionId,
                 Record = LambdaSerializer.Serialize<object>(record)
             }));
 
@@ -504,9 +513,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // send parsed error report to event bus
             SendEvent(owner, new LambdaEventRecord {
-                App = "LambdaSharp.Core/Logs",
-                Type = "LambdaError",
-                Details = LambdaSerializer.Serialize(report)
+                Source = owner.Module,
+                DetailType = "LambdaError",
+                Detail = LambdaSerializer.Serialize(report)
             });
 
             // capture reporting metrics
@@ -534,9 +543,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // publish usage report to the event bus
             SendEvent(owner, new LambdaEventRecord {
-                App = "LambdaSharp.Core/Logs",
-                Type = "UsageReport",
-                Details = LambdaSerializer.Serialize(report)
+                Source = owner.Module,
+                DetailType = "UsageReport",
+                Detail = LambdaSerializer.Serialize(report)
             });
 
             // capture usage report as converted record
@@ -554,9 +563,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             // publish metrics to the event bus
             SendEvent(owner, new LambdaEventRecord {
                 Time = DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp(),
-                App = "LambdaSharp.Core/Logs",
-                Type = "LambdaMetrics",
-                Details = LambdaSerializer.Serialize(record)
+                Source = owner.Module,
+                DetailType = "LambdaMetrics",
+                Detail = LambdaSerializer.Serialize(record)
             });
 
             // capture metrics as converted record

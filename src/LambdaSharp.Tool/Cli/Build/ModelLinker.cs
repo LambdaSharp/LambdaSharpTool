@@ -92,7 +92,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // set default environment variables
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
-                        environment["MODULE_INFO"] = builder.Info;
+                        environment["MODULE_INFO"] = builder.ModuleInfo.ToString();
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
                         environment["DEPLOYMENT_TIER"] = FnSelect("0", FnSplit("-", FnRef("DeploymentPrefix")));

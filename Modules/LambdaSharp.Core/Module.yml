@@ -257,10 +257,15 @@ Items:
         Type: String
         Required: true
 
-      - Name: Module
-        Description: Module full name and version
+      - Name: ModuleInfo
+        Description: Module full name, version, and origin
         Type: String
         Required: true
+
+      - Name: Module
+        Description: "Module full name and version (OBSOLETE: use ModuleInfo instead)"
+        Type: String
+        Required: false
 
     Attributes:
 

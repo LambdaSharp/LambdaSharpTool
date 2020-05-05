@@ -27,10 +27,10 @@ namespace LambdaSharp.Records {
         //--- Properties ---
 
         /// <summary>
-        /// The <see cref="Source"/> property determines the source of the Lambda record.
+        /// The <see cref="Type"/> property determines the type of the Lambda record.
         /// </summary>
         /// <value>The source of the Lambda record.</value>
-        public string Source { get; set; }
+        public string Type { get; set; }
 
         /// <summary>
         /// The <see cref="Version"/> property determines the format version of the Lambda record.

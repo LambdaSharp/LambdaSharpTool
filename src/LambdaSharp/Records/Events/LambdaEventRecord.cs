@@ -32,8 +32,8 @@ namespace LambdaSharp.Records.Events {
         /// Create a new <see cref="LambdaEventRecord"/> instance.
         /// </summary>
         public LambdaEventRecord() {
-            Source = "LambdaEvent";
-            Version = "2020-04-12";
+            Type = "LambdaEvent";
+            Version = "2020-05-05";
         }
 
         //--- Properties ---
@@ -45,22 +45,22 @@ namespace LambdaSharp.Records.Events {
         public string Time { get; set; }
 
         /// <summary>
-        /// The <see cref="App"/> property describes the source application of the event.
+        /// The <see cref="Source"/> property describes the source of the event.
         /// </summary>
         /// <value></value>
-        public string App { get; set; }
+        public string Source { get; set; }
 
         /// <summary>
-        /// The <see cref="Type"/> property describes what fields to expect in the event detail.
+        /// The <see cref="DetailType"/> property describes what fields to expect in the event detail.
         /// </summary>
         /// <value>Then event name.</value>
-        public string Type { get; set; }
+        public string DetailType { get; set; }
 
         /// <summary>
-        /// The <see cref="Details"/> property describes a custom object with additional details for the event.
+        /// The <see cref="Detail"/> property contains detailed event information as a JSON-serialized object.
         /// </summary>
         /// <value>The event details, encoded as a JSON string.</value>
-        public string Details { get; set; }
+        public string Detail { get; set; }
 
         /// <summary>
         /// The <see cref="Resources"/> property describes what resources the event is associated with.
