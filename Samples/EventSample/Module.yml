@@ -30,4 +30,4 @@ Items:
     Sources:
       - EventBus: default
         Pattern:
-          source: [ LambdaSharp.Sample ]
+          source: [ Sample.Event ]
