@@ -43,12 +43,6 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 (optional) Specify filename to read module parameters from (default: none)
 </dd>
 
-<dt><code>--force-publish</code></dt>
-<dd>
-
-(optional) Publish modules and their artifacts even when no changes were detected
-</dd>
-
 <dt><code>--force-deploy</code></dt>
 <dd>
 
@@ -95,12 +89,6 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 <dd>
 
 (optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)
-</dd>
-
-<dt><code>--force-build</code></dt>
-<dd>
-
-(optional) Always build function packages
 </dd>
 
 <dt><code>--tier|-T &lt;NAME&gt;</code></dt>
