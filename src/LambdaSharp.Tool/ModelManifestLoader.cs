@@ -374,6 +374,10 @@ namespace LambdaSharp.Tool {
                     LogWarn($"unable to retrieve module version from CloudFormation stack '{stackName}'");
                     return null;
                 }
+                if(deployedModule.Stack.GetModuleManifestChecksum() == null) {
+                    LogWarn($"unable to retrieve module checksum from CloudFormation stack '{stackName}'");
+                    return null;
+                }
                 var result = new DependencyRecord {
                     ModuleLocation = new ModuleLocation(Settings.DeploymentBucketName, deployedModuleInfo, deployedModule.Stack.GetModuleManifestChecksum())
                 };
