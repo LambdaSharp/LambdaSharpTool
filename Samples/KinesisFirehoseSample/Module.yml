@@ -90,7 +90,7 @@ Items:
                   - !GetAtt FirehoseBucket.Arn
                   - !Sub "${FirehoseBucket.Arn}/*"
 
-        # Give Firehose access to invoking the Lamdda function
+        # Give Firehose access to invoking the Lambda function
         - PolicyName: !Sub "${AWS::StackName}FirehoseLambdaPolicy"
           PolicyDocument:
             Version: 2012-10-17
