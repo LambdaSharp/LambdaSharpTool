@@ -29,6 +29,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using LambdaSharp.Tool.Internal;
 using System.Threading.Tasks;
+using Amazon;
 
 namespace LambdaSharp.Tool.Cli {
     using Tag = Amazon.CloudFormation.Model.Tag;
@@ -199,8 +200,8 @@ namespace LambdaSharp.Tool.Cli {
 
                         // initialize settings instance
                         var settings = new Settings {
-                            CfnClient = new AmazonCloudFormationClient(),
-                            S3Client = new AmazonS3Client(),
+                            CfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint),
+                            S3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint),
                             AwsRegion = awsAccount.Region,
                             AwsAccountId = awsAccount.AccountId,
                             AwsUserArn = awsAccount.UserArn

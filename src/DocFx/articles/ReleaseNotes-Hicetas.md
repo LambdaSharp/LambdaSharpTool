@@ -117,6 +117,7 @@ This sample shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:ALa
 * LambdaSharp CLI
     * Fixed an issue were recreating a _LambdaSharp.Core_ deployment from scratch would not update existing deployed modules with the new deployment bucket name.
     * Let CloudFormation determine the name for `AWS::ApiGateway::Model` resources.
+    * Fixed an issue where the `--aws-region` command option didn't always work as expected.
 * LambdaSharp Core Module
     * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
