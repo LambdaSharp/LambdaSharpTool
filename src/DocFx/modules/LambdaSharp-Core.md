@@ -19,6 +19,8 @@ The `LambdaSharp.Core` module defines the core resources and resource types for 
 
 ### LambdaSharp Tier Settings
 
+> TODO: update LambdaSharp.Core parameters information
+
 <dl>
 
 <dt><code>DeadLetterQueue</code></dt>
@@ -130,22 +132,6 @@ The <code>LoggingStream</code> output contains the logging Kinesis stream for fu
 The <code>LoggingStreamRole</code> output contains the IAM role used by CloudWatch logs to write to the Kinesis stream.
 
 <i>Type:</i> AWS::IAM::Role
-</dd>
-
-<dt><code>ErrorReportTopic</code></dt>
-<dd>
-
-The <code>ErrorReportTopic</code> output contains the SNS topic for LambdaSharp module errors.
-
-<i>Type:</i> AWS::SNS::Topic
-</dd>
-
-<dt><code>UsageReportTopic</code></dt>
-<dd>
-
-The <code>UsageReportTopic</code> output contains the SNS topic for LambdaSharp function usage reports.
-
-<i>Type:</i> AWS::SNS::Topic
 </dd>
 
 </dl>
