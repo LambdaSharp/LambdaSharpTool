@@ -65,6 +65,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public string? ModuleId { get; set; }
         public string? Function { get; set; }
         public string? FunctionId { get; set; }
+        public string? Tier { get; set; }
         public string? Record { get; set; }
     }
 
@@ -507,6 +508,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 ModuleId = owner.ModuleId,
                 Function = owner.FunctionName,
                 FunctionId = owner.FunctionId,
+                Tier = Info.DeploymentTier,
                 Record = LambdaSerializer.Serialize<object>(record)
             }));
 
