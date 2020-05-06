@@ -107,7 +107,7 @@ namespace LambdaSharp.Core.RegistrationFunction {
             _coreSecretsKey = config.ReadText("CoreSecretsKey");
 
             // set default project pattern if none is specified
-            if(_rollbarProjectPattern == "") {
+            if(string.IsNullOrEmpty(_rollbarProjectPattern)) {
                 var rollbarProjectPrefix = config.ReadText("RollbarProjectPrefix");
                 _rollbarProjectPattern = $"{rollbarProjectPrefix}{{ModuleFullName}}";
             }
@@ -134,42 +134,9 @@ namespace LambdaSharp.Core.RegistrationFunction {
                     var owner = PopulateOwnerMetaData(properties);
 
                     // create new rollbar project
-                    if(RollbarClient.HasTokens) {
-                        var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
-                            var value = match.ToString();
-                            switch(value) {
-                            case "{ModuleFullName}":
-                                return properties.GetModuleFullName();
-                            case "{ModuleNamespace}":
-                                return properties.GetModuleNamespace();
-                            case "{ModuleName}":
-                                return properties.GetModuleName();
-                            default:
-
-                                // remove curly braces for unrecognized placeholders
-                                return value.Substring(1, value.Length - 2);
-                            }
-                        });
-
-                        // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
-                        if(name.Length > 32) {
-                            using(var crypto = new SHA256Managed()) {
-                                var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
-
-                                // keep first X characters for original project name, append (32-X) characters from the hash
-                                name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
-                            }
-                        }
-                        var project = await RollbarClient.FindProjectByName(name)
-                            ?? await RollbarClient.CreateProject(name);
-                        var tokens = await RollbarClient.ListProjectTokens(project.Id);
-                        var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
-                        if(token == null) {
-                            throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
-                        }
-                        owner.RollbarProjectId = project.Id;
-                        owner.RollbarAccessToken = await EncryptSecretAsync(token, CoreSecretsKey);
-                    }
+                    var rollbarProject = await RegisterRollbarProject(properties);
+                    owner.RollbarProjectId = rollbarProject.ProjectId;
+                    owner.RollbarAccessToken = rollbarProject.ProjectAccessToken;
 
                     // create owner record
                     await Registrations.PutOwnerMetaDataAsync($"M:{owner.ModuleId}", owner);
@@ -292,6 +259,51 @@ namespace LambdaSharp.Core.RegistrationFunction {
             owner.FunctionMaxMemory = Math.Max(properties.FunctionMaxMemory, owner.FunctionMaxMemory);
             owner.FunctionMaxDuration = TimeSpan.FromSeconds(Math.Max(properties.FunctionMaxDuration, owner.FunctionMaxDuration.TotalSeconds));
             return owner;
+        }
+
+        private async Task<(int ProjectId, string? ProjectAccessToken)> RegisterRollbarProject(RegistrationResourceProperties properties) {
+            if(!RollbarClient.HasTokens) {
+                return (ProjectId: 0, ProjectAccessToken: null);
+            }
+
+            // generate the Rollbar project name
+            var name = Regex.Replace(_rollbarProjectPattern, @"\{(?!\!)[^\}]+\}", match => {
+                var value = match.ToString();
+                switch(value) {
+                case "{ModuleFullName}":
+                    return properties.GetModuleFullName();
+                case "{ModuleNamespace}":
+                    return properties.GetModuleNamespace();
+                case "{ModuleName}":
+                    return properties.GetModuleName();
+                default:
+
+                    // remove curly braces for unrecognized placeholders
+                    return value.Substring(1, value.Length - 2);
+                }
+            });
+
+            // NOTE (2020-02-19, bjorg): Rollbar projects cannot exceed 32 characters
+            if(name.Length > 32) {
+                using(var crypto = new SHA256Managed()) {
+                    var hash = string.Concat(crypto.ComputeHash(Encoding.UTF8.GetBytes(name)).Select(x => x.ToString("X2")));
+
+                    // keep first X characters for original project name, append (32-X) characters from the hash
+                    name = name.Substring(0, 32 - PROJECT_HASH_LENGTH) + hash.Substring(0, PROJECT_HASH_LENGTH);
+                }
+            }
+
+            // find or create Rollbar project
+            var project = await RollbarClient.FindProjectByName(name)
+                ?? await RollbarClient.CreateProject(name);
+
+            // retrieve access token for Rollbar project
+            var tokens = await RollbarClient.ListProjectTokens(project.Id);
+            var token = tokens.FirstOrDefault(t => t.Name == "post_server_item").AccessToken;
+            if(token == null) {
+                throw new RegistrarException("internal error: unable to retrieve token for new Rollbar project");
+            }
+            return (ProjectId: project.Id, ProjectAccessToken: await EncryptSecretAsync(token, CoreSecretsKey));
         }
     }
 }
