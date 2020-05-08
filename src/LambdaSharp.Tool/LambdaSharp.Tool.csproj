@@ -19,7 +19,8 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
-    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
+    <PackageTags>AWS CloudFormation Lambda LambdaSharp Serverless DotNetCore</PackageTags>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
     <ToolCommandName>lash</ToolCommandName>
     <PackAsTool>True</PackAsTool>
