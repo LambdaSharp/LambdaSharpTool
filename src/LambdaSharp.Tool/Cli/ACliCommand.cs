@@ -106,6 +106,7 @@ namespace LambdaSharp.Tool.Cli {
                 }
 
                 // consistently set the AWS profile by setting the AWS_PROFILE/AWS_DEFAULT_PROFILE environment variables
+                AWSConfigs.AWSProfileName = awsProfile;
                 Environment.SetEnvironmentVariable("AWS_PROFILE", awsProfile);
                 Environment.SetEnvironmentVariable("AWS_DEFAULT_PROFILE", awsProfile);
 
@@ -225,13 +226,13 @@ namespace LambdaSharp.Tool.Cli {
                         }
 
                         // create AWS clients
-                        ssmClient = new AmazonSimpleSystemsManagementClient();
-                        cfnClient = new AmazonCloudFormationClient();
-                        kmsClient = new AmazonKeyManagementServiceClient();
-                        s3Client = new AmazonS3Client();
-                        apiGatewayClient = new AmazonAPIGatewayClient();
-                        iamClient = new AmazonIdentityManagementServiceClient();
-                        lambdaClient = new AmazonLambdaClient();
+                        ssmClient = new AmazonSimpleSystemsManagementClient(AWSConfigs.RegionEndpoint);
+                        cfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint);
+                        kmsClient = new AmazonKeyManagementServiceClient(AWSConfigs.RegionEndpoint);
+                        s3Client = new AmazonS3Client(AWSConfigs.RegionEndpoint);
+                        apiGatewayClient = new AmazonAPIGatewayClient(AWSConfigs.RegionEndpoint);
+                        iamClient = new AmazonIdentityManagementServiceClient(AWSConfigs.RegionEndpoint);
+                        lambdaClient = new AmazonLambdaClient(AWSConfigs.RegionEndpoint);
                     }
                     if(HasErrors) {
                         return null;

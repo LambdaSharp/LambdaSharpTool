@@ -26,6 +26,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.APIGateway;
 using Amazon.APIGateway.Model;
 using Amazon.ApiGatewayV2;
@@ -69,8 +70,8 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.HelpOption();
                     subCmd.Description = "Delete orphaned Lambda and API Gateway V1/V2 CloudWatch logs";
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
-                    var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
 
                     // run command
                     subCmd.OnExecute(async () => {
@@ -148,8 +149,8 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("list-lambdas", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "List all Lambda functions by CloudFormation stack";
-                    var awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
-                    var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
+                    var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
+                    var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
@@ -165,6 +166,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
+                    Program.ShowHelp = true;
                     Console.WriteLine(cmd.GetHelpText());
                 });
             });
@@ -274,7 +276,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // initialize AWS profile
             await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
-            var logsClient = new AmazonCloudWatchLogsClient();
+            var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);
 
             // delete orphaned logs
             var totalLogGroups = 0;
@@ -293,7 +295,7 @@ namespace LambdaSharp.Tool.Cli {
             async Task DeleteOrphanLambdaLogsAsync() {
 
                 // list all lambda functions
-                var lambdaClient = new AmazonLambdaClient();
+                var lambdaClient = new AmazonLambdaClient(AWSConfigs.RegionEndpoint);
                 var request = new ListFunctionsRequest { };
                 var lambdaLogGroupNames = new HashSet<string>();
                 do {
@@ -315,7 +317,7 @@ namespace LambdaSharp.Tool.Cli {
             async Task DeleteOrphanApiGatewayLogs() {
 
                 // list all API Gateway V1 instances
-                var apiGatewayClient = new AmazonAPIGatewayClient();
+                var apiGatewayClient = new AmazonAPIGatewayClient(AWSConfigs.RegionEndpoint);
                 var request = new GetRestApisRequest { };
                 var apiGatewayGroupNames = new List<string>();
                 do {
@@ -335,7 +337,7 @@ namespace LambdaSharp.Tool.Cli {
             async Task DeleteOrphanApiGatewayV2Logs() {
 
                 // list all API Gateway V2 instances
-                var apiGatewayV2Client = new AmazonApiGatewayV2Client();
+                var apiGatewayV2Client = new AmazonApiGatewayV2Client(AWSConfigs.RegionEndpoint);
                 var request = new GetApisRequest { };
                 var apiGatewayGroupNames = new List<string>();
                 do {
@@ -668,9 +670,9 @@ namespace LambdaSharp.Tool.Cli {
 
             // initialize AWS profile
             await InitializeAwsProfile(awsProfile, awsRegion: awsRegion, allowCaching: true);
-            var cfnClient = new AmazonCloudFormationClient();
-            var lambdaClient = new AmazonLambdaClient();
-            var logsClient = new AmazonCloudWatchLogsClient();
+            var cfnClient = new AmazonCloudFormationClient(AWSConfigs.RegionEndpoint);
+            var lambdaClient = new AmazonLambdaClient(AWSConfigs.RegionEndpoint);
+            var logsClient = new AmazonCloudWatchLogsClient(AWSConfigs.RegionEndpoint);
 
             // fetch all Lambda functions on account
             var globalFunctions = (await ListLambdasAsync())
@@ -801,17 +803,27 @@ namespace LambdaSharp.Tool.Cli {
                     StackName = stackName
                 };
                 do {
-                    var response = await cfnClient.ListStackResourcesAsync(request);
-                    result.AddRange(
-                        response.StackResourceSummaries
-                            .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
-                            .Select(summary => {
-                                globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
-                                return (Name: summary.LogicalResourceId, Configuration: configuration);
-                            })
-                            .Where(tuple => tuple.Configuration != null)
-                    );
-                    request.NextToken = response.NextToken;
+                    var attempts = 0;
+                again:
+                    try {
+                        var response = await cfnClient.ListStackResourcesAsync(request);
+                        result.AddRange(
+                            response.StackResourceSummaries
+                                .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
+                                .Select(summary => {
+                                    globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
+                                    return (Name: summary.LogicalResourceId, Configuration: configuration);
+                                })
+                                .Where(tuple => tuple.Configuration != null)
+                        );
+                        request.NextToken = response.NextToken;
+                    } catch(AmazonCloudFormationException e) when(
+                        (e.Message == "Rate exceeded")
+                        && (++attempts < 30)
+                    ) {
+                        await Task.Delay(TimeSpan.FromSeconds(attempts));
+                        goto again;
+                    }
                 } while(request.NextToken != null);
                 return result;
             }
