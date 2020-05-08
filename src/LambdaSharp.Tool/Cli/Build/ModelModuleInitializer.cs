@@ -121,6 +121,26 @@ namespace LambdaSharp.Tool.Cli.Build {
                 allow: null,
                 encryptionContext: null
             );
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "Tier",
+                description: "Deployment tier name",
+                type: "String",
+                scope: null,
+                value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefix"))),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "TierLowercase",
+                description: "Deployment tier name in lowercase characters",
+                type: "String",
+                scope: null,
+                value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefixLowercase"))),
+                allow: null,
+                encryptionContext: null
+            );
 
             // create module IAM role used by all functions
             var moduleRoleItem = _builder.AddResource(
