@@ -115,7 +115,7 @@ Items:
     Description: CloudWatch log group for Firehose
     Type: AWS::Logs::LogGroup
     Properties:
-      RetentionInDays: 7
+      RetentionInDays: 30
 
   - Resource: FirehoseLogStream
     Description: CloudWatch log stream for Firehose
@@ -124,7 +124,7 @@ Items:
       LogGroupName: !Ref FirehoseLogGroup
 
   - Resource: LoggingStreamRole
-    Description: IAM Role to be used by CloudWatch log subscribers to allow them to write to the Firehose stream
+    Description: IAM Role used by CloudWatch log subscribers to write to the Firehose stream
     Type: AWS::IAM::Role
     Scope: public
     Properties:
