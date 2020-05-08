@@ -38,6 +38,6 @@ if ! (lash | grep -q "LambdaSharp CLI (v${LAMBDASHARP_VERSION})"); then
     echo "ERROR: MSBUILD output doesn't have the expected version number; expected 'LambdaSharp CLI (v${LAMBDASHARP_VERSION})'"
     dotnet tool uninstall \
         --global \
-        LambdaSharp.Tool \
+        LambdaSharp.Tool
     exit 1
 fi
