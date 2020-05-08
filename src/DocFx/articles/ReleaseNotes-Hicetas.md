@@ -22,12 +22,10 @@ This release introduces some key new capabilities for Lambda functions and the _
 1. Ensure all modules are deployed with v0.6.1 or later
 1. Upgrade LambdaSharp CLI to v0.8
     1. `dotnet tool update -g LambdaSharp.Tool`
-1. Disable _Core Services_ for all deployed modules to allow _LambdaSharp.Core_ to update the logging stream.
-    1. `lash tier coreservices --disabled`
 1. Upgrade LambdaSharp Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
-    1. `lash init --tier Sandbox --allow-upgrade`
+    1. `lash init --core-services=disabled --allow-upgrade --tier Sandbox`
 1. Re-enable _Core Services_ for all deployed modules.
-    1. `lash tier coreservices --enabled`
+    1. `lash init --core-services=enabled --tier Sandbox`
 
 
 ## BREAKING CHANGES
@@ -48,8 +46,22 @@ This release introduces some key new capabilities for Lambda functions and the _
 
 ## New LambdaSharp Module Syntax
 
-> TODO: CloudWatch events as event source
->   * Module::Tier and Module::TierLowercase
+### CloudWatch EventBridge Source
+
+It is now possible to subscribe a Lambda function to a CloudWatch event bus. The [notation](~/syntax/Module-Function-Sources-EventBus.md) is straightforward. Multiple event bus subscriptions can be active at the same time.
+
+```yaml
+Sources:
+  - EventBus: default
+    Pattern:
+      source: [ Sample.Event ]
+      detail-type: [ MyFirstEvent ]
+```
+
+
+### New Module Variables
+
+Two new, but related, module variables were introduced to retrieve the deployment tier name. They are `Module::Tier` and `Module::TierLowercase`. As the name implies, `Module::TierLowercase` returns the lowercase version of `Module::Tier`.
 
 
 ## New LambdaSharp CLI Features
