@@ -49,11 +49,14 @@ This release introduces some key new capabilities for Lambda functions and the _
 ## New LambdaSharp Module Syntax
 
 > TODO: CloudWatch events as event source
+>   * Module::Tier and Module::TierLowercase
+
 
 ## New LambdaSharp CLI Features
 
 * Enhanced `lash init` to highlight deployment tier name during stack updates.
 * Enhanced `lash init` for _LambdaSharp_ contributors to automatically force build and force publish.
+* Enhanced `lash nuke` to only empty the deployment and logging buckets if they were created by the _LambdaSharp.Core_ module.
 
 ## New LambdaSharp SDK Features
 
