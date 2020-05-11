@@ -56,7 +56,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public string? Message { get; set; }
     }
 
-    public class LogRecord : ALambdaRecord {
+    public class LogRecord {
 
         //--- Properties ---
         public long Timestamp { get; set; }
@@ -66,6 +66,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public string? Function { get; set; }
         public string? FunctionId { get; set; }
         public string? Tier { get; set; }
+        public string? RecordType { get; set; }
         public string? Record { get; set; }
     }
 
@@ -500,8 +501,6 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         private void AddConvertedRecord(OwnerMetaData owner, DateTimeOffset timestamp, ALambdaRecord record)
             => _convertedRecords.Add(LambdaSerializer.Serialize(new LogRecord {
-                Type = record.Type,
-                Version = record.Version,
                 Timestamp = timestamp.ToUnixTimeMilliseconds(),
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
@@ -509,6 +508,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 Function = owner.FunctionName,
                 FunctionId = owner.FunctionId,
                 Tier = Info.DeploymentTier,
+                RecordType = record.Type,
                 Record = LambdaSerializer.Serialize<object>(record)
             }));
 

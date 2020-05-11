@@ -35,10 +35,18 @@ Items:
     Type: AWS::SQS::Queue
     Properties: { }
 
-  - Parameter: LoggingStream
+  # NOTE (2020-05-11, bjorg): we use a variable, because `LoggingStream` was of a different resource type pre-0.8;
+  #   resources cannot change their type during a CloudFormation update operation.
+  - Variable: LoggingStream
     Scope: public
     Section: LambdaSharp Tier Settings
     Label: Logging stream for functions (leave blank to create a new stream)
+    Description: Logging Stream (ARN)
+    Value: !Ref LoggingFirehoseStream
+
+  - Parameter: LoggingFirehoseStream
+    Section: LambdaSharp Tier Settings
+    Label: Logging Kinesis Firehose stream for functions (leave blank to create a new stream)
     Description: Logging Stream (ARN)
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
@@ -50,8 +58,8 @@ Items:
           IntervalInSeconds: 60
           SizeInMBs: 1
         CompressionFormat: GZIP
-        Prefix: !Ref LoggingRecordsSuccessPrefix
-        ErrorOutputPrefix: !Ref LoggingRecordsFailurePrefix
+        Prefix: !Ref LoggingBucketSuccessPrefix
+        ErrorOutputPrefix: !Ref LoggingBucketFailurePrefix
         ProcessingConfiguration:
           Enabled: true
           Processors:
@@ -88,7 +96,7 @@ Items:
   - Parameter: LoggingStreamRole
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: IAM role used by CloudWatch Log to write records to logging stream (leave blank to create a new role)
+    Label: IAM role used by CloudWatch Logs to write records to the logging stream (leave blank to create a new role)
     Description: CloudWatch Logs IAM Role (ARN)
     Type: AWS::IAM::Role
     Properties:
@@ -114,8 +122,9 @@ Items:
 
   # CloudWatch Logs Processing
   - Parameter: LoggingBucket
+    Scope: public
     Section: LambdaSharp Tier Settings
-    Label: S3 bucket for storing ingested log records (leave blank to create a new S3 bucket)
+    Label: S3 bucket for storing ingested log entries (leave blank to create a new S3 bucket)
     Description: Logging S3 Bucket (ARN)
     Type: AWS::S3::Bucket
     Properties:
@@ -127,16 +136,16 @@ Items:
               - StorageClass: INTELLIGENT_TIERING
                 TransitionInDays: 1
 
-  - Parameter: LoggingRecordsSuccessPrefix
+  - Parameter: LoggingBucketSuccessPrefix
     Section: LambdaSharp Tier Settings
-    Label: Destination S3 bucket prefix for records successfully processed by logging stream
+    Label: Destination S3 bucket prefix for records successfully processed by the logging stream
     Description: S3 Object Prefix
     Type: String
     Default: "logging-success/"
 
-  - Parameter: LoggingRecordsFailurePrefix
+  - Parameter: LoggingBucketFailurePrefix
     Section: LambdaSharp Tier Settings
-    Label: Destination S3 bucket prefix for records unsuccessfully processed processed by logging stream
+    Label: Destination S3 bucket prefix for records unsuccessfully processed processed by the logging stream
     Description: S3 Object Prefix
     Type: String
     Default: "logging-failed/"
