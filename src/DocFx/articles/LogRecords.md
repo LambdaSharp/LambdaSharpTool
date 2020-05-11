@@ -175,3 +175,10 @@ FROM (
 GROUP BY 1, 2
 ORDER BY 5 DESC;
 ```
+
+
+|Module       |Function        |Count|AvgUsedDurationPercent|MaxUsedDurationPercent|
+|-------------|----------------|-----|----------------------|----------------------|
+|Sample.Event |SenderFunction  |   10|                  6.82|                 16.93|
+|Sample.Metric|MyFunction      |    4|                  2.02|                  8.07|
+|Sample.Event |ReceiverFunction|   10|                  6.08|                  7.84|
