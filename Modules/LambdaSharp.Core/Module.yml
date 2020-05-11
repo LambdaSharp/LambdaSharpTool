@@ -94,7 +94,7 @@ Items:
   - Parameter: LoggingStreamRole
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: IAM role used by CloudWatch Logs to write records to the logging stream (leave blank to create a new role)
+    Label: IAM role used by CloudWatch logs to write records to the logging stream (leave blank to create a new role)
     Description: CloudWatch Logs IAM Role (ARN)
     Type: AWS::IAM::Role
     Properties:
@@ -122,7 +122,7 @@ Items:
   - Parameter: LoggingBucket
     Scope: public
     Section: LambdaSharp Tier Settings
-    Label: S3 bucket for storing ingested log entries (leave blank to create a new S3 bucket)
+    Label: S3 bucket for storing ingested CloudWatch Log events (leave blank to create a new S3 bucket)
     Description: Logging S3 Bucket (ARN)
     Type: AWS::S3::Bucket
     Properties:

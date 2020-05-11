@@ -837,7 +837,7 @@ namespace LambdaSharp {
             => Logger.LogFatal(exception, format, arguments);
 
         /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="name">Metric name.</param>
         /// <param name="value">Metric value.</param>
@@ -849,7 +849,7 @@ namespace LambdaSharp {
         ) => LogMetric(new[] { new LambdaMetric(name, value, unit) });
 
         /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="name">Metric name.</param>
         /// <param name="value">Metric value.</param>
@@ -865,14 +865,14 @@ namespace LambdaSharp {
         ) => LogMetric(new[] { new LambdaMetric(name, value, unit) }, dimensionNames, dimensionValues);
 
         /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
         protected void LogMetric(IEnumerable<LambdaMetric> metrics)
             => LogMetric(metrics, new string[0], new Dictionary<string, string>());
 
         /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
         /// <param name="dimensionNames">Metric dimensions as comma-separated list (e.g. [ "A", "A,B" ]).</param>

@@ -47,7 +47,7 @@ The <code>DeadLetterQueue</code> parameter sets the Dead letter queue for functi
 <dt><code>LoggingBucket</code></dt>
 <dd>
 
-The <code>LoggingBucket</code> parameter sets the S3 bucket for storing ingested log entries. If left blank, a new bucket is created.
+The <code>LoggingBucket</code> parameter sets the S3 bucket for storing ingested CloudWatch Log events. If left blank, a new bucket is created.
 
 <i>Required</i>: No (Default: Create new AWS::S3::Bucket)
 
@@ -87,7 +87,7 @@ The <code>LoggingFirehoseStream</code> parameter sets the Logging Kinesis Fireho
 <dt><code>LoggingStreamRole</code></dt>
 <dd>
 
-The <code>LoggingStreamRole</code> parameter sets the IAM role used by CloudWatch Logs to write records to the logging stream. If left blank, a new role is created.
+The <code>LoggingStreamRole</code> parameter sets the IAM role used by CloudWatch logs to write records to the logging stream. If left blank, a new role is created.
 
 <i>Required</i>: No (Default: Create new AWS::IAM::Role)
 
@@ -161,7 +161,7 @@ The <code>DeploymentBucket</code> output contains the S3 bucket for the deployme
 <dt><code>LoggingBucket</code></dt>
 <dd>
 
-The <code>LoggingBucket</code> output contains the S3 bucket for processed log entries.
+The <code>LoggingBucket</code> output contains the S3 bucket for processed log events.
 
 <i>Type:</i> AWS::S3::Bucket
 </dd>

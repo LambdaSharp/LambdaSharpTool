@@ -152,7 +152,7 @@ namespace LambdaSharp.ErrorReports {
         public string Level { get; set; }
 
         /// <summary>
-        /// The <see cref="Fingerprint"/> property holds a unique value by which to group related error log entries.
+        /// The <see cref="Fingerprint"/> property holds a unique value by which to group related LambdaError records.
         /// </summary>
         /// <value>The log entry fingerprint.</value>
         public string Fingerprint { get; set; }

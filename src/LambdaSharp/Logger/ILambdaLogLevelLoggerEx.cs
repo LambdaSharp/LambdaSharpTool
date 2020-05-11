@@ -140,7 +140,7 @@ namespace LambdaSharp.Logger {
             => logger.Log(LambdaLogLevel.FATAL, exception, format, arguments);
 
         /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
         /// <param name="namespace">Metric namespace.</param>

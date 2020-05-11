@@ -19,6 +19,12 @@
 - name: Metrics
   href: Metrics.md
 
+- name: Events
+  href: Events.md
+
+- name: Log Records
+  href: LogRecords.md
+
 - name: Samples
   href: Samples.md
   items:

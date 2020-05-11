@@ -198,7 +198,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddVariable(
                 parent: moduleItem,
                 name: "LogRetentionInDays",
-                description: "Number days log entries are retained for",
+                description: "Number days CloudWatch Log streams are retained for",
                 type: "Number",
                 scope: null,
                 value: logRetentionInDays,

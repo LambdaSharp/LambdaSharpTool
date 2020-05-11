@@ -20,7 +20,7 @@ namespace LambdaSharp.Records {
 
     /// <summary>
     /// The abstract <see cref="ALambdaRecord"/> class is the base class for all
-    /// structured log entries.
+    /// structured log records.
     /// </summary>
     public abstract class ALambdaRecord {
 
