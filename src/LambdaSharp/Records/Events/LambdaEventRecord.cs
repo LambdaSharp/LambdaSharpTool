@@ -45,9 +45,15 @@ namespace LambdaSharp.Records.Events {
         public string Time { get; set; }
 
         /// <summary>
+        /// The <see cref="EventBus"/> property describes which event bus will receive the event.
+        /// </summary>
+        /// <value>The name of the event bus.</value>
+        public string EventBus { get; set; }
+
+        /// <summary>
         /// The <see cref="Source"/> property describes the source of the event.
         /// </summary>
-        /// <value></value>
+        /// <value>The source of the event.</value>
         public string Source { get; set; }
 
         /// <summary>

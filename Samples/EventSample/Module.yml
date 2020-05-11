@@ -30,5 +30,9 @@ Items:
     Sources:
       - EventBus: default
         Pattern:
-          source: [ Sample.Event ]
-          detail-type: [ MyFirstEvent ]
+          source:
+            - Sample.Event
+          detail-type:
+            - MyEvent
+          resources:
+            - !Sub "lambdasharp:tier:${Module::Tier}"

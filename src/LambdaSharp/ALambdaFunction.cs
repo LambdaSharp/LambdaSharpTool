@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -920,17 +921,35 @@ namespace LambdaSharp {
         /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
         protected void SendEvent<T>(string detailType, T details, IEnumerable<string> resources = null) {
-            var lambdaResources = new List<string> {
+
+            // augment event resources with LambdaSharp specific resources
+            var lambdaResources = new List<string>(resources ?? Enumerable.Empty<string>()) {
                 $"lambdasharp:stack:{Info.ModuleId}",
                 $"lambdasharp:module:{Info.ModuleFullName}",
                 $"lambdasharp:tier:{Info.DeploymentTier}"
             };
-            if(resources?.Any() ?? false) {
-                lambdaResources.AddRange(resources);
-            }
 
-            // TODO (2020-05-05, bjorg): allow setting the event bus
-            AddPendingTask(Provider.SendEventAsync("default", Info.ModuleFullName, detailType, LambdaSerializer.Serialize(details), lambdaResources));
+            // create event record for logging
+            var now = DateTimeOffset.UtcNow;
+            var record = new LambdaEventRecord {
+                Time = now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo),
+                EventBus = "default",
+                Source = Info.ModuleFullName,
+                DetailType = detailType,
+                Detail = LambdaSerializer.Serialize(details),
+                Resources = lambdaResources
+            };
+            Logger.LogRecord(record);
+
+            // send event
+            AddPendingTask(Provider.SendEventAsync(
+                now,
+                record.EventBus,
+                record.Source,
+                record.DetailType,
+                record.Detail,
+                record.Resources
+            ));
         }
         #endregion
 

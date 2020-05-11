@@ -44,14 +44,16 @@ The <code>Pattern</code> attribute describes which events are routed to the Lamb
 
 ### Receive Events from Deployment Tier
 
-The following definition receives events from `Sample.Event` module of type `MyFirstEvent`, but only when sent from the same deployment tier.
+The following definition receives events from `Sample.Event` module of type `MyEvent`, but only when sent from the same deployment tier.
 
 ```yaml
 Sources:
   - EventBus: default
     Pattern:
-      source: [ Sample.Event ]
-      detail-type: [ MyFirstEvent ]
+      source:
+        - Sample.Event
+      detail-type:
+        - MyEvent
       resources:
         - !Sub "lambdasharp:tier:${Module::Tier}"
 ```
