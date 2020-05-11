@@ -788,7 +788,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // check if CloudFormation stack was deployed by LambdaSharp
                 var moduleInfoOutput = stackWithFunctions.Stack.Outputs
-                    .FirstOrDefault(output => output.OutputKey == "Module")
+                    .FirstOrDefault(output => (output.OutputKey == "ModuleInfo") || (output.OutputKey == "Module"))
                     ?.OutputValue;
                 var lambdaSharpToolOutput = stackWithFunctions.Stack.Outputs
                     .FirstOrDefault(output => output.OutputKey == "LambdaSharpTool")

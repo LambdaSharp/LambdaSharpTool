@@ -123,6 +123,18 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
             _builder.AddVariable(
                 parent: moduleItem,
+                name: "Info",
+                description: "Module Fullname, Version, and Origin",
+                type: "String",
+                scope: null,
+                value: _builder.ModuleInfo.ToString(),
+                allow: null,
+                encryptionContext: null
+            );
+
+            // TODO: move these into "Deployment" group
+            _builder.AddVariable(
+                parent: moduleItem,
                 name: "Tier",
                 description: "Deployment tier name",
                 type: "String",
