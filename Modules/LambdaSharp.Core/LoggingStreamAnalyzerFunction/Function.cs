@@ -133,7 +133,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 foreach(var record in request.Records) {
                     try {
 
-                        // deserialize kinesis record into a CloudWatch Logs event
+                        // deserialize kinesis record into a CloudWatch Log event
                         LogEventsMessage logEvent;
                         using(var sourceStream = new MemoryStream(Convert.FromBase64String(record.Base64EncodedData)))
                         using(var destinationStream = new MemoryStream()) {
@@ -204,6 +204,16 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                     LogError(e, "log event entry [{1}] processing failed (record-id: {0})", record.RecordId, logEventIndex);
                                     success = false;
                                     break;
+                                }
+                            }
+
+                            // record how long it took to process the CloudWatch Log event
+                            if(logEvent.LogEvents.Any()) {
+                                try {
+                                    var timestamp = DateTimeOffset.FromUnixTimeMilliseconds(logEvent.LogEvents.First().Timestamp);
+                                    LogMetric("LogEvent.Latency", (DateTimeOffset.UtcNow - timestamp).TotalMilliseconds, LambdaMetricUnit.Milliseconds);
+                                } catch(Exception e) {
+                                    LogError(e, "report log event latency failed");
                                 }
                             }
 
