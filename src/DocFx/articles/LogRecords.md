@@ -111,7 +111,7 @@ The following steps show how to setup an Athena database and table to query inge
 If you haven't already done so, create an Athena database. Replace `MyDatabase` with a database name of your choice.
 
 ```sql
-CREATE DATABASE MyDatabase
+CREATE DATABASE MyDatabase;
 ```
 
 ### Step 2 - Create an Athena Table
@@ -148,7 +148,7 @@ Make sure to replace `MyDatabase` and `MyLogs` with your database and table name
 ```sql
 SELECT *
 FROM MyDatabase.MyLogs
-ORDER BY Timestamp DESC
+ORDER BY Timestamp DESC;
 ```
 
 ### Example: Show Usage Reports by Used Duration
@@ -173,5 +173,5 @@ FROM (
   WHERE RecordType = 'UsageReport'
 )
 GROUP BY 1, 2
-ORDER BY 5 DESC
+ORDER BY 5 DESC;
 ```
