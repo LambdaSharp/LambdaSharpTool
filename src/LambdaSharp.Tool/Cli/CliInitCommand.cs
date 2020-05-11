@@ -490,6 +490,7 @@ namespace LambdaSharp.Tool.Cli {
                         return false;
                     }
                 } else {
+                    Console.WriteLine();
                     if(Settings.UseAnsiConsole) {
                         Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
                     } else {

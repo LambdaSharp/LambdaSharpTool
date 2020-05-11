@@ -59,7 +59,7 @@ The <code>LoggingBucket</code> parameter sets the S3 bucket for storing ingested
 
 The <code>LoggingBucketSuccessPrefix</code> parameter sets the destination S3 bucket prefix for records successfully processed by the logging stream.
 
-<i>Required</i>: No (Default: <c>logging-success/</c>)
+<i>Required</i>: No (Default: <code>logging-success/</code>)
 
 <i>Type:</i> String
 </dd>
@@ -69,7 +69,7 @@ The <code>LoggingBucketSuccessPrefix</code> parameter sets the destination S3 bu
 
 The <code>LoggingBucketFailurePrefix</code> parameter sets the destination S3 bucket prefix for records unsuccessfully processed processed by the logging stream.
 
-<i>Required</i>: No (Default: <c>logging-failed/</c>)
+<i>Required</i>: No (Default: <code>logging-failed/</code>)
 
 <i>Type:</i> String
 </dd>

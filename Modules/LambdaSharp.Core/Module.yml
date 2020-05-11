@@ -39,8 +39,6 @@ Items:
   #   resources cannot change their type during a CloudFormation update operation.
   - Variable: LoggingStream
     Scope: public
-    Section: LambdaSharp Tier Settings
-    Label: Logging stream for functions (leave blank to create a new stream)
     Description: Logging Stream (ARN)
     Value: !Ref LoggingFirehoseStream
 

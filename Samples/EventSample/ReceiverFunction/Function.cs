@@ -22,6 +22,14 @@ using System.Threading.Tasks;
 using Amazon.Lambda.CloudWatchEvents;
 using LambdaSharp;
 
+// NOTE (2020-05-11, bjorg): due to a bug in `Amazon.Lambda.CloudWatchEvents`, the class being deserialized
+//  must be located in the `Amazon.Lambda.CloudWatchEvents` namespace.
+//  For more details, see: https://github.com/aws/aws-lambda-dotnet/issues/634
+namespace Amazon.Lambda.CloudWatchEvents {
+
+    public class CloudWatchEvent : CloudWatchEvent<Sample.Event.ReceiverFunction.EventDetails> { }
+}
+
 namespace Sample.Event.ReceiverFunction {
 
     public class EventDetails {
@@ -32,12 +40,12 @@ namespace Sample.Event.ReceiverFunction {
 
     public class FunctionResponse { }
 
-    public class Function : ALambdaFunction<CloudWatchEvent<EventDetails>, FunctionResponse> {
+    public class Function : ALambdaFunction<CloudWatchEvent, FunctionResponse> {
 
         //--- Methods ---
         public override async Task InitializeAsync(LambdaConfig config) { }
 
-        public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent<EventDetails> request) {
+        public override async Task<FunctionResponse> ProcessMessageAsync(CloudWatchEvent request) {
             LogInfo($"Version = {request.Version}");
             LogInfo($"Account = {request.Account}");
             LogInfo($"Region = {request.Region}");
