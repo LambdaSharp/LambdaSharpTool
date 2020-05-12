@@ -23,14 +23,20 @@ This release introduces some key new capabilities for Lambda functions and the _
 1. Upgrade LambdaSharp CLI to v0.8
     1. `dotnet tool update -g LambdaSharp.Tool`
 1. Upgrade LambdaSharp Deployment Tier (replace `Sandbox` with the name of the deployment tier to upgrade)
-    1. `lash init --core-services=disabled --allow-upgrade --tier Sandbox`
-1. Re-enable _Core Services_ for all deployed modules.
-    1. `lash init --core-services=enabled --tier Sandbox`
+    1. `lash init --allow-upgrade --tier Sandbox`
 
 
 ## BREAKING CHANGES
 
 ### LambdaSharp Core Services
+
+#### LambdaSharp.Core
+
+> TODO:
+> * replaced input parameter `LoggingStream` with `LoggingFirehoseStream`
+> * removed `LoggingStreamRetentionPeriodHours`
+> * removed `LoggingStreamShardCount`
+> * added `LoggingBucketSuccessPrefix` and `LoggingBucketFailurePrefix`
 
 ### LambdaSharp CLI
 * Check for redundant `[assembly: LambdaSerializer(typeof(...))]` definition.
@@ -54,8 +60,12 @@ It is now possible to subscribe a Lambda function to a CloudWatch event bus. The
 Sources:
   - EventBus: default
     Pattern:
-      source: [ Sample.Event ]
-      detail-type: [ MyFirstEvent ]
+      source:
+        - Sample.Event
+      detail-type:
+        - MyEvent
+      resources:
+        - !Sub "lambdasharp:tier:${Module::Tier}"
 ```
 
 
@@ -75,6 +85,7 @@ Two new, but related, module variables were introduced to retrieve the deploymen
 > TODO: talk about new emitted metrics and link to docs
 > * Added CloudWatch metrics to `ALambdaQueueFunction<T>` base class.
 > * Added CloudWatch metrics to `ALambdaTopicFunction<T>` base class.
+> * Talk about custom metrics.
 
 * Added [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(IEnumerable{LambdaMetric})) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
 * Added [`ALambdaFunction.SendEvent(...)`](xref:ALambdaFunction.SendEvent(string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
@@ -90,13 +101,13 @@ Two new, but related, module variables were introduced to retrieve the deploymen
 * Added metrics to _LambdaSharp.Core_ module.
 * Ported module to .NET Core 3.1 with null-aware support.
 * Published module with _ReadyToRun_ support for shorter cold-start times.
-* Use Kinesis Firehose stream for CloudWatch Logs ingestion.
+* Use Kinesis Firehose stream for CloudWatch logs ingestion.
 * Store ingested CloudWatch Log events in S3 bucket as queryable JSON records.
 
 ### Logging Bucket
 > TODO: describe the purpose of the logging bucket
 
-### Create an Athena Table to Query ingested CloudWatch Logs
+### Create an Athena Table to Query ingested CloudWatch Log Events
 ```sql
 CREATE EXTERNAL TABLE IF NOT EXISTS `<ATHENA-DATABASE>`.Logs (
   `Timestamp` bigint,
