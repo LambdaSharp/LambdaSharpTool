@@ -510,10 +510,7 @@ namespace LambdaSharp {
             // read LambdaSharp provided environment variables
             _moduleId = envSource.Read("MODULE_ID");
             _moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleInfoString(_moduleInfo, out var moduleNamespace, out var moduleName, out var moduleVersion, out var moduleOrigin);
-            _moduleNamespace = moduleNamespace;
-            _moduleName = moduleName;
-            _moduleVersion = moduleVersion;
+            ParseModuleInfoString(_moduleInfo, out _moduleNamespace, out _moduleName, out _moduleVersion, out _moduleOrigin);
             _deploymentTier = envSource.Read("DEPLOYMENT_TIER");
             _deploymentBucketName = envSource.Read("DEPLOYMENTBUCKETNAME");
             var deadLetterQueueArn = envSource.Read("DEADLETTERQUEUE");

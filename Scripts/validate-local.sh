@@ -52,20 +52,17 @@ echo "**********************"
 echo "*** Run Unit Tests ***"
 echo "***********************"
 
-cd $LAMBDASHARP/Tests/Tests.LambdaSharp
-dotnet test
+dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp"
 if [ $? -ne 0 ]; then
     exit $?
 fi
 
-cd $LAMBDASHARP/Tests/Tests.LambdaSharp.Tool
-dotnet test
+dotnet test "$LAMBDASHARP/Tests/Tests.LambdaSharp.Tool"
 if [ $? -ne 0 ]; then
     exit $?
 fi
 
-cd $LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests
-dotnet test
+dotnet test "$LAMBDASHARP/Modules/LambdaSharp.Core/Tests/ProcessLogEventsTests"
 if [ $? -ne 0 ]; then
     exit $?
 fi
