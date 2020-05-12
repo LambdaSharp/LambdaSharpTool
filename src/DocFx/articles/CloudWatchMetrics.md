@@ -1,20 +1,17 @@
 ---
-title: LambdaSharp Metrics - Custom CloudWatch Metrics reported by LambdaSharp - LambdaSharp
+title: CloudWatch Metrics - Custom CloudWatch Metrics reported by LambdaSharp - LambdaSharp
 description: List of custom CloudWatch metrics reported by LambdaSharp modules
 keywords: cloudwatch, metrics, modules
 ---
 
-# Metrics
-
-
-## Overview
+# CloudWatch Metrics
 
 LambdaSharp modules emit custom CloudWatch metrics to enable automated monitoring on the efficiency and reliability of modules.
 
 LambdaSharp modules can report custom metrics using the built-in [`LogMetric(string name, double value, LambdaMetricUnit unit)`](xref:LambdaSharp.ALambdaFunction.LogMetric(string,double,LambdaMetricUnit)) method or one of its overloads. Metrics are automatically organized by module full name, prefixed by _Module:_. For example, the _LambdaSharp.Core_ metrics are found under the _Module:LambdaSharp.Core_ namespace in CloudWatch.
 
 
-## Standard Function Metrics
+## Standard Lambda Function Metrics
 
 ### Class [LambdaSharp.ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
 
@@ -60,8 +57,8 @@ The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 
 |Name                       |Unit        |Description                                                                       |
 |---------------------------|------------|----------------------------------------------------------------------------------|
-|MessageAttempt.Count       |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
-|MessageFailure.Count       |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
+|MessageFailed.Count        |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
+|MessageDead.Count          |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
 |MessageSuccess.Count       |Count       |Number of successfully processed messages.                                        |
 |MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.           |
 |MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created. |
@@ -95,8 +92,8 @@ The `ALambdaTopicFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 
 |Name                       |Unit        |Description                                                                       |
 |---------------------------|------------|----------------------------------------------------------------------------------|
-|MessageAttempt.Count       |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
-|MessageFailure.Count       |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
+|MessageFailed.Count        |Count       |Number of messages that failed processing, but have not been forwarded to the dead-letter queue.|
+|MessageDead.Count          |Count       |Number of messages that failed processing and have been forwarded to the dead-letter queue.|
 |MessageSuccess.Count       |Count       |Number of successfully processed messages.                                        |
 |MessageSuccess.Latency     |Milliseconds|Number of milliseconds to successfully process a message once received.           |
 |MessageSuccess.Lifespan    |Seconds     |Number of seconds to successfully process a message from the time it was created. |
@@ -128,18 +125,21 @@ In addition, SNS emits the following metrics organized by [`Application`], [`App
 
 For more details, consult the [Amazon SNS metrics documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-monitoring-using-cloudwatch.html).
 
+### Class [LambdaSharp.ApiGateway.ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
 
-### (Proposal) Class [LambdaSharp.ApiGateway.ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
-
-The `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Method`,`Resource`] dimensions where:
+For REST APIs, the `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Method`,`Resource`] dimension where:
 * `Stack` is the CloudFormation stack name.
 * `Method` is the HTTP method (e.g. `POST`, `GET`, etc.)
-* `Resource` is the API Gateway resources (e.g. `/foo/bar`)
+* `Resource` is the API Gateway resource (e.g. `/foo/bar`)
+
+For WebSocket APIs, the `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Route`] dimension where:
+* `Stack` is the CloudFormation stack name.
+* `Route` is the WebSocket route key (e.g. `$connect`, `$disconnect`, etc.)
 
 |Name                       |Unit   |Description                                                                    |
 |---------------------------|-------|-------------------------------------------------------------------------------|
-|AsyncRequestAttempt.Count  |Count  |Number of asynchronous messages that failed processing, but have not been forwarded to the dead-letter queue.|
-|AsyncRequestFailure.Count  |Count  |Number of asynchronous requests that failed and have been forwarded to the dead-letter queue.|
+|AsyncRequestFailed.Count   |Count  |Number of asynchronous messages that failed processing, but have not been forwarded to the dead-letter queue.|
+|AsyncRequestDead.Count     |Count  |Number of asynchronous requests that failed and have been forwarded to the dead-letter queue.|
 |AsyncRequestSuccess.Count  |Count  |Number of successfully processed asynchronous requests.                        |
 |AsyncRequestSuccess.Latency|Milliseconds|Number of milliseconds to successfully process an asynchronous request.             |
 
@@ -170,11 +170,11 @@ For more details, consult the [Amazon API Gateway metrics documentation](https:/
 
 Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be reported.
 
-|Name                   |Unit        |Description                                                    |
-|-----------------------|------------|---------------------------------------------------------------|
-|ErrorReport.Count      |Count       |Number of errors reported while processing CloudWatch logs.    |
-|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch logs.  |
-|Event.Latency          |Milliseconds|Number of milliseconds to send an event once logged.           |
+|Name                   |Unit        |Description                                                           |
+|-----------------------|------------|----------------------------------------------------------------------|
+|ErrorReport.Count      |Count       |Number of errors reported while processing CloudWatch Log events.     |
+|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch Log events.   |
+|LogEvent.Latency       |Milliseconds|Number of milliseconds to to process an ingested CloudWatch Log event.|
 
 ## LambdaSharp.Core Metrics Events
 

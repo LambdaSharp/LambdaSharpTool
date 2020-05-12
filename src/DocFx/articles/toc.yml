@@ -16,8 +16,8 @@
 - name: API Gateway for .NET
   href: APIGateway.md
 
-- name: Metrics
-  href: Metrics.md
+- name: CloudWatch Metrics
+  href: CloudWatchMetrics.md
 
 - name: Events
   href: Events.md

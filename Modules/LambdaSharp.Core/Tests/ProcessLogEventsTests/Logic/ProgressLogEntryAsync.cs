@@ -45,27 +45,23 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             }
 
             //--- Methods ---
-            public Task SendErrorReportAsync(OwnerMetaData owner, LambdaErrorReport report) {
+            public Task SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report) {
                 ErrorReport.Should().BeNull();
                 ErrorReport = report;
                 return Task.CompletedTask;
             }
 
-            public Task SendUsageReportAsync(OwnerMetaData owner, UsageReport report) {
+            public Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report) {
                 UsageReport.Should().BeNull();
                 UsageReport = report;
                 return Task.CompletedTask;
             }
 
-            public void LogProcessingError(Exception exception) {
-                _output.WriteLine(exception.ToString());
-            }
-
-            public Task SendEventAsync(OwnerMetaData owner, LambdaEventRecord record) {
+            public Task SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record) {
                 return Task.CompletedTask;
             }
 
-            public Task SendMetricsAsync(OwnerMetaData owner, LambdaMetricsRecord record) {
+            public Task SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record) {
                 return Task.CompletedTask;
             }
         }

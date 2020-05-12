@@ -36,13 +36,6 @@ namespace LambdaSharp.SimpleQueueService {
     /// <typeparam name="TMessage">The SQS queue message type.</typeparam>
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
 
-        //--- Constants ---
-        private const string MESSAGE_ATTEMPT_COUNT = "MessageAttempt.Count";
-        private const string MESSAGE_FAILURE_COUNT = "MessageFailure.Count";
-        private const string MESSAGE_SUCCESS_COUNT = "MessageSuccess.Count";
-        private const string MESSAGE_SUCCESS_LATENCY = "MessageSuccess.Latency";
-        private const string MESSAGE_SUCCESS_LIFESPAN = "MessageSuccess.Lifespan";
-
         //--- Fields ---
 
         // TODO: initialize max-retry value
@@ -145,9 +138,9 @@ namespace LambdaSharp.SimpleQueueService {
                     // record successful processing metrics
                     stopwatch.Stop();
                     var now = DateTimeOffset.UtcNow;
-                    metrics.Add((MESSAGE_SUCCESS_COUNT, 1, LambdaMetricUnit.Count));
-                    metrics.Add((MESSAGE_SUCCESS_LATENCY, stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
-                    metrics.Add((MESSAGE_SUCCESS_LIFESPAN, (now - record.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
+                    metrics.Add(("MessageSuccess.Count", 1, LambdaMetricUnit.Count));
+                    metrics.Add(("MessageSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
+                    metrics.Add(("MessageSuccess.Lifespan", (now - record.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
                 } catch(Exception e) {
 
                     // NOTE (2020-04-21, bjorg): delete message if error is not retriable (i.e. logic error) or
@@ -173,16 +166,16 @@ namespace LambdaSharp.SimpleQueueService {
                             successfulMessages.Add(record);
 
                             // record failed processing metrics
-                            metrics.Add((MESSAGE_FAILURE_COUNT, 1, LambdaMetricUnit.Count));
+                            metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
                         } catch {
 
                             // record attempted processing metrics
-                            metrics.Add((MESSAGE_ATTEMPT_COUNT, 1, LambdaMetricUnit.Count));
+                            metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
                         }
                     } else {
 
                         // record attempted processing metrics
-                        metrics.Add((MESSAGE_ATTEMPT_COUNT, 1, LambdaMetricUnit.Count));
+                        metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
 
                         // log error as a warning as we expect to see this message again
                         LogErrorAsWarning(e);

@@ -35,13 +35,6 @@ namespace LambdaSharp.SimpleNotificationService {
     /// <typeparam name="TMessage">The SNS topic message type.</typeparam>
     public abstract class ALambdaTopicFunction<TMessage> : ALambdaFunction {
 
-        //--- Constants ---
-        private const string MESSAGE_ATTEMPT_COUNT = "MessageAttempt.Count";
-        private const string MESSAGE_FAILURE_COUNT = "MessageFailure.Count";
-        private const string MESSAGE_SUCCESS_COUNT = "MessageSuccess.Count";
-        private const string MESSAGE_SUCCESS_LATENCY = "MessageSuccess.Latency";
-        private const string MESSAGE_SUCCESS_LIFESPAN = "MessageSuccess.Lifespan";
-
         //--- Fields ---
         private SNSEvent.SNSMessage _currentRecord;
 
@@ -133,9 +126,9 @@ namespace LambdaSharp.SimpleNotificationService {
                     // record successful processing metrics
                     stopwatch.Stop();
                     var now = DateTimeOffset.UtcNow;
-                    metrics.Add((MESSAGE_SUCCESS_COUNT, 1, LambdaMetricUnit.Count));
-                    metrics.Add((MESSAGE_SUCCESS_LATENCY, stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
-                    metrics.Add((MESSAGE_SUCCESS_LIFESPAN, (now - CurrentRecord.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
+                    metrics.Add(("MessageSuccess.Count", 1, LambdaMetricUnit.Count));
+                    metrics.Add(("MessageSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
+                    metrics.Add(("MessageSuccess.Lifespan", (now - CurrentRecord.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
                     return "Ok".ToStream();
                 } catch(Exception e) {
                     LogError(e);
@@ -145,7 +138,7 @@ namespace LambdaSharp.SimpleNotificationService {
                         await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SQS, LambdaSerializer.Serialize(snsEventBody), e);
 
                         // record failed processing metrics
-                        metrics.Add((MESSAGE_FAILURE_COUNT, 1, LambdaMetricUnit.Count));
+                        metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
                     } catch {
 
                         // NOTE (2020-04-22, bjorg): since the message could not be sent to the dead-letter queue,
@@ -153,7 +146,7 @@ namespace LambdaSharp.SimpleNotificationService {
                         //  of knowing how many attempts have occurred already.
 
                         // unable to forward message to dead-letter queue; report failure to lambda so it can retry
-                        metrics.Add((MESSAGE_ATTEMPT_COUNT, 1, LambdaMetricUnit.Count));
+                        metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
                         throw;
                     }
                     return $"ERROR: {e.Message}".ToStream();
