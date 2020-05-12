@@ -102,6 +102,7 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/ApiInvokeSample \
         $LAMBDASHARP/Samples/CustomResourceTypeSample \
         $LAMBDASHARP/Samples/DynamoDBSample \
+        $LAMBDASHARP/Samples/EventSample \
         $LAMBDASHARP/Samples/FinalizerSample \
         $LAMBDASHARP/Samples/KinesisSample \
         $LAMBDASHARP/Samples/MetricSample \
