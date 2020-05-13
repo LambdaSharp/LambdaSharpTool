@@ -173,8 +173,8 @@ Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be rep
 |Name                   |Unit        |Description                                                           |
 |-----------------------|------------|----------------------------------------------------------------------|
 |ErrorReport.Count      |Count       |Number of errors reported while processing CloudWatch Log events.     |
-|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch Log events.   |
 |LogEvent.Latency       |Milliseconds|Number of milliseconds to to process an ingested CloudWatch Log event.|
+|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch Log events.   |
 
 ## LambdaSharp.Core Metrics Events
 
