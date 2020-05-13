@@ -43,7 +43,6 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Create or update a LambdaSharp deployment tier";
 
                 // init options
-                var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
@@ -122,7 +121,7 @@ namespace LambdaSharp.Tool.Cli {
                     // determine if we want to install modules from a local check-out
                     await Init(
                         settings,
-                        allowDataLossOption.HasValue(),
+                        allowDataLoos: true,
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCoreServicesReferenceVersion(),

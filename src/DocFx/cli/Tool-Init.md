@@ -13,12 +13,6 @@ The `--quick-start` option minimizes the setup time by disabling the core servic
 
 <dl>
 
-<dt><code>--allow-data-loss</code></dt>
-<dd>
-
-(optional) Allow CloudFormation resource update operations that could lead to data loss
-</dd>
-
 <dt><code>--protect</code></dt>
 <dd>
 
