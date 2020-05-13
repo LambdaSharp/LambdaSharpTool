@@ -64,6 +64,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         //--- Class Fields ---
         private static Regex _javascriptTrace = new Regex(@"(?<Function>.*)\((?<File>.*):(?<Line>[\d]+):(?<Column>[\d]+)\)", RegexOptions.CultureInvariant | RegexOptions.Compiled);
+        private static Regex _csharpTrace = new Regex(@"^\s+at (?<Method>.+?)( in (?<File>.+?):line (?<Line>.+))?$");
 
         //--- Class Methods ---
         private static (Regex Regex, MatchHandlerAsync HandlerAsync, string Pattern) CreateMatchPattern(string pattern, MatchHandlerAsync handler)
@@ -120,8 +121,21 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 // LambdaSharp error report
                 CreateMatchPattern(@"^\s*{.*}\s*$", MatchLambdaSharpJsonLogEntryAsync),
 
-                // Lambda .NET exception
+                // Lambda runtime exceptions need to be reported; these occur when there is an exception to locate
+                //  the constructor or inside the constructor.
                 CreateMatchPattern(@"^(?<ErrorMessage>[^:]+): LambdaException$", MatchLambdaExceptionAsync),
+
+                // NOTE (2020-05-12, bjorg): this message is shown when an exception bubbles out of the Lambda function; since
+                //  all exceptions are already logged as LambdaError records, this log entry is not needed.
+                CreateMatchPattern(@"^.*: [\w]*Exception$", IgnoreEntryAsync),
+
+                // NOTE (2020-05-12, bjorg): this message is shown when an exception occurs in the constructor or the function
+                //  entry point could not be found; both errors are reported already by other log entries.
+                CreateMatchPattern(@"^.*\[WARN\] .* run_dotnet\(dotnet_path, &args\) failed.*$", IgnoreEntryAsync),
+
+                // NOTE (2020-05-12, bjorg): this message is shown when an exception occurs in the constructor or the function
+                //  entry point could not be found; both errors are reported already by other log entries.
+                CreateMatchPattern(@"^Unknown application error occurred.*$", IgnoreEntryAsync),
 
                 // Lambda timeout error
                 CreateMatchPattern(@"^(?<Timestamp>[\d\-T\.:Z]+)\s+(?<RequestId>[\da-f\-]+) (?<ErrorMessage>Task timed out after (?<Duration>[\d\.]+) seconds)$", MatchTimeoutAsync),
@@ -148,7 +162,14 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                     return;
                 }
             }
-            throw new ProcessLogEventsException("invalid or unrecognized log event entry");
+            await UnrecognizedEntryAsync(owner, message, timestamp);
+        }
+
+        private Task UnrecognizedEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp) {
+            var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, "^.*$");
+            report.Level = "WARNING";
+            report.Message = message;
+            return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task IgnoreEntryAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
@@ -207,6 +228,62 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = match.Groups["ErrorMessage"].Value;
             report.RequestId = match.Groups["RequestId"].Value;
+
+            // remove empty lines, but keep the indentation
+            var lines = message.Split("\n", StringSplitOptions.RemoveEmptyEntries).ToList();
+
+            // convert lines into one or more stack traces
+            var traces = new List<LambdaErrorReportStackTrace>();
+            report.Traces = traces;
+            while(lines.Any()) {
+                var trace = new LambdaErrorReportStackTrace();
+
+                // process exception message
+                var messageLine = lines.First();
+                lines.RemoveAt(0);
+                var lastColon = messageLine.LastIndexOf(':');
+                if(lastColon >= 0) {
+                    trace.Exception = new LambdaErrorReportExceptionInfo {
+                        Type = messageLine.Substring(lastColon + 1).Trim(),
+                        Message = messageLine.Substring(0, lastColon).Trim()
+                    };
+                } else {
+                    trace.Exception = new LambdaErrorReportExceptionInfo {
+                        Type = "Exception",
+                        Message = messageLine
+                    };
+                }
+                traces.Add(trace);
+
+                // grab as many matching frame lines as possible and remove them from the list
+                var frameLineMatches = lines.Select(line => _csharpTrace.Match(line))
+                    .TakeWhile(match => match.Success)
+                    .ToList();
+                lines.RemoveRange(0, frameLineMatches.Count);
+
+                // convert each trace line into a frame
+                var frames = new List<LambdaErrorReportStackFrame>();
+                foreach(var frameLineMatch in frameLineMatches) {
+                    var frame = new LambdaErrorReportStackFrame {
+                        MethodName = frameLineMatch.Groups["Method"].Value
+                    };
+
+                    // check if the trace line contains information about the originating file and line number
+                    var file = frameLineMatch.Groups["File"].Value;
+                    if(!string.IsNullOrEmpty(file)) {
+                        frame.FileName = file.Trim();
+                        if(int.TryParse(frameLineMatch.Groups["Line"].Value, out var line)) {
+                            frame.LineNumber = line;
+                        }
+                    }
+                    frames.Add(frame);
+                }
+
+                // only set set frames if any were generated
+                if(frames.Any()) {
+                    trace.Frames = frames;
+                }
+            }
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
@@ -260,7 +337,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
                 // report out-of-memory error
                 report.Level = "ERROR";
-                report.Message = $"Lambda ran out of memory (Max: {usage.UsedMemory} MB)";
+                report.Message = $"Lambda ran out of memory (Max: {owner.FunctionMaxMemory} MB)";
                 report.Fingerprint = ToMD5Hash($"{owner.FunctionId}-Lambda ran out of memory");
             } else if(usage.UsedDurationPercent >= 1.0F) {
 

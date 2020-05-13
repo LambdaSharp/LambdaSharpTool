@@ -151,7 +151,7 @@ FROM MyDatabase.MyLogs
 ORDER BY Timestamp DESC;
 ```
 
-### Example: Show Usage Reports by Used Duration
+### Example 1: Show Usage Reports by Used Duration
 
 The following query summarizes all `UsageReport` records by count, average used duration in percent, and maximum used duration in percent. This query is useful to identify Lambda functions that may be running too close to their execution limit.
 
@@ -176,9 +176,41 @@ GROUP BY 1, 2
 ORDER BY 5 DESC;
 ```
 
-
 |Module       |Function        |Count|AvgUsedDurationPercent|MaxUsedDurationPercent|
 |-------------|----------------|-----|----------------------|----------------------|
 |Sample.Event |SenderFunction  |   10|                  6.82|                 16.93|
 |Sample.Metric|MyFunction      |    4|                  2.02|                  8.07|
 |Sample.Event |ReceiverFunction|   10|                  6.08|                  7.84|
+
+
+### Example 2: Show LambdaError Reports for past 24 Hours
+
+The following query shows all LambdaError reports for the past 24 hours by CloudFormation stack (`moduleId`) and Lambda function.
+
+Make sure to replace `MyDatabase` and `MyLogs` with your database and table names, respectively.
+
+```sql
+SELECT
+  from_unixtime(Timestamp / 1000.0) AS "DateTime (UTC)",
+  ModuleId,
+  Function,
+  json_extract_scalar(Record, '$.Level') AS Level,
+  json_extract_scalar(Record, '$.Message') AS Message
+FROM steveb.stevebv7logs
+WHERE Timestamp > (1000.0 * to_unixtime(date_add('day', -1, now()))) AND RecordType='LambdaError'
+ORDER BY Timestamp DESC, ModuleId, Function
+```
+
+|DateTime               |ModuleId                       |Function         |Level|Message                                |
+|-----------------------|-------------------------------|-----------------|-----|---------------------------------------|
+|2020-05-13 23:10:08.779|SteveBv7-LambdaSharp-BadModule |FailTimeout      |ERROR|Lambda timed out after 15.02 seconds   |
+|2020-05-13 23:10:03.361|SteveBv7-LambdaSharp-BadModule |FailConstructor  |ERROR|An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.|
+|2020-05-13 23:10:02.816|SteveBv7-LambdaSharp-BadModule |FailConstructor  |ERROR|An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.|
+|2020-05-13 23:10:02.208|SteveBv7-LambdaSharp-BadModule |FailError        |ERROR|this exception was thrown on request   |
+|2020-05-13 23:10:01.582|SteveBv7-LambdaSharp-BadModule |FailBadEntryPoint|ERROR|Unable to load type 'BadModule.FailBadEntryPoint.Function' from assembly 'FailBadEntryPoint'.|
+|2020-05-13 23:10:01.236|SteveBv7-LambdaSharp-BadModule |FailBadEntryPoint|ERROR|Unable to load type 'BadModule.FailBadEntryPoint.Function' from assembly 'FailBadEntryPoint'.|
+|2020-05-13 23:10:00.877|SteveBv7-LambdaSharp-BadModule |FailOutOfMemory  |ERROR|Exception of type 'System.OutOfMemoryException' was thrown.|
+|2020-05-13 23:09:59.386|SteveBv7-LambdaSharp-BadModule |FailBadEntryPoint|ERROR|Unable to load type 'BadModule.FailBadEntryPoint.Function' from assembly 'FailBadEntryPoint'.|
+|2020-05-13 23:09:58.200|SteveBv7-LambdaSharp-BadModule |FailConstructor  |ERROR|An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.|
+
+> **NOTE:** Due to an [issue in the Lambda runtime](https://github.com/aws/aws-lambda-dotnet/issues/669) errors that occur either in the constructor or failure to located the constructor result in multiple entries in CloudWatch Logs.

@@ -201,7 +201,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                                         DateTimeOffset.FromUnixTimeMilliseconds(entry.Timestamp)
                                     );
                                 } catch(Exception e) {
-                                    LogError(e, "log event entry [{1}] processing failed (record-id: {0})", record.RecordId, logEventIndex);
+                                    LogError(e, "log event entry [{1}] processing failed (function-id: {3}, record-id: {0}):\n{2}", record.RecordId, logEventIndex, entry.Message, functionId);
                                     success = false;
                                     break;
                                 }
@@ -309,7 +309,12 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 AccessToken = owner.RollbarAccessToken,
                 Data = new Data {
                     Environment = report.ModuleId,
-                    Level = report.Level?.ToLowerInvariant() ?? "error",
+                    Level = report.Level?.ToLowerInvariant() switch {
+                        "error" => "error",
+                        "warning" => "warning",
+                        "fatal" => "critical",
+                        _ => "error"
+                    },
                     Timestamp = report.Timestamp,
                     CodeVersion = report.GitSha,
                     Platform = report.Platform,

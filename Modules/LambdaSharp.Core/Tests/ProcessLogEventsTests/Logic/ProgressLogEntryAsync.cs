@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Core.LoggingStreamAnalyzerFunction;
@@ -91,6 +92,9 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         }
 
         //--- Methods ---
+
+
+        #region --- Application Error ---
         [Fact]
         public void LambdaSharpJsonLogEntry() {
             _logic.ProgressLogEntryAsync(_owner, "{\"Type\":\"LambdaError\",\"Version\":\"2018-09-27\",\"ModuleInfo\":\"Test.Module:1.0@origin\",\"Module\":\"Test.Module\",\"ModuleVersion\":\"ModuleVersion\",\"ModuleId\":\"ModuleId\",\"FunctionId\":\"ModuleName-FunctionName-NT5EUXTNTXXD\",\"FunctionName\":\"FunctionName\",\"Platform\":\"Platform\",\"Framework\":\"Framework\",\"Language\":\"Language\",\"GitSha\":\"GitSha\",\"GitBranch\":\"GitBranch\",\"RequestId\":\"RequestId\",\"Level\":\"Level\",\"Fingerprint\":\"Fingerprint\",\"Timestamp\":1539238963879,\"Message\":\"failed during message stream processing\"}", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
@@ -110,14 +114,45 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         }
 
         [Fact]
-        public void LambdaException() {
-            _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.: LambdaException", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
-            CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.");
+        public void LambdaReturnException() {
+            _logic.ProgressLogEntryAsync(_owner, "this exception was thrown on request: Exception\n   at BadModule.FailError.Function.ProcessMessageAsync(FunctionRequest request) in C:\\LambdaSharp\\LambdaSharpTool\\Tests\\BadModule\\FailError\\Function.cs:line 36\n   at LambdaSharp.ALambdaFunction`2.ProcessMessageStreamAsync(Stream stream)\n   at LambdaSharp.ALambdaFunction.FunctionHandlerAsync(Stream stream, ILambdaContext context) in C:\\LambdaSharp\\LambdaSharpTool\\src\\LambdaSharp\\ALambdaFunction.cs:line 398\n   at LambdaSharp.ALambdaFunction.FunctionHandlerAsync(Stream stream, ILambdaContext context) in C:\\LambdaSharp\\LambdaSharpTool\\src\\LambdaSharp\\ALambdaFunction.cs:line 487\n   at lambda_method(Closure , Stream , Stream , LambdaContextInternal )\n\n\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+
+            // NOTE (2020-05-12, bjorg): this message is shown when an exception bubbles out of the Lambda function; since
+            //  all exceptions are already logged as LambdaError records, this log entry is not needed.
+            NoErrorsReportedAssert();
+        }
+        #endregion
+
+        #region --- Out-of-Memory ---
+        [Fact]
+        public void OutOfMemory1() {
+            _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            _provider.UsageReport.Should().NotBeNull();
+            _provider.UsageReport.UsedDuration.Should().Be((float)TimeSpan.FromMilliseconds(1062.06).TotalSeconds);
+            _provider.UsageReport.BilledDuration.Should().Be((float)TimeSpan.FromMilliseconds(1000).TotalSeconds);
+            _provider.UsageReport.MaxDuration.Should().Be((float)TimeSpan.FromSeconds(10).TotalSeconds);
+            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.1062F, 0.00001F);
+            _provider.UsageReport.MaxMemory.Should().Be(128);
+            _provider.UsageReport.UsedMemory.Should().Be(128);
+            _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
+            _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.Zero.TotalSeconds);
+            CommonErrorReportAsserts(usageReportCheck: false);
+            _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
-            _provider.ErrorReport.RequestId.Should().Be("");
+            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
         }
 
+        [Fact]
+        public void OutOfMemory2() {
+            _logic.ProgressLogEntryAsync(_owner, "Exception of type 'System.OutOfMemoryException' was thrown.: OutOfMemoryException\n   at BadModule.FailOutOfMemory.Function.ProcessMessageAsync(FunctionRequest request) in C:\\LambdaSharp\\LambdaSharpTool\\Tests\\BadModule\\FailOutOfMemory\\Function.cs:line 36\n   at LambdaSharp.ALambdaFunction`2.ProcessMessageStreamAsync(Stream stream)\n   at LambdaSharp.ALambdaFunction.FunctionHandlerAsync(Stream stream, ILambdaContext context) in C:\\LambdaSharp\\LambdaSharpTool\\src\\LambdaSharp\\ALambdaFunction.cs:line 398\n   at LambdaSharp.ALambdaFunction.FunctionHandlerAsync(Stream stream, ILambdaContext context) in C:\\LambdaSharp\\LambdaSharpTool\\src\\LambdaSharp\\ALambdaFunction.cs:line 487\n   at lambda_method(Closure , Stream , Stream , LambdaContextInternal )\n\n\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+
+            // NOTE (2020-05-12, bjorg): this message is shown when an exception bubbles out of the Lambda function; since
+            //  all exceptions are already logged as LambdaError records, this log entry is not needed.
+            NoErrorsReportedAssert();
+        }
+        #endregion
+
+        #region --- Timeout ---
         [Fact]
         public void Timeout() {
             _logic.ProgressLogEntryAsync(_owner, "2018-10-11T07:00:40.906Z 546933ad-cd23-11e8-bb5d-7f3682cfa000 Task timed out after 15.02 seconds", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
@@ -126,18 +161,101 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
             _provider.ErrorReport.RequestId.Should().Be("546933ad-cd23-11e8-bb5d-7f3682cfa000");
         }
+        #endregion
 
+        #region --- Bad Entry Point ---
         [Fact]
-        public void ProcessExitedBeforeCompletion() {
-            _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
-            CommonErrorReportAsserts();
-            _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
-            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
-            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        public void BadEntryPoint1() {
+            _logic.ProgressLogEntryAsync(_owner, "12 May 2020 21:19:02,997 [WARN] (invoke@invoke.c:297 errno: Address family not supported by protocol) run_dotnet(dotnet_path, &args) failed\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+
+            // NOTE (2020-05-12, bjorg): this message is shown when an exception occurs in the constructor or the function
+            //  entry point could not be found; both errors are reported already by other log entries.
+            NoErrorsReportedAssert();
         }
 
         [Fact]
-        public void ExecutionReport() {
+        public void BadEntryPoint2() {
+            _logic.ProgressLogEntryAsync(_owner, "Unknown application error occurred\n\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+
+            // NOTE (2020-05-12, bjorg): this message is shown when an exception occurs in the constructor or the function
+            //  entry point could not be found; both errors are reported already by other log entries.
+            NoErrorsReportedAssert();
+        }
+
+        [Fact]
+        public void BadEntryPoint3() {
+            _logic.ProgressLogEntryAsync(_owner, "Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.: LambdaException", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.");
+            _provider.ErrorReport.Traces.Should().NotBeNull();
+            _provider.ErrorReport.Traces.Count().Should().Be(1);
+            _provider.ErrorReport.Traces.ElementAt(0).Exception.Type.Should().Be("LambdaException");
+            _provider.ErrorReport.Traces.ElementAt(0).Exception.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.Should().BeNull();
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
+            _provider.ErrorReport.RequestId.Should().Be("");
+        }
+        #endregion
+
+        #region --- Constructor Exception ---
+        [Fact]
+        public void ConstructorException1() {
+            _logic.ProgressLogEntryAsync(_owner, "An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.: LambdaException\n\n\n   at System.RuntimeTypeHandle.CreateInstance(RuntimeType type, Boolean publicOnly, Boolean wrapExceptions, Boolean& canBeCached, RuntimeMethodHandleInternal& ctor, Boolean& hasNoDefaultCtor)\n   at System.RuntimeType.CreateInstanceDefaultCtorSlow(Boolean publicOnly, Boolean wrapExceptions, Boolean fillCache)\n   at System.RuntimeType.CreateInstanceDefaultCtor(Boolean publicOnly, Boolean skipCheckThis, Boolean fillCache, Boolean wrapExceptions)\n   at System.Activator.CreateInstance(Type type, Boolean nonPublic, Boolean wrapExceptions)\nthis exception was thrown in the constructor: Exception\n   at BadModule.FailConstructor.Function..ctor() in C:\\LambdaSharp\\LambdaSharpTool\\Tests\\BadModule\\FailConstructor\\Function.cs:line 33", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
+            _provider.ErrorReport.RequestId.Should().Be("");
+
+            // check exception traces
+            _provider.ErrorReport.Traces.Should().NotBeNull();
+            _provider.ErrorReport.Traces.Count().Should().Be(2);
+            _provider.ErrorReport.Traces.ElementAt(0).Exception.Type.Should().Be("LambdaException");
+            _provider.ErrorReport.Traces.ElementAt(0).Exception.Message.Should().Be("An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.Should().NotBeNull();
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.Count().Should().Be(4);
+
+            // check stack frames for first stack trace
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(0).MethodName.Should().Be("System.RuntimeTypeHandle.CreateInstance(RuntimeType type, Boolean publicOnly, Boolean wrapExceptions, Boolean& canBeCached, RuntimeMethodHandleInternal& ctor, Boolean& hasNoDefaultCtor)");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(0).FileName.Should().BeNull();
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(0).LineNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(0).ColumnNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(1).MethodName.Should().Be("System.RuntimeType.CreateInstanceDefaultCtorSlow(Boolean publicOnly, Boolean wrapExceptions, Boolean fillCache)");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(1).FileName.Should().BeNull();
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(1).LineNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(1).ColumnNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(2).MethodName.Should().Be("System.RuntimeType.CreateInstanceDefaultCtor(Boolean publicOnly, Boolean skipCheckThis, Boolean fillCache, Boolean wrapExceptions)");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(2).FileName.Should().BeNull();
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(2).LineNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(2).ColumnNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(3).MethodName.Should().Be("System.Activator.CreateInstance(Type type, Boolean nonPublic, Boolean wrapExceptions)");
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(3).FileName.Should().BeNull();
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(3).LineNumber.Should().Be(null);
+            _provider.ErrorReport.Traces.ElementAt(0).Frames.ElementAt(3).ColumnNumber.Should().Be(null);
+
+            // check stack frames for second stack trace
+            _provider.ErrorReport.Traces.ElementAt(1).Exception.Type.Should().Be("Exception");
+            _provider.ErrorReport.Traces.ElementAt(1).Exception.Message.Should().Be("this exception was thrown in the constructor");
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.Should().NotBeNull();
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.Count().Should().Be(1);
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.ElementAt(0).MethodName.Should().Be("BadModule.FailConstructor.Function..ctor()");
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.ElementAt(0).FileName.Should().Be(@"C:\LambdaSharp\LambdaSharpTool\Tests\BadModule\FailConstructor\Function.cs");
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.ElementAt(0).LineNumber.Should().Be(33);
+            _provider.ErrorReport.Traces.ElementAt(1).Frames.ElementAt(0).ColumnNumber.Should().Be(null);
+        }
+
+        [Fact]
+        public void ConstructorException2() {
+            _logic.ProgressLogEntryAsync(_owner, "Unknown application error occurred\n\n", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+
+            // NOTE (2020-05-12, bjorg): this message is shown when an exception occurs in the constructor or the function
+            //  entry point could not be found; both errors are reported already by other log entries.
+            NoErrorsReportedAssert();
+        }
+        #endregion
+
+        #region --- Usage Report ---
+        [Fact]
+        public void UsageReport1() {
             _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
             _provider.UsageReport.Should().NotBeNull();
             _provider.ErrorReport.Should().BeNull();
@@ -151,26 +269,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
         }
 
         [Fact]
-        public void ExecutionReportOutOfMemory() {
-            _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6\tDuration: 1062.06 ms\tBilled Duration: 1000 ms \tMemory Size: 128 MB\tMax Memory Used: 128 MB", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
-            _provider.UsageReport.Should().NotBeNull();
-            _provider.UsageReport.UsedDuration.Should().Be((float)TimeSpan.FromMilliseconds(1062.06).TotalSeconds);
-            _provider.UsageReport.BilledDuration.Should().Be((float)TimeSpan.FromMilliseconds(1000).TotalSeconds);
-            _provider.UsageReport.MaxDuration.Should().Be((float)TimeSpan.FromSeconds(10).TotalSeconds);
-            _provider.UsageReport.UsedDurationPercent.Should().BeApproximately(0.1062F, 0.00001F);
-            _provider.UsageReport.MaxMemory.Should().Be(128);
-            _provider.UsageReport.UsedMemory.Should().Be(128);
-            _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
-            _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.Zero.TotalSeconds);
-
-            CommonErrorReportAsserts(usageReportCheck: false);
-            _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
-            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
-            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
-        }
-
-        [Fact]
-        public void ExecutionReportWithInitDuration() {
+        public void UsageReport2() {
             _logic.ProgressLogEntryAsync(_owner, "REPORT RequestId: 5169911c-b198-496a-b235-ab77e8a93e97\tDuration: 0.58 ms\tBilled Duration: 100 ms Memory Size: 128 MB\tMax Memory Used: 20 MB\tInit Duration: 419.31 ms", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
             _provider.UsageReport.Should().NotBeNull();
             _provider.ErrorReport.Should().BeNull();
@@ -183,6 +282,18 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(0.15625F, 0.0001F);
             _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.FromMilliseconds(419.31).TotalSeconds);
         }
+        #endregion
+
+        #region --- Misc ---
+        [Fact]
+        public void ProcessExitedBeforeCompletion() {
+            _logic.ProgressLogEntryAsync(_owner, "RequestId: 813a64e4-cd22-11e8-acad-d7f8fa4137e6 Process exited before completing request", DateTimeOffset.FromUnixTimeMilliseconds(1539238963679L)).GetAwaiter().GetResult();
+            CommonErrorReportAsserts();
+            _provider.ErrorReport.Message.Should().Be("Lambda exited before completing request");
+            _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
+            _provider.ErrorReport.RequestId.Should().Be("813a64e4-cd22-11e8-acad-d7f8fa4137e6");
+        }
+        #endregion
 
         private void CommonErrorReportAsserts(bool usageReportCheck = true) {
             _provider.ErrorReport.Should().NotBeNull();
@@ -197,6 +308,11 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             if(usageReportCheck) {
                 _provider.UsageReport.Should().BeNull();
             }
+        }
+
+        private void NoErrorsReportedAssert() {
+            _provider.UsageReport.Should().BeNull();
+            _provider.ErrorReport.Should().BeNull();
         }
     }
 }
