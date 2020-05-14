@@ -55,5 +55,5 @@ Sources:
       detail-type:
         - MyEvent
       resources:
-        - !Sub "lambdasharp:tier:${Module::Tier}"
+        - !Sub "lambdasharp:tier:${Deployment::Tier}"
 ```

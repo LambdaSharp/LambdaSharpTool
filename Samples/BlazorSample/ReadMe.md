@@ -64,7 +64,7 @@ Items:
   - Resource: UnzipWebsiteContents
     Type: LambdaSharp::S3::Unzip
     Properties:
-      SourceBucket: !Ref DeploymentBucketName
+      SourceBucket: !Ref Deployment::BucketName
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""

@@ -95,8 +95,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         environment["MODULE_INFO"] = FnRef("Module::Info");
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
-                        environment["DEPLOYMENT_TIER"] = FnRef("Module::Tier");
-                        environment["DEPLOYMENTBUCKETNAME"] = FnRef("DeploymentBucketName");
+                        environment["DEPLOYMENT_TIER"] = FnRef("Deployment::Tier");
+                        environment["DEPLOYMENTBUCKETNAME"] = FnRef("Deployment::BucketName");
                         if(function.HasDeadLetterQueue && _builder.TryGetItem("Module::DeadLetterQueue", out var _))  {
                             environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
                         }

@@ -65,7 +65,7 @@ Sources:
       detail-type:
         - MyEvent
       resources:
-        - !Sub "lambdasharp:tier:${Module::Tier}"
+        - !Sub "lambdasharp:tier:${Deployment::Tier}"
 ```
 
 ### Package Build Attribute
@@ -75,7 +75,7 @@ Sources:
 
 ### New Module Variables
 
-Two new, but related, module variables were introduced to retrieve the deployment tier name. They are `Module::Tier` and `Module::TierLowercase`. As the name implies, `Module::TierLowercase` returns the lowercase version of `Module::Tier`.
+Two new, but related, module variables were introduced to retrieve the deployment tier name. They are `Deployment::Tier` and `Deployment::TierLowercase`. As the name implies, `Deployment::TierLowercase` returns the lowercase version of `Deployment::Tier`.
 
 
 ## New LambdaSharp CLI Features

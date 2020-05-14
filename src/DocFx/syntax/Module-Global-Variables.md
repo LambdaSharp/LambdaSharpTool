@@ -14,16 +14,23 @@ LambdaSharp modules have variables and resources defined implicitly as part of t
 |`Module::DeadLetterQueue`     |Arn&lt;AWS::SQS::Queue&gt;     |Deadletter queue for failed messages
 |`Module::FullName`            |String                         |Module namespace and name (e.g. `Namespace.Name`)
 |`Module::Id`                  |String                         |CloudFormation stack name
-|`Module::Info`                |String                         |Module full name, version, and origin.
+|`Module::Info`                |String                         |Module full name, version, and origin
 |`Module::LoggingStream`       |Arn&lt;AWS::Kinesis::Stream&gt;|Kinesis logging stream used by Lambda function logs subscription
 |`Module::LoggingStreamRole`   |Arn&lt;AWS::IAM::Role&gt;      |IAM Role for used by Lambda function log subscription
 |`Module::Name`                |String                         |Module name
 |`Module::Namespace`           |String                         |Module namespace
 |`Module::Role`                |Arn&lt;AWS::IAM::Role&gt;      |IAM Role used by all Lambda functions in the module
 |`Module::RootId`              |String                         |Root CloudFormation stack when the module is nested; empty string otherwise
-|`Module::Tier`                |String                         |Deployment tier name. Empty string for default deployment tier.
-|`Module::TierLowercase`       |String                         |Deployment tier name in lowercase characters. Empty string for default deployment tier.
 |`Module::Version`             |String                         |Module version
+
+
+## Deployment Variables
+
+|Variable                      |Type      |Definition                                    |
+|------------------------------|----------|----------------------------------------------|
+|`Deployment::BucketName`      |String    |S3 Bucket name from which the module is being deployed from
+|`Deployment::Tier`            |String    |Deployment tier name. Empty string for default deployment tier
+|`Deployment::TierLowercase`   |String    |Deployment tier name in lowercase characters. Empty string for default deployment tier
 
 
 **NOTE:**

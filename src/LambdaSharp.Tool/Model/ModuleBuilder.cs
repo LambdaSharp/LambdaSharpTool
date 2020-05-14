@@ -798,7 +798,7 @@ namespace LambdaSharp.Tool.Model {
                 }
 
                 // add expected parameters
-                MandatoryAdd("DeploymentBucketName", FnRef("DeploymentBucketName"));
+                MandatoryAdd("DeploymentBucketName", FnRef("Deployment::BucketName"));
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
@@ -905,7 +905,7 @@ namespace LambdaSharp.Tool.Model {
             if(!definition.ContainsKey("Code")) {
                 definition["Code"] = new Dictionary<string, object> {
                     ["S3Key"] = "<BAD>",
-                    ["S3Bucket"] = FnRef("DeploymentBucketName")
+                    ["S3Bucket"] = FnRef("Deployment::BucketName")
                 };
             }
             if(!definition.ContainsKey("TracingConfig")) {

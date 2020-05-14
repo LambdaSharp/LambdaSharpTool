@@ -16,7 +16,7 @@ Items:
     Properties:
       DestinationBucket: !Ref MyBucket
       DestinationKey: Bucket/Folder/
-      SourceBucketName: !Ref DeploymentBucketName
+      SourceBucketName: !Ref Deployment::BucketName
       SourceKey: !Ref FilesPackage
 
   - Function: Function

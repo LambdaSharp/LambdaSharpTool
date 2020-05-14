@@ -22,7 +22,7 @@ Items:
     Type: AWS::Lambda::LayerVersion
     Properties:
       Content:
-        S3Bucket: !Ref DeploymentBucketName
+        S3Bucket: !Ref Deployment::BucketName
         S3Key: !Ref MyLayerFiles
 
   - Function: MyFunction

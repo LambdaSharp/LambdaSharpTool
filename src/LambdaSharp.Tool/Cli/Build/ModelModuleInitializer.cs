@@ -132,9 +132,21 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
+            // add module variables
+            var deploymentItem = _builder.AddVariable(
+                parent: null,
+                name: "Deployment",
+                description: "Deployment Variables",
+                type: "String",
+                scope: null,
+                value: "",
+                allow: null,
+                encryptionContext: null
+            );
+
             // TODO: move these into "Deployment" group
             _builder.AddVariable(
-                parent: moduleItem,
+                parent: deploymentItem,
                 name: "Tier",
                 description: "Deployment tier name",
                 type: "String",
@@ -144,12 +156,22 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
             _builder.AddVariable(
-                parent: moduleItem,
+                parent: deploymentItem,
                 name: "TierLowercase",
                 description: "Deployment tier name in lowercase characters",
                 type: "String",
                 scope: null,
                 value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefixLowercase"))),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: deploymentItem,
+                name: "BucketName",
+                description: "Deployment S3 Bucket Name",
+                type: "String",
+                scope: null,
+                value: FnRef("DeploymentBucketName"),
                 allow: null,
                 encryptionContext: null
             );
