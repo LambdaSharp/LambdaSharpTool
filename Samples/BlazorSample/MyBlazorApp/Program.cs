@@ -29,6 +29,8 @@ using Microsoft.Extensions.Logging;
 namespace MyBlazorApp {
 
     public class Program {
+
+        //--- Class Methods ---
         public static async Task Main(string[] args) {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("app");
