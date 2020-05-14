@@ -31,11 +31,6 @@ resources:
     - lambdasharp:tier:$DEPLOYMENT_TIER
 ```
 
-> TODO:
->   * `lambdasharp:origin:$MODULE_ORIGIN`
->   * `git:sha:$GIT_SHA`
->   * `git:branch:$GIT_BRANCH`
-
 |Variable           |Description    |
 |-------------------|---------------|
 |`$DEPLOYMENT_TIER` |The name of the deployment tier. Empty value for the default deployment tier.
