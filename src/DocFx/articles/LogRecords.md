@@ -24,7 +24,7 @@ RecordType: String
 Record: String
 ```
 
-## Record Fields
+## Record Properties
 
 <dl>
 
