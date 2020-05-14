@@ -68,6 +68,10 @@ Sources:
         - !Sub "lambdasharp:tier:${Module::Tier}"
 ```
 
+### Package Build Attribute
+
+> TODO:
+
 
 ### New Module Variables
 
