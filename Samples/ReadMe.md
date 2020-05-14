@@ -29,3 +29,4 @@ Please refer to the [Folder Structure Documentation](https://lambdasharp.net/art
 ## Miscellaneous Examples
 1. [Lambda Function in VPC](VpcFunctionSample/)
 1. [Lambda Function with Lambda Layer](LambdaLayerSample/)
+1. [ASP.NET Core Blazor WebAssembly Website](BlazorSample/)
