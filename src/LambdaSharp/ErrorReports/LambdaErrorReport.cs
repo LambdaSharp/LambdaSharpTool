@@ -170,8 +170,7 @@ namespace LambdaSharp.ErrorReports {
         public string Message { get; set; }
 
         /// <summary>
-        /// The <see cref="Raw"/> property holds the unprocessed error log entry. This property
-        /// is only set if the <see cref="Traces"/> property is <c>null</c>.
+        /// The <see cref="Raw"/> property holds the unprocessed error log entry.
         /// </summary>
         /// <value>The unprocessed error log entry.</value>
         public string Raw { get; set; }

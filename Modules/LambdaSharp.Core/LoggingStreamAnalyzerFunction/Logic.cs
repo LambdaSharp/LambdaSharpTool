@@ -227,7 +227,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private Task MatchLambdaExceptionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = match.Groups["ErrorMessage"].Value;
-            report.RequestId = match.Groups["RequestId"].Value;
+            report.RequestId = GetRequestId(match);
 
             // remove empty lines, but keep the indentation
             var lines = message.Split("\n", StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -291,20 +291,20 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private Task MatchTimeoutAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = $"Lambda timed out after {match.Groups["Duration"].Value} seconds";
-            report.RequestId = match.Groups["RequestId"].Value;
+            report.RequestId = GetRequestId(match);
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchProcessExitedBeforeCompletionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = "Lambda exited before completing request";
-            report.RequestId = match.Groups["RequestId"].Value;
+            report.RequestId = GetRequestId(match);
             return _provider.SendErrorReportAsync(owner, timestamp, report);
         }
 
         private Task MatchExecutionReportAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
-            var requestId = match.Groups["RequestId"].Value;
+            var requestId = GetRequestId(match);
             var usedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["UsedDuration"].Value));
             var billedDuration = TimeSpan.FromMilliseconds(double.Parse(match.Groups["BilledDuration"].Value));
             var maxMemory = int.Parse(match.Groups["MaxMemory"].Value);
@@ -358,7 +358,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         private Task MatchJavascriptExceptionAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
-            report.RequestId = match.Groups["RequestId"].Value;
+            report.RequestId = GetRequestId(match);
             var error = _serializer.Deserialize<JavascriptException>(match.Groups["ErrorMessage"].Value);
             report.Message = error.ErrorMessage;
             if(error.StackTrace?.Any() == true) {
@@ -388,8 +388,15 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private Task MatchJavascriptSyntaxErrorAsync(OwnerMetaData owner, string message, DateTimeOffset timestamp, Match match, string pattern) {
             var report = PopulateLambdaErrorReport(new LambdaErrorReport(), owner, message, timestamp, pattern);
             report.Message = match.Groups["ErrorMessage"].Value;
-            report.RequestId = match.Groups["RequestId"].Value;
+            report.RequestId = GetRequestId(match);
             return _provider.SendErrorReportAsync(owner, timestamp, report);
+        }
+
+        private string? GetRequestId(Match match) {
+            var result = match.Groups["RequestId"].Value;
+            return string.IsNullOrEmpty(result)
+                ? null
+                : result;
         }
     }
 }
