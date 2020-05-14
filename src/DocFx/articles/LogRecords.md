@@ -31,7 +31,7 @@ Record: String
 <dt><code>Timestamp</code></dt>
 <dd>
 
-The <code>Timestamp</code> attribute holds the UNIX epoch timestamp in milliseconds.
+The <code>Timestamp</code> property holds the UNIX epoch timestamp in milliseconds.
 
 <i>Type</i>: Long
 </dd>
@@ -39,7 +39,7 @@ The <code>Timestamp</code> attribute holds the UNIX epoch timestamp in milliseco
 <dt><code>ModuleInfo</code></dt>
 <dd>
 
-The <code>ModuleInfo</code> attribute holds the module name, version, and origin information.
+The <code>ModuleInfo</code> property holds the module name, version, and origin information.
 
 <i>Type</i>: String
 </dd>
@@ -47,7 +47,7 @@ The <code>ModuleInfo</code> attribute holds the module name, version, and origin
 <dt><code>Module</code></dt>
 <dd>
 
-The <code>Module</code> attribute holds the module name.
+The <code>Module</code> property holds the module name.
 
 <i>Type</i>: String
 </dd>
@@ -55,7 +55,7 @@ The <code>Module</code> attribute holds the module name.
 <dt><code>ModuleId</code></dt>
 <dd>
 
-The <code>ModuleId</code> attribute holds the CloudFormation stack name.
+The <code>ModuleId</code> property holds the CloudFormation stack name.
 
 <i>Type</i>: String
 </dd>
@@ -63,7 +63,7 @@ The <code>ModuleId</code> attribute holds the CloudFormation stack name.
 <dt><code>Function</code></dt>
 <dd>
 
-The <code>Function</code> attribute holds the logical Lambda function name.
+The <code>Function</code> property holds the logical Lambda function name.
 
 <i>Type</i>: String
 </dd>
@@ -71,7 +71,7 @@ The <code>Function</code> attribute holds the logical Lambda function name.
 <dt><code>FunctionId</code></dt>
 <dd>
 
-The <code>FunctionId</code> attribute holds the Lambda function resource name.
+The <code>FunctionId</code> property holds the Lambda function resource name.
 
 <i>Type</i>: String
 </dd>
@@ -79,7 +79,7 @@ The <code>FunctionId</code> attribute holds the Lambda function resource name.
 <dt><code>Tier</code></dt>
 <dd>
 
-The <code>Tier</code> attribute holds the deployment tier name.
+The <code>Tier</code> property holds the deployment tier name.
 
 <i>Type</i>: String
 </dd>
@@ -87,7 +87,7 @@ The <code>Tier</code> attribute holds the deployment tier name.
 <dt><code>RecordType</code></dt>
 <dd>
 
-The <code>RecordType</code> attribute holds the type of log record. Must be one of <code>LambdaError</code>, <code>LambdaEvent</code>, <code>LambdaMetrics</code>, or <code>UsageReport</code>.
+The <code>RecordType</code> property holds the type of log record. Must be one of <code>LambdaError</code>, <code>LambdaEvent</code>, <code>LambdaMetrics</code>, or <code>UsageReport</code>.
 
 <i>Type</i>: String
 </dd>
@@ -95,7 +95,7 @@ The <code>RecordType</code> attribute holds the type of log record. Must be one 
 <dt><code>Record</code></dt>
 <dd>
 
-The <code>Record</code> attribute holds the contents of the log record as a serialized JSON string.
+The <code>Record</code> property holds the contents of the log record as a serialized JSON string.
 
 <i>Type</i>: String
 </dd>

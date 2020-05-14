@@ -1,7 +1,7 @@
 ---
-title: LambdaSharp Events - CloudWatch Events emitted by LambdaSharp.Core - LambdaSharp
-description: Description of CloudWatch events emitted by the LambdaSharp.Core module
-keywords: cloudwatch, events, modules
+title: LambdaSharp Operational Events - CloudWatch Events emitted by LambdaSharp.Core - LambdaSharp
+description: Description of operational CloudWatch events emitted by the LambdaSharp.Core module
+keywords: cloudwatch, events, modules, observability, operations, core
 ---
 
 # Operational Events

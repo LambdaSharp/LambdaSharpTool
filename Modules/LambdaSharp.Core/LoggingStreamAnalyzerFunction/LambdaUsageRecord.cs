@@ -42,6 +42,6 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         public int MaxMemory { get; set; }
         public int UsedMemory { get; set; }
         public float UsedMemoryPercent { get; set; }
-        public float InitDuration { get; set; }
+        public float? InitDuration { get; set; }
     }
 }

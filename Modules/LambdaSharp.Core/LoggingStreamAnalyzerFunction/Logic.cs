@@ -310,8 +310,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var maxMemory = int.Parse(match.Groups["MaxMemory"].Value);
             var usedMemory = int.Parse(match.Groups["UsedMemory"].Value);
             var initDuration = !string.IsNullOrEmpty(match.Groups["InitDuration"].Value)
-                ? TimeSpan.FromMilliseconds(double.Parse(match.Groups["InitDuration"].Value))
-                : TimeSpan.Zero;
+                ? (TimeSpan?)TimeSpan.FromMilliseconds(double.Parse(match.Groups["InitDuration"].Value))
+                : null;
             var usage = new LambdaUsageRecord {
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
@@ -325,7 +325,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 MaxMemory = maxMemory,
                 UsedMemory = usedMemory,
                 UsedMemoryPercent = (float)usedMemory / (float)owner.FunctionMaxMemory,
-                InitDuration = (float)initDuration.TotalSeconds
+                InitDuration = (float?)initDuration?.TotalSeconds
             };
             var tasks = new List<Task> {
                 _provider.SendUsageReportAsync(owner, timestamp, usage)
