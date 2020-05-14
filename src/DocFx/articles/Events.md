@@ -1,5 +1,5 @@
 ---
-title: LambdaSharp Operational Events - CloudWatch Events emitted by LambdaSharp.Core - LambdaSharp
+title: LambdaSharp Operational Events - LambdaSharp
 description: Description of operational CloudWatch events emitted by the LambdaSharp.Core module
 keywords: cloudwatch, events, modules, observability, operations, core
 ---
@@ -30,6 +30,11 @@ resources:
     - lambdasharp:module:$MODULE_FULL_NAME
     - lambdasharp:tier:$DEPLOYMENT_TIER
 ```
+
+> TODO:
+>   * `lambdasharp:origin:$MODULE_ORIGIN`
+>   * `git:sha:$GIT_SHA`
+>   * `git:branch:$GIT_BRANCH`
 
 |Variable           |Description    |
 |-------------------|---------------|
