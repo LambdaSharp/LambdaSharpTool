@@ -4,7 +4,7 @@ description: Description of CloudWatch events emitted by the LambdaSharp.Core mo
 keywords: cloudwatch, events, modules
 ---
 
-# Observability Events
+# Operational Events
 
 LambdaSharp modules can emit operational [CloudWatch events](https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/WhatIsCloudWatchEvents.html) on the default [Amazon EventBridge](https://aws.amazon.com/eventbridge/) when _Core Services_ are enabled. These events correspond to runtime errors, function usage, as well as custom CloudWatch metrics.
 
