@@ -6,6 +6,8 @@ keywords: tutorial, sample, example, getting started, overview
 
 # LambdaSharp Samples
 
+> TODO: update list
+
 ## REST API using API Gateway V1
 
 API Gateway allows you to build a fully managed, serverless REST API. API endpoints are automatically validated by API Gateway before invoking an attached Lambda function.

@@ -1,12 +1,12 @@
 ![λ#](../../src/DocFx/images/LambdaSharpLogo.png)
 
-# LambdaSharp ASP.NET Core Blazor Sample
+# LambdaSharp ASP.NET Core Blazor WebAssembly Sample
 
 Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.net/articles/Setup.html).
 
 > **NOTE:** The [.NET Core SDK version 3.1.201 or later](https://dotnet.microsoft.com/download/dotnet-core/3.1) is required to use the 3.2 Preview Blazor WebAssembly template. Confirm the installed .NET Core SDK version by running `dotnet --version` in a command shell.
 
-Make sure to check out the [Get started with ASP.NET Core Blazor](https://docs.microsoft.com/en-us/aspnet/core/blazor/get-started?view=aspnetcore-3.1&tabs=visual-studio-code) page to get started.
+Make sure to check out the [Get started with ASP.NET Core Blazor WebAssembly](https://docs.microsoft.com/en-us/aspnet/core/blazor/get-started?view=aspnetcore-3.1&tabs=visual-studio-code) page to get started.
 
 
 ## Module Definition
@@ -14,13 +14,13 @@ Make sure to check out the [Get started with ASP.NET Core Blazor](https://docs.m
 The following module definition does the following:
 1. It references the `LambdaSharp.S3.IO` to import its definitions.
 1. It creates a new bucket.
-1. It compiles the ASP.NET Core Blazor project and then copies the contents of the `WebsiteContents` package to it, which include the `index.html` and `error.html` files.
+1. It compiles the ASP.NET Core Blazor WebAssembly project and then copies the contents of the `WebsiteContents` package to it, which include the `index.html` and `error.html` files.
 1. It then writes the module parameters to a JSON file in the S3 bucket so that the values can be loaded by the HTML files.
 1. Finally, it registers the bucket with the `LambdaSharp::S3::EmptyBucket` so that the bucket is emptied automatically when the module is torn down.
 
 ```yaml
-Module: Sample.ApiGatewayInvoke
-Description: A sample module integrating with API Gateway
+Module: Sample.BlazorWebAssembly
+Description: A sample module showing how to deploy a ASP.NET Core Blazor WebAssembly website
 Using:
   - Module: LambdaSharp.S3.IO@lambdasharp
 

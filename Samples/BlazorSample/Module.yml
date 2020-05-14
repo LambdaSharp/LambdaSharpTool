@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: Sample.ApiGatewayInvoke
-Description: A sample module integrating with API Gateway
+Module: Sample.BlazorWebAssembly
+Description: A sample module showing how to deploy a ASP.NET Core Blazor WebAssembly website
 Using:
   - Module: LambdaSharp.S3.IO@lambdasharp
 
