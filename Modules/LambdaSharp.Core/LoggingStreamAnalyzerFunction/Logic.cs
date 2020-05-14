@@ -36,7 +36,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
         //--- Methods ---
         Task SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report);
-        Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report);
+        Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report);
         Task SendEventAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaEventRecord record);
         Task SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record);
     }
@@ -256,23 +256,24 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
                 traces.Add(trace);
 
                 // grab as many matching frame lines as possible and remove them from the list
-                var frameLineMatches = lines.Select(line => _csharpTrace.Match(line))
-                    .TakeWhile(match => match.Success)
+                var frameLineMatches = lines.Select(line => (Line: line, Match: _csharpTrace.Match(line)))
+                    .TakeWhile(tuple => tuple.Match.Success)
                     .ToList();
                 lines.RemoveRange(0, frameLineMatches.Count);
+                trace.Exception.StackTrace = string.Join("\n", frameLineMatches.Select(tuple => tuple.Line));
 
                 // convert each trace line into a frame
                 var frames = new List<LambdaErrorReportStackFrame>();
                 foreach(var frameLineMatch in frameLineMatches) {
                     var frame = new LambdaErrorReportStackFrame {
-                        MethodName = frameLineMatch.Groups["Method"].Value
+                        MethodName = frameLineMatch.Match.Groups["Method"].Value
                     };
 
                     // check if the trace line contains information about the originating file and line number
-                    var file = frameLineMatch.Groups["File"].Value;
+                    var file = frameLineMatch.Match.Groups["File"].Value;
                     if(!string.IsNullOrEmpty(file)) {
                         frame.FileName = file.Trim();
-                        if(int.TryParse(frameLineMatch.Groups["Line"].Value, out var line)) {
+                        if(int.TryParse(frameLineMatch.Match.Groups["Line"].Value, out var line)) {
                             frame.LineNumber = line;
                         }
                     }
@@ -311,7 +312,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             var initDuration = !string.IsNullOrEmpty(match.Groups["InitDuration"].Value)
                 ? TimeSpan.FromMilliseconds(double.Parse(match.Groups["InitDuration"].Value))
                 : TimeSpan.Zero;
-            var usage = new UsageReport {
+            var usage = new LambdaUsageRecord {
                 ModuleInfo = owner.ModuleInfo,
                 Module = owner.Module,
                 ModuleId = owner.ModuleId,

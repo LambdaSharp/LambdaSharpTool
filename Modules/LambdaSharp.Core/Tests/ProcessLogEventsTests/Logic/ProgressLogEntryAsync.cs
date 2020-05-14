@@ -37,7 +37,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
 
             //--- Fields ---
             public LambdaErrorReport ErrorReport;
-            public UsageReport UsageReport;
+            public LambdaUsageRecord UsageReport;
             private ITestOutputHelper _output;
 
             //--- Constructors ---
@@ -52,7 +52,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
                 return Task.CompletedTask;
             }
 
-            public Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report) {
+            public Task SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report) {
                 UsageReport.Should().BeNull();
                 UsageReport = report;
                 return Task.CompletedTask;

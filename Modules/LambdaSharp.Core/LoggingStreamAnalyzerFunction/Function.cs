@@ -559,12 +559,12 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             }
         }
 
-        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, UsageReport report) {
+        async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report) {
 
             // publish usage report to the event bus
             SendEvent(owner, new LambdaEventRecord {
                 Source = owner.Module,
-                DetailType = "UsageReport",
+                DetailType = "LambdaUsage",
                 Detail = LambdaSerializer.Serialize(report)
             });
 

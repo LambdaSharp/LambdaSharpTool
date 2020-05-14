@@ -21,11 +21,11 @@ using LambdaSharp.Records;
 
 namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
-    public class UsageReport : ALambdaRecord {
+    public class LambdaUsageRecord : ALambdaRecord {
 
         //--- Constructors ---
-        public UsageReport() {
-            Type = "UsageReport";
+        public LambdaUsageRecord() {
+            Type = "LambdaUsage";
             Version = "2020-05-05";
         }
 
