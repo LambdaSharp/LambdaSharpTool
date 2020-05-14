@@ -1,5 +1,5 @@
 ---
-title: LambdaMetrics Event - LambdaSharp Operational Events LambdaSharp
+title: LambdaMetrics Event - LambdaSharp Operational Events - LambdaSharp
 description: Description of custom CloudWatch metrics event emitted by LambdaSharp.Core
 keywords: cloudwatch, events, modules
 ---
