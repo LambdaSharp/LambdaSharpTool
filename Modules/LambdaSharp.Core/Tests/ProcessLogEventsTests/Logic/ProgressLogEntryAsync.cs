@@ -135,7 +135,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.UsageReport.MaxMemory.Should().Be(128);
             _provider.UsageReport.UsedMemory.Should().Be(128);
             _provider.UsageReport.UsedMemoryPercent.Should().BeApproximately(1F, 0.0001F);
-            _provider.UsageReport.InitDuration.Should().Be((float)TimeSpan.Zero.TotalSeconds);
+            _provider.UsageReport.InitDuration.Should().BeNull();
             CommonErrorReportAsserts(usageReportCheck: false);
             _provider.ErrorReport.Message.Should().Be("Lambda ran out of memory (Max: 128 MB)");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
@@ -193,7 +193,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             _provider.ErrorReport.Traces.ElementAt(0).Exception.Message.Should().Be("Unable to load type 'LambdaSharp.Core.ProcessLogEventsFunction.Function' from assembly 'ProcessLogEvents'.");
             _provider.ErrorReport.Traces.ElementAt(0).Frames.Should().BeNull();
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
-            _provider.ErrorReport.RequestId.Should().Be("");
+            _provider.ErrorReport.RequestId.Should().BeNull();
         }
         #endregion
 
@@ -204,7 +204,7 @@ namespace LambdaSharp.Core.ProcessLogEventsFunction.Tests {
             CommonErrorReportAsserts();
             _provider.ErrorReport.Message.Should().Be("An exception was thrown when the constructor for type 'BadModule.FailConstructor.Function' was invoked. Check inner exception for more details.");
             _provider.ErrorReport.Timestamp.Should().Be(1539238963679);
-            _provider.ErrorReport.RequestId.Should().Be("");
+            _provider.ErrorReport.RequestId.Should().BeNull();
 
             // check exception traces
             _provider.ErrorReport.Traces.Should().NotBeNull();
