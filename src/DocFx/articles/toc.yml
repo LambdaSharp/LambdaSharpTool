@@ -27,19 +27,6 @@
 
 - name: Samples
   href: Samples.md
-  items:
-
-    - name: Create Static Website with CloudFormation
-      href: https://github.com/LambdaSharp/StaticWebsite-Sample
-
-    - name: Create Animated GIFs from Videos with AWS Lambda
-      href: https://github.com/LambdaSharp/GifMaker-Sample
-
-    - name: Create a Web Chat with API Gateway WebSockets
-      href: https://github.com/LambdaSharp/WebSocketsChat-Sample
-
-    - name: Misc. λ# Samples
-      href: https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ReadMe.md
 
 - name: Releases
   items:

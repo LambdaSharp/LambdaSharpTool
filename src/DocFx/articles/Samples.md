@@ -1,12 +1,37 @@
 ---
-title: LambdaSharp Samples
+title: Sample Applications and Patterns - LambdaSharp
 description: List of LambdaSharp samples
 keywords: tutorial, sample, example, getting started, overview
 ---
 
-# LambdaSharp Samples
+# Sample Applications
 
-> TODO: update list
+## Create Static Website with CloudFormation
+
+This LambdaSharp module creates a static website hosted by an S3 bucket with a customizable title and greeting message. The assets for the website are uploaded from the `wwwroot` folder and copied to the S3 bucket during deployment.
+
+Sample: [StaticWebsite-Sample](https://github.com/LambdaSharp/StaticWebsite-Sample)
+
+## Create Animated GIFs from Videos with AWS Lambda
+
+This LambdaSharp module creates a Lambda function that converts videos to animated GIFs. The conversion is done by the [FFmpeg application](https://www.ffmpeg.org/) which is deployed as a [Lambda Layer](https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html). The module uses two S3 buckets: one for uploading videos and one for storing the converted animated GIFs. The Lambda function is automatically invoked when a file is uploaded the video S3 bucket.
+
+**Related**:
+* Sample: [GifMaker-Sample](https://github.com/LambdaSharp/GifMaker-Sample)
+
+## Create a Web Chat with API Gateway WebSockets
+
+This LambdaSharp module creates a web chat front-end and back-end using CloudFormation. The front-end is served by an S3 bucket and secured by a CloudFront distribution. The back-end uses API Gateway Websockets to facilitate communication between clients. The assets for the front-end are uploaded from the `wwwroot` folder and copied to the S3 bucket during deployment. Afterwards, a CloudFront distribution is created to provide secure access over `https://` to the front-end. In addition, an API Gateway (v2) is deployed with two Lambda functions that handle websocket connections and message notifications.
+
+**Related**:
+* Sample: [WebSocketsChat-Sample](https://github.com/LambdaSharp/WebSocketsChat-Sample)
+
+## λ-Robots Game
+
+In λ-Robots (pronounced _Lambda Robots_), you program a battle robot that participates on a square game field. Each turn, the server invokes your robot's Lambda function to get its action for the turn until either the robot wins or is destroyed.
+
+**Related**:
+* Sample: [LambdaRobots](https://github.com/LambdaSharp/LambdaRobots)
 
 ## REST API using API Gateway V1
 
@@ -64,3 +89,10 @@ Define your own resource types in CloudFormation. The base class provides the ne
 * Base class: [LambdaSharp.CustomResource.ALambdaCustomResourceFunction&lt;TProperties,TAttributes&gt;](xref:Lambda* harp.CustomResource.ALambdaCustomResourceFunction`2)
 
 Sample: [CustomResourceTypeSample](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/CustomResourceTypeSample)
+
+## Misc. λ# Samples
+
+Various module samples showcasing LambdaSharp declarations and patterns.
+
+**Related**:
+* Samples: [LambdaSharp GitHub Samples](https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ReadMe.md)

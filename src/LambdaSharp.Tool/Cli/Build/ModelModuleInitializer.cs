@@ -144,7 +144,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 encryptionContext: null
             );
 
-            // TODO: move these into "Deployment" group
+            // add deployment variables
             _builder.AddVariable(
                 parent: deploymentItem,
                 name: "Tier",
