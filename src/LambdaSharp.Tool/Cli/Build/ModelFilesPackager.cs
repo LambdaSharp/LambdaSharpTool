@@ -109,9 +109,51 @@ namespace LambdaSharp.Tool.Cli.Build {
             AtLocation("Package", () => {
                 var containsElfExecutable = false;
 
+                // check if a build command is present
+                if(parameter.Build != null) {
+                    Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.Name}{Settings.ResetColor}");
+                    var commandAndArguments = parameter.Build.Split(' ', 2);
+                    if(!ProcessLauncher.Execute(
+                        commandAndArguments[0],
+                        commandAndArguments[1],
+                        Settings.WorkingDirectory,
+                        Settings.VerboseLevel >= VerboseLevel.Detailed,
+                        ColorizeOutput
+                    )) {
+                        LogError("package build command failed");
+                        return;
+                    }
+                }
+
+                // discover files to package
+                var files = new List<KeyValuePair<string, string>>();
+                string folder;
+                string filePattern;
+                SearchOption searchOption;
+                var packageFiles = Path.Combine(Settings.WorkingDirectory, parameter.Files);
+                if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
+                    folder = Path.GetFullPath(packageFiles);
+                    filePattern = "*";
+                    searchOption = SearchOption.AllDirectories;
+                } else {
+                    folder = Path.GetDirectoryName(packageFiles);
+                    filePattern = Path.GetFileName(packageFiles);
+                    searchOption = SearchOption.TopDirectoryOnly;
+                }
+                if(Directory.Exists(folder)) {
+                    foreach(var filePath in Directory.GetFiles(folder, filePattern, searchOption)) {
+                        var relativeFilePathName = Path.GetRelativePath(folder, filePath);
+                        files.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
+                    }
+                    files = files.OrderBy(file => file.Key).ToList();
+                } else {
+                    LogError($"cannot find folder '{Path.GetRelativePath(Settings.WorkingDirectory, folder)}'");
+                    return;
+                }
+
                 // compute MD5 hash for package
                 var bytes = new List<byte>();
-                foreach(var file in parameter.Files) {
+                foreach(var file in files) {
 
                     // check if one of the files in the package is an ELF executable
                     using(var stream = File.OpenRead(file.Value)) {
@@ -123,25 +165,23 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
 
                 // compute hash for all files
-                var fileValueToFileKey = parameter.Files.ToDictionary(kv => kv.Value, kv => kv.Key);
-                var hash = parameter.Files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
+                var fileValueToFileKey = files.ToDictionary(kv => kv.Value, kv => kv.Key);
+                var hash = files.Select(kv => kv.Value).ComputeHashForFiles(file => fileValueToFileKey[file]);
                 var package = Path.Combine(Settings.OutputDirectory, $"package_{_builder.FullName}_{parameter.LogicalId}_{hash}.zip");
 
                 // only build package if it doesn't exist
                 if(!_existingPackages.Remove(package)) {
 
                     // create zip package
-                    if(Settings.UseAnsiConsole) {
-                        Console.WriteLine($"=> Building package {AnsiTerminal.Yellow}{parameter.Name}{AnsiTerminal.Reset}");
-                    } else {
-                        Console.WriteLine($"=> Building package {parameter.Name}");
+                    if(parameter.Build == null) {
+                        Console.WriteLine($"=> Building package {Settings.InfoColor}{parameter.Name}{Settings.ResetColor}");
                     }
                     if(containsElfExecutable) {
 
                         // compress package contents with executable permissions
                         using(var outputStream = File.OpenWrite(package))
                         using(var outputZip = new ZipOutputStream(outputStream)) {
-                            foreach(var file in parameter.Files) {
+                            foreach(var file in files) {
                                 if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
                                     Console.WriteLine($"... zipping: {file.Key}");
                                 }
@@ -163,7 +203,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                         // package contents with built-in zip library, which is ~6x faster
                         using(var zipArchive = System.IO.Compression.ZipFile.Open(package, ZipArchiveMode.Create, new ForwardSlashEncoder())) {
-                            foreach(var file in parameter.Files) {
+                            foreach(var file in files) {
                                 if(Settings.VerboseLevel >= VerboseLevel.Detailed) {
                                     Console.WriteLine($"... zipping: {file.Key}");
                                 }
@@ -174,6 +214,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                 }
                 _builder.AddArtifact($"{parameter.FullName}::PackageName", package);
             });
+
+            // local functions
+            string ColorizeOutput(string line)
+                => !Settings.UseAnsiConsole
+                    ? line
+                    : line.Contains(": error ", StringComparison.Ordinal)
+                    ? $"{AnsiTerminal.BrightRed}{line}{AnsiTerminal.Reset}"
+                    : line.Contains(": warning ", StringComparison.Ordinal)
+                    ? $"{AnsiTerminal.BrightYellow}{line}{AnsiTerminal.Reset}"
+                    : line;
         }
     }
 }

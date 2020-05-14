@@ -13,12 +13,23 @@ The package definition creates a compressed zip package from a local path. The z
 Package: String
 Description: String
 Scope: ScopeDefinition
+Build: String
 Files: String
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>Build</code></dt>
+<dd>
+
+The <code>Build</code> attribute specifies a command to execute from the same directory as the module definition.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
 
 <dt><code>Description</code></dt>
 <dd>

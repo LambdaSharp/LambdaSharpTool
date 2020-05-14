@@ -107,7 +107,8 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Package"] = new[] {
                 "Description",
                 "Files",
-                "Scope"
+                "Scope",
+                "Build"
             },
             ["ResourceType"] = new[] {
                 "Attributes",
@@ -241,9 +242,11 @@ namespace LambdaSharp.Tool.Model.AST {
          * Description: string
          * Scope: string -or- list<string>
          * Files: string
+         * Build: string
          */
         public string Package { get; set; }
         public string Files { get; set; }
+        public string Build { get; set; }
 
         /*
          * Function: string
