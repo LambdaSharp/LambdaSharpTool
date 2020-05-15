@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "A sample module integrating with S3 Bucket events (v1.0-DEV)",
+  "Description": "Module description (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -67,26 +67,18 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EBC423BF5CDD1132F73D3CC5A430ACEA"
+      "Default": "0E6CEE32FC37BF51AEC51730640B2303"
     }
   },
   "Resources": {
-    "MyFirstBucket": {
-      "Type": "AWS::S3::Bucket",
-      "Properties": {}
-    },
-    "MySecondBucket": {
-      "Type": "AWS::S3::Bucket",
-      "Properties": {}
-    },
-    "MyFunction": {
+    "SenderFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/MyFunction-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Event/.artifacts/SenderFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -128,15 +120,15 @@
             ]
           }
         },
-        "Description": "This function is invoked by an S3 Bucket event (v1.0-DEV)",
+        "Description": "Lambda function sending a CloudWatch event (v1.0-DEV)",
         "Environment": {
           "Variables": {
             "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>",
-            "LAMBDA_NAME": "MyFunction",
+            "MODULE_INFO": "Sample.Event:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "SenderFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
               "Fn::Select": [
@@ -216,8 +208,8 @@
             }
           }
         },
-        "Handler": "MyFunction::S3Sample.MyFunction.Function::FunctionHandlerAsync",
-        "MemorySize": "128",
+        "Handler": "SenderFunction::Sample.Event.MyFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
             "ModuleRole",
@@ -237,11 +229,178 @@
         }
       }
     },
-    "MyFunctionLogGroup": {
+    "SenderFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${MyFunction}"
+          "Fn::Sub": "/aws/lambda/${SenderFunction}"
+        },
+        "RetentionInDays": 30
+      }
+    },
+    "ReceiverFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Ref": "DeploymentBucketName"
+          },
+          "S3Key": "<%MODULE_ORIGIN%>/Sample/Event/.artifacts/ReceiverFunction-DRYRUN.zip"
+        },
+        "DeadLetterConfig": {
+          "TargetArn": {
+            "Fn::If": [
+              "UseCoreServices",
+              {
+                "Fn::If": [
+                  "LambdaSharpCoreDeadLetterQueueIsImported",
+                  {
+                    "Fn::ImportValue": {
+                      "Fn::Sub": [
+                        "${DeploymentPrefix}${Import}",
+                        {
+                          "Import": {
+                            "Fn::Select": [
+                              "1",
+                              {
+                                "Fn::Split": [
+                                  "$",
+                                  {
+                                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                  }
+                                ]
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  {
+                    "Ref": "LambdaSharpCoreDeadLetterQueue"
+                  }
+                ]
+              },
+              {
+                "Ref": "AWS::NoValue"
+              }
+            ]
+          }
+        },
+        "Description": "Lambda function for receiving CloudWatch events (v1.0-DEV)",
+        "Environment": {
+          "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
+            "MODULE_ID": {
+              "Ref": "AWS::StackName"
+            },
+            "MODULE_INFO": "Sample.Event:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "ReceiverFunction",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
+            "DEPLOYMENTBUCKETNAME": {
+              "Ref": "DeploymentBucketName"
+            },
+            "DEADLETTERQUEUE": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Fn::If": [
+                    "LambdaSharpCoreDeadLetterQueueIsImported",
+                    {
+                      "Fn::ImportValue": {
+                        "Fn::Sub": [
+                          "${DeploymentPrefix}${Import}",
+                          {
+                            "Import": {
+                              "Fn::Select": [
+                                "1",
+                                {
+                                  "Fn::Split": [
+                                    "$",
+                                    {
+                                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "Ref": "LambdaSharpCoreDeadLetterQueue"
+                    }
+                  ]
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_DEADLETTERQUEUEPOLICY": {
+              "Fn::If": [
+                "UseCoreServices",
+                {
+                  "Ref": "ModuleRoleDeadLetterQueuePolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            },
+            "STR_MODULE_ROLE_SECRETSPOLICY": {
+              "Fn::If": [
+                "ModuleRoleSecretsPolicyCondition",
+                {
+                  "Ref": "ModuleRoleSecretsPolicy"
+                },
+                {
+                  "Ref": "AWS::NoValue"
+                }
+              ]
+            }
+          }
+        },
+        "Handler": "ReceiverFunction::Sample.Event.ReceiverFunction.Function::FunctionHandlerAsync",
+        "MemorySize": "256",
+        "Role": {
+          "Fn::GetAtt": [
+            "ModuleRole",
+            "Arn"
+          ]
+        },
+        "Runtime": "dotnetcore3.1",
+        "Timeout": "30",
+        "TracingConfig": {
+          "Mode": {
+            "Fn::If": [
+              "XRayIsEnabled",
+              "Active",
+              "PassThrough"
+            ]
+          }
+        }
+      }
+    },
+    "ReceiverFunctionLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ReceiverFunction}"
         },
         "RetentionInDays": 30
       }
@@ -267,110 +426,6 @@
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
-                {
-                  "Sid": "MyFirstBucket",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MyFirstBucket",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "MyFirstBucket",
-                              "Arn"
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
-                {
-                  "Sid": "MySecondBucket",
-                  "Effect": "Allow",
-                  "Action": [
-                    "s3:AbortMultipartUpload",
-                    "s3:CreateBucket",
-                    "s3:DeleteObject",
-                    "s3:DeleteObjectTagging",
-                    "s3:DeleteObjectVersion",
-                    "s3:DeleteObjectVersionTagging",
-                    "s3:GetBucketLocation",
-                    "s3:GetObject",
-                    "s3:GetObjectAcl",
-                    "s3:GetObjectTagging",
-                    "s3:GetObjectTorrent",
-                    "s3:GetObjectVersion",
-                    "s3:GetObjectVersionAcl",
-                    "s3:GetObjectVersionTagging",
-                    "s3:GetObjectVersionTorrent",
-                    "s3:ListBucket",
-                    "s3:ListBucketMultipartUploads",
-                    "s3:ListMultipartUploadParts",
-                    "s3:PutObject",
-                    "s3:PutObjectAcl",
-                    "s3:PutObjectTagging",
-                    "s3:PutObjectVersionAcl",
-                    "s3:PutObjectVersionTagging",
-                    "s3:RestoreObject"
-                  ],
-                  "Resource": [
-                    {
-                      "Fn::GetAtt": [
-                        "MySecondBucket",
-                        "Arn"
-                      ]
-                    },
-                    {
-                      "Fn::Join": [
-                        "",
-                        [
-                          {
-                            "Fn::GetAtt": [
-                              "MySecondBucket",
-                              "Arn"
-                            ]
-                          },
-                          "/*"
-                        ]
-                      ]
-                    }
-                  ]
-                },
                 {
                   "Sid": "LogStream",
                   "Effect": "Allow",
@@ -419,7 +474,7 @@
                     "s3:GetObject"
                   ],
                   "Resource": {
-                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/S3.Subscription/.artifacts/*"
+                    "Fn::Sub": "arn:aws:s3:::${DeploymentBucketName}/<%MODULE_ORIGIN%>/Sample/Event/.artifacts/*"
                   }
                 }
               ]
@@ -540,13 +595,13 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "ModuleInfo": "Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>",
+        "ModuleInfo": "Sample.Event:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
       }
     },
-    "MyFunctionRegistration": {
+    "SenderFunctionRegistration": {
       "Type": "Custom::LambdaSharpRegistrationFunction",
       "Condition": "UseCoreServices",
       "Properties": {
@@ -560,23 +615,23 @@
           "Ref": "AWS::StackName"
         },
         "FunctionId": {
-          "Ref": "MyFunction"
+          "Ref": "SenderFunction"
         },
-        "FunctionName": "MyFunction",
+        "FunctionName": "SenderFunction",
         "FunctionLogGroupName": {
-          "Fn::Sub": "/aws/lambda/${MyFunction}"
+          "Fn::Sub": "/aws/lambda/${SenderFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
         "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
-        "FunctionMaxMemory": "128",
+        "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
       },
       "DependsOn": [
         "ModuleRegistration"
       ]
     },
-    "MyFunctionLogGroupSubscription": {
+    "SenderFunctionLogGroupSubscription": {
       "Type": "AWS::Logs::SubscriptionFilter",
       "Condition": "UseCoreServices",
       "Properties": {
@@ -620,7 +675,7 @@
         },
         "FilterPattern": "-\"*** \"",
         "LogGroupName": {
-          "Ref": "MyFunctionLogGroup"
+          "Ref": "SenderFunctionLogGroup"
         },
         "RoleArn": {
           "Fn::If": [
@@ -662,117 +717,189 @@
         }
       }
     },
-    "MyFunctionSource1Permission": {
-      "Type": "AWS::Lambda::Permission",
+    "ReceiverFunctionRegistration": {
+      "Type": "Custom::LambdaSharpRegistrationFunction",
+      "Condition": "UseCoreServices",
       "Properties": {
-        "Action": "lambda:InvokeFunction",
-        "FunctionName": {
-          "Ref": "MyFunction"
+        "ServiceToken": {
+          "Fn::ImportValue": {
+            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::Registration::Function"
+          }
         },
-        "Principal": "s3.amazonaws.com",
-        "SourceAccount": {
-          "Ref": "AWS::AccountId"
+        "ResourceType": "LambdaSharp::Registration::Function",
+        "ModuleId": {
+          "Ref": "AWS::StackName"
         },
-        "SourceArn": {
-          "Fn::GetAtt": [
-            "MyFirstBucket",
-            "Arn"
+        "FunctionId": {
+          "Ref": "ReceiverFunction"
+        },
+        "FunctionName": "ReceiverFunction",
+        "FunctionLogGroupName": {
+          "Fn::Sub": "/aws/lambda/${ReceiverFunction}"
+        },
+        "FunctionPlatform": "AWS Lambda",
+        "FunctionFramework": "dotnetcore3.1",
+        "FunctionLanguage": "csharp",
+        "FunctionMaxMemory": "256",
+        "FunctionMaxDuration": "30"
+      },
+      "DependsOn": [
+        "ModuleRegistration"
+      ]
+    },
+    "ReceiverFunctionLogGroupSubscription": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Condition": "UseCoreServices",
+      "Properties": {
+        "DestinationArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStream"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStream"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
+          ]
+        },
+        "FilterPattern": "-\"*** \"",
+        "LogGroupName": {
+          "Ref": "ReceiverFunctionLogGroup"
+        },
+        "RoleArn": {
+          "Fn::If": [
+            "UseCoreServices",
+            {
+              "Fn::If": [
+                "LambdaSharpCoreLoggingStreamRoleIsImported",
+                {
+                  "Fn::ImportValue": {
+                    "Fn::Sub": [
+                      "${DeploymentPrefix}${Import}",
+                      {
+                        "Import": {
+                          "Fn::Select": [
+                            "1",
+                            {
+                              "Fn::Split": [
+                                "$",
+                                {
+                                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "Ref": "LambdaSharpCoreLoggingStreamRole"
+                }
+              ]
+            },
+            {
+              "Ref": "AWS::NoValue"
+            }
           ]
         }
       }
     },
-    "MyFunctionSource1Subscription": {
-      "Type": "Custom::LambdaSharpS3Subscription",
+    "ReceiverFunctionSource1Event": {
+      "Type": "AWS::Events::Rule",
       "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
-          }
-        },
-        "ResourceType": "LambdaSharp::S3::Subscription",
-        "Bucket": {
-          "Fn::GetAtt": [
-            "MyFirstBucket",
-            "Arn"
+        "EventBusName": "default",
+        "EventPattern": {
+          "source": [
+            "Sample.Event"
+          ],
+          "detail-type": [
+            "MyEvent"
+          ],
+          "resources": [
+            {
+              "Fn::Sub": [
+                "lambdasharp:tier:${P0}",
+                {
+                  "P0": {
+                    "Fn::Select": [
+                      "0",
+                      {
+                        "Fn::Split": [
+                          "-",
+                          {
+                            "Ref": "DeploymentPrefix"
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
           ]
         },
-        "Function": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
-        },
-        "Filters": [
+        "Targets": [
           {
-            "Events": [
-              "s3:ObjectCreated:*"
-            ]
+            "Arn": {
+              "Fn::GetAtt": [
+                "ReceiverFunction",
+                "Arn"
+              ]
+            },
+            "Id": "ReceiverFunction-1"
           }
         ]
-      },
-      "DependsOn": [
-        "MyFunctionSource1Permission"
-      ]
+      }
     },
-    "MyFunctionSource2Permission": {
+    "ReceiverFunctionSource1Permission": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "Action": "lambda:InvokeFunction",
         "FunctionName": {
-          "Ref": "MyFunction"
+          "Ref": "ReceiverFunction"
         },
-        "Principal": "s3.amazonaws.com",
-        "SourceAccount": {
-          "Ref": "AWS::AccountId"
-        },
+        "Principal": "events.amazonaws.com",
         "SourceArn": {
           "Fn::GetAtt": [
-            "MySecondBucket",
+            "ReceiverFunctionSource1Event",
             "Arn"
           ]
         }
       }
-    },
-    "MyFunctionSource2Subscription": {
-      "Type": "Custom::LambdaSharpS3Subscription",
-      "Properties": {
-        "ServiceToken": {
-          "Fn::ImportValue": {
-            "Fn::Sub": "${DeploymentPrefix}LambdaSharp::S3::Subscription"
-          }
-        },
-        "ResourceType": "LambdaSharp::S3::Subscription",
-        "Bucket": {
-          "Fn::GetAtt": [
-            "MySecondBucket",
-            "Arn"
-          ]
-        },
-        "Function": {
-          "Fn::GetAtt": [
-            "MyFunction",
-            "Arn"
-          ]
-        },
-        "Filters": [
-          {
-            "Events": [
-              "s3:ObjectCreated:*",
-              "s3:ObjectRemoved:*"
-            ],
-            "Prefix": "images/",
-            "Suffix": ".png"
-          }
-        ]
-      },
-      "DependsOn": [
-        "MyFunctionSource2Permission"
-      ]
     }
   },
   "Outputs": {
     "ModuleInfo": {
-      "Value": "Sample.S3.Subscription:1.0-DEV@<%MODULE_ORIGIN%>"
+      "Value": "Sample.Event:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
       "Value": {
@@ -1008,9 +1135,9 @@
     },
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
-      "Module": "Sample.S3.Subscription:1.0-DEV",
-      "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "EBC423BF5CDD1132F73D3CC5A430ACEA",
+      "Module": "Sample.Event:1.0-DEV",
+      "Description": "Module description",
+      "TemplateChecksum": "0E6CEE32FC37BF51AEC51730640B2303",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
@@ -1084,34 +1211,29 @@
         "SHA": "0123456789ABCDEF0123456789ABCDEF01234567"
       },
       "Artifacts": [],
-      "Dependencies": [
-        {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0-rc1@lambdasharp",
-          "Type": "Shared"
-        }
-      ],
+      "Dependencies": [],
       "ResourceTypes": [],
       "Outputs": []
     },
     "LambdaSharp::NameMappings": {
       "Version": "2019-07-04",
       "ResourceNameMappings": {
-        "MyFunctionLogGroup": "MyFunction::LogGroup",
+        "SenderFunctionLogGroup": "SenderFunction::LogGroup",
+        "ReceiverFunctionLogGroup": "ReceiverFunction::LogGroup",
         "ModuleRole": "Module::Role",
         "ModuleRoleDeadLetterQueuePolicy": "Module::Role::DeadLetterQueuePolicy",
         "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
         "ModuleRegistration": "Module::Registration",
-        "MyFunctionRegistration": "MyFunction::Registration",
-        "MyFunctionLogGroupSubscription": "MyFunction::LogGroupSubscription",
-        "MyFunctionSource1Permission": "MyFunction::Source1Permission",
-        "MyFunctionSource1Subscription": "MyFunction::Source1Subscription",
-        "MyFunctionSource2Permission": "MyFunction::Source2Permission",
-        "MyFunctionSource2Subscription": "MyFunction::Source2Subscription"
+        "SenderFunctionRegistration": "SenderFunction::Registration",
+        "SenderFunctionLogGroupSubscription": "SenderFunction::LogGroupSubscription",
+        "ReceiverFunctionRegistration": "ReceiverFunction::Registration",
+        "ReceiverFunctionLogGroupSubscription": "ReceiverFunction::LogGroupSubscription",
+        "ReceiverFunctionSource1Event": "ReceiverFunction::Source1Event",
+        "ReceiverFunctionSource1Permission": "ReceiverFunction::Source1Permission"
       },
       "TypeNameMappings": {
         "Custom::LambdaSharpRegistrationModule": "LambdaSharp::Registration::Module",
-        "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function",
-        "Custom::LambdaSharpS3Subscription": "LambdaSharp::S3::Subscription"
+        "Custom::LambdaSharpRegistrationFunction": "LambdaSharp::Registration::Function"
       }
     }
   }

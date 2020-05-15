@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "65E3870244FC080D780551D7DA35D67D"
+      "Default": "D0A4AD455A0EE7132C8FC013231F7ED8"
     }
   },
   "Resources": {
@@ -146,10 +146,11 @@
         "Description": "Respond to slack commands (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Demo.SlackTodo:1.0-DEV",
+            "MODULE_INFO": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "SlackCommand",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -376,6 +377,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -503,7 +514,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Demo.SlackTodo:1.0-DEV",
+        "ModuleInfo": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -723,6 +734,9 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
+        },
+        "StageDescription": {
+          "MetricsEnabled": true
         }
       },
       "DependsOn": [
@@ -773,7 +787,7 @@
       },
       "Description": "Slack Command URL"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "Demo.SlackTodo:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -782,7 +796,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1023,9 +1037,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.SlackTodo:1.0-DEV",
       "Description": "Manage a personal To-Do list from Slack",
-      "TemplateChecksum": "65E3870244FC080D780551D7DA35D67D",
+      "TemplateChecksum": "D0A4AD455A0EE7132C8FC013231F7ED8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
