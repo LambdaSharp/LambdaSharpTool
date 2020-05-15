@@ -82,7 +82,7 @@ namespace LambdaSharp.SimpleQueueService {
             // NOTE (2020-05-15, bjorg): by default, rely on an environment variable to determine the max number
             //  of retries; an alternative would be to fetch the redrive policy from the queue instead.
             if(!int.TryParse(Environment.GetEnvironmentVariable("MAX_QUEUE_RETRIES"), out var result)) {
-                result = 10;
+                result = 3;
             }
             return result;
         }
