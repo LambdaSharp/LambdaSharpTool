@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "3277F0A58D36C6C835EF49C062E6450A"
+      "Default": "26B6CCAF3CC28C05135D15CA98B70CA0"
     }
   },
   "Resources": {
@@ -913,7 +913,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1143,9 +1143,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "3277F0A58D36C6C835EF49C062E6450A",
+      "TemplateChecksum": "26B6CCAF3CC28C05135D15CA98B70CA0",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

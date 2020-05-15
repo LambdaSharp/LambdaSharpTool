@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0C8E70C83C635A30E7BC0F92995D084A"
+      "Default": "50CB906B9B9D470ABF9673A8D68A7DBF"
     }
   },
   "Resources": {
@@ -756,7 +756,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -986,9 +986,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "0C8E70C83C635A30E7BC0F92995D084A",
+      "TemplateChecksum": "50CB906B9B9D470ABF9673A8D68A7DBF",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

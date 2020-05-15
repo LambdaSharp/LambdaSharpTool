@@ -95,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "269A0A74D66CA6F074B409AEDDAAB2E5"
+      "Default": "ACC83453FD04D15A1FF6806AFE6FA70B"
     }
   },
   "Resources": {
@@ -1121,7 +1121,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1335,9 +1335,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "269A0A74D66CA6F074B409AEDDAAB2E5",
+      "TemplateChecksum": "ACC83453FD04D15A1FF6806AFE6FA70B",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",

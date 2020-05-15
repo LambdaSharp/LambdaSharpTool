@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "722518E0000D48751319FFEBDDD25103"
+      "Default": "6D46C9B3278917F0BE9D8A4F90295E4C"
     }
   },
   "Resources": {
@@ -604,7 +604,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -834,9 +834,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Sns:1.0-DEV",
       "Description": "A sample module using an SNS topic",
-      "TemplateChecksum": "722518E0000D48751319FFEBDDD25103",
+      "TemplateChecksum": "6D46C9B3278917F0BE9D8A4F90295E4C",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

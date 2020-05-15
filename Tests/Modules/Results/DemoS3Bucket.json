@@ -35,7 +35,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DEFD0E89BD1E9A8ADB09D397C68FBA02"
+      "Default": "38DB3C5AF3C7FF57BF1E0CE3A9F6EAC8"
     }
   },
   "Resources": {
@@ -83,7 +83,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -163,9 +163,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Bucket:1.0-DEV",
-      "TemplateChecksum": "DEFD0E89BD1E9A8ADB09D397C68FBA02",
+      "TemplateChecksum": "38DB3C5AF3C7FF57BF1E0CE3A9F6EAC8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
