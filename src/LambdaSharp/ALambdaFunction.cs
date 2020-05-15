@@ -29,7 +29,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.CloudWatchEvents.Model;
 using Amazon.Lambda.Core;
 using Amazon.XRay.Recorder.Handlers.System.Net;
 using LambdaSharp.ConfigSource;
@@ -392,6 +391,23 @@ namespace LambdaSharp {
                     }
                 }
 
+                // check if the request stream should be logged for debugging purposes
+                if(Provider.DebugLoggingEnabled) {
+
+                    // convert request stream to memory stream, so we can read it twice
+                    if(!(stream is MemoryStream memoryStream)) {
+                        memoryStream = new MemoryStream();
+                        stream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                    }
+
+                    // log the request data verbatim
+                    LogDebug($"request stream: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
+
+                    // replace request stream
+                    stream = memoryStream;
+                }
+
                 // process message stream
                 Stream result;
                 try {
@@ -411,6 +427,23 @@ namespace LambdaSharp {
                 } catch(Exception e) {
                     LogError(e);
                     throw;
+                }
+
+                // check if response stream should be logged for debugging purposes
+                if(Provider.DebugLoggingEnabled) {
+
+                    // convert response stream to memory stream, so we can read it twice
+                    if(!(result is MemoryStream memoryStream)) {
+                        memoryStream = new MemoryStream();
+                        result.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                    }
+
+                    // log the response data verbatim
+                    LogDebug($"response stream: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
+
+                    // replace response stream
+                    result = memoryStream;
                 }
                 return result;
             } catch(Exception e) {
@@ -743,6 +776,17 @@ namespace LambdaSharp {
         /// </summary>
         /// <param name="exception">Exception to record.</param>
         protected virtual void RecordException(Exception exception) => Provider.Log($"EXCEPTION: {exception}\n");
+
+        /// <summary>
+        /// Log a debugging message. This message will only appear in the log when debug logging is enabled and will not be forwarded to an error aggregator.
+        /// </summary>
+        /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
+        /// <param name="arguments">Optional arguments for the message string.</param>
+        protected void LogDebug(string format, params object[] arguments) {
+            if(Provider.DebugLoggingEnabled) {
+                Logger.LogDebug(format, arguments);
+            }
+        }
 
         /// <summary>
         /// Log an informational message. This message will only appear in the log and not be forwarded to an error aggregator.

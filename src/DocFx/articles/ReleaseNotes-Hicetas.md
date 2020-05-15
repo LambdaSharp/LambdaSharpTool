@@ -5,7 +5,8 @@ keywords: release, notes, hicetas
 ---
 
 > TODO:
-> * DEBUG_REQUEST_RESPONSE
+> * DEBUG_LOGGING_ENABLED
+> * MAX_QUEUE_RETRIES
 
 
 # LambdaSharp "Hicetas" Release (v0.8.0.0) - TBD

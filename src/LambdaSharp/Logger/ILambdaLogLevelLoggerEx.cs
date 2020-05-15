@@ -33,6 +33,16 @@ namespace LambdaSharp.Logger {
         //--- Extension Methods ---
 
         /// <summary>
+        /// Log a debugging message. This message will only appear in the log and not be forwarded to an error aggregator.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
+        /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
+        /// <param name="arguments">Optional arguments for the message string.</param>
+        /// <seealso cref="LambdaLogLevel"/>
+        public static void LogDebug(this ILambdaLogLevelLogger logger, string format, params object[] arguments)
+            => logger.Log(LambdaLogLevel.DEBUG, exception: null, format: format, arguments: arguments);
+
+        /// <summary>
         /// Log an informational message. This message will only appear in the log and not be forwarded to an error aggregator.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>

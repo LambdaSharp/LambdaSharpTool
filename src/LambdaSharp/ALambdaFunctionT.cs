@@ -43,25 +43,16 @@ namespace LambdaSharp {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) {
-
-            // read environment variable to determine if request/response messages should be serialized to the log for debugging purposes
-            bool.TryParse(System.Environment.GetEnvironmentVariable("DEBUG_REQUEST_RESPONSE"), out var debugLogMessage);
-            DebugRequestResponse = debugLogMessage;
-            if(DebugRequestResponse) {
-                LogInfo($"typeof(LambdaSerializer): {LambdaSerializer.GetType().FullName}");
-            }
-        }
+        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider ?? new LambdaFunctionDependencyProvider()) { }
 
         //--- Properties ---
 
         /// <summary>
-        /// The <see cref="DebugRequestResponse"/> property indicates if the the requests received and responses emitted
-        /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
-        /// issues caused by inconsistencies in serialization or deserialization.
+        /// The <see cref="ILambdaFunctionDependencyProvider"/> instance used by the Lambda function to
+        /// satisfy its required dependencies.
         /// </summary>
-        /// <value>Boolean indicating if request/response are logged</value>
-        protected bool DebugRequestResponse { get; set; }
+        /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
+        protected new ILambdaFunctionDependencyProvider Provider => (ILambdaFunctionDependencyProvider)base.Provider;
 
         //--- Abstract Methods ---
 
@@ -85,42 +76,12 @@ namespace LambdaSharp {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
-            if(DebugRequestResponse) {
-                using(var memoryStream = new MemoryStream()) {
-
-                    // copy request stream to an in-memory stream
-                    stream.CopyTo(memoryStream);
-                    memoryStream.Position = 0;
-
-                    // log the received data verbatim
-                    LogInfo($"received data: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
-
-                    // deserialize request
-                    var request = LambdaSerializer.Deserialize<TRequest>(memoryStream);
-
-                    // log how the request was deserialized
-                    LogInfo($"deserialized request: {LambdaSerializer.Serialize(request)}");
-
-                    // process request
-                    var response = await ProcessMessageAsync(request);
-
-                    // serialize response
-                    var responseStream = new MemoryStream();
-                    LambdaSerializer.Serialize(response, responseStream);
-                    responseStream.Position = 0;
-
-                    // log the serialize response
-                    LogInfo($"serializer response: {Encoding.UTF8.GetString(responseStream.ToArray())}");
-                    return responseStream;
-                }
-            } else {
-                var request = LambdaSerializer.Deserialize<TRequest>(stream);
-                var response = await ProcessMessageAsync(request);
-                var responseStream = new MemoryStream();
-                LambdaSerializer.Serialize(response, responseStream);
-                responseStream.Position = 0;
-                return responseStream;
-            }
-        }
+            var request = LambdaSerializer.Deserialize<TRequest>(stream);
+            var response = await ProcessMessageAsync(request);
+            var responseStream = new MemoryStream();
+            LambdaSerializer.Serialize(response, responseStream);
+            responseStream.Position = 0;
+            return responseStream;
+       }
     }
 }

@@ -91,6 +91,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         var environment = function.Function.Environment.Variables;
 
                         // set default environment variables
+                        environment["DEBUG_LOGGING_ENABLED"] = "false";
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
                         environment["MODULE_INFO"] = FnRef("Module::Info");
                         environment["LAMBDA_NAME"] = function.FullName;

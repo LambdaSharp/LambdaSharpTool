@@ -50,6 +50,7 @@ namespace LambdaSharp {
         //--- Fields ---
         private readonly Func<DateTime> _nowCallback;
         private readonly Action<string> _logCallback;
+        private readonly bool _debugLoggingEnabled;
 
         //--- Constructors ---
 
@@ -63,6 +64,7 @@ namespace LambdaSharp {
         /// <param name="kmsClient">A <see cref="IAmazonKeyManagementService"/> client instance. Defaults to <see cref="AmazonKeyManagementServiceClient"/> when <c>null</c>.</param>
         /// <param name="sqsClient">A <see cref="IAmazonSQS"/> client instance. Defaults to <see cref="AmazonSQSClient"/> when <c>null</c>.</param>
         /// <param name="eventsClient">A <see cref="IAmazonCloudWatchEvents"/> client instance. Defaults to <see cref="AmazonCloudWatchEventsClient"/> when <c>null</c>.</param>
+        /// <param name="debugLoggingEnabled">A boolean indicating if debug logging is enabled.</param>
         public LambdaFunctionDependencyProvider(
             Func<DateTime> utcNowCallback = null,
             Action<string> logCallback = null,
@@ -70,7 +72,8 @@ namespace LambdaSharp {
             ILambdaSerializer jsonSerializer = null,
             IAmazonKeyManagementService kmsClient = null,
             IAmazonSQS sqsClient = null,
-            IAmazonCloudWatchEvents eventsClient = null
+            IAmazonCloudWatchEvents eventsClient = null,
+            bool? debugLoggingEnabled = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);
             _logCallback = logCallback ?? LambdaLogger.Log;
@@ -79,6 +82,15 @@ namespace LambdaSharp {
             KmsClient = kmsClient ?? new AmazonKeyManagementServiceClient();
             SqsClient = sqsClient ?? new AmazonSQSClient();
             EventsClient = eventsClient ?? new AmazonCloudWatchEventsClient();
+
+            // determine if debug logging is enabled
+            if(debugLoggingEnabled.HasValue) {
+                _debugLoggingEnabled = debugLoggingEnabled.Value;
+            } else {
+
+                // read environment variable to determine if request/response messages should be serialized to the log for debugging purposes
+                bool.TryParse(System.Environment.GetEnvironmentVariable("DEBUG_LOGGING_ENABLED"), out _debugLoggingEnabled);
+            }
         }
 
         //--- Properties ---
@@ -118,6 +130,12 @@ namespace LambdaSharp {
         /// <a href="https://aws.amazon.com/eventbridge/">Amazon EventBridge</a> service.
         /// </summary>
         public IAmazonCloudWatchEvents EventsClient { get; }
+
+        /// <summary>
+        /// The <see cref="DebugLoggingEnabled"/> property indicates if debug log entries should be emitted
+        /// to CloudWatch logs.
+        /// </summary>
+        public bool DebugLoggingEnabled => _debugLoggingEnabled;
 
         //--- Methods ---
 
