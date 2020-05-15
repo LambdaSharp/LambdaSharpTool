@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "949518531E40F734C7AC3482A36D3730"
+      "Default": "5510F51E4F9C63620283627BA460458C"
     }
   },
   "Resources": {
@@ -575,7 +575,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -805,9 +805,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "949518531E40F734C7AC3482A36D3730",
+      "TemplateChecksum": "5510F51E4F9C63620283627BA460458C",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

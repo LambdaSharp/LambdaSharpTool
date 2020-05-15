@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "24800AF9263232544AC1F936F0E02B82"
+      "Default": "EBC423BF5CDD1132F73D3CC5A430ACEA"
     }
   },
   "Resources": {
@@ -780,7 +780,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1010,9 +1010,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.S3.Subscription:1.0-DEV",
       "Description": "A sample module integrating with S3 Bucket events",
-      "TemplateChecksum": "24800AF9263232544AC1F936F0E02B82",
+      "TemplateChecksum": "EBC423BF5CDD1132F73D3CC5A430ACEA",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
@@ -1086,7 +1086,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0-rc1@lambdasharp",
           "Type": "Shared"
         }
       ],

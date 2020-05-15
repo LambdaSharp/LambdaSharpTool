@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E1C87BB9CA290FF6B87687FAD27A42F8"
+      "Default": "EB9A240A896D905F7BBD552ABB69936B"
     }
   },
   "Resources": {
@@ -651,7 +651,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -881,9 +881,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.DynamoDB:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "E1C87BB9CA290FF6B87687FAD27A42F8",
+      "TemplateChecksum": "EB9A240A896D905F7BBD552ABB69936B",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

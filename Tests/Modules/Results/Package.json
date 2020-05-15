@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "D6D24BA89FEC77B7F528FA4E2BBFCD45"
+      "Default": "31EEBD80819E935E8FB2500D96EAC0DB"
     }
   },
   "Resources": {
@@ -620,7 +620,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -850,9 +850,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "D6D24BA89FEC77B7F528FA4E2BBFCD45",
+      "TemplateChecksum": "31EEBD80819E935E8FB2500D96EAC0DB",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

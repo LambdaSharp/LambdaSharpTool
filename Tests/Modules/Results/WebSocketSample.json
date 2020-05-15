@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "8032E7EEF28EC36C56249DAE77C90766"
+      "Default": "B4DEECB097933A8E1EF632F255CD8943"
     }
   },
   "Resources": {
@@ -1116,7 +1116,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1345,9 +1345,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "8032E7EEF28EC36C56249DAE77C90766",
+      "TemplateChecksum": "B4DEECB097933A8E1EF632F255CD8943",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

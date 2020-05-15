@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6FF5045806221A5F9CC1E43CA5068FBD"
+      "Default": "2E6ACBB262081B4942AAE5CB8A794799"
     }
   },
   "Resources": {
@@ -707,7 +707,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -948,9 +948,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "6FF5045806221A5F9CC1E43CA5068FBD",
+      "TemplateChecksum": "2E6ACBB262081B4942AAE5CB8A794799",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "Module Settings",

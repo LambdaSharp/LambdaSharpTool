@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9874DD6AE2427AC31FABCAA674BA8F6D"
+      "Default": "44B7938D6A74C543A37300B1A167CFD8"
     }
   },
   "Resources": {
@@ -584,7 +584,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.0-rc1"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -823,9 +823,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.VpcFunction:1.0-DEV",
       "Description": "A sample module defining a Lambda function in VPC",
-      "TemplateChecksum": "9874DD6AE2427AC31FABCAA674BA8F6D",
+      "TemplateChecksum": "44B7938D6A74C543A37300B1A167CFD8",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0",
+      "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
         {
           "Title": "Module Settings",
