@@ -17,4 +17,4 @@ echo $LAMBDASHARP_VERSION > $LAMBDASHARP/src/DocFX/version.txt
 # generate new documentation
 echo "*** SERVING DOCUMENTATION (HIT ENTER TO STOP)"
 cd $LAMBDASHARP/src/DocFx
-docfx --serve
+docfx docfx.json --serve

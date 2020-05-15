@@ -30,4 +30,4 @@ git checkout master -- CNAME
 # generate new documentation
 echo "*** GENERATING NEW DOCUMENTATION"
 cd $LAMBDASHARP/src/DocFx
-docfx build --force
+docfx docfx.json --force
