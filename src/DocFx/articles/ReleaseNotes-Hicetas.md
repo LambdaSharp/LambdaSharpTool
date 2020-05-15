@@ -4,7 +4,8 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-> TODO: document the JSON format for log records
+> TODO:
+> * DEBUG_REQUEST_RESPONSE
 
 
 # LambdaSharp "Hicetas" Release (v0.8.0.0) - TBD

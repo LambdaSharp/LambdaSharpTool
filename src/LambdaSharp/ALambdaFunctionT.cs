@@ -17,6 +17,7 @@
  */
 
 using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace LambdaSharp {
@@ -42,7 +43,25 @@ namespace LambdaSharp {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) {
+
+            // read environment variable to determine if request/response messages should be serialized to the log for debugging purposes
+            bool.TryParse(System.Environment.GetEnvironmentVariable("DEBUG_REQUEST_RESPONSE"), out var debugLogMessage);
+            DebugRequestResponse = debugLogMessage;
+            if(DebugRequestResponse) {
+                LogInfo($"typeof(LambdaSerializer): {LambdaSerializer.GetType().FullName}");
+            }
+        }
+
+        //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="DebugRequestResponse"/> property indicates if the the requests received and responses emitted
+        /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
+        /// issues caused by inconsistencies in serialization or deserialization.
+        /// </summary>
+        /// <value>Boolean indicating if request/response are logged</value>
+        protected bool DebugRequestResponse { get; set; }
 
         //--- Abstract Methods ---
 
@@ -66,41 +85,42 @@ namespace LambdaSharp {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
+            if(DebugRequestResponse) {
+                using(var memoryStream = new MemoryStream()) {
 
-// TODO: allow runtime configuration!
-#if DEBUG_LAMBDASHARP
+                    // copy request stream to an in-memory stream
+                    stream.CopyTo(memoryStream);
+                    memoryStream.Position = 0;
 
-            // copy request stream to an in-memory stream
-            using var memoryStream = new MemoryStream();
-            stream.CopyTo(memoryStream);
-            memoryStream.Position = 0;
+                    // log the received data verbatim
+                    LogInfo($"received data: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
 
-            // log the received data verbatim
-            LogInfo($"received data {LambdaSerializer.GetType().FullName}: {System.Text.Encoding.UTF8.GetString(memoryStream.ToArray())}");
-            stream = memoryStream;
+                    // deserialize request
+                    var request = LambdaSerializer.Deserialize<TRequest>(memoryStream);
 
-            // deserialize request
-            var request = LambdaSerializer.Deserialize<TRequest>(stream);
+                    // log how the request was deserialized
+                    LogInfo($"deserialized request: {LambdaSerializer.Serialize(request)}");
 
-            // log how the request was deserialized
-            LogInfo($"deserialized to {System.Text.Json.JsonSerializer.Serialize(request)}");
+                    // process request
+                    var response = await ProcessMessageAsync(request);
 
-            // process request
-            var response = await ProcessMessageAsync(request);
+                    // serialize response
+                    var responseStream = new MemoryStream();
+                    LambdaSerializer.Serialize(response, responseStream);
+                    responseStream.Position = 0;
 
-            //
-            var responseStream = new MemoryStream();
-            LambdaSerializer.Serialize(response, responseStream);
-            responseStream.Position = 0;
-            LogInfo($"responded data: {System.Text.Encoding.UTF8.GetString(responseStream.ToArray())}");
-#else
-            var request = LambdaSerializer.Deserialize<TRequest>(stream);
-            var response = await ProcessMessageAsync(request);
-            var responseStream = new MemoryStream();
-            LambdaSerializer.Serialize(response, responseStream);
-            responseStream.Position = 0;
-#endif
-            return responseStream;
+                    // log the serialize response
+                    LogInfo($"serializer response: {Encoding.UTF8.GetString(responseStream.ToArray())}");
+                    return responseStream;
+                }
+            } else {
+                var request = LambdaSerializer.Deserialize<TRequest>(stream);
+                var response = await ProcessMessageAsync(request);
+                var responseStream = new MemoryStream();
+                LambdaSerializer.Serialize(response, responseStream);
+                responseStream.Position = 0;
+                return responseStream;
+            }
         }
     }
 }
