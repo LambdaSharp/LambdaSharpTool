@@ -21,8 +21,18 @@
 
 - name: Events
   href: Events.md
+  items:
 
-- name: Log Records
+    - name: LambdaError
+      href: Events-LambdaError.md
+
+    - name: LambdaMetrics
+      href: Events-LambdaMetrics.md
+
+    - name: LambdaUsage
+      href: Events-LambdaUsage.md
+
+- name: S3 Log Records
   href: LogRecords.md
 
 - name: Samples
@@ -30,6 +40,9 @@
 
 - name: Releases
   items:
+
+    - name: Hicetas (v0.8.0)
+      href: ReleaseNotes-Hicetas.md
 
     - name: Geminus (v0.7.0.16)
       href: ReleaseNotes-Geminus.md
@@ -43,13 +56,13 @@
     - name: Damo (v0.4.0.4)
       href: ReleaseNotes-Damo.md
 
-    - name: Cebes (v3.0)
+    - name: Cebes (v0.3.0)
       href: ReleaseNotes-Cebes.md
 
-    - name: Brontinus (v2.0)
+    - name: Brontinus (v0.2.0)
       href: ReleaseNotes-Brontinus.md
 
-    - name: Acrion (v1.0)
+    - name: Acrion (v0.1.0)
       href: ReleaseNotes-Acrion.md
 
 # - name: Glossary

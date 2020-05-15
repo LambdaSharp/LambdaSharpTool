@@ -8,12 +8,12 @@ keywords: cloudwatch, metrics, modules
 
 LambdaSharp modules emit custom CloudWatch metrics to enable automated monitoring on the efficiency and reliability of modules.
 
-LambdaSharp modules can report custom metrics using the built-in [`LogMetric(string name, double value, LambdaMetricUnit unit)`](xref:LambdaSharp.ALambdaFunction.LogMetric(string,double,LambdaMetricUnit)) method or one of its overloads. Metrics are automatically organized by module full name, prefixed by _Module:_. For example, the _LambdaSharp.Core_ metrics are found under the _Module:LambdaSharp.Core_ namespace in CloudWatch.
+LambdaSharp modules can report custom metrics using the built-in [`LogMetric(string name, double value, LambdaMetricUnit unit)`](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) method or one of its overloads. Metrics are automatically organized by module full name, prefixed by _Module:_. For example, the _LambdaSharp.Core_ metrics are found under the _Module:LambdaSharp.Core_ namespace in CloudWatch.
 
 
 ## Standard Lambda Function Metrics
 
-### Class [LambdaSharp.ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
+### Class [ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
 
 The `ALambdaFunction` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -49,7 +49,7 @@ In addition, Lambda emits the following metrics organized by [`FunctionName`], [
 |Throttles                                  |Count          |The number of invocation requests that are throttled. When all function instances are processing requests and no concurrency is available to scale up, Lambda rejects additional requests with `TooManyRequestsException`. Throttled requests and other invocation errors don't count as Invocations or Errors.|
 |UnreservedConcurrentExecutions             |Count          |For an AWS Region, the number of events that are being processed by functions that don't have reserved concurrency.|
 
-### Class [LambdaSharp.SimpleQueueService.ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
+### Class [ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
 
 The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -84,7 +84,7 @@ In addition, SQS emits the following metrics organized by [`QueueName`] dimensio
 
 For more details, consult the [Amazon SQS metrics documentation](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html).
 
-### Class [LambdaSharp.SimpleNotificationService.ALambdaTopicFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleNotificationService.ALambdaTopicFunction`1)
+### Class [ALambdaTopicFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleNotificationService.ALambdaTopicFunction`1)
 
 The `ALambdaTopicFunction<TMessage>` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -125,7 +125,7 @@ In addition, SNS emits the following metrics organized by [`Application`], [`App
 
 For more details, consult the [Amazon SNS metrics documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-monitoring-using-cloudwatch.html).
 
-### Class [LambdaSharp.ApiGateway.ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
+### Class [ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
 
 For REST APIs, the `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Method`,`Resource`] dimension where:
 * `Stack` is the CloudFormation stack name.

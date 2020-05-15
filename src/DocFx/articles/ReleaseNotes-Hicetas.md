@@ -9,14 +9,14 @@ keywords: release, notes, hicetas
 > * MAX_QUEUE_RETRIES
 
 
-# LambdaSharp "Hicetas" Release (v0.8.0.0) - TBD
+# LambdaSharp "Hicetas" Release (v0.8.0) - TBD
 
 > Hicetas was a Greek philosopher of the Pythagorean School. He was born in Syracuse. Like his fellow Pythagorean Ecphantus and the Academic Heraclides Ponticus, he believed that the daily movement of permanent stars was caused by the rotation of the Earth around its axis. When Copernicus referred to Nicetus Syracusanus (Nicetus of Syracuse) in _De revolutionibus orbium coelestium_ as having been cited by Cicero as an ancient who also argued that the Earth moved, it is believed that he was actually referring to Hicetas. [(Wikipedia)](https://en.wikipedia.org/wiki/Hicetas)
 
 
 ## What's New
 
-This release introduces some key new capabilities for Lambda functions and the _LambdaSharp.Core_ module. The [`ALambdaFunction`](xref:Lambdasharp.ALambdaFunction) base class now has new methods for sending events and recording metrics.
+This release introduces some key new capabilities for Lambda functions and the _LambdaSharp.Core_ module. The [`ALambdaFunction`](xref:LambdaSharp.ALambdaFunction) base class now has new methods for sending events and recording metrics.
 
 > TODO: more text here
 
@@ -95,8 +95,8 @@ Two new, but related, module variables were introduced to retrieve the deploymen
 > * Talk about custom metrics.
 > * High precision metrics for API Gateway enabled
 
-* Added [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(string,double,LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
-* Added [`ALambdaFunction.SendEvent(...)`](xref:ALambdaFunction.SendEvent{T}(string,T,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
+* Added [`ALambdaFunction.LogMetric(...)`](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
+* Added [`ALambdaFunction.SendEvent(...)`](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
 * Added `LambdaSharp.Serialization.LambdaJsonSerializer`, which derives from the prescribed JSON serializer (i.e. `Newtonsoft.Json` until a future release).
 * Updated embedded CloudFormation spec to 13.0.0.
 * Marked `JsonSerializer` property as obsolete. Use `LambdaSerializer` instead.
@@ -141,10 +141,10 @@ WITH SERDEPROPERTIES (
 ## New Samples
 
 ### Samples/EventSample
-This sample shows how to use the new [`ALambdaFunction.LogEvent(...)`](xref:ALambdaFunction.SendEvent(string,string,object,IEnumerable{string})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
+This sample shows how to use the new [`ALambdaFunction.LogEvent(...)`](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html) method for sending CloudWatch Events.
 
 ### Samples/MetricSample
-This sample shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:ALambdaFunction.LogMetric(string,double,LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) method for sending CloudWatch Events.
+This sample shows how to use the new [`ALambdaFunction.LogMetric(...)`](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html) method for sending CloudWatch Events.
 
 ## Bug Fixes
 
