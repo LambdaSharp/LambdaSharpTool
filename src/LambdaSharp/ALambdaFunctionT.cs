@@ -66,6 +66,8 @@ namespace LambdaSharp {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
+
+// TODO: allow runtime configuration!
 #if DEBUG_LAMBDASHARP
 
             // copy request stream to an in-memory stream

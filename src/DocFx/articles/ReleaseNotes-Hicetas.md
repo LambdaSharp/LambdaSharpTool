@@ -83,6 +83,7 @@ Two new, but related, module variables were introduced to retrieve the deploymen
 * Enhanced `lash init` to highlight deployment tier name during stack updates.
 * Enhanced `lash init` for _LambdaSharp_ contributors to automatically force build and force publish.
 * Enhanced `lash nuke` to only empty the deployment and logging buckets if they were created by the _LambdaSharp.Core_ module.
+* Enhanced API Gateway V2 WebSocket logging to show error messages.
 
 ## New LambdaSharp SDK Features
 
