@@ -60,16 +60,31 @@ namespace LambdaSharp.SimpleQueueService {
         /// Delete a batch of message from an SQS queue. The Lambda function requires <c>sqs:DeleteMessageBatch</c> permission
         /// on the specified SQS URL.
         /// </summary>
-        /// <param name="queueUrl">SQS URL.</param>
+        /// <param name="queueArn">SQS ARN.</param>
         /// <param name="messages">Enumeration of <c>(string MessageId, string ReceiptHandle)</c> tuples specifying which messages to delete.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        public Task DeleteMessagesFromQueueAsync(string queueUrl, IEnumerable<(string MessageId, string ReceiptHandle)> messages) {
+        public Task DeleteMessagesFromQueueAsync(string queueArn, IEnumerable<(string MessageId, string ReceiptHandle)> messages) {
             return SqsClient.DeleteMessageBatchAsync(new DeleteMessageBatchRequest {
-                QueueUrl = queueUrl,
+                QueueUrl = AwsConverters.ConvertQueueArnToUrl(queueArn),
                 Entries = messages.Select(message =>
                     new DeleteMessageBatchRequestEntry(message.MessageId, message.ReceiptHandle)
                 ).ToList()
             });
+        }
+
+        /// <summary>
+        /// Determine how many times a message should be retried for a given SQS queue.
+        /// </summary>
+        /// <param name="queueArn">SQS ARN.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        public async Task<int> GetMaxRetriesForQueueAsync(string queueArn) {
+
+            // NOTE (2020-05-15, bjorg): by default, rely on an environment variable to determine the max number
+            //  of retries; an alternative would be to fetch the redrive policy from the queue instead.
+            if(!int.TryParse(Environment.GetEnvironmentVariable("MAX_QUEUE_RETRIES"), out var result)) {
+                result = 10;
+            }
+            return result;
         }
     }
 }
