@@ -1,3 +1,3 @@
 DeadLetterQueue: ""
-LoggingStream: ""
+LoggingFirehoseStream: ""
 CoreSecretsKey: ""
