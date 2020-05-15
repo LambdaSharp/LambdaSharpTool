@@ -248,7 +248,7 @@ namespace LambdaSharp.Tool.Model {
 
                 // assume key name is an alias and resolve it to its ARN
                 try {
-                    var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
+                    var response = Settings.KmsClient.DescribeKeyAsync(textSecret).GetAwaiter().GetResult();
                     _secrets.Add(response.KeyMetadata.Arn);
                     return true;
                 } catch(Exception e) {
@@ -739,7 +739,7 @@ namespace LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
-            var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).Result;
+            var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).GetAwaiter().GetResult();
 
             // validate module parameters
             AtLocation("Parameters", () => {

@@ -754,8 +754,8 @@ namespace LambdaSharp.Tool.Cli {
 
             // wait for both fetch operations to finish
             await Task.WhenAll(logStreamsTask, stacksWithFunctionsTask);
-            var logStreams = logStreamsTask.Result;
-            var stacksWithFunctions = stacksWithFunctionsTask.Result;
+            var logStreams = logStreamsTask.GetAwaiter().GetResult();
+            var stacksWithFunctions = stacksWithFunctionsTask.GetAwaiter().GetResult();
 
             // remove all the functions that were discovered inside a stack from the orphaned list of functions
             foreach(var function in stacksWithFunctions.SelectMany(stackWithFunctions => stackWithFunctions.Functions)) {

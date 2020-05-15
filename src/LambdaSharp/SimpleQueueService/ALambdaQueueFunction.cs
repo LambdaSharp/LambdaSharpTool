@@ -37,11 +37,6 @@ namespace LambdaSharp.SimpleQueueService {
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
 
         //--- Fields ---
-
-        // TODO: initialize max-retry value
-        private int? _maxMessageRetryCount;
-
-        //--- Fields ---
         private SQSEvent.SQSMessage _currentRecord;
 
         //--- Constructors ---
@@ -146,10 +141,7 @@ namespace LambdaSharp.SimpleQueueService {
                     // NOTE (2020-04-21, bjorg): delete message if error is not retriable (i.e. logic error) or
                     //  the message has reached it's maximum number of retries.
                     var deleteMessage = !(e is LambdaRetriableException)
-                        || (
-                            _maxMessageRetryCount.HasValue
-                            && (record.GetApproximateReceiveCount() >= _maxMessageRetryCount.Value)
-                        );
+                        || (record.GetApproximateReceiveCount() >= await Provider.GetMaxRetriesForQueueAsync(record.EventSourceArn));
 
                     // the intent is to delete the message
                     if(deleteMessage) {
@@ -191,7 +183,7 @@ namespace LambdaSharp.SimpleQueueService {
 
                 // delete all messages that were successfully processed to avoid them being tried again
                 await Provider.DeleteMessagesFromQueueAsync(
-                    AwsConverters.ConvertQueueArnToUrl(eventSourceArn),
+                    eventSourceArn,
                     successfulMessages.Select(message =>
                         (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
                     )

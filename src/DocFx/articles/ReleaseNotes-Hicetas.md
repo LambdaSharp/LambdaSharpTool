@@ -4,7 +4,9 @@ description: Release notes for LambdaSharp "Hicetas" (v0.8)
 keywords: release, notes, hicetas
 ---
 
-> TODO: document the JSON format for log records
+> TODO:
+> * DEBUG_LOGGING_ENABLED
+> * MAX_QUEUE_RETRIES
 
 
 # LambdaSharp "Hicetas" Release (v0.8.0.0) - TBD

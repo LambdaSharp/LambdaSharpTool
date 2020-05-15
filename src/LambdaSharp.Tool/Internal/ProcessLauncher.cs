@@ -65,8 +65,8 @@ namespace LambdaSharp.Tool.Internal {
                 process.WaitForExit();
                 var success = (process.ExitCode == 0);
                 if(showOutput || !success) {
-                    PrintLines(output.Result);
-                    PrintLines(error.Result);
+                    PrintLines(output.GetAwaiter().GetResult());
+                    PrintLines(error.GetAwaiter().GetResult());
                 }
                 return success;
             }
@@ -112,7 +112,7 @@ namespace LambdaSharp.Tool.Internal {
                 error = Task.Run(() => process.StandardError.ReadToEndAsync());
                 process.WaitForExit();
                 return (process.ExitCode == 0)
-                    ? output.Result
+                    ? output.GetAwaiter().GetResult()
                     : null;
             }
         }
