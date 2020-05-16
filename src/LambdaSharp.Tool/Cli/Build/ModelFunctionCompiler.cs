@@ -182,10 +182,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]"),
-                    StageDescription = new Humidifier.ApiGateway.DeploymentTypes.StageDescription {
-                        MetricsEnabled = true
-                    }
+                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]")
                 },
                 resourceExportAttribute: null,
                 dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
@@ -204,8 +201,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // RestApi stage depends on API gateway deployment and API gateway account
-            // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
-            //  the necessary permissions for logging
             _builder.AddResource(
                 parent: restApi,
                 name: "Stage",
@@ -220,7 +215,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             DataTraceEnabled = true,
                             HttpMethod = "*",
                             LoggingLevel = "INFO",
-                            ResourcePath = "/*"
+                            ResourcePath = "/*",
+                            MetricsEnabled = true
                         }
                     }.ToList(),
                     TracingEnabled = FnIf("XRayIsEnabled", true, false)
