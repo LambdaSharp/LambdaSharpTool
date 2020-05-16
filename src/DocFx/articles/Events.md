@@ -22,7 +22,7 @@ The following operational events are emitted:
 The LambdaSharp events follow the CloudWatch Events schema with some values consistently filled in so they can be used to subscribe to specific events reliably.
 
 ```yaml
-source: $MODULE_FULL_NAME
+source: LambdaSharp
 detail-type: $EVENT_TYPE
 detail: JSON # event type specific
 resources:

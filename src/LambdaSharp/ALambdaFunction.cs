@@ -958,10 +958,11 @@ namespace LambdaSharp {
         /// <summary>
         /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
         /// </summary>
+        /// <param name="source">Name of the event source.</param>
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void SendEvent<T>(string detailType, T details, IEnumerable<string> resources = null) {
+        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string> resources = null) {
 
             // augment event resources with LambdaSharp specific resources
             var lambdaResources = new List<string>(resources ?? Enumerable.Empty<string>()) {
@@ -975,7 +976,7 @@ namespace LambdaSharp {
             var record = new LambdaEventRecord {
                 Time = now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo),
                 EventBus = "default",
-                Source = Info.ModuleFullName,
+                Source = source,
                 DetailType = detailType,
                 Detail = LambdaSerializer.Serialize(details),
                 Resources = lambdaResources

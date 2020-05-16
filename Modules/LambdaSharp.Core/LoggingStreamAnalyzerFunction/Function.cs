@@ -451,7 +451,7 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
             int GetUtf8Length(string? text) => (text != null) ? Encoding.UTF8.GetByteCount(text) : 0;
         }
 
-        private void SendEvent(OwnerMetaData owner, LambdaEventRecord record) {
+        private void SendEventRecord(OwnerMetaData owner, LambdaEventRecord record) {
             var resources = new List<string> {
                 $"lambdasharp:stack:{owner?.ModuleId}",
                 $"lambdasharp:module:{owner?.Module}",
@@ -479,8 +479,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // publish error report to the event bus
             try {
-                SendEvent(SelfMetaData, new LambdaEventRecord {
-                    Source =  Info.ModuleFullName,
+                SendEventRecord(SelfMetaData, new LambdaEventRecord {
+                    Source =  "LambdaSharp",
                     DetailType = "LambdaError",
                     Detail = LambdaSerializer.Serialize(report)
                 });
@@ -499,8 +499,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
 
             // publish exception to the event bus
             try {
-                SendEvent(SelfMetaData, new LambdaEventRecord {
-                    Source = Info.ModuleFullName,
+                SendEventRecord(SelfMetaData, new LambdaEventRecord {
+                    Source = "LambdaSharp",
                     DetailType = "Exception",
                     Detail = LambdaSerializer.Serialize(new {
                         Message = exception?.Message,
@@ -531,9 +531,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         async Task ILogicDependencyProvider.SendErrorReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaErrorReport report) {
 
             // send parsed error report to event bus
-            SendEvent(owner, new LambdaEventRecord {
+            SendEventRecord(owner, new LambdaEventRecord {
                 Time = timestamp.ToRfc3339Timestamp(),
-                Source = owner.Module,
+                Source = "LambdaSharp",
                 DetailType = "LambdaError",
                 Detail = LambdaSerializer.Serialize(report)
             });
@@ -562,8 +562,8 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         async Task ILogicDependencyProvider.SendUsageReportAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaUsageRecord report) {
 
             // publish usage report to the event bus
-            SendEvent(owner, new LambdaEventRecord {
-                Source = owner.Module,
+            SendEventRecord(owner, new LambdaEventRecord {
+                Source = "LambdaSharp",
                 DetailType = "LambdaUsage",
                 Detail = LambdaSerializer.Serialize(report)
             });
@@ -581,9 +581,9 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         async Task ILogicDependencyProvider.SendMetricsAsync(OwnerMetaData owner, DateTimeOffset timestamp, LambdaMetricsRecord record) {
 
             // publish metrics to the event bus
-            SendEvent(owner, new LambdaEventRecord {
+            SendEventRecord(owner, new LambdaEventRecord {
                 Time = DateTimeOffset.FromUnixTimeMilliseconds(record.Aws.Timestamp).ToRfc3339Timestamp(),
-                Source = owner.Module,
+                Source = "LambdaSharp",
                 DetailType = "LambdaMetrics",
                 Detail = LambdaSerializer.Serialize(record)
             });
