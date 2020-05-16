@@ -4,9 +4,6 @@ if [ -z "$LAMBDASHARP" ]; then
     exit 1
 fi
 
-# never use suffix for tests
-unset LAMBDASHARP_VERSION_SUFFIX
-
 if [ -z "$1" ]; then
 
     # run everything

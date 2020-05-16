@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "FA58E4B29366F53E8284E834DC4E80C3"
+      "Default": "51B31DDB3387E4664E3A1A37D4A1CB34"
     }
   },
   "Resources": {
@@ -1026,7 +1026,7 @@
       "Version": "2019-07-04",
       "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "FA58E4B29366F53E8284E834DC4E80C3",
+      "TemplateChecksum": "51B31DDB3387E4664E3A1A37D4A1CB34",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
@@ -1160,7 +1160,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query:0.8.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.Twitter.Query:0.8.0-rc1@lambdasharp",
           "Type": "Nested"
         }
       ],
