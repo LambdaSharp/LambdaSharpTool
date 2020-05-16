@@ -181,6 +181,7 @@ namespace LambdaSharp.Tool.Cli {
             // check if a new installation is required
             var createNewTier = (settings.TierVersion == null);
             var updateExistingTier = forceDeploy;
+            var disableCoreServicesForUpgrade = false;
             if(!createNewTier && !updateExistingTier) {
 
                 // check if core services state was not specified
@@ -238,6 +239,7 @@ namespace LambdaSharp.Tool.Cli {
                     if(!updateExistingTier) {
                         return false;
                     }
+                    disableCoreServicesForUpgrade = true;
                 } else if(!forceDeploy) {
                     LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
@@ -261,6 +263,9 @@ namespace LambdaSharp.Tool.Cli {
 
                     // deployment tier core services need to be disabled
                     || (coreServices == CoreServices.Disabled)
+
+                    // we have to disable core services to upgrade
+                    || disableCoreServicesForUpgrade
                 ))
             ) {
 
