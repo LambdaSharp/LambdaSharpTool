@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0C8E70C83C635A30E7BC0F92995D084A"
+      "Default": "D1ECEEC2E22955D0E5D94C88D33FCE18"
     }
   },
   "Resources": {
@@ -701,9 +701,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        },
-        "StageDescription": {
-          "MetricsEnabled": true
         }
       },
       "DependsOn": [
@@ -726,6 +723,7 @@
             "DataTraceEnabled": true,
             "HttpMethod": "*",
             "LoggingLevel": "INFO",
+            "MetricsEnabled": true,
             "ResourcePath": "/*"
           }
         ],
@@ -986,7 +984,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.ApiGateway:1.0-DEV",
       "Description": "A sample module integrating with API Gateway",
-      "TemplateChecksum": "0C8E70C83C635A30E7BC0F92995D084A",
+      "TemplateChecksum": "D1ECEEC2E22955D0E5D94C88D33FCE18",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [

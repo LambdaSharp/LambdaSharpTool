@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "2E6ACBB262081B4942AAE5CB8A794799"
+      "Default": "088049C9F99694FEEDF23F42E9D0C4AB"
     }
   },
   "Resources": {
@@ -656,9 +656,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        },
-        "StageDescription": {
-          "MetricsEnabled": true
         }
       },
       "DependsOn": [
@@ -677,6 +674,7 @@
             "DataTraceEnabled": true,
             "HttpMethod": "*",
             "LoggingLevel": "INFO",
+            "MetricsEnabled": true,
             "ResourcePath": "/*"
           }
         ],
@@ -948,7 +946,7 @@
       "Version": "2019-07-04",
       "Module": "Sample.SlackCommand:1.0-DEV",
       "Description": "A sample module integrating with Slack",
-      "TemplateChecksum": "2E6ACBB262081B4942AAE5CB8A794799",
+      "TemplateChecksum": "088049C9F99694FEEDF23F42E9D0C4AB",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [

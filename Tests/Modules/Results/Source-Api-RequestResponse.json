@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "15BF1F5A7E7CE10D270E83EE3ADA235E"
+      "Default": "4768F65CB9CA72C8CB64809F17239EBD"
     }
   },
   "Resources": {
@@ -724,9 +724,6 @@
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
-        },
-        "StageDescription": {
-          "MetricsEnabled": true
         }
       },
       "DependsOn": [
@@ -750,6 +747,7 @@
             "DataTraceEnabled": true,
             "HttpMethod": "*",
             "LoggingLevel": "INFO",
+            "MetricsEnabled": true,
             "ResourcePath": "/*"
           }
         ],
@@ -1010,7 +1008,7 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "15BF1F5A7E7CE10D270E83EE3ADA235E",
+      "TemplateChecksum": "4768F65CB9CA72C8CB64809F17239EBD",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0-rc1",
       "ParameterSections": [
