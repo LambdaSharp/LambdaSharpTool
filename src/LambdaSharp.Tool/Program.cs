@@ -80,7 +80,7 @@ namespace LambdaSharp.Tool {
 
             // execute command line options and report any errors
             var stopwatch = Stopwatch.StartNew();
-            using(new AnsiTerminal(Settings.UseAnsiConsole)) {
+            using(Settings.AnsiTerminal = new AnsiTerminal()) {
                 try {
                     try {
                         app.Execute(args);

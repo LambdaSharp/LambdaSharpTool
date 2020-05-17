@@ -194,7 +194,7 @@ namespace LambdaSharp.Tool.Cli {
 
                         // validate options
                         if(directoryOption.Value() == null) {
-                            LogError("missing --assembly option");
+                            LogError("missing --directory option");
                             return;
                         }
                         if(!entryPointOption.Values.Any()) {
