@@ -35,6 +35,9 @@
 - name: S3 Log Records
   href: LogRecords.md
 
+- name: Debugging
+  href: Debugging.md
+
 - name: Samples
   href: Samples.md
 
