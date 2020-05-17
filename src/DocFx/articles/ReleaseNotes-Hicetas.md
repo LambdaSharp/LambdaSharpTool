@@ -93,10 +93,10 @@ Two new, but related, module variables were introduced to retrieve the deploymen
 > * Added CloudWatch metrics to `ALambdaQueueFunction<T>` base class.
 > * Added CloudWatch metrics to `ALambdaTopicFunction<T>` base class.
 > * Talk about custom metrics.
-> * High precision metrics for API Gateway enabled
+> * High precision metrics for API Gateway enabled (Enable Detailed CloudWatch Metrics)
 
 * Added [`ALambdaFunction.LogMetric(...)`](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) methods to emit custom CloudWatch metrics using the [embedded metric format](https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/CloudWatch_Embedded_Metric_Format_Specification.html).
-* Added [`ALambdaFunction.SendEvent(...)`](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
+* Added [`ALambdaFunction.SendEvent(...)`](xref:LambdaSharp.ALambdaFunction.SendEvent``1(System.String,System.String,``0,System.Collections.Generic.IEnumerable{System.String})) method to emit CloudWatch Events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
 * Added `LambdaSharp.Serialization.LambdaJsonSerializer`, which derives from the prescribed JSON serializer (i.e. `Newtonsoft.Json` until a future release).
 * Updated embedded CloudFormation spec to 13.0.0.
 * Marked `JsonSerializer` property as obsolete. Use `LambdaSerializer` instead.
