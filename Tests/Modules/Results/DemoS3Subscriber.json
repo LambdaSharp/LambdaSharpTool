@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "070258D2559CC13825C4D68F78FB1A99"
+      "Default": "21FF4001E19E7606D1762EBE0CBF5431"
     }
   },
   "Resources": {
@@ -743,7 +743,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1017,9 +1017,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "070258D2559CC13825C4D68F78FB1A99",
+      "TemplateChecksum": "21FF4001E19E7606D1762EBE0CBF5431",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Demo.S3Bucket Imports",
@@ -1107,7 +1107,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0-rc1@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0@lambdasharp",
           "Type": "Shared"
         }
       ],

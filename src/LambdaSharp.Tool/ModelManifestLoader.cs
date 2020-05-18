@@ -409,7 +409,7 @@ namespace LambdaSharp.Tool {
 
             // NOTE (2020-04-12, bjorg): some templates (like the bootstrap) are written in YAML instead of JSON
             if(!template.TrimStart().StartsWith("{")) {
-                return new ModuleNameMappings();
+                return null;
             }
 
             // parse template as a JSON object
@@ -418,25 +418,55 @@ namespace LambdaSharp.Tool {
                 cloudformation.TryGetValue("Metadata", out var metadataToken)
                 && (metadataToken is JObject metadata)
             ) {
-                if(metadata.TryGetValue("LambdaSharp::NameMappings", out var nameMappingsToken)) {
+                JToken nameMappingsToken;
+                if(metadata.TryGetValue("LambdaSharp::NameMappings", out nameMappingsToken)) {
                     var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
                     if(nameMappings.Version == ModuleNameMappings.CurrentVersion) {
                         return nameMappings;
                     }
-                    LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                    LogWarn($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
                     return null;
-                } else if(metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)) {
+                } else if(
+                    metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+                    && (manifestToken is JObject manifest)
+                    && manifest.TryGetValue("ResourceNameMappings", out nameMappingsToken)
+                ) {
 
                     // check if the name mappings are in the old manifest format (pre v0.7)
-                    var nameMappings = manifestToken.ToObject<ModuleNameMappings>();
+                    var nameMappings = nameMappingsToken.ToObject<ModuleNameMappings>();
                     if((nameMappings.Version != null) && (nameMappings.ResourceNameMappings != null) && (nameMappings.TypeNameMappings != null)) {
                         return nameMappings;
                     }
-                    LogError($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                    LogWarn($"Incompatible LambdaSharp name mappings version (found: {nameMappings.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
                     return null;
                 }
             }
-            LogError("CloudFormation file does not contain LambdaSharp name mappings");
+            LogWarn("CloudFormation file does not contain LambdaSharp name mappings");
+            return null;
+        }
+
+        public IEnumerable<string> GetArtifactsFromTemplate(string template) {
+
+            // NOTE (2020-04-12, bjorg): some templates (like the bootstrap) are written in YAML instead of JSON
+            if(!template.TrimStart().StartsWith("{")) {
+                return null;
+            }
+
+            // parse template as a JSON object
+            var cloudformation = JObject.Parse(template);
+            if(
+                cloudformation.TryGetValue("Metadata", out var metadataToken)
+                && (metadataToken is JObject metadata)
+                && metadata.TryGetValue("LambdaSharp::Manifest", out var manifestToken)
+            ) {
+                var manifest = manifestToken.ToObject<ModuleManifest>();
+                if(manifest.Version != null) {
+                    return manifest.Artifacts;
+                }
+                LogWarn($"Incompatible LambdaSharp manifest version (found: {manifest.Version ?? "<null>"}, expected: {ModuleNameMappings.CurrentVersion})");
+                return null;
+            }
+            LogWarn("CloudFormation file does not contain LambdaSharp artifacts");
             return null;
         }
 

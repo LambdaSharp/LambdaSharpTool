@@ -212,6 +212,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
+                    Program.ShowHelp = true;
                     Console.WriteLine(cmd.GetHelpText());
                 });
             });
@@ -854,15 +855,36 @@ namespace LambdaSharp.Tool.Cli {
                 return result;
             }
 
-            async Task<IEnumerable<(string Name, FunctionConfiguration Configuration)>> ListStackFunctionsAsync(string stackName)
-                => (await cfnClient.GetStackResourcesAsync(stackName))
-                    .Where(resource => resource.ResourceType == "AWS::Lambda::Function")
-                    .Select(resource => {
-                        globalFunctions.TryGetValue(resource.PhysicalResourceId, out var configuration);
-                        return (Name: resource.LogicalResourceId, Configuration: configuration);
-                    })
-                    .Where(tuple => tuple.Configuration != null)
-                    .ToList();
+            async Task<IEnumerable<(string Name, FunctionConfiguration Configuration)>> ListStackFunctionsAsync(string stackName) {
+                var result = new List<(string, FunctionConfiguration)>();
+                var request = new ListStackResourcesRequest {
+                    StackName = stackName
+                };
+                do {
+                    var attempts = 0;
+                again:
+                    try {
+                        var response = await cfnClient.ListStackResourcesAsync(request);
+                        result.AddRange(
+                            response.StackResourceSummaries
+                                .Where(resourceSummary => resourceSummary.ResourceType  == "AWS::Lambda::Function")
+                                .Select(summary => {
+                                    globalFunctions.TryGetValue(summary.PhysicalResourceId, out var configuration);
+                                    return (Name: summary.LogicalResourceId, Configuration: configuration);
+                                })
+                                .Where(tuple => tuple.Configuration != null)
+                        );
+                        request.NextToken = response.NextToken;
+                    } catch(AmazonCloudFormationException e) when(
+                        (e.Message == "Rate exceeded")
+                        && (++attempts < 30)
+                    ) {
+                        await Task.Delay(TimeSpan.FromSeconds(attempts));
+                        goto again;
+                    }
+                } while(request.NextToken != null);
+                return result;
+            }
 
             void PrintFunction(string name, FunctionConfiguration function) {
                 Console.Write("    ");

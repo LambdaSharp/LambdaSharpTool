@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0E98A91F17D8AD8990689DD0B7B1B34D"
+      "Default": "EADB18C51B23A88C64D9BEA8BCD2B0A0"
     }
   },
   "Resources": {
@@ -3108,7 +3108,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3338,9 +3338,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "0E98A91F17D8AD8990689DD0B7B1B34D",
+      "TemplateChecksum": "EADB18C51B23A88C64D9BEA8BCD2B0A0",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

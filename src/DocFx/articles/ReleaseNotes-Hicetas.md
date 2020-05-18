@@ -89,7 +89,7 @@ New module variables have been introduced that relate to the deployment. These i
 The CLI remains mostly unchanged from the previous release.
 
 ### Misc.
-* Updated embedded CloudFormation spec to 13.0.0.
+* Updated embedded CloudFormation spec to 14.3.0.
 * Enhanced API Gateway V2 WebSocket logging to show error messages.
 * Enabled detailed CloudWatch metrics for API Gateway deployments.
 * Enhanced `lash init` to highlight deployment tier name during stack updates.

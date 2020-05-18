@@ -19,6 +19,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS CloudFormation Lambda LambdaSharp Serverless DotNetCore</PackageTags>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
 
@@ -51,5 +52,8 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Resources\*" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 </Project>

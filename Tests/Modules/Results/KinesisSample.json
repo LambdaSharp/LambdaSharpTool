@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "E27E5991384703ECF8E3A78133A06F47"
+      "Default": "8810741816F5F2E61B11E248E3F455DF"
     }
   },
   "Resources": {
@@ -599,7 +599,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0-rc1"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -829,9 +829,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.Kinesis:1.0-DEV",
       "Description": "A sample module using Kinesis streams",
-      "TemplateChecksum": "E27E5991384703ECF8E3A78133A06F47",
+      "TemplateChecksum": "8810741816F5F2E61B11E248E3F455DF",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.8.0-rc1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

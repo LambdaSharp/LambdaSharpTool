@@ -68,6 +68,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
+                    Program.ShowHelp = true;
                     Console.WriteLine(cmd.GetHelpText());
                 });
             });
@@ -204,12 +205,26 @@ namespace LambdaSharp.Tool.Cli {
                     };
                 }).ToList();
 
-            // retrieve name mappings for template
+            // retrieve name mappings and artifacts for template
             var template = (await settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
                 StackName = module.Stack.StackName,
                 TemplateStage = TemplateStage.Original
             })).TemplateBody;
-            var nameMappings = new ModelManifestLoader(settings, module.Stack.StackName).GetNameMappingsFromTemplate(template);
+            var manifestLoader = new ModelManifestLoader(settings, module.Stack.StackName);
+            var nameMappings = manifestLoader.GetNameMappingsFromTemplate(template);
+            var artifacts = manifestLoader.GetArtifactsFromTemplate(template);
+
+            // ensure that all artifacts exist before updating (otherwise, the update will fail)
+            if(artifacts?.Any() ?? false) {
+                foreach(var artifact in artifacts) {
+                    if(!await settings.S3Client.DoesS3ObjectExistAsync(settings.DeploymentBucketName, artifact)) {
+                        LogError($"cannot update CloudFormation stack due to missing artifact; re-publish original artifacts or re-deploy module with new artifacts (missing: {artifact})");
+                    }
+                }
+                if(HasErrors) {
+                    return;
+                }
+            }
 
             // create change-set
             var now = DateTime.UtcNow;

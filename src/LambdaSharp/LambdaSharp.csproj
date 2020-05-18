@@ -17,6 +17,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
@@ -33,5 +34,8 @@
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 </Project>

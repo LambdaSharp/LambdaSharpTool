@@ -62,7 +62,8 @@ namespace LambdaSharp.Tool {
         public const string Reset = "\u001b[0m";
         public const string ClearEndOfLine = "\u001b[0K";
         private const string HideCursor = "\u001b[?25l";
-        private const string ShowCursor = "\u001b[?25h";        private const int WINDOWS_STD_OUTPUT_HANDLE = -11;
+        private const string ShowCursor = "\u001b[?25h";
+        private const int WINDOWS_STD_OUTPUT_HANDLE = -11;
         private const uint WINDOWS_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 0x0004;
         private const uint WINDOWS_DISABLE_NEWLINE_AUTO_RETURN = 0x0008;
 
