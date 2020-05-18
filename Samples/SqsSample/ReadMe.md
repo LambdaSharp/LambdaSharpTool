@@ -6,7 +6,7 @@ Before you begin, make sure to [setup your LambdaSharp CLI](https://lambdasharp.
 
 ## Module Definition
 
-Creating a function that is invoked by an SQS queue requires two steps. First, the SQS topic must either be created or referenced in the `Items` section. Second, the function must reference the parameter name in its `Sources` section using the `Sqs` attribute.
+Creating a function that is invoked by an SQS queue requires two steps. First, the SQS queue must either be created or referenced in the `Items` section. Second, the function must reference the parameter name in its `Sources` section using the `Sqs` attribute.
 
 Optionally, the `Sqs` attribute can specify the maximum number of messages to read from SQS.
 

@@ -6,7 +6,7 @@ keywords: cloudwatch, metrics, modules
 
 # LambdaSharp Module Metrics
 
-## Module: LambdaSharp.Core
+## Module [LambdaSharp.Core](~/modules/LambdaSharp-Core.md)
 
 Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be reported.
 

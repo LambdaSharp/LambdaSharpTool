@@ -39,7 +39,7 @@
     - name: LambdaUsage
       href: Events-LambdaUsage.md
 
-- name: S3 Log Records
+- name: Log Records
   href: LogRecords.md
 
 - name: Debugging

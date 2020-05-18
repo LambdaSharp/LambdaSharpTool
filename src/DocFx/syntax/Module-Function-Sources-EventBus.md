@@ -1,6 +1,6 @@
 ---
 title: CloudWatch Event Source Declaration - Function
-description: LambdaSharp YAML syntax for Amazon CloudWatch Topic event source
+description: LambdaSharp YAML syntax for Amazon CloudWatch EventBus event source
 keywords: amazon, cloudwatch, events, event bus, event source, declaration, lambda, syntax, yaml, cloudformation
 ---
 # CloudWatch Event Source
