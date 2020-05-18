@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "072996A8A055EB386969DC14A130E959"
+      "Default": "949518531E40F734C7AC3482A36D3730"
     }
   },
   "Resources": {
@@ -123,12 +123,26 @@
         "Description": "This function is invoked by CloudFormation (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.CustomResourceType:1.0-DEV",
+            "MODULE_INFO": "Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "ResourceHandler",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -277,6 +291,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -404,7 +428,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Sample.CustomResourceType:1.0-DEV",
+        "ModuleInfo": "Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -542,7 +566,7 @@
       },
       "Description": "Definition for MyNamespace::MyResource resource"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "Sample.CustomResourceType:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -551,7 +575,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -781,9 +805,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.CustomResourceType:1.0-DEV",
       "Description": "A sample module for defining a custom resource",
-      "TemplateChecksum": "072996A8A055EB386969DC14A130E959",
+      "TemplateChecksum": "949518531E40F734C7AC3482A36D3730",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

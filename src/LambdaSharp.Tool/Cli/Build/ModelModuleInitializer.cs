@@ -121,6 +121,60 @@ namespace LambdaSharp.Tool.Cli.Build {
                 allow: null,
                 encryptionContext: null
             );
+            _builder.AddVariable(
+                parent: moduleItem,
+                name: "Info",
+                description: "Module Fullname, Version, and Origin",
+                type: "String",
+                scope: null,
+                value: _builder.ModuleInfo.ToString(),
+                allow: null,
+                encryptionContext: null
+            );
+
+            // add module variables
+            var deploymentItem = _builder.AddVariable(
+                parent: null,
+                name: "Deployment",
+                description: "Deployment Variables",
+                type: "String",
+                scope: null,
+                value: "",
+                allow: null,
+                encryptionContext: null
+            );
+
+            // add deployment variables
+            _builder.AddVariable(
+                parent: deploymentItem,
+                name: "Tier",
+                description: "Deployment tier name",
+                type: "String",
+                scope: null,
+                value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefix"))),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: deploymentItem,
+                name: "TierLowercase",
+                description: "Deployment tier name in lowercase characters",
+                type: "String",
+                scope: null,
+                value: FnSelect("0", FnSplit("-", FnRef("DeploymentPrefixLowercase"))),
+                allow: null,
+                encryptionContext: null
+            );
+            _builder.AddVariable(
+                parent: deploymentItem,
+                name: "BucketName",
+                description: "Deployment S3 Bucket Name",
+                type: "String",
+                scope: null,
+                value: FnRef("DeploymentBucketName"),
+                allow: null,
+                encryptionContext: null
+            );
 
             // create module IAM role used by all functions
             var moduleRoleItem = _builder.AddResource(
@@ -166,7 +220,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _builder.AddVariable(
                 parent: moduleItem,
                 name: "LogRetentionInDays",
-                description: "Number days log entries are retained for",
+                description: "Number days CloudWatch Log streams are retained for",
                 type: "Number",
                 scope: null,
                 value: logRetentionInDays,
@@ -576,6 +630,17 @@ namespace LambdaSharp.Tool.Cli.Build {
                 condition: null
             );
 
+            // permission needed for posting events to the default event bus
+            _builder.AddGrant(
+                name: "EventBus",
+                awsType: null,
+                reference: FnSub("arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"),
+                allow: new[] {
+                    "events:PutEvents"
+                },
+                condition: null
+            );
+
             // check if lambdasharp specific resources need to be initialized
             var functions = _builder.Items.OfType<FunctionItem>().ToList();
             if(_builder.TryGetItem("Module::DeadLetterQueue", out _)) {
@@ -616,7 +681,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     scope: null,
                     allow: null,
                     properties: new Dictionary<string, object> {
-                        ["Module"] = _builder.Info,
+                        ["ModuleInfo"] = _builder.ModuleInfo.ToString(),
                         ["ModuleId"] = FnRef("AWS::StackName")
                     },
                     dependsOn: null,

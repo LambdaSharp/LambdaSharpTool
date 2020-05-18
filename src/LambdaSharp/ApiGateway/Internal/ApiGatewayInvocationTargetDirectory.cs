@@ -23,8 +23,8 @@ using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
+using Amazon.Lambda.Core;
 using LambdaSharp.Exceptions;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.ApiGateway.Internal {
 
@@ -35,24 +35,19 @@ namespace LambdaSharp.ApiGateway.Internal {
         public delegate object CreateTargetInstanceDelegate(Type type);
 
         //--- Class Methods ---
-        private static string SerializeJson(object value) => JsonConvert.SerializeObject(value);
-
         internal class InvocationTargetState {
 
             //--- Properties ---
             public string PathQueryParametersJson { get; set; }
         }
 
-        // TODO (2019-03-09, bjorg): I would prefer to use the Lambda serializer, but there is no-non generic version available (yet)
-        private static object DeserializeJson(string json, Type type) => JsonConvert.DeserializeObject(json, type);
-
-        private static Func<APIGatewayProxyRequest, InvocationTargetState, object> CreateParameterResolver(MethodInfo method, ParameterInfo parameter) {
+        private static Func<APIGatewayProxyRequest, InvocationTargetState, object> CreateParameterResolver(ILambdaSerializer serializer, MethodInfo method, ParameterInfo parameter) {
 
             // check if [FromUri] or [FromBody] attributes are present
             var hasFromUriAttribute = parameter.GetCustomAttribute<FromUriAttribute>() != null;
             var hasFromBodyAttribute = parameter.GetCustomAttribute<FromBodyAttribute>() != null;
             if(hasFromUriAttribute && hasFromBodyAttribute) {
-                throw new ApiGatewayInvocationTargetUnsupportedException($"{method.ReflectedType.FullName}::{method.Name}", $"parameter '{parameter.Name}' cannot have both [FromUri] and [FromBody] attributes");
+                throw new ApiGatewayInvocationTargetParameterException(method, parameter, "cannot have both [FromUri] and [FromBody] attributes");
             }
 
             // check if parameter is a proxy request
@@ -75,7 +70,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     if(parameter.IsOptional) {
                         getDefaultValue = () => parameter.DefaultValue;
                     } else if((Nullable.GetUnderlyingType(parameter.ParameterType) == null) && (parameter.ParameterType.IsValueType || parameter.ParameterType == typeof(string))) {
-                        getDefaultValue = () => throw new ApiGatewayInvocationTargetParameterException("missing value", parameter.Name);
+                        getDefaultValue = () => throw new ApiGatewayInvocationTargetParameterException(method, parameter, "missing value");
                     } else {
                         getDefaultValue = () => null;
                     }
@@ -93,7 +88,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                             try {
                                 return Convert.ChangeType(value, parameter.ParameterType);
                             } catch(FormatException) {
-                                throw new ApiGatewayInvocationTargetParameterException("invalid parameter format", parameter.Name);
+                                throw new ApiGatewayInvocationTargetParameterException(method, parameter, "invalid parameter format");
                             }
                         }
                         return getDefaultValue();
@@ -109,15 +104,15 @@ namespace LambdaSharp.ApiGateway.Internal {
                             if(state.PathQueryParametersJson == null) {
                                 var pathParameters = request.PathParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
                                 var queryStringParameters = request.QueryStringParameters ?? Enumerable.Empty<KeyValuePair<string, string>>();
-                                state.PathQueryParametersJson = SerializeJson(new Dictionary<string, string>(
+                                state.PathQueryParametersJson = serializer.Serialize(new Dictionary<string, string>(
                                     pathParameters.Union(queryStringParameters)
                                         .GroupBy(kv => kv.Key)
                                         .Select(grouping => grouping.First())
                                 ));
                             }
-                            return DeserializeJson(state.PathQueryParametersJson, parameter.ParameterType);
+                            return serializer.Deserialize(state.PathQueryParametersJson, parameter.ParameterType);
                         } catch {
-                            throw new ApiGatewayInvocationTargetParameterException("invalid path/query-string parameters", "query");
+                            throw new ApiGatewayInvocationTargetParameterException(method, parameter, "invalid path/query-string parameters format");
                         }
                     };
                 }
@@ -126,9 +121,9 @@ namespace LambdaSharp.ApiGateway.Internal {
                 // parameter represents the body of the request
                 return (request, state) => {
                     try {
-                        return DeserializeJson(request.Body, parameter.ParameterType);
+                        return serializer.Deserialize(request.Body, parameter.ParameterType);
                     } catch {
-                        throw new ApiGatewayInvocationTargetParameterException("invalid JSON document in request body", "request");
+                        throw new ApiGatewayInvocationTargetParameterException(method, parameter, "invalid JSON document in request body");
                     }
                 };
             }
@@ -136,12 +131,14 @@ namespace LambdaSharp.ApiGateway.Internal {
 
         //--- Fields ---
         private readonly CreateTargetInstanceDelegate _createInstance;
-        private readonly Dictionary<string, InvocationTargetDelegate> _mappings = new Dictionary<string, InvocationTargetDelegate>();
+        private readonly Dictionary<string, (InvocationTargetDelegate Delegate, bool IsAsync)> _mappings = new Dictionary<string, (InvocationTargetDelegate, bool)>();
         private readonly Dictionary<Type, object> _targets = new Dictionary<Type, object>();
+        private readonly ILambdaSerializer _serializer;
 
         //--- Constructors ---
-        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance) {
+        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance, ILambdaSerializer serializer) {
             _createInstance = createInstance ?? throw new ArgumentNullException(nameof(createInstance));
+            _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
 
         //--- Methods ---
@@ -158,6 +155,9 @@ namespace LambdaSharp.ApiGateway.Internal {
 
             // check if an invocation target already exists; otherwise create it
             var type = Assembly.Load(assemblyName).GetType(typeName);
+            if(type == null) {
+                throw new ArgumentException($"could not find type '{typeName}'", nameof(methodReference));
+            }
             if(!_targets.TryGetValue(type, out var target)) {
                 target = _createInstance(type);
                 _targets[type] = target;
@@ -170,19 +170,29 @@ namespace LambdaSharp.ApiGateway.Internal {
             }
 
             // add invocation delegate
-            _mappings.Add(key, CreateMethodDelegate(target, method));
+            var methodDelegate = CreateMethodDelegate(target, method, out var isAsync);
+            _mappings.Add(key, (methodDelegate, isAsync));
         }
 
-        public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget) => _mappings.TryGetValue(key, out invocationTarget);
+        public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget, out bool isAsync) {
+            if(_mappings.TryGetValue(key, out var tuple)) {
+                (invocationTarget, isAsync) = tuple;
+                return true;
+            } else {
+                (invocationTarget, isAsync) = (null, false);
+                return false;
+            }
+        }
 
-        private InvocationTargetDelegate CreateMethodDelegate(object target, MethodInfo method) {
+        private InvocationTargetDelegate CreateMethodDelegate(object target, MethodInfo method, out bool isAsync) {
 
-            // create function to resolve all method parameters
-            var resolvers = method.GetParameters().Select(parameter => CreateParameterResolver(method, parameter)).ToArray();
+            // create resolver function for each method parameter
+            var resolvers = method.GetParameters().Select(parameter => CreateParameterResolver(_serializer, method, parameter)).ToArray();
 
-            // create adapter to invoke custom method
+            // create method adapter based on method return type
             InvocationTargetDelegate methodAdapter;
             if(method.ReturnType == typeof(Task<APIGatewayProxyResponse>)) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -190,11 +200,12 @@ namespace LambdaSharp.ApiGateway.Internal {
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        ExceptionDispatchInfo.Capture(e.InnerException ?? e).Throw();
                         throw new Exception("should never happen");
                     }
                 };
             } else if(method.ReturnType == typeof(APIGatewayProxyResponse)) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -202,33 +213,39 @@ namespace LambdaSharp.ApiGateway.Internal {
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        ExceptionDispatchInfo.Capture(e.InnerException ?? e).Throw();
                         throw new Exception("should never happen");
                     }
                 };
             } else if(method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) {
-                var resolveReturnValue = method.ReturnType.GetProperty("Result");
+                isAsync = false;
+                var resolveReturnValue = method.ReturnType.GetProperty("Result") ?? throw new ShouldNeverHappenException("could not fetch 'Result' property of Task<> type");
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
                         var task = (Task)method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
                         await task;
                         var result = resolveReturnValue.GetValue(task);
-                        return new APIGatewayProxyResponse {
-                            StatusCode = 200,
-                            Body = SerializeJson(result),
-                            Headers = new Dictionary<string, string> {
-                                ["ContentType"] = "application/json"
+                        return (result != null)
+                            ? new APIGatewayProxyResponse {
+                                StatusCode = 200,
+                                Body = _serializer.Serialize<object>(result),
+                                Headers = new Dictionary<string, string> {
+                                    ["ContentType"] = "application/json"
+                                }
                             }
-                        };
+                            : new APIGatewayProxyResponse {
+                                StatusCode = 200
+                            };
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        ExceptionDispatchInfo.Capture(e.InnerException ?? e).Throw();
                         throw new Exception("should never happen");
                     }
                 };
             } else if(method.ReturnType == typeof(Task)) {
+                isAsync = true;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -240,10 +257,11 @@ namespace LambdaSharp.ApiGateway.Internal {
                     } catch(TargetInvocationException e) {
 
                         // rethrow target exception as an asynchronous endpoint exception
-                        throw new ApiGatewayAsyncEndpointException(e.InnerException);
+                        throw new ApiGatewayAsyncEndpointException(e.InnerException ?? e);
                     }
                 };
             } else if(method.ReturnType == typeof(void)) {
+                isAsync = true;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -254,30 +272,35 @@ namespace LambdaSharp.ApiGateway.Internal {
                     } catch(TargetInvocationException e) {
 
                         // rethrow target exception as an asynchronous endpoint exception
-                        throw new ApiGatewayAsyncEndpointException(e.InnerException);
+                        throw new ApiGatewayAsyncEndpointException(e.InnerException ?? e);
                     }
                 };
             } else if(!method.ReturnType.IsValueType && (method.ReturnType != typeof(string))) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
                         var result = method.Invoke(target, resolvers.Select(resolver => resolver(request, state)).ToArray());
-                        return new APIGatewayProxyResponse {
-                            StatusCode = 200,
-                            Body = SerializeJson(result),
-                            Headers = new Dictionary<string, string> {
-                                ["ContentType"] = "application/json"
+                        return (result != null)
+                            ? new APIGatewayProxyResponse {
+                                StatusCode = 200,
+                                Body = _serializer.Serialize<object>(result),
+                                Headers = new Dictionary<string, string> {
+                                    ["ContentType"] = "application/json"
+                                }
                             }
-                        };
+                            : new APIGatewayProxyResponse {
+                                StatusCode = 200
+                            };
                     } catch(TargetInvocationException e) {
 
                         // rethrow inner exception caused by reflection invocation
-                        ExceptionDispatchInfo.Capture(e.InnerException).Throw();
+                        ExceptionDispatchInfo.Capture(e.InnerException ?? e).Throw();
                         throw new Exception("should never happen");
                     }
                 };
             } else {
-                throw new ApiGatewayInvocationTargetUnsupportedException($"{method.ReflectedType.FullName}::{method.Name}", $"return type '{method.ReturnType.FullName}' is not supported");
+                throw new ApiGatewayInvocationTargetReturnException(method, $"unsupported type '{method.ReturnType.FullName}'");
             }
             return methodAdapter;
         }

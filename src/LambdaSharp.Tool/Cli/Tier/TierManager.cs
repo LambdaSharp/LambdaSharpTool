@@ -96,7 +96,11 @@ namespace LambdaSharp.Tool.Cli.Tier {
             if(moduleDetails.Any()) {
                 var columnsWithWidth = columns.Select((column, index) => (ColumnTitle: column.ColumnTitle, GetColumnValue: column.GetColumnValue, ColumnWidth: Math.Max(column.ColumnTitle.Length, moduleDetails.Max(module => column.GetColumnValue(module)?.Length ?? 0)) + ((index != (columns.Length - 1)) ? 4 : 0)));
                 Console.WriteLine();
-                Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier '{Settings.TierName}'");
+                if(Settings.UseAnsiConsole) {
+                    Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {AnsiTerminal.Yellow}{Settings.TierName}{AnsiTerminal.Reset}");
+                } else {
+                    Console.WriteLine($"Found {moduleDetails.Count():N0} modules for deployment tier {Settings.TierName}");
+                }
                 Console.WriteLine();
 
                 // compute the width of every column by getting the max string length of the column name and all possible values for the column

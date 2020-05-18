@@ -169,9 +169,21 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     if(!dryRun) {
 
-                        // delete contents of deployment bucket
+                        // check if this is the LambdaSharp.Core stack
                         if(module.DeploymentBucketArn != null) {
-                            await DeleteBucketContentsAsync(settings, module.DeploymentBucketArn);
+                            var resources = await settings.CfnClient.GetStackResourcesAsync(module.StackName);
+
+                            // check if this stack created its own deployment bucket
+                            var deploymentBucketName = resources.FirstOrDefault(resource => resource.LogicalResourceId == "DeploymentBucketResource")?.PhysicalResourceId;
+                            if(deploymentBucketName != null) {
+                                await DeleteBucketContentsAsync(settings, "deployment bucket", deploymentBucketName);
+                            }
+
+                            // check if this stack created its own logging bucket
+                            var loggingBucketName = resources.FirstOrDefault(resource => resource.LogicalResourceId == "LoggingBucketResource")?.PhysicalResourceId;
+                            if(loggingBucketName != null) {
+                                await DeleteBucketContentsAsync(settings, "logging bucket", loggingBucketName);
+                            }
                         }
 
                         // delete stack
@@ -200,6 +212,7 @@ namespace LambdaSharp.Tool.Cli {
                             return;
                         }
                         Console.WriteLine("=> Stack delete finished");
+                        Console.WriteLine();
                     }
 
                     // remove this stack as a dependent from all dependencies
@@ -213,22 +226,20 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        private async Task DeleteBucketContentsAsync(Settings settings, string bucketArn) {
+        private async Task DeleteBucketContentsAsync(Settings settings, string bucketDescription, string bucketArnOrName) {
 
             // extract bucket name from bucket ARN
-            var colonIndex = bucketArn.LastIndexOf(':');
+            var colonIndex = bucketArnOrName.LastIndexOf(':');
             string bucketName;
             if(colonIndex > 0) {
-                bucketName = bucketArn.Substring(colonIndex + 1);
+                bucketName = bucketArnOrName.Substring(colonIndex + 1);
             } else {
-
-                // NOTE (2020-04-08, bjorg): we allow this case just in case we get the bucket name directly instead of its ARN
-                bucketName = bucketArn;
+                bucketName = bucketArnOrName;
             }
             if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> Emptying deployment bucket {AnsiTerminal.Yellow}{bucketName}{AnsiTerminal.Reset}");
+                Console.WriteLine($"=> Emptying {bucketDescription} {AnsiTerminal.Yellow}{bucketName}{AnsiTerminal.Reset}");
             } else {
-                Console.WriteLine($"=> Emptying deployment tier bucket {bucketName}");
+                Console.WriteLine($"=> Emptying {bucketDescription} {bucketName}");
             }
 
             // enumerate all S3 objects

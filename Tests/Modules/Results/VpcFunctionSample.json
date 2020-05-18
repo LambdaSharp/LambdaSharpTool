@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "6B59A3E422E0D9784659696AA7525CAD"
+      "Default": "9874DD6AE2427AC31FABCAA674BA8F6D"
     }
   },
   "Resources": {
@@ -128,12 +128,26 @@
         },
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.VpcFunction:1.0-DEV",
+            "MODULE_INFO": "Sample.VpcFunction:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "MyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -290,6 +304,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "VpcNetworkInterfaces",
                   "Effect": "Allow",
                   "Action": [
@@ -427,7 +451,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Sample.VpcFunction:1.0-DEV",
+        "ModuleInfo": "Sample.VpcFunction:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -551,7 +575,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Sample.VpcFunction:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -560,7 +584,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -799,9 +823,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.VpcFunction:1.0-DEV",
       "Description": "A sample module defining a Lambda function in VPC",
-      "TemplateChecksum": "6B59A3E422E0D9784659696AA7525CAD",
+      "TemplateChecksum": "9874DD6AE2427AC31FABCAA674BA8F6D",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",

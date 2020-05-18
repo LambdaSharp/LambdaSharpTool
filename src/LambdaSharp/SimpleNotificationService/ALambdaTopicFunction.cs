@@ -17,13 +17,14 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using Amazon.Lambda.SNSEvents;
-using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
+using LambdaSharp.SimpleNotificationService.Extensions;
 
 namespace LambdaSharp.SimpleNotificationService {
 
@@ -33,6 +34,9 @@ namespace LambdaSharp.SimpleNotificationService {
     /// </summary>
     /// <typeparam name="TMessage">The SNS topic message type.</typeparam>
     public abstract class ALambdaTopicFunction<TMessage> : ALambdaFunction {
+
+        //--- Fields ---
+        private SNSEvent.SNSMessage _currentRecord;
 
         //--- Constructors ---
 
@@ -58,7 +62,7 @@ namespace LambdaSharp.SimpleNotificationService {
         /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>. Otherwise, it returns <c>null</c>.
         /// </remarks>
         /// <value>The <see cref="SNSEvent.SNSMessage"/> instance.</value>
-        protected SNSEvent.SNSMessage CurrentRecord { get; private set; }
+        protected SNSEvent.SNSMessage CurrentRecord => _currentRecord;
 
         //--- Abstract Methods ---
 
@@ -75,12 +79,12 @@ namespace LambdaSharp.SimpleNotificationService {
         /// The <see cref="Deserialize(string)"/> method converts the SNS topic message from string to a typed instance.
         /// </summary>
         /// <remarks>
-        /// This method invokes <see cref="ALambdaFunction.DeserializeJson{TMessage}(string)"/> to convert the SNS topic message string
+        /// This method invokes <see cref="Amazon.Lambda.Core.ILambdaSerializer.Deserialize{TMessage}(Stream)"/> to convert the SNS topic message string
         /// into a <paramtyperef name="TMessage"/> instance. Override this method to provide a custom message deserialization implementation.
         /// </remarks>
         /// <param name="body">The SNS topic message.</param>
         /// <returns>The deserialized SNS topic message.</returns>
-        public virtual TMessage Deserialize(string body) => DeserializeJson<TMessage>(body);
+        public virtual TMessage Deserialize(string body) => LambdaSerializer.Deserialize<TMessage>(body);
 
         /// <summary>
         /// The <see cref="ProcessMessageStreamAsync(Stream)"/> method is overridden to
@@ -99,29 +103,57 @@ namespace LambdaSharp.SimpleNotificationService {
             using(var reader = new StreamReader(stream)) {
                 snsEventBody = reader.ReadToEnd();
             }
+            var stopwatch = Stopwatch.StartNew();
+            var metrics = new List<LambdaMetric>();
 
             // process received sns record (there is only ever one)
             try {
 
                 // sns event deserialization
                 LogInfo("deserializing SNS event");
-                var snsEvent = DeserializeJson<SNSEvent>(snsEventBody);
-                CurrentRecord = snsEvent.Records.First().Sns;
+                try {
+                    var snsEvent = LambdaSerializer.Deserialize<SNSEvent>(snsEventBody);
+                    _currentRecord = snsEvent.Records.First().Sns;
 
-                // message deserialization
-                LogInfo("deserializing message");
-                var message = Deserialize(CurrentRecord.Message);
+                    // message deserialization
+                    LogInfo("deserializing message");
+                    var message = Deserialize(CurrentRecord.Message);
 
-                // process message
-                LogInfo("processing message");
-                await ProcessMessageAsync(message);
-                return "Ok".ToStream();
-            } catch(Exception e) when(!(e is LambdaRetriableException)) {
-                LogError(e);
-                await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SNS, snsEventBody, e);
-                return $"ERROR: {e.Message}".ToStream();
+                    // process message
+                    LogInfo("processing message");
+                    await ProcessMessageAsync(message);
+
+                    // record successful processing metrics
+                    stopwatch.Stop();
+                    var now = DateTimeOffset.UtcNow;
+                    metrics.Add(("MessageSuccess.Count", 1, LambdaMetricUnit.Count));
+                    metrics.Add(("MessageSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
+                    metrics.Add(("MessageSuccess.Lifespan", (now - CurrentRecord.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
+                    return "Ok".ToStream();
+                } catch(Exception e) {
+                    LogError(e);
+                    try {
+
+                        // attempt to send failed message to the dead-letter queue
+                        await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SQS, LambdaSerializer.Serialize(snsEventBody), e);
+
+                        // record failed processing metrics
+                        metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
+                    } catch {
+
+                        // NOTE (2020-04-22, bjorg): since the message could not be sent to the dead-letter queue,
+                        //  the next best action is to let Lambda retry it; unfortunately, there is no way
+                        //  of knowing how many attempts have occurred already.
+
+                        // unable to forward message to dead-letter queue; report failure to lambda so it can retry
+                        metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
+                        throw;
+                    }
+                    return $"ERROR: {e.Message}".ToStream();
+                }
             } finally {
-                CurrentRecord = null;
+                _currentRecord = null;
+                LogMetric(metrics);
             }
         }
     }

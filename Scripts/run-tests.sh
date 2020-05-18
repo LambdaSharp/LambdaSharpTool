@@ -4,9 +4,6 @@ if [ -z "$LAMBDASHARP" ]; then
     exit 1
 fi
 
-# never use suffix for tests
-unset LAMBDASHARP_VERSION_SUFFIX
-
 if [ -z "$1" ]; then
 
     # run everything
@@ -102,8 +99,10 @@ if [ -z "$1" ]; then
         $LAMBDASHARP/Samples/ApiInvokeSample \
         $LAMBDASHARP/Samples/CustomResourceTypeSample \
         $LAMBDASHARP/Samples/DynamoDBSample \
+        $LAMBDASHARP/Samples/EventSample \
         $LAMBDASHARP/Samples/FinalizerSample \
         $LAMBDASHARP/Samples/KinesisSample \
+        $LAMBDASHARP/Samples/MetricSample \
         $LAMBDASHARP/Samples/MacroSample \
         $LAMBDASHARP/Samples/S3IOSample \
         $LAMBDASHARP/Samples/S3SubscriptionSample \

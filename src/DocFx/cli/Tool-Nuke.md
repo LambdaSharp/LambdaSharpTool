@@ -5,7 +5,7 @@ keywords: cli, nuke, module, deployment, tier
 ---
 # Delete Deployment Tier
 
-The `nuke` command is used to delete all module deployments from a deployment tier, including `LambdaSharp.Core` and the deployment bucket.
+The `nuke` command is used to delete all CloudFormation stacks from a deployment tier, including `LambdaSharp.Core` and the deployment bucket.
 
 The user will have to confirm the operation twice, including confirming the deployment tier name, unless the `--confirm-tier` or `--dryrun` options are used.
 
@@ -69,9 +69,9 @@ lash nuke --tier Sandbox
 
 Output:
 ```
-LambdaSharp CLI (v0.7.0.13) - Delete a LambdaSharp deployment tier
+LambdaSharp CLI (v0.7.0.15) - Delete a LambdaSharp deployment tier
 => Inspecting deployment tier Sandbox
-=> Found 2 module deployments to delete
+=> Found 2 CloudFormation stacks to delete
 
   LambdaSharp-S3-IO
   LambdaSharp-Core

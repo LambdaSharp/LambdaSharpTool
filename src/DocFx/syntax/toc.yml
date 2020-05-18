@@ -45,6 +45,9 @@
         - name: DynamoDB
           href: Module-Function-Sources-DynamoDB.md
 
+        - name: Event
+          href: Module-Function-Sources-EventBus.md
+
         - name: Kinesis Stream
           href: Module-Function-Sources-Kinesis.md
 

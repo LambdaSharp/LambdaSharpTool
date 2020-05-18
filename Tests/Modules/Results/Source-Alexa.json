@@ -71,7 +71,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "DCCD71ECA198D0E82D37280177C694D9"
+      "Default": "19851FE08B5E5966526047869C958CE7"
     }
   },
   "Resources": {
@@ -127,12 +127,26 @@
         "Description": "My function (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Test.TestModule:1.0-DEV",
+            "MODULE_INFO": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -281,6 +295,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -408,7 +432,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Test.TestModule:1.0-DEV",
+        "ModuleInfo": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -574,7 +598,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -583,7 +607,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -829,9 +853,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "DCCD71ECA198D0E82D37280177C694D9",
+      "TemplateChecksum": "19851FE08B5E5966526047869C958CE7",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",

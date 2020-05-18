@@ -21,7 +21,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
-using Amazon.Lambda.Core;
 using LambdaSharp.CustomResource;
 
 namespace LambdaSharp.Finalizer {
@@ -86,7 +85,7 @@ namespace LambdaSharp.Finalizer {
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessCreateResourceAsync(Request<FinalizerProperties> request) {
-            await CreateDeployment(request.ResourceProperties);
+            await CreateDeployment(request.ResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes> {
                 PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()
@@ -125,9 +124,9 @@ namespace LambdaSharp.Finalizer {
                     return new Response<FinalizerAttributes>();
                 }
             } catch(Exception e) {
-                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId);
+                LogErrorAsInfo(e, "unable to describe stack {0} to determine if an update or delete operation is being performed", request.StackId ?? "<MISSING>");
             }
-            await DeleteDeployment(request.ResourceProperties);
+            await DeleteDeployment(request.ResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes>();
         }
 
@@ -141,7 +140,7 @@ namespace LambdaSharp.Finalizer {
         /// This method cannot be overridden.
         /// </remarks>
         public override sealed async Task<Response<FinalizerAttributes>> ProcessUpdateResourceAsync(Request<FinalizerProperties> request) {
-            await UpdateDeployment(request.ResourceProperties, request.OldResourceProperties);
+            await UpdateDeployment(request.ResourceProperties ?? new FinalizerProperties(), request.OldResourceProperties ?? new FinalizerProperties());
             return new Response<FinalizerAttributes> {
                 PhysicalResourceId = FINALIZER_PHYSICAL_ID,
                 Attributes = new FinalizerAttributes()

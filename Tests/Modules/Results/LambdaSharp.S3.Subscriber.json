@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AF5413834F7FE22F36E7D18BF59E08C7"
+      "Default": "17AC5E2179FF77FC0BBB387E6F2A2235"
     }
   },
   "Resources": {
@@ -127,12 +127,26 @@
         "Description": "LambdaSharp S3 Subscription handler (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.S3.Subscriber:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "ResourceHandler",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -207,7 +221,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -314,6 +328,16 @@
                     "xray:PutTraceSegments"
                   ],
                   "Resource": "*"
+                },
+                {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
                 },
                 {
                   "Sid": "DeploymentBucketReadOnly",
@@ -443,7 +467,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
+        "ModuleInfo": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -470,7 +494,7 @@
           "Fn::Sub": "/aws/lambda/${ResourceHandler}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "128",
         "FunctionMaxDuration": "30"
@@ -606,7 +630,7 @@
       },
       "Description": "Resource type for S3 bucket subscriptions"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "LambdaSharp.S3.Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -615,7 +639,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -845,9 +869,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.S3.Subscriber:1.0-DEV",
       "Description": "LambdaSharp S3 Lambda Function Subscriber",
-      "TemplateChecksum": "AF5413834F7FE22F36E7D18BF59E08C7",
+      "TemplateChecksum": "17AC5E2179FF77FC0BBB387E6F2A2235",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

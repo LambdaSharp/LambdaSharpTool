@@ -86,40 +86,58 @@ namespace LambdaSharp.Tool {
         private IntPtr _consoleStandardOut;
         private uint _originaConsoleMode;
 
-        //--- Constructors ---
-        public AnsiTerminal(bool enableAnsiOutput) {
-            _enableAnsiOutput = enableAnsiOutput;
-            if(_enableAnsiOutput && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
-                SwitchWindowsConsoleToAnsi();
-            }
-            if(_enableAnsiOutput) {
-                Console.Write(HideCursor);
+        //--- Properties ---
+        public bool Enabled {
+            get => _enableAnsiOutput && _switchedToAnsi;
+            set {
+                if(value) {
+                    if(_enableAnsiOutput) {
+
+                        // nothing to do
+                        return;
+                    }
+
+                    // enable ANSI output on Windows
+                    if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows)) {
+                        _consoleStandardOut = GetStdHandle(WINDOWS_STD_OUTPUT_HANDLE);
+                        _switchedToAnsi = GetConsoleMode(_consoleStandardOut, out _originaConsoleMode)
+                            && SetConsoleMode(
+                                _consoleStandardOut,
+                                _originaConsoleMode
+                                | WINDOWS_ENABLE_VIRTUAL_TERMINAL_PROCESSING
+                                | WINDOWS_DISABLE_NEWLINE_AUTO_RETURN
+                            );
+                    } else {
+                        _switchedToAnsi = true;
+                    }
+
+                    // hide the cursor by default when turning ANSI on
+                    if(_switchedToAnsi) {
+                        Console.Write(HideCursor);
+                    }
+                } else {
+                    if(!_enableAnsiOutput) {
+
+                        // nothing to do
+                        return;
+                    }
+
+                    // show cursor by default when turning ANSI off
+                    if(_switchedToAnsi) {
+                        Console.Write(ShowCursor);
+                    }
+                    if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && _switchedToAnsi) {
+                        SetConsoleMode(_consoleStandardOut, _originaConsoleMode);
+                    }
+                    _switchedToAnsi = false;
+                }
+                _enableAnsiOutput = value;
             }
         }
 
         //--- Methods ---
         public void Dispose() {
-            if(_enableAnsiOutput) {
-                Console.Write(ShowCursor);
-            }
-            RestoreWindowsConsoleSettings();
-        }
-
-        private void SwitchWindowsConsoleToAnsi() {
-            _consoleStandardOut = GetStdHandle(WINDOWS_STD_OUTPUT_HANDLE);
-            _switchedToAnsi = GetConsoleMode(_consoleStandardOut, out _originaConsoleMode)
-                && SetConsoleMode(
-                    _consoleStandardOut,
-                    _originaConsoleMode
-                    | WINDOWS_ENABLE_VIRTUAL_TERMINAL_PROCESSING
-                    | WINDOWS_DISABLE_NEWLINE_AUTO_RETURN
-                );
-        }
-
-        private void RestoreWindowsConsoleSettings() {
-            if(_switchedToAnsi) {
-                SetConsoleMode(_consoleStandardOut, _originaConsoleMode);
-            }
+            Enabled = false;
         }
     }
 }

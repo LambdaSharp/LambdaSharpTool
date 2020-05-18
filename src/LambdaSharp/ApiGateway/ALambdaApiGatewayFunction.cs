@@ -18,10 +18,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
+using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
 
 namespace LambdaSharp.ApiGateway {
@@ -54,6 +56,7 @@ namespace LambdaSharp.ApiGateway {
 
         //--- Fields ---
         private ApiGatewayInvocationTargetDirectory _directory;
+        private APIGatewayProxyRequest _currentRequest;
 
         //--- Constructors ---
 
@@ -77,7 +80,7 @@ namespace LambdaSharp.ApiGateway {
         /// This property is only set during the invocation of <see cref="ProcessMessageAsync(APIGatewayProxyRequest)"/>. Otherwise, it returns <c>null</c>.
         /// </remarks>
         /// <value>The <see cref="APIGatewayProxyRequest"/> instance.</value>
-        protected APIGatewayProxyRequest CurrentRequest { get; private set; }
+        protected APIGatewayProxyRequest CurrentRequest => _currentRequest;
 
         //--- Methods ---
 
@@ -93,10 +96,16 @@ namespace LambdaSharp.ApiGateway {
             //  initialization so that 'CreateInvocationTargetInstance()' can access the environment variables if need be.
 
             // read optional api-gateway-mappings file
-            _directory = new ApiGatewayInvocationTargetDirectory(CreateInvocationTargetInstance);
+            _directory = new ApiGatewayInvocationTargetDirectory(CreateInvocationTargetInstance, LambdaSerializer);
             if(File.Exists("api-mappings.json")) {
-                var mappings = DeserializeJson<ApiGatewayInvocationMappings>(File.ReadAllText("api-mappings.json"));
+                var mappings = LambdaSerializer.Deserialize<ApiGatewayInvocationMappings>(File.ReadAllText("api-mappings.json"));
+                if(mappings.Mappings == null) {
+                    throw new InvalidDataException("missing 'Mappings' property in 'api-mappings.json' file");
+                }
                 foreach(var mapping in mappings.Mappings) {
+                    if(mapping.Method == null) {
+                        throw new InvalidDataException("missing 'Method' property in 'api-mappings.json' file");
+                    }
                     if(mapping.RestApi != null) {
                         LogInfo($"Mapping REST API '{mapping.RestApi}' to {mapping.Method}");
                         _directory.Add(mapping.RestApi, mapping.Method);
@@ -117,38 +126,69 @@ namespace LambdaSharp.ApiGateway {
         /// <param name="request">The <see cref="APIGatewayProxyRequest"/> instance.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<APIGatewayProxyResponse> ProcessMessageAsync(APIGatewayProxyRequest request) {
+            if(_directory == null) {
+                throw new ShouldNeverHappenException();
+            }
 
             // NOTE (2020-02-19, bjorg): we rewrite the headers' dictionary to make it case-insensitive
-            request.Headers = new Dictionary<string, string>(request.Headers, StringComparer.InvariantCultureIgnoreCase);
+            request.Headers = (request.Headers != null)
+                ? new Dictionary<string, string>(request.Headers, StringComparer.InvariantCultureIgnoreCase)
+                : new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
             // handle request
-            CurrentRequest = request;
+            _currentRequest = request;
             APIGatewayProxyResponse response;
             var signature = "<null>";
+            IEnumerable<string> dimensionNames = null;
+            Dictionary<string, string> dimensionValues = null;
             try {
                 ApiGatewayInvocationTargetDirectory.InvocationTargetDelegate invocationTarget;
+                bool isAsync;
                 var requestContext = request.RequestContext;
+                var stopwatch = Stopwatch.StartNew();
 
                 // check if this invocation is a REST API request
                 if(requestContext.ResourcePath != null) {
 
                     // this is a REST API request
                     signature = $"{requestContext.HttpMethod}:{requestContext.ResourcePath}";
-                    if(!_directory.TryGetInvocationTarget(signature, out invocationTarget)) {
+                    if(!_directory.TryGetInvocationTarget(signature, out invocationTarget, out isAsync)) {
 
                         // check if a generic HTTP method entry exists
-                        _directory.TryGetInvocationTarget($"ANY:{requestContext.ResourcePath}", out invocationTarget);
+                        _directory.TryGetInvocationTarget($"ANY:{requestContext.ResourcePath}", out invocationTarget, out isAsync);
+                    }
+
+                    // set additional metrics dimensions for async invocations
+                    if(isAsync) {
+                        dimensionNames = new[] {
+                            "Stack,Method,Resource"
+                        };
+                        dimensionValues = new Dictionary<string, string> {
+                            ["Method"] = requestContext.HttpMethod,
+                            ["Resource"] = requestContext.ResourcePath
+                        };
                     }
                 } else if(requestContext.RouteKey != null) {
 
                     // this is a WebSocket request
                     signature = requestContext.RouteKey;
-                    _directory.TryGetInvocationTarget(signature, out invocationTarget);
+                    _directory.TryGetInvocationTarget(signature, out invocationTarget, out isAsync);
+
+                    // set additional metrics dimensions for async invocations
+                    if(isAsync) {
+                        dimensionNames = new[] {
+                            "Stack,Route"
+                        };
+                        dimensionValues = new Dictionary<string, string> {
+                            ["Route"] = requestContext.RouteKey
+                        };
+                    }
                 } else {
 
                     // could not determine the request type
                     signature = "<undetermined>";
                     invocationTarget = null;
+                    isAsync = false;
                 }
 
                 // invoke invocation target or derived handler
@@ -158,13 +198,27 @@ namespace LambdaSharp.ApiGateway {
                 } else {
                     response = await ProcessProxyRequestAsync(request);
                 }
+
+                // log metrics for async functions since they are not captured by the detailed API Gateway metrics
+                if(isAsync) {
+                    LogMetric(new LambdaMetric[] {
+                        ("AsyncRequestSuccess.Count", 1, LambdaMetricUnit.Count),
+                        ("AsyncRequestSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds)
+                    }, dimensionNames, dimensionValues);
+                }
                 LogInfo($"finished with status code {response.StatusCode}");
             } catch(ApiGatewayAsyncEndpointException e) {
 
                 // exception was raised by an asynchronous endpoint; the failure needs to be recorded for playback
                 LogError(e, $"async route '{signature}' threw {e.GetType()}");
-                await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, SerializeJson(request), e);
-                return CreateInvocationExceptionResponse(request, e.InnerException);
+                try {
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, LambdaSerializer.Serialize(request), e);
+                    LogMetric("AsyncRequestDead.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                } catch {
+                    LogMetric("AsyncRequestFailed.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                    throw;
+                }
+                return CreateInvocationExceptionResponse(request, e.InnerException ?? e);
             } catch(ApiGatewayInvocationTargetParameterException e) {
                 LogInfo($"invalid target invocation parameter '{e.ParameterName}': {e.Message}");
                 response = CreateBadParameterResponse(request, e.ParameterName, e.Message);
@@ -175,7 +229,7 @@ namespace LambdaSharp.ApiGateway {
                 LogError(e, $"route '{signature}' threw {e.GetType()}");
                 response = CreateInvocationExceptionResponse(request, e);
             } finally {
-                CurrentRequest = null;
+                _currentRequest = null;
             }
             return response;
         }
@@ -211,7 +265,7 @@ namespace LambdaSharp.ApiGateway {
         public virtual object CreateInvocationTargetInstance(Type type) {
             return (type == GetType())
                 ? this
-                : Activator.CreateInstance(type, new[] { this });
+                : (Activator.CreateInstance(type, new[] { this }) ?? throw new ShouldNeverHappenException());
         }
 
         /// <summary>
@@ -347,18 +401,18 @@ namespace LambdaSharp.ApiGateway {
         /// </code>
         /// </example>
         protected virtual APIGatewayProxyResponse CreateResponse(int statusCode, string message) {
-            var response = (CurrentRequest?.RequestContext.ConnectionId != null)
+            var response = (_currentRequest?.RequestContext.ConnectionId != null)
                 ? (object)new {
                     message = message,
-                    connectionId = CurrentRequest.RequestContext.ConnectionId,
-                    requestId = CurrentRequest.RequestContext.RequestId
+                    connectionId = _currentRequest.RequestContext.ConnectionId,
+                    requestId = _currentRequest.RequestContext.RequestId
                 }
                 : new {
                     message = message
                 };
             return new APIGatewayProxyResponse {
                 StatusCode = statusCode,
-                Body = SerializeJson(response),
+                Body = LambdaSerializer.Serialize<object>(response),
                 Headers = new Dictionary<string, string> {
                     ["ContentType"] = "application/json"
                 }

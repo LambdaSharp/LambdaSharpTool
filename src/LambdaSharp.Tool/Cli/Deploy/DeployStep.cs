@@ -227,6 +227,12 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 }
             }
 
+            // deployment bucket must always be set to match deployment tier in case it changed because LambdaSharp.Core was recreated
+            stackParameters["DeploymentBucketName"] = new CloudFormationParameter {
+                ParameterKey = "DeploymentBucketName",
+                ParameterValue = Settings.DeploymentBucketName
+            };
+
             // add all provided parameters
             if(parameters != null) {
                 foreach(var parameter in parameters) {

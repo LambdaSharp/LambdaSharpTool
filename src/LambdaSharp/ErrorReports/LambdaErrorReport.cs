@@ -16,10 +16,8 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
+using LambdaSharp.Records;
 
 namespace LambdaSharp.ErrorReports {
 
@@ -27,34 +25,39 @@ namespace LambdaSharp.ErrorReports {
     /// The <see cref="LambdaErrorReport"/> class defines a structured Lambda log entry
     /// for runtime errors and warnings.
     /// </summary>
-    public class LambdaErrorReport {
+    public class LambdaErrorReport : ALambdaRecord {
+
+        //--- Constructors ---
+
+        /// <summary>
+        /// Create a new <see cref="LambdaErrorReport"/> instance.
+        /// </summary>
+        public LambdaErrorReport() {
+            Type = "LambdaError";
+            Version = "2020-05-05";
+        }
 
         //--- Properties ---
-
-        // Report
-
-        /// <summary>
-        /// The <see cref="Source"/> property determines the source of the log entry.
-        /// The value is always <c>"LambdaError"</c> for instance of <see cref="LambdaErrorReport"/>.
-        /// </summary>
-        /// <value>The source of the log entry.</value>
-        public string Source { get; set; } = "LambdaError";
-
-        /// <summary>
-        /// The <see cref="Version"/> property determines the format version of the Lambda error log entry.
-        /// </summary>
-        /// <value>The format version.</value>
-        public string Version { get; set; } = "2018-12-31";
 
         // Origin
 
         /// <summary>
-        /// The <see cref="Module"/> property describes the LambdaSharp module name, version, and origin.
+        /// The <see cref="ModuleInfo"/> property describes the LambdaSharp module name, version, and origin.
         /// </summary>
         /// <value>The LambdaSharp module name and version.</value>
         /// <example>
         /// Sample module name and version:
         /// <code>My.AcmeModule:1.0-Dev@origin</code>
+        /// </example>
+        public string ModuleInfo { get; set; }
+
+        /// <summary>
+        /// The <see cref="Module"/> property describes the LambdaSharp module name.
+        /// </summary>
+        /// <value>The LambdaSharp module name.</value>
+        /// <example>
+        /// Sample module name:
+        /// <code>My.AcmeModule</code>
         /// </example>
         public string Module { get; set; }
 
@@ -149,15 +152,15 @@ namespace LambdaSharp.ErrorReports {
         public string Level { get; set; }
 
         /// <summary>
-        /// The <see cref="Fingerprint"/> property holds a unique value by which to group related error log entries.
+        /// The <see cref="Fingerprint"/> property holds a unique value by which to group related LambdaError records.
         /// </summary>
         /// <value>The log entry fingerprint.</value>
         public string Fingerprint { get; set; }
 
         /// <summary>
-        /// The <see cref="Timestamp"/> property holds the UNIX epoch when the error log entry was generated.
+        /// The <see cref="Timestamp"/> property holds the UNIX epoch in milliseconds when the error log entry was generated.
         /// </summary>
-        /// <value>The UNIX epoch timestamp.</value>
+        /// <value>The UNIX epoch in milliseconds timestamp.</value>
         public long Timestamp { get; set; }
 
         /// <summary>
@@ -167,8 +170,7 @@ namespace LambdaSharp.ErrorReports {
         public string Message { get; set; }
 
         /// <summary>
-        /// The <see cref="Raw"/> property holds the unprocessed error log entry. This property
-        /// is only set if the <see cref="Traces"/> property is <c>null</c>.
+        /// The <see cref="Raw"/> property holds the unprocessed error log entry.
         /// </summary>
         /// <value>The unprocessed error log entry.</value>
         public string Raw { get; set; }

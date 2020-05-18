@@ -24,6 +24,11 @@ namespace LambdaSharp.Logger {
     public enum LambdaLogLevel {
 
         /// <summary>
+        /// No error occurred. This log entry is for debugging purposes only.
+        /// </summary>
+        DEBUG,
+
+        /// <summary>
         /// No error occurred. This log entry is for informational purposes only.
         /// </summary>
         INFO,

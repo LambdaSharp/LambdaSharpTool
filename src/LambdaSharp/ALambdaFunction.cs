@@ -20,10 +20,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Net.Http;
 using System.Runtime.ExceptionServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Lambda.Core;
@@ -32,6 +35,10 @@ using LambdaSharp.ConfigSource;
 using LambdaSharp.ErrorReports;
 using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
+using LambdaSharp.Records;
+using LambdaSharp.Records.ErrorReports;
+using LambdaSharp.Records.Events;
+using LambdaSharp.Serialization;
 
 namespace LambdaSharp {
 
@@ -68,6 +75,11 @@ namespace LambdaSharp {
             public DateTime Started => _function._started;
 
             /// <summary>
+            /// The module full name, version, and origin.
+            /// </summary>
+            public string ModuleInfo => _function._moduleInfo;
+
+            /// <summary>
             /// The namespace of the module.
             /// </summary>
             public string ModuleNamespace => _function._moduleNamespace;
@@ -78,7 +90,13 @@ namespace LambdaSharp {
             public string ModuleName => _function._moduleName;
 
             /// <summary>
-            /// The ID of the module deployment. This value corresponds to the CloudFormation stack name.
+            /// The full-name of the module (ModuleNamespace.ModuleName)
+            /// </summary>
+            /// <value></value>
+            public string ModuleFullName => (_function._moduleName != null) ? $"{ModuleNamespace}.{ModuleName}" : null;
+
+            /// <summary>
+            /// The CloudFormation stack name of the module deployment.
             /// </summary>
             public string ModuleId => _function._moduleId;
 
@@ -86,6 +104,11 @@ namespace LambdaSharp {
             /// The version of the module.
             /// </summary>
             public string ModuleVersion => _function._moduleVersion;
+
+            /// <summary>
+            /// The origin of the module.
+            /// </summary>
+            public string ModuleOrigin => _function._moduleOrigin;
 
             /// <summary>
             /// The ID of the AWS Lambda function. This value corresponds to the Physical ID of the AWS Lambda function in the CloudFormation template.
@@ -98,6 +121,11 @@ namespace LambdaSharp {
             public string FunctionName => _function._functionName;
 
             /// <summary>
+            /// The framework used by the AWS Lambda function.
+            /// </summary>
+            public string FunctionFramework => _function._functionFramework;
+
+            /// <summary>
             /// The URL of the dead-letter queue for the AWS Lambda function. This value can be <c>null</c> if the module has no dead-letter queue.
             /// </summary>
             public string DeadLetterQueueUrl => _function._deadLetterQueueUrl;
@@ -106,6 +134,21 @@ namespace LambdaSharp {
             /// The S3 bucket name where the module artifacts are located.
             /// </summary>
             public string DeploymentBucketName => _function._deploymentBucketName;
+
+            /// <summary>
+            /// The deployment tier name.
+            /// </summary>
+            public string DeploymentTier => _function._deploymentTier;
+
+            /// <summary>
+            /// The Git SHA from which the function was built from.
+            /// </summary>
+            public string GitSha => _function._gitSha;
+
+            /// <summary>
+            /// The Git branch from which the function was built form.
+            /// </summary>
+            public string GitBranch => _function._gitBranch;
         }
 
         /// <summary>
@@ -138,47 +181,54 @@ namespace LambdaSharp {
         //--- Class Fields ---
         private static readonly Stopwatch Stopwatch = Stopwatch.StartNew();
         private static int Invocations;
+        private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        private static void ParseModuleString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion) {
-            moduleNamespace = null;
-            moduleName = null;
-            moduleVersion = null;
-            if(moduleInfo == null) {
-                return;
-            }
+        private static void ParseModuleInfoString(string moduleInfo, out string moduleNamespace, out string moduleName, out string moduleVersion, out string moduleOrigin) {
 
-            // extract module version
-            var colon = moduleInfo.IndexOf(':');
-            if(colon >= 0) {
-                moduleVersion = moduleInfo.Substring(colon + 1);
+            // try parsing module reference
+            var match = ModuleKeyPattern.Match(moduleInfo);
+            if(match.Success) {
+                moduleNamespace = GetMatchValue("Namespace");
+                moduleName = GetMatchValue("Name");
+                moduleOrigin = GetMatchValue("Origin");
+                moduleVersion = GetMatchValue("Version");
             } else {
-                colon = moduleInfo.Length;
+                moduleNamespace = null;
+                moduleName = null;
+                moduleVersion = null;
+                moduleOrigin = null;
             }
 
-            // extract module namespace and module name
-            var dot = moduleInfo.IndexOf('.');
-            if(dot >= 0) {
-                moduleNamespace = moduleInfo.Substring(0, dot);
-                moduleName = moduleInfo.Substring(dot + 1, colon - dot - 1);
+            // local function
+            string GetMatchValue(string groupName) {
+                var group = match.Groups[groupName];
+                return group.Success ? group.Value : null;
             }
         }
 
         //--- Fields ---
         private DateTime _started;
+        private string _deploymentTier;
         private string _deploymentBucketName;
         private string _deadLetterQueueUrl;
+        private string _moduleInfo;
         private string _moduleNamespace;
         private string _moduleName;
         private string _moduleId;
         private string _moduleVersion;
+        private string _moduleOrigin;
         private string _functionId;
         private string _functionName;
+        private string _functionFramework;
+        private string _gitSha;
+        private string _gitBranch;
         private bool _initialized;
         private LambdaConfig _appConfig;
-        private Dictionary<Exception, LambdaLogLevel> _reportedExceptions = new Dictionary<Exception, LambdaLogLevel>();
+        private readonly Dictionary<Exception, LambdaLogLevel> _reportedExceptions = new Dictionary<Exception, LambdaLogLevel>();
         private List<Task> _pendingTasks = new List<Task>();
         private object _pendingTasksSyncRoot = new object();
+        private ILambdaContext _currentContext;
 
         //--- Constructors ---
 
@@ -196,10 +246,16 @@ namespace LambdaSharp {
         /// </exception>
         protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) {
             Provider = provider ?? new LambdaFunctionDependencyProvider();
+            ErrorReportGenerator = new LogErrorReportGenerator(Provider);
 
-            // NOTE (2019-02-12, bjorg): set environment variable to unwrap aggregate exceptions automatically
-            // see: https://www.reddit.com/r/aws/comments/98witj/we_are_the_aws_net_team_ask_the_experts/e98xinf/
-            Environment.SetEnvironmentVariable("UNWRAP_AGGREGATE_EXCEPTIONS", "1");
+            // instantiate the assembly serializer or default LambdaJsonSerializer
+            var serializerAttribute = GetType().Assembly
+                .GetCustomAttributes(typeof(LambdaSerializerAttribute), false)
+                .OfType<LambdaSerializerAttribute>()
+                .FirstOrDefault();
+            LambdaSerializer = (serializerAttribute != null)
+                ? (ILambdaSerializer)(Activator.CreateInstance(serializerAttribute.SerializerType) ?? throw new ShouldNeverHappenException())
+                : new LambdaJsonSerializer();
 
             // initialize function fields from configuration
             _started = UtcNow;
@@ -212,7 +268,7 @@ namespace LambdaSharp {
         /// satisfy its required dependencies.
         /// </summary>
         /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
-        protected ILambdaFunctionDependencyProvider Provider { get; private set; }
+        protected ILambdaFunctionDependencyProvider Provider { get; }
 
         /// <summary>
         /// Retrieves the current date-time in UTC timezone.
@@ -224,7 +280,15 @@ namespace LambdaSharp {
         /// Retrieves the <see cref="ILambdaSerializer"/> instance used for serializing/deserializing JSON data.
         /// </summary>
         /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
+        [Obsolete("Use LambdaSerializer instead. This property will be removed in the next major release.")]
         protected ILambdaSerializer JsonSerializer => Provider.JsonSerializer;
+
+        /// <summary>
+        /// An instance of <see cref="ILambdaSerializer"/>, as specified by the <see cre="LambdaSerializer"/> attribute on the assembly,
+        /// used for serializing/deserializing JSON data.
+        /// </summary>
+        /// <value>The <see cref="ILambdaSerializer"/> instance.</value>
+        protected ILambdaSerializer LambdaSerializer { get; set; }
 
         /// <summary>
         /// Retrieve the Lambda function initialization settings.
@@ -236,7 +300,7 @@ namespace LambdaSharp {
         /// Retrieve the <see cref="ErrorReportGenerator"/> instance used to generate error reports.
         /// </summary>
         /// <value>The <see cref="ErrorReportGenerator"/> instance.</value>
-        protected LambdaErrorReportGenerator ErrorReportGenerator { get; private set; }
+        protected ILambdaErrorReportGenerator ErrorReportGenerator { get; private set; }
 
         /// <summary>
         /// Retrieve the <see cref="ILambdaLogLevelLogger"/> instance.
@@ -251,13 +315,18 @@ namespace LambdaSharp {
         /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>. Otherwise, it returns <c>null</c>.
         /// </remarks>
         /// <value>The <see cref="ILambdaContext"/> instance.</value>
-        protected ILambdaContext CurrentContext { get; private set; }
+        protected ILambdaContext CurrentContext => _currentContext;
 
         /// <summary>
         /// The <see cref="HttpClient"/> property holds a <c>HttpClient</c> instance that is initialized with X-Ray support.
         /// </summary>
         /// <value>The <see cref="HttpClient"/> instance.</value>
         protected HttpClient HttpClient { get; set; }
+
+        private LambdaConfig AppConfig {
+            get => _appConfig ?? throw new InvalidOperationException();
+            set => _appConfig = value ?? throw new ArgumentNullException();
+        }
 
         //--- Abstract Methods ---
 
@@ -291,8 +360,9 @@ namespace LambdaSharp {
         /// <see cref="CurrentContext"/> property.
         /// </param>
         /// <returns>The task object representing the asynchronous operation.</returns>
+        [LambdaSerializer(typeof(LambdaSharp.Serialization.LambdaJsonSerializer))]
         public async Task<Stream> FunctionHandlerAsync(Stream stream, ILambdaContext context) {
-            CurrentContext = context;
+            _currentContext = context;
             Exception foregroundException = null;
             try {
 
@@ -309,7 +379,7 @@ namespace LambdaSharp {
                         LogInfo("start function initialization");
                         await InitializePrologueAsync(Provider.ConfigSource);
                         LogInfo("initialize function configuration");
-                        await InitializeAsync(_appConfig);
+                        await InitializeAsync(AppConfig);
                         LogInfo("end function initialization");
                         await InitializeEpilogueAsync();
                         LogInfo("initialization complete");
@@ -319,6 +389,23 @@ namespace LambdaSharp {
                         await HandleFailedInitializationAsync(stream);
                         throw;
                     }
+                }
+
+                // check if the request stream should be logged for debugging purposes
+                if(Provider.DebugLoggingEnabled) {
+
+                    // convert request stream to memory stream, so we can read it twice
+                    if(!(stream is MemoryStream memoryStream)) {
+                        memoryStream = new MemoryStream();
+                        stream.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                    }
+
+                    // log the request data verbatim
+                    LogDebug($"request stream: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
+
+                    // replace request stream
+                    stream = memoryStream;
                 }
 
                 // process message stream
@@ -341,6 +428,23 @@ namespace LambdaSharp {
                     LogError(e);
                     throw;
                 }
+
+                // check if response stream should be logged for debugging purposes
+                if(Provider.DebugLoggingEnabled) {
+
+                    // convert response stream to memory stream, so we can read it twice
+                    if(!(result is MemoryStream memoryStream)) {
+                        memoryStream = new MemoryStream();
+                        result.CopyTo(memoryStream);
+                        memoryStream.Position = 0;
+                    }
+
+                    // log the response data verbatim
+                    LogDebug($"response stream: {Encoding.UTF8.GetString(memoryStream.ToArray())}");
+
+                    // replace response stream
+                    result = memoryStream;
+                }
                 return result;
             } catch(Exception e) {
                 foregroundException = e;
@@ -352,20 +456,20 @@ namespace LambdaSharp {
                 while(true) {
 
                     // check if any pending tasks exist
-                    Task[] pendingTasksCopy;
+                    List<Task> pendingTasks;
                     lock(_pendingTasksSyncRoot) {
                         if(_pendingTasks.Count == 0) {
                             break;
                         }
 
-                        // copy pending tasks and recent accumulator list
-                        pendingTasksCopy = _pendingTasks.ToArray();
-                        _pendingTasks.Clear();
+                        // replace pending tasks with fresh list
+                        pendingTasks = _pendingTasks;
+                        _pendingTasks = new List<Task>();
                     }
 
                     // wait for copied tasks to finish and report exceptions as appropriate
                     try {
-                        await Task.WhenAll(pendingTasksCopy);
+                        await Task.WhenAll(pendingTasks);
                     } catch(AggregateException e) {
                         foreach(var innerException in e.Flatten().InnerExceptions) {
 
@@ -388,7 +492,7 @@ namespace LambdaSharp {
                 // clear function state
                 LogInfo($"invocation completed (reported errors: {_reportedExceptions.Count:N0})");
                 _reportedExceptions.Clear();
-                CurrentContext = null;
+                _currentContext = null;
 
                 // NOTE (2019-06-20, bjorg): we can let the normal control flow exit the finally statement when no background exceptions occur;
                 //  if a foreground exception has occurred, it will the thrown automatically at the end of the finally statement;
@@ -431,52 +535,58 @@ namespace LambdaSharp {
             Amazon.XRay.Recorder.Handlers.AwsSdk.AWSSDKHandler.RegisterXRayForAllServices();
             HttpClient = new HttpClient(new HttpClientXRayTracingHandler(new HttpClientHandler()));
 
-            // read configuration from environment variables
+            // read Lambda runtime environment variables
+            _functionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
+            _functionName = envSource.Read("LAMBDA_NAME");
+            _functionFramework = envSource.Read("LAMBDA_RUNTIME");
+
+            // read LambdaSharp provided environment variables
             _moduleId = envSource.Read("MODULE_ID");
-            var moduleInfo = envSource.Read("MODULE_INFO");
-            ParseModuleString(moduleInfo, out var moduleNamespace, out var moduleName, out var moduleVersion);
-            _moduleNamespace = moduleNamespace;
-            _moduleName = moduleName;
-            _moduleVersion = moduleVersion;
+            _moduleInfo = envSource.Read("MODULE_INFO");
+            ParseModuleInfoString(_moduleInfo, out _moduleNamespace, out _moduleName, out _moduleVersion, out _moduleOrigin);
+            _deploymentTier = envSource.Read("DEPLOYMENT_TIER");
             _deploymentBucketName = envSource.Read("DEPLOYMENTBUCKETNAME");
             var deadLetterQueueArn = envSource.Read("DEADLETTERQUEUE");
             if(deadLetterQueueArn != null) {
                 _deadLetterQueueUrl = AwsConverters.ConvertQueueArnToUrl(deadLetterQueueArn);
             }
-            _functionId = envSource.Read("AWS_LAMBDA_FUNCTION_NAME");
-            _functionName = envSource.Read("LAMBDA_NAME");
-            var framework = envSource.Read("LAMBDA_RUNTIME");
-            LogInfo($"MODULE_ID = {_moduleId}");
-            LogInfo($"MODULE_INFO = {moduleInfo}");
-            LogInfo($"FUNCTION_NAME = {_functionName}");
-            LogInfo($"FUNCTION_ID = {_functionId}");
-            LogInfo($"DEPLOYMENTBUCKETNAME = {_deploymentBucketName}");
-            LogInfo($"DEADLETTERQUEUE = {_deadLetterQueueUrl ?? "NONE"}");
+
+            // log function start-up information
+            var info = new Dictionary<string, string> {
+                ["MODULE_ID"] = _moduleId,
+                ["MODULE_INFO"] = _moduleInfo,
+                ["FUNCTION_NAME"] = _functionName,
+                ["FUNCTION_ID"] = _functionId,
+                ["DEPLOYMENT_TIER"] = _deploymentTier,
+                ["DEPLOYMENTBUCKETNAME"] = _deploymentBucketName,
+                ["DEADLETTERQUEUE"] = _deadLetterQueueUrl,
+            };
 
             // read optional git-info file
-            string gitSha = null;
-            string gitBranch = null;
             if(File.Exists("git-info.json")) {
-                var git = DeserializeJson<GitInfo>(File.ReadAllText("git-info.json"));
-                gitSha = git.SHA;
-                gitBranch = git.Branch;
-                LogInfo($"GIT-SHA = {gitSha ?? "NONE"}");
-                LogInfo($"GIT-BRANCH = {gitBranch ?? "NONE"}");
+                var git = LambdaSerializer.Deserialize<GitInfo>(File.ReadAllText("git-info.json"));
+                _gitSha = git.SHA;
+                _gitBranch = git.Branch;
+                info["GIT-SHA"] = _gitSha;
+                info["GIT-BRANCH"] = _gitBranch;
+            }
+            if(info.Any()) {
+                LogInfo("function startup information\n{0}", LambdaSerializer.Serialize(info));
             }
 
             // initialize error/warning reporter
             ErrorReportGenerator = new LambdaErrorReportGenerator(
-                _moduleId,
-                $"{_moduleNamespace}.{_moduleName}:{_moduleVersion}",
-                _functionId,
-                _functionName,
-                framework,
-                gitSha,
-                gitBranch
+                _moduleId ?? "<MISSING>",
+                _moduleInfo ?? "<MISSING>",
+                _functionId ?? "<MISSING>",
+                _functionName ?? "<MISSING>",
+                _functionFramework ?? "<MISSING>",
+                _gitSha,
+                _gitBranch
             );
 
             // convert environment variables to lambda parameters
-            _appConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
+            AppConfig = new LambdaConfig(new LambdaDictionarySource(await ReadParametersFromEnvironmentVariables()));
         }
 
         /// <summary>
@@ -515,13 +625,13 @@ namespace LambdaSharp {
             if(!string.IsNullOrEmpty(_deadLetterQueueUrl)) {
                 await Provider.SendMessageToQueueAsync(_deadLetterQueueUrl, message, new[] {
                     new KeyValuePair<string, string>("LambdaSharp.FailedMessageOrigin", origin.ToString()),
-                    new KeyValuePair<string, string>("LambdaSharp.FailedFunctionArn", CurrentContext.InvokedFunctionArn)
+                    new KeyValuePair<string, string>("LambdaSharp.FailedFunctionArn", _currentContext?.InvokedFunctionArn ?? "")
                 });
             } else {
 
                 // let the original exception propagate since there is no dead-letter queue
                 ExceptionDispatchInfo.Capture(exception).Throw();
-                throw new Exception("should never happen");
+                throw new ShouldNeverHappenException();
             }
         }
 
@@ -531,24 +641,27 @@ namespace LambdaSharp {
         /// <param name="stream">The stream to deserialize.</param>
         /// <typeparam name="T">The deserialization target type.</typeparam>
         /// <returns>Deserialized instance.</returns>
-        protected T DeserializeJson<T>(Stream stream) => JsonSerializer.Deserialize<T>(stream);
+        [Obsolete("Use LambdaSerializer.Deserialize<T>(Stream) instead. This method will be removed in the next major release.")]
+        protected T DeserializeJson<T>(Stream stream) => LambdaSerializer.Deserialize<T>(stream);
 
         /// <summary>
-        /// The <see cref="DeserializeJson{T}(Stream)"/> method deserializes the JSON object from a <c>string</c>.
+        /// The <see cref="DeserializeJson{T}(string)"/> method deserializes the JSON object from a <c>string</c>.
         /// </summary>
         /// <param name="json">The <c>string</c> to deserialize.</param>
         /// <typeparam name="T">The deserialization target type.</typeparam>
         /// <returns>Deserialized instance.</returns>
-        protected T DeserializeJson<T>(string json) => DeserializeJson<T>(json.ToStream());
+        [Obsolete("Use LambdaSerializer.Deserialize<T>(string) instead. This method will be removed in the next major release.")]
+        protected T DeserializeJson<T>(string json) => LambdaSerializer.Deserialize<T>(json.ToStream());
 
         /// <summary>
         /// The <see cref="SerializeJson(object)"/> method serializes an instance to a JSON <c>string</c>.
         /// </summary>
         /// <param name="value">The instance to serialize.</param>
         /// <returns>Serialized JSON <c>string</c>.</returns>
+        [Obsolete("Use LambdaSerializer.Serialize<T>(T) instead. This method will be removed in the next major release.")]
         protected string SerializeJson(object value) {
             using(var stream = new MemoryStream()) {
-                JsonSerializer.Serialize(value, stream);
+                LambdaSerializer.Serialize(value, stream);
                 return Encoding.UTF8.GetString(stream.ToArray());
             }
         }
@@ -655,14 +768,25 @@ namespace LambdaSharp {
         /// The <see cref="RecordErrorReport(LambdaErrorReport)"/> method is invoked record errors for later reporting.
         /// </summary>
         /// <param name="report">The <see cref="LambdaErrorReport"/> to record.</param>
-        protected virtual void RecordErrorReport(LambdaErrorReport report) => Provider.Log(SerializeJson(report) + "\n");
+        protected virtual void RecordErrorReport(LambdaErrorReport report) => Provider.Log(LambdaSerializer.Serialize(report) + "\n");
 
         /// <summary>
         /// The <see cref="RecordException(Exception)"/> method is only invoked when Lambda function <see cref="ErrorReportGenerator"/> instance
         /// has not yet been initialized of if an exception occurred while invoking <see cref="RecordErrorReport(LambdaErrorReport)"/>.
         /// </summary>
         /// <param name="exception">Exception to record.</param>
-        protected virtual void RecordException(Exception exception) => Provider.Log($"EXCEPTION: {exception}");
+        protected virtual void RecordException(Exception exception) => Provider.Log($"EXCEPTION: {exception}\n");
+
+        /// <summary>
+        /// Log a debugging message. This message will only appear in the log when debug logging is enabled and will not be forwarded to an error aggregator.
+        /// </summary>
+        /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
+        /// <param name="arguments">Optional arguments for the message string.</param>
+        protected void LogDebug(string format, params object[] arguments) {
+            if(Provider.DebugLoggingEnabled) {
+                Logger.LogDebug(format, arguments);
+            }
+        }
 
         /// <summary>
         /// Log an informational message. This message will only appear in the log and not be forwarded to an error aggregator.
@@ -745,28 +869,133 @@ namespace LambdaSharp {
             => Logger.LogErrorAsWarning(exception, format, arguments);
 
         /// <summary>
-        ///
+        /// Log an exception with a custom message as a fatal error. This message will be reported if an error aggregator is configured for the <c>LambdaSharp.Core</c> module.
         /// </summary>
         /// <param name="exception">The exception to log. The exception is logged with its message, stacktrace, and any nested exceptions.</param>
         /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
         /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         protected void LogFatal(Exception exception, string format, params object[] arguments)
             => Logger.LogFatal(exception, format, arguments);
+
+        /// <summary>
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
+        /// </summary>
+        /// <param name="name">Metric name.</param>
+        /// <param name="value">Metric value.</param>
+        /// <param name="unit">Metric unit.</param>
+        protected void LogMetric(
+            string name,
+            double value,
+            LambdaMetricUnit unit
+        ) => LogMetric(new[] { new LambdaMetric(name, value, unit) });
+
+        /// <summary>
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
+        /// </summary>
+        /// <param name="name">Metric name.</param>
+        /// <param name="value">Metric value.</param>
+        /// <param name="unit">Metric unit.</param>
+        /// <param name="dimensionNames">Metric dimensions as comma-separated list (e.g. [ "A", "A,B" ]).</param>
+        /// <param name="dimensionValues">Dictionary of dimesion name-value pairs.</param>
+        protected void LogMetric(
+            string name,
+            double value,
+            LambdaMetricUnit unit,
+            IEnumerable<string> dimensionNames,
+            Dictionary<string, string> dimensionValues
+        ) => LogMetric(new[] { new LambdaMetric(name, value, unit) }, dimensionNames, dimensionValues);
+
+        /// <summary>
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
+        /// </summary>
+        /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
+        protected void LogMetric(IEnumerable<LambdaMetric> metrics)
+            => LogMetric(metrics, new string[0], new Dictionary<string, string>());
+
+        /// <summary>
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
+        /// </summary>
+        /// <param name="metrics">Enumeration of metrics, including their name, value, and unit.</param>
+        /// <param name="dimensionNames">Metric dimensions as comma-separated list (e.g. [ "A", "A,B" ]).</param>
+        /// <param name="dimensionValues">Dictionary of dimesion name-value pairs.</param>
+        protected virtual void LogMetric(
+            IEnumerable<LambdaMetric> metrics,
+            IEnumerable<string> dimensionNames,
+            Dictionary<string, string> dimensionValues
+        ) {
+            if(!metrics.Any()) {
+                return;
+            }
+            IEnumerable<string> newDimensionNames;
+            Dictionary<string, string> newDimensionValues;
+            if(Info.ModuleId != null) {
+
+                // dimension the metric by 'ModuleId' and 'Function'
+                newDimensionNames = dimensionNames.Union(new[] { "Stack", "Stack,Function" }).Distinct().ToList();
+                newDimensionValues = new Dictionary<string, string>(dimensionValues) {
+                    ["Stack"] = Info.ModuleId,
+                    ["Function"] = Info.FunctionName
+                };
+            } else {
+
+                // dimension the metric by 'Function' only
+                newDimensionNames = dimensionNames.Union(new[] { "Function" }).Distinct().ToList();
+                newDimensionValues = new Dictionary<string, string>(dimensionValues) {
+                    ["Function"] = Info.FunctionName
+                };
+            }
+
+            // add git sha and git branch as extra metadata when available
+            if(Info.GitSha != null) {
+                newDimensionValues["GitSha"] = Info.GitSha;
+            }
+            if(Info.GitBranch != null) {
+                newDimensionValues["GitBranch"] = Info.GitBranch;
+            }
+            Logger.LogMetric($"Module:{Info.ModuleFullName}", metrics, newDimensionNames, newDimensionValues);
+        }
+
+        /// <summary>
+        /// Send a CloudWatch event with optional event details and resources it applies to. This event will be forwarded to the default EventBridge by LambdaSharp.Core (requires Core Services to be enabled).
+        /// </summary>
+        /// <param name="source">Name of the event source.</param>
+        /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
+        /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
+        /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
+        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string> resources = null) {
+
+            // augment event resources with LambdaSharp specific resources
+            var lambdaResources = new List<string>(resources ?? Enumerable.Empty<string>()) {
+                $"lambdasharp:stack:{Info.ModuleId}",
+                $"lambdasharp:module:{Info.ModuleFullName}",
+                $"lambdasharp:tier:{Info.DeploymentTier}"
+            };
+
+            // create event record for logging
+            var now = DateTimeOffset.UtcNow;
+            var record = new LambdaEventRecord {
+                Time = now.ToString("yyyy-MM-dd'T'HH:mm:ss.fffZ", DateTimeFormatInfo.InvariantInfo),
+                EventBus = "default",
+                Source = source,
+                DetailType = detailType,
+                Detail = LambdaSerializer.Serialize(details),
+                Resources = lambdaResources
+            };
+            Logger.LogRecord(record);
+
+            // send event
+            AddPendingTask(Provider.SendEventAsync(
+                now,
+                record.EventBus,
+                record.Source,
+                record.DetailType,
+                record.Detail,
+                record.Resources
+            ));
+        }
         #endregion
 
         #region --- ILambdaLogLevelLogger Members ---
-
-        /// <summary>
-        /// Log a message wit the given severity level. The <c>format</c> string is used to create a unique signature for errors.
-        /// Therefore, any error information that varies between occurrences should be provided in the <c>arguments</c> parameter.
-        /// </summary>
-        /// <remarks>
-        /// Nothing is logged if both <paramref name="format"/> and <paramref name="exception"/> are null.
-        /// </remarks>
-        /// <param name="level">The severity level of the log message. See <see cref="LambdaLogLevel"/> for a description of the severity levels.</param>
-        /// <param name="exception">Optional exception to log. The exception is logged with its description and stacktrace. This parameter can be <c>null</c>.</param>
-        /// <param name="format">Optional message to use instead of <c>Exception.Message</c>. This parameter can be <c>null</c>.</param>
-        /// <param name="arguments">Optional arguments for the <c>format</c> parameter.</param>
         void ILambdaLogLevelLogger.Log(LambdaLogLevel level, Exception exception, string format, params object[] arguments) {
             string message = LambdaErrorReportGenerator.FormatMessage(format, arguments) ?? exception?.Message;
             if((level >= LambdaLogLevel.WARNING) && (exception != null)) {
@@ -779,26 +1008,45 @@ namespace LambdaSharp {
 
                 // abort messages are printed, but not reported since they are not logic errors
                 if(exception is LambdaAbortException) {
-                    Provider.Log($"*** ABORT: {message} [{Stopwatch.Elapsed:c}]\n{exception?.ToString()}");
+                    Provider.Log($"*** ABORT: {message} [{Stopwatch.Elapsed:c}]\n{PrintException()}");
                     return;
                 }
-
-                // NOTE (0218-12-18, bjorg): 'ErrorReporter' is null until the function has initialized
-                if(ErrorReportGenerator != null) {
-                    try {
-                        var report = ErrorReportGenerator.CreateReport(CurrentContext?.AwsRequestId, level.ToString(), exception, format, arguments);
+                try {
+                    var report = ErrorReportGenerator.CreateReport(_currentContext?.AwsRequestId ?? "<NONE>", level.ToString(), exception, format, arguments);
+                    if(report != null) {
                         RecordErrorReport(report);
-                    } catch(Exception e) {
-                        RecordException(e);
-                        RecordException(exception);
                     }
-                } else {
+                } catch(Exception e) {
+                    RecordException(e);
                     RecordException(exception);
                 }
             } else if(message != null) {
-                Provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{exception?.ToString()}");
+                Provider.Log($"*** {level.ToString().ToUpperInvariant()}: {message} [{Stopwatch.Elapsed:c}]\n{PrintException()}");
             }
+
+            // record metrics on warnings, errors, and fatal errors being logged
+            switch(level) {
+            case LambdaLogLevel.WARNING:
+                LogMetric("LogWarning.Count", 1, LambdaMetricUnit.Count);
+                break;
+            case LambdaLogLevel.ERROR:
+                LogMetric("LogError.Count", 1, LambdaMetricUnit.Count);
+                break;
+            case LambdaLogLevel.FATAL:
+                LogMetric("LogFatal.Count", 1, LambdaMetricUnit.Count);
+                break;
+            default:
+
+                // nothing to do
+                break;
+            }
+
+            // local functions
+            string PrintException() => (exception != null) ? exception.ToString() + "\n" : "";
         }
+
+        void ILambdaLogLevelLogger.LogRecord(ALambdaRecord record)
+            => Provider.Log(LambdaSerializer.Serialize<object>(record ?? throw new ArgumentNullException(nameof(record))) + "\n");
         #endregion
     }
 }

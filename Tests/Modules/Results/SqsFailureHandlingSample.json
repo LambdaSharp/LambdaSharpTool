@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "0AAE51A16BC2AB4D866400D2F031F900"
+      "Default": "26B6CCAF3CC28C05135D15CA98B70CA0"
     }
   },
   "Resources": {
@@ -142,12 +142,26 @@
         "Description": "This function produces numbers that are sent as messages to the SQS queue (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
+            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "SqsProducer",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -301,12 +315,26 @@
         "Description": "Consumes messages form SQS queue (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV",
+            "MODULE_INFO": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "SqsConsumer",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -483,6 +511,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -610,7 +648,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Sample.SqsHandler:1.0-DEV",
+        "ModuleInfo": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -866,7 +904,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Sample.SqsHandler:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -875,7 +913,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1105,9 +1143,9 @@
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
       "Description": "Module description",
-      "TemplateChecksum": "0AAE51A16BC2AB4D866400D2F031F900",
+      "TemplateChecksum": "26B6CCAF3CC28C05135D15CA98B70CA0",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",
