@@ -87,3 +87,11 @@ When the logical ID of this item is provided to the `Ref` intrinsic function, `R
 - Package: MyPackage
   Files: WebAssets/
 ```
+
+### Create package from a published Blazor WebAssembly project
+
+```yaml
+- Package: MyBlazorPackage
+  Build: dotnet publish -c Release MyBlazorApp
+  Files: MyBlazorApp/bin/Release/netstandard2.1/publish/wwwroot/
+```
