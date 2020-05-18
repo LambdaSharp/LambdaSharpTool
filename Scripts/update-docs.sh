@@ -22,6 +22,7 @@ echo $LAMBDASHARP_VERSION > $LAMBDASHARP/src/DocFX/version.txt
 # clean-out current documentation folder
 echo "*** DELETING OLD DOCUMENTATION"
 cd $LAMBDASHARP/../Docs-LambdaSharpTool
+git pull
 git ls-files -z | xargs -0 rm -f
 
 # restore CNAME file, which is required by github
