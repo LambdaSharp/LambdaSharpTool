@@ -33,6 +33,12 @@ namespace LambdaSharp.SimpleQueueService {
     /// The <see cref="ALambdaQueueFunction{TMessage}"/> is the abstract base class for handling
     /// <a href="https://aws.amazon.com/sqs/">Amazon Simple Queue Service (SQS)</a> events.
     /// </summary>
+    /// <remarks>
+    /// When the Lambda function is declared with a Dead-Letter Queue (DLQ), the function attempts a
+    /// failed message up to 3 times, by default. The default can be overridden by setting a different
+    /// value for the <c>MAX_QUEUE_RETRIES</c> environment variable. Without a DLQ, the function will
+    /// attempt a message indefinitely.
+    /// </remarks>
     /// <typeparam name="TMessage">The SQS queue message type.</typeparam>
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
 
