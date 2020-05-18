@@ -156,7 +156,6 @@ namespace LambdaSharp.Tool.Cli.Publish {
             } else {
                 Settings.WriteAnsiLine("=> No changes found to upload", AnsiTerminal.BrightBlack);
             }
-            Console.WriteLine();
             if(Settings.UseAnsiConsole) {
                 Console.WriteLine($"=> Published: {AnsiTerminal.Green}{manifest.ModuleInfo}{AnsiTerminal.Reset}");
             } else {

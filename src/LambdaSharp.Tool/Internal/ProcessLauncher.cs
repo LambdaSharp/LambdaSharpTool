@@ -34,11 +34,25 @@ namespace LambdaSharp.Tool.Internal {
         public static string Lash => FindExecutableInPath("lash");
 
         //--- Class methods ---
-        public static bool Execute(string application, IEnumerable<string> arguments, string workingFolder, bool showOutput, Func<string, string> processOutputLine = null) {
+        public static bool Execute(
+            string application,
+            IEnumerable<string> arguments,
+            string workingFolder,
+            bool showOutput,
+            Func<string, string> processOutputLine = null
+        ) => Execute(application, ArgumentEscaper.EscapeAndConcatenate(arguments), workingFolder, showOutput, processOutputLine);
+
+        public static bool Execute(
+            string application,
+            string arguments,
+            string workingFolder,
+            bool showOutput,
+            Func<string, string> processOutputLine = null
+        ) {
             using(var process = new Process()) {
                 process.StartInfo = new ProcessStartInfo {
                     FileName = application,
-                    Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
+                    Arguments = arguments,
                     WorkingDirectory = workingFolder,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -51,8 +65,8 @@ namespace LambdaSharp.Tool.Internal {
                 process.WaitForExit();
                 var success = (process.ExitCode == 0);
                 if(showOutput || !success) {
-                    PrintLines(output.Result);
-                    PrintLines(error.Result);
+                    PrintLines(output.GetAwaiter().GetResult());
+                    PrintLines(error.GetAwaiter().GetResult());
                 }
                 return success;
             }
@@ -67,7 +81,14 @@ namespace LambdaSharp.Tool.Internal {
                         lineBreakPosition = buffer.Length - 1;
                     }
                     var line = buffer.Substring(currentPosition, lineBreakPosition - currentPosition + 1);
-                    Console.Write(processOutputLine?.Invoke(line) ?? line);
+                    if(processOutputLine != null) {
+                        var newLine = processOutputLine(line);
+                        if(newLine != null) {
+                            Console.Write(newLine);
+                        }
+                    } else {
+                        Console.Write(line);
+                    }
                     currentPosition = lineBreakPosition + 1;
                 }
             }
@@ -91,7 +112,7 @@ namespace LambdaSharp.Tool.Internal {
                 error = Task.Run(() => process.StandardError.ReadToEndAsync());
                 process.WaitForExit();
                 return (process.ExitCode == 0)
-                    ? output.Result
+                    ? output.GetAwaiter().GetResult()
                     : null;
             }
         }

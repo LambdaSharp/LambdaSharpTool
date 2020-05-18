@@ -7,13 +7,16 @@ keywords: module, core, documentation, overview
 # Module: LambdaSharp.Core
 _Version:_ [!include[LAMBDASHARP_VERSION](../version.txt)]
 
+
 ## Overview
 
 The `LambdaSharp.Core` module defines the core resources and resource types for deploying LambdaSharp modules. This module is included automatically by all LambdaSharp modules.
 
+
 ## Resource Types
 1. [LambdaSharp::Registration::Module](LambdaSharp-Registration-Module.md)
 1. [LambdaSharp::Registration::Function](LambdaSharp-Registration-Function.md)
+
 
 ## Parameters
 
@@ -21,44 +24,74 @@ The `LambdaSharp.Core` module defines the core resources and resource types for 
 
 <dl>
 
+<dt><code>CoreSecretsKey</code></dt>
+<dd>
+
+The <code>CoreSecretsKey</code> parameter sets the KMS key used by LambdaSharp.Core to encrypt sensitive information. If left blank, a new key is created.
+
+<i>Required</i>: No (Default: Create new AWS::KMS::Key)
+
+<i>Type:</i> AWS::KMS::Key
+</dd>
+
 <dt><code>DeadLetterQueue</code></dt>
 <dd>
 
-The <code>DeadLetterQueue</code> parameter sets the Dead letter queue for functions or creates a new queue if left blank.
+The <code>DeadLetterQueue</code> parameter sets the Dead letter queue for functions. If left blank, a new queue is created.
 
 <i>Required</i>: No (Default: Create new AWS::SQS::Queue)
 
 <i>Type:</i> AWS::SQS::Queue
 </dd>
 
-<dt><code>LoggingStream</code></dt>
+<dt><code>LoggingBucket</code></dt>
 <dd>
 
-The <code>LoggingStream</code> parameter sets the Logging Kinesis stream for functions or creates a new stream if left blank.
+The <code>LoggingBucket</code> parameter sets the S3 bucket for storing ingested CloudWatch Log events. If left blank, a new bucket is created.
 
-<i>Required</i>: No (Default: Create new AWS::Kinesis::Stream)
+<i>Required</i>: No (Default: Create new AWS::S3::Bucket)
 
-<i>Type:</i> AWS::Kinesis::Stream
+<i>Type:</i> AWS::S3::Bucket
 </dd>
 
-<dt><code>LoggingStreamRetentionPeriodHours</code></dt>
+<dt><code>LoggingBucketSuccessPrefix</code></dt>
 <dd>
 
-The <code>LoggingStreamRetentionPeriodHours</code> parameter sets the size of the Logging stream buffer (in hours).
+The <code>LoggingBucketSuccessPrefix</code> parameter sets the destination S3 bucket prefix for records successfully processed by the logging stream.
 
-<i>Required</i>: No (Default: 24)
+<i>Required</i>: No (Default: <code>logging-success/</code>)
 
-<i>Type:</i> Number
+<i>Type:</i> String
 </dd>
 
-<dt><code>LoggingStreamShardCount</code></dt>
+<dt><code>LoggingBucketFailurePrefix</code></dt>
 <dd>
 
-The <code>LoggingStreamShardCount</code> parameter sets the number of Kinesis shards for the logging streams.
+The <code>LoggingBucketFailurePrefix</code> parameter sets the destination S3 bucket prefix for records unsuccessfully processed processed by the logging stream.
 
-<i>Required</i>: No (Default: 1)
+<i>Required</i>: No (Default: <code>logging-failed/</code>)
 
-<i>Type:</i> Number
+<i>Type:</i> String
+</dd>
+
+<dt><code>LoggingFirehoseStream</code></dt>
+<dd>
+
+The <code>LoggingFirehoseStream</code> parameter sets the Logging Kinesis Firehose stream for functions. If left blank, a new stream is created.
+
+<i>Required</i>: No (Default: Create new AWS::KinesisFirehose::DeliveryStream)
+
+<i>Type:</i> AWS::KinesisFirehose::DeliveryStream
+</dd>
+
+<dt><code>LoggingStreamRole</code></dt>
+<dd>
+
+The <code>LoggingStreamRole</code> parameter sets the IAM role used by CloudWatch logs to write records to the logging stream. If left blank, a new role is created.
+
+<i>Required</i>: No (Default: Create new AWS::IAM::Role)
+
+<i>Type:</i> AWS::IAM::Role
 </dd>
 
 </dl>
@@ -104,6 +137,7 @@ The <code>RollbarProjectPrefix</code> parameter sets optional prefix when creati
 
 </dl>
 
+
 ## Output Values
 
 <dl>
@@ -116,12 +150,28 @@ The <code>DeadLetterQueue</code> output contains the dead letter queue for funct
 <i>Type:</i> AWS::SQS::Queue
 </dd>
 
+<dt><code>DeploymentBucket</code></dt>
+<dd>
+
+The <code>DeploymentBucket</code> output contains the S3 bucket for the deployment tier artifacts.
+
+<i>Type:</i> AWS::S3::Bucket
+</dd>
+
+<dt><code>LoggingBucket</code></dt>
+<dd>
+
+The <code>LoggingBucket</code> output contains the S3 bucket for processed log events.
+
+<i>Type:</i> AWS::S3::Bucket
+</dd>
+
 <dt><code>LoggingStream</code></dt>
 <dd>
 
 The <code>LoggingStream</code> output contains the logging Kinesis stream for functions.
 
-<i>Type:</i> AWS::Kinesis::Stream
+<i>Type:</i> AWS::KinesisFirehose::DeliveryStream
 </dd>
 
 <dt><code>LoggingStreamRole</code></dt>
@@ -130,22 +180,6 @@ The <code>LoggingStream</code> output contains the logging Kinesis stream for fu
 The <code>LoggingStreamRole</code> output contains the IAM role used by CloudWatch logs to write to the Kinesis stream.
 
 <i>Type:</i> AWS::IAM::Role
-</dd>
-
-<dt><code>ErrorReportTopic</code></dt>
-<dd>
-
-The <code>ErrorReportTopic</code> output contains the SNS topic for LambdaSharp module errors.
-
-<i>Type:</i> AWS::SNS::Topic
-</dd>
-
-<dt><code>UsageReportTopic</code></dt>
-<dd>
-
-The <code>UsageReportTopic</code> output contains the SNS topic for LambdaSharp function usage reports.
-
-<i>Type:</i> AWS::SNS::Topic
 </dd>
 
 </dl>

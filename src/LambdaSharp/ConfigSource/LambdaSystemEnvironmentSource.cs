@@ -72,7 +72,9 @@ namespace LambdaSharp.ConfigSource {
         /// <returns>Enumeration of defined configuration keys.</returns>
         public IEnumerable<string> ReadAllKeys() {
             var subpath = CombinePrefixWithKey("");
-            return Environment.GetEnvironmentVariables().Keys.Cast<string>()
+            return Environment.GetEnvironmentVariables()
+                .Keys
+                .Cast<string>()
                 .Select(ExtractSubKey)
                 .Where(key => key != null)
                 .Distinct()

@@ -256,7 +256,7 @@ namespace LambdaSharp.CustomResource {
                 var messageBody = snsEvent.Records.First().Sns.Message;
 
                 // deserialize message into a cloudformation request
-                return DeserializeJson<CloudFormationResourceRequest<TProperties>>(messageBody);
+                return LambdaSerializer.Deserialize<CloudFormationResourceRequest<TProperties>>(messageBody);
             } else {
 
                 // deserialize generic JSON into a cloudformation request
@@ -274,21 +274,27 @@ namespace LambdaSharp.CustomResource {
             // write response to pre-signed S3 URL
             for(var i = 0; i < MAX_SEND_ATTEMPTS; ++i) {
                 try {
+                    if(rawRequest.ResponseURL == null) {
+                        throw new InvalidOperationException("ResponseURL is missing");
+                    }
                     var httpResponse = await HttpClient.SendAsync(new HttpRequestMessage {
                         RequestUri = new Uri(rawRequest.ResponseURL),
                         Method = HttpMethod.Put,
-                        Content = new ByteArrayContent(Encoding.UTF8.GetBytes(SerializeJson(rawResponse)))
+                        Content = new ByteArrayContent(Encoding.UTF8.GetBytes(LambdaSerializer.Serialize(rawResponse)))
                     });
                     if(httpResponse.StatusCode != HttpStatusCode.OK) {
                         throw new LambdaCustomResourceException(
                             "PUT operation to pre-signed S3 URL failed with status code: {0} [{1} {2}] = {3}",
                             httpResponse.StatusCode,
                             rawRequest.RequestType,
-                            rawRequest.ResourceType,
+                            rawRequest.ResourceType ?? "<MISSING>",
                             await httpResponse.Content.ReadAsStringAsync()
                         );
                     }
                     return;
+                } catch(InvalidOperationException e) {
+                    exception = e;
+                    break;
                 } catch(Exception e) {
                     exception = e;
                     LogErrorAsWarning(e, "writing response to pre-signed S3 URL failed");
@@ -296,10 +302,13 @@ namespace LambdaSharp.CustomResource {
                     backoff = backoff * 2;
                 }
             }
+            if(exception == null) {
+                exception = new ShouldNeverHappenException($"ALambdaCustomResourceFunction.WriteResponse failed w/o an explicit");
+            }
 
             // max attempts have been reached; fail permanently and record the failed request for playback
             LogError(exception);
-            await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.CloudFormation, SerializeJson(rawRequest), exception);
+            await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.CloudFormation, LambdaSerializer.Serialize(rawRequest), exception);
         }
     }
 }

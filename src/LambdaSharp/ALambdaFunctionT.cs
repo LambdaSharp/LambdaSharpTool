@@ -16,12 +16,9 @@
  * limitations under the License.
  */
 
-using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
-using Amazon.Lambda.Serialization.Json;
 
 namespace LambdaSharp {
 
@@ -46,7 +43,16 @@ namespace LambdaSharp {
         /// custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.
         /// </summary>
         /// <param name="provider">Custom implementation of <see cref="ILambdaFunctionDependencyProvider"/>.</param>
-        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider) { }
+        protected ALambdaFunction(ILambdaFunctionDependencyProvider provider) : base(provider ?? new LambdaFunctionDependencyProvider()) { }
+
+        //--- Properties ---
+
+        /// <summary>
+        /// The <see cref="ILambdaFunctionDependencyProvider"/> instance used by the Lambda function to
+        /// satisfy its required dependencies.
+        /// </summary>
+        /// <value>The <see cref="ILambdaFunctionDependencyProvider"/> instance.</value>
+        protected new ILambdaFunctionDependencyProvider Provider => (ILambdaFunctionDependencyProvider)base.Provider;
 
         //--- Abstract Methods ---
 
@@ -70,10 +76,12 @@ namespace LambdaSharp {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
-            var request = DeserializeJson<TRequest>(stream);
-            LogInfo($"deserialized stream as {typeof(TRequest)}");
+            var request = LambdaSerializer.Deserialize<TRequest>(stream);
             var response = await ProcessMessageAsync(request);
-            return SerializeJson(response).ToStream();
-        }
+            var responseStream = new MemoryStream();
+            LambdaSerializer.Serialize(response, responseStream);
+            responseStream.Position = 0;
+            return responseStream;
+       }
     }
 }

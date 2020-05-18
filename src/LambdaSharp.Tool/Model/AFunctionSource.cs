@@ -191,4 +191,21 @@ namespace LambdaSharp.Tool.Model {
             }
        }
     }
+
+    public class CloudWatchEventSource : AFunctionSource {
+
+        //--- Properties ---
+        public object EventBus { get; set; }
+        public object Pattern { get; set; }
+
+        //--- Methods ---
+        public override void Visit(AModuleItem item, ModuleVisitorDelegate visitor) {
+            if(EventBus != null) {
+                EventBus = visitor(item, EventBus);
+            }
+            if(Pattern != null) {
+                Pattern = visitor(item, Pattern);
+            }
+        }
+    }
 }

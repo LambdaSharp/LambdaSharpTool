@@ -69,6 +69,9 @@ namespace LambdaSharp.Tool.Model.AST {
                 "AuthorizationScopes",
                 "AuthorizerId",
                 "Invoke"
+            },
+            ["EventBus"] = new[] {
+                "Pattern"
             }
         };
 
@@ -126,5 +129,9 @@ namespace LambdaSharp.Tool.Model.AST {
         // public string[] AuthorizationScopes { get; set; }
         // public object AuthorizerId { get; set; }
         // public string Invoke { get; set; }
+
+        // CloudWatch Event
+        public object EventBus { get; set; }
+        public object Pattern { get; set; }
    }
 }

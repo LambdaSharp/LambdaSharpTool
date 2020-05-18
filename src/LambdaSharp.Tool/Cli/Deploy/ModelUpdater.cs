@@ -282,6 +282,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                 case "LambdaSharpTier":
                 case "LambdaSharpTool":
                 case "Module":
+                case "ModuleInfo":
                 case "ModuleChecksum":
 
                     // skip expected outputs

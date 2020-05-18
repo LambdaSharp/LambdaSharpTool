@@ -231,7 +231,7 @@ namespace LambdaSharp.Tool {
                 ModuleManifest manifest = null;
                 var match = VersionInfo.FindLatestMatchingVersion(found, moduleInfo.Version, candidate => {
                     var candidateModuleInfo = new ModuleInfo(moduleInfo.Namespace, moduleInfo.Name, candidate, moduleInfo.Origin);
-                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).Result;
+                    var candidateManifestText = GetS3ObjectContentsAsync(bucketName, candidateModuleInfo.VersionPath).GetAwaiter().GetResult();
                     manifest = JsonConvert.DeserializeObject<ModuleManifest>(candidateManifestText);
 
                     // check if module is compatible with this tool

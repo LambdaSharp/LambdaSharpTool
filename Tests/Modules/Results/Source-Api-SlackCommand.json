@@ -72,7 +72,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "EA5B0D493D9D67769ECC4F42AD033E8D"
+      "Default": "9414CAAC20319FC6123E5235070A4A94"
     }
   },
   "Resources": {
@@ -128,12 +128,26 @@
         "Description": "My function (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Test.TestModule:1.0-DEV",
+            "MODULE_INFO": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "Function",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
+            "DEPLOYMENT_TIER": {
+              "Fn::Select": [
+                "0",
+                {
+                  "Fn::Split": [
+                    "-",
+                    {
+                      "Ref": "DeploymentPrefix"
+                    }
+                  ]
+                }
+              ]
+            },
             "DEPLOYMENTBUCKETNAME": {
               "Ref": "DeploymentBucketName"
             },
@@ -285,6 +299,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -412,7 +436,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Test.TestModule:1.0-DEV",
+        "ModuleInfo": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -537,11 +561,11 @@
     "ModuleRestApi": {
       "Type": "AWS::ApiGateway::RestApi",
       "Properties": {
-        "Description": "${Module::FullName} API (v${Module::Version})",
-        "FailOnWarnings": true,
         "Name": {
           "Fn::Sub": "${AWS::StackName} Module API"
-        }
+        },
+        "Description": "Test.TestModule API (v1.0-DEV)",
+        "FailOnWarnings": true
       }
     },
     "ModuleRestApiSlackResource": {
@@ -624,17 +648,18 @@
         "RetentionInDays": 30
       }
     },
-    "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F": {
+    "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": {
       "Type": "AWS::ApiGateway::Deployment",
       "Properties": {
         "Description": {
-          "Fn::Sub": "${AWS::StackName} API [62311F0212357E487E01F9D9BE890A0F]"
+          "Fn::Sub": "${AWS::StackName} API [1D1D317CDC4C2886ADBCC3C5E5DC5FF1]"
         },
         "RestApiId": {
           "Ref": "ModuleRestApi"
         }
       },
       "DependsOn": [
+        "ModuleRestApiSlackResource",
         "ModuleRestApiSlackResourcePOST"
       ]
     },
@@ -642,13 +667,14 @@
       "Type": "AWS::ApiGateway::Stage",
       "Properties": {
         "DeploymentId": {
-          "Ref": "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F"
+          "Ref": "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1"
         },
         "MethodSettings": [
           {
             "DataTraceEnabled": true,
             "HttpMethod": "*",
             "LoggingLevel": "INFO",
+            "MetricsEnabled": true,
             "ResourcePath": "/*"
           }
         ],
@@ -670,7 +696,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -679,7 +705,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.0.12"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -920,9 +946,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "EA5B0D493D9D67769ECC4F42AD033E8D",
+      "TemplateChecksum": "9414CAAC20319FC6123E5235070A4A94",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.0",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Module Settings",
@@ -1023,7 +1049,7 @@
         "ModuleRestApiSlackResourcePOST": "Module::RestApi::SlackResource::POST",
         "FunctionRestApiPermission": "Function::RestApiPermission",
         "ModuleRestApiLogGroup": "Module::RestApi::LogGroup",
-        "ModuleRestApiDeployment62311F0212357E487E01F9D9BE890A0F": "Module::RestApi::Deployment62311F0212357E487E01F9D9BE890A0F",
+        "ModuleRestApiDeployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1": "Module::RestApi::Deployment1D1D317CDC4C2886ADBCC3C5E5DC5FF1",
         "ModuleRestApiStage": "Module::RestApi::Stage"
       },
       "TypeNameMappings": {

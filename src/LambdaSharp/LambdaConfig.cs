@@ -103,11 +103,11 @@ namespace LambdaSharp {
         };
 
         private static string CombinePathWithKey(string path, string key) => ((path ?? "").Length > 0) ? (path + "::" + key) : key;
-        private static bool IsValidKey(string key) => key.Any() && key.All(c => char.IsLetterOrDigit(c) || (c == ':'));
+        private static bool IsValidKey(string key) => (key?.Any() ?? false) && key.All(c => char.IsLetterOrDigit(c) || (c == ':'));
 
         //--- Fields ---
         private readonly LambdaConfig _parent;
-        private readonly string _key;
+        private readonly string _key = "";
         private readonly ILambdaConfigSource _source;
 
         //--- Constructors ---

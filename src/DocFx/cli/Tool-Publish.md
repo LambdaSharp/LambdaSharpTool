@@ -63,6 +63,12 @@ lash new function MyNewFunction
 (optional) Name of generated CloudFormation template file (default: bin/cloudformation.json)
 </dd>
 
+<dt><code>--module-origin &lt;ORIGIN&gt;</code></dt>
+<dd>
+
+(optional) Set alternative module origin when publishing
+</dd>
+
 <dt><code>--module-version &lt;VERSION&gt;</code></dt>
 <dd>
 

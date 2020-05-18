@@ -105,7 +105,7 @@ The <code>Url</code> attribute contains the S3 URL of the destination bucket and
 - Resource: DeployAssetsToBucket
   Type: LambdaSharp::S3::Unzip
   Properties:
-    SourceBucket: !Ref DeploymentBucketName
+    SourceBucket: !Ref Deployment::BucketName
     SourceKey: !Ref MyPackage
     DestinationBucket: !Ref MyBucket
     DestinationKey: assets/

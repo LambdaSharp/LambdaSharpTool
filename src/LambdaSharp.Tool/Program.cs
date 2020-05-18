@@ -80,7 +80,7 @@ namespace LambdaSharp.Tool {
 
             // execute command line options and report any errors
             var stopwatch = Stopwatch.StartNew();
-            using(new AnsiTerminal(Settings.UseAnsiConsole)) {
+            using(Settings.AnsiTerminal = new AnsiTerminal()) {
                 try {
                     try {
                         app.Execute(args);
@@ -90,13 +90,17 @@ namespace LambdaSharp.Tool {
                         LogError(e);
                     }
                     if(Settings.HasErrors) {
-                        Console.WriteLine();
-                        Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                        if(!Quiet) {
+                            Console.WriteLine();
+                            Console.WriteLine($"FAILED: {Settings.ErrorCount:N0} errors encountered");
+                        }
                         Settings.ShowErrors();
                         return -1;
                     }
                     if(Settings.HasWarnings) {
-                        Console.WriteLine();
+                        if(!Quiet) {
+                            Console.WriteLine();
+                        }
                         Settings.ShowErrors();
                     }
                     return 0;

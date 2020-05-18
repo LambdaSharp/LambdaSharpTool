@@ -27,7 +27,6 @@ using System.Text;
 using System.Xml.Linq;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
-using Mono.Cecil;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
@@ -40,39 +39,6 @@ namespace LambdaSharp.Tool.Cli.Build {
         private const string GIT_INFO_FILE = "git-info.json";
         private const string API_MAPPINGS = "api-mappings.json";
         private const string MIN_AWS_LAMBDA_TOOLS_VERSION = "4.0.0";
-
-        //--- Types ---
-        private class CustomAssemblyResolver : BaseAssemblyResolver {
-
-            //--- Fields ---
-            private string _directory;
-            private List<AssemblyDefinition> _loadedAssemblies = new List<AssemblyDefinition>();
-
-            //--- Constructors ---
-            public CustomAssemblyResolver(string directory) {
-                _directory = directory;
-            }
-
-            //--- Methods ---
-            public override AssemblyDefinition Resolve(AssemblyNameReference name) {
-                var assembly = AssemblyDefinition.ReadAssembly(Path.Combine(_directory, $"{name.Name}.dll"), new ReaderParameters {
-                    AssemblyResolver = this
-                });
-                if(assembly != null) {
-                    _loadedAssemblies.Add(assembly);
-                }
-                return assembly;
-            }
-
-            protected override void Dispose(bool disposing) {
-                base.Dispose(disposing);
-                if(disposing) {
-                    foreach(var assembly in _loadedAssemblies) {
-                        assembly.Dispose();
-                    }
-                }
-            }
-        }
 
         private class ApiGatewayInvocationMappings {
 
@@ -357,6 +323,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // validate the project is using the most recent lambdasharp assembly references
+            var hasErrors = false;
             if(!noAssemblyValidation && function.HasAssemblyValidation) {
                 var includes = csproj.Element("Project")
                     ?.Descendants("PackageReference")
@@ -369,9 +336,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var library = include.Attribute("Include").Value;
                     var libraryVersionText = include.Attribute("Version")?.Value;
                     if(libraryVersionText == null) {
+                        hasErrors = true;
                         LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
                     } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
                         if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
+                            hasErrors = true;
                             LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
 
@@ -381,10 +350,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 // show error as warning instead since this package reference will not be used anyway
                                 LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             } else {
+                                hasErrors = true;
                                 LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
                         }
                     } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
+                        hasErrors = true;
                         LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                     } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
 
@@ -392,11 +363,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                         if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
                             LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else {
+                            hasErrors = true;
                             LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                 }
-                if(Settings.HasErrors) {
+                if(hasErrors) {
                     return;
                 }
             }
@@ -415,10 +387,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
             if(function.HasHandlerValidation) {
                 if(function.Function.Handler is string handler) {
-                    ValidateEntryPoint(
+                    if(!ValidateEntryPoint(
                         buildFolder,
                         handler
-                    );
+                    )) {
+                        return;
+                    }
                 }
             }
 
@@ -820,52 +794,29 @@ namespace LambdaSharp.Tool.Cli.Build {
             File.Move(zipTempPackage, package);
         }
 
-        private void ValidateEntryPoint(string directory, string handler) {
-            var parts = handler.Split("::");
-            if(parts.Length != 3) {
-                LogError("'Handler' attribute has invalid value");
-                return;
-            }
-            try {
-                var lambdaFunctionAssemblyName = parts[0];
-                var lambdaFunctionClassName = parts[1];
-                var lambdaFunctionEntryPointName = parts[2];
-                using(var resolver = new CustomAssemblyResolver(directory))
-                using(var lambdaFunctionAssembly = AssemblyDefinition.ReadAssembly(Path.Combine(directory, $"{lambdaFunctionAssemblyName}.dll"), new ReaderParameters {
-                    AssemblyResolver = resolver
-                })) {
-                    if(lambdaFunctionAssembly == null) {
-                        LogError("could not load assembly");
-                        return;
+        private bool ValidateEntryPoint(string buildFolder, string handler) {
+            var hasErrors = false;
+            RunLashTool(
+                new[] {
+                    "util", "validate-assembly",
+                    "--directory", buildFolder,
+                    "--entry-point", handler,
+                    "--quiet",
+                    "--no-ansi"
+                },
+                showOutput: false,
+                output => {
+                    if(output.StartsWith("ERROR:", StringComparison.Ordinal)) {
+                        hasErrors = true;
+                        LogError(output.Substring(6).Trim());
+                    } else if(output.StartsWith("WARNING:")) {
+                        hasErrors = true;
+                        LogError(output.Substring(8).Trim());
                     }
-                    var functionClassType = lambdaFunctionAssembly.MainModule.GetType(lambdaFunctionClassName);
-                    if(functionClassType == null) {
-                        LogError($"could not find type '{lambdaFunctionClassName}' in assembly");
-                        return;
-                    }
-                    FindMethod(functionClassType, lambdaFunctionEntryPointName);
-
-                    // local functions
-                    void FindMethod(TypeDefinition methodClassType, string methodName) {
-                        again:
-                            var functionMethod = methodClassType.Methods.FirstOrDefault(method => method.Name == methodName);
-                            if(functionMethod == null) {
-                                if((methodClassType.BaseType == null) || (methodClassType.BaseType.FullName == "System.Object")) {
-                                    LogError($"could not find method '{methodName}' in class '{lambdaFunctionClassName}'");
-                                    return;
-                                }
-                                methodClassType = methodClassType.BaseType.Resolve();
-                                goto again;
-                            }
-                    }
+                    return null;
                 }
-            } catch(Exception e) {
-                if(Settings.VerboseLevel >= VerboseLevel.Exceptions) {
-                    LogError(e);
-                } else {
-                    LogWarn("unable to validate function entry-point due to an internal error");
-                }
-            }
+            );
+            return !hasErrors;
         }
 
         private List<ApiGatewayInvocationMapping> ExtractMappings(FunctionItem function) {
@@ -966,38 +917,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // check if lambdasharp is installed or if we need to run it using dotnet
             var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
-            bool success;
-            if(lambdaSharpFolder == null) {
-
-                // check if lash executable exists (it should since we're running)
-                var lash = ProcessLauncher.Lash;
-                if(string.IsNullOrEmpty(lash)) {
-                    LogError("failed to find the \"lash\" executable in path.");
-                    return false;
-                }
-                success = ProcessLauncher.Execute(
-                    lash,
-                    arguments,
-                    Settings.WorkingDirectory,
-                    Settings.VerboseLevel >= VerboseLevel.Detailed
-                );
-            } else {
-
-                // check if dotnet executable exists
-                var dotNetExe = ProcessLauncher.DotNetExe;
-                if(string.IsNullOrEmpty(dotNetExe)) {
-                    LogError("failed to find the \"dotnet\" executable in path.");
-                    return false;
-                }
-                success = ProcessLauncher.Execute(
-                    dotNetExe,
-                    new[] {
-                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
-                    }.Union(arguments).ToList(),
-                    Settings.WorkingDirectory,
-                    Settings.VerboseLevel >= VerboseLevel.Detailed
-                );
-            }
+            var success = RunLashTool(arguments, Settings.VerboseLevel >= VerboseLevel.Detailed);
             if(!success) {
                 return false;
             }
@@ -1095,6 +1015,47 @@ namespace LambdaSharp.Tool.Cli.Build {
                         }
                     }
                 }
+            }
+            return success;
+        }
+
+        private bool RunLashTool(IEnumerable<string> arguments, bool showOutput, Func<string, string> processOutputLine = null) {
+
+            // check if lambdasharp is installed or if we need to run it using dotnet
+            var lambdaSharpFolder = Environment.GetEnvironmentVariable("LAMBDASHARP");
+            bool success;
+            if(lambdaSharpFolder == null) {
+
+                // check if lash executable exists (it should since we're running)
+                var lash = ProcessLauncher.Lash;
+                if(string.IsNullOrEmpty(lash)) {
+                    LogError("failed to find the \"lash\" executable in path.");
+                    return false;
+                }
+                success = ProcessLauncher.Execute(
+                    lash,
+                    arguments,
+                    Settings.WorkingDirectory,
+                    showOutput,
+                    processOutputLine
+                );
+            } else {
+
+                // check if dotnet executable exists
+                var dotNetExe = ProcessLauncher.DotNetExe;
+                if(string.IsNullOrEmpty(dotNetExe)) {
+                    LogError("failed to find the \"dotnet\" executable in path.");
+                    return false;
+                }
+                success = ProcessLauncher.Execute(
+                    dotNetExe,
+                    new[] {
+                        "run", "-p", $"{lambdaSharpFolder}/src/LambdaSharp.Tool", "--"
+                    }.Union(arguments).ToList(),
+                    Settings.WorkingDirectory,
+                    showOutput,
+                    processOutputLine
+                );
             }
             return success;
         }

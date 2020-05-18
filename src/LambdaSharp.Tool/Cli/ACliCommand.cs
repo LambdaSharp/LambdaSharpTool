@@ -184,9 +184,7 @@ namespace LambdaSharp.Tool.Cli {
             return async () => {
 
                 // check if ANSI console output needs to be disabled
-                if(noAnsiOutputOption.HasValue()) {
-                    Settings.UseAnsiConsole = false;
-                }
+                Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
 
                 // check if experimental caching feature is enabled
                 Settings.AllowCaching = string.Equals((Environment.GetEnvironmentVariable("LAMBDASHARP_FEATURE_CACHING") ?? "false"), "true", StringComparison.OrdinalIgnoreCase);
@@ -437,15 +435,18 @@ namespace LambdaSharp.Tool.Cli {
                 gitSha = process.StandardOutput.ReadToEnd().Trim();
                 process.WaitForExit();
                 if(process.ExitCode != 0) {
+                    gitSha = null;
                     if(showWarningOnFailure) {
                         LogWarn($"unable to get git-sha 'git rev-parse HEAD' failed with exit code = {process.ExitCode}");
                     }
-                    gitSha = null;
                 }
             } catch {
                 if(showWarningOnFailure) {
                     LogWarn("git is not installed; skipping git-sha detection");
                 }
+            }
+            if(gitSha == null) {
+                return null;
             }
 
             // check if folder contains uncommitted/untracked changes

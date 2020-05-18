@@ -1,0 +1,20 @@
+# The Module Name is used as prefix for all contained resources.
+Module: Sample.Metric
+
+# The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
+Version: 1.0-DEV
+
+# The Module Description is shown in the AWS CloudFormation console with the version number.
+Description: Module description
+
+# The Items section defines values and resources for the module.
+Items:
+
+  - Variable: MyVariable
+    Description: Variable description
+    Value: A sample variable value for the module
+
+  - Function: MyFunction
+    Description: Lambda function sending a CloudWatch metric
+    Memory: 256
+    Timeout: 30

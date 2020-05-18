@@ -18,12 +18,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Amazon.Lambda.SQSEvents;
 using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
+using LambdaSharp.SimpleQueueService.Extensions;
 
 namespace LambdaSharp.SimpleQueueService {
 
@@ -31,8 +33,17 @@ namespace LambdaSharp.SimpleQueueService {
     /// The <see cref="ALambdaQueueFunction{TMessage}"/> is the abstract base class for handling
     /// <a href="https://aws.amazon.com/sqs/">Amazon Simple Queue Service (SQS)</a> events.
     /// </summary>
+    /// <remarks>
+    /// When the Lambda function is declared with a Dead-Letter Queue (DLQ), the function attempts a
+    /// failed message up to 3 times, by default. The default can be overridden by setting a different
+    /// value for the <c>MAX_QUEUE_RETRIES</c> environment variable. Without a DLQ, the function will
+    /// attempt a message indefinitely.
+    /// </remarks>
     /// <typeparam name="TMessage">The SQS queue message type.</typeparam>
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
+
+        //--- Fields ---
+        private SQSEvent.SQSMessage _currentRecord;
 
         //--- Constructors ---
 
@@ -65,7 +76,7 @@ namespace LambdaSharp.SimpleQueueService {
         /// This property is only set during the invocation of <see cref="ProcessMessageStreamAsync(Stream)"/>. Otherwise, it returns <c>null</c>.
         /// </remarks>
         /// <value>The <see cref="SQSEvent.SQSMessage"/> instance.</value>
-        protected SQSEvent.SQSMessage CurrentRecord { get; private set; }
+        protected SQSEvent.SQSMessage CurrentRecord => _currentRecord;
 
         //--- Abstract Methods ---
 
@@ -82,12 +93,12 @@ namespace LambdaSharp.SimpleQueueService {
         /// The <see cref="Deserialize(string)"/> method converts the SQS queue message from string to a typed instance.
         /// </summary>
         /// <remarks>
-        /// This method invokes <see cref="ALambdaFunction.DeserializeJson{TMessage}(string)"/> to convert the SQS queue message string
+        /// This method invokes <see cref="Amazon.Lambda.Core.ILambdaSerializer.Deserialize{TMessage}(Stream)"/> to convert the SQS queue message string
         /// into a <paramtyperef name="TMessage"/> instance. Override this method to provide a custom message deserialization implementation.
         /// </remarks>
         /// <param name="body">The SQS queue message.</param>
         /// <returns>The deserialized SQS queue message.</returns>
-        public virtual TMessage Deserialize(string body) => DeserializeJson<TMessage>(body);
+        public virtual TMessage Deserialize(string body) => LambdaSerializer.Deserialize<TMessage>(body);
 
         /// <summary>
         /// The <see cref="ProcessMessageStreamAsync(Stream)"/> method is overridden to
@@ -99,63 +110,93 @@ namespace LambdaSharp.SimpleQueueService {
         /// <param name="stream">The stream with the request payload.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
         public override sealed async Task<Stream> ProcessMessageStreamAsync(Stream stream) {
-            var failureCounter = 0;
 
             // deserialize stream to sqs event
             LogInfo("deserializing stream to SQS event");
-            var sqsEvent = DeserializeJson<SQSEvent>(stream);
+            var sqsEvent = LambdaSerializer.Deserialize<SQSEvent>(stream);
+            if(!sqsEvent.Records.Any()) {
+                return $"empty batch".ToStream();
+            }
 
             // process all received sqs records
+            var eventSourceArn = sqsEvent.Records.First().EventSourceArn;
             var successfulMessages = new List<SQSEvent.SQSMessage>();
-            foreach(var sqsRecord in sqsEvent.Records) {
-                CurrentRecord = sqsRecord;
+            foreach(var record in sqsEvent.Records) {
+                _currentRecord = record;
+                var metrics = new List<LambdaMetric>();
                 try {
+                    var stopwatch = Stopwatch.StartNew();
 
                     // attempt to deserialize the sqs record
                     LogInfo("deserializing message");
-                    var message = Deserialize(sqsRecord.Body);
+                    var message = Deserialize(record.Body);
 
                     // attempt to process the sqs message
                     LogInfo("processing message");
                     await ProcessMessageAsync(message);
-                    successfulMessages.Add(sqsRecord);
-                } catch(LambdaRetriableException e) {
+                    successfulMessages.Add(record);
 
-                    // record error as warning; function will need to fail to prevent deletion
-                    LogErrorAsWarning(e);
-                    ++failureCounter;
+                    // record successful processing metrics
+                    stopwatch.Stop();
+                    var now = DateTimeOffset.UtcNow;
+                    metrics.Add(("MessageSuccess.Count", 1, LambdaMetricUnit.Count));
+                    metrics.Add(("MessageSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
+                    metrics.Add(("MessageSuccess.Lifespan", (now - record.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
                 } catch(Exception e) {
-                    LogError(e);
 
-                    // send straight to the dead letter queue and prevent from re-trying
-                    try {
-                        await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SQS, SerializeJson(sqsRecord), e);
-                        successfulMessages.Add(sqsRecord);
-                    } catch {
+                    // NOTE (2020-04-21, bjorg): delete message if error is not retriable (i.e. logic error) or
+                    //  the message has reached it's maximum number of retries.
+                    var deleteMessage = !(e is LambdaRetriableException)
+                        || (record.GetApproximateReceiveCount() >= await Provider.GetMaxRetriesForQueueAsync(record.EventSourceArn));
 
-                        // no dead-letter queue configured; function will need to fail to prevent deletion
-                        ++failureCounter;
+                    // the intent is to delete the message
+                    if(deleteMessage) {
+
+                        // NOTE (2020-04-22, bjorg): always log an error since the intent is to send
+                        //  this message to the dead-letter queue.
+                        LogError(e);
+                        try {
+
+                            // attempt to send failed message to the dead-letter queue
+                            await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.SQS, LambdaSerializer.Serialize(record), e);
+
+                            // record forwarded message as successful so it gets deleted from the queue
+                            successfulMessages.Add(record);
+
+                            // record failed processing metrics
+                            metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
+                        } catch {
+
+                            // record attempted processing metrics
+                            metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
+                        }
+                    } else {
+
+                        // record attempted processing metrics
+                        metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
+
+                        // log error as a warning as we expect to see this message again
+                        LogErrorAsWarning(e);
                     }
                 } finally {
-                    CurrentRecord = null;
+                    _currentRecord = null;
+                    LogMetric(metrics);
                 }
             }
 
             // check if any failures occurred
-            if(failureCounter > 0) {
+            if((sqsEvent.Records.Count != successfulMessages.Count) && (successfulMessages.Count > 0)) {
 
                 // delete all messages that were successfully processed to avoid them being tried again
-                if(successfulMessages.Count > 0) {
-                    await Provider.DeleteMessagesFromQueueAsync(
-                        AwsConverters.ConvertQueueArnToUrl(successfulMessages.First().EventSourceArn),
-                        successfulMessages.Select(message =>
-                            (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
-                        )
-                    );
-                }
+                await Provider.DeleteMessagesFromQueueAsync(
+                    eventSourceArn,
+                    successfulMessages.Select(message =>
+                        (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
+                    )
+                );
 
                 // fail invocation to prevent messages from being deleted
-                throw new LambdaAbortException($"processing failed: {failureCounter} errors ({successfulMessages.Count} messages succeeded)");
+                throw new LambdaAbortException($"processing failed: {sqsEvent.Records.Count - successfulMessages.Count} errors ({successfulMessages.Count} messages succeeded)");
             }
             return $"processed {successfulMessages.Count} messages".ToStream();
         }

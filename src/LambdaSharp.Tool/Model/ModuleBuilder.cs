@@ -89,7 +89,7 @@ namespace LambdaSharp.Tool.Model {
         public string Name => _name;
         public string FullName => $"{_namespace}.{_name}";
         public string Info => $"{FullName}:{Version}";
-        public ModuleInfo ModuleInfo => new ModuleInfo(_namespace, _name, Version, origin: null);
+        public ModuleInfo ModuleInfo => new ModuleInfo(Namespace, Name, Version, origin: ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
         public VersionInfo Version { get; set; }
         public IEnumerable<object> Secrets => _secrets;
         public IEnumerable<AModuleItem> Items => _items;
@@ -248,7 +248,7 @@ namespace LambdaSharp.Tool.Model {
 
                 // assume key name is an alias and resolve it to its ARN
                 try {
-                    var response = Settings.KmsClient.DescribeKeyAsync(textSecret).Result;
+                    var response = Settings.KmsClient.DescribeKeyAsync(textSecret).GetAwaiter().GetResult();
                     _secrets.Add(response.KeyMetadata.Arn);
                     return true;
                 } catch(Exception e) {
@@ -739,7 +739,7 @@ namespace LambdaSharp.Tool.Model {
                 condition: null,
                 pragmas: null
             );
-            var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).Result;
+            var dependency = AddDependencyAsync(moduleInfo, ModuleManifestDependencyType.Nested).GetAwaiter().GetResult();
 
             // validate module parameters
             AtLocation("Parameters", () => {
@@ -748,7 +748,7 @@ namespace LambdaSharp.Tool.Model {
                         var manifest = dependency.Manifest;
 
                         // update stack resource source with hashed cloudformation key
-                        stack.TemplateURL = $"https://{ModuleInfo.MODULE_ORIGIN_PLACEHOLDER}.s3.amazonaws.com/{dependency.ModuleLocation.ModuleTemplateKey}";
+                        stack.TemplateURL = FnSub($"https://${{DeploymentBucketName}}.s3.amazonaws.com/{dependency.ModuleLocation.ModuleTemplateKey}");
 
                         // validate that all required parameters are supplied
                         var formalParameters = manifest.GetAllParameters().ToDictionary(p => p.Name);
@@ -798,7 +798,7 @@ namespace LambdaSharp.Tool.Model {
                 }
 
                 // add expected parameters
-                MandatoryAdd("DeploymentBucketName", FnRef("DeploymentBucketName"));
+                MandatoryAdd("DeploymentBucketName", FnRef("Deployment::BucketName"));
                 MandatoryAdd("DeploymentPrefix", FnRef("DeploymentPrefix"));
                 MandatoryAdd("DeploymentPrefixLowercase", FnRef("DeploymentPrefixLowercase"));
                 MandatoryAdd("DeploymentRoot", FnRef("Module::RootId"));
@@ -821,7 +821,8 @@ namespace LambdaSharp.Tool.Model {
             string name,
             string description,
             IList<string> scope,
-            IList<KeyValuePair<string, string>> files
+            string files,
+            string build
         ) {
 
             // create variable corresponding to the package definition
@@ -830,7 +831,8 @@ namespace LambdaSharp.Tool.Model {
                 name: name,
                 description: description,
                 scope: scope,
-                files: files
+                files: files,
+                build: build
             );
             AddItem(package);
 
@@ -903,7 +905,7 @@ namespace LambdaSharp.Tool.Model {
             if(!definition.ContainsKey("Code")) {
                 definition["Code"] = new Dictionary<string, object> {
                     ["S3Key"] = "<BAD>",
-                    ["S3Bucket"] = FnRef("DeploymentBucketName")
+                    ["S3Bucket"] = FnRef("Deployment::BucketName")
                 };
             }
             if(!definition.ContainsKey("TracingConfig")) {
