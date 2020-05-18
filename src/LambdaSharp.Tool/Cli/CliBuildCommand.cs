@@ -109,8 +109,9 @@ namespace LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -211,8 +212,9 @@ namespace LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -352,8 +354,9 @@ namespace LambdaSharp.Tool.Cli {
                 var dryRunOption = AddDryRunOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();

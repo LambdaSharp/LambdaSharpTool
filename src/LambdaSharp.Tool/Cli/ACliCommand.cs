@@ -76,6 +76,9 @@ namespace LambdaSharp.Tool.Cli {
             return result;
         }
 
+        //--- Fields ---
+        private readonly Dictionary<CommandLineApplication, List<Func<bool>>> _commandOptions = new Dictionary<CommandLineApplication, List<Func<bool>>>();
+
         //--- Methods ---
         protected async Task<AwsAccountInfo> InitializeAwsProfile(
             string awsProfile,
@@ -166,8 +169,6 @@ namespace LambdaSharp.Tool.Cli {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                 awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
             }
-            var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-            var noAnsiOutputOption = cmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
             // add hidden testing options
             var awsAccountIdOption = cmd.Option("--aws-account-id <VALUE>", "(test only) Override AWS account Id (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -183,18 +184,8 @@ namespace LambdaSharp.Tool.Cli {
             tierVersionOption.ShowInHelpText = false;
             return async () => {
 
-                // check if ANSI console output needs to be disabled
-                Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-
                 // check if experimental caching feature is enabled
                 Settings.AllowCaching = string.Equals((Environment.GetEnvironmentVariable("LAMBDASHARP_FEATURE_CACHING") ?? "false"), "true", StringComparison.OrdinalIgnoreCase);
-
-                // initialize logging level
-                if(!TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)) {
-
-                    // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
-                    return null;
-                }
 
                 // initialize deployment tier
                 string tier = tierOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP_TIER") ?? "";
@@ -510,6 +501,70 @@ namespace LambdaSharp.Tool.Cli {
                 }
             }
             return gitBranch;
+        }
+
+        protected void AddStandardCommandOptions(CommandLineApplication cmd) {
+
+            // add --no-ansi command line option
+            var noAnsiOutputOption = cmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+            AddCommandAction(cmd, () => Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue());
+
+            // add --verbose command line option
+            // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
+            var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
+            AddCommandAction(cmd, () => TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel));
+
+            // add --quiet command line option
+            var noBannerOption = cmd.Option("--quiet", "(optional) Don't show banner or execution time", CommandOptionType.NoValue);
+            AddCommandAction(cmd, () => {
+                Program.Quiet = noBannerOption.HasValue();
+                if(!Program.Quiet) {
+
+                    // find top level command line application
+                    var app = cmd;
+                    while(app.Parent != null) {
+                        app = app.Parent;
+                    }
+                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                }
+            });
+        }
+
+        protected void AddCommandAction(CommandLineApplication cmd, Action action) {
+            if(action is null) {
+                throw new ArgumentNullException(nameof(action));
+            }
+            AddCommandAction(cmd, () => {
+                action();
+                return true;
+            });
+        }
+
+        protected void AddCommandAction(CommandLineApplication cmd, Func<bool> action) {
+            if(cmd is null) {
+                throw new ArgumentNullException(nameof(cmd));
+            }
+            if(action is null) {
+                throw new ArgumentNullException(nameof(action));
+            }
+            if(!_commandOptions.TryGetValue(cmd, out var actions)) {
+                actions = new List<Func<bool>>();
+                _commandOptions[cmd] = actions;
+            }
+            actions.Add(action);
+        }
+
+        protected bool ExecuteCommandActions(CommandLineApplication cmd) {
+            if(cmd is null) {
+                throw new ArgumentNullException(nameof(cmd));
+            }
+            var success = true;
+            if(_commandOptions.TryGetValue(cmd, out var actions)) {
+                foreach(var action in actions) {
+                    success &= action();
+                }
+            }
+            return success;
         }
     }
 }

@@ -72,12 +72,11 @@ namespace LambdaSharp.Tool.Cli {
                     var dryRunOption = subCmd.Option("--dryrun", "(optional) Check which logs to delete without deleting them", CommandOptionType.NoValue);
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
-                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
                         await DeleteOrphanLogsAsync(
                             dryRunOption.HasValue(),
                             awsProfileOption.Value(),
@@ -90,12 +89,11 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("download-cloudformation-spec", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Download CloudFormation JSON specification";
-                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
 
                         // determine destination folder
                         var lambdaSharpFolder = System.Environment.GetEnvironmentVariable("LAMBDASHARP");
@@ -126,16 +124,11 @@ namespace LambdaSharp.Tool.Cli {
                     var methodOption = subCmd.Option("--method|-m", "Name of a method to analyze", CommandOptionType.MultipleValue);
                     var defaultNamespaceOption = subCmd.Option("--default-namespace|-ns", "(optional) Default namespace for resolving class names", CommandOptionType.SingleValue);
                     var outputFileOption = subCmd.Option("--out|-o", "(optional) Output schema file location (default: console out)", CommandOptionType.SingleValue);
-                    var noBannerOption = subCmd.Option("--quiet", "Don't show banner or execution time", CommandOptionType.NoValue);
-                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-                        Program.Quiet = noBannerOption.HasValue();
-                        if(!Program.Quiet) {
-                            Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        }
+                        ExecuteCommandActions(subCmd);
 
                         // validate options
                         if(directoryOption.Value() == null) {
@@ -161,12 +154,11 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "List all Lambda functions by CloudFormation stack";
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = subCmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
-                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
 
                     // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
                         await ListLambdasAsync(
                             awsProfileOption.Value(),
                             awsRegionOption.Value()
@@ -181,16 +173,11 @@ namespace LambdaSharp.Tool.Cli {
                     var directoryOption = subCmd.Option("--directory|-d", "Directory where .NET assemblies are located", CommandOptionType.SingleValue);
                     var entryPointOption = subCmd.Option("--entry-point|-e", "Name of entry-point method to analyze", CommandOptionType.SingleValue);
                     var outputFileOption = subCmd.Option("--out|-o", "(optional) Output schema file location (default: console out)", CommandOptionType.SingleValue);
-                    var noBannerOption = subCmd.Option("--quiet", "Don't show banner or execution time", CommandOptionType.NoValue);
-                    var noAnsiOutputOption = subCmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
+                    AddStandardCommandOptions(subCmd);
 
                     // run command
                     subCmd.OnExecute(async () => {
-                        Program.Quiet = noBannerOption.HasValue();
-                        Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue();
-                        if(!Program.Quiet) {
-                            Console.WriteLine($"{app.FullName} - {subCmd.Description}");
-                        }
+                        ExecuteCommandActions(subCmd);
 
                         // validate options
                         if(directoryOption.Value() == null) {
@@ -204,8 +191,7 @@ namespace LambdaSharp.Tool.Cli {
                         ValidateAssembly(
                             directoryOption.Value(),
                             entryPointOption.Value(),
-                            outputFileOption.Value(),
-                            noBannerOption.HasValue()
+                            outputFileOption.Value()
                         );
                     });
                 });
@@ -906,12 +892,12 @@ namespace LambdaSharp.Tool.Cli {
             }
         }
 
-        public void ValidateAssembly(string directory, string methodReference, string outputFile, bool quiet) {
+        public void ValidateAssembly(string directory, string methodReference, string outputFile) {
             try {
                 if(!StringEx.TryParseAssemblyClassMethodReference(methodReference, out var assemblyName, out var typeName, out var methodName)) {
                     throw new ProcessTargetInvocationException($"method reference '{methodReference}' is not well formed");
                 }
-                var output = quiet ? null : Console.Out;
+                var output = Program.Quiet ? null : Console.Out;
 
                 // load assembly
                 Assembly assembly;

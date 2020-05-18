@@ -78,8 +78,9 @@ namespace LambdaSharp.Tool.Cli {
                     var functionTimeoutOption = subCmd.Option("--timeout <SECONDS>", "(optional) Function timeout in seconds (default: 30)", CommandOptionType.SingleValue);
                     var functionMemoryOption = subCmd.Option("--memory <MB>", "(optional) Function memory in megabytes (default: 256)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new project (e.g. MyFunction)");
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
                         var settings = new Settings { };
 
                         // get function name
@@ -126,8 +127,9 @@ namespace LambdaSharp.Tool.Cli {
                     // sub-command options
                     var directoryOption = subCmd.Option("--working-directory <PATH>", "(optional) New module directory (default: current directory)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new module (e.g. My.NewModule)");
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
                         var settings = new Settings { };
 
                         // get the module name
@@ -153,10 +155,9 @@ namespace LambdaSharp.Tool.Cli {
                     subCmd.Description = "Create new LambdaSharp resource definition";
                     var nameArgument = subCmd.Argument("<NAME>", "Name of new resource (e.g. MyResource)");
                     var typeArgument = subCmd.Argument("<TYPE>", "AWS resource type (e.g. AWS::SNS::Topic)");
-
-                    // sub-command options
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(() => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
                         var settings = new Settings { };
 
                         // get the resource name
@@ -186,10 +187,9 @@ namespace LambdaSharp.Tool.Cli {
                     var awsProfileOption = subCmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                     var awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
                     var nameArgument = subCmd.Argument("<NAME>", "Name of the S3 bucket");
-
-                    // sub-command options
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                        ExecuteCommandActions(subCmd);
 
                         // initialize AWS profile
                         var awsAccount = await InitializeAwsProfile(

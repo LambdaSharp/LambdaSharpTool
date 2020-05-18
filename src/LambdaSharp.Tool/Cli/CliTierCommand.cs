@@ -41,13 +41,14 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("coreservices", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Enable/disable LambdaSharp.Core services for all modules in tier";
+
+                    // command options
                     var enabledOption = subCmd.Option("--enabled", "(optional) Enable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var disabledOption = subCmd.Option("--disabled", "(optional) Disable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
-
-                    // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                    ExecuteCommandActions(subCmd);
                         var settings = await initSettingsCallback();
                         if(settings == null) {
                             return;
@@ -118,9 +119,9 @@ namespace LambdaSharp.Tool.Cli {
             }
             Console.WriteLine();
             if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
             } else {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {settings.TierName}");
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {settings.TierName}");
             }
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter,
