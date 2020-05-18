@@ -38,7 +38,7 @@ Name of a method to analyze
 <dt><code>--quiet</code></dt>
 <dd>
 
-Don't show banner or execution time
+(optional) Don't show banner or execution time
 </dd>
 
 </dl>
