@@ -390,10 +390,10 @@ namespace LambdaSharp.Core.LoggingStreamAnalyzerFunction {
         private void ReportMetrics() {
             var metrics = new List<LambdaMetric>();
             if(_errorsReportsCount > 0) {
-                metrics.Add(("ErrorReport.Count", _errorsReportsCount, LambdaMetricUnit.Count));
+                metrics.Add(("LambdaError.Errors.Count", _errorsReportsCount, LambdaMetricUnit.Count));
             }
             if(_warningsReportsCount > 0) {
-                metrics.Add(("WarningReport.Count", _warningsReportsCount, LambdaMetricUnit.Count));
+                metrics.Add(("LambdaError.Warnings.Count", _warningsReportsCount, LambdaMetricUnit.Count));
             }
             LogMetric(metrics);
         }

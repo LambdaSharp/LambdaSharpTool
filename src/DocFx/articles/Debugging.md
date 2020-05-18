@@ -1,10 +1,10 @@
 ---
-title: Debug Logging - Lambda Functions - LambdaSharp
+title: Lambda Debug Logging - Lambda Functions - LambdaSharp
 description: Description of how to enable debug logging for Lambda functions
 keywords: debug, logs, cloudwatch
 ---
 
-# Debugging
+# Lambda Debugging
 
 While it is not (yet) possible to attach a debugger to a running Lambda function, the [ALambdaFunction](xref:LambdaSharp.ALambdaFunction) base class provides debug logging capabilities to enable better inspection capabilities of what's going in a deployed Lambda function.
 

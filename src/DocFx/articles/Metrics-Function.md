@@ -1,19 +1,12 @@
 ---
-title: CloudWatch Metrics - Custom CloudWatch Metrics reported by LambdaSharp - LambdaSharp
-description: List of custom CloudWatch metrics reported by LambdaSharp modules
-keywords: cloudwatch, metrics, modules
+title: LambdaSharp Function Metrics - Custom CloudWatch Metrics reported by LambdaSharp functions - LambdaSharp
+description: List of custom CloudWatch metrics reported by LambdaSharp functions
+keywords: cloudwatch, metrics, functions
 ---
 
-# CloudWatch Metrics
+# LambdaSharp Function Metrics
 
-LambdaSharp modules emit custom CloudWatch metrics to enable automated monitoring on the efficiency and reliability of modules.
-
-LambdaSharp modules can report custom metrics using the built-in [`LogMetric(string name, double value, LambdaMetricUnit unit)`](xref:LambdaSharp.ALambdaFunction.LogMetric(System.String,System.Double,LambdaSharp.LambdaMetricUnit)) method or one of its overloads. Metrics are automatically organized by module full name, prefixed by _Module:_. For example, the _LambdaSharp.Core_ metrics are found under the _Module:LambdaSharp.Core_ namespace in CloudWatch.
-
-
-## Standard Lambda Function Metrics
-
-### Class [ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
+## Class [ALambdaFunction](xref:LambdaSharp.ALambdaFunction)
 
 The `ALambdaFunction` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -25,7 +18,7 @@ The `ALambdaFunction` custom metrics are organized by [`Stack`,`Function`] and [
 |LogFatal.Count     |Count  |Number of fatal error statements logged.                                           |
 |LogWarning.Count   |Count  |Number of warning statements logged. This count includes errors logged as warnings.|
 
-#### AWS Metrics
+### AWS Metrics
 
 In addition, Lambda emits the following metrics organized by [`FunctionName`], [`Resource`], [`ExecutedVersion`], and [`(none)`] dimension where:
 * `FunctionName` is the aggregate metrics for all versions and aliases of a function.
@@ -49,7 +42,7 @@ In addition, Lambda emits the following metrics organized by [`FunctionName`], [
 |Throttles                                  |Count          |The number of invocation requests that are throttled. When all function instances are processing requests and no concurrency is available to scale up, Lambda rejects additional requests with `TooManyRequestsException`. Throttled requests and other invocation errors don't count as Invocations or Errors.|
 |UnreservedConcurrentExecutions             |Count          |For an AWS Region, the number of events that are being processed by functions that don't have reserved concurrency.|
 
-### Class [ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
+## Class [ALambdaQueueFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleQueueService.ALambdaQueueFunction`1)
 
 The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -65,7 +58,7 @@ The `ALambdaQueueFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 
 **NOTE:** The lifespan of a message is determined by first checking for a custom `SentTimestamp` message attribute. If none is found, the built-in SQS `SentTimestamp` message attribute is used instead to determine when the message was created. The custom `SentTimestamp` attribute must a UNIX epoch timestamp in milliseconds stored as a `String` value.
 
-#### AWS Metrics
+### AWS Metrics
 
 In addition, SQS emits the following metrics organized by [`QueueName`] dimension where:
 * `QueueName` is the Amazon SQS queue name.
@@ -84,7 +77,7 @@ In addition, SQS emits the following metrics organized by [`QueueName`] dimensio
 
 For more details, consult the [Amazon SQS metrics documentation](https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-available-cloudwatch-metrics.html).
 
-### Class [ALambdaTopicFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleNotificationService.ALambdaTopicFunction`1)
+## Class [ALambdaTopicFunction&lt;TMessage&gt;](xref:LambdaSharp.SimpleNotificationService.ALambdaTopicFunction`1)
 
 The `ALambdaTopicFunction<TMessage>` custom metrics are organized by [`Stack`,`Function`] and [`Stack`] dimensions where:
 * `Stack` is the CloudFormation stack name.
@@ -100,7 +93,7 @@ The `ALambdaTopicFunction<TMessage>` custom metrics are organized by [`Stack`,`F
 
 **NOTE:** The lifespan of a message is determined by first checking for a custom `SentTimestamp` message attribute. If none is found, the built-in SNS `Timestamp` is used instead to determine when the message was created. The custom `SentTimestamp` attribute must a UNIX epoch timestamp in milliseconds stored as a `String` value.
 
-#### AWS Metrics
+### AWS Metrics
 
 In addition, SNS emits the following metrics organized by [`Application`], [`Application`,`Platform`], [`Country`], [`Platform`], [`TopicName`], and [`SMSType`] dimensions where:
 * `Application` is the app and device registered with one of the supported push notification services, such as APNs and FCM.
@@ -125,7 +118,7 @@ In addition, SNS emits the following metrics organized by [`Application`], [`App
 
 For more details, consult the [Amazon SNS metrics documentation](https://docs.aws.amazon.com/sns/latest/dg/sns-monitoring-using-cloudwatch.html).
 
-### Class [ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
+## Class [ALambdaApiGatewayFunction](xref:LambdaSharp.ApiGateway.ALambdaApiGatewayFunction)
 
 For REST APIs, the `ALambdaApiGatewayFunction` custom metrics are organized by [`Stack`,`Method`,`Resource`] dimension where:
 * `Stack` is the CloudFormation stack name.
@@ -143,7 +136,7 @@ For WebSocket APIs, the `ALambdaApiGatewayFunction` custom metrics are organized
 |AsyncRequestSuccess.Count  |Count  |Number of successfully processed asynchronous requests.                        |
 |AsyncRequestSuccess.Latency|Milliseconds|Number of milliseconds to successfully process an asynchronous request.             |
 
-#### AWS Metrics
+### AWS Metrics
 
 In addition, API Gateway emits the following detailed metrics organized by [`ApiName`,`Method`,`Resource`,`Stage`] dimensions where:
 * `ApiName` is the API Gateway name.
@@ -163,71 +156,3 @@ In addition, API Gateway emits the following detailed metrics organized by [`Api
 
 For more details, consult the [Amazon API Gateway metrics documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-metrics-and-dimensions.html).
 
-
-## Standard Module Metrics
-
-### Module LambdaSharp.Core
-
-Note that Core services must be enabled for _LambdaSharp.Core_ metrics to be reported.
-
-|Name                   |Unit        |Description                                                           |
-|-----------------------|------------|----------------------------------------------------------------------|
-|ErrorReport.Count      |Count       |Number of errors reported while processing CloudWatch Log events.     |
-|LogEvent.Latency       |Milliseconds|Number of milliseconds to to process an ingested CloudWatch Log event.|
-|WarningReport.Count    |Count       |Number of warnings reported while processing CloudWatch Log events.   |
-
-## LambdaSharp.Core Metrics Events
-
-When the _Core Services_ are enabled, the emitted LambdaSharp metrics are also published as events to the default event bus on [Amazon EventBridge](https://docs.aws.amazon.com/eventbridge/latest/userguide/what-is-amazon-eventbridge.html).
-
-The following is an example of a `LambdaMetrics` event:
-```json
-{
-  "id": "53dc4d37-cffa-4f76-80c9-8b7d4a4d2eaa",
-  "detail-type": "LambdaMetrics",
-  "source": "LambdaSharp.Core/Logs",
-  "account": "123456789012",
-  "time": "2019-10-08T16:53:06Z",
-  "region": "us-east-1",
-  "resources": [
-      "lambdasharp:stack:MyTier-Sample-Metric",
-      "lambdasharp:module:Sample.Metric",
-      "lambdasharp:tier:MyTier"
-    ],
-  "detail": {
-    "_aws": {
-        "Timestamp": 1587416172844,
-        "CloudWatchMetrics": [
-            {
-                "Namespace": "Module:Sample.Metric",
-                "Dimensions": [
-                    [
-                        "Stack"
-                    ],
-                    [
-                        "Stack",
-                        "Function"
-                    ]
-                ],
-                "Metrics": [
-                    {
-                        "Name": "CompletedMessages.Latency",
-                        "Unit": "Milliseconds"
-                    },
-                    {
-                        "Name": "CompletedMessages.Count",
-                        "Unit": "Count"
-                    }
-                ]
-            }
-        ]
-    },
-    "Source": "LambdaMetrics",
-    "Version": "2020-04-16",
-    "CompletedMessages.Latency": 100,
-    "CompletedMessages.Count": 100,
-    "Stack": "MyTier-Sample-Metric",
-    "Function": "MyFunction"
-  }
-}
-```
