@@ -137,14 +137,14 @@ namespace LambdaSharp.Records.ErrorReports {
                 ?.Select(CreateStackTraceFromException)
                 .Reverse()
                 .ToList();
-            var timestamp = Convert.ToInt64((DateTime.UtcNow - _epoch).TotalSeconds);
             return new LambdaErrorReport {
-                Module = _moduleInfo,
+                ModuleInfo = _moduleInfo,
+                Module = _moduleInfo.Split(":", 2)[0],
                 ModuleId = _moduleId,
                 RequestId = requestId,
                 Level = level,
                 Fingerprint = fingerprint,
-                Timestamp = timestamp,
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 Message = message,
                 Traces = traces,
                 Platform = _platform,

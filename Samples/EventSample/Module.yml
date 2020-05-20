@@ -1,13 +1,21 @@
-# The Module Name is used as prefix for all contained resources.
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2019
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 Module: Sample.Event
-
-# The Module Version is shown in the CloudFormation stack and Lambda function descriptions.
-Version: 1.0-DEV
-
-# The Module Description is shown in the AWS CloudFormation console with the version number.
 Description: Module description
-
-# The Items section defines values and resources for the module.
 Items:
 
   - Function: SenderFunction
@@ -19,24 +27,12 @@ Items:
     Description: Lambda function for receiving CloudWatch events
     Memory: 256
     Timeout: 30
-    # Sources:
-    #   - Rule: ReceiverFunction
-    #     Pattern:
-    #       source: [ LambdaSharp.Sample ]
-
-  - Resource: ReceiverEventRule
-    Type: AWS::Events::Rule
-    Properties:
-      EventPattern:
-        source: [ LambdaSharp.Sample ]
-      Targets:
-         - Id: Lambda
-           Arn: !GetAtt [ ReceiverFunction, Arn ]
-
-  - Resource: PermissionForEventsToInvokeLambda
-    Type: AWS::Lambda::Permission
-    Properties:
-      FunctionName: !Ref ReceiverFunction
-      Action: lambda:InvokeFunction
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt [ ReceiverEventRule, Arn ]
+    Sources:
+      - EventBus: default
+        Pattern:
+          source:
+            - MySample
+          detail-type:
+            - MyEvent
+          resources:
+            - !Sub "lambdasharp:tier:${Deployment::Tier}"

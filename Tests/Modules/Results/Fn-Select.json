@@ -36,7 +36,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9F17ECD60BE4290A5DAF190FE97A1A95"
+      "Default": "461BD7DC397EBAB8D8F3084E0173A3BB"
     }
   },
   "Resources": {
@@ -66,7 +66,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Test.TestModule:1.0-DEV",
+        "ModuleInfo": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -74,7 +74,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Test.TestModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -83,7 +83,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -164,9 +164,9 @@
       "Version": "2019-07-04",
       "Module": "Test.TestModule:1.0-DEV",
       "Description": "LambdaSharp CloudFormation Test",
-      "TemplateChecksum": "9F17ECD60BE4290A5DAF190FE97A1A95",
+      "TemplateChecksum": "461BD7DC397EBAB8D8F3084E0173A3BB",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

@@ -61,11 +61,14 @@ namespace LambdaSharp.Tool.Cli {
         public static CommandOption AddForcePublishOption(CommandLineApplication cmd)
             => cmd.Option("--force-publish", "(optional) Publish modules and their artifacts even when no changes were detected", CommandOptionType.NoValue);
 
+        public static CommandOption AddModuleOriginOption(CommandLineApplication cmd)
+            => cmd.Option("--module-origin <ORIGIN>", "(optional) Set alternative module origin when publishing", CommandOptionType.SingleValue);
+
         public static CommandOption AddModuleVersionOption(CommandLineApplication cmd)
-            => cmd.Option("--module-version", "(optional) Override the module version", CommandOptionType.SingleValue);
+            => cmd.Option("--module-version <VERSION>", "(optional) Override the module version", CommandOptionType.SingleValue);
 
         public static CommandOption AddModuleBuildDateOption(CommandLineApplication cmd)
-            => cmd.Option("--module-build-date", "(optional) Override module build date [yyyyMMddHHmmss]", CommandOptionType.SingleValue);
+            => cmd.Option("--module-build-date <DATE>", "(optional) Override module build date [yyyyMMddHHmmss]", CommandOptionType.SingleValue);
 
         public static CommandOption AddForceBuildOption(CommandLineApplication cmd)
             => cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
@@ -106,8 +109,9 @@ namespace LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -189,7 +193,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
-                var moduleOriginOption = cmd.Option("--module-origin", "(optional) Set alternative module origin when publishing", CommandOptionType.SingleValue);
+                var moduleOriginOption = AddModuleOriginOption(cmd);
 
                 // build options
                 var compiledModulesArgument = cmd.Argument("<NAME>", "(optional) Path to module or artifacts folder (default: Module.yml)", multipleValues: true);
@@ -208,8 +212,9 @@ namespace LambdaSharp.Tool.Cli {
                 // misc options
                 var dryRunOption = AddDryRunOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -331,6 +336,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // publish options
                 var forcePublishOption = AddForcePublishOption(cmd);
+                var moduleOriginOption = AddModuleOriginOption(cmd);
 
                 // build options
                 var skipAssemblyValidationOption = AddSkipAssemblyValidationOption(cmd);
@@ -348,8 +354,9 @@ namespace LambdaSharp.Tool.Cli {
                 var dryRunOption = AddDryRunOption(cmd);
                 var outputCloudFormationPathOption = AddCloudFormationOutputOption(cmd);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // read settings and validate them
                     var settings = await initSettingsCallback();
@@ -455,7 +462,7 @@ namespace LambdaSharp.Tool.Cli {
 
                             // check if module needs to be published or imported first
                             if(moduleInfo == null) {
-                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOrigin: null);
+                                moduleInfo = await PublishStepAsync(settings, forcePublishOption.HasValue(), moduleOrigin: moduleOriginOption.Value());
                                 if(moduleInfo == null) {
                                     break;
                                 }

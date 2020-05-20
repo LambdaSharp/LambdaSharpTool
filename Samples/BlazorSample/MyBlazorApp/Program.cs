@@ -17,19 +17,21 @@
  */
 
 using System;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 
-namespace LambdaSharp.Core.ProcessLogEvents {
+namespace MyBlazorApp {
 
-    public class UsageReport {
+    public class Program {
 
-        //--- Properties ---
-        public TimeSpan BilledDuration { get; set; }
-        public TimeSpan UsedDuration { get; set; }
-        public float UsedDurationPercent { get; set; }
-        public TimeSpan MaxDuration { get; set; }
-        public int MaxMemory { get; set; }
-        public int UsedMemory { get; set; }
-        public float UsedMemoryPercent { get; set; }
-        public TimeSpan InitDuration { get; set; }
+        //--- Class Methods ---
+        public static async Task Main(string[] args) {
+            var builder = WebAssemblyHostBuilder.CreateDefault(args);
+            builder.RootComponents.Add<App>("app");
+            builder.Services.AddTransient(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+            await builder.Build().RunAsync();
+        }
     }
 }

@@ -115,31 +115,18 @@ __Using Bash:__
 export LAMBDASHARP_TIER=Sandbox
 ```
 
-## (Optional) Customize LambdaSharp Core Settings
-
-The following LambdaSharp Core module settings can be adjusted in the AWS console by updating the deployed CloudFormation stack.
-
-|Parameter|Description|Default|
-|---|---|---|
-|`LoggingStreamRetentionPeriod`|How long logging stream entries are kept before they are lost|24|
-|`LoggingStreamShardCount`|Number of Kinesis shards for the logging streams|1|
-
-## (Optional) Subscribe to `ErrorReportTopic` Topic
-
-The LambdaSharp Core module analyzes the output of all deployed functions. When an issue occurs, the Core module sends a notification on the SNS `ErrorReportTopic`.
-
 ## (Optional) Setup Rollbar Integration
 
 The LambdaSharp Core module can optionally be configured to send errors and warnings to [Rollbar](https://rollbar.com/). To enable this functionality, the LambdaSharp Core module needs the _read_ and _write_ access tokens for the account, which can be found in the _Account Settings_ page.
 
 The LambdaSharp Core module expects the access tokens to be encrypted, which can easily be done with the [`lash encrypt`](~/cli/Tool-Encrypt.md) command.
 
-|Parameter|Description|Default|
-|---|---|---|
-|`RollbarReadAccessToken`|Account-level token for read operations|""|
-|`RollbarWriteAccessToken`|Account-level token for write operations|""|
-|`RollbarProjectPattern`|Optional pattern for naming Rollbar projects (see below)|""|
-|`RollbarProjectPrefix`|(Obsolete: use `RollbarProjectPattern` instead) Optional prefix when creating Rollbar projects|""|
+|Parameter                |Description                                              |Default  |
+|-------------------------|---------------------------------------------------------|---------|
+|`RollbarReadAccessToken` |Account-level token for read operations                  |""       |
+|`RollbarWriteAccessToken`|Account-level token for write operations                 |""       |
+|`RollbarProjectPattern`  |Optional pattern for naming Rollbar projects (see below) |""       |
+|`RollbarProjectPrefix`   |(Obsolete: use `RollbarProjectPattern` instead) Optional prefix when creating Rollbar projects|""|
 
 ### Using `RollbarProjectPattern` Parameter
 The `RollbarProjectPattern` parameter is used to flexibly configure how Rollbar projects are named based on the module information. The following placeholders values are available for the pattern (assuming a module named `Acme.Example.Module:123@origin`):

@@ -152,7 +152,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             _stack.Parameters["DeploymentChecksum"].Default = templateHash;
 
             // add outputs
-            _stack.Add("Module", new Humidifier.Output {
+            _stack.Add("ModuleInfo", new Humidifier.Output {
                 Value = _module.ModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER).ToString()
             });
             _stack.Add("ModuleChecksum", new Humidifier.Output {

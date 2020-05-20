@@ -13,12 +13,23 @@ The package definition creates a compressed zip package from a local path. The z
 Package: String
 Description: String
 Scope: ScopeDefinition
+Build: String
 Files: String
 ```
 
 ## Properties
 
 <dl>
+
+<dt><code>Build</code></dt>
+<dd>
+
+The <code>Build</code> attribute specifies a command to execute from the same directory as the module definition.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
 
 <dt><code>Description</code></dt>
 <dd>
@@ -75,4 +86,12 @@ When the logical ID of this item is provided to the `Ref` intrinsic function, `R
 ```yaml
 - Package: MyPackage
   Files: WebAssets/
+```
+
+### Create package from a published Blazor WebAssembly project
+
+```yaml
+- Package: MyBlazorPackage
+  Build: dotnet publish -c Release MyBlazorApp
+  Files: MyBlazorApp/bin/Release/netstandard2.1/publish/wwwroot/
 ```

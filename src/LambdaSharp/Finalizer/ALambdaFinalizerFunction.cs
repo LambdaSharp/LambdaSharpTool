@@ -21,7 +21,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
-using Amazon.Lambda.Core;
 using LambdaSharp.CustomResource;
 
 namespace LambdaSharp.Finalizer {

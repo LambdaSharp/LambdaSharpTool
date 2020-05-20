@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Amazon.Lambda.Core;
 using LambdaSharp;
 using LambdaSharp.SimpleQueueService;
 

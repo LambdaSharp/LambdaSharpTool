@@ -14,7 +14,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\..\src\LambdaSharp\LambdaSharp.csproj" />
-    <ProjectReference Include="..\..\ProcessLogEventsFunction\ProcessLogEventsFunction.csproj" />
+    <ProjectReference Include="..\..\LoggingStreamAnalyzerFunction\LoggingStreamAnalyzerFunction.csproj" />
     <ProjectReference Include="..\..\CommonLib\CommonLib.csproj" />
   </ItemGroup>
 </Project>

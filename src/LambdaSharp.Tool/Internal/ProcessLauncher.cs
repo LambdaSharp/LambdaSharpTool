@@ -40,11 +40,19 @@ namespace LambdaSharp.Tool.Internal {
             string workingFolder,
             bool showOutput,
             Func<string, string> processOutputLine = null
+        ) => Execute(application, ArgumentEscaper.EscapeAndConcatenate(arguments), workingFolder, showOutput, processOutputLine);
+
+        public static bool Execute(
+            string application,
+            string arguments,
+            string workingFolder,
+            bool showOutput,
+            Func<string, string> processOutputLine = null
         ) {
             using(var process = new Process()) {
                 process.StartInfo = new ProcessStartInfo {
                     FileName = application,
-                    Arguments = ArgumentEscaper.EscapeAndConcatenate(arguments),
+                    Arguments = arguments,
                     WorkingDirectory = workingFolder,
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
@@ -57,8 +65,8 @@ namespace LambdaSharp.Tool.Internal {
                 process.WaitForExit();
                 var success = (process.ExitCode == 0);
                 if(showOutput || !success) {
-                    PrintLines(output.Result);
-                    PrintLines(error.Result);
+                    PrintLines(output.GetAwaiter().GetResult());
+                    PrintLines(error.GetAwaiter().GetResult());
                 }
                 return success;
             }
@@ -104,7 +112,7 @@ namespace LambdaSharp.Tool.Internal {
                 error = Task.Run(() => process.StandardError.ReadToEndAsync());
                 process.WaitForExit();
                 return (process.ExitCode == 0)
-                    ? output.Result
+                    ? output.GetAwaiter().GetResult()
                     : null;
             }
         }

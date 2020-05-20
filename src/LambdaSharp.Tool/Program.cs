@@ -50,6 +50,7 @@ namespace LambdaSharp.Tool {
 
         //--- Class Fields ---
         public static bool Quiet;
+        public static bool ShowHelp;
 
         //--- Class Methods ---
         public static int Main(string[] args) {
@@ -72,15 +73,14 @@ namespace LambdaSharp.Tool {
             new CliNukeCommand().Register(app);
 
             // no command
-            var showHelp = false;
             app.OnExecute(() => {
-                showHelp = true;
+                ShowHelp = true;
                 Console.WriteLine(app.GetHelpText());
             });
 
             // execute command line options and report any errors
             var stopwatch = Stopwatch.StartNew();
-            using(new AnsiTerminal(Settings.UseAnsiConsole)) {
+            using(Settings.AnsiTerminal = new AnsiTerminal()) {
                 try {
                     try {
                         app.Execute(args);
@@ -105,7 +105,7 @@ namespace LambdaSharp.Tool {
                     }
                     return 0;
                 } finally {
-                    if(!showHelp && !Quiet) {
+                    if(!ShowHelp && !Quiet) {
                         Console.WriteLine();
                         Console.WriteLine($"Done (finished: {DateTime.Now}; duration: {stopwatch.Elapsed:c})");
                     }

@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "457E681BD8798B1DDF394F38FE6A7017"
+      "Default": "EADB18C51B23A88C64D9BEA8BCD2B0A0"
     }
   },
   "Resources": {
@@ -123,10 +123,11 @@
         "Description": "Gets within 1 second of a timeout (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "NearTimeout",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -289,10 +290,11 @@
         "Description": "Uses most of the available memory (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "NearOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -455,10 +457,11 @@
         "Description": "Bad handler definition for assembly (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "FailBadEntryPoint",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -621,10 +624,11 @@
         "Description": "Throws an exception (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "FailError",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -787,10 +791,11 @@
         "Description": "Times out (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "FailTimeout",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -953,10 +958,11 @@
         "Description": "Runs out of memory (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "FailOutOfMemory",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -1119,10 +1125,11 @@
         "Description": "Throws an exception in the constructor (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "FailConstructor",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -1285,10 +1292,11 @@
         "Description": "Throws an exception in Javascript function (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "JsBadSyntax",
             "LAMBDA_RUNTIME": "nodejs12.x",
             "DEPLOYMENT_TIER": {
@@ -1451,10 +1459,11 @@
         "Description": "Throws an exception in Javascript function (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "JsError",
             "LAMBDA_RUNTIME": "nodejs12.x",
             "DEPLOYMENT_TIER": {
@@ -1617,10 +1626,11 @@
         "Description": "Throws an exception in Javascript function (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "JsThrow",
             "LAMBDA_RUNTIME": "nodejs12.x",
             "DEPLOYMENT_TIER": {
@@ -1784,6 +1794,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -1911,7 +1931,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.BadModule:1.0-DEV",
+        "ModuleInfo": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -3079,7 +3099,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "LambdaSharp.BadModule:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -3088,7 +3108,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -3318,9 +3338,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.BadModule:1.0-DEV",
       "Description": "Module for generating errors",
-      "TemplateChecksum": "457E681BD8798B1DDF394F38FE6A7017",
+      "TemplateChecksum": "EADB18C51B23A88C64D9BEA8BCD2B0A0",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

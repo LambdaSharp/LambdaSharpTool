@@ -73,7 +73,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "25C6138783BFF66B54B097A7DCC8E198"
+      "Default": "21FF4001E19E7606D1762EBE0CBF5431"
     }
   },
   "Resources": {
@@ -128,10 +128,11 @@
         },
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.DemoS3Subscriber:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "Subscriber",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -372,6 +373,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -499,7 +510,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
+        "ModuleInfo": "LambdaSharp.DemoS3Subscriber:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -723,7 +734,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "LambdaSharp.DemoS3Subscriber:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -732,7 +743,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1006,9 +1017,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "LambdaSharp.DemoS3Subscriber:1.0-DEV",
-      "TemplateChecksum": "25C6138783BFF66B54B097A7DCC8E198",
+      "TemplateChecksum": "21FF4001E19E7606D1762EBE0CBF5431",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Demo.S3Bucket Imports",
@@ -1096,7 +1107,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.7.1@lambdasharp",
+          "ModuleInfo": "LambdaSharp.S3.Subscriber:0.8.0@lambdasharp",
           "Type": "Shared"
         }
       ],

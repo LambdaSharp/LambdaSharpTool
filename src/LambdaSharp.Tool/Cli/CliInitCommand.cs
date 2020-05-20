@@ -43,12 +43,10 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Description = "Create or update a LambdaSharp deployment tier";
 
                 // init options
-                var allowDataLossOption = cmd.Option("--allow-data-loss", "(optional) Allow CloudFormation resource update operations that could lead to data loss", CommandOptionType.NoValue);
                 var protectStackOption = cmd.Option("--protect", "(optional) Enable termination protection for the CloudFormation stack", CommandOptionType.NoValue);
                 var enableXRayTracingOption = cmd.Option("--xray[:<LEVEL>]", "(optional) Enable service-call tracing with AWS X-Ray for all resources in module  (0=Disabled, 1=RootModule, 2=AllModules; RootModule if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
                 var versionOption = cmd.Option("--version <VERSION>", "(optional) Specify version for LambdaSharp modules (default: same as CLI version)", CommandOptionType.SingleValue);
                 var parametersFileOption = cmd.Option("--parameters <FILE>", "(optional) Specify source filename for module parameters (default: none)", CommandOptionType.SingleValue);
-                var forcePublishOption = CliBuildPublishDeployCommand.AddForcePublishOption(cmd);
                 var forceDeployOption = cmd.Option("--force-deploy", "(optional) Force module deployment", CommandOptionType.NoValue);
                 var quickStartOption = cmd.Option("--quick-start", "(optional, create-only) Use safe defaults for quickly setting up a LambdaSharp deployment tier.", CommandOptionType.NoValue);
                 var coreServicesOption = cmd.Option("--core-services <VALUE>", "(optional, create-only) Select if LambdaSharp.Core services should be enabled or not (either Enabled or Disabled, default prompts)", CommandOptionType.SingleValue);
@@ -57,10 +55,10 @@ namespace LambdaSharp.Tool.Cli {
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)", CommandOptionType.NoValue);
-                var forceBuildOption = cmd.Option("--force-build", "(optional) Always build function packages", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
 
                     // check if .aws/credentials file needs to be created
                     if(
@@ -124,7 +122,7 @@ namespace LambdaSharp.Tool.Cli {
                     // determine if we want to install modules from a local check-out
                     await Init(
                         settings,
-                        allowDataLossOption.HasValue(),
+                        allowDataLoos: true,
                         protectStackOption.HasValue(),
                         forceDeployOption.HasValue(),
                         versionOption.HasValue() ? VersionInfo.Parse(versionOption.Value()) : Version.GetCoreServicesReferenceVersion(),
@@ -132,13 +130,11 @@ namespace LambdaSharp.Tool.Cli {
                             ? null
                             : (localOption.Value() ?? Environment.GetEnvironmentVariable("LAMBDASHARP")),
                         parametersFileOption.Value(),
-                        forcePublishOption.HasValue(),
                         promptAllParametersOption.HasValue(),
                         xRayTracingLevel,
                         coreServices,
                         existingS3BucketName,
-                        allowUpgradeOption.HasValue(),
-                        forceBuildOption.HasValue()
+                        allowUpgradeOption.HasValue()
                     );
                 });
             });
@@ -152,13 +148,11 @@ namespace LambdaSharp.Tool.Cli {
             VersionInfo version,
             string lambdaSharpPath,
             string parametersFilename,
-            bool forcePublish,
             bool promptAllParameters,
             XRayTracingLevel xRayTracingLevel,
             CoreServices coreServices,
             string existingS3BucketName,
-            bool allowUpgrade,
-            bool forceBuild
+            bool allowUpgrade
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -187,8 +181,9 @@ namespace LambdaSharp.Tool.Cli {
 
             // check if a new installation is required
             var createNewTier = (settings.TierVersion == null);
-            var updateExistingTier = false;
-            if(!createNewTier) {
+            var updateExistingTier = forceDeploy;
+            var disableCoreServicesForUpgrade = false;
+            if(!createNewTier && !updateExistingTier) {
 
                 // check if core services state was not specified
                 if(coreServices == CoreServices.Undefined) {
@@ -245,6 +240,7 @@ namespace LambdaSharp.Tool.Cli {
                     if(!updateExistingTier) {
                         return false;
                     }
+                    disableCoreServicesForUpgrade = true;
                 } else if(!forceDeploy) {
                     LogError($"LambdaSharp tool is not compatible (tool: {settings.ToolVersion}, tier: {settings.TierVersion}); use --force-deploy to proceed anyway");
                     return false;
@@ -268,6 +264,9 @@ namespace LambdaSharp.Tool.Cli {
 
                     // deployment tier core services need to be disabled
                     || (coreServices == CoreServices.Disabled)
+
+                    // we have to disable core services to upgrade
+                    || disableCoreServicesForUpgrade
                 ))
             ) {
 
@@ -319,13 +318,13 @@ namespace LambdaSharp.Tool.Cli {
                         selector: null,
                         moduleSource: moduleSource,
                         moduleVersion: moduleVersion,
-                        forceBuild
+                        forceBuild: true
                     )) {
                         return false;
                     }
 
                     // publish module
-                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish, moduleOrigin: "lambdasharp");
+                    var moduleReference = await buildPublishDeployCommand.PublishStepAsync(settings, forcePublish: true, moduleOrigin: "lambdasharp");
                     if(moduleReference == null) {
                         return false;
                     }
@@ -336,7 +335,7 @@ namespace LambdaSharp.Tool.Cli {
                 if(!await buildPublishDeployCommand.ImportStepAsync(
                     settings,
                     ModuleInfo.Parse($"LambdaSharp.Core:{version}@lambdasharp"),
-                    forcePublish: forcePublish
+                    forcePublish: true
                 )) {
                     return false;
                 }
@@ -353,7 +352,7 @@ namespace LambdaSharp.Tool.Cli {
 
             // check if operating services need to be installed/updated
             if(createNewTier) {
-            Console.WriteLine();
+                Console.WriteLine();
                 Console.WriteLine($"Creating new deployment tier '{settings.TierName}'");
             } else if(updateExistingTier) {
                 Console.WriteLine();
@@ -496,6 +495,7 @@ namespace LambdaSharp.Tool.Cli {
                         return false;
                     }
                 } else {
+                    Console.WriteLine();
                     if(Settings.UseAnsiConsole) {
                         Console.WriteLine($"=> Stack update initiated for {AnsiTerminal.Yellow}{stackName}{AnsiTerminal.Reset}");
                     } else {

@@ -356,7 +356,30 @@ namespace LambdaSharp.Tool.Internal {
             return true;
         }
 
-        public static string GetModuleVersionText(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "Module")?.OutputValue;
+        public static async Task<IEnumerable<StackResourceSummary>> GetStackResourcesAsync(this IAmazonCloudFormation cfnClient, string stackName) {
+            var result = new List<StackResourceSummary>();
+            var request = new ListStackResourcesRequest {
+                StackName = stackName
+            };
+            do {
+                var attempts = 0;
+            again:
+                try {
+                    var response = await cfnClient.ListStackResourcesAsync(request);
+                    result.AddRange(response.StackResourceSummaries);
+                    request.NextToken = response.NextToken;
+                } catch(AmazonCloudFormationException e) when(
+                    (e.Message == "Rate exceeded")
+                    && (++attempts < 30)
+                ) {
+                    await Task.Delay(TimeSpan.FromSeconds(attempts));
+                    goto again;
+                }
+            } while(request.NextToken != null);
+            return result;
+        }
+
+        public static string GetModuleVersionText(this Stack stack) => stack.Outputs?.FirstOrDefault(output => (output.OutputKey == "ModuleInfo") || (output.OutputKey == "Module"))?.OutputValue;
         public static string GetModuleManifestChecksum(this Stack stack) => stack.Outputs?.FirstOrDefault(output => output.OutputKey == "ModuleChecksum")?.OutputValue;
     }
 }

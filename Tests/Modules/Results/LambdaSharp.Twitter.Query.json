@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "16C1B11727EF7FFCB34C60EBB3A0407B"
+      "Default": "12C38E716BD7E83EDE800DEF7ABDFBC1"
     }
   },
   "Resources": {
@@ -183,12 +183,13 @@
         "Description": "This function runs on a scheduled interval to find the latest matching tweets (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Twitter.Query:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "QueryFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
               "Fn::Select": [
                 "0",
@@ -299,7 +300,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -446,6 +447,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -573,7 +584,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
+        "ModuleInfo": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -600,7 +611,7 @@
           "Fn::Sub": "/aws/lambda/${QueryFunction}"
         },
         "FunctionPlatform": "AWS Lambda",
-        "FunctionFramework": "dotnetcore2.1",
+        "FunctionFramework": "dotnetcore3.1",
         "FunctionLanguage": "csharp",
         "FunctionMaxMemory": "256",
         "FunctionMaxDuration": "30"
@@ -750,7 +761,7 @@
       },
       "Description": "This topic publishes tweets that match the query"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "LambdaSharp.Twitter.Query:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -759,7 +770,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1027,9 +1038,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Twitter.Query:1.0-DEV",
       "Description": "Search Twitter at regular intervals and publish new found tweets",
-      "TemplateChecksum": "16C1B11727EF7FFCB34C60EBB3A0407B",
+      "TemplateChecksum": "12C38E716BD7E83EDE800DEF7ABDFBC1",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",

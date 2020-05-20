@@ -41,13 +41,14 @@ namespace LambdaSharp.Tool.Cli {
                 cmd.Command("coreservices", subCmd => {
                     subCmd.HelpOption();
                     subCmd.Description = "Enable/disable LambdaSharp.Core services for all modules in tier";
+
+                    // command options
                     var enabledOption = subCmd.Option("--enabled", "(optional) Enable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var disabledOption = subCmd.Option("--disabled", "(optional) Disable LambdaSharp.Core services for all modules", CommandOptionType.NoValue);
                     var initSettingsCallback = CreateSettingsInitializer(subCmd);
-
-                    // run command
+                    AddStandardCommandOptions(subCmd);
                     subCmd.OnExecute(async () => {
-                        Console.WriteLine($"{app.FullName} - {subCmd.Description}");
+                    ExecuteCommandActions(subCmd);
                         var settings = await initSettingsCallback();
                         if(settings == null) {
                             return;
@@ -68,6 +69,7 @@ namespace LambdaSharp.Tool.Cli {
 
                 // show help text if no sub-command is provided
                 cmd.OnExecute(() => {
+                    Program.ShowHelp = true;
                     Console.WriteLine(cmd.GetHelpText());
                 });
             });
@@ -115,10 +117,11 @@ namespace LambdaSharp.Tool.Cli {
             if(!modulesToUpdate.Any()) {
                 return;
             }
+            Console.WriteLine();
             if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {AnsiTerminal.Yellow}{settings.TierName}{AnsiTerminal.Reset}");
             } else {
-                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} modules in deployment tier {settings.TierName}");
+                Console.WriteLine($"=> {(enabled.Value ? "Enabling" : "Disabling")} core services in deployment tier {settings.TierName}");
             }
             var parameters = new Dictionary<string, string> {
                 ["LambdaSharpCoreServices"] = coreServicesParameter,
@@ -129,7 +132,6 @@ namespace LambdaSharp.Tool.Cli {
             foreach(var module in modulesToUpdate) {
                 await UpdateStackParameters(settings, module, parameters);
             }
-            Console.WriteLine();
 
             // show updated state
             if(showModules) {
@@ -204,12 +206,26 @@ namespace LambdaSharp.Tool.Cli {
                     };
                 }).ToList();
 
-            // retrieve name mappings for template
+            // retrieve name mappings and artifacts for template
             var template = (await settings.CfnClient.GetTemplateAsync(new GetTemplateRequest {
                 StackName = module.Stack.StackName,
                 TemplateStage = TemplateStage.Original
             })).TemplateBody;
-            var nameMappings = new ModelManifestLoader(settings, module.Stack.StackName).GetNameMappingsFromTemplate(template);
+            var manifestLoader = new ModelManifestLoader(settings, module.Stack.StackName);
+            var nameMappings = manifestLoader.GetNameMappingsFromTemplate(template);
+            var artifacts = manifestLoader.GetArtifactsFromTemplate(template);
+
+            // ensure that all artifacts exist before updating (otherwise, the update will fail)
+            if(artifacts?.Any() ?? false) {
+                foreach(var artifact in artifacts) {
+                    if(!await settings.S3Client.DoesS3ObjectExistAsync(settings.DeploymentBucketName, artifact)) {
+                        LogError($"cannot update CloudFormation stack due to missing artifact; re-publish original artifacts or re-deploy module with new artifacts (missing: {artifact})");
+                    }
+                }
+                if(HasErrors) {
+                    return;
+                }
+            }
 
             // create change-set
             var now = DateTime.UtcNow;

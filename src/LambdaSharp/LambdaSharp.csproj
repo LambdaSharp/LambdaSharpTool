@@ -21,6 +21,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageIcon>LambdaSharp-64x64.png</PackageIcon>
     <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
   </PropertyGroup>
   <ItemGroup>
@@ -30,10 +31,14 @@
     <PackageReference Include="Amazon.Lambda.SNSEvents" Version="1.1.0" />
     <PackageReference Include="Amazon.Lambda.SQSEvents" Version="1.1.0" />
     <PackageReference Include="AWSSDK.CloudFormation" Version="3.3.104.30" />
+    <PackageReference Include="AWSSDK.CloudWatchEvents" Version="3.3.102.27" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.30" />
     <PackageReference Include="AWSSDK.SQS" Version="3.3.102.93" />
     <PackageReference Include="AWSXRayRecorder.Core" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.AwsSdk" Version="2.8.0" />
     <PackageReference Include="AWSXRayRecorder.Handlers.System.Net" Version="2.7.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="LambdaSharp-64x64.png" Pack="true" Visible="false" PackagePath="" />
   </ItemGroup>
 </Project>

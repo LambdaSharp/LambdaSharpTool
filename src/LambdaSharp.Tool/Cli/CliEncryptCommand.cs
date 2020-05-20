@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Amazon;
 using Amazon.KeyManagementService;
 using Amazon.KeyManagementService.Model;
 using McMaster.Extensions.CommandLineUtils;
@@ -39,8 +40,9 @@ namespace LambdaSharp.Tool.Cli {
 
                 // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;
@@ -75,7 +77,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         public async Task<string> EncryptAsync(string keyId, string text, bool decrypt) {
-            var kmsClient = new AmazonKeyManagementServiceClient();
+            var kmsClient = new AmazonKeyManagementServiceClient(AWSConfigs.RegionEndpoint);
 
             // check if value needs to be decrypted first
             if(decrypt) {

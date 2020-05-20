@@ -6,27 +6,33 @@
       "Type": "String",
       "Description": "Dead Letter Queue (ARN)"
     },
-    "LoggingStream": {
+    "LoggingFirehoseStream": {
       "Type": "String",
       "Description": "Logging Stream (ARN)"
-    },
-    "LoggingStreamRetentionPeriodHours": {
-      "Type": "Number",
-      "Description": "Retention period (hours)",
-      "Default": "24",
-      "MinValue": 1
-    },
-    "LoggingStreamShardCount": {
-      "Type": "Number",
-      "Description": "Number of Kinesis shards",
-      "Default": "1",
-      "MinValue": 1
     },
     "CoreSecretsKey": {
       "Type": "String",
       "Description": "Encryption Key (ARN)",
       "AllowedPattern": "(arn:aws:kms:.*)?",
       "ConstraintDescription": "Must be a valid KMS Key ARN or left blank"
+    },
+    "LoggingStreamRole": {
+      "Type": "String",
+      "Description": "CloudWatch Logs IAM Role (ARN)"
+    },
+    "LoggingBucket": {
+      "Type": "String",
+      "Description": "Logging S3 Bucket (ARN)"
+    },
+    "LoggingBucketSuccessPrefix": {
+      "Type": "String",
+      "Description": "S3 Object Prefix",
+      "Default": "logging-success/"
+    },
+    "LoggingBucketFailurePrefix": {
+      "Type": "String",
+      "Description": "S3 Object Prefix",
+      "Default": "logging-failed/"
     },
     "RollbarReadAccessToken": {
       "Type": "String",
@@ -89,7 +95,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "AF413F1557D56F2D4668947EB2CF07F9"
+      "Default": "ACC83453FD04D15A1FF6806AFE6FA70B"
     }
   },
   "Resources": {
@@ -98,15 +104,62 @@
       "Condition": "DeadLetterQueueIsBlank",
       "Properties": {}
     },
-    "LoggingStreamResource": {
-      "Type": "AWS::Kinesis::Stream",
-      "Condition": "LoggingStreamIsBlank",
+    "LoggingFirehoseStreamResource": {
+      "Type": "AWS::KinesisFirehose::DeliveryStream",
+      "Condition": "LoggingFirehoseStreamIsBlank",
       "Properties": {
-        "RetentionPeriodHours": {
-          "Ref": "LoggingStreamRetentionPeriodHours"
-        },
-        "ShardCount": {
-          "Ref": "LoggingStreamShardCount"
+        "DeliveryStreamType": "DirectPut",
+        "ExtendedS3DestinationConfiguration": {
+          "RoleARN": {
+            "Fn::GetAtt": [
+              "LoggingStreamDeliveryRole",
+              "Arn"
+            ]
+          },
+          "BucketARN": {
+            "Fn::If": [
+              "LoggingBucketIsBlank",
+              {
+                "Fn::GetAtt": [
+                  "LoggingBucketResource",
+                  "Arn"
+                ]
+              },
+              {
+                "Ref": "LoggingBucket"
+              }
+            ]
+          },
+          "BufferingHints": {
+            "IntervalInSeconds": "60",
+            "SizeInMBs": "1"
+          },
+          "CompressionFormat": "GZIP",
+          "Prefix": {
+            "Ref": "LoggingBucketSuccessPrefix"
+          },
+          "ErrorOutputPrefix": {
+            "Ref": "LoggingBucketFailurePrefix"
+          },
+          "ProcessingConfiguration": {
+            "Enabled": "true",
+            "Processors": [
+              {
+                "Type": "Lambda",
+                "Parameters": [
+                  {
+                    "ParameterName": "LambdaArn",
+                    "ParameterValue": {
+                      "Fn::GetAtt": [
+                        "LoggingStreamAnalyzerFunction",
+                        "Arn"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         }
       }
     },
@@ -139,8 +192,9 @@
         }
       }
     },
-    "LoggingStreamRole": {
+    "LoggingStreamRoleResource": {
       "Type": "AWS::IAM::Role",
+      "Condition": "LoggingStreamRoleIsBlank",
       "Properties": {
         "AssumeRolePolicyDocument": {
           "Version": "2012-10-17",
@@ -160,26 +214,29 @@
         "Policies": [
           {
             "PolicyName": {
-              "Fn::Sub": "${AWS::StackName}CloudWatchLogsKinesisPolicy"
+              "Fn::Sub": "${AWS::StackName}CloudWatchLogsFirehosePolicy"
             },
             "PolicyDocument": {
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "CloudWatchLogsKinesisPermissions",
+                  "Sid": "CloudWatchLogsFirehosePermissions",
                   "Effect": "Allow",
-                  "Action": "kinesis:PutRecord",
+                  "Action": [
+                    "firehose:PutRecord",
+                    "firehose:PutRecordBatch"
+                  ],
                   "Resource": {
                     "Fn::If": [
-                      "LoggingStreamIsBlank",
+                      "LoggingFirehoseStreamIsBlank",
                       {
                         "Fn::GetAtt": [
-                          "LoggingStreamResource",
+                          "LoggingFirehoseStreamResource",
                           "Arn"
                         ]
                       },
                       {
-                        "Ref": "LoggingStream"
+                        "Ref": "LoggingFirehoseStream"
                       }
                     ]
                   }
@@ -190,14 +247,135 @@
         ]
       }
     },
-    "ProcessLogEvents": {
+    "LoggingBucketResource": {
+      "Type": "AWS::S3::Bucket",
+      "Condition": "LoggingBucketIsBlank",
+      "Properties": {
+        "LifecycleConfiguration": {
+          "Rules": [
+            {
+              "Status": "Enabled",
+              "ExpirationInDays": "90",
+              "Transitions": [
+                {
+                  "StorageClass": "INTELLIGENT_TIERING",
+                  "TransitionInDays": "1"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    "LoggingStreamDeliveryRole": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "FirehosePrincipal",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "firehose.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        },
+        "Policies": [
+          {
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}FirehoseS3Policy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "s3:AbortMultipartUpload",
+                    "s3:GetBucketLocation",
+                    "s3:GetObject",
+                    "s3:ListBucket",
+                    "s3:ListBucketMultipartUploads",
+                    "s3:PutObject"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::If": [
+                        "LoggingBucketIsBlank",
+                        {
+                          "Fn::GetAtt": [
+                            "LoggingBucketResource",
+                            "Arn"
+                          ]
+                        },
+                        {
+                          "Ref": "LoggingBucket"
+                        }
+                      ]
+                    },
+                    {
+                      "Fn::Sub": [
+                        "${P0}/*",
+                        {
+                          "P0": {
+                            "Fn::If": [
+                              "LoggingBucketIsBlank",
+                              {
+                                "Fn::GetAtt": [
+                                  "LoggingBucketResource",
+                                  "Arn"
+                                ]
+                              },
+                              {
+                                "Ref": "LoggingBucket"
+                              }
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "PolicyName": {
+              "Fn::Sub": "${AWS::StackName}FirehoseLambdaPolicy"
+            },
+            "PolicyDocument": {
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "lambda:InvokeFunction",
+                    "lambda:GetFunctionConfiguration"
+                  ],
+                  "Resource": {
+                    "Fn::GetAtt": [
+                      "LoggingStreamAnalyzerFunction",
+                      "Arn"
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "LoggingStreamAnalyzerFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": {
             "Ref": "DeploymentBucketName"
           },
-          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/ProcessLogEvents-DRYRUN.zip"
+          "S3Key": "<%MODULE_ORIGIN%>/LambdaSharp/Core/.artifacts/LoggingStreamAnalyzerFunction-DRYRUN.zip"
         },
         "DeadLetterConfig": {
           "TargetArn": {
@@ -215,15 +393,15 @@
             ]
           }
         },
-        "Description": "Process log events from all LambdaSharp module functions (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
-            "LAMBDA_NAME": "ProcessLogEvents",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>",
+            "LAMBDA_NAME": "LoggingStreamAnalyzerFunction",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
               "Fn::Select": [
                 "0",
@@ -268,12 +446,6 @@
                 }
               ]
             },
-            "STR_ERRORREPORTTOPIC": {
-              "Ref": "ErrorReportTopic"
-            },
-            "STR_USAGEREPORTTOPIC": {
-              "Ref": "UsageReportTopic"
-            },
             "STR_REGISTRATIONTABLE": {
               "Fn::GetAtt": [
                 "RegistrationTable",
@@ -293,7 +465,7 @@
             }
           }
         },
-        "Handler": "ProcessLogEvents::LambdaSharp.Core.ProcessLogEvents.Function::FunctionHandlerAsync",
+        "Handler": "LoggingStreamAnalyzerFunction::LambdaSharp.Core.LoggingStreamAnalyzerFunction.Function::FunctionHandlerAsync",
         "MemorySize": "256",
         "Role": {
           "Fn::GetAtt": [
@@ -301,8 +473,8 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
-        "Timeout": "30",
+        "Runtime": "dotnetcore3.1",
+        "Timeout": "300",
         "TracingConfig": {
           "Mode": {
             "Fn::If": [
@@ -314,22 +486,14 @@
         }
       }
     },
-    "ProcessLogEventsLogGroup": {
+    "LoggingStreamAnalyzerFunctionLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
         "LogGroupName": {
-          "Fn::Sub": "/aws/lambda/${ProcessLogEvents}"
+          "Fn::Sub": "/aws/lambda/${LoggingStreamAnalyzerFunction}"
         },
         "RetentionInDays": 30
       }
-    },
-    "ErrorReportTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
-    },
-    "UsageReportTopic": {
-      "Type": "AWS::SNS::Topic",
-      "Properties": {}
     },
     "RegistrationTable": {
       "Type": "AWS::DynamoDB::Table",
@@ -377,12 +541,13 @@
         "Description": "Register LambdaSharp modules and functions (v1.0-DEV)",
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV",
+            "MODULE_INFO": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "RegistrationFunction",
-            "LAMBDA_RUNTIME": "dotnetcore2.1",
+            "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
               "Fn::Select": [
                 "0",
@@ -466,7 +631,7 @@
             "Arn"
           ]
         },
-        "Runtime": "dotnetcore2.1",
+        "Runtime": "dotnetcore3.1",
         "Timeout": "30",
         "TracingConfig": {
           "Mode": {
@@ -539,29 +704,6 @@
               "Version": "2012-10-17",
               "Statement": [
                 {
-                  "Sid": "LoggingStreamResource",
-                  "Effect": "Allow",
-                  "Action": [
-                    "kinesis:DescribeStream",
-                    "kinesis:GetRecords",
-                    "kinesis:GetShardIterator"
-                  ],
-                  "Resource": {
-                    "Fn::If": [
-                      "LoggingStreamIsBlank",
-                      {
-                        "Fn::GetAtt": [
-                          "LoggingStreamResource",
-                          "Arn"
-                        ]
-                      },
-                      {
-                        "Ref": "LoggingStream"
-                      }
-                    ]
-                  }
-                },
-                {
                   "Sid": "CoreSecretsKeyResource",
                   "Effect": "Allow",
                   "Action": [
@@ -581,26 +723,6 @@
                         "Ref": "CoreSecretsKey"
                       }
                     ]
-                  }
-                },
-                {
-                  "Sid": "ErrorReportTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "ErrorReportTopic"
-                  }
-                },
-                {
-                  "Sid": "UsageReportTopic",
-                  "Effect": "Allow",
-                  "Action": [
-                    "sns:Publish"
-                  ],
-                  "Resource": {
-                    "Ref": "UsageReportTopic"
                   }
                 },
                 {
@@ -778,6 +900,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -830,31 +962,6 @@
           }
         ]
       }
-    },
-    "ProcessLogEventsSource1EventMapping": {
-      "Type": "AWS::Lambda::EventSourceMapping",
-      "Properties": {
-        "BatchSize": 100,
-        "Enabled": true,
-        "EventSourceArn": {
-          "Fn::If": [
-            "LoggingStreamIsBlank",
-            {
-              "Fn::GetAtt": [
-                "LoggingStreamResource",
-                "Arn"
-              ]
-            },
-            {
-              "Ref": "LoggingStream"
-            }
-          ]
-        },
-        "FunctionName": {
-          "Ref": "ProcessLogEvents"
-        },
-        "StartingPosition": "LATEST"
-      }
     }
   },
   "Outputs": {
@@ -883,15 +990,15 @@
     "LoggingStream": {
       "Value": {
         "Fn::If": [
-          "LoggingStreamIsBlank",
+          "LoggingFirehoseStreamIsBlank",
           {
             "Fn::GetAtt": [
-              "LoggingStreamResource",
+              "LoggingFirehoseStreamResource",
               "Arn"
             ]
           },
           {
-            "Ref": "LoggingStream"
+            "Ref": "LoggingFirehoseStream"
           }
         ]
       },
@@ -904,9 +1011,17 @@
     },
     "LoggingStreamRole": {
       "Value": {
-        "Fn::GetAtt": [
-          "LoggingStreamRole",
-          "Arn"
+        "Fn::If": [
+          "LoggingStreamRoleIsBlank",
+          {
+            "Fn::GetAtt": [
+              "LoggingStreamRoleResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "LoggingStreamRole"
+          }
         ]
       },
       "Export": {
@@ -914,7 +1029,29 @@
           "Fn::Sub": "${AWS::StackName}::LoggingStreamRole"
         }
       },
-      "Description": "CloudWatch Logs Role for writing to logging stream (ARN)"
+      "Description": "CloudWatch Logs IAM Role (ARN)"
+    },
+    "LoggingBucket": {
+      "Value": {
+        "Fn::If": [
+          "LoggingBucketIsBlank",
+          {
+            "Fn::GetAtt": [
+              "LoggingBucketResource",
+              "Arn"
+            ]
+          },
+          {
+            "Ref": "LoggingBucket"
+          }
+        ]
+      },
+      "Export": {
+        "Name": {
+          "Fn::Sub": "${AWS::StackName}::LoggingBucket"
+        }
+      },
+      "Description": "Logging S3 Bucket (ARN)"
     },
     "LambdaSharpRegistrationModule": {
       "Value": {
@@ -975,7 +1112,7 @@
       },
       "Description": "S3 bucket for published modules (ARN)"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "LambdaSharp.Core:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -984,7 +1121,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1011,10 +1148,10 @@
         ""
       ]
     },
-    "LoggingStreamIsBlank": {
+    "LoggingFirehoseStreamIsBlank": {
       "Fn::Equals": [
         {
-          "Ref": "LoggingStream"
+          "Ref": "LoggingFirehoseStream"
         },
         ""
       ]
@@ -1023,6 +1160,22 @@
       "Fn::Equals": [
         {
           "Ref": "CoreSecretsKey"
+        },
+        ""
+      ]
+    },
+    "LoggingStreamRoleIsBlank": {
+      "Fn::Equals": [
+        {
+          "Ref": "LoggingStreamRole"
+        },
+        ""
+      ]
+    },
+    "LoggingBucketIsBlank": {
+      "Fn::Equals": [
+        {
+          "Ref": "LoggingBucket"
         },
         ""
       ]
@@ -1066,17 +1219,23 @@
         "DeadLetterQueue": {
           "default": "Dead letter queue for functions (leave blank to create a new queue) [AWS::SQS::Queue]"
         },
-        "LoggingStream": {
-          "default": "Logging Kinesis stream for functions (leave blank to create a new stream) [AWS::Kinesis::Stream]"
-        },
-        "LoggingStreamRetentionPeriodHours": {
-          "default": "Size of the Logging stream buffer (in hours) [Number]"
-        },
-        "LoggingStreamShardCount": {
-          "default": "Number of Kinesis shards for the logging streams [Number]"
+        "LoggingFirehoseStream": {
+          "default": "Logging Kinesis Firehose stream for functions (leave blank to create a new stream) [AWS::KinesisFirehose::DeliveryStream]"
         },
         "CoreSecretsKey": {
           "default": "KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key) [AWS::KMS::Key]"
+        },
+        "LoggingStreamRole": {
+          "default": "IAM role used by CloudWatch logs to write records to the logging stream (leave blank to create a new role) [AWS::IAM::Role]"
+        },
+        "LoggingBucket": {
+          "default": "S3 bucket for storing ingested CloudWatch Log events (leave blank to create a new S3 bucket) [AWS::S3::Bucket]"
+        },
+        "LoggingBucketSuccessPrefix": {
+          "default": "Destination S3 bucket prefix for records successfully processed by the logging stream [String]"
+        },
+        "LoggingBucketFailurePrefix": {
+          "default": "Destination S3 bucket prefix for records unsuccessfully processed processed by the logging stream [String]"
         },
         "RollbarReadAccessToken": {
           "default": "Account-level token for read operations (leave blank to disable Rollbar integration) [Secret]"
@@ -1122,10 +1281,12 @@
           },
           "Parameters": [
             "DeadLetterQueue",
-            "LoggingStream",
-            "LoggingStreamRetentionPeriodHours",
-            "LoggingStreamShardCount",
-            "CoreSecretsKey"
+            "LoggingFirehoseStream",
+            "CoreSecretsKey",
+            "LoggingStreamRole",
+            "LoggingBucket",
+            "LoggingBucketSuccessPrefix",
+            "LoggingBucketFailurePrefix"
           ]
         },
         {
@@ -1174,9 +1335,9 @@
       "Version": "2019-07-04",
       "Module": "LambdaSharp.Core:1.0-DEV",
       "Description": "LambdaSharp Core Resources and Services",
-      "TemplateChecksum": "AF413F1557D56F2D4668947EB2CF07F9",
+      "TemplateChecksum": "ACC83453FD04D15A1FF6806AFE6FA70B",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Tier Settings",
@@ -1187,21 +1348,9 @@
               "Label": "Dead letter queue for functions (leave blank to create a new queue)"
             },
             {
-              "Name": "LoggingStream",
-              "Type": "AWS::Kinesis::Stream",
-              "Label": "Logging Kinesis stream for functions (leave blank to create a new stream)"
-            },
-            {
-              "Name": "LoggingStreamRetentionPeriodHours",
-              "Type": "Number",
-              "Label": "Size of the Logging stream buffer (in hours)",
-              "Default": "24"
-            },
-            {
-              "Name": "LoggingStreamShardCount",
-              "Type": "Number",
-              "Label": "Number of Kinesis shards for the logging streams",
-              "Default": "1"
+              "Name": "LoggingFirehoseStream",
+              "Type": "AWS::KinesisFirehose::DeliveryStream",
+              "Label": "Logging Kinesis Firehose stream for functions (leave blank to create a new stream)"
             },
             {
               "Name": "CoreSecretsKey",
@@ -1209,6 +1358,28 @@
               "Label": "KMS key used by LambdaSharp.Core to encrypt sensitive information (leave blank to create a new key)",
               "AllowedPattern": "(arn:aws:kms:.*)?",
               "ConstraintDescription": "Must be a valid KMS Key ARN or left blank"
+            },
+            {
+              "Name": "LoggingStreamRole",
+              "Type": "AWS::IAM::Role",
+              "Label": "IAM role used by CloudWatch logs to write records to the logging stream (leave blank to create a new role)"
+            },
+            {
+              "Name": "LoggingBucket",
+              "Type": "AWS::S3::Bucket",
+              "Label": "S3 bucket for storing ingested CloudWatch Log events (leave blank to create a new S3 bucket)"
+            },
+            {
+              "Name": "LoggingBucketSuccessPrefix",
+              "Type": "String",
+              "Label": "Destination S3 bucket prefix for records successfully processed by the logging stream",
+              "Default": "logging-success/"
+            },
+            {
+              "Name": "LoggingBucketFailurePrefix",
+              "Type": "String",
+              "Label": "Destination S3 bucket prefix for records unsuccessfully processed processed by the logging stream",
+              "Default": "logging-failed/"
             }
           ]
         },
@@ -1362,10 +1533,16 @@
               "Required": true
             },
             {
-              "Name": "Module",
-              "Description": "Module full name and version",
+              "Name": "ModuleInfo",
+              "Description": "Module full name, version, and origin",
               "Type": "String",
               "Required": true
+            },
+            {
+              "Name": "Module",
+              "Description": "Module full name and version (OBSOLETE: use ModuleInfo instead)",
+              "Type": "String",
+              "Required": false
             }
           ],
           "Attributes": [
@@ -1395,13 +1572,18 @@
           "Type": "AWS::S3::Bucket"
         },
         {
+          "Name": "LoggingBucket",
+          "Description": "Logging S3 Bucket (ARN)",
+          "Type": "AWS::S3::Bucket"
+        },
+        {
           "Name": "LoggingStream",
           "Description": "Logging Stream (ARN)",
-          "Type": "AWS::Kinesis::Stream"
+          "Type": "String"
         },
         {
           "Name": "LoggingStreamRole",
-          "Description": "CloudWatch Logs Role for writing to logging stream (ARN)",
+          "Description": "CloudWatch Logs IAM Role (ARN)",
           "Type": "AWS::IAM::Role"
         }
       ]
@@ -1410,13 +1592,14 @@
       "Version": "2019-07-04",
       "ResourceNameMappings": {
         "DeadLetterQueueResource": "DeadLetterQueue::Resource",
-        "LoggingStreamResource": "LoggingStream::Resource",
+        "LoggingFirehoseStreamResource": "LoggingFirehoseStream::Resource",
         "CoreSecretsKeyResource": "CoreSecretsKey::Resource",
-        "ProcessLogEventsLogGroup": "ProcessLogEvents::LogGroup",
+        "LoggingStreamRoleResource": "LoggingStreamRole::Resource",
+        "LoggingBucketResource": "LoggingBucket::Resource",
+        "LoggingStreamAnalyzerFunctionLogGroup": "LoggingStreamAnalyzerFunction::LogGroup",
         "RegistrationFunctionLogGroup": "RegistrationFunction::LogGroup",
         "ModuleRole": "Module::Role",
-        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy",
-        "ProcessLogEventsSource1EventMapping": "ProcessLogEvents::Source1EventMapping"
+        "ModuleRoleSecretsPolicy": "Module::Role::SecretsPolicy"
       },
       "TypeNameMappings": {}
     }

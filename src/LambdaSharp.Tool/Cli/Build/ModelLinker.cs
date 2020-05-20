@@ -91,12 +91,13 @@ namespace LambdaSharp.Tool.Cli.Build {
                         var environment = function.Function.Environment.Variables;
 
                         // set default environment variables
+                        environment["DEBUG_LOGGING_ENABLED"] = "false";
                         environment["MODULE_ID"] = FnRef("AWS::StackName");
-                        environment["MODULE_INFO"] = builder.Info;
+                        environment["MODULE_INFO"] = FnRef("Module::Info");
                         environment["LAMBDA_NAME"] = function.FullName;
                         environment["LAMBDA_RUNTIME"] = function.Function.Runtime;
-                        environment["DEPLOYMENT_TIER"] = FnSelect("0", FnSplit("-", FnRef("DeploymentPrefix")));
-                        environment["DEPLOYMENTBUCKETNAME"] = FnRef("DeploymentBucketName");
+                        environment["DEPLOYMENT_TIER"] = FnRef("Deployment::Tier");
+                        environment["DEPLOYMENTBUCKETNAME"] = FnRef("Deployment::BucketName");
                         if(function.HasDeadLetterQueue && _builder.TryGetItem("Module::DeadLetterQueue", out var _))  {
                             environment["DEADLETTERQUEUE"] = FnRef("Module::DeadLetterQueue");
                         }

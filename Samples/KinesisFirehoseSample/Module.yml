@@ -1,0 +1,150 @@
+Module: Sample.Firehose
+Items:
+
+  - Function: FirehoseAnalyzerFunction
+    Memory: 256
+    Timeout: 300
+
+  - Resource: FirehoseBucket
+    Type: AWS::S3::Bucket
+    Properties:
+      # Documentation: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-s3-bucket.html
+      LifecycleConfiguration:
+        Rules:
+          - Status: Enabled
+            ExpirationInDays: 90
+
+            # Use 'intelligent tiering' to move rarely accessed records to a lower cost tier
+            Transitions:
+              - StorageClass: INTELLIGENT_TIERING
+                TransitionInDays: 1
+
+  - Resource: FirehoseStream
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Scope: public
+    Properties:
+      # Documentation: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-kinesisfirehose-deliverystream.html
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !GetAtt FirehoseBucket.Arn
+        BufferingHints:
+          IntervalInSeconds: 60
+          SizeInMBs: 1
+
+        # Capture Kinesis Firehose error in a CloudWatch log
+        CloudWatchLoggingOptions:
+          Enabled: true
+          LogGroupName: !Ref FirehoseLogGroup
+          LogStreamName: !Ref FirehoseLogStream
+
+        # Storage format for processed records
+        CompressionFormat: GZIP
+
+        # Store failed records here
+        ErrorOutputPrefix: failed-records/!{firehose:error-output-type}/Year=!{timestamp:yyyy}/Month=!{timestamp:MM}/Day=!{timestamp:dd}/
+
+        # Store successfully transformed records here
+        Prefix: records/Year=!{timestamp:yyyy}/Month=!{timestamp:MM}/Day=!{timestamp:dd}/
+
+        # Register the Lambda function to process all records
+        ProcessingConfiguration:
+          Enabled: true
+          Processors:
+            - Type: Lambda
+              Parameters:
+                - ParameterName: LambdaArn
+                  ParameterValue: !GetAtt FirehoseAnalyzerFunction.Arn
+        RoleARN: !GetAtt FirehoseDeliveryRole.Arn
+
+  - Resource: FirehoseDeliveryRole
+    Description: IAM Role for Firehose to interact with other resources in this module
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: FirehosePrincipal
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: sts:AssumeRole
+            Condition:
+              StringEquals:
+                sts:ExternalId: !Ref AWS::AccountId
+      Policies:
+
+        # Give Firehose access to S3 bucket
+        - PolicyName: !Sub "${AWS::StackName}FirehoseS3Policy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:AbortMultipartUpload
+                  - s3:GetBucketLocation
+                  - s3:GetObject
+                  - s3:ListBucket
+                  - s3:ListBucketMultipartUploads
+                  - s3:PutObject
+                Resource:
+                  - !GetAtt FirehoseBucket.Arn
+                  - !Sub "${FirehoseBucket.Arn}/*"
+
+        # Give Firehose access to invoking the Lambda function
+        - PolicyName: !Sub "${AWS::StackName}FirehoseLambdaPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - lambda:InvokeFunction
+                  - lambda:GetFunctionConfiguration
+                Resource: !GetAtt FirehoseAnalyzerFunction.Arn
+
+        # Give Firehose access to writing to CloudWatch logs
+        - PolicyName: !Sub "${AWS::StackName}FirehoseLogPolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:PutLogEvents
+                Resource: !GetAtt FirehoseLogGroup.Arn
+
+  - Resource: FirehoseLogGroup
+    Description: CloudWatch log group for Firehose
+    Type: AWS::Logs::LogGroup
+    Properties:
+      RetentionInDays: 30
+
+  - Resource: FirehoseLogStream
+    Description: CloudWatch log stream for Firehose
+    Type: AWS::Logs::LogStream
+    Properties:
+      LogGroupName: !Ref FirehoseLogGroup
+
+  - Resource: LoggingStreamRole
+    Description: IAM Role used by CloudWatch log subscribers to write to the Firehose stream
+    Type: AWS::IAM::Role
+    Scope: public
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: CloudWatchLogsPrincipal
+            Effect: Allow
+            Principal:
+              Service: !Sub "logs.${AWS::Region}.amazonaws.com"
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: !Sub "${AWS::StackName}CloudWatchLogsFirehosePolicy"
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: CloudWatchLogsFirehosePermissions
+                Effect: Allow
+                Action:
+                  - firehose:PutRecord
+                  - firehose:PutRecordBatch
+                Resource: !GetAtt FirehoseStream.Arn
+

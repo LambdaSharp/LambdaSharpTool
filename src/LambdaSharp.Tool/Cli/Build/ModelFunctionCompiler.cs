@@ -182,10 +182,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]"),
-                    StageDescription = new Humidifier.ApiGateway.DeploymentTypes.StageDescription {
-                        MetricsEnabled = true
-                    }
+                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]")
                 },
                 resourceExportAttribute: null,
                 dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
@@ -204,8 +201,6 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // RestApi stage depends on API gateway deployment and API gateway account
-            // NOTE (2018-06-21, bjorg): the stage resource depends on the account resource having been granted
-            //  the necessary permissions for logging
             _builder.AddResource(
                 parent: restApi,
                 name: "Stage",
@@ -220,7 +215,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                             DataTraceEnabled = true,
                             HttpMethod = "*",
                             LoggingLevel = "INFO",
-                            ResourcePath = "/*"
+                            ResourcePath = "/*",
+                            MetricsEnabled = true
                         }
                     }.ToList(),
                     TracingEnabled = FnIf("XRayIsEnabled", true, false)
@@ -1202,6 +1198,54 @@ namespace LambdaSharp.Tool.Cli.Build {
                     break;
                 case WebSocketSource webSocketSource:
                     _webSocketRoutes.Add((Function: function, Source: webSocketSource));
+                    break;
+                case CloudWatchEventSource cloudWatchRuleSource: {
+
+                        // NOTE (2019-01-30, bjorg): we need the source suffix to support multiple sources
+                        //  per function; however, we cannot exceed 64 characters in length for the ID.
+                        var id = function.LogicalId;
+                        if(id.Length > 61) {
+                            id += id.Substring(0, 61) + "-" + sourceSuffix;
+                        } else {
+                            id += "-" + sourceSuffix;
+                        }
+                        var rule = _builder.AddResource(
+                            parent: function,
+                            name: $"Source{sourceSuffix}Event",
+                            description: null,
+                            scope: null,
+                            resource: new Humidifier.Events.Rule {
+                                EventPattern = cloudWatchRuleSource.Pattern,
+                                EventBusName = cloudWatchRuleSource.EventBus,
+                                Targets = new[] {
+                                    new Humidifier.Events.RuleTypes.Target {
+                                        Id = id,
+                                        Arn = FnGetAtt(function.FullName, "Arn")
+                                    }
+                                }.ToList()
+                            },
+                            resourceExportAttribute: null,
+                            dependsOn: null,
+                            condition: function.Condition,
+                            pragmas: null
+                        );
+                        _builder.AddResource(
+                            parent: function,
+                            name: $"Source{sourceSuffix}Permission",
+                            description: null,
+                            scope: null,
+                            resource: new Humidifier.Lambda.Permission {
+                                Action = "lambda:InvokeFunction",
+                                FunctionName = FnRef(function.FullName),
+                                Principal = "events.amazonaws.com",
+                                SourceArn = FnGetAtt(rule.FullName, "Arn")
+                            },
+                            resourceExportAttribute: null,
+                            dependsOn: null,
+                            condition: function.Condition,
+                            pragmas: null
+                        );
+                    }
                     break;
                 default:
                     throw new ApplicationException($"unrecognized function source type '{source?.GetType()}' for source #{sourceSuffix}");

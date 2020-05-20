@@ -408,7 +408,7 @@ namespace Tests.LambdaSharp.ApiGateway {
             invocationTargetDirectory.Add("test", $"{GetType().Assembly.FullName}::{GetType().FullName}::{methodName}");
 
             // Act
-            var found = invocationTargetDirectory.TryGetInvocationTarget("test", out var invocationTarget);
+            var found = invocationTargetDirectory.TryGetInvocationTarget("test", out var invocationTarget, out var isAsync);
 
             // Assert
             found.Should().Be(true);

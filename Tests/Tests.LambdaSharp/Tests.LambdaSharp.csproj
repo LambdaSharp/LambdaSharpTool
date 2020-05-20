@@ -19,6 +19,7 @@
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\LambdaSharp\LambdaMetric.cs" Link="LambdaMetric.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromBodyAttribute.cs" Link="FromBodyAttribute.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\FromUriAttribute.cs" Link="FromUriAttribute.cs" />
     <Compile Include="..\..\src\LambdaSharp\ApiGateway\Internal\ApiGatewayAsyncEndpointException.cs" Link="ApiGatewayAsyncEndpointException.cs" />

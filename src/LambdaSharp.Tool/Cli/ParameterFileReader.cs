@@ -271,14 +271,14 @@ namespace LambdaSharp.Tool.Cli {
                     }
                     if(keyId.StartsWith("alias/", StringComparison.Ordinal)) {
                         try {
-                            return Settings.KmsClient.DescribeKeyAsync(keyId).Result.KeyMetadata.Arn;
+                            return Settings.KmsClient.DescribeKeyAsync(keyId).GetAwaiter().GetResult().KeyMetadata.Arn;
                         } catch(Exception e) {
                             LogError($"failed to resolve key alias: {keyId}", e);
                             return null;
                         }
                     }
                     try {
-                        return Settings.KmsClient.DescribeKeyAsync($"alias/{keyId}").Result.KeyMetadata.Arn;
+                        return Settings.KmsClient.DescribeKeyAsync($"alias/{keyId}").GetAwaiter().GetResult().KeyMetadata.Arn;
                     } catch(Exception e) {
                         LogError($"failed to resolve key alias: {keyId}", e);
                         return null;

@@ -323,6 +323,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             }
 
             // validate the project is using the most recent lambdasharp assembly references
+            var hasErrors = false;
             if(!noAssemblyValidation && function.HasAssemblyValidation) {
                 var includes = csproj.Element("Project")
                     ?.Descendants("PackageReference")
@@ -335,9 +336,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     var library = include.Attribute("Include").Value;
                     var libraryVersionText = include.Attribute("Version")?.Value;
                     if(libraryVersionText == null) {
+                        hasErrors = true;
                         LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
                     } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
                         if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
+                            hasErrors = true;
                             LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
 
@@ -347,10 +350,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                                 // show error as warning instead since this package reference will not be used anyway
                                 LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             } else {
+                                hasErrors = true;
                                 LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                             }
                         }
                     } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
+                        hasErrors = true;
                         LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                     } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
 
@@ -358,11 +363,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                         if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
                             LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         } else {
+                            hasErrors = true;
                             LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                 }
-                if(Settings.HasErrors) {
+                if(hasErrors) {
                     return;
                 }
             }
@@ -381,10 +387,12 @@ namespace LambdaSharp.Tool.Cli.Build {
             var buildFolder = Path.Combine(projectDirectory, "bin", buildConfiguration, targetFramework, "publish");
             if(function.HasHandlerValidation) {
                 if(function.Function.Handler is string handler) {
-                    ValidateEntryPoint(
+                    if(!ValidateEntryPoint(
                         buildFolder,
                         handler
-                    );
+                    )) {
+                        return;
+                    }
                 }
             }
 
@@ -786,7 +794,8 @@ namespace LambdaSharp.Tool.Cli.Build {
             File.Move(zipTempPackage, package);
         }
 
-        private void ValidateEntryPoint(string buildFolder, string handler) {
+        private bool ValidateEntryPoint(string buildFolder, string handler) {
+            var hasErrors = false;
             RunLashTool(
                 new[] {
                     "util", "validate-assembly",
@@ -798,13 +807,16 @@ namespace LambdaSharp.Tool.Cli.Build {
                 showOutput: false,
                 output => {
                     if(output.StartsWith("ERROR:", StringComparison.Ordinal)) {
+                        hasErrors = true;
                         LogError(output.Substring(6).Trim());
                     } else if(output.StartsWith("WARNING:")) {
+                        hasErrors = true;
                         LogError(output.Substring(8).Trim());
                     }
                     return null;
                 }
             );
+            return !hasErrors;
         }
 
         private List<ApiGatewayInvocationMapping> ExtractMappings(FunctionItem function) {

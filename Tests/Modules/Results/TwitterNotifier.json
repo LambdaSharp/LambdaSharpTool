@@ -105,7 +105,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "9F35F66D1A8F13A20836A9F1D5FBB2C2"
+      "Default": "A6363129338DA51B6174213D4CD82B7C"
     }
   },
   "Resources": {
@@ -232,10 +232,11 @@
         },
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Demo.TwitterNotifier:1.0-DEV",
+            "MODULE_INFO": "Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "NotifyFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -434,6 +435,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -561,7 +572,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Demo.TwitterNotifier:1.0-DEV",
+        "ModuleInfo": "Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -719,7 +730,7 @@
     }
   },
   "Outputs": {
-    "Module": {
+    "ModuleInfo": {
       "Value": "Demo.TwitterNotifier:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -728,7 +739,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1015,9 +1026,9 @@
       "Version": "2019-07-04",
       "Module": "Demo.TwitterNotifier:1.0-DEV",
       "Description": "Listen for specific tweets and publish to an email address via SNS topic",
-      "TemplateChecksum": "9F35F66D1A8F13A20836A9F1D5FBB2C2",
+      "TemplateChecksum": "A6363129338DA51B6174213D4CD82B7C",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "Twitter Settings",
@@ -1149,7 +1160,7 @@
       "Artifacts": [],
       "Dependencies": [
         {
-          "ModuleInfo": "LambdaSharp.Twitter.Query:0.7.0@lambdasharp",
+          "ModuleInfo": "LambdaSharp.Twitter.Query:0.8.0@lambdasharp",
           "Type": "Nested"
         }
       ],

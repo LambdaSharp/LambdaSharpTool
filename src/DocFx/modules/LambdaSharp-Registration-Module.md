@@ -24,7 +24,7 @@ Using:
 Type: LambdaSharp::Registration::Module
 Properties:
   ModuleId: String
-  Module: String
+  ModuleInfo: String
 ```
 
 ## Properties
@@ -41,9 +41,9 @@ The <code>ModuleId</code> property specifies the module CloudFormation stack nam
 <i>Type</i>: String
 </dd>
 
-<dt><code>Module</code></dt>
+<dt><code>ModuleInfo</code></dt>
 <dd>
-The <code>Module</code> property specifies the module full name and version.
+The <code>ModuleInfo</code> property specifies the module full name, version, and origin.
 
 <i>Required</i>: Yes
 

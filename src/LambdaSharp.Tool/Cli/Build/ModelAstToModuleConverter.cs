@@ -130,7 +130,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                 "Alexa",
                 "DynamoDB",
                 "Kinesis",
-                "WebSocket"
+                "WebSocket",
+                "EventBus"
             });
             switch(type) {
             case "Api":
@@ -225,6 +226,11 @@ namespace LambdaSharp.Tool.Cli.Build {
                     AuthorizationScopes =  source.AuthorizationScopes,
                     AuthorizerId = source.AuthorizerId,
                     Invoke = source.Invoke
+                });
+            case "EventBus":
+                return AtLocation("EventBus", () => new CloudWatchEventSource {
+                    EventBus = source.EventBus,
+                    Pattern = source.Pattern
                 });
             }
             return null;
@@ -438,33 +444,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
                 // package resource
                 AtLocation(node.Package, () => {
-
-                    // discover files to package
-                    var files = new List<KeyValuePair<string, string>>();
-                    if(node.Files != null) {
-                        string folder;
-                        string filePattern;
-                        SearchOption searchOption;
-                        var packageFiles = Path.Combine(Settings.WorkingDirectory, node.Files);
-                        if((packageFiles.EndsWith("/", StringComparison.Ordinal) || Directory.Exists(packageFiles))) {
-                            folder = Path.GetFullPath(packageFiles);
-                            filePattern = "*";
-                            searchOption = SearchOption.AllDirectories;
-                        } else {
-                            folder = Path.GetDirectoryName(packageFiles);
-                            filePattern = Path.GetFileName(packageFiles);
-                            searchOption = SearchOption.TopDirectoryOnly;
-                        }
-                        if(Directory.Exists(folder)) {
-                            foreach(var filePath in Directory.GetFiles(folder, filePattern, searchOption)) {
-                                var relativeFilePathName = Path.GetRelativePath(folder, filePath);
-                                files.Add(new KeyValuePair<string, string>(relativeFilePathName, filePath));
-                            }
-                            files = files.OrderBy(file => file.Key).ToList();
-                        } else {
-                            LogError($"cannot find folder '{Path.GetRelativePath(Settings.WorkingDirectory, folder)}'");
-                        }
-                    } else {
+                    if(node.Files == null) {
                         LogError("missing 'Files' attribute");
                     }
 
@@ -474,7 +454,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                         name: node.Package,
                         description: node.Description,
                         scope: ConvertScope(node.Scope),
-                        files: files
+                        files: node.Files,
+                        build: node.Build
                     );
                 });
                 break;
@@ -721,6 +702,12 @@ namespace LambdaSharp.Tool.Cli.Build {
                     } else if(source.WebSocket != null) {
 
                         // TODO (2019-03-13, bjorg): validate WebSocket route expression
+                    } else if(source.EventBus != null) {
+                        AtLocation("Pattern", () => {
+                            if(source.Pattern == null) {
+                                LogError("missing rule pattern");
+                            }
+                        });
                     } else {
                         LogError("unknown source type");
                     }

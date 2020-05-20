@@ -33,6 +33,16 @@ namespace LambdaSharp.Logger {
         //--- Extension Methods ---
 
         /// <summary>
+        /// Log a debugging message. This message will only appear in the log and not be forwarded to an error aggregator.
+        /// </summary>
+        /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
+        /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
+        /// <param name="arguments">Optional arguments for the message string.</param>
+        /// <seealso cref="LambdaLogLevel"/>
+        public static void LogDebug(this ILambdaLogLevelLogger logger, string format, params object[] arguments)
+            => logger.Log(LambdaLogLevel.DEBUG, exception: null, format: format, arguments: arguments);
+
+        /// <summary>
         /// Log an informational message. This message will only appear in the log and not be forwarded to an error aggregator.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
@@ -140,24 +150,7 @@ namespace LambdaSharp.Logger {
             => logger.Log(LambdaLogLevel.FATAL, exception, format, arguments);
 
         /// <summary>
-        /// Log a CloudWatch event with optional event details in a serialized JSON string and resources it applies to. This event will be forwarded to the default EventBridge by
-        /// LambdaSharp.Core (requires Core Services to be enabled).
-        /// </summary>
-        /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
-        /// <param name="source">The source application of the event.</param>
-        /// <param name="type">Free-form string used to decide what fields to expect in the event detail.</param>
-        /// <param name="jsonDetails">Optional data-structure serialized as JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
-        /// <param name="resources">Optional AWS resources, identified by Amazon Resource Name (ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        public static void LogEventJson(this ILambdaLogLevelLogger logger, string source, string type, string? jsonDetails = null, IEnumerable<string>? resources = null)
-            => logger.LogRecord(new LambdaEventRecord {
-                App = source,
-                Type = type,
-                Details = jsonDetails,
-                Resources = resources?.ToList()
-            });
-
-        /// <summary>
-        /// Log a CloudWatch metric. The metric is picked up by CloudWatch Logs and automatically ingested as a CloudWatch metric.
+        /// Log a CloudWatch metric. The metric is picked up by CloudWatch logs and automatically ingested as a CloudWatch metric.
         /// </summary>
         /// <param name="logger">The <see cref="ILambdaLogLevelLogger"/> instance to use.</param>
         /// <param name="namespace">Metric namespace.</param>
