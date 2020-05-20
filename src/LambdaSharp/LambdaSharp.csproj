@@ -14,10 +14,6 @@
     <Company>LambdaSharp</Company>
     <Copyright>Copyright (C) 2018-2019</Copyright>
     <Authors>Bjorg</Authors>
-
-    <!-- TODO: remove this -->
-    <RestoreSources Condition="'$(LAMBDASHARP)'!=''">$(RestoreSources);C:\LambdaSharp\aws-lambda-dotnet.preview-packages;https://api.nuget.org/v3/index.json</RestoreSources>
-
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
