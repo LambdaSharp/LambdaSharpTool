@@ -94,12 +94,13 @@ namespace LambdaSharp.Tool {
         public static AnsiTerminal AnsiTerminal;
         public static bool AllowCaching = false;
         public static TimeSpan MaxCacheAge = TimeSpan.FromDays(1);
-        private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
-        private static string PromptColor = AnsiTerminal.Cyan;
-        private static string LabelColor = AnsiTerminal.BrightCyan;
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
+        public static string AlertColor => UseAnsiConsole ? (AnsiTerminal.Black + AnsiTerminal.BackgroundRed) : "";
+        private static IList<(bool Error, string Message, Exception Exception)> _errors = new List<(bool Error, string Message, Exception Exception)>();
+        private static string PromptColor = AnsiTerminal.Cyan;
+        private static string LabelColor = AnsiTerminal.BrightCyan;
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
 
             // check if running on Linux OS

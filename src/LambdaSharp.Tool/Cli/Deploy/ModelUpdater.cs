@@ -179,11 +179,7 @@ namespace LambdaSharp.Tool.Cli.Deploy {
                     if(lossyChanges.Any()) {
                         LogError("one or more resources could be replaced or deleted; use --allow-data-loss to proceed");
                         Console.WriteLine();
-                        if(Settings.UseAnsiConsole) {
-                            Console.WriteLine($"{AnsiTerminal.Black}{AnsiTerminal.BackgroundRed}CAUTION:{AnsiTerminal.Reset} detected potential replacement and data-loss in the following resources");
-                        } else {
-                            Console.WriteLine("CAUTION: detected potential replacement and data-loss in the following resources");
-                        }
+                        Console.WriteLine($"{Settings.AlertColor}CAUTION:{Settings.ResetColor} detected potential replacement and data-loss in the following resources");
                         var maxResourceTypeWidth = lossyChanges.Select(change => change.ResourceChange.ResourceType.Length).Max();
                         foreach(var lossy in lossyChanges) {
                             if(Settings.UseAnsiConsole) {
