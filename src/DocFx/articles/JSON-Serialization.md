@@ -6,6 +6,11 @@ keywords: newtonsoft, json, serialization, system
 
 # JSON Serialization
 
+> TODO:
+> * describe `[JsonConverter(typeof(JsonIntConverter))] public int Value { get; set; }`
+> * describe `[JsonConverter(typeof(JsonUnixDateTimeConverter))]`
+> * Serialize concrete type with derived type
+
 As of _v0.8.1.0_, LambdaSharp has switched from using _Newtonsoft.Json_ to _System.Text.Json_. See the section below on how to migrate existing code to the new JSON serializer.
 
 ## Migrating JSON Serialization from _Newtonsoft.Json_ to _System.Text.Json_
@@ -26,10 +31,18 @@ Remove all _Newtonsoft.Json_ package dependencies.
 Remove all explicit `LambdaSerializer` declarations in the function files.
 * Remove: `[assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.Json.JsonSerializer))]`
 
-### Replace Fields with Properties
+### Replace Fields with Public Properties
 
-_System.Text.Json_ only works with public properties. All fields must be converted to public, mutable properties.
-* Before: `protected string Name;`
+Fields must be converted to public, mutable properties.
+* Before: `public string Name;`
+* After: `public string Name { get; set; }`
+
+Non-public properties must be converted to public, mutable properties.
+* Before: `internal string Name { get; set; };`
+* After: `public string Name { get; set; }`
+
+Limited mutable properties must be converted to public, mutable properties to be deserialized properly.
+* Before: `public string Name { get; protected set; };`
 * After: `public string Name { get; set; }`
 
 ### Review Property Types
@@ -39,6 +52,10 @@ _System.Text.Json_ only works with public properties. All fields must be convert
 Beware of `string` properties to deserialize a JSON number. _Newtonsoft.Json_ would automatically convert the number to a string. _System.Text.Json_ ignores the number instead.
 * Before: `public string Timestamp { get; set; }`
 * After: `public long Timestamp { get; set; }`
+
+Beware of derived classes during serialization. _System.Text.Json_ will only serialize properties of the declared type, not all the properties of the actual instance, unless you use `object` as type.
+* Before: `JsonSerializer.Serialize<Car>(new Sedan { ... })` (only `Car` properties are serialized; any additional `Sedan` properties are skipped)
+* After: `JsonSerializer.Serialize<object>(mySedan)` (all public properties are always serialized)
 
 ### Update Property Attributes
 
@@ -58,12 +75,3 @@ Replace enum-to-string converters.
 * Before: `[JsonConverter(typeof(StringEnumConverter))]`
 * After: `[JsonConverter(typeof(JsonStringEnumConverter))]`
 * Requires: `using System.Text.Json.Serialization;`
-
-### Discussions Points
-
-> TODO:
-> * How much does _Newtonsoft.Json_ cost use every month? For each cold invocation, we get 1s penalty.
-
-> TODO:
-> * describe `[JsonConverter(typeof(JsonIntConverter))] public int Value { get; set; }`
-> * describe `[JsonConverter(typeof(JsonUnixDateTimeConverter))]`
