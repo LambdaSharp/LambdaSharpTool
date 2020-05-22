@@ -50,7 +50,7 @@ namespace LambdaSharp.Records.Events {
         /// The <see cref="EventBus"/> property describes which event bus will receive the event.
         /// </summary>
         /// <value>The name of the event bus.</value>
-        public string EventBus { get; set; }
+        public string? EventBus { get; set; }
 
         /// <summary>
         /// The <see cref="Source"/> property describes the source of the event.
@@ -68,7 +68,7 @@ namespace LambdaSharp.Records.Events {
         /// The <see cref="Detail"/> property contains detailed event information as a JSON-serialized object.
         /// </summary>
         /// <value>The event details, encoded as a JSON string.</value>
-        public string? Details { get; set; }
+        public string? Detail { get; set; }
 
         /// <summary>
         /// The <see cref="Resources"/> property describes what resources the event is associated with.

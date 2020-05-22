@@ -77,7 +77,7 @@ namespace LambdaSharp {
             /// <summary>
             /// The module full name, version, and origin.
             /// </summary>
-            public string ModuleInfo => _function._moduleInfo;
+            public string? ModuleInfo => _function._moduleInfo;
 
             /// <summary>
             /// The namespace of the module.
@@ -108,7 +108,7 @@ namespace LambdaSharp {
             /// <summary>
             /// The origin of the module.
             /// </summary>
-            public string ModuleOrigin => _function._moduleOrigin;
+            public string? ModuleOrigin => _function._moduleOrigin;
 
             /// <summary>
             /// The ID of the AWS Lambda function. This value corresponds to the Physical ID of the AWS Lambda function in the CloudFormation template.
@@ -123,7 +123,7 @@ namespace LambdaSharp {
             /// <summary>
             /// The framework used by the AWS Lambda function.
             /// </summary>
-            public string FunctionFramework => _function._functionFramework;
+            public string? FunctionFramework => _function._functionFramework;
 
             /// <summary>
             /// The URL of the dead-letter queue for the AWS Lambda function. This value can be <c>null</c> if the module has no dead-letter queue.
@@ -184,7 +184,7 @@ namespace LambdaSharp {
         private static readonly Regex ModuleKeyPattern = new Regex(@"^(?<Namespace>\w+)\.(?<Name>[\w\.]+)(:(?<Version>\*|[\w\.\-]+))?(@(?<Origin>[\w\-%]+))?$", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Class Methods ---
-        private static void ParseModuleString(string? moduleInfo, out string? moduleNamespace, out string? moduleName, out string? moduleVersion, out string? moduleOrigin) {
+        private static void ParseModuleInfoString(string? moduleInfo, out string? moduleNamespace, out string? moduleName, out string? moduleVersion, out string? moduleOrigin) {
 
             // try parsing module reference
             var match = ModuleKeyPattern.Match(moduleInfo);
@@ -201,7 +201,7 @@ namespace LambdaSharp {
             }
 
             // local function
-            string GetMatchValue(string groupName) {
+            string? GetMatchValue(string groupName) {
                 var group = match.Groups[groupName];
                 return group.Success ? group.Value : null;
             }
@@ -217,7 +217,7 @@ namespace LambdaSharp {
         private string? _moduleName;
         private string? _moduleId;
         private string? _moduleVersion;
-        private string _moduleOrigin;
+        private string? _moduleOrigin;
         private string? _functionId;
         private string? _functionName;
         private string? _functionFramework;
@@ -546,7 +546,7 @@ namespace LambdaSharp {
             }
 
             // log function start-up information
-            var info = new Dictionary<string, string> {
+            var info = new Dictionary<string, string?> {
                 ["MODULE_ID"] = _moduleId,
                 ["MODULE_INFO"] = _moduleInfo,
                 ["FUNCTION_NAME"] = _functionName,
@@ -930,7 +930,7 @@ namespace LambdaSharp {
         /// <param name="detailType">Free-form string used to decide what fields to expect in the event detail.</param>
         /// <param name="details">Data-structure to serialize as a JSON string. There is no other schema imposed. The data-structure may contain fields and nested subobjects.</param>
         /// <param name="resources">Optional AWS or custom resources, identified by unique identifier (e.g. ARN), which the event primarily concerns. Any number, including zero, may be present.</param>
-        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string> resources = null) {
+        protected void SendEvent<T>(string source, string detailType, T details, IEnumerable<string>? resources = null) {
 
             // augment event resources with LambdaSharp specific resources
             var lambdaResources = new List<string>(resources ?? Enumerable.Empty<string>()) {

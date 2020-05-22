@@ -72,11 +72,11 @@ namespace LambdaSharp.Core.RollbarApi {
         public string? Status { get; set; }
 
         [JsonPropertyName("date_created")]
-        [JsonConverter(typeof(JsonUnixDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
         public DateTimeOffset Created { get; set; }
 
         [JsonPropertyName("date_modified")]
-        [JsonConverter(typeof(JsonUnixDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
         public DateTimeOffset Modified { get; set; }
     }
 
@@ -96,11 +96,11 @@ namespace LambdaSharp.Core.RollbarApi {
         public string? Status { get; set; }
 
         [JsonPropertyName("date_created")]
-        [JsonConverter(typeof(JsonUnixDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
         public DateTime Created { get; set; }
 
         [JsonPropertyName("date_modified")]
-        [JsonConverter(typeof(JsonUnixDateTimeConverter))]
+        [JsonConverter(typeof(JsonEpochSecondsDateTimeConverter))]
         public DateTime Modified { get; set; }
     }
 

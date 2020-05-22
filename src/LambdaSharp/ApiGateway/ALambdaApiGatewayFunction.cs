@@ -18,15 +18,14 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using LambdaSharp.ApiGateway.Internal;
 using LambdaSharp.Exceptions;
 using LambdaSharp.Logger;
+using System.Linq;
 
 namespace LambdaSharp.ApiGateway {
 
@@ -141,8 +140,8 @@ namespace LambdaSharp.ApiGateway {
             _currentRequest = request;
             APIGatewayProxyResponse response;
             var signature = "<null>";
-            IEnumerable<string> dimensionNames = null;
-            Dictionary<string, string> dimensionValues = null;
+            IEnumerable<string>? dimensionNames = null;
+            Dictionary<string, string>? dimensionValues = null;
             try {
                 ApiGatewayInvocationTargetDirectory.InvocationTargetDelegate? invocationTarget;
                 bool isAsync;
@@ -206,7 +205,7 @@ namespace LambdaSharp.ApiGateway {
                     LogMetric(new LambdaMetric[] {
                         ("AsyncRequestSuccess.Count", 1, LambdaMetricUnit.Count),
                         ("AsyncRequestSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds)
-                    }, dimensionNames, dimensionValues);
+                    }, dimensionNames ?? Enumerable.Empty<string>(), dimensionValues ?? new Dictionary<string, string>());
                 }
                 LogInfo($"finished with status code {response.StatusCode}");
             } catch(ApiGatewayAsyncEndpointException e) {
@@ -215,9 +214,9 @@ namespace LambdaSharp.ApiGateway {
                 LogError(e, $"async route '{signature}' threw {e.GetType()}");
                 try {
                     await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, LambdaSerializer.Serialize(request), e);
-                    LogMetric("AsyncRequestDead.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                    LogMetric("AsyncRequestDead.Count", 1, LambdaMetricUnit.Count, dimensionNames ?? Enumerable.Empty<string>(), dimensionValues ?? new Dictionary<string, string>());
                 } catch {
-                    LogMetric("AsyncRequestFailed.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                    LogMetric("AsyncRequestFailed.Count", 1, LambdaMetricUnit.Count, dimensionNames ?? Enumerable.Empty<string>(), dimensionValues ?? new Dictionary<string, string>());
                     throw;
                 }
                 return CreateInvocationExceptionResponse(request, e.InnerException ?? e);

@@ -70,7 +70,7 @@ namespace LambdaSharp {
             ILambdaConfigSource? configSource = null,
             IAmazonKeyManagementService? kmsClient = null,
             IAmazonSQS? sqsClient = null,
-            IAmazonCloudWatchEvents eventsClient = null,
+            IAmazonCloudWatchEvents? eventsClient = null,
             bool? debugLoggingEnabled = null
         ) {
             _nowCallback = utcNowCallback ?? (() => DateTime.UtcNow);

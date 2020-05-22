@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -23,9 +23,20 @@ using Amazon.Lambda.Serialization.SystemTextJson;
 
 namespace LambdaSharp.Serialization {
 
-    public class JsonIntConverter : JsonConverter<int> {
+    /// <summary>
+    /// The <see cref="JsonParseIntConverter"/> converts JSON numbers and strings to type <c>int</c>.
+    /// </summary>
+    public class JsonParseIntConverter : JsonConverter<int> {
 
         //--- Methods ---
+
+        /// <summary>
+        /// Reads and converts JSON to the appropriate type.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <param name="typeToConvert">The type to convert.</param>
+        /// <param name="options">An object that specifies serialization options to use.</param>
+        /// <returns></returns>
         public override int Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             switch(reader.TokenType) {
             case JsonTokenType.String:
@@ -37,6 +48,12 @@ namespace LambdaSharp.Serialization {
             }
         }
 
+        /// <summary>
+        /// Writes a specified value as JSON.
+        /// </summary>
+        /// <param name="writer">The writer to write to.</param>
+        /// <param name="value">The value to convert to JSON.</param>
+        /// <param name="options">An object that specifies serialization options to use.</param>
         public override void Write(Utf8JsonWriter writer, int value, JsonSerializerOptions options)
             => writer.WriteNumberValue(value);
     }
