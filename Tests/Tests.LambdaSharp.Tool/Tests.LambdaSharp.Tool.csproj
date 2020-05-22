@@ -15,6 +15,7 @@
     <PackageReference Include="FluentAssertions" Version="5.10.3" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\src\LambdaSharp.Tool\VersionWithSuffix.cs" Link="VersionWithSuffix.cs" />
     <Compile Include="..\..\src\LambdaSharp.Tool\VersionInfo.cs" Link="VersionInfo.cs" />
   </ItemGroup>
 </Project>

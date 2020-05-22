@@ -45,9 +45,9 @@ namespace Tests.LambdaSharp.Tool {
 
             // assert
             version.Major.Should().Be(7);
+            version.MajorPartial.Should().BeNull();
             version.Minor.Should().Be(2);
-            version.Patch.Should().Be(null);
-            version.PatchRevision.Should().Be(null);
+            version.Patch.Should().BeNull();
             version.Suffix.Should().Be("-DEV1");
         }
 
@@ -91,10 +91,23 @@ namespace Tests.LambdaSharp.Tool {
         }
 
         [Fact]
-        public void ToStringMajorMinorPatchMinorSuffixVersion() {
+        public void ToStringMajorMajorPartialMinorPatchVersion() {
 
             // arrange
-            var text = "7.2.0.4-DEV1";
+            var text = "0.7.2.4";
+
+            // act
+            var result = VersionInfo.Parse(text).ToString();
+
+            // assert
+            result.Should().Be(text);
+        }
+
+        [Fact]
+        public void ToStringMajorMajorPartialMinorPatchSuffixVersion() {
+
+            // arrange
+            var text = "0.7.2.4-DEV1";
 
             // act
             var result = VersionInfo.Parse(text).ToString();
@@ -134,7 +147,7 @@ namespace Tests.LambdaSharp.Tool {
             var result = version1.CompareToVersion(version2);
 
             // assert
-            result.Should().Be(null);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -147,7 +160,7 @@ namespace Tests.LambdaSharp.Tool {
             var result = version1.CompareToVersion(null);
 
             // assert
-            result.Should().Be(null);
+            result.Should().BeNull();
         }
 
         [Fact]
@@ -156,34 +169,6 @@ namespace Tests.LambdaSharp.Tool {
             // arrange
             var version1 = VersionInfo.Parse("1.0");
             var version2 = VersionInfo.Parse("1.0.0");
-
-            // act
-            var result = version1.CompareToVersion(version2) == 0;
-
-            // assert
-            result.Should().Be(true);
-        }
-
-        [Fact]
-        public void CompareMajorMinorToMajorMinorPatchPatchMinor() {
-
-            // arrange
-            var version1 = VersionInfo.Parse("1.0");
-            var version2 = VersionInfo.Parse("1.0.0.0");
-
-            // act
-            var result = version1.CompareToVersion(version2) == 0;
-
-            // assert
-            result.Should().Be(true);
-        }
-
-        [Fact]
-        public void CompareMajorMinorPatchToMajorMinorPatchPatchMinor() {
-
-            // arrange
-            var version1 = VersionInfo.Parse("1.0.0");
-            var version2 = VersionInfo.Parse("1.0.0.0");
 
             // act
             var result = version1.CompareToVersion(version2) == 0;
@@ -254,7 +239,7 @@ namespace Tests.LambdaSharp.Tool {
             var result = VersionInfo.FindLatestMatchingVersion(
                 versions,
                 minVersion: null,
-                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             ).CompareToVersion(VersionInfo.Parse("0.7.0-rc6"));
 
             // assert
@@ -281,7 +266,7 @@ namespace Tests.LambdaSharp.Tool {
             var result = VersionInfo.FindLatestMatchingVersion(
                 versions,
                 minVersion: VersionInfo.Parse("0.7.0-rc5"),
-                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             ).CompareToVersion(VersionInfo.Parse("0.7.0-rc6"));
 
             // assert
@@ -310,11 +295,11 @@ namespace Tests.LambdaSharp.Tool {
             var result = VersionInfo.FindLatestMatchingVersion(
                 versions,
                 minVersion: null,
-                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+                moduleVersion => VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion)
             );
 
             // assert
-            result.CompareToVersion(VersionInfo.Parse("0.7.1.2")).Should().Be(0);
+            result.CompareToVersion(VersionInfo.Parse("0.7.2")).Should().Be(0);
         }
 
         [Fact]
@@ -336,14 +321,77 @@ namespace Tests.LambdaSharp.Tool {
             var toolVersion = VersionInfo.Parse("0.7.1");
 
             // act
+            var counter = 0;
             var result = VersionInfo.FindLatestMatchingVersion(
                 versions,
-                minVersion: VersionInfo.Parse("0.7.0"),
-                coreVersion => coreVersion.IsCoreServicesCompatible(toolVersion)
+                minVersion: VersionInfo.Parse("0.7.1"),
+                moduleVersion => {
+                    ++counter;
+                    return VersionInfo.IsModuleCoreVersionCompatibleWithToolVersion(moduleVersion, toolVersion);
+                }
             );
 
             // assert
-            result.CompareToVersion(VersionInfo.Parse("0.7.1.2")).Should().Be(0);
+            result.CompareToVersion(VersionInfo.Parse("0.7.2")).Should().Be(0);
+            counter.Should().Be(2);
+        }
+
+        [Fact]
+        public void GetLambdaSharpAssemblyWildcardVersionForNetCore21() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.8.1.2");
+            var framework = "netcoreapp2.1";
+
+            // act
+            var assemblyVersion = toolVersion.GetLambdaSharpAssemblyWildcardVersion(framework);
+
+            // assert
+            assemblyVersion.Should().Be("0.8.0.*");
+        }
+
+        [Fact]
+        public void GetLambdaSharpAssemblyWildcardVersionForNetCore31() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.8.1.2");
+            var framework = "netcoreapp3.1";
+
+            // act
+            var assemblyVersion = toolVersion.GetLambdaSharpAssemblyWildcardVersion(framework);
+
+            // assert
+            assemblyVersion.Should().Be("0.8.1.*");
+        }
+
+        [Fact]
+        public void IsValidLambdaSharpAssemblyReferenceForToolVersionForNetCore21() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.8.1.2");
+            var framework = "netcoreapp2.1";
+            var lambdaSharpAssemblyVersion = "0.8.0.*";
+
+            // act
+            var result = VersionInfo.IsValidLambdaSharpAssemblyReferenceForToolVersion(toolVersion, framework, lambdaSharpAssemblyVersion);
+
+            // assert
+            result.Should().Be(true);
+        }
+
+        [Fact]
+        public void IsValidLambdaSharpAssemblyReferenceForToolVersionForNetCore31() {
+
+            // arrange
+            var toolVersion = VersionInfo.Parse("0.8.1.2");
+            var framework = "netcoreapp3.1";
+            var lambdaSharpAssemblyVersion = "0.8.1.*";
+
+            // act
+            var result = VersionInfo.IsValidLambdaSharpAssemblyReferenceForToolVersion(toolVersion, framework, lambdaSharpAssemblyVersion);
+
+            // assert
+            result.Should().Be(true);
         }
 
         private void IsLessThan(string left, string right) {

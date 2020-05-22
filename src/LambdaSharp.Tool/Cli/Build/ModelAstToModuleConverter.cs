@@ -30,7 +30,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.Tool.Cli.Build {
-    using static ModelFunctions;
 
     public class ModelAstToModuleConverter : AModelProcessor {
 
@@ -54,7 +53,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 if(module.Version == null) {
                     version = VersionInfo.Parse("1.0-DEV");
                 } else if(!VersionInfo.TryParse(module.Version, out version)) {
-                    LogError("'Version' expected to have format: Major.Minor[.Build[.Revision]]");
+                    LogError("'Version' expected to have format: Major.Minor[.Patch][-Suffix]");
                     version = VersionInfo.Parse("0.0");
                 }
 

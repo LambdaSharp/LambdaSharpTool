@@ -670,7 +670,7 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // add module registration
             if(_builder.HasModuleRegistration) {
-                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesReferenceVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
+                _builder.AddDependencyAsync(new ModuleInfo("LambdaSharp", "Core", Settings.CoreServicesVersion, "lambdasharp"), ModuleManifestDependencyType.Shared).Wait();
 
                 // create module registration
                 _builder.AddResource(

@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -100,6 +101,8 @@ namespace LambdaSharp.Tool {
         public static string ResetColor => UseAnsiConsole ? AnsiTerminal.Reset : "";
         public static string OutputColor => UseAnsiConsole ? AnsiTerminal.Green : "";
         public static string InfoColor => UseAnsiConsole ? AnsiTerminal.Yellow : "";
+        private static VersionInfo _toolVersion;
+
         private static Lazy<bool> _isAmazonLinux2 = new Lazy<bool>(() => {
 
             // check if running on Linux OS
@@ -115,6 +118,13 @@ namespace LambdaSharp.Tool {
             }
             return false;
         });
+
+        //--- Class Constructor ---
+        static Settings() {
+
+            // initialize from assembly build version
+            _toolVersion = VersionInfo.From(VersionWithSuffix.Parse(typeof(Settings).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion));
+        }
 
         //--- Class Properties ---
         public static bool UseAnsiConsole  {
@@ -132,6 +142,7 @@ namespace LambdaSharp.Tool {
                 ?? Environment.GetEnvironmentVariable("AWS_DEFAULT_PROFILE")
                 ?? "default";
         public static string CloudFormationResourceSpecificationCacheFilePath = Path.Combine(ToolCacheDirectory, "CloudFormationResourceSpecification.json");
+        public static VersionInfo ToolVersion => _toolVersion;
 
         //--- Class Methods ---
         public static void ShowErrors() {
@@ -237,13 +248,11 @@ namespace LambdaSharp.Tool {
         }
 
         //--- Properties ---
-        public VersionInfo ToolVersion { get; set; }
-
         /// <summary>
         /// This property determines the reference version for compatibility between the tool, the tier, and the core services.
         /// The reference version is `Major.Minor`, where `Major` can be a fractional version.
         /// </summary>
-        public VersionInfo CoreServicesReferenceVersion => ToolVersion.GetCoreServicesReferenceVersion();
+        public VersionInfo CoreServicesVersion => VersionInfo.GetCoreVersion(ToolVersion);
 
         public string Tier { get; set; }
         public string TierName => string.IsNullOrEmpty(Tier) ? "<DEFAULT>" : Tier;

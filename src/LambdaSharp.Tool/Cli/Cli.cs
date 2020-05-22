@@ -24,18 +24,7 @@ namespace LambdaSharp.Tool.Cli {
 
     public class CliBase {
 
-        //--- Class Fields ---
-        private static VersionInfo _version;
-
-        //--- Class Constructor ---
-        static CliBase() {
-
-            // initialize from assembly build version
-            _version = VersionInfo.Parse(typeof(CliBase).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
-        }
-
         //--- Class Properties ---
-        protected static VersionInfo Version => _version;
         protected static bool HasErrors => Settings.HasErrors;
 
         //--- Class Methods ---

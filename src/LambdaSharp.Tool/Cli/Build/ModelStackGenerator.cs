@@ -83,7 +83,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             var manifest = new ModuleManifest {
                 ModuleInfo = module.ModuleInfo,
                 Description = module.Description,
-                CoreServicesVersion = Settings.CoreServicesReferenceVersion,
+                CoreServicesVersion = Settings.CoreServicesVersion,
                 ParameterSections = inputParameters
                     .GroupBy(input => input.Section)
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")

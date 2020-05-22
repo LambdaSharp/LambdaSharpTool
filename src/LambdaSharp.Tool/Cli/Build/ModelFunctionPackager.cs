@@ -330,41 +330,29 @@ namespace LambdaSharp.Tool.Cli.Build {
                     .Where(elem => elem.Attribute("Include")?.Value.StartsWith("LambdaSharp", StringComparison.Ordinal) ?? false)
                     ?? Enumerable.Empty<XElement>();
                 foreach(var include in includes) {
-                    var expectedVersion = (Settings.ToolVersion.Major == 0)
-                        ? VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}.{Settings.ToolVersion.Patch ?? 0}{Settings.ToolVersion.Suffix}")
-                        : VersionInfo.Parse($"{Settings.ToolVersion.Major}.{Settings.ToolVersion.Minor}{Settings.ToolVersion.Suffix}");
+                    var expectedVersion = Settings.ToolVersion.GetLambdaSharpAssemblyReferenceVersion();
                     var library = include.Attribute("Include").Value;
                     var libraryVersionText = include.Attribute("Version")?.Value;
                     if(libraryVersionText == null) {
                         hasErrors = true;
                         LogError($"csproj file is missing a version attribute in its assembly reference for {library} (expected version: '{expectedVersion}')");
-                    } else if(libraryVersionText.EndsWith(".*", StringComparison.Ordinal)) {
-                        if(!VersionInfo.TryParse(libraryVersionText.Substring(0, libraryVersionText.Length - 2), out var libraryVersion)) {
+                    } else {
+                        try {
+                            if(!VersionInfo.IsValidLambdaSharpAssemblyReferenceForToolVersion(Settings.ToolVersion, targetFramework, libraryVersionText)) {
+
+                                // check if we're compiling a conditional package reference in contributor mode
+                                if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
+
+                                    // show error as warning instead since this package reference will not be used anyway
+                                    LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                } else {
+                                    hasErrors = true;
+                                    LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
+                                }
+                            }
+                        } catch {
                             hasErrors = true;
                             LogError($"csproj file contains an invalid wildcard version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                        } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
-
-                            // check if we're compiling a conditional package reference in contributor mode
-                            if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
-
-                                // show error as warning instead since this package reference will not be used anyway
-                                LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                            } else {
-                                hasErrors = true;
-                                LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                            }
-                        }
-                    } else if(!VersionInfo.TryParse(libraryVersionText, out var libraryVersion)) {
-                        hasErrors = true;
-                        LogError($"csproj file contains an invalid version in its assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                    } else if(!libraryVersion.IsAssemblyCompatibleWith(expectedVersion)) {
-
-                        // check if we're compiling a conditional package reference in contributor mode
-                        if((include.Attribute("Condition")?.Value != null) && (Environment.GetEnvironmentVariable("LAMBDASHARP") != null)) {
-                            LogWarn($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
-                        } else {
-                            hasErrors = true;
-                            LogError($"csproj file contains a mismatched assembly reference for {library} (expected version: '{expectedVersion}', found: '{libraryVersionText}')");
                         }
                     }
                 }
@@ -688,12 +676,12 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // check version of installed AWS Lambda Tools extension
             var match = Regex.Match(result, @"\((?<Version>.*)\)");
-            if(!match.Success || !VersionInfo.TryParse(match.Groups["Version"].Value, out var version)) {
+            if(!match.Success || !VersionWithSuffix.TryParse(match.Groups["Version"].Value, out var version)) {
                 LogWarn("proceeding compilation with unknown version of 'Amazon.Lambda.Tools'; please ensure latest version is installed");
                 _dotnetLambdaToolVersionValid = true;
                 return true;
             }
-            if(version.IsLessThanVersion(VersionInfo.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION), strict: true)) {
+            if(version.IsLessThanVersion(VersionWithSuffix.Parse(MIN_AWS_LAMBDA_TOOLS_VERSION))) {
 
                 // attempt to install the AWS Lambda Tools extension
                 if(!ProcessLauncher.Execute(

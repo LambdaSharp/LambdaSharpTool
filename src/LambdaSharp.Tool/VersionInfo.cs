@@ -30,48 +30,77 @@ namespace LambdaSharp.Tool {
 
         //--- Class Methods ---
         public static VersionInfo Parse(string text) {
-            var index = text.IndexOf('-');
-            Version version;
-            string suffix;
-            if(index < 0) {
-                version = Version.Parse(text);
-                suffix = "";
+            VersionWithSuffix.Parse(text, out var major, out var minor, out var build, out var revision, out var suffix);
+
+            // if major version is 0, we need to assign the minor version as major suffix
+            if(major == 0) {
+                return new VersionInfo(
+                    major,
+                    minor,
+                    (build != -1) ? build : 0,
+                    (revision != -1) ? (int?)revision : null,
+                    suffix
+                );
             } else {
-                version = Version.Parse(text.Substring(0, index));
-                suffix = text.Substring(index).TrimEnd('*');
+                if(revision != -1) {
+                    throw new ArgumentException("unsupported format", nameof(text));
+                }
+                return new VersionInfo(
+                    major,
+                    majorPartial: null,
+                    minor,
+                    (build != -1) ? (int?)build : null,
+                    suffix
+                );
             }
-            return new VersionInfo(
-                version.Major,
-                version.Minor,
-                (version.Build != -1) ? (int?)version.Build : null,
-                (version.Revision != -1) ? (int?)version.Revision : null,
-                suffix
-            );
         }
 
         public static bool TryParse(string text, out VersionInfo version) {
-            var index = text.IndexOf('-');
-            string prefix;
-            string suffix;
-            if(index < 0) {
-                prefix = text;
-                suffix = "";
-            } else {
-                prefix = text.Substring(0, index);
-                suffix = text.Substring(index).TrimEnd('*');
-            }
-            if(!Version.TryParse(prefix, out var prefixVersion)) {
-                version = null;
+            version = null;
+            if(!VersionWithSuffix.TryParse(text, out var major, out var minor, out var build, out var revision, out var suffix)) {
                 return false;
             }
-            version = new VersionInfo(
-                prefixVersion.Major,
-                prefixVersion.Minor,
-                (prefixVersion.Build != -1) ? (int?)prefixVersion.Build : null,
-                (prefixVersion.Revision != -1) ? (int?)prefixVersion.Revision : null,
-                suffix
-            );
+
+            // if major version is 0, we need to assign the minor version as major suffix
+            if(major == 0) {
+                version = new VersionInfo(
+                    major,
+                    minor,
+                    (build != -1) ? build : 0,
+                    (revision != -1) ? (int?)revision : null,
+                    suffix
+                );
+            } else {
+                if(revision != -1) {
+                    return false;
+                }
+                version = new VersionInfo(
+                    major,
+                    majorPartial: null,
+                    minor,
+                    (build != -1) ? (int?)build : null,
+                    suffix
+                );
+            }
             return true;
+        }
+
+        public static VersionInfo From(VersionWithSuffix version) {
+            return (version.Major == 0)
+                ? new VersionInfo(
+                    version.Major,
+                    version.Minor,
+                    (version.Build != -1) ? version.Build : 0,
+                    (version.Revision != -1) ? (int?)version.Revision : null,
+                    version.Suffix
+                )
+                : new VersionInfo(
+                    version.Major,
+                    majorPartial: null,
+                    version.Minor,
+                    (version.Build != -1) ? (int?)version.Build : null,
+                    version.Suffix
+                );
         }
 
         public static VersionInfo Max(IEnumerable<VersionInfo> versionInfos, bool strict = false) {
@@ -110,64 +139,98 @@ namespace LambdaSharp.Tool {
             return null;
         }
 
+        public static int? CompareTierVersionToToolVersion(VersionInfo tierVersion, VersionInfo toolVersion)
+            => tierVersion.GetMajorVersion().CompareToVersion(toolVersion.GetMajorVersion());
+
+        public static bool IsTierVersionCompatibleWithToolVersion(VersionInfo tierVersion, VersionInfo toolVersion)
+            => tierVersion.GetMajorVersion().IsEqualToVersion(toolVersion.GetMajorVersion());
+
+        public static bool IsModuleCoreVersionCompatibleWithToolVersion(VersionInfo moduleCoreVersion, VersionInfo toolVersion)
+            => moduleCoreVersion.GetMajorVersion().IsEqualToVersion(toolVersion.GetMajorVersion());
+
+        public static bool IsModuleCoreVersionCompatibleWithTierVersion(VersionInfo moduleCoreVersion, VersionInfo tierVersion)
+            => moduleCoreVersion.GetMajorVersion().IsEqualToVersion(tierVersion.GetMajorVersion());
+
+        public static VersionInfo GetCoreVersion(VersionInfo version)
+            => version.GetMajorVersion();
+
+        public static bool IsValidLambdaSharpAssemblyReferenceForToolVersion(VersionInfo toolVersion, string framework, string lambdaSharpAssemblyVersion) {
+
+            // extract assembly version pattern without wildcard
+            VersionWithSuffix libraryVersion;
+            if(lambdaSharpAssemblyVersion.EndsWith(".*", StringComparison.Ordinal)) {
+                libraryVersion = VersionWithSuffix.Parse(lambdaSharpAssemblyVersion.Substring(0, lambdaSharpAssemblyVersion.Length - 2));
+            } else {
+                libraryVersion = VersionWithSuffix.Parse(lambdaSharpAssemblyVersion);
+            }
+
+            // compare based on selected framework
+            switch(framework) {
+                case "netcoreapp2.1":
+
+                    // .NET Core 2.1 projects require 0.8.0.*
+                    return (libraryVersion.Major == 0)
+                        && (libraryVersion.Minor == 8)
+                        && (libraryVersion.Build == 0);
+                case "netcoreapp3.1":
+
+                    // .NET Core 3.1 projects require 0.8.*
+                    return (libraryVersion.Major == 0)
+                        && (libraryVersion.Minor >= 8)
+                        && (libraryVersion.Build >= 0);
+                default:
+                    throw new ApplicationException($"unsupported framework: {framework}");
+            }
+        }
+
         //--- Fields ---
         public readonly int Major;
+        public readonly int? MajorPartial;
         public readonly int Minor;
         public readonly int? Patch;
-        public readonly int? PatchRevision;
         public readonly string Suffix;
 
         //--- Constructors ---
-        private VersionInfo(int major, int minor, int? patch, int? patchMinor, string suffix) {
+        private VersionInfo(int major, int? majorPartial, int minor, int? patch, string suffix) {
+
+            // parameter validation
+            if((major == 0) && !majorPartial.HasValue) {
+                throw new ArgumentException($"{nameof(majorPartial)} cannot be null when {nameof(major)} is 0");
+            } else if((major != 0) && majorPartial.HasValue) {
+                throw new ArgumentException($"{nameof(majorPartial)} must be null when {nameof(major)} is not 0");
+            }
+
+            // set fields
             Major = major;
+            MajorPartial = majorPartial;
             Minor = minor;
             Patch = patch;
-            PatchRevision = patchMinor;
             Suffix = suffix ?? throw new ArgumentNullException(nameof(suffix));
-            if(PatchRevision.HasValue && !Patch.HasValue) {
-                throw new ArgumentException($"{nameof(Patch)} must have a value when {nameof(PatchRevision)} has a value");
-            }
         }
 
         //--- Properties ---
         public bool IsPreRelease => Suffix.Length > 0;
-        public bool HasFloatingConstraints => !Patch.HasValue || !PatchRevision.HasValue;
+        public bool HasFloatingConstraints => !Patch.HasValue;
 
         //--- Methods ---
         public override string ToString() {
             var result = new StringBuilder();
             result.Append(Major);
+            if(MajorPartial.HasValue) {
+                result.Append('.');
+                result.Append(MajorPartial);
+            }
             result.Append('.');
             result.Append(Minor);
-            if(PatchRevision.HasValue) {
+            if(Patch.HasValue) {
                 result.Append('.');
                 result.Append(Patch);
-                result.Append('.');
-                result.Append(PatchRevision);
-            } else if(Patch.HasValue || (Major == 0)) {
-                result.Append('.');
-                result.Append(Patch ?? 0);
             }
             result.Append(Suffix);
             return result.ToString();
         }
 
-        public override int GetHashCode() => (Major << 16) ^ (Minor << 8) ^ ((Patch ?? 0) << 4) ^ (PatchRevision ?? 0)  ^ Suffix.GetHashCode();
-
-        public bool IsAssemblyCompatibleWith(VersionInfo other) {
-            if(Suffix != other.Suffix) {
-                return false;
-            }
-            if(Major != other.Major) {
-                return false;
-            }
-            if(Major != 0) {
-                return Minor == other.Minor;
-            }
-
-            // when Major version is 0, we rely on Minor and Patch to match
-            return ((Minor == other.Minor) && (Patch == other.Patch));
-        }
+        public override int GetHashCode() => (Major << 21) ^ ((MajorPartial ?? 0) << 14) ^ (Minor << 7) ^ (Patch ?? 0) ^ Suffix.GetHashCode();
 
         public int? CompareToVersion(VersionInfo other, bool strict = false) {
             if(object.ReferenceEquals(other, null)) {
@@ -183,15 +246,15 @@ namespace LambdaSharp.Tool {
                 if(result != 0) {
                     return Sign(result);
                 }
+                result = (MajorPartial ?? 0) - (other.MajorPartial ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
                 result = Minor - other.Minor;
                 if(result != 0) {
                     return Sign(result);
                 }
                 result = (Patch ?? 0) - (other.Patch ?? 0);
-                if(result != 0) {
-                    return Sign(result);
-                }
-                result = (PatchRevision ?? 0) - (other.PatchRevision ?? 0);
                 if(result != 0) {
                     return Sign(result);
                 }
@@ -203,15 +266,15 @@ namespace LambdaSharp.Tool {
                 if(result != 0) {
                     return Sign(result);
                 }
+                result = (MajorPartial ?? 0) - (other.MajorPartial ?? 0);
+                if(result != 0) {
+                    return Sign(result);
+                }
                 result = Minor - other.Minor;
                 if(result != 0) {
                     return Sign(result);
                 }
                 result = (Patch ?? 0) - (other.Patch ?? 0);
-                if(result != 0) {
-                    return Sign(result);
-                }
-                result = (PatchRevision ?? 0) - (other.PatchRevision ?? 0);
                 if(result != 0) {
                     return Sign(result);
                 }
@@ -259,56 +322,39 @@ namespace LambdaSharp.Tool {
         public bool IsEqualToVersion(VersionInfo info, bool strict = false) => CompareToVersion(info, strict) == 0;
 
         public string GetLambdaSharpAssemblyWildcardVersion(string framework) {
-            var major = Major;
-            var minor = Minor;
-            var patch = Patch;
             switch(framework) {
-                case "netcoreapp1.0":
-                case "netcoreapp2.0":
-
-                    // TODO (2020-04-02, bjorg): determine correct LambdaSharp.dll version for .NET Core 1.0 & 2.0
                 case "netcoreapp2.1":
-                    major = 0;
-                    minor = 7;
-                    patch = 0;
-                    break;
+                    return "0.8.0.*";
                 case "netcoreapp3.1":
-                    break;
+                    if(IsPreRelease) {
+
+                        // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
+                        return ToString();
+                    }
+                    if(MajorPartial.HasValue) {
+                        return $"{Major}.{MajorPartial}.{Minor}.*";
+                    }
+                    return $"{Major}.{Minor}.*";
                 default:
                     throw new ApplicationException($"unsupported framework: {framework}");
             }
-            if(IsPreRelease) {
-
-                // NOTE (2018-12-16, bjorg): for pre-release version, there is no wildcard; the version must match everything
-                return ToString();
-            }
-            if(major == 0) {
-
-                // when Major version is 0, the build number is relevant
-                return $"{major}.{minor}.{patch ?? 0}.*";
-            }
-            return $"{major}.{minor}.*";
         }
 
-        public VersionInfo GetCoreServicesReferenceVersion() {
-            if(Major == 0) {
-
-                // when Major version is 0, the build number is relevant
-                return new VersionInfo(Major, Minor, Patch, patchMinor: null, Suffix);
-            }
-            return new VersionInfo(Major, Minor, patch: null, patchMinor: null, Suffix);
+        public VersionWithSuffix GetLambdaSharpAssemblyReferenceVersion() {
+            return MajorPartial.HasValue
+                ? new VersionWithSuffix(new Version(Major, MajorPartial.Value, Minor, Patch ?? 0), Suffix)
+                : new VersionWithSuffix(new Version(Major, Minor, Patch ?? 0, 0), Suffix);
         }
 
         public bool MatchesConstraint(VersionInfo versionConstraint) {
             return (Major == versionConstraint.Major)
+                && (MajorPartial == versionConstraint.MajorPartial)
                 && (Minor == versionConstraint.Minor)
                 && (Suffix == versionConstraint.Suffix)
-                && (!versionConstraint.Patch.HasValue || (Patch == versionConstraint.Patch))
-                && (!versionConstraint.PatchRevision.HasValue || (PatchRevision == versionConstraint.PatchRevision));
+                && (!versionConstraint.Patch.HasValue || (Patch == versionConstraint.Patch));
         }
 
-        public bool IsCoreServicesCompatible(VersionInfo info)
-            => GetCoreServicesReferenceVersion().IsEqualToVersion(info?.GetCoreServicesReferenceVersion());
+        private VersionInfo GetMajorVersion() => new VersionInfo(Major, MajorPartial, 0, patch: null, Suffix);
     }
 
     public class VersionInfoConverter : JsonConverter {

@@ -365,7 +365,7 @@ namespace LambdaSharp.Tool.Cli {
             var substitutions = new Dictionary<string, string> {
                 ["FRAMEWORK"] = framework,
                 ["ROOTNAMESPACE"] = rootNamespace,
-                ["LAMBDASHARP_VERSION"] = Version.GetLambdaSharpAssemblyWildcardVersion(framework)
+                ["LAMBDASHARP_VERSION"] = Settings.ToolVersion.GetLambdaSharpAssemblyWildcardVersion(framework)
             };
             try {
                 var projectContents = ReadResource("NewCSharpFunctionProject.xml", substitutions);
