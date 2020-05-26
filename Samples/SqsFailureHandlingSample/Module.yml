@@ -15,7 +15,7 @@
 # limitations under the License.
 
 Module: Sample.SqsHandler
-Description: Module description
+Description: Sample module to demonstrate receiving events from an SQS queue
 Items:
 
   - Resource: SqsQueue

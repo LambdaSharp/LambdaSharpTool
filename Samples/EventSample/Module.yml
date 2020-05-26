@@ -15,7 +15,7 @@
 # limitations under the License.
 
 Module: Sample.Event
-Description: Module description
+Description: Sample module to demonstrate sending and receiving events
 Items:
 
   - Function: SenderFunction
