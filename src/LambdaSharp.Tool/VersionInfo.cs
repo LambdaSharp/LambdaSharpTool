@@ -199,6 +199,18 @@ namespace LambdaSharp.Tool {
             } else if((major != 0) && majorPartial.HasValue) {
                 throw new ArgumentException($"{nameof(majorPartial)} must be null when {nameof(major)} is not 0");
             }
+            if(major < 0) {
+                throw new ArgumentException("value must be greater than or equal to 0", nameof(major));
+            }
+            if(majorPartial.HasValue && (majorPartial.Value < 0)) {
+                throw new ArgumentException("value must be null, greater than, or equal to 0", nameof(majorPartial));
+            }
+            if(minor < 0) {
+                throw new ArgumentException("value must be greater than or equal to 0", nameof(minor));
+            }
+            if(patch.HasValue && (patch.Value < 0)) {
+                throw new ArgumentException("value must be null, greater than, or equal to 0", nameof(patch));
+            }
 
             // set fields
             Major = major;

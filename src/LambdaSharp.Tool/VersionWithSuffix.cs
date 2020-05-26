@@ -79,7 +79,8 @@ namespace LambdaSharp.Tool {
             VersionWithSuffix.Parse(text, out var major, out var minor, out var build, out var revision, out var suffix);
             if(build == -1) {
                 return new VersionWithSuffix(new Version(major, minor), suffix);
-            }if(revision == -1) {
+            }
+            if(revision == -1) {
                 return new VersionWithSuffix(new Version(major, minor, build), suffix);
             }
             return new VersionWithSuffix(new Version(major, minor, build, revision), suffix);
@@ -87,7 +88,13 @@ namespace LambdaSharp.Tool {
 
         public static bool TryParse(string text, out VersionWithSuffix version) {
             if(TryParse(text, out var major, out var minor, out var build, out var revision, out var suffix)) {
-                version = new VersionWithSuffix(new Version(major, minor, build, revision), suffix);
+                if(build == -1) {
+                    version = new VersionWithSuffix(new Version(major, minor), suffix);
+                } else if(revision == -1) {
+                    version = new VersionWithSuffix(new Version(major, minor, build), suffix);
+                } else {
+                    version = new VersionWithSuffix(new Version(major, minor, build, revision), suffix);
+                }
                 return true;
             }
             version = null;
