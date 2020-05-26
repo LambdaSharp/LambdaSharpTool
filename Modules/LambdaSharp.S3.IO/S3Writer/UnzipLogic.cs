@@ -22,7 +22,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -35,13 +34,11 @@ namespace LambdaSharp.S3.IO.S3Writer {
     public class UnzipLogic {
 
         //--- Class Methods ---
-        private static string ToHexString(IEnumerable<byte> bytes)
-            => string.Concat(bytes.Select(x => x.ToString("X2")));
-
-        private static string GetMD5Hash(MemoryStream stream) {
+        private static string GetMD5AsBase64(MemoryStream stream) {
             using(var md5 = MD5.Create()) {
                 stream.Position = 0;
-                var result = ToHexString(md5.ComputeHash(stream));
+                var hash = md5.ComputeHash(stream);
+                var result = Convert.ToBase64String(hash);
                 stream.Position = 0;
                 return result;
             }
@@ -71,19 +68,8 @@ namespace LambdaSharp.S3.IO.S3Writer {
             // download package and copy all files to destination bucket
             var fileEntries = new Dictionary<string, string>();
             if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
-                using(var stream = entry.Open()) {
-                    var memoryStream = new MemoryStream();
-                    await stream.CopyToAsync(memoryStream);
-                    var hash = GetMD5Hash(memoryStream);
-                    var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
-                    _logger.LogInfo($"uploading file: {destination}");
-                    await _transferUtility.UploadAsync(
-                        memoryStream,
-                        properties.DestinationBucketName,
-                        destination
-                    );
-                    fileEntries.Add(entry.FullName, hash);
-                }
+                await UploadEntry(entry, properties);
+                fileEntries.Add(entry.FullName, entry.Crc32.ToString("X8"));
             })) {
                 throw new FileNotFoundException("Unable to download source package");
             }
@@ -127,26 +113,16 @@ namespace LambdaSharp.S3.IO.S3Writer {
                 var uploadedCount = 0;
                 var skippedCount = 0;
                 if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
-                    using(var stream = entry.Open()) {
-                        var memoryStream = new MemoryStream();
-                        await stream.CopyToAsync(memoryStream);
-                        var hash = GetMD5Hash(memoryStream);
 
-                        // only upload file if new or the contents have changed
-                        if(!oldFileEntries.TryGetValue(entry.FullName, out var existingHash) || (existingHash != hash)) {
-                            var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
-                            _logger.LogInfo($"uploading file: {destination}");
-                            await _transferUtility.UploadAsync(
-                                memoryStream,
-                                properties.DestinationBucketName,
-                                destination
-                            );
-                            ++uploadedCount;
-                        } else {
-                           ++skippedCount;
-                        }
-                        newFileEntries.Add(entry.FullName, hash);
+                    // check if entry has changed using the CRC32 code
+                    var hash = entry.Crc32.ToString("X8");
+                    if(!oldFileEntries.TryGetValue(entry.FullName, out var existingHash) || (existingHash != hash)) {
+                        await UploadEntry(entry, properties);
+                        ++uploadedCount;
+                    } else {
+                        ++skippedCount;
                     }
+                    newFileEntries.Add(entry.FullName, hash);
                 })) {
                     throw new FileNotFoundException("Unable to download source package");
                 }
@@ -182,6 +158,55 @@ namespace LambdaSharp.S3.IO.S3Writer {
                 fileEntries.Select(kv => Path.Combine(properties.DestinationKey, kv.Key)).ToList()
             );
             return new Response<S3WriterResourceAttribute>();
+        }
+
+        private async Task UploadEntry(ZipArchiveEntry entry, S3WriterResourceProperties properties) {
+
+            // unzip entry
+            using(var stream = entry.Open()) {
+                var memoryStream = new MemoryStream();
+
+                // determine if stream needs to be encoded
+                string contentEncodingHeader = null;
+                var encoding = DetermineEncodingType(entry.FullName);
+                switch(encoding) {
+                case "NONE":
+                    await stream.CopyToAsync(memoryStream);
+                    break;
+                case "GZIP":
+                    contentEncodingHeader = "gzip";
+                    using(var gzipStream = new GZipStream(memoryStream, CompressionLevel.Optimal, leaveOpen: true)) {
+                        await stream.CopyToAsync(gzipStream);
+                    }
+                    break;
+                case "BROTLI":
+                    contentEncodingHeader = "br";
+                    using(var brotliStream = new BrotliStream(memoryStream, CompressionLevel.Optimal, leaveOpen: true)) {
+                        await stream.CopyToAsync(brotliStream);
+                    }
+                    break;
+                default:
+                    _logger.LogWarn("unrecognized compression type {0} for {1}", encoding, entry.FullName);
+                    goto case "NONE";
+                }
+                var base64 = GetMD5AsBase64(memoryStream);
+
+                // only upload file if new or the contents have changed
+                var destination = Path.Combine(properties.DestinationKey, entry.FullName).Replace('\\', '/');
+                _logger.LogInfo($"uploading file: {destination} [encoding: {encoding.ToLowerInvariant()}]");
+                await _transferUtility.UploadAsync(new TransferUtilityUploadRequest {
+                    Headers = {
+                        ContentEncoding = contentEncodingHeader,
+                        ContentMD5 = base64
+                    },
+                    InputStream = memoryStream,
+                    BucketName = properties.DestinationBucket,
+                    Key = destination
+                });
+            }
+
+            // local functions
+            string DetermineEncodingType(string filename) => properties.Encoding?.ToUpperInvariant() ?? "NONE";
         }
 
         private async Task<bool> ProcessZipFileItemsAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {

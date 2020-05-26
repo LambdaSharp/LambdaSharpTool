@@ -86,6 +86,7 @@ Items:
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""
+      Encoding: BROTLI
 
   - Variable: WebsiteUrl
     Description: Website URL

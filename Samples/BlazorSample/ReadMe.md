@@ -28,7 +28,7 @@ Items:
 
   # Build the ASP.NET Core Blazor application and compress it into a zip package
   - Package: WebsiteContents
-    Build: dotnet publish -c Release MyBlazorApp
+    Build: dotnet publish -c Release MyBlazorApp -p:BlazorEnableCompression=false
     Files: MyBlazorApp/bin/Release/netstandard2.1/publish/wwwroot/
 
   # Create S3 bucket, make it publicly accessible, and register it for automatic emptying
@@ -39,7 +39,7 @@ Items:
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html
-        ErrorDocument: error.html
+        ErrorDocument: index.html
 
   - Resource: BucketPolicy
     Type: AWS::S3::BucketPolicy
@@ -68,6 +68,7 @@ Items:
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""
+      Encoding: BROTLI
 
   - Variable: WebsiteUrl
     Description: Website URL
