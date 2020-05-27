@@ -69,7 +69,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
             var fileEntries = new Dictionary<string, string>();
             if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
                 await UploadEntry(entry, properties);
-                fileEntries.Add(entry.FullName, entry.Crc32.ToString("X8"));
+                fileEntries.Add(entry.FullName, ComputeEntryHash(entry, properties));
             })) {
                 throw new FileNotFoundException("Unable to download source package");
             }
@@ -115,7 +115,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
                 if(!await ProcessZipFileItemsAsync(properties.SourceBucketName, properties.SourceKey, async entry => {
 
                     // check if entry has changed using the CRC32 code
-                    var hash = entry.Crc32.ToString("X8");
+                    var hash = ComputeEntryHash(entry, properties);
                     if(!oldFileEntries.TryGetValue(entry.FullName, out var existingHash) || (existingHash != hash)) {
                         await UploadEntry(entry, properties);
                         ++uploadedCount;
@@ -168,7 +168,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
 
                 // determine if stream needs to be encoded
                 string contentEncodingHeader = null;
-                var encoding = DetermineEncodingType(entry.FullName);
+                var encoding = DetermineEncodingType(entry.FullName, properties);
                 switch(encoding) {
                 case "NONE":
                     await stream.CopyToAsync(memoryStream);
@@ -187,6 +187,7 @@ namespace LambdaSharp.S3.IO.S3Writer {
                     break;
                 default:
                     _logger.LogWarn("unrecognized compression type {0} for {1}", encoding, entry.FullName);
+                    encoding = "NONE";
                     goto case "NONE";
                 }
                 var base64 = GetMD5AsBase64(memoryStream);
@@ -204,10 +205,11 @@ namespace LambdaSharp.S3.IO.S3Writer {
                     Key = destination
                 });
             }
-
-            // local functions
-            string DetermineEncodingType(string filename) => properties.Encoding?.ToUpperInvariant() ?? "NONE";
         }
+
+        private string DetermineEncodingType(string filename, S3WriterResourceProperties properties) => properties.Encoding?.ToUpperInvariant() ?? "NONE";
+
+        private string ComputeEntryHash(ZipArchiveEntry entry, S3WriterResourceProperties properties) => $"{entry.Crc32.ToString("X8")}-{DetermineEncodingType(entry.FullName, properties)}";
 
         private async Task<bool> ProcessZipFileItemsAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {
             var tmpFilename = Path.GetTempFileName() + ".zip";
