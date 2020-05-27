@@ -68,7 +68,7 @@ Items:
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""
-      Encoding: BROTLI
+      Encoding: GZIP
 
   - Variable: WebsiteUrl
     Description: Website URL
