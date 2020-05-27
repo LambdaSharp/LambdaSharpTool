@@ -358,6 +358,6 @@ namespace LambdaSharp.Tool {
                 : Prompt.GetYesNo($"|=> {message}", defaultAnswer);
         }
 
-        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin, moduleInfo.Namespace, moduleInfo.Name);
+        public string GetOriginCacheDirectory(ModuleInfo moduleInfo) => Path.Combine(ToolCacheDirectory, ".origin", moduleInfo.Origin ?? DeploymentBucketName, moduleInfo.Namespace, moduleInfo.Name);
     }
 }

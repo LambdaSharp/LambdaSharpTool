@@ -43,6 +43,10 @@ Items:
         Type: String
         Required: true
 
+      - Name: Encoding
+        Description: "Encode all unzipped files (one of: NONE, BROTLI, or GZIP)"
+        Required: false
+
     Attributes:
 
       - Name: Url

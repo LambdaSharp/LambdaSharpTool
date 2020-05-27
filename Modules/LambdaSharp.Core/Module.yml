@@ -354,20 +354,6 @@ Items:
     Type: AWS::S3::Bucket
     If: CreateDeploymentBucket
 
-  - Resource: DeploymentBucketPolicy
-    Type: AWS::S3::BucketPolicy
-    If: CreateDeploymentBucket
-    Properties:
-      Bucket: !Ref DeploymentBucketResource
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: serverlessrepo.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub "${DeploymentBucketResource.Arn}/*"
-
   - Resource: DeploymentBucket
     Scope: public
     Description: S3 bucket for published modules (ARN)

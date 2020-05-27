@@ -143,6 +143,11 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 ### (v0.8.0.2) - TBD
 
+#### Features
+
+* LambdaSharp.S3.IO
+  * Added `Encoding` property for `LambdaSharp::S3::IO` to enable encoding content when deploying to an S3 bucket.
+
 #### Fixes
 
 * LambdaSharp CLI
