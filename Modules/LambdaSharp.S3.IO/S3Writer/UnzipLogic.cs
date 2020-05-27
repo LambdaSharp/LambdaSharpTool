@@ -22,6 +22,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using Amazon.S3;
 using Amazon.S3.Model;
@@ -37,10 +38,27 @@ namespace LambdaSharp.S3.IO.S3Writer {
         private static string GetMD5AsBase64(MemoryStream stream) {
             using(var md5 = MD5.Create()) {
                 stream.Position = 0;
-                var hash = md5.ComputeHash(stream);
-                var result = Convert.ToBase64String(hash);
+                var bytes = md5.ComputeHash(stream);
+                var result = Convert.ToBase64String(bytes);
                 stream.Position = 0;
                 return result;
+            }
+        }
+
+        private static string GetMD5AsHexString(ZipArchiveEntry entry) {
+            using(var md5 = MD5.Create())
+            using(var hashStream = new CryptoStream(Stream.Null, md5, CryptoStreamMode.Write)) {
+
+                // hash file path
+                var filePathBytes = Encoding.UTF8.GetBytes(entry.FullName.Replace('\\', '/'));
+                hashStream.Write(filePathBytes, 0, filePathBytes.Length);
+
+                // hash file contents
+                using(var stream = entry.Open()) {
+                    stream.CopyTo(hashStream);
+                }
+                hashStream.FlushFinalBlock();
+                return string.Concat(md5.Hash.Select(x => x.ToString("X2")));
             }
         }
 
@@ -207,9 +225,11 @@ namespace LambdaSharp.S3.IO.S3Writer {
             }
         }
 
-        private string DetermineEncodingType(string filename, S3WriterResourceProperties properties) => properties.Encoding?.ToUpperInvariant() ?? "NONE";
+        private string DetermineEncodingType(string filename, S3WriterResourceProperties properties)
+            => properties.Encoding?.ToUpperInvariant() ?? "NONE";
 
-        private string ComputeEntryHash(ZipArchiveEntry entry, S3WriterResourceProperties properties) => $"{entry.Crc32.ToString("X8")}-{DetermineEncodingType(entry.FullName, properties)}";
+        private string ComputeEntryHash(ZipArchiveEntry entry, S3WriterResourceProperties properties)
+            => $"{GetMD5AsHexString(entry)}-{DetermineEncodingType(entry.FullName, properties)}";
 
         private async Task<bool> ProcessZipFileItemsAsync(string bucketName, string key, Func<ZipArchiveEntry, Task> callbackAsync) {
             var tmpFilename = Path.GetTempFileName() + ".zip";
