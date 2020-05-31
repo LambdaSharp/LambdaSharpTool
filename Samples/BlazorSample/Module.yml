@@ -1,0 +1,71 @@
+# LambdaSharp (λ#)
+# Copyright (C) 2018-2020
+# lambdasharp.net
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+Module: Sample.BlazorWebAssembly
+Description: A sample module showing how to deploy a ASP.NET Core Blazor WebAssembly website
+Using:
+  - Module: LambdaSharp.S3.IO@lambdasharp
+
+Items:
+
+  # Build the ASP.NET Core Blazor application and compress it into a zip package
+  - Package: WebsiteContents
+    Build: dotnet publish -c Release MyBlazorApp -p:BlazorEnableCompression=false
+    Files: MyBlazorApp/bin/Release/netstandard2.1/publish/wwwroot/
+
+  # Create S3 bucket, make it publicly accessible, and register it for automatic emptying
+  - Resource: WebsiteBucket
+    Type: AWS::S3::Bucket
+    Allow: ReadWrite
+    Properties:
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+
+  - Resource: BucketPolicy
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      PolicyDocument:
+        Id: WebsiteBucket
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${WebsiteBucket}/*"
+      Bucket: !Ref WebsiteBucket
+
+  - Resource: EmptyBucket
+    Type: LambdaSharp::S3::EmptyBucket
+    Properties:
+      Bucket: !Ref WebsiteBucket
+
+  # Upload the HTML assets and copy them to the bucket
+  - Resource: UnzipWebsiteContents
+    Type: LambdaSharp::S3::Unzip
+    Properties:
+      SourceBucket: !Ref Deployment::BucketName
+      SourceKey: !Ref WebsiteContents
+      DestinationBucket: !Ref WebsiteBucket
+      DestinationKey: ""
+      Encoding: GZIP
+
+  - Variable: WebsiteUrl
+    Description: Website URL
+    Scope: public
+    Value: !GetAtt WebsiteBucket.WebsiteURL

@@ -18,27 +18,43 @@
 
 - name: Metrics
   href: Metrics.md
+  items:
+
+      - name: Function Metrics
+        href: Metrics-Function.md
+
+      - name: Module Metrics
+        href: Metrics-Module.md
+
+- name: Events
+  href: Events.md
+  items:
+
+    - name: LambdaError
+      href: Events-LambdaError.md
+
+    - name: LambdaMetrics
+      href: Events-LambdaMetrics.md
+
+    - name: LambdaUsage
+      href: Events-LambdaUsage.md
+
+- name: Log Records
+  href: LogRecords.md
+
+- name: Debugging
+  href: Debugging.md
 
 - name: Samples
   href: Samples.md
-  items:
-
-    - name: Create Static Website with CloudFormation
-      href: https://github.com/LambdaSharp/StaticWebsite-Sample
-
-    - name: Create Animated GIFs from Videos with AWS Lambda
-      href: https://github.com/LambdaSharp/GifMaker-Sample
-
-    - name: Create a Web Chat with API Gateway WebSockets
-      href: https://github.com/LambdaSharp/WebSocketsChat-Sample
-
-    - name: Misc. λ# Samples
-      href: https://github.com/LambdaSharp/LambdaSharpTool/tree/master/Samples/ReadMe.md
 
 - name: Releases
   items:
 
-    - name: Geminus (v0.7.0.15)
+    - name: Hicetas (v0.8.0.2)
+      href: ReleaseNotes-Hicetas.md
+
+    - name: Geminus (v0.7.0.17)
       href: ReleaseNotes-Geminus.md
 
     - name: Favorinus (v0.6.1)
@@ -50,13 +66,13 @@
     - name: Damo (v0.4.0.4)
       href: ReleaseNotes-Damo.md
 
-    - name: Cebes (v3.0)
+    - name: Cebes (v0.3.0)
       href: ReleaseNotes-Cebes.md
 
-    - name: Brontinus (v2.0)
+    - name: Brontinus (v0.2.0)
       href: ReleaseNotes-Brontinus.md
 
-    - name: Acrion (v1.0)
+    - name: Acrion (v0.1.0)
       href: ReleaseNotes-Acrion.md
 
 # - name: Glossary

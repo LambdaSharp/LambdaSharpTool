@@ -14,7 +14,7 @@ In order to have a more efficient way to process the sqs messages with lambda us
 
 ```yaml
 Module: Sample.SqsHandler
-Description: Module description
+Description: Sample module to demonstrate receiving events from an SQS queue
 Items:
 
   - Resource: SqsQueue

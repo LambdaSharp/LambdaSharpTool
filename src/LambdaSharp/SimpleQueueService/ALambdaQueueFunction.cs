@@ -33,20 +33,14 @@ namespace LambdaSharp.SimpleQueueService {
     /// The <see cref="ALambdaQueueFunction{TMessage}"/> is the abstract base class for handling
     /// <a href="https://aws.amazon.com/sqs/">Amazon Simple Queue Service (SQS)</a> events.
     /// </summary>
+    /// <remarks>
+    /// When the Lambda function is declared with a Dead-Letter Queue (DLQ), the function attempts a
+    /// failed message up to 3 times, by default. The default can be overridden by setting a different
+    /// value for the <c>MAX_QUEUE_RETRIES</c> environment variable. Without a DLQ, the function will
+    /// attempt a message indefinitely.
+    /// </remarks>
     /// <typeparam name="TMessage">The SQS queue message type.</typeparam>
     public abstract class ALambdaQueueFunction<TMessage> : ALambdaFunction {
-
-        //--- Constants ---
-        private const string MESSAGE_ATTEMPT_COUNT = "MessageAttempt.Count";
-        private const string MESSAGE_FAILURE_COUNT = "MessageFailure.Count";
-        private const string MESSAGE_SUCCESS_COUNT = "MessageSuccess.Count";
-        private const string MESSAGE_SUCCESS_LATENCY = "MessageSuccess.Latency";
-        private const string MESSAGE_SUCCESS_LIFESPAN = "MessageSuccess.Lifespan";
-
-        //--- Fields ---
-
-        // TODO: initialize max-retry value
-        private int? _maxMessageRetryCount;
 
         //--- Fields ---
         private SQSEvent.SQSMessage _currentRecord;
@@ -145,18 +139,15 @@ namespace LambdaSharp.SimpleQueueService {
                     // record successful processing metrics
                     stopwatch.Stop();
                     var now = DateTimeOffset.UtcNow;
-                    metrics.Add((MESSAGE_SUCCESS_COUNT, 1, LambdaMetricUnit.Count));
-                    metrics.Add((MESSAGE_SUCCESS_LATENCY, stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
-                    metrics.Add((MESSAGE_SUCCESS_LIFESPAN, (now - record.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
+                    metrics.Add(("MessageSuccess.Count", 1, LambdaMetricUnit.Count));
+                    metrics.Add(("MessageSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds));
+                    metrics.Add(("MessageSuccess.Lifespan", (now - record.GetLifespanTimestamp()).TotalSeconds, LambdaMetricUnit.Seconds));
                 } catch(Exception e) {
 
                     // NOTE (2020-04-21, bjorg): delete message if error is not retriable (i.e. logic error) or
                     //  the message has reached it's maximum number of retries.
                     var deleteMessage = !(e is LambdaRetriableException)
-                        || (
-                            _maxMessageRetryCount.HasValue
-                            && (record.GetApproximateReceiveCount() >= _maxMessageRetryCount.Value)
-                        );
+                        || (record.GetApproximateReceiveCount() >= await Provider.GetMaxRetriesForQueueAsync(record.EventSourceArn));
 
                     // the intent is to delete the message
                     if(deleteMessage) {
@@ -173,16 +164,16 @@ namespace LambdaSharp.SimpleQueueService {
                             successfulMessages.Add(record);
 
                             // record failed processing metrics
-                            metrics.Add((MESSAGE_FAILURE_COUNT, 1, LambdaMetricUnit.Count));
+                            metrics.Add(("MessageDead.Count", 1, LambdaMetricUnit.Count));
                         } catch {
 
                             // record attempted processing metrics
-                            metrics.Add((MESSAGE_ATTEMPT_COUNT, 1, LambdaMetricUnit.Count));
+                            metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
                         }
                     } else {
 
                         // record attempted processing metrics
-                        metrics.Add((MESSAGE_ATTEMPT_COUNT, 1, LambdaMetricUnit.Count));
+                        metrics.Add(("MessageFailed.Count", 1, LambdaMetricUnit.Count));
 
                         // log error as a warning as we expect to see this message again
                         LogErrorAsWarning(e);
@@ -198,7 +189,7 @@ namespace LambdaSharp.SimpleQueueService {
 
                 // delete all messages that were successfully processed to avoid them being tried again
                 await Provider.DeleteMessagesFromQueueAsync(
-                    AwsConverters.ConvertQueueArnToUrl(eventSourceArn),
+                    eventSourceArn,
                     successfulMessages.Select(message =>
                         (MessageId: message.MessageId, ReceiptHandle: message.ReceiptHandle)
                     )

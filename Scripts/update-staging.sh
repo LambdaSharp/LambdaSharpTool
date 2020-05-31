@@ -24,9 +24,7 @@ $LAMBDASHARP/Scripts/install-cli.sh
 lash init \
     --allow-upgrade \
     --tier=Staging \
-    --aws-profile=lambdasharp \
-    --force-publish \
-    --force-build
+    --aws-profile=lambdasharp
 
 # publish LambdaSharp standard modules
 lash publish \

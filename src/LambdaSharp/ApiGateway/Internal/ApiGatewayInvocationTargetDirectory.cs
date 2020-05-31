@@ -25,7 +25,6 @@ using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
 using Amazon.Lambda.Core;
 using LambdaSharp.Exceptions;
-using Newtonsoft.Json;
 
 namespace LambdaSharp.ApiGateway.Internal {
 
@@ -132,12 +131,12 @@ namespace LambdaSharp.ApiGateway.Internal {
 
         //--- Fields ---
         private readonly CreateTargetInstanceDelegate _createInstance;
-        private readonly Dictionary<string, InvocationTargetDelegate> _mappings = new Dictionary<string, InvocationTargetDelegate>();
+        private readonly Dictionary<string, (InvocationTargetDelegate Delegate, bool IsAsync)> _mappings = new Dictionary<string, (InvocationTargetDelegate, bool)>();
         private readonly Dictionary<Type, object> _targets = new Dictionary<Type, object>();
-        private readonly Amazon.Lambda.Core.ILambdaSerializer _serializer;
+        private readonly ILambdaSerializer _serializer;
 
         //--- Constructors ---
-        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance, Amazon.Lambda.Core.ILambdaSerializer serializer) {
+        public ApiGatewayInvocationTargetDirectory(CreateTargetInstanceDelegate createInstance, ILambdaSerializer serializer) {
             _createInstance = createInstance ?? throw new ArgumentNullException(nameof(createInstance));
             _serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
         }
@@ -171,12 +170,21 @@ namespace LambdaSharp.ApiGateway.Internal {
             }
 
             // add invocation delegate
-            _mappings.Add(key, CreateMethodDelegate(target, method));
+            var methodDelegate = CreateMethodDelegate(target, method, out var isAsync);
+            _mappings.Add(key, (methodDelegate, isAsync));
         }
 
-        public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget) => _mappings.TryGetValue(key, out invocationTarget);
+        public bool TryGetInvocationTarget(string key, out InvocationTargetDelegate invocationTarget, out bool isAsync) {
+            if(_mappings.TryGetValue(key, out var tuple)) {
+                (invocationTarget, isAsync) = tuple;
+                return true;
+            } else {
+                (invocationTarget, isAsync) = (null, false);
+                return false;
+            }
+        }
 
-        private InvocationTargetDelegate CreateMethodDelegate(object target, MethodInfo method) {
+        private InvocationTargetDelegate CreateMethodDelegate(object target, MethodInfo method, out bool isAsync) {
 
             // create resolver function for each method parameter
             var resolvers = method.GetParameters().Select(parameter => CreateParameterResolver(_serializer, method, parameter)).ToArray();
@@ -184,6 +192,7 @@ namespace LambdaSharp.ApiGateway.Internal {
             // create method adapter based on method return type
             InvocationTargetDelegate methodAdapter;
             if(method.ReturnType == typeof(Task<APIGatewayProxyResponse>)) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -196,6 +205,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     }
                 };
             } else if(method.ReturnType == typeof(APIGatewayProxyResponse)) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -208,6 +218,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     }
                 };
             } else if(method.ReturnType.IsGenericType && method.ReturnType.GetGenericTypeDefinition() == typeof(Task<>)) {
+                isAsync = false;
                 var resolveReturnValue = method.ReturnType.GetProperty("Result") ?? throw new ShouldNeverHappenException("could not fetch 'Result' property of Task<> type");
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
@@ -234,6 +245,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     }
                 };
             } else if(method.ReturnType == typeof(Task)) {
+                isAsync = true;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -245,10 +257,11 @@ namespace LambdaSharp.ApiGateway.Internal {
                     } catch(TargetInvocationException e) {
 
                         // rethrow target exception as an asynchronous endpoint exception
-                        throw new ApiGatewayAsyncEndpointException(e.InnerException);
+                        throw new ApiGatewayAsyncEndpointException(e.InnerException ?? e);
                     }
                 };
             } else if(method.ReturnType == typeof(void)) {
+                isAsync = true;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();
@@ -263,6 +276,7 @@ namespace LambdaSharp.ApiGateway.Internal {
                     }
                 };
             } else if(!method.ReturnType.IsValueType && (method.ReturnType != typeof(string))) {
+                isAsync = false;
                 methodAdapter = async (APIGatewayProxyRequest request) => {
                     try {
                         var state = new InvocationTargetState();

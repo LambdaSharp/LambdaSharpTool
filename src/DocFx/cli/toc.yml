@@ -48,3 +48,6 @@
 
     - name: Download CloudFormation Spec
       href: Tool-Util-DownloadCloudFormationSpec.md
+
+    - name: List Lambdas
+      href: Tool-Util-ListLambdas.md

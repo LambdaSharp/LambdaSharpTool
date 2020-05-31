@@ -25,9 +25,6 @@ The LambdaSharp CLI `build` command compiles the module into a CloudFormation te
 Module: String
 Version: String
 Description: String
-CloudFormation:
-  Region: String
-  Version: String
 Pragmas:
   - PragmaDefinition
 Secrets:

@@ -18,6 +18,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Amazon.Lambda.APIGatewayEvents;
@@ -138,30 +139,56 @@ namespace LambdaSharp.ApiGateway {
             _currentRequest = request;
             APIGatewayProxyResponse response;
             var signature = "<null>";
+            IEnumerable<string> dimensionNames = null;
+            Dictionary<string, string> dimensionValues = null;
             try {
                 ApiGatewayInvocationTargetDirectory.InvocationTargetDelegate invocationTarget;
+                bool isAsync;
                 var requestContext = request.RequestContext;
+                var stopwatch = Stopwatch.StartNew();
 
                 // check if this invocation is a REST API request
                 if(requestContext.ResourcePath != null) {
 
                     // this is a REST API request
                     signature = $"{requestContext.HttpMethod}:{requestContext.ResourcePath}";
-                    if(!_directory.TryGetInvocationTarget(signature, out invocationTarget)) {
+                    if(!_directory.TryGetInvocationTarget(signature, out invocationTarget, out isAsync)) {
 
                         // check if a generic HTTP method entry exists
-                        _directory.TryGetInvocationTarget($"ANY:{requestContext.ResourcePath}", out invocationTarget);
+                        _directory.TryGetInvocationTarget($"ANY:{requestContext.ResourcePath}", out invocationTarget, out isAsync);
+                    }
+
+                    // set additional metrics dimensions for async invocations
+                    if(isAsync) {
+                        dimensionNames = new[] {
+                            "Stack,Method,Resource"
+                        };
+                        dimensionValues = new Dictionary<string, string> {
+                            ["Method"] = requestContext.HttpMethod,
+                            ["Resource"] = requestContext.ResourcePath
+                        };
                     }
                 } else if(requestContext.RouteKey != null) {
 
                     // this is a WebSocket request
                     signature = requestContext.RouteKey;
-                    _directory.TryGetInvocationTarget(signature, out invocationTarget);
+                    _directory.TryGetInvocationTarget(signature, out invocationTarget, out isAsync);
+
+                    // set additional metrics dimensions for async invocations
+                    if(isAsync) {
+                        dimensionNames = new[] {
+                            "Stack,Route"
+                        };
+                        dimensionValues = new Dictionary<string, string> {
+                            ["Route"] = requestContext.RouteKey
+                        };
+                    }
                 } else {
 
                     // could not determine the request type
                     signature = "<undetermined>";
                     invocationTarget = null;
+                    isAsync = false;
                 }
 
                 // invoke invocation target or derived handler
@@ -171,12 +198,26 @@ namespace LambdaSharp.ApiGateway {
                 } else {
                     response = await ProcessProxyRequestAsync(request);
                 }
+
+                // log metrics for async functions since they are not captured by the detailed API Gateway metrics
+                if(isAsync) {
+                    LogMetric(new LambdaMetric[] {
+                        ("AsyncRequestSuccess.Count", 1, LambdaMetricUnit.Count),
+                        ("AsyncRequestSuccess.Latency", stopwatch.Elapsed.TotalMilliseconds, LambdaMetricUnit.Milliseconds)
+                    }, dimensionNames, dimensionValues);
+                }
                 LogInfo($"finished with status code {response.StatusCode}");
             } catch(ApiGatewayAsyncEndpointException e) {
 
                 // exception was raised by an asynchronous endpoint; the failure needs to be recorded for playback
                 LogError(e, $"async route '{signature}' threw {e.GetType()}");
-                await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, LambdaSerializer.Serialize(request), e);
+                try {
+                    await RecordFailedMessageAsync(LambdaLogLevel.ERROR, FailedMessageOrigin.ApiGateway, LambdaSerializer.Serialize(request), e);
+                    LogMetric("AsyncRequestDead.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                } catch {
+                    LogMetric("AsyncRequestFailed.Count", 1, LambdaMetricUnit.Count, dimensionNames, dimensionValues);
+                    throw;
+                }
                 return CreateInvocationExceptionResponse(request, e.InnerException ?? e);
             } catch(ApiGatewayInvocationTargetParameterException e) {
                 LogInfo($"invalid target invocation parameter '{e.ParameterName}': {e.Message}");

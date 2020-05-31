@@ -8,7 +8,7 @@ keywords: welcome, overview, getting started
 
 # LambdaSharp (v[!include[LAMBDASHARP_VERSION](version.txt)]) - Serverless .NET on AWS
 
-**[Read what's new in the v0.7.0 "Geminus" release.](~/articles/ReleaseNotes-Geminus.md)**
+> **[Read what's new in the v0.8.0 "Hicetas" release.](~/articles/ReleaseNotes-Hicetas.md)**
 
 LambdaSharp is a command line tool and a framework for serverless application development. LambdaSharp uses a simple declarative syntax to generate sophisticated CloudFormation templates that provide simple, yet flexible, deployment options.
 

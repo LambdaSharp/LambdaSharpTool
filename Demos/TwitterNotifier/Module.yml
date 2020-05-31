@@ -1,5 +1,5 @@
 # LambdaSharp (λ#)
-# Copyright (C) 2018-2019
+# Copyright (C) 2018-2020
 # lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -67,7 +67,7 @@ Items:
 
   # Resources
   - Nested: TwitterNotify
-    Module: LambdaSharp.Twitter.Query:0.7@lambdasharp
+    Module: LambdaSharp.Twitter.Query:0.8@lambdasharp
     Parameters:
       TwitterApiKey: !Ref TwitterApiKey
       TwitterApiSecretKey: !Ref TwitterApiSecretKey

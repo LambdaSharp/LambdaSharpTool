@@ -15,15 +15,16 @@ Pragmas are used to change the default processing behavior of the LambdaSharp CL
 |`sam-transform`                        |Add SAM template transform to CloudFormation output|
 
 ## Overrides Keys
-|Key                                         |Definition                                                               |Default                                |
-|--------------------------------------------|-------------------------------------------------------------------------|---------------------------------------|
-|`Module::DeadLetterQueue`                   |Expression for determining the module dead-letter queue.                 |`!Ref LambdaSharp::DeadLetterQueue`    |
-|`Module::LoggingStream`                     |Expression for determining the module logging stream.                    |`!Ref LambdaSharp::LoggingStream`      |
-|`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.               |`!Ref LambdaSharp::LoggingStreamRole`  |
-|`Module::LogRetentionInDays`                |Expression for determining the number days log entries are retained for. |`30`                                   |
-|`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                            |(none)                                 |
-|`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                              |(none)                                 |
-|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                          |`$request.body.action`                 |
+|Key                                         |Definition                                                                          |Default                                |
+|--------------------------------------------|------------------------------------------------------------------------------------|---------------------------------------|
+|`Module::DeadLetterQueue`                   |Expression for determining the module dead-letter queue.                            |`!Ref LambdaSharp::DeadLetterQueue`    |
+|`Module::LoggingStream`                     |Expression for determining the module logging stream.                               |`!Ref LambdaSharp::LoggingStream`      |
+|`Module::LoggingStreamRole`                 |Expression for determining the module logging stream role.                          |`!Ref LambdaSharp::LoggingStreamRole`  |
+|`Module::LogRetentionInDays`                |Expression for determining the number days CloudWatch Log streams are retained for. |`30`                                   |
+|`Module::RestApi.EndpointConfiguration`     |Expression for setting the REST API endpoint.                                       |(none)                                 |
+|`Module::RestApi.Policy`                    |Expression for setting the REST API policy.                                         |(none)                                 |
+|`Module::WebSocket.RouteSelectionExpression`|Expression for determining the WebSocket route.                                     |`$request.body.action`                 |
+|`Module::Role.PermissionsBoundary`          |Expression for setting the PermissionsBoundary attribute on the function IAM role.  |(none)                                 |
 
 ### Examples
 

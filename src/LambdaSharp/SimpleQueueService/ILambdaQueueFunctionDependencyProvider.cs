@@ -32,11 +32,18 @@ namespace LambdaSharp.SimpleQueueService {
 
         /// <summary>
         /// Delete a batch of message from an SQS queue. The Lambda function requires <c>sqs:DeleteMessageBatch</c> permission
-        /// on the specified SQS URL.
+        /// on the specified SQS ARN.
         /// </summary>
-        /// <param name="queueUrl">SQS URL.</param>
+        /// <param name="queueArn">SQS ARN.</param>
         /// <param name="messages">Enumeration of <c>(string MessageId, string ReceiptHandle)</c> tuples specifying which messages to delete.</param>
         /// <returns>The task object representing the asynchronous operation.</returns>
-        Task DeleteMessagesFromQueueAsync(string queueUrl, IEnumerable<(string MessageId, string ReceiptHandle)> messages);
+        Task DeleteMessagesFromQueueAsync(string queueArn, IEnumerable<(string MessageId, string ReceiptHandle)> messages);
+
+        /// <summary>
+        /// Determine how many times a message should be retried for a given SQS queue.
+        /// </summary>
+        /// <param name="queueArn">SQS ARN.</param>
+        /// <returns>The task object representing the asynchronous operation.</returns>
+        Task<int> GetMaxRetriesForQueueAsync(string queueArn);
     }
 }

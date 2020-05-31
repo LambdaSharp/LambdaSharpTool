@@ -66,7 +66,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "22B879AF59ACA15DD780C6897C49D537"
+      "Default": "8032E7EEF28EC36C56249DAE77C90766"
     }
   },
   "Resources": {
@@ -139,10 +139,11 @@
         },
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
+            "MODULE_INFO": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "ConnectionFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -313,10 +314,11 @@
         },
         "Environment": {
           "Variables": {
+            "DEBUG_LOGGING_ENABLED": "false",
             "MODULE_ID": {
               "Ref": "AWS::StackName"
             },
-            "MODULE_INFO": "Sample.WebSockets:1.0-DEV",
+            "MODULE_INFO": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>",
             "LAMBDA_NAME": "MessageFunction",
             "LAMBDA_RUNTIME": "dotnetcore3.1",
             "DEPLOYMENT_TIER": {
@@ -543,6 +545,16 @@
                   "Resource": "*"
                 },
                 {
+                  "Sid": "EventBus",
+                  "Effect": "Allow",
+                  "Action": [
+                    "events:PutEvents"
+                  ],
+                  "Resource": {
+                    "Fn::Sub": "arn:aws:events:${AWS::Region}:${AWS::AccountId}:event-bus/default"
+                  }
+                },
+                {
                   "Sid": "DeploymentBucketReadOnly",
                   "Effect": "Allow",
                   "Action": [
@@ -680,7 +692,7 @@
           }
         },
         "ResourceType": "LambdaSharp::Registration::Module",
-        "Module": "Sample.WebSockets:1.0-DEV",
+        "ModuleInfo": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>",
         "ModuleId": {
           "Ref": "AWS::StackName"
         }
@@ -1067,7 +1079,7 @@
           "DestinationArn": {
             "Fn::Sub": "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${ModuleWebSocketLogGroup}"
           },
-          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\"}"
+          "Format": "{\"requestId\":\"$context.requestId\",\"extendedRequestId\":\"$context.extendedRequestId\",\"ip\":\"$context.identity.sourceIp\",\"caller\":\"$context.identity.caller\",\"user\":\"$context.identity.user\",\"apiKeyId\":\"$context.identity.apiKeyId\",\"domainName\":\"$context.domainName\",\"requestTime\":\"$context.requestTime\",\"eventType\":\"$context.eventType\",\"apiId\":\"$context.apiId\",\"stage\":\"$context.stage\",\"connectionId\":\"$context.connectionId\",\"route\":\"$context.routeKey\",\"error\":\"$context.error.message\"}"
         },
         "ApiId": {
           "Ref": "ModuleWebSocket"
@@ -1095,7 +1107,7 @@
       },
       "Description": "WebSocket URL"
     },
-    "Module": {
+    "ModuleInfo": {
       "Value": "Sample.WebSockets:1.0-DEV@<%MODULE_ORIGIN%>"
     },
     "ModuleChecksum": {
@@ -1104,7 +1116,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.7.1.0"
+      "Value": "0.8.0.0"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1333,9 +1345,9 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.WebSockets:1.0-DEV",
-      "TemplateChecksum": "22B879AF59ACA15DD780C6897C49D537",
+      "TemplateChecksum": "8032E7EEF28EC36C56249DAE77C90766",
       "Date": "2019-08-09T15:00:00Z",
-      "CoreServicesVersion": "0.7.1",
+      "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
         {
           "Title": "LambdaSharp Module Options",

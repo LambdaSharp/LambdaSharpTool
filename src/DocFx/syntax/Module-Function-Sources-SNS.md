@@ -25,7 +25,7 @@ The <code>Filters</code> section specifies the filter conditions when subscribin
 
 <i>Required</i>: No
 
-<i>Type</i>: String
+<i>Type</i>: JSON
 </dd>
 
 <dt><code>Topic</code></dt>

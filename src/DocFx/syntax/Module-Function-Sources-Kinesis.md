@@ -13,7 +13,6 @@ See [Kinesis Stream sample](https://github.com/LambdaSharp/LambdaSharpTool/tree/
 Kinesis: String|Expression
 BatchSize: Int|Expression
 StartingPosition: String|Expression
-MaximumBatchingWindowInSeconds: Int|Expression
 ```
 
 ## Properties
@@ -50,17 +49,6 @@ The <code>StartingPosition</code> attribute specifies the position in the Kinesi
 <i>Type</i>: String or Expression
 
 <i>Valid Values</i>: <code>TRIM_HORIZON</code> | <code>LATEST</code>
-</dd>
-
-<dt><code>MaximumBatchingWindowInSeconds</code></dt>
-<dd>
-
-The <code>MaximumBatchingWindowInSeconds</code> attribute specifies the maximum amount of time to gather records before invoking the function, in seconds. The value must be in the range from 0 to 300.
-
-<i>Required</i>: No
-
-<i>Type</i>: Int or Expression
-
 </dd>
 
 </dl>

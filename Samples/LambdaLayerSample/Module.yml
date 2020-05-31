@@ -1,5 +1,5 @@
 # LambdaSharp (λ#)
-# Copyright (C) 2018-2019
+# Copyright (C) 2018-2020
 # lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ Items:
     Type: AWS::Lambda::LayerVersion
     Properties:
       Content:
-        S3Bucket: !Ref DeploymentBucketName
+        S3Bucket: !Ref Deployment::BucketName
         S3Key: !Ref MyLayerFiles
 
   - Function: MyFunction
