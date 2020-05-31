@@ -19,15 +19,15 @@ Description: A sample module defining a Lambda function in VPC
 Items:
 
   - Parameter: SecurityGroupIds
-    Type: CommaDelimitedString
+    Type: CommaDelimitedList
 
   - Parameter: SubnetIds
-    Type: CommaDelimitedString
+    Type: CommaDelimitedList
 
   - Function: MyFunction
     Memory: 128
     Timeout: 30
     Properties:
       VpcConfig:
-        SecurityGroupIds: !Split [ ",", !Ref SecurityGroupIds ]
-        SubnetIds: !Split [ ",", !Ref SubnetIds ]
+        SecurityGroupIds: !Ref SecurityGroupIds
+        SubnetIds: !Ref SubnetIds
