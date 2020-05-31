@@ -30,6 +30,18 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 
+    // TODO:
+    //  - validate all !GetAtt occurrences (including those inside a !Sub expression)
+    //      - check if this declaration should be typechecked
+    //          - if(foundDeclaration.HasTypeValidation) ...
+    //          - if(foundDeclaration.HasAttribute(literalExpression.Value)) ...
+    //          - LogError($"item '{freeItem.FullName}' of type '{freeItem.Type}' does not have attribute '{attributeName}'");
+    //  - !If with expression in condition
+    //  - !If with literal in condition
+    //  - condition declaration with reference to non-parameter declaration
+    //  - circular dependencies
+    //  - test what two "Import" declarations for the same source look like in the generated CloudFormation
+
     public class ParseTests : _Init {
 
         //--- Constructors ---

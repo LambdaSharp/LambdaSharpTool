@@ -158,13 +158,14 @@ namespace LambdaSharp.Tool.Compiler {
         #endregion
 
         #region *** Structural Validation ***
-        public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
+        public static readonly ErrorFunc DuplicateName = parameter => new Error(0, $"duplicate name '{parameter}'");
+        public static readonly ErrorFunc AmbiguousLogicalId = parameter => new Error(0, $"ambiguous logical ID for '{parameter}'");
 
         // TODO: these is an internal error; should it be an exception instead?
         public static readonly Func<object, Error> UnrecognizedExpressionType = parameter => new Error(0, $"unrecognized expression: {parameter?.GetType().Name ?? "<null>"}");
         #endregion
 
-        #region *** Mapping Validation ***
+        #region *** Mapping Declaration Validation ***
         public static readonly Error MappingDeclarationTopLevelIsMissing = new Error(0, "Mapping declaration is missing top-level mappings");
         public static readonly Error MappingDeclarationSecondLevelIsMissing = new Error(0, "Mapping declaration is missing second-level mappings");
         public static readonly Error MappingKeyMustBeAlphanumeric = new Error(0, "key must be alphanumeric");
@@ -172,7 +173,24 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error MappingExpectedListOrLiteral = new Error(0, "expected list expression or literal value");
         #endregion
 
-        #region *** Resource Type Validation ***
+        #region *** Parameter Declaration Validation ***
+        public static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
+        public static readonly Error ParameterAttributeImportExpectedLiteral = new Error(0, "'Import' attribute can only be used with a value parameter type");
+        public static readonly Error ParameterImportAttributeIsInvalid = new Error(0, "invalid 'Import' attribute");
+        public static readonly Error ParameterImportAttributeCannotHaveVersion = new Error(0, "'Import' attribute cannot have a version");
+        public static readonly Error ParameterImportAttributeCannotHaveOrigin = new Error(0, "'Import' attribute cannot have an origin");
+        public static readonly Error ParameterDefaultAttributeCannotUseWithImportAttribute = new Error(0, "cannot use 'Default' attribute with 'Import'");
+        #endregion
+
+        #region *** Import Declaration Validation ***
+        public static readonly Error ImportModuleAttributeIsInvalid = new Error(0, "invalid 'Module' attribute");
+        public static readonly Error ImportModuleAttributeCannotHaveVersion = new Error(0, "'Module' attribute cannot have a version");
+        public static readonly Error ImportModuleAttributeCannotHaveOrigin = new Error(0, "'Module' attribute cannot have an origin");
+        public static readonly ErrorFunc ImportDuplicateWithDifferentBinding = parameter => new Error(0, $"import declaration '{parameter}' is already defined with a different binding");
+        public static readonly ErrorFunc ImportDuplicateWithDifferentType = parameter => new Error(0, $"import declaration '{parameter}' is already defined with a different type");
+        #endregion
+
+        #region *** Resource Type Declaration Validation ***
         public static readonly Error ResourceTypeNameInvalidFormat = new Error(0, "the expected format for the resource type name is: Prefix::Suffix");
         public static readonly ErrorFunc ResourceTypeNameReservedPrefix = parameter => new Error(0, $"'{parameter}' is a reserved resource type prefix");
         public static readonly ErrorFunc ResourceTypeDuplicateName = parameter => new Error(0, $"resource type name '{parameter}' is already defined");
@@ -187,7 +205,7 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error ResourceTypePropertiesAttributeIsInvalid = new Error(0, "'Properties' attribute cannot be empty");
         #endregion
 
-        #region *** Resource Validation ***
+        #region *** Resource Declaration Validation ***
         public static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
         public static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
         public static readonly ErrorFunc2 ResourceUnknownProperty = (p1, p2) => new Error(0, $"unrecognized property '{p1}' on resource type {p2}");
@@ -257,10 +275,49 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error CloudFormationSpecNotFound = new Error(0, "unable to find a matching CloudFormation resource specification");
         #endregion
 
+        #region *** WebSocket Event Source ***
+        public static readonly Error WebSocketEventSourceInvalidPredefinedRoute = new Error(0, "WebSocket route starting with $ must be one of $connect, $disconnect, or $default");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationType = new Error(0, "'AuthorizationType' must be either AWS_IAM or CUSTOM");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationTypeForCustomAuthorizer = new Error(0, "'AuthorizationType' must be CUSTOM");
+        public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
+        public static readonly Error WebSocketApiKeyRequiredExpectedBoolean = new Error(0, "'ApiKeyRequired' must be a boolean value");
+        #endregion
+
+        #region *** REST API Event Source ***
+        public static readonly Error RestApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
+        public static readonly Error RestApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported REST API integration type");
+        public static readonly ErrorFunc RestApiEventSourceGreedyParameterMustBeLast = parameter => new Error(0, $"the '{parameter}' parameter must be the last segment in the path");
+        #endregion
+
+        #region *** S3 Event Source ***
+        public static readonly Error S3EventSourceEventListCannotBeEmpty = new Error(0, "'Events' attribute cannot be an empty list");
+        public static readonly ErrorFunc S3EventSourceUnrecognizedEventType = parameter => new Error(0, $"'{parameter}' is not a recognized S3 event type");
+        #endregion
+
+        #region *** Slack Event Source ***
+        public static readonly Error SlackCommandEventSourceInvalidRestPath = new Error(0, "REST API path for SlackCommand can not contain parameters");
+        #endregion
+
+        #region *** SQS Event Source ***
+        public static readonly Error SqsEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10");
+        #endregion
+
+        #region *** DynamoDB Stream Event Source ***
+        public static readonly Error DynamoDBStreamEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 1,000");
+        public static readonly Error DynamoDBStreamEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be either LATEST or TRIM_HORIZON");
+        public static readonly Error DynamoDBStreamEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
+        #endregion
+
+        #region *** Kinesis Stream Event Source ***
+        public static readonly Error KinesisStreamEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10,000");
+        public static readonly Error KinesisStreamEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be one of AT_TIMESTAMP, LATEST, or TRIM_HORIZON");
+        public static readonly Error KinesisStreamEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
+        #endregion
+
+
         // TODO: keep reviewing errors
         public static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
         public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
-        public static readonly ErrorFunc DuplicateName = parameter => new Error(0, $"duplicate name '{parameter}'");
         public static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");
         public static readonly Error SecretKeyMustBeValidARN = new Error(0, "secret key must be a valid ARN");
         public static readonly Error SecreteKeyMustBeValidAlias = new Error(0, "secret key must be a valid alias");
@@ -277,23 +334,6 @@ namespace LambdaSharp.Tool.Compiler {
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");
         public static readonly Error ExpectedLiteralStringExpression = new Error(0, "expected literal string expression");
-        public static readonly Error ApiEventSourceInvalidApiFormat = new Error(0, "malformed REST API declaration");
-        public static readonly Error ApiEventSourceUnsupportedIntegrationType = new Error(0, "unsupported integration type");
-        public static readonly ErrorFunc ApiEventSourceInvalidGreedyParameterMustBeLast = parameter => new Error(0, $"the {parameter} parameter must be the last segment in the path");
-        public static readonly Error S3EventSourceEventListCannotBeEmpty = new Error(0, "'Events' attribute cannot be an empty list");
-        public static readonly ErrorFunc S3EventSourceUnrecognizedEventType = parameter => new Error(0, $"'{parameter}' is not a recognized S3 event type");
-        public static readonly Error SlackCommandEventSourceInvalidRestPath = new Error(0, "REST API path for SlackCommand can not contain parameters");
-        public static readonly Error SqsEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10");
-        public static readonly Error DynamoDBEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 1,000");
-        public static readonly Error DynamoDBEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be either LATEST or TRIM_HORIZON");
-        public static readonly Error DynamoDBEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
-        public static readonly Error KinesisEventSourceInvalidBatchSize = new Error(0, "'BatchSize' must be an integer value between 1 and 10,000");
-        public static readonly Error KinesisEventSourceInvalidStartingPosition = new Error(0, "'StartingPosition' must be one of AT_TIMESTAMP, LATEST, or TRIM_HORIZON");
-        public static readonly Error KinesisEventSourceInvalidMaximumBatchingWindowInSeconds = new Error(0, "'MaximumBatchingWindowInSeconds' must be an integer value between 0 and 300");
-        public static readonly Error WebSocketEventSourceInvalidPredefinedRoute = new Error(0, "WebSocket route starting with $ must be one of $connect, $disconnect, or $default");
-        public static readonly Error WebSocketEventSourceInvalidAuthorizationType = new Error(0, "'AuthorizationType' must be either AWS_IAM or CUSTOM");
-        public static readonly Error WebSocketEventSourceInvalidAuthorizationTypeForCustomAuthorizer = new Error(0, "'AuthorizationType' must be CUSTOM");
-        public static readonly Error WebSocketEventSourceInvalidAuthorizationConfigurationForRoute = new Error(0, "'AuthorizationType' can only be used on $connect WebSocket route");
         public static readonly Error FunctionPropertiesEnvironmentMustBeMap = new Error(0, "Properties.Environment must be a map");
         public static readonly Error FunctionPropertiesEnvironmentVariablesMustBeMap = new Error(0, "Properties.Environment.Variables must be a map");
         public static readonly ErrorFunc UnsupportedDependencyType = parameter => new Error(0, $"unsupported depency type '{parameter}'");

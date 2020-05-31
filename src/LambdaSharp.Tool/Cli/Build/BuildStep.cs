@@ -82,9 +82,9 @@ namespace LambdaSharp.Tool.Cli.Build {
 
             // prepare compilation
             if(Settings.UseAnsiConsole) {
-                Console.WriteLine($"Compiling: {AnsiTerminal.Yellow}{module.FullName}{AnsiTerminal.Reset} (v{module.Version})");
+                Console.WriteLine($"Compiling: {AnsiTerminal.Yellow}{moduleDeclaration.ModuleName}{AnsiTerminal.Reset} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
             } else {
-                Console.WriteLine($"Compiling: {module.FullName} (v{module.Version})");
+                Console.WriteLine($"Compiling: {moduleDeclaration.ModuleName} (v{moduleVersion?.ToString() ?? moduleDeclaration.Version.Value})");
             }
 
             // download dependencies and cloudformation specification

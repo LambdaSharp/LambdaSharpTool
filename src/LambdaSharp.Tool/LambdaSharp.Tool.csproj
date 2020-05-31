@@ -34,7 +34,7 @@
     <PackageReference Include="AWSSDK.CloudWatchLogs" Version="3.3.101.111" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.3.105.34" />
     <PackageReference Include="AWSSDK.KeyManagementService" Version="3.3.105.30" />
-    <PackageReference Include="AWSSDK.Lambda" Version="3.3.109.8" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.3.109.33" />
     <PackageReference Include="AWSSDK.S3" Version="3.3.110.52" />
     <PackageReference Include="AWSSDK.SecurityToken" Version="3.3.104.60" />
     <PackageReference Include="AWSSDK.SimpleSystemsManagement" Version="3.3.119.18" />

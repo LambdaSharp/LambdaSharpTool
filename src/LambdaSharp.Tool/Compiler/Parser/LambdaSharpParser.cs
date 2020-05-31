@@ -38,6 +38,12 @@ namespace LambdaSharp.Tool.Compiler.Parser {
         string ReadFile(string filePath);
     }
 
+    public sealed class LambdaSharpParserException : ApplicationException {
+
+        //--- Constructors ---
+        public LambdaSharpParserException(string message) : base(message) { }
+    }
+
     public sealed class LambdaSharpParser {
 
         // TODO:
@@ -546,7 +552,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
 
                     // add key-value pair
-                    result[new LiteralExpression(keyScalar.ParsingEvent.Value) {
+                    result[new LiteralExpression(keyScalar.ParsingEvent.Value, LiteralType.String) {
                         SourceLocation = Location(keyScalar)
                     }] = value;
                 }
@@ -857,7 +863,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     }
                     return new FindInMapFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        MapName = new LiteralExpression(mapNameLiteral.Value) {
+                        MapName = new LiteralExpression(mapNameLiteral.Value, LiteralType.String) {
                             SourceLocation = mapNameLiteral.SourceLocation
                         },
                         TopLevelKey = parameterList[1],
@@ -875,10 +881,15 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                     var referenceAndAttribute = parameterLiteral.Value.Split('.', 2);
                     return new GetAttFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression(referenceAndAttribute[0]) {
+                        ReferenceName = new LiteralExpression(referenceAndAttribute[0], LiteralType.String) {
                             SourceLocation = parameterLiteral.SourceLocation
                         },
-                        AttributeName = new LiteralExpression((referenceAndAttribute.Length == 2) ? referenceAndAttribute[1] : "") {
+                        AttributeName = new LiteralExpression(
+                            (referenceAndAttribute.Length == 2)
+                                ? referenceAndAttribute[1]
+                                : "",
+                            LiteralType.String
+                        ) {
                             SourceLocation = parameterLiteral.SourceLocation
                         }
                     };
@@ -929,7 +940,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                         SourceLocation = value.SourceLocation,
                         Condition = new ConditionExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
-                            ReferenceName = new LiteralExpression(conditionNameLiteral.Value) {
+                            ReferenceName = new LiteralExpression(conditionNameLiteral.Value, LiteralType.String) {
                                 SourceLocation = conditionNameLiteral.SourceLocation
                             }
                         },
@@ -1085,7 +1096,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 if(value is LiteralExpression refLiteral) {
                     return new ReferenceFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression(refLiteral.Value) {
+                        ReferenceName = new LiteralExpression(refLiteral.Value, LiteralType.String) {
                             SourceLocation = value.SourceLocation
                         }
                     };
@@ -1171,7 +1182,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 if(value is LiteralExpression conditionLiteral) {
                     return new ConditionExpression {
                         SourceLocation = value.SourceLocation,
-                        ReferenceName = new LiteralExpression(conditionLiteral.Value) {
+                        ReferenceName = new LiteralExpression(conditionLiteral.Value, LiteralType.String) {
                             SourceLocation = value.SourceLocation
                         }
                     };
@@ -1216,7 +1227,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                             var endColumnOffset = literalExpression.Value.Take(offset + item.Length).Reverse().TakeWhile(c => c != '\n').Count();
 
                             // add literal value
-                            result.Add(new LiteralExpression(item) {
+                            result.Add(new LiteralExpression(item, LiteralType.String) {
                                 SourceLocation = new SourceLocation(
                                     literalExpression.SourceLocation.FilePath,
                                     literalExpression.SourceLocation.LineNumberStart + startLineOffset,
@@ -1256,7 +1267,6 @@ namespace LambdaSharp.Tool.Compiler.Parser {
             return result;
         }
 
-        // TODO: should take a node instead (where possible)
         private void Log(Error error, SourceLocation? location) => _provider.Log(error, location);
 
         private SourceLocation Location() {
@@ -1373,9 +1383,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
                 }
                 break;
             default:
-
-                // TODO: better exception
-                throw new ApplicationException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+                throw new LambdaSharpParserException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}");
             }
         }
 
@@ -1388,9 +1396,7 @@ namespace LambdaSharp.Tool.Compiler.Parser {
 
         private (string FilePath, T ParsingEvent) Expect<T>() where T : ParsingEvent {
             if(!IsEvent<T>(out var parsingEvent, out var filePath)) {
-
-                // TODO: better exception
-                throw new ApplicationException($"Expected parsing event {typeof(T).Name} instead of {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+                throw new LambdaSharpParserException($"Expected parsing event {typeof(T).Name} instead of {Current.ParsingEvent.GetType().Name ?? "<null>"}");
             }
             MoveNext();
             return (filePath, parsingEvent);

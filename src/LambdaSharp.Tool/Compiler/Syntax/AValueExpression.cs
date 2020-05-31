@@ -59,8 +59,8 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
 
         //--- Operators ---
         public AExpression this[string key] {
-            get => this[ASyntaxAnalyzer.Literal(key)];
-            set => this[ASyntaxAnalyzer.Literal(key)] = value;
+            get => this[Fn.Literal(key)];
+            set => this[Fn.Literal(key)] = value;
         }
 
         public AExpression this[LiteralExpression key] {
@@ -90,7 +90,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         public bool TryGetValue(string key, [NotNullWhen(true)] out AExpression? value) {
             var found = _pairs.FirstOrDefault(item => item.Key.Value == key);
             value = found?.Value;
-            return found != null;
+            return value != null;
         }
 
         public bool Remove(string key) {
@@ -199,16 +199,9 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
     public class LiteralExpression : AValueExpression {
 
         //--- Constructors ---
-        public LiteralExpression(string value) : this(value, LiteralType.String) { }
-
         public LiteralExpression(string value, LiteralType type) {
             Value = value ?? throw new ArgumentNullException(nameof(value));
             Type = type;
-        }
-
-        public LiteralExpression(int value) {
-            Value = value.ToString();
-            Type = LiteralType.Integer;
         }
 
         //--- Properties ---

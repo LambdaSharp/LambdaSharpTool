@@ -64,7 +64,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                         Description = declaration.Description?.Value,
                         Value = Translate(scopedDeclaration.ReferenceExpression ?? throw new NullValueException()),
                         Export = new Dictionary<string, ACloudFormationExpression> {
-                            ["Name"] = Translate(ASyntaxAnalyzer.FnSub($"${{AWS::StackName}}::{declaration.FullName}"))
+                            ["Name"] = Translate(Fn.Sub($"${{AWS::StackName}}::{declaration.FullName}"))
                         }
                     });
                 }
@@ -100,11 +100,26 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                     .Where(dependency => dependency.ModuleLocation.ModuleInfo.FullName != "LambdaSharp.Core")
                     .Select(dependency => new CloudFormationModuleManifestDependency {
                         ModuleInfo = dependency.ModuleLocation.ModuleInfo,
-                        Type = dependency.Type
+                        Type = Enum.Parse<CloudFormationModuleManifestDependencyType>(dependency.Type.ToString())
                     })
-                    .OrderBy(dependency => dependency.ModuleInfo.ToString())
+                    .OrderBy(dependency => dependency.ModuleInfo?.ToString() ?? throw new ShouldNeverHappenException("missing ModuleInfo"))
                     .ToList(),
-                ResourceTypes = _builder.CustomResourceTypes.ToList(),
+                ResourceTypes = _builder.LocalResourceTypes.Values
+                    .Select(resourceType => new CloudFormationModuleManifestResourceType {
+                        Type = resourceType.Type,
+                        Description = resourceType.Description,
+                        Properties = resourceType.Properties.Select(property => new CloudFormationModuleManifestResourceProperty {
+                            Name = property.Name,
+                            Description = property.Description,
+                            Type = property.Type,
+                            Required = property.Required
+                        }).ToList(),
+                        Attributes = resourceType.Attributes.Select(attribute => new CloudFormationModuleManifestResourceAttribute {
+                            Name = attribute.Name,
+                            Description = attribute.Description,
+                            Type = attribute.Type
+                        }).ToList()
+                    }).ToList(),
                 Outputs = _builder.ItemDeclarations
                     .OfType<IScopedDeclaration>()
                     .Where(item => item.IsPublic)

@@ -243,8 +243,8 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         private AExpression? _batchSize;
 
         //--- Constructors ---
-        // TODO: constructor must be able to take `AExpression`!
-        public SqsEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public SqsEventSourceDeclaration(AExpression eventSource)
+            => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
 
         //--- Properties ---
 

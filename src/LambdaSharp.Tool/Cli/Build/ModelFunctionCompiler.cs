@@ -103,11 +103,11 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // recursively create resources as needed
-            var apiDeclarations = new Dictionary<string, object>();
-            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiDeclarations);
+            var apiMethodDeclarations = new Dictionary<string, object>();
+            AddRestApiResource(restApi, FnRef(restApi.FullName), FnGetAtt(restApi.FullName, "RootResourceId"), 0, _restApiRoutes, apiMethodDeclarations);
 
             // RestApi deployment depends on all methods and their hash (to force redeployment in case of change)
-            string apiDeclarationsChecksum = string.Join("\n", apiDeclarations
+            string apiMethodDeclarationsChecksum = string.Join("\n", apiMethodDeclarations
                 .OrderBy(kv => kv.Key)
                 .Select(kv => $"{kv.Key}={JsonConvert.SerializeObject(kv.Value)}")
             ).ToMD5Hash();
@@ -179,18 +179,18 @@ namespace LambdaSharp.Tool.Cli.Build {
             //  a new name is used for the deployment to force the stage to be updated
             var deploymentWithChecksum = _builder.AddResource(
                 parent: restApi,
-                name: "Deployment" + apiDeclarationsChecksum,
+                name: "Deployment" + apiMethodDeclarationsChecksum,
                 description: "Module REST API Deployment",
                 scope: null,
                 resource: new Humidifier.ApiGateway.Deployment {
                     RestApiId = FnRef("Module::RestApi"),
-                    Description = FnSub($"${{AWS::StackName}} API [{apiDeclarationsChecksum}]"),
+                    Description = FnSub($"${{AWS::StackName}} API [{apiMethodDeclarationsChecksum}]"),
                     StageDescription = new Humidifier.ApiGateway.DeploymentTypes.StageDescription {
                         MetricsEnabled = true
                     }
                 },
                 resourceExportAttribute: null,
-                dependsOn: apiDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
+                dependsOn: apiMethodDeclarations.Select(kv => kv.Key).OrderBy(key => key).ToArray(),
                 condition: null,
                 pragmas: null
             );
@@ -588,7 +588,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
         }
 
-        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiDeclarations) {
+        private void AddRestApiResource(AModuleItem parent, object restApiId, object parentId, int level, IEnumerable<(FunctionItem Function, RestApiSource Source)> routes, Dictionary<string, object> apiMethodDeclarations) {
 
             // create methods at this route level to parent id
             foreach(var route in routes.Where(route => route.Source.Path.Length == level)) {
@@ -618,7 +618,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: route.Function.Condition,
                     pragmas: null
                 );
-                apiDeclarations.Add(method.FullName, apiMethodResource);
+                apiMethodDeclarations.Add(method.FullName, apiMethodResource);
                 integration.PassthroughBehavior = "WHEN_NO_TEMPLATES";
 
                 // set list of expected query parameters (if any)
@@ -675,7 +675,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         condition: route.Function.Condition,
                         pragmas: null
                     );
-                    apiDeclarations.Add(model.FullName, route.Source.RequestSchema);
+                    apiMethodDeclarations.Add(model.FullName, route.Source.RequestSchema);
 
                     // update API method to require request validation
                     apiMethodResource.RequestModels = new Dictionary<string, dynamic> {
@@ -782,7 +782,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                         condition: route.Function.Condition,
                         pragmas: null
                     );
-                    apiDeclarations.Add(model.FullName, route.Source.ResponseSchema);
+                    apiMethodDeclarations.Add(model.FullName, route.Source.ResponseSchema);
 
                     // update the API method with the response schema
                     if(route.Source.ResponseContentType != null) {
@@ -849,8 +849,8 @@ namespace LambdaSharp.Tool.Cli.Build {
                     condition: null,
                     pragmas: null
                 );
-                apiDeclarations.Add(resource.FullName, apiResourceResource);
-                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiDeclarations);
+                apiMethodDeclarations.Add(resource.FullName, apiResourceResource);
+                AddRestApiResource(resource, restApiId, FnRef(resource.FullName), level + 1, subRoute, apiMethodDeclarations);
             }
 
             // local functions

@@ -70,7 +70,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
             ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
-            _version = SetParent(ASyntaxAnalyzer.Literal("1.0-DEV"));
+            _version = SetParent(Fn.Literal("1.0-DEV"));
             _pragmas = SetParent(new ListExpression());
             _secrets = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _using = SetParent(new SyntaxNodeCollection<UsingModuleDeclaration>());

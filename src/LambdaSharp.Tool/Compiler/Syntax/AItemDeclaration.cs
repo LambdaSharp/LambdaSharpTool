@@ -51,12 +51,26 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
             public AExpression Expression { get; }
         }
 
+        internal class MissingDependencyRecord {
+
+            //--- Constructors ---
+            public MissingDependencyRecord(string declarationFullName, ASyntaxNode node) {
+                MissingDeclarationFullName = declarationFullName ?? throw new ArgumentNullException(nameof(declarationFullName));
+                Node = node ?? throw new ArgumentNullException(nameof(node));
+            }
+
+            //--- Properties ---
+            public string MissingDeclarationFullName { get; }
+            public ASyntaxNode Node{ get; }
+        }
+
         //--- Fields ---
         private string? _logicalId;
         private LiteralExpression? _description;
         private AExpression? _referenceExpression;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
         private readonly List<DependencyRecord> _reverseDependencies = new List<DependencyRecord>();
+        private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
         private SyntaxNodeCollection<AItemDeclaration> _declarations;
 
         //--- Constructors ---
@@ -155,6 +169,9 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
                 return conditions;
             }
         }
+
+        public void TrackMissingDependency(string declarationFullName, ASyntaxNode dependentNode)
+            => _missingDependencies.Add(new MissingDependencyRecord(declarationFullName, dependentNode));
 
         public void UntrackDependency(AExpression dependentExpression)
             => _reverseDependencies.RemoveAll(reverseDependency => reverseDependency.Expression == dependentExpression);
@@ -759,7 +776,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
 
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
         public bool HasSecretType => false;
-        public LiteralExpression? Type => ASyntaxAnalyzer.Literal("String");
+        public LiteralExpression? Type => Fn.Literal("String");
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
@@ -924,7 +941,7 @@ namespace LambdaSharp.Tool.Compiler.Syntax {
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
-        public LiteralExpression? Type => ASyntaxAnalyzer.Literal("AWS::Lambda::Function");
+        public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {

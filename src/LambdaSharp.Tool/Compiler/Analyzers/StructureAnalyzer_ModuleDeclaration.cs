@@ -72,89 +72,89 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             }
 
             // add built-in AWS variables
-            var awsGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Literal("AWS")) {
-                Description = Literal("AWS Pseudo-Parameters")
+            var awsGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Fn.Literal("AWS")) {
+                Description = Fn.Literal("AWS Pseudo-Parameters")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("AccountId")) {
-                Description = Literal("AWS account ID of the account in which the CloudFormation stack is being created")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("AccountId")) {
+                Description = Fn.Literal("AWS account ID of the account in which the CloudFormation stack is being created")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("NotificationARNs")) {
-                Description = Literal("List of notification Amazon Resource Names (ARNs) for the current CloudFormation stack")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("NotificationARNs")) {
+                Description = Fn.Literal("List of notification Amazon Resource Names (ARNs) for the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("NoValue")) {
-                Description = Literal("Removes the resource property it is assigned to")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("NoValue")) {
+                Description = Fn.Literal("Removes the resource property it is assigned to")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("Partition")) {
-                Description = Literal("Partition that the resource is in (e.g. aws, aws-cn, aws-us-gov, etc.)")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("Partition")) {
+                Description = Fn.Literal("Partition that the resource is in (e.g. aws, aws-cn, aws-us-gov, etc.)")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("Region")) {
-                Description = Literal("AWS Region in which the CloudFormation stack is located")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("Region")) {
+                Description = Fn.Literal("AWS Region in which the CloudFormation stack is located")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("StackId")) {
-                Description = Literal("ARN of the current CloudFormation stack")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("StackId")) {
+                Description = Fn.Literal("ARN of the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("StackName")) {
-                Description = Literal("Name of the current CloudFormation stack")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("StackName")) {
+                Description = Fn.Literal("Name of the current CloudFormation stack")
             });
-            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Literal("URLSuffix")) {
-                Description = Literal("Suffix for a domain (e.g. amazonaws.com, amazonaws.com.cn, etc.)")
+            AddDeclaration(awsGroupDeclaration, new PseudoParameterDeclaration(Fn.Literal("URLSuffix")) {
+                Description = Fn.Literal("Suffix for a domain (e.g. amazonaws.com, amazonaws.com.cn, etc.)")
             });
 
             // add implicit module variables
-            var moduleGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Literal("Module")) {
-                Description = Literal("Module Variables")
+            var moduleGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Fn.Literal("Module")) {
+                Description = Fn.Literal("Module Variables")
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("Id")) {
-                Description = Literal("Module ID"),
-                Value = FnRef("AWS::StackName")
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("Id")) {
+                Description = Fn.Literal("Module ID"),
+                Value = Fn.Ref("AWS::StackName")
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("Namespace")) {
-                Description = Literal("Module Namespace"),
-                Value = Literal(_builder.ModuleNamespace)
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("Namespace")) {
+                Description = Fn.Literal("Module Namespace"),
+                Value = Fn.Literal(_builder.ModuleNamespace)
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("Name")) {
-                Description = Literal("Module Name"),
-                Value = Literal(_builder.ModuleName)
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("Name")) {
+                Description = Fn.Literal("Module Name"),
+                Value = Fn.Literal(_builder.ModuleName)
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("FullName")) {
-                Description = Literal("Module Full Name"),
-                Value = Literal(_builder.ModuleFullName)
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("FullName")) {
+                Description = Fn.Literal("Module Full Name"),
+                Value = Fn.Literal(_builder.ModuleFullName)
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("Version")) {
-                Description = Literal("Module Version"),
-                Value = Literal(_builder.ModuleVersion.ToString())
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("Version")) {
+                Description = Fn.Literal("Module Version"),
+                Value = Fn.Literal(_builder.ModuleVersion.ToString())
             });
-            AddDeclaration(moduleGroupDeclaration, new ConditionDeclaration(Literal("IsNested")) {
-                Description = Literal("Module is nested"),
-                Value = FnNot(FnEquals(FnRef("DeploymentRoot"), Literal("")))
+            AddDeclaration(moduleGroupDeclaration, new ConditionDeclaration(Fn.Literal("IsNested")) {
+                Description = Fn.Literal("Module is nested"),
+                Value = Fn.Not(Fn.Equals(Fn.Ref("DeploymentRoot"), Fn.Literal("")))
             });
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("RootId")) {
-                Description = Literal("Root Module ID"),
-                Value = FnIf("Module::IsNested", FnRef("DeploymentRoot"), FnRef("Module::Id"))
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("RootId")) {
+                Description = Fn.Literal("Root Module ID"),
+                Value = Fn.If("Module::IsNested", Fn.Ref("DeploymentRoot"), Fn.Ref("Module::Id"))
             });
 
             // create module IAM role used by all functions
-            AddDeclaration(moduleGroupDeclaration, new ResourceDeclaration(Literal("Role")) {
-                Type = Literal("AWS::IAM::Role"),
+            AddDeclaration(moduleGroupDeclaration, new ResourceDeclaration(Fn.Literal("Role")) {
+                Type = Fn.Literal("AWS::IAM::Role"),
                 Properties = new ObjectExpression {
                     ["AssumeRolePolicyDocument"] = new ObjectExpression {
-                        ["Version"] = Literal("2012-10-17"),
+                        ["Version"] = Fn.Literal("2012-10-17"),
                         ["Statement"] = new ListExpression {
                             new ObjectExpression {
-                                ["Sid"] = Literal("ModuleLambdaPrincipal"),
-                                ["Effect"] = Literal("Allow"),
+                                ["Sid"] = Fn.Literal("ModuleLambdaPrincipal"),
+                                ["Effect"] = Fn.Literal("Allow"),
                                 ["Principal"] = new ObjectExpression {
-                                    ["Service"] = Literal("lambda.amazonaws.com")
+                                    ["Service"] = Fn.Literal("lambda.amazonaws.com")
                                 },
-                                ["Action"] = Literal("sts:AssumeRole")
+                                ["Action"] = Fn.Literal("sts:AssumeRole")
                             }
                         }
                     },
                     ["Policies"] = new ListExpression {
                         new ObjectExpression {
-                            ["PolicyName"] = FnSub("${AWS::StackName}ModulePolicy"),
+                            ["PolicyName"] = Fn.Sub("${AWS::StackName}ModulePolicy"),
                             ["PolicyDocument"] = new ObjectExpression {
-                                ["Version"] = Literal("2012-10-17"),
+                                ["Version"] = Fn.Literal("2012-10-17"),
                                 ["Statement"] = new ListExpression()
                             }
                         }
@@ -165,64 +165,64 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // add overridable logging retention variable
             if(!TryGetOverride(node, "Module::LogRetentionInDays", out var logRetentionInDays)) {
-                logRetentionInDays = Literal(30);
+                logRetentionInDays = Fn.Literal(30);
             }
-            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("LogRetentionInDays")) {
-                Description = Literal("Number days log entries are retained for"),
-                Type = Literal("Number"),
+            AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("LogRetentionInDays")) {
+                Description = Fn.Literal("Number days log entries are retained for"),
+                Type = Fn.Literal("Number"),
                 Value = logRetentionInDays
             });
 
             // add LambdaSharp Module Options
             var section = "LambdaSharp Module Options";
-            AddDeclaration(node, new ParameterDeclaration(Literal("Secrets")) {
-                Section = Literal(section),
-                Label = Literal("Comma-separated list of additional KMS secret keys"),
-                Description = Literal("Secret Keys (ARNs)"),
-                Default = Literal("")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("Secrets")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Comma-separated list of additional KMS secret keys"),
+                Description = Fn.Literal("Secret Keys (ARNs)"),
+                Default = Fn.Literal("")
             });
-            AddDeclaration(node, new ParameterDeclaration(Literal("XRayTracing")) {
-                Section = Literal(section),
-                Label = Literal("Enable AWS X-Ray tracing mode for module resources"),
-                Description = Literal("AWS X-Ray Tracing"),
-                Default = Literal(XRayTracingLevel.Disabled.ToString()),
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("XRayTracing")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Enable AWS X-Ray tracing mode for module resources"),
+                Description = Fn.Literal("AWS X-Ray Tracing"),
+                Default = Fn.Literal(XRayTracingLevel.Disabled.ToString()),
                 AllowedValues = new SyntaxNodeCollection<LiteralExpression> {
-                    Literal(XRayTracingLevel.Disabled.ToString()),
-                    Literal(XRayTracingLevel.RootModule.ToString()),
-                    Literal(XRayTracingLevel.AllModules.ToString())
+                    Fn.Literal(XRayTracingLevel.Disabled.ToString()),
+                    Fn.Literal(XRayTracingLevel.RootModule.ToString()),
+                    Fn.Literal(XRayTracingLevel.AllModules.ToString())
                 },
                 DiscardIfNotReachable = true
             });
 
             // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::IsEnabled
-            AddDeclaration(node, new ConditionDeclaration(Literal("XRayIsEnabled")) {
-                Value = FnNot(FnEquals(FnRef("XRayTracing"), Literal(XRayTracingLevel.Disabled.ToString())))
+            AddDeclaration(node, new ConditionDeclaration(Fn.Literal("XRayIsEnabled")) {
+                Value = Fn.Not(Fn.Equals(Fn.Ref("XRayTracing"), Fn.Literal(XRayTracingLevel.Disabled.ToString())))
             });
 
             // TODO (2019-11-05, bjorg): consider making this a child declaration of the parameter XRayTracing::NestedIsEnabled
-            AddDeclaration(node, new ConditionDeclaration(Literal("XRayNestedIsEnabled")) {
-                Value = FnEquals(FnRef("XRayTracing"), Literal(XRayTracingLevel.AllModules.ToString()))
+            AddDeclaration(node, new ConditionDeclaration(Fn.Literal("XRayNestedIsEnabled")) {
+                Value = Fn.Equals(Fn.Ref("XRayTracing"), Fn.Literal(XRayTracingLevel.AllModules.ToString()))
             });
 
             // check if module might depdent on core services
             if(node.HasLambdaSharpDependencies || node.HasModuleRegistration) {
-                AddDeclaration(node, new ParameterDeclaration(Literal("LambdaSharpCoreServices")) {
-                    Section = Literal(section),
-                    Label = Literal("Integrate with LambdaSharp.Core services"),
-                    Description = Literal("Use LambdaSharp.Core Services"),
+                AddDeclaration(node, new ParameterDeclaration(Fn.Literal("LambdaSharpCoreServices")) {
+                    Section = Fn.Literal(section),
+                    Label = Fn.Literal("Integrate with LambdaSharp.Core services"),
+                    Description = Fn.Literal("Use LambdaSharp.Core Services"),
 
                     // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
-                    Default = Literal("Disabled"),
+                    Default = Fn.Literal("Disabled"),
                     AllowedValues = new SyntaxNodeCollection<LiteralExpression> {
-                        Literal("Disabled"),
-                        Literal("Enabled")
+                        Fn.Literal("Disabled"),
+                        Fn.Literal("Enabled")
                     },
                     DiscardIfNotReachable = true
                 });
-                AddDeclaration(node, new ConditionDeclaration(Literal("UseCoreServices")) {
+                AddDeclaration(node, new ConditionDeclaration(Fn.Literal("UseCoreServices")) {
 
                     // TODO (2019-11-05, bjorg): use enum with ToString() instead of hard-coded strings
-                    Value = FnEquals(FnRef("LambdaSharpCoreServices"), Literal("Enabled"))
+                    Value = Fn.Equals(Fn.Ref("LambdaSharpCoreServices"), Fn.Literal("Enabled"))
                 });
             }
 
@@ -230,61 +230,61 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.HasLambdaSharpDependencies) {
 
                 // add LambdaSharp Module Internal resource imports
-                var lambdasharpGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Literal("LambdaSharp")) {
-                   Description = Literal("LambdaSharp Core Imports")
+                var lambdasharpGroupDeclaration = AddDeclaration(node, new GroupDeclaration(Fn.Literal("LambdaSharp")) {
+                   Description = Fn.Literal("LambdaSharp Core Imports")
                 });
-                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Literal("DeadLetterQueue")) {
-                    Module = Literal("LambdaSharp.Core"),
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Fn.Literal("DeadLetterQueue")) {
+                    Module = Fn.Literal("LambdaSharp.Core"),
 
                     // TODO (2018-12-01, bjorg): consider using 'AWS::SQS::Queue'
-                    Type = Literal("String")
+                    Type = Fn.Literal("String")
                 });
-                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Literal("LoggingStream")) {
-                    Module = Literal("LambdaSharp.Core"),
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Fn.Literal("LoggingStream")) {
+                    Module = Fn.Literal("LambdaSharp.Core"),
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
-                    Type = Literal("String")
+                    Type = Fn.Literal("String")
                 });
-                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Literal("LoggingStreamRole")) {
-                    Module = Literal("LambdaSharp.Core"),
+                AddDeclaration(lambdasharpGroupDeclaration, new ImportDeclaration(Fn.Literal("LoggingStreamRole")) {
+                    Module = Fn.Literal("LambdaSharp.Core"),
 
                     // NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
-                    Type = Literal("String")
+                    Type = Fn.Literal("String")
                 });
             }
 
             // add module variables
             if(TryGetVariable(node, "DeadLetterQueue", out var deadLetterQueueVariable, out var deadLetterQueueCondition)) {
-                var deadLetterQueueDeclaration = AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("DeadLetterQueue")) {
-                    Description = Literal("Module Dead Letter Queue (ARN)"),
+                var deadLetterQueueDeclaration = AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("DeadLetterQueue")) {
+                    Description = Fn.Literal("Module Dead Letter Queue (ARN)"),
                     Value = deadLetterQueueVariable
                 });
                 AddGrant(
                     name: deadLetterQueueDeclaration.FullName,
                     awsType: null,
-                    reference: FnRef("Module::DeadLetterQueue"),
+                    reference: Fn.Ref("Module::DeadLetterQueue"),
                     allow: new SyntaxNodeCollection<LiteralExpression> {
-                        Literal("sqs:SendMessage")
+                        Fn.Literal("sqs:SendMessage")
                     },
                     condition: deadLetterQueueCondition
                 );
             }
             if(TryGetVariable(node, "LoggingStream", out var loggingStreamVariable, out var _)) {
-                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("LoggingStream")) {
-                    Description = Literal("Module Logging Stream (ARN)"),
+                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("LoggingStream")) {
+                    Description = Fn.Literal("Module Logging Stream (ARN)"),
                     Value = loggingStreamVariable,
 
                     // TODO (2019-11-05, bjorg): can we use a more specific type than 'String' here?
-                    Type = Literal("String")
+                    Type = Fn.Literal("String")
                 });
             }
             if(TryGetVariable(node, "LoggingStreamRole", out var loggingStreamRoleVariable, out var _)) {
-                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Literal("LoggingStreamRole")) {
-                    Description = Literal("Module Logging Stream Role (ARN)"),
+                AddDeclaration(moduleGroupDeclaration, new VariableDeclaration(Fn.Literal("LoggingStreamRole")) {
+                    Description = Fn.Literal("Module Logging Stream Role (ARN)"),
                     Value = loggingStreamRoleVariable,
 
                     // TODO (2019-11-05, bjorg): consider using 'AWS::IAM::Role'
-                    Type = Literal("String")
+                    Type = Fn.Literal("String")
 
                 });
             }
@@ -296,40 +296,40 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                     awsType: null,
                     reference: new ListExpression(node.Secrets),
                     allow: new SyntaxNodeCollection<LiteralExpression> {
-                        Literal("kms:Decrypt"),
-                        Literal("kms:Encrypt")
+                        Fn.Literal("kms:Decrypt"),
+                        Fn.Literal("kms:Encrypt")
                     },
                     condition: null
                 );
             }
 
             // add decryption function for secret parameters and values
-            AddDeclaration(node, new FunctionDeclaration(Literal("DecryptSecretFunction")) {
-                Description = Literal("Module secret decryption function"),
+            AddDeclaration(node, new FunctionDeclaration(Fn.Literal("DecryptSecretFunction")) {
+                Description = Fn.Literal("Module secret decryption function"),
                 Environment = new ObjectExpression {
 
                     // NOTE (2019-11-05, bjorg): we use the Lambda environment to introduce a conditional dependency
                     //  on the policy for KMS keys passed in through the 'Secrets' parameter; without this dependency,
                     //  the Lambda function could run before the policy is in effect, causing it to fail.
-                    ["MODULE_ROLE_SECRETSPOLICY"] = FnIf(
+                    ["MODULE_ROLE_SECRETSPOLICY"] = Fn.If(
                         "Module::Role::SecretsPolicy::Condition",
-                        FnRef("Module::Role::SecretsPolicy"),
-                        FnRef("AWS::NoValue")
+                        Fn.Ref("Module::Role::SecretsPolicy"),
+                        Fn.Ref("AWS::NoValue")
                     )
                 },
                 Pragmas = new ListExpression {
-                    Literal("no-function-registration"),
-                    Literal("no-dead-letter-queue"),
-                    Literal("no-wildcard-scoped-variables")
+                    Fn.Literal("no-function-registration"),
+                    Fn.Literal("no-dead-letter-queue"),
+                    Fn.Literal("no-wildcard-scoped-variables")
                 },
-                Timeout = Literal(30),
-                Memory = Literal(128),
-                Runtime = Literal(Amazon.Lambda.Runtime.Nodejs12X.ToString()),
-                Handler = Literal("index.handler"),
-                Language = Literal("javascript"),
+                Timeout = Fn.Literal(30),
+                Memory = Fn.Literal(128),
+                Runtime = Fn.Literal(Amazon.Lambda.Runtime.Nodejs12X.ToString()),
+                Handler = Fn.Literal("index.handler"),
+                Language = Fn.Literal("javascript"),
                 Properties = new ObjectExpression {
                     ["Code"] = new ObjectExpression {
-                        ["ZipFile"] = Literal(_decryptSecretFunctionCode)
+                        ["ZipFile"] = Fn.Literal(_decryptSecretFunctionCode)
                     }
                 },
                 DiscardIfNotReachable = true
@@ -337,54 +337,54 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
             // add LambdaSharp Deployment Settings
             section = "LambdaSharp Deployment Settings (DO NOT MODIFY)";
-            AddDeclaration(node, new ParameterDeclaration(Literal("DeploymentBucketName")) {
-                Section = Literal(section),
-                Label = Literal("Deployment S3 bucket name"),
-                Description = Literal("Deployment S3 Bucket Name")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("DeploymentBucketName")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Deployment S3 bucket name"),
+                Description = Fn.Literal("Deployment S3 Bucket Name")
             });
-            AddDeclaration(node, new ParameterDeclaration(Literal("DeploymentPrefix")) {
-                Section = Literal(section),
-                Label = Literal("Deployment tier prefix"),
-                Description = Literal("Deployment Tier Prefix")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("DeploymentPrefix")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Deployment tier prefix"),
+                Description = Fn.Literal("Deployment Tier Prefix")
             });
-            AddDeclaration(node, new ParameterDeclaration(Literal("DeploymentPrefixLowercase")) {
-                Section = Literal(section),
-                Label = Literal("Deployment tier prefix (lowercase)"),
-                Description = Literal("Deployment Tier Prefix (lowercase)")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("DeploymentPrefixLowercase")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Deployment tier prefix (lowercase)"),
+                Description = Fn.Literal("Deployment Tier Prefix (lowercase)")
             });
-            AddDeclaration(node, new ParameterDeclaration(Literal("DeploymentRoot")) {
-                Section = Literal(section),
-                Label = Literal("Root stack name for nested deployments, blank otherwise"),
-                Description = Literal("Root Stack Name"),
-                Default = Literal("")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("DeploymentRoot")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("Root stack name for nested deployments, blank otherwise"),
+                Description = Fn.Literal("Root Stack Name"),
+                Default = Fn.Literal("")
             });
-            AddDeclaration(node, new ParameterDeclaration(Literal("DeploymentChecksum")) {
-                Section = Literal(section),
-                Label = Literal("CloudFormation template MD5 checksum"),
-                Description = Literal("Deployment Checksum"),
-                Default = Literal("")
+            AddDeclaration(node, new ParameterDeclaration(Fn.Literal("DeploymentChecksum")) {
+                Section = Fn.Literal(section),
+                Label = Fn.Literal("CloudFormation template MD5 checksum"),
+                Description = Fn.Literal("Deployment Checksum"),
+                Default = Fn.Literal("")
             });
 
             // add conditional KMS permissions for secrets parameter
             AddGrant(
                 name: "Secrets",
                 awsType: null,
-                reference: FnSplit(",", FnRef("Secrets")),
+                reference: Fn.Split(",", Fn.Ref("Secrets")),
                 allow: new SyntaxNodeCollection<LiteralExpression> {
-                    Literal("kms:Decrypt"),
-                    Literal("kms:Encrypt")
+                    Fn.Literal("kms:Decrypt"),
+                    Fn.Literal("kms:Encrypt")
                 },
-                condition: FnNot(FnEquals(FnRef("Secrets"), Literal("")))
+                condition: Fn.Not(Fn.Equals(Fn.Ref("Secrets"), Fn.Literal("")))
             );
 
             // permissions needed for writing to log streams (but not for creating log groups!)
             AddGrant(
                 name: "LogStream",
                 awsType: null,
-                reference: Literal("arn:aws:logs:*:*:*"),
+                reference: Fn.Literal("arn:aws:logs:*:*:*"),
                 allow: new SyntaxNodeCollection<LiteralExpression> {
-                    Literal("logs:CreateLogStream"),
-                    Literal("logs:PutLogEvents")
+                    Fn.Literal("logs:CreateLogStream"),
+                    Fn.Literal("logs:PutLogEvents")
                 },
                 condition: null
             );
@@ -393,9 +393,9 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             AddGrant(
                 name: "CloudFormation",
                 awsType: null,
-                reference: FnRef("AWS::StackId"),
+                reference: Fn.Ref("AWS::StackId"),
                 allow: new SyntaxNodeCollection<LiteralExpression> {
-                    Literal("cloudformation:DescribeStacks")
+                    Fn.Literal("cloudformation:DescribeStacks")
                 },
                 condition: null
             );
@@ -404,13 +404,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             AddGrant(
                 name: "AWS-XRay",
                 awsType: null,
-                reference: Literal("*"),
+                reference: Fn.Literal("*"),
                 allow: new SyntaxNodeCollection<LiteralExpression> {
-                    Literal("xray:PutTraceSegments"),
-                    Literal("xray:PutTelemetryRecords"),
-                    Literal("xray:GetSamplingRules"),
-                    Literal("xray:GetSamplingTargets"),
-                    Literal("xray:GetSamplingStatisticSummaries")
+                    Fn.Literal("xray:PutTraceSegments"),
+                    Fn.Literal("xray:PutTelemetryRecords"),
+                    Fn.Literal("xray:GetSamplingRules"),
+                    Fn.Literal("xray:GetSamplingTargets"),
+                    Fn.Literal("xray:GetSamplingStatisticSummaries")
                 },
                 condition: null
             );
@@ -419,13 +419,13 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.HasModuleRegistration) {
 
                 // create module registration
-                AddDeclaration(node, new ResourceDeclaration(Literal("Registration")) {
-                    Type = Literal("LambdaSharp::Registration::Module"),
+                AddDeclaration(node, new ResourceDeclaration(Fn.Literal("Registration")) {
+                    Type = Fn.Literal("LambdaSharp::Registration::Module"),
                     Properties = new ObjectExpression {
-                        ["Module"] = Literal(_builder.ModuleInfo.ToString()),
-                        ["ModuleId"] = FnRef("AWS::StackName")
+                        ["Module"] = Fn.Literal(_builder.ModuleInfo.ToString()),
+                        ["ModuleId"] = Fn.Ref("AWS::StackName")
                     },
-                    If = FnCondition("UseCoreServices")
+                    If = Fn.Condition("UseCoreServices")
                 });
             }
             return true;
@@ -438,11 +438,11 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
                 AddGrant(
                     name: "VpcNetworkInterfaces",
                     awsType: null,
-                    reference: Literal("*"),
+                    reference: Fn.Literal("*"),
                     allow: new SyntaxNodeCollection<LiteralExpression> {
-                        Literal("ec2:DescribeNetworkInterfaces"),
-                        Literal("ec2:CreateNetworkInterface"),
-                        Literal("ec2:DeleteNetworkInterface")
+                        Fn.Literal("ec2:DescribeNetworkInterfaces"),
+                        Fn.Literal("ec2:CreateNetworkInterface"),
+                        Fn.Literal("ec2:DeleteNetworkInterface")
                     },
                     condition: null
                 );

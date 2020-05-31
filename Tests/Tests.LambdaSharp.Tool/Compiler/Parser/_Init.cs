@@ -35,6 +35,7 @@ using Newtonsoft.Json;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
+    
     public abstract class _Init {
 
         //--- Types ---

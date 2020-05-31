@@ -61,7 +61,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
         private readonly Builder _builder;
 
         //--- Constructors ---
-        public DiscoverDependenciesAnalyzer(Builder builder) => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
+        public DiscoverDependenciesAnalyzer(Builder builder)
+            => _builder = builder ?? throw new System.ArgumentNullException(nameof(builder));
 
         //--- Methods ---
         public override bool VisitStart(ModuleDeclaration node) {
@@ -195,7 +196,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Type == null) {
 
                 // default Type is String when omitted
-                node.Type = Literal("String");
+                node.Type = Fn.Literal("String");
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
                 _builder.Log(Error.ResourceTypePropertyTypeIsInvalid, node.Type);
             }
@@ -212,7 +213,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             if(node.Type == null) {
 
                 // default Type is String when omitted
-                node.Type = Literal("String");
+                node.Type = Fn.Literal("String");
             } else if(!IsValidCloudFormationType(node.Type.Value)) {
                 _builder.Log(Error.ResourceTypeAttributeTypeIsInvalid, node.Type);
             }

@@ -54,28 +54,50 @@ namespace LambdaSharp.Tool.Compiler {
         int Code { get; }
         string Message { get; }
         BuildReportEntrySeverity Severity { get; }
+
+        //--- Methods ---
+        string Render(SourceLocation? sourceLocation, bool exact) {
+            var label = Severity.ToString().ToUpperInvariant();
+            if(sourceLocation == null) {
+                return $"{label}{Code}: {Message}";
+            } else if(exact) {
+                return $"{label}{Code}: {Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})";
+            } else {
+                return $"{label}{Code}: {Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})";
+            }
+        }
     }
 
     public class BuildReportLogger : ILogger {
 
-        //--- Fields ---
-        private readonly List<string> _messages = new List<string>();
+        //--- Types ---
+        public class Entry {
 
-        //--- Properties ---
-        public IEnumerable<string> Messages => _messages;
+            //--- Fields ---
+            private readonly string _rendered;
+
+            //--- Constructors ---
+            public Entry(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact) {
+                BuildReportEntry = entry ?? throw new ArgumentNullException(nameof(entry));
+                SourceLocation = sourceLocation;
+                Exact = exact;
+                _rendered = entry.Render(sourceLocation, exact);
+            }
+
+            //--- Properties ---
+            public IBuildReportEntry BuildReportEntry { get; }
+            public SourceLocation? SourceLocation { get; }
+            public bool Exact { get; }
+
+            //--- Methods ---
+            public override string ToString() => _rendered;
+        }
+
+        //--- Fields ---
+        private readonly List<Entry> _entries = new List<Entry>();
 
         //--- Methods ---
-        public void Log(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact) {
-
-            // TODO: message should not be captured as strings, which makes further formatting impossible (such as colorization)
-            var label = entry.Severity.ToString().ToUpperInvariant();
-            if(sourceLocation == null) {
-                _messages.Add($"{label}{entry.Code}: {entry.Message}");
-            } else if(exact) {
-                _messages.Add($"{label}{entry.Code}: {entry.Message} @ {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
-            } else {
-                _messages.Add($"{label}{entry.Code}: {entry.Message} @ (near) {sourceLocation.FilePath ?? "n/a"}({sourceLocation.LineNumberStart},{sourceLocation.ColumnNumberStart})");
-            }
-        }
+        public void Log(IBuildReportEntry buildReportEntry, SourceLocation? sourceLocation, bool exact)
+            => _entries.Add(new Entry(buildReportEntry, sourceLocation, exact));
     }
 }
