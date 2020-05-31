@@ -21,7 +21,7 @@ namespace LambdaSharp.CloudFormation.ModuleManifest {
     public class CloudFormationModuleManifestDependency {
 
         //--- Properties ---
-        public CloudFormationModuleManifestModuleInfo? ModuleInfo { get; set; }
+        public string? ModuleInfo { get; set; }
         public CloudFormationModuleManifestDependencyType Type { get; set; }
     }
 }

@@ -52,7 +52,7 @@ namespace LambdaSharp.CloudFormation.Serialization {
             void WriteCollection<T>(string key, IEnumerable<T> items) {
                 if(items?.Any() ?? false) {
                     writer.WritePropertyName(key);
-                    JsonSerializer.Serialize(writer, items, options);
+                    JsonSerializer.Serialize(writer, items, items.GetType(), options);
                 }
             }
         }

@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -20,17 +20,21 @@ using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest.Serialization {
+namespace LambdaSharp.CloudFormation.Serialization {
 
-    public class CloudFormationModuleManifestModuleInfoConverter : JsonConverter<CloudFormationModuleManifestModuleInfo> {
+    public class CloudFormationListConverter : JsonConverter<CloudFormationList> {
 
         //--- Methods ---
-        public override CloudFormationModuleManifestModuleInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        public override CloudFormationList Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
             throw new NotImplementedException();
         }
 
-        public override void Write(Utf8JsonWriter writer, CloudFormationModuleManifestModuleInfo moduleInfo, JsonSerializerOptions options) {
-            writer.WriteStringValue(moduleInfo.Value);
+        public override void Write(Utf8JsonWriter writer, CloudFormationList list, JsonSerializerOptions options) {
+            writer.WriteStartArray();
+            foreach(var item in list) {
+                JsonSerializer.Serialize(writer, item, item.GetType(), options);
+            }
+            writer.WriteEndArray();
         }
     }
 }

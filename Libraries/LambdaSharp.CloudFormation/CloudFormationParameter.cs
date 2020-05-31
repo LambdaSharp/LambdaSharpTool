@@ -23,7 +23,7 @@ namespace LambdaSharp.CloudFormation {
     public class CloudFormationParameter {
 
         //--- Properties ---
-        public string? Type { get; set; }
+        public string Type { get; set; } = "String";
         public string? Description { get; set; }
         public string? AllowedPattern { get; set; }
         public List<string>? AllowedValues { get; set; }

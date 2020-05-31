@@ -16,7 +16,11 @@
  * limitations under the License.
  */
 
+using System.Text.Json.Serialization;
+using LambdaSharp.CloudFormation.Serialization;
+
 namespace LambdaSharp.CloudFormation {
 
+    [JsonConverter(typeof(CloudFormationExpressionConverter))]
     public class ACloudFormationExpression { }
 }

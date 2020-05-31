@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using LambdaSharp.CloudFormation.Serialization;
@@ -25,9 +26,19 @@ namespace LambdaSharp.CloudFormation {
     [JsonConverter(typeof(CloudFormationResourceConverter))]
     public class CloudFormationResource {
 
+        //--- Constructors ---
+        public CloudFormationResource(string type)
+            => Type = type ?? throw new ArgumentNullException(nameof(type));
+
+        //--- Operators ---
+        public ACloudFormationExpression this[string key] {
+            get => Properties[key];
+            set => Properties[key] = value;
+        }
+
         //--- Properties ---
-        public string? Type { get; set; }
-        public CloudFormationObjectExpression Properties { get; set; } = new CloudFormationObjectExpression();
+        public string Type { get; set; }
+        public CloudFormationObject Properties { get; set; } = new CloudFormationObject();
         public List<string> DependsOn { get; set; } = new List<string>();
         public Dictionary<string, ACloudFormationExpression> Metadata { get; set; } = new Dictionary<string, ACloudFormationExpression>();
         public string? Condition { get; set; }

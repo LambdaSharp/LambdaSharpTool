@@ -32,11 +32,6 @@ namespace LambdaSharp.CloudFormation.Serialization {
         }
 
         public override void Write(Utf8JsonWriter writer, CloudFormationTemplate template, JsonSerializerOptions options) {
-
-            // never emit null properties
-            options.IgnoreNullValues = true;
-
-            // emit template
             writer.WriteStartObject();
             WriteItem("AWSTemplateFormatVersion", template.AWSTemplateFormatVersion);
             WriteItem("Description", template.Description);
@@ -60,7 +55,7 @@ namespace LambdaSharp.CloudFormation.Serialization {
             void WriteCollection<T>(string key, IEnumerable<T> items) {
                 if(items?.Any() ?? false) {
                     writer.WritePropertyName(key);
-                    JsonSerializer.Serialize(writer, items, options);
+                    JsonSerializer.Serialize(writer, items, items.GetType(), options);
                 }
             }
         }

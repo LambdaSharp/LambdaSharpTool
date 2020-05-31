@@ -29,13 +29,11 @@ namespace LambdaSharp.CloudFormation.ModuleManifest {
 
         //--- Properties ---
         public string Version { get; set; } = CurrentVersion;
-
-        public CloudFormationModuleManifestModuleInfo? Module { get; set; }
-
+        public string? Module { get; set; }
         public string? Description { get; set; }
         public string? TemplateChecksum { get; set; }
         public DateTime Date { get; set; }
-        public CloudFormationModuleManifestVersionInfo? CoreServicesVersion { get; set; }
+        public string? CoreServicesVersion { get; set; }
         public List<CloudFormationModuleManifestParameterSection> ParameterSections { get; set; } = new List<CloudFormationModuleManifestParameterSection>();
         public CloudFormationModuleManifestGitInfo? Git { get; set; }
         public List<string> Artifacts { get; set; } = new List<string>();

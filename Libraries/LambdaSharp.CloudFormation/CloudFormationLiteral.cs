@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -16,15 +16,22 @@
  * limitations under the License.
  */
 
+using System;
 using System.Text.Json.Serialization;
-using LambdaSharp.CloudFormation.ModuleManifest.Serialization;
+using LambdaSharp.CloudFormation.Serialization;
 
-namespace LambdaSharp.CloudFormation.ModuleManifest {
+namespace LambdaSharp.CloudFormation {
 
-    [JsonConverter(typeof(CloudFormationModuleManifestModuleInfoConverter))]
-    public class CloudFormationModuleManifestModuleInfo {
+    [JsonConverter(typeof(CloudFormationLiteralConverter))]
+    public class CloudFormationLiteral : ACloudFormationExpression {
+
+        // TODO: support different literal types (e.g. string, number)
+
+        //--- Constructors ---
+        public CloudFormationLiteral(string value) => Value = value ?? throw new ArgumentNullException(nameof(value));
+        public CloudFormationLiteral(int value) => Value = value.ToString();
 
         //--- Properties ---
-        public string? Value { get; set; }
+        public string Value { get; }
     }
 }

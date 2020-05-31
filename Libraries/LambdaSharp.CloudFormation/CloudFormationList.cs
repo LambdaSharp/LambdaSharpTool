@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -24,16 +24,16 @@ using LambdaSharp.CloudFormation.Serialization;
 
 namespace LambdaSharp.CloudFormation {
 
-    [JsonConverter(typeof(CloudFormationListExpressionConverter))]
-    public class CloudFormationListExpression : ACloudFormationExpression, IEnumerable, IEnumerable<ACloudFormationExpression> {
+    [JsonConverter(typeof(CloudFormationListConverter))]
+    public class CloudFormationList : ACloudFormationExpression, IEnumerable, IEnumerable<ACloudFormationExpression> {
 
         //--- Fields ---
         private readonly List<ACloudFormationExpression> _items;
 
         //--- Constructors ---
-        public CloudFormationListExpression() => _items = new List<ACloudFormationExpression>();
+        public CloudFormationList() => _items = new List<ACloudFormationExpression>();
 
-        public CloudFormationListExpression(IEnumerable<ACloudFormationExpression> items)
+        public CloudFormationList(IEnumerable<ACloudFormationExpression> items)
             => _items = new List<ACloudFormationExpression>(items);
 
         //--- Properties ---
