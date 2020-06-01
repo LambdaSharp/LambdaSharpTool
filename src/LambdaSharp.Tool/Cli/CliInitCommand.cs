@@ -55,6 +55,7 @@ namespace LambdaSharp.Tool.Cli {
                 var usePublishedOption = cmd.Option("--use-published", "(optional) Force the init command to use the published LambdaSharp modules", CommandOptionType.NoValue);
                 var promptAllParametersOption = cmd.Option("--prompt-all", "(optional) Prompt for all missing parameters values (default: only prompt for missing parameters with no default value)", CommandOptionType.NoValue);
                 var allowUpgradeOption = cmd.Option("--allow-upgrade", "(optional) Allow upgrading LambdaSharp.Core across major releases (default: prompt)", CommandOptionType.NoValue);
+                var skipApiGatewayCheckOption = cmd.Option("--skip-apigateway-check", "(optional) Skip API Gateway role check", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
                 AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
@@ -134,7 +135,8 @@ namespace LambdaSharp.Tool.Cli {
                         xRayTracingLevel,
                         coreServices,
                         existingS3BucketName,
-                        allowUpgradeOption.HasValue()
+                        allowUpgradeOption.HasValue(),
+                        skipApiGatewayCheckOption.HasValue()
                     );
                 });
             });
@@ -152,7 +154,8 @@ namespace LambdaSharp.Tool.Cli {
             XRayTracingLevel xRayTracingLevel,
             CoreServices coreServices,
             string existingS3BucketName,
-            bool allowUpgrade
+            bool allowUpgrade,
+            bool skipApiGatewayCheck
         ) {
 
             // NOTE (2019-08-15, bjorg): the deployment tier initialization must support the following scenarios:
@@ -278,7 +281,9 @@ namespace LambdaSharp.Tool.Cli {
             }
 
             // check if API Gateway role needs to be set or updated
-            await CheckApiGatewayRole(settings);
+            if(!skipApiGatewayCheck) {
+                await CheckApiGatewayRole(settings);
+            }
             if(HasErrors) {
                 return false;
             }
