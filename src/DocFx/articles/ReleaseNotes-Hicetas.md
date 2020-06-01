@@ -145,14 +145,30 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 #### Features
 
-* LambdaSharp.S3.IO
-  * Added `Encoding` property for `LambdaSharp::S3::IO` to enable encoding content when deploying to an S3 bucket.
+* LambdaSharp CLI
+  * Added `--skip-apigateway-check` to `lash init` to bypass API Gateway role creation/update operation during deployment tier initialization.
+
+* LambdaSharp SDK
+  * Added the virtual `DebugLoggingEnabled` property to `ALambdaFunction` as the preferred way to check if debug logging is enabled.
+
+* LambdaSharp Syntax
   * Added pragma for overriding `Module::Role.PermissionsBoundary` (contributed by @yurigorokhov).
+
+* LambdaSharp Modules
+  * LambdaSharp.S3.IO
+    * Added `Encoding` property for `LambdaSharp::S3::IO` to enable compression encoding for content before it is deployed to an S3 bucket.
+    * Added `Content-MD5` checksum header for S3 uploads to ensure end-to-end data integrity.
+
+* Samples
+  * Added _DebugSample_ showing how to use `LogDebug()` and `DebugLoggingEnabled`.
 
 #### Fixes
 
 * LambdaSharp CLI
     * Added support to all commands for `--no-ansi`, `--quiet`, and `--verbose` options.
+
+* LambdaSharp.Core
+  * Removed access policy for `serverlessrepo.amazonaws.com` from deployment bucket.
 
 ### (v0.8.0.1) - 2020-05-18
 
