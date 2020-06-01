@@ -166,7 +166,7 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 * LambdaSharp CLI
     * Added support to all commands for `--no-ansi`, `--quiet`, and `--verbose` options.
 
-* LambdaSharpModules
+* LambdaSharp Modules
   * Removed unnecessary S3 access policy from _LambdaSharp.Core_ that granted read access to `serverlessrepo.amazonaws.com` for deployment buckets.
 
 ### (v0.8.0.1) - 2020-05-18
