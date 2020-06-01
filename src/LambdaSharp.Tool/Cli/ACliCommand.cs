@@ -63,9 +63,6 @@ namespace LambdaSharp.Tool.Cli {
         public static string CredentialsFilePath = Path.Combine(CredentialsFolder, "credentials");
 
         //--- Class Methods ---
-        public static CommandOption AddTierOption(CommandLineApplication cmd)
-            => cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
-
         public static string ReadResource(string resourceName, IDictionary<string, string> substitutions = null) {
             var result = typeof(ACliCommand).Assembly.ReadManifestResource($"LambdaSharp.Tool.Resources.{resourceName}");
             if(substitutions != null) {
@@ -77,7 +74,7 @@ namespace LambdaSharp.Tool.Cli {
         }
 
         //--- Fields ---
-        private readonly Dictionary<CommandLineApplication, List<Func<bool>>> _commandOptions = new Dictionary<CommandLineApplication, List<Func<bool>>>();
+        private readonly Dictionary<CommandLineApplication, List<Action>> _commandOptions = new Dictionary<CommandLineApplication, List<Action>>();
 
         //--- Methods ---
         protected async Task<AwsAccountInfo> InitializeAwsProfile(
@@ -99,7 +96,7 @@ namespace LambdaSharp.Tool.Cli {
                         || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
                     )
                 ) {
-                    LogError($"IMPORTANT: run '{Settings.Lash} init' to create an AWS profile");
+                    LogError($"IMPORTANT: run 'lash init' to create an AWS profile");
                     return null;
                 }
 
@@ -164,7 +161,7 @@ namespace LambdaSharp.Tool.Cli {
             CommandOption awsRegionOption = null;
 
             // add misc options
-            var tierOption = AddTierOption(cmd);
+            var tierOption = cmd.Option("--tier|-T <NAME>", "(optional) Name of deployment tier (default: LAMBDASHARP_TIER environment variable)", CommandOptionType.SingleValue);
             if(requireAwsProfile) {
                 awsProfileOption = cmd.Option("--aws-profile|-P <NAME>", "(optional) Use a specific AWS profile from the AWS credentials file", CommandOptionType.SingleValue);
                 awsRegionOption = cmd.Option("--aws-region <NAME>", "(optional) Use a specific AWS region (default: read from AWS profile)", CommandOptionType.SingleValue);
@@ -506,65 +503,69 @@ namespace LambdaSharp.Tool.Cli {
         protected void AddStandardCommandOptions(CommandLineApplication cmd) {
 
             // add --no-ansi command line option
-            var noAnsiOutputOption = cmd.Option("--no-ansi", "(optional) Disable colored ANSI terminal output", CommandOptionType.NoValue);
-            AddCommandAction(cmd, () => Settings.UseAnsiConsole = !noAnsiOutputOption.HasValue());
+            AddToolOption(
+                cmd,
+                "--no-ansi",
+                "(optional) Disable colored ANSI terminal output",
+                CommandOptionType.NoValue,
+                option => Settings.UseAnsiConsole = !option.HasValue()
+            );
 
             // add --verbose command line option
             // NOTE (2018-08-04, bjorg): no need to add an error message since it's already added by 'TryParseEnumOption'
-            var verboseLevelOption = cmd.Option("--verbose|-V[:<LEVEL>]", "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)", CommandOptionType.SingleOrNoValue);
-            AddCommandAction(cmd, () => TryParseEnumOption(verboseLevelOption, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel));
+            AddToolOption(
+                cmd,
+                "--verbose|-V[:<LEVEL>]",
+                "(optional) Show verbose output (0=Quiet, 1=Normal, 2=Detailed, 3=Exceptions; Normal if LEVEL is omitted)",
+                CommandOptionType.SingleOrNoValue,
+                option => TryParseEnumOption(option, Tool.VerboseLevel.Normal, VerboseLevel.Detailed, out Settings.VerboseLevel)
+            );
 
             // add --quiet command line option
-            var noBannerOption = cmd.Option("--quiet", "(optional) Don't show banner or execution time", CommandOptionType.NoValue);
-            AddCommandAction(cmd, () => {
-                Program.Quiet = noBannerOption.HasValue();
-                if(!Program.Quiet) {
+            AddToolOption(
+                cmd,
+                "--quiet",
+                "(optional) Don't show banner or execution time",
+                CommandOptionType.NoValue,
+                option => {
+                    Program.Quiet = option.HasValue();
+                    if(!Program.Quiet) {
 
-                    // find top level command line application
-                    var app = cmd;
-                    while(app.Parent != null) {
-                        app = app.Parent;
+                        // find top level command line application
+                        var app = cmd;
+                        while(app.Parent != null) {
+                            app = app.Parent;
+                        }
+                        Console.WriteLine($"{app.FullName} - {cmd.Description}");
                     }
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
                 }
-            });
+            );
         }
 
-        protected void AddCommandAction(CommandLineApplication cmd, Action action) {
-            if(action is null) {
-                throw new ArgumentNullException(nameof(action));
-            }
-            AddCommandAction(cmd, () => {
-                action();
-                return true;
-            });
-        }
-
-        protected void AddCommandAction(CommandLineApplication cmd, Func<bool> action) {
+        protected void AddToolOption(CommandLineApplication cmd, string template, string description, CommandOptionType optionType, Action<CommandOption> action) {
             if(cmd is null) {
                 throw new ArgumentNullException(nameof(cmd));
             }
             if(action is null) {
                 throw new ArgumentNullException(nameof(action));
             }
+            var option = cmd.Option(template, description, optionType);
             if(!_commandOptions.TryGetValue(cmd, out var actions)) {
-                actions = new List<Func<bool>>();
+                actions = new List<Action>();
                 _commandOptions[cmd] = actions;
             }
-            actions.Add(action);
+            actions.Add(() => action(option));
         }
 
-        protected bool ExecuteCommandActions(CommandLineApplication cmd) {
+        protected void ExecuteCommandActions(CommandLineApplication cmd) {
             if(cmd is null) {
                 throw new ArgumentNullException(nameof(cmd));
             }
-            var success = true;
             if(_commandOptions.TryGetValue(cmd, out var actions)) {
                 foreach(var action in actions) {
-                    success &= action();
+                    action();
                 }
             }
-            return success;
         }
     }
 }
