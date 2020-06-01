@@ -19,7 +19,7 @@ Debug statements are logged by using [LogDebug(string format, params object[] ar
 *** DEBUG: this entry is only emitted when debug logging is enabled
 ```
 
-For complex debug statements, it is best practice to first check the [DebugLoggingEnabled](xref:xref:LambdaSharp.ALambdaFunction.DebugLoggingEnabled) property before invoking [LogDebug(...)](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])) . Checking if debug logging is enabled first avoids incurring wasteful overhead when the debug statement is discarded anyway.
+For complex debug statements, it is best practice to first check the [DebugLoggingEnabled](xref:LambdaSharp.ALambdaFunction.DebugLoggingEnabled) property before invoking [LogDebug(...)](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])) . Checking if debug logging is enabled first avoids incurring wasteful overhead when the debug statement is discarded anyway.
 
 ```csharp
 if(DebugLoggingEnabled) {
