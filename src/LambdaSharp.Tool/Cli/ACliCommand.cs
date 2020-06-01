@@ -96,7 +96,7 @@ namespace LambdaSharp.Tool.Cli {
                         || (Environment.GetEnvironmentVariable("AWS_SECRET_ACCESS_KEY") == null)
                     )
                 ) {
-                    LogError($"IMPORTANT: run 'lash init' to create an AWS profile");
+                    LogError($"IMPORTANT: run '{Settings.Lash} init' to create an AWS profile");
                     return null;
                 }
 
