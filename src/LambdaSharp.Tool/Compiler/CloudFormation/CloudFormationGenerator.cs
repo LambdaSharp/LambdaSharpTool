@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LambdaSharp.CloudFormation;
+using LambdaSharp.CloudFormation.ModuleManifest;
 using LambdaSharp.Tool.Compiler.Syntax;
 using Microsoft.CSharp.RuntimeBinder;
 
@@ -31,8 +33,8 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
             => new CloudFormationGenerator(builder).Translate(module);
 
         private static ACloudFormationExpression CreateFunction(string functionName, params ACloudFormationExpression[] parameters)
-            => new CloudFormationObjectExpression {
-                [functionName ?? throw new ArgumentNullException(nameof(functionName))] = new CloudFormationListExpression(parameters ?? throw new ArgumentNullException(nameof(parameters)))
+            => new CloudFormationObject {
+                [functionName ?? throw new ArgumentNullException(nameof(functionName))] = new CloudFormationList(parameters ?? throw new ArgumentNullException(nameof(parameters)))
             };
 
         //--- Fields ---
@@ -72,9 +74,9 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
 
             // add module manifest
             var manifest = new CloudFormationModuleManifest {
-                ModuleInfo = _builder.ModuleInfo,
+                Module = _builder.ModuleInfo.ToString(),
                 Description = module.Description?.Value,
-                CoreServicesVersion = _builder.CoreServicesReferenceVersion,
+                CoreServicesVersion = _builder.CoreServicesReferenceVersion.ToString(),
                 ParameterSections = _builder.ItemDeclarations.OfType<ParameterDeclaration>()
                     .GroupBy(input => input.Section?.Value ?? "Module Settings")
                     .Where(group => group.Key != "LambdaSharp Deployment Settings (DO NOT MODIFY)")
@@ -99,7 +101,7 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                     // no need to store LambdaSharp.Core dependency since the manifest already has a CoreServicesVersion property
                     .Where(dependency => dependency.ModuleLocation.ModuleInfo.FullName != "LambdaSharp.Core")
                     .Select(dependency => new CloudFormationModuleManifestDependency {
-                        ModuleInfo = dependency.ModuleLocation.ModuleInfo,
+                        ModuleInfo = dependency.ModuleLocation.ModuleInfo.ToString(),
                         Type = Enum.Parse<CloudFormationModuleManifestDependencyType>(dependency.Type.ToString())
                     })
                     .OrderBy(dependency => dependency.ModuleInfo?.ToString() ?? throw new ShouldNeverHappenException("missing ModuleInfo"))
@@ -171,12 +173,11 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         private void TranslateDeclaration(CloudFormationTemplate template, GroupDeclaration declaration) { }
 
         private void TranslateDeclaration(CloudFormationTemplate template, ConditionDeclaration declaration)
-            => template.Conditions.Add(declaration.LogicalId, (CloudFormationObjectExpression)Translate(declaration.Value ?? throw new NullValueException()));
+            => template.Conditions.Add(declaration.LogicalId, (CloudFormationObject)Translate(declaration.Value ?? throw new NullValueException()));
 
         private void TranslateDeclaration(CloudFormationTemplate template, ResourceDeclaration declaration)
-            => template.Resources.Add(declaration.LogicalId, new CloudFormationResource {
-                Type = declaration.Type?.Value ?? throw new NullValueException(),
-                Properties = (CloudFormationObjectExpression)Translate(declaration.Properties),
+            => template.Resources.Add(declaration.LogicalId, new CloudFormationResource(declaration.Type?.Value ?? throw new ShouldNeverHappenException("missing resource type")) {
+                Properties = (CloudFormationObject)Translate(declaration.Properties),
                 DependsOn = declaration.DependsOn.Select(dependOn => dependOn.Value).ToList(),
                 Condition = declaration.IfConditionName,
 
@@ -226,15 +227,15 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
         }
 
         private ACloudFormationExpression TranslateExpression(ObjectExpression expression)
-            => new CloudFormationObjectExpression(expression.Select(kv => new CloudFormationObjectExpression.KeyValuePair(kv.Key.Value, Translate(kv.Value))));
+            => new CloudFormationObject(expression.Select(kv => new CloudFormationObject.KeyValuePair(kv.Key.Value, Translate(kv.Value))));
 
         private ACloudFormationExpression TranslateExpression(ListExpression expression)
-            => new CloudFormationListExpression(expression.Select(value => Translate(value)));
+            => new CloudFormationList(expression.Select(value => Translate(value)));
 
         private ACloudFormationExpression TranslateExpression(LiteralExpression expression) {
             switch(expression.Type) {
                 case LiteralType.String:
-                    return new CloudFormationLiteralExpression(expression.Value);
+                    return new CloudFormationLiteral(expression.Value);
                 case LiteralType.Bool:
                 case LiteralType.Float:
                 case LiteralType.Integer:
@@ -299,8 +300,8 @@ namespace LambdaSharp.Tool.Compiler.CloudFormation {
                 : CreateFunction("Fn::Sub", Translate(expression.FormatString));
 
         private ACloudFormationExpression TranslateExpression(TransformFunctionExpression expression) {
-            var result = new CloudFormationObjectExpression {
-                ["Fn::Transform"] = new CloudFormationObjectExpression {
+            var result = new CloudFormationObject {
+                ["Fn::Transform"] = new CloudFormationObject {
                     ["Name"] = Translate(expression.MacroName)
                 }
             };
