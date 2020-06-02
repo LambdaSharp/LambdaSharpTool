@@ -9,7 +9,6 @@ keywords: newtonsoft, json, serialization, system
 > TODO:
 > * describe `[JsonConverter(typeof(JsonIntConverter))] public int Value { get; set; }`
 > * describe `[JsonConverter(typeof(JsonUnixDateTimeConverter))]`
-> * Serialize concrete type with derived type
 
 As of _v0.8.1.0_, LambdaSharp has switched from using _Newtonsoft.Json_ to _System.Text.Json_. See the section below on how to migrate existing code to the new JSON serializer.
 
@@ -75,3 +74,61 @@ Replace enum-to-string converters.
 * Before: `[JsonConverter(typeof(StringEnumConverter))]`
 * After: `[JsonConverter(typeof(JsonStringEnumConverter))]`
 * Requires: `using System.Text.Json.Serialization;`
+
+### Polymorphic Serialization
+
+Additional care is required when serializing an abstract syntax tree where nodes share an abstract base definition.
+
+For example, consider the definition for nestable lists with values. Using `Newtonsoft.Json`, we may have written something as follows, where `ListConverter` and `ValueConverter` are JSON-converters that implement serialization for their respective types.
+```csharp
+public class AExpression { }
+
+[JsonConverter(ListConverter)]
+public class List : AExpression {
+    public List<AExpression> Items { get; set; } = new List<AExpression>()
+}
+
+[JsonConverter(LiteralConverter)]
+public class Literal : AExpression {
+    public string Value { get; set; }
+}
+```
+
+Surprisingly, the following expression serializes as `[{}]` because the declared type for `List` is `AExpression` which has no properties!
+```csharp
+JsonSerialize.Serialize(new List {
+    Items = {
+        new Literal {
+            Value = 123
+        }
+    }
+})
+```
+
+The solution is to provide a `JsonConverter` for `AExpression` that knows how to perform polymorphic serialization based on the actual derived type.
+```csharp
+public class ExpressionConverter : JsonConverter<AExpression> {
+
+    //--- Class Fields ---
+    private readonly ListConverter _listSerializer = new ListConverter();
+    private readonly LiteralConverter _literalSerializer = new LiteralConverter();
+
+    //--- Methods ---
+    public override ACloudFormationExpression Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+        throw new NotImplementedException();
+    }
+
+    public override void Write(Utf8JsonWriter writer, ACloudFormationExpression value, JsonSerializerOptions options) {
+        switch(value) {
+        case List list:
+            _listSerializer.Write(writer, list, options);
+            break;
+        case Literal literal:
+            _literalSerializer.Write(writer, literal, options);
+            break;
+        default:
+            throw new ArgumentException($"unsupported serialization type {value?.GetType().FullName ?? "<null>"}");
+        }
+    }
+}
+```
