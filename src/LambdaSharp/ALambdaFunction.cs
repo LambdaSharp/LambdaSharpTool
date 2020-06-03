@@ -323,6 +323,14 @@ namespace LambdaSharp {
         /// <value>The <see cref="HttpClient"/> instance.</value>
         protected HttpClient HttpClient { get; set; }
 
+        /// <summary>
+        /// The <see cref="DebugLoggingEnabled"/> property indicates if the the requests received and responses emitted
+        /// by this Lambda function should be shown in the CloudWatch logs. This can be useful to determine check for
+        /// issues caused by inconsistencies in serialization or deserialization.
+        /// </summary>
+        /// <value>Boolean indicating if requests and responses are logged</value>
+        protected virtual bool DebugLoggingEnabled => Provider.DebugLoggingEnabled;
+
         private LambdaConfig AppConfig {
             get => _appConfig ?? throw new InvalidOperationException();
             set => _appConfig = value ?? throw new ArgumentNullException();
@@ -392,7 +400,7 @@ namespace LambdaSharp {
                 }
 
                 // check if the request stream should be logged for debugging purposes
-                if(Provider.DebugLoggingEnabled) {
+                if(DebugLoggingEnabled) {
 
                     // convert request stream to memory stream, so we can read it twice
                     if(!(stream is MemoryStream memoryStream)) {
@@ -430,7 +438,7 @@ namespace LambdaSharp {
                 }
 
                 // check if response stream should be logged for debugging purposes
-                if(Provider.DebugLoggingEnabled) {
+                if(DebugLoggingEnabled) {
 
                     // convert response stream to memory stream, so we can read it twice
                     if(!(result is MemoryStream memoryStream)) {
@@ -783,7 +791,7 @@ namespace LambdaSharp {
         /// <param name="format">The message format string. If not arguments are supplied, the message format string will be printed as a plain string.</param>
         /// <param name="arguments">Optional arguments for the message string.</param>
         protected void LogDebug(string format, params object[] arguments) {
-            if(Provider.DebugLoggingEnabled) {
+            if(DebugLoggingEnabled) {
                 Logger.LogDebug(format, arguments);
             }
         }

@@ -404,7 +404,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                 function.Function.Handler as string,
                 mappings
             )) {
-                LogError("'lash util create-invoke-methods-schema' command failed");
+                LogError($"'{Settings.Lash} util create-invoke-methods-schema' command failed");
                 return;
             }
 

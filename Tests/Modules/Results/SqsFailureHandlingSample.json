@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Module description (v1.0-DEV)",
+  "Description": "Sample module to demonstrate receiving events from an SQS queue (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "26B6CCAF3CC28C05135D15CA98B70CA0"
+      "Default": "696AD3D2F7E6BDDCD41E2399DCA88BA4"
     }
   },
   "Resources": {
@@ -913,7 +913,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.2"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -1142,8 +1142,8 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.SqsHandler:1.0-DEV",
-      "Description": "Module description",
-      "TemplateChecksum": "26B6CCAF3CC28C05135D15CA98B70CA0",
+      "Description": "Sample module to demonstrate receiving events from an SQS queue",
+      "TemplateChecksum": "696AD3D2F7E6BDDCD41E2399DCA88BA4",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [

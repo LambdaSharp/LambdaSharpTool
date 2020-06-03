@@ -55,6 +55,18 @@ The <code>DestinationKey</code> property specifies the destination prefix for al
 <i>Type</i>: String
 </dd>
 
+<dt><code>Encoding</code></dt>
+<dd>
+
+The <code>Encoding</code> property sets the content encoding to apply to all files copied from the zip package. The value must be one of: <code>NONE</code>, <code>BROTLI</code>, or <code>GZIP</code>). In addition, the encoded file is also annotated with a `Content-Encoding` header matching the compression algorithm.
+
+Note that <code>BROTLI</code> encoding is only valid for <em>https://</em> connections.
+
+<i>Required</i>: No
+
+<i>Type</i>: String
+</dd>
+
 <dt><code>SourceBucket</code></dt>
 <dd>
 

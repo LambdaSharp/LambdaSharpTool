@@ -1,5 +1,5 @@
 # LambdaSharp (λ#)
-# Copyright (C) 2018-2019
+# Copyright (C) 2018-2020
 # lambdasharp.net
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -353,20 +353,6 @@ Items:
   - Resource: DeploymentBucketResource
     Type: AWS::S3::Bucket
     If: CreateDeploymentBucket
-
-  - Resource: DeploymentBucketPolicy
-    Type: AWS::S3::BucketPolicy
-    If: CreateDeploymentBucket
-    Properties:
-      Bucket: !Ref DeploymentBucketResource
-      PolicyDocument:
-        Version: 2012-10-17
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: serverlessrepo.amazonaws.com
-            Action: s3:GetObject
-            Resource: !Sub "${DeploymentBucketResource.Arn}/*"
 
   - Resource: DeploymentBucket
     Scope: public

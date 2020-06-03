@@ -12,7 +12,7 @@ Learn more about [event patterns](https://docs.aws.amazon.com/eventbridge/latest
 
 ```yaml
 Module: Sample.Event
-Description: Module description
+Description: Sample module to demonstrate sending and receiving events
 Items:
 
   - Function: ReceiverFunction
