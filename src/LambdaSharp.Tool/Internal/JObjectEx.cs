@@ -78,7 +78,7 @@ namespace LambdaSharp.Tool.Internal {
                     foreach(var property in value.GetType().GetProperties().Where(p => !SkipType(p.PropertyType))) {
                         object propertyValue;
                         try {
-                            propertyValue = property.GetGetMethod()?.Invoke(value, new object[0]);
+                            propertyValue = property.GetGetMethod()?.Invoke(value, Array.Empty<object>());
                         } catch(Exception e) {
                             throw new ApplicationException($"unable to get {value.GetType()}::{property.Name}", e);
                         }

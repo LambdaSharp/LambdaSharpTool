@@ -44,7 +44,7 @@ namespace LambdaSharp.Tool.Model.AST {
                 "Prefix",
                 "Suffix"
             },
-            ["SlackCommand"] = new string[0],
+            ["SlackCommand"] = Array.Empty<string>(),
             ["Topic"] = new[] {
                 "Filters"
             },
@@ -53,7 +53,7 @@ namespace LambdaSharp.Tool.Model.AST {
             ["Sqs"] = new[] {
                 "BatchSize"
             },
-            ["Alexa"] = new string[0],
+            ["Alexa"] = Array.Empty<string>(),
             ["DynamoDB"] = new[] {
                 "BatchSize",
                 "StartingPosition"
