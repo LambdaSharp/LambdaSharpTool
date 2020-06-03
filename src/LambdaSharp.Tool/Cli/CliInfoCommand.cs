@@ -42,8 +42,9 @@ namespace LambdaSharp.Tool.Cli {
                 // info options
                 var showSensitiveInformationOption = cmd.Option("--show-sensitive", "(optional) Show sensitive information", CommandOptionType.NoValue);
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;

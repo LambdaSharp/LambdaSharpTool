@@ -12,17 +12,17 @@ While it is not (yet) possible to attach a debugger to a running Lambda function
 
 Lambda functions deployed by LambdaSharp have a `DEBUG_LOGGING_ENABLED` environment variable to enable debug logging after deployment. By default, `DEBUG_LOGGING_ENABLED` is set to `false`.
 
-At runtime, the value of the `DEBUG_LOGGING_ENABLED` environment variable can be checked through the [Provider.DebugLoggingEnabled](xref:LambdaSharp.ILambdaFunctionDependencyProvider.DebugLoggingEnabled) property.
+At runtime, the value of the `DEBUG_LOGGING_ENABLED` environment variable can be checked through the [DebugLoggingEnabled](xref:LambdaSharp.ALambdaFunction.DebugLoggingEnabled) property.
 
 Debug statements are logged by using [LogDebug(string format, params object[] arguments)](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])) method and appear in CloudWatch logs with a `*** DEBUG:` prefix:
 ```log
 *** DEBUG: this entry is only emitted when debug logging is enabled
 ```
 
-For complex debug statements, it is best practice to first check the [Provider.DebugLoggingEnabled](xref:LambdaSharp.ILambdaFunctionDependencyProvider.DebugLoggingEnabled) property before invoking [LogDebug(...)](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])) . Checking if debug logging is enabled first avoids incurring wasteful overhead when the debug statement is discarded anyway.
+For complex debug statements, it is best practice to first check the [DebugLoggingEnabled](xref:LambdaSharp.ALambdaFunction.DebugLoggingEnabled) property before invoking [LogDebug(...)](xref:LambdaSharp.ALambdaFunction.LogDebug(System.String,System.Object[])) . Checking if debug logging is enabled first avoids incurring wasteful overhead when the debug statement is discarded anyway.
 
 ```csharp
-if(Provider.DebugLoggingEnabled) {
+if(DebugLoggingEnabled) {
     LogDebug(CreateComplexDebugStatement());
 }
 ```

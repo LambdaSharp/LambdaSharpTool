@@ -177,6 +177,7 @@ namespace LambdaSharp.Tool.Cli.Build {
             );
 
             // create module IAM role used by all functions
+            _builder.TryGetOverride("Module::Role.PermissionsBoundary", out var rolePermissionsBoundary);
             var moduleRoleItem = _builder.AddResource(
                 parent: moduleItem,
                 name: "Role",
@@ -196,6 +197,7 @@ namespace LambdaSharp.Tool.Cli.Build {
                             }
                         }.ToList()
                     },
+                    PermissionsBoundary = rolePermissionsBoundary,
                     Policies = new[] {
                         new Humidifier.IAM.Policy {
                             PolicyName = FnSub("${AWS::StackName}ModulePolicy"),

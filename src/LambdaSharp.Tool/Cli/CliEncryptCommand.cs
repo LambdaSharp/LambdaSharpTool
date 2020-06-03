@@ -40,8 +40,9 @@ namespace LambdaSharp.Tool.Cli {
 
                 // command options
                 var initSettingsCallback = CreateSettingsInitializer(cmd);
+                AddStandardCommandOptions(cmd);
                 cmd.OnExecute(async () => {
-                    Console.WriteLine($"{app.FullName} - {cmd.Description}");
+                    ExecuteCommandActions(cmd);
                     var settings = await initSettingsCallback();
                     if(settings == null) {
                         return;

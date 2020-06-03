@@ -35,11 +35,13 @@ namespace LambdaSharp.S3.IO.S3Writer {
          * DestinationKey: String
          * SourceBucket: String
          * SourceKey: String
+         * Encoding: String
          */
         public string DestinationBucket { get; set; }
         public string DestinationKey { get; set; }
         public string SourceBucket { get; set; }
         public string SourceKey { get; set; }
+        public string Encoding { get; set; }
 
         /*
          * LambdaSharp::S3::WriteJson

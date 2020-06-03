@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Module description (v1.0-DEV)",
+  "Description": "Sample module to demonstrate emitting custom CloudWatch metrics (v1.0-DEV)",
   "Parameters": {
     "Secrets": {
       "Type": "String",
@@ -67,7 +67,7 @@
     "DeploymentChecksum": {
       "Type": "String",
       "Description": "Deployment Checksum",
-      "Default": "66642BDFC2327930A751B7599108164D"
+      "Default": "0E26176885FA5228298AC518F96FF23F"
     }
   },
   "Resources": {
@@ -561,7 +561,7 @@
       }
     },
     "LambdaSharpTool": {
-      "Value": "0.8.0.0"
+      "Value": "0.8.0.2"
     },
     "LambdaSharpTier": {
       "Value": {
@@ -790,8 +790,8 @@
     "LambdaSharp::Manifest": {
       "Version": "2019-07-04",
       "Module": "Sample.Metric:1.0-DEV",
-      "Description": "Module description",
-      "TemplateChecksum": "66642BDFC2327930A751B7599108164D",
+      "Description": "Sample module to demonstrate emitting custom CloudWatch metrics",
+      "TemplateChecksum": "0E26176885FA5228298AC518F96FF23F",
       "Date": "2019-08-09T15:00:00Z",
       "CoreServicesVersion": "0.8.0",
       "ParameterSections": [
