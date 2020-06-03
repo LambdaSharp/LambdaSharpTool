@@ -22,7 +22,7 @@ Items:
     Type: CommaDelimitedList
 
   - Parameter: SubnetIds
-    Type: CommaDelimitedList 
+    Type: CommaDelimitedList
 
   - Function: MyFunction
     Memory: 128
