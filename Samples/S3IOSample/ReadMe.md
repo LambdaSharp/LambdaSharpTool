@@ -93,6 +93,7 @@ Items:
       SourceKey: !Ref WebsiteContents
       DestinationBucket: !Ref WebsiteBucket
       DestinationKey: ""
+      Encoding: GZIP
 
   - Variable: WebsiteUrl
     Description: Website URL

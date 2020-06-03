@@ -6259,13 +6259,17 @@
     },
     "AWS::DLM::LifecyclePolicy.CreateRule": {
       "Properties": {
+        "CronExpression": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "Interval": {
           "PrimitiveType": "Integer",
-          "Required": true
+          "Required": false
         },
         "IntervalUnit": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
         },
         "Times": {
           "PrimitiveItemType": "String",
@@ -6278,11 +6282,11 @@
       "Properties": {
         "Interval": {
           "PrimitiveType": "Integer",
-          "Required": false
+          "Required": true
         },
         "IntervalUnit": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     },
@@ -6298,7 +6302,7 @@
         },
         "Encrypted": {
           "PrimitiveType": "Boolean",
-          "Required": false
+          "Required": true
         },
         "RetainRule": {
           "Required": false,
@@ -6306,7 +6310,7 @@
         },
         "TargetRegion": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         }
       }
     },
@@ -20905,6 +20909,9 @@
         }
       }
     },
+    "AWS::StepFunctions::StateMachine.DefinitionSubstitutions": {
+      "PrimitiveType": "Json"
+    },
     "AWS::StepFunctions::StateMachine.LogDestination": {
       "Properties": {
         "CloudWatchLogsLogGroup": {
@@ -20925,6 +20932,22 @@
           "Required": false
         },
         "Level": {
+          "PrimitiveType": "String",
+          "Required": false
+        }
+      }
+    },
+    "AWS::StepFunctions::StateMachine.S3Location": {
+      "Properties": {
+        "Bucket": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Key": {
+          "PrimitiveType": "String",
+          "Required": true
+        },
+        "Version": {
           "PrimitiveType": "String",
           "Required": false
         }
@@ -22383,7 +22406,7 @@
       }
     }
   },
-  "ResourceSpecificationVersion": "14.3.0",
+  "ResourceSpecificationVersion": "14.4.0",
   "ResourceTypes": {
     "Alexa::ASK::Skill": {
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ask-skill.html",
@@ -23480,10 +23503,6 @@
         },
         "Description": {
           "PrimitiveType": "String",
-          "Required": false
-        },
-        "DisableExecuteApiEndpoint": {
-          "PrimitiveType": "Boolean",
           "Required": false
         },
         "DisableSchemaValidation": {
@@ -34962,12 +34981,12 @@
           "Required": false
         },
         "FindingCriteria": {
-          "Required": false,
+          "Required": true,
           "Type": "FindingCriteria"
         },
         "Name": {
           "PrimitiveType": "String",
-          "Required": false
+          "Required": true
         },
         "Position": {
           "PrimitiveType": "Integer",
@@ -35465,7 +35484,19 @@
           "PrimitiveType": "String",
           "Required": false
         },
+        "RestoreToTime": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "RestoreType": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
         "SnapshotIdentifier": {
+          "PrimitiveType": "String",
+          "Required": false
+        },
+        "SourceDBClusterIdentifier": {
           "PrimitiveType": "String",
           "Required": false
         },
@@ -35477,6 +35508,10 @@
           "ItemType": "Tag",
           "Required": false,
           "Type": "List"
+        },
+        "UseLatestRestorableTime": {
+          "PrimitiveType": "Boolean",
+          "Required": false
         },
         "VpcSecurityGroupIds": {
           "PrimitiveItemType": "String",
@@ -39958,9 +39993,17 @@
       },
       "Documentation": "http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-stepfunctions-statemachine.html",
       "Properties": {
+        "DefinitionS3Location": {
+          "Required": false,
+          "Type": "S3Location"
+        },
         "DefinitionString": {
           "PrimitiveType": "String",
-          "Required": true
+          "Required": false
+        },
+        "DefinitionSubstitutions": {
+          "Required": false,
+          "Type": "DefinitionSubstitutions"
         },
         "LoggingConfiguration": {
           "Required": false,

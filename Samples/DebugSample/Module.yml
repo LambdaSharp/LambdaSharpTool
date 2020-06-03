@@ -14,17 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Module: LambdaSharp.DemoS3Subscriber
+Module: Sample.Debug
+Description: Sample module to demonstrate Lambda debug logging
 Items:
 
-  - Import: Bucket
-    Type: AWS::S3::Bucket
-    Allow: Full
-    Module: Demo.S3Bucket::Bucket
-
-  - Function: Subscriber
-    Memory: 128
-    Timeout: 15
-    Sources:
-
-      - S3: Bucket
+  - Function: MyFunction
+    Memory: 256
+    Timeout: 30
