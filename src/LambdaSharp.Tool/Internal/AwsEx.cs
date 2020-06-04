@@ -31,6 +31,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Amazon.SimpleSystemsManagement;
 using Amazon.SimpleSystemsManagement.Model;
+using LambdaSharp.Compiler.Model;
 using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Internal {

@@ -25,6 +25,8 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
 using LambdaSharp.Tool.Internal;
 
 namespace LambdaSharp.Tool.Model {

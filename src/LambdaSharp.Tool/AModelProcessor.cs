@@ -23,8 +23,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using LambdaSharp.Tool.Compiler;
-using LambdaSharp.Tool.Compiler.Parser;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Parser;
 
 namespace LambdaSharp.Tool {
 

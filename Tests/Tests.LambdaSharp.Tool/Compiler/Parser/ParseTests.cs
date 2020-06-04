@@ -21,10 +21,11 @@
 using System;
 using System.IO;
 using System.Linq;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Tool;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
-using LambdaSharp.Tool.Compiler.Syntax;
 using Xunit;
 using Xunit.Abstractions;
 

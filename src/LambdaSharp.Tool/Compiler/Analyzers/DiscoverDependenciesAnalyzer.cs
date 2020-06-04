@@ -18,8 +18,9 @@
 
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Compiler.Syntax;
-using LambdaSharp.Tool.Model;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
+using LambdaSharp.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 

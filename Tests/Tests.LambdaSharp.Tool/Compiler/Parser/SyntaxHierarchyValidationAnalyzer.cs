@@ -19,8 +19,8 @@
 #nullable disable
 
 using FluentAssertions;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Tool.Compiler;
-using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
 

@@ -21,7 +21,8 @@ using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.CloudFormation;
 using LambdaSharp.CloudFormation.ModuleManifest;
-using LambdaSharp.Tool.Compiler.Syntax;
+using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace LambdaSharp.Tool.Compiler.CloudFormation {

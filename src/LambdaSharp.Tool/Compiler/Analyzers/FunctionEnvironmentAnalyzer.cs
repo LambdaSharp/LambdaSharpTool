@@ -19,7 +19,8 @@
 #nullable disable
 
 using System.Linq;
-using LambdaSharp.Tool.Compiler.Syntax;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 

@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using FluentAssertions;
+using LambdaSharp.CloudFormation;
 using LambdaSharp.Tool.Compiler.CloudFormation;
 using Xunit;
 

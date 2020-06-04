@@ -20,6 +20,7 @@
 
 using System;
 using System.Reflection;
+using LambdaSharp.Compiler;
 
 namespace LambdaSharp.Tool.Cli {
 

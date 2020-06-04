@@ -23,6 +23,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Humidifier;
 using Humidifier.Json;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;

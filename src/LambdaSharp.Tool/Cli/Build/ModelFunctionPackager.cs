@@ -32,6 +32,8 @@ using LambdaSharp.Tool.Model;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

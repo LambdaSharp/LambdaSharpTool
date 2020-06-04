@@ -36,6 +36,7 @@ using Amazon.S3;
 using Amazon.SecurityToken;
 using Amazon.SecurityToken.Model;
 using Amazon.SimpleSystemsManagement;
+using LambdaSharp.Compiler;
 using LambdaSharp.Tool.Internal;
 using McMaster.Extensions.CommandLineUtils;
 using Newtonsoft.Json;

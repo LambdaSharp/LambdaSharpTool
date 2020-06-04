@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 using Amazon;
 using Amazon.S3;
 using Amazon.S3.Model;
+using LambdaSharp.Compiler;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 

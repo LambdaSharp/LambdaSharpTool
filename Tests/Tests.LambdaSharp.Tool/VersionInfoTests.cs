@@ -18,6 +18,7 @@
 
 using System.Collections.Generic;
 using FluentAssertions;
+using LambdaSharp.Compiler;
 using LambdaSharp.Tool;
 using Xunit;
 using Xunit.Abstractions;

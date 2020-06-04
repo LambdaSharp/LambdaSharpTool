@@ -20,10 +20,11 @@ using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading.Tasks;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Parser;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Tool.Compiler;
 using LambdaSharp.Tool.Compiler.Analyzers;
-using LambdaSharp.Tool.Compiler.Parser;
-using LambdaSharp.Tool.Compiler.Syntax;
 
 namespace LambdaSharp.Tool.Cli.Build {
 

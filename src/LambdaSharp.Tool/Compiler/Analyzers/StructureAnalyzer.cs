@@ -23,8 +23,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Model;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Tool.Internal;
-using LambdaSharp.Tool.Compiler.Syntax;
 using LambdaSharp.Tool.Model;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {

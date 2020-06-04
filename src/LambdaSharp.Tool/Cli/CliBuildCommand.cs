@@ -27,6 +27,7 @@ using McMaster.Extensions.CommandLineUtils;
 using LambdaSharp.Tool.Cli.Build;
 using LambdaSharp.Tool.Cli.Deploy;
 using LambdaSharp.Tool.Cli.Publish;
+using LambdaSharp.Compiler;
 
 namespace LambdaSharp.Tool.Cli {
 

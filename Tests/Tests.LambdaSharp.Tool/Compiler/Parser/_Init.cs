@@ -26,16 +26,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using Amazon;
 using FluentAssertions;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Tool;
 using LambdaSharp.Tool.Compiler;
-using LambdaSharp.Tool.Compiler.Parser;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Tool.Compiler.Parser {
-    
+
     public abstract class _Init {
 
         //--- Types ---

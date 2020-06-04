@@ -31,6 +31,8 @@ using Amazon.CloudFormation;
 using Amazon.CloudFormation.Model;
 using Amazon.S3;
 using Amazon.S3.Model;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 using Newtonsoft.Json;

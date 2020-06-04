@@ -21,6 +21,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using LambdaSharp.Compiler;
+using LambdaSharp.Compiler.Model;
 
 namespace LambdaSharp.Tool.Model {
 
