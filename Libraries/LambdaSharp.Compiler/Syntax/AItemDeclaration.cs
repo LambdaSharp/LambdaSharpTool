@@ -76,7 +76,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
-            ItemName = SetParent(itemName) ?? throw new ArgumentNullException(nameof(itemName));
+            ItemName = SetParent(itemName ?? throw new ArgumentNullException(nameof(itemName)));
             _declarations = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
@@ -100,7 +100,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         public SyntaxNodeCollection<AItemDeclaration> Declarations {
             get => _declarations ?? throw new InvalidOperationException();
-            set => _declarations = SetParent(value) ?? throw new ArgumentNullException();
+            set => _declarations = SetParent(value ?? throw new ArgumentNullException());
         }
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace LambdaSharp.Compiler.Syntax {
         /// </summary>
         public AExpression ReferenceExpression {
             get => _referenceExpression ?? throw new InvalidOperationException();
-            set => _referenceExpression = SetParent(value) ?? throw new ArgumentNullException();
+            set => _referenceExpression = SetParent(value ?? throw new ArgumentNullException());
         }
 
         /// <summary>
@@ -284,7 +284,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -445,7 +445,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -509,7 +509,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxRequired]
@@ -634,7 +634,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -765,7 +765,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         // TODO: shouldn't this be List<LiteralExpression>?
@@ -856,7 +856,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Scope {
             get => _scope;
-            set => _scope = SetParent(value) ?? throw new ArgumentNullException();
+            set => _scope = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -1014,7 +1014,7 @@ namespace LambdaSharp.Compiler.Syntax {
             [SyntaxRequired]
             public LiteralExpression Name {
                 get => _name ?? throw new InvalidOperationException();
-                set => _name = SetParent(value) ?? throw new ArgumentNullException();
+                set => _name = SetParent(value ?? throw new ArgumentNullException());
             }
 
             [SyntaxOptional]
@@ -1059,7 +1059,7 @@ namespace LambdaSharp.Compiler.Syntax {
             [SyntaxRequired]
             public LiteralExpression Name {
                 get => _name ?? throw new InvalidOperationException();
-                set => _name = SetParent(value) ?? throw new ArgumentNullException();
+                set => _name = SetParent(value ?? throw new ArgumentNullException());
             }
 
             [SyntaxOptional]

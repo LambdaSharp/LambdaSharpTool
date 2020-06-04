@@ -136,7 +136,7 @@ namespace LambdaSharp.Compiler.Syntax {
             if(nodes is null) {
                 throw new ArgumentNullException(nameof(nodes));
             }
-            _nodes = nodes.Select(node => SetParent(node)).ToList();
+            _nodes = nodes.Select(node => SetItemParent(node)).ToList();
         }
 
         //--- Properties ---
@@ -146,14 +146,14 @@ namespace LambdaSharp.Compiler.Syntax {
             get => _parent ?? throw new ArgumentNullException(nameof(Parent));
             set {
                 _parent = value ?? throw new ArgumentNullException(nameof(Parent));
-                _nodes = _nodes.Select(node => SetParent(node)).ToList();
+                _nodes = _nodes.Select(node => SetItemParent(node)).ToList();
             }
         }
 
         //--- Operators ---
         public T this[int index] {
             get => _nodes[index];
-            set => _nodes[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
+            set => _nodes[index] = SetItemParent(value ?? throw new ArgumentNullException(nameof(value)));
         }
 
         //--- Methods ---
@@ -169,10 +169,10 @@ namespace LambdaSharp.Compiler.Syntax {
             return this;
         }
 
-        public void Add(T expression) => _nodes.Add(SetParent(expression) ??  throw new ArgumentNullException(nameof(expression)));
+        public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));
 
         [return: NotNullIfNotNull("node")]
-        private T? SetParent(T? node) {
+        private T? SetItemParent(T? node) {
             if((node != null) && (_parent != null)) {
                 return (T)ASyntaxNode.SetParent(node, _parent);
             }

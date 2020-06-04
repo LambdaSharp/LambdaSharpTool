@@ -70,7 +70,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Constructors ---
         public ModuleDeclaration(LiteralExpression moduleName) {
-            ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
+            ModuleName = SetParent(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
             _version = SetParent(Fn.Literal("1.0-DEV"));
             _pragmas = SetParent(new ListExpression());
             _secrets = SetParent(new SyntaxNodeCollection<LiteralExpression>());
@@ -83,7 +83,7 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public LiteralExpression Version {
             get => _version;
-            set => _version = SetParent(value) ?? throw new ArgumentNullException();
+            set => _version = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -95,25 +95,25 @@ namespace LambdaSharp.Compiler.Syntax {
         [SyntaxOptional]
         public ListExpression Pragmas {
             get => _pragmas;
-            set => _pragmas = SetParent(value) ?? throw new ArgumentNullException();
+            set => _pragmas = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> Secrets {
             get => _secrets;
-            set => _secrets = SetParent(value) ?? throw new ArgumentNullException();
+            set => _secrets = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
         public SyntaxNodeCollection<UsingModuleDeclaration> Using {
             get => _using;
-            set => _using = SetParent(value) ?? throw new ArgumentNullException();
+            set => _using = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxRequired]
         public SyntaxNodeCollection<AItemDeclaration> Items {
             get => _items;
-            set => _items = SetParent(value) ?? throw new ArgumentNullException();
+            set => _items = SetParent(value ?? throw new ArgumentNullException());
         }
 
         [SyntaxOptional]
@@ -151,7 +151,8 @@ namespace LambdaSharp.Compiler.Syntax {
         private LiteralExpression? _description;
 
         //--- Constructors ---
-        public UsingModuleDeclaration(LiteralExpression moduleName) => ModuleName = SetParent(moduleName) ?? throw new ArgumentNullException(nameof(moduleName));
+        public UsingModuleDeclaration(LiteralExpression moduleName)
+            => ModuleName = SetParent(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
 
         //--- Properties ---
 

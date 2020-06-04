@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         //--- Constructors ---
-        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -117,7 +117,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private LiteralExpression? _name;
 
         //--- Constructors ---
-        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -149,7 +149,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private LiteralExpression? _suffix;
 
         //--- Constructors ---
-        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -190,7 +190,7 @@ namespace LambdaSharp.Compiler.Syntax {
     public class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
         public string[]? SlackPath { get; set; }
@@ -213,7 +213,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private ObjectExpression? _filters;
 
         //--- Constructors ---
-        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -244,7 +244,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Constructors ---
         public SqsEventSourceDeclaration(AExpression eventSource)
-            => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+            => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -271,7 +271,7 @@ namespace LambdaSharp.Compiler.Syntax {
     public class AlexaEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         public AExpression EventSource { get; }
 
@@ -294,7 +294,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private AExpression? _maximumBatchingWindowInSeconds;
 
         //--- Constructors ---
-        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -339,7 +339,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private AExpression? _maximumBatchingWindowInSeconds;
 
         //--- Constructors ---
-        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public KinesisEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
@@ -387,7 +387,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private LiteralExpression? _invoke;
 
         //--- Constructors ---
-        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource) ?? throw new ArgumentNullException(nameof(eventSource));
+        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 

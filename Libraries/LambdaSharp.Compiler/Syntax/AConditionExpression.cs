@@ -34,7 +34,7 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Properties ---
         public LiteralExpression ReferenceName {
             get => _referenceName ?? throw new InvalidOperationException();
-            set => _referenceName = SetParent(value) ?? throw new ArgumentNullException();
+            set => _referenceName = SetParent(value ?? throw new ArgumentNullException());
         }
 
         public ConditionDeclaration? ReferencedDeclaration {
@@ -81,12 +81,12 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Properties ---
         public AExpression LeftValue {
             get => _leftValue ?? throw new InvalidOperationException();
-            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         public AExpression RightValue {
             get => _rightValue ?? throw new InvalidOperationException();
-            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _rightValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---
@@ -120,7 +120,7 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Properties ---
         public AExpression Value {
             get => _value ?? throw new InvalidOperationException();
-            set => _value = SetParent(value) ?? throw new ArgumentNullException();
+            set => _value = SetParent(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---
@@ -153,12 +153,12 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Properties ---
         public AExpression LeftValue {
             get => _leftValue ?? throw new InvalidOperationException();
-            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         public AExpression RightValue {
             get => _rightValue ?? throw new InvalidOperationException();
-            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _rightValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---
@@ -193,12 +193,12 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Properties ---
         public AExpression LeftValue {
             get => _leftValue ?? throw new InvalidOperationException();
-            set => _leftValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         public AExpression RightValue {
             get => _rightValue ?? throw new InvalidOperationException();
-            set => _rightValue = SetParent(value) ?? throw new ArgumentNullException();
+            set => _rightValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---

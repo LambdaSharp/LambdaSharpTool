@@ -163,7 +163,7 @@ namespace LambdaSharp.Compiler.Syntax {
         //--- Operators ---
         public AExpression this[int index] {
             get => _items[index];
-            set => _items[index] = SetParent(value) ?? throw new ArgumentNullException(nameof(value));
+            set => _items[index] = SetParent(value ?? throw new ArgumentNullException(nameof(value)));
         }
 
         //--- Methods ---
