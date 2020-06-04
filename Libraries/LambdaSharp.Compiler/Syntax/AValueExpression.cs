@@ -21,8 +21,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using LambdaSharp.Compiler.Exceptions;
 
-namespace LambdaSharp.Tool.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class AExpression : ASyntaxNode {
 

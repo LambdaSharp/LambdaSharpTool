@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class AEventSourceDeclaration : ADeclaration { }
 

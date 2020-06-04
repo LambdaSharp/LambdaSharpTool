@@ -23,7 +23,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
 
-namespace LambdaSharp.Tool.Model {
+namespace LambdaSharp.Compiler.Model {
 
     public class ModuleNameMappings {
 

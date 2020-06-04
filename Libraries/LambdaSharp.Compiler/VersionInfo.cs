@@ -22,10 +22,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
+using LambdaSharp.Compiler.Serialization;
 
-namespace LambdaSharp.Tool {
+namespace LambdaSharp.Compiler {
 
     [JsonConverter(typeof(JsonVersionInfoConverter))]
     public class VersionInfo {
@@ -293,23 +293,5 @@ namespace LambdaSharp.Tool {
 
         public bool IsCoreServicesCompatible(VersionInfo info)
             => GetCoreServicesReferenceVersion().IsEqualToVersion(info?.GetCoreServicesReferenceVersion());
-    }
-
-    public class JsonVersionInfoConverter : JsonConverter<VersionInfo> {
-
-        //--- Methods ---
-        public override VersionInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            switch(reader.TokenType) {
-            case JsonTokenType.String:
-                return VersionInfo.Parse(reader.GetString());
-            case JsonTokenType.Null:
-                return null;
-            default:
-                throw new JsonException($"unexpected token type for deserializing VersionInfo type (token: {reader.TokenType})");
-            }
-        }
-
-        public override void Write(Utf8JsonWriter writer, VersionInfo value, JsonSerializerOptions options)
-            => writer.WriteStringValue(value.ToString());
     }
 }

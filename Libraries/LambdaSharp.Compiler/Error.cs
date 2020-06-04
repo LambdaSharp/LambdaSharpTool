@@ -19,9 +19,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Model;
+using LambdaSharp.Compiler.Model;
 
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler {
     using ErrorFunc = Func<string, Error>;
     using ErrorFunc2 = Func<string, string, Error>;
     using ErrorFunc3 = Func<string, string, string, Error>;

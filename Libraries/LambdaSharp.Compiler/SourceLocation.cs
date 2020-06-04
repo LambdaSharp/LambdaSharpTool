@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler {
 
     public class SourceLocation {
 

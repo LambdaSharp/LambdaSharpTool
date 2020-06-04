@@ -23,11 +23,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using LambdaSharp.Tool.Compiler.Syntax;
+using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
 
-namespace LambdaSharp.Tool.Compiler.Parser {
+namespace LambdaSharp.Compiler.Parser {
 
     public interface ILambdaSharpParserDependencyProvider {
 

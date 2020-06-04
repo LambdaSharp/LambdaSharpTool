@@ -19,9 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using LambdaSharp.Tool.Compiler.Syntax;
 
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler.Syntax {
 
     public static class Fn {
 

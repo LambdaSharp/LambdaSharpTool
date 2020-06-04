@@ -18,7 +18,7 @@
 
 using System;
 
-namespace LambdaSharp.Tool.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax {
 
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class ASyntaxAttribute : Attribute { }

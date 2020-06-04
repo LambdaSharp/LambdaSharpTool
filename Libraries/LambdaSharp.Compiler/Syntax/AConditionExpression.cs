@@ -17,8 +17,9 @@
  */
 
 using System;
+using LambdaSharp.Compiler.Exceptions;
 
-namespace LambdaSharp.Tool.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class AConditionExpression : AExpression { }
 

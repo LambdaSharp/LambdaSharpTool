@@ -16,9 +16,7 @@
  * limitations under the License.
  */
 
-using LambdaSharp.Tool.Compiler.Syntax;
-
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler.Syntax {
 
     public interface ISyntaxVisitor {
 

@@ -20,11 +20,11 @@
 
 using System;
 using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using LambdaSharp.Compiler.Serialization;
 
-namespace LambdaSharp.Tool {
+namespace LambdaSharp.Compiler {
 
     public class ModuleLocation {
 
@@ -155,23 +155,5 @@ namespace LambdaSharp.Tool {
         public ModuleInfo WithVersion(VersionInfo version) => new ModuleInfo(Namespace, Name, version ?? throw new ArgumentNullException(nameof(version)), Origin);
         public ModuleInfo WithoutOrigin() => new ModuleInfo(Namespace, Name, Version, origin: null);
         public ModuleInfo WithOrigin(string origin) => new ModuleInfo(Namespace, Name, Version, origin);
-    }
-
-    public class JsonModuleInfoConverter : JsonConverter<ModuleInfo> {
-
-        //--- Methods ---
-        public override ModuleInfo Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
-            switch(reader.TokenType) {
-            case JsonTokenType.String:
-                return ModuleInfo.Parse(reader.GetString());
-            case JsonTokenType.Null:
-                return null;
-            default:
-                throw new JsonException($"unexpected token type for deserializing ModuleInfo type (token: {reader.TokenType})");
-            }
-        }
-
-        public override void Write(Utf8JsonWriter writer, ModuleInfo value, JsonSerializerOptions options)
-            => writer.WriteStringValue(value.ToString());
     }
 }

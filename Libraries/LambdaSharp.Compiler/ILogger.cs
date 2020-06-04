@@ -19,7 +19,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler {
 
     public interface ILogger {
 
