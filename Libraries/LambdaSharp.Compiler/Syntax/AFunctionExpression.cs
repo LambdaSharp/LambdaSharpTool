@@ -46,6 +46,11 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Value.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new Base64FunctionExpression {
             Value = Value.Clone()
         };
@@ -88,6 +93,13 @@ namespace LambdaSharp.Compiler.Syntax {
             Count = Count.Visit(visitor) ?? throw new NullValueException();
             CidrBits = CidrBits.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            IpBlock.InspectNode(inspector);
+            Count.InspectNode(inspector);
+            CidrBits.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new CidrFunctionExpression {
@@ -152,6 +164,13 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            MapName.InspectNode(inspector);
+            TopLevelKey.InspectNode(inspector);
+            SecondLevelKey.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new FindInMapFunctionExpression {
             MapName = MapName.Clone(),
             TopLevelKey = TopLevelKey.Clone(),
@@ -207,6 +226,12 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ReferenceName.InspectNode(inspector);
+            AttributeName.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new GetAttFunctionExpression {
             ReferenceName = ReferenceName.Clone(),
             AttributeName = AttributeName.Clone(),
@@ -235,6 +260,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             Region = Region.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Region.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new GetAZsFunctionExpression {
@@ -288,6 +318,13 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Condition.InspectNode(inspector);
+            IfTrue.InspectNode(inspector);
+            IfFalse.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new IfFunctionExpression {
             Condition = Condition.Clone(),
             IfTrue = IfTrue.Clone(),
@@ -324,6 +361,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             SharedValueToImport = SharedValueToImport.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            SharedValueToImport.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new ImportValueFunctionExpression {
@@ -375,6 +417,12 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Delimiter.InspectNode(inspector);
+            Values.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new JoinFunctionExpression {
             Delimiter = Delimiter.Clone(),
             Values = Values.Clone()
@@ -417,6 +465,12 @@ namespace LambdaSharp.Compiler.Syntax {
             Index = Index.Visit(visitor) ?? throw new NullValueException();
             Values = Values?.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Index.InspectNode(inspector);
+            Values.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new SelectFunctionExpression {
@@ -466,6 +520,12 @@ namespace LambdaSharp.Compiler.Syntax {
             Delimiter = Delimiter.Visit(visitor) ?? throw new NullValueException();
             SourceString = SourceString.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Delimiter.InspectNode(inspector);
+            SourceString.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new SplitFunctionExpression {
@@ -522,6 +582,12 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            FormatString.InspectNode(inspector);
+            Parameters.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new SubFunctionExpression {
             FormatString = FormatString.Clone(),
             Parameters = Parameters.Clone()
@@ -558,6 +624,12 @@ namespace LambdaSharp.Compiler.Syntax {
             MacroName = MacroName.Visit(visitor) ?? throw new NullValueException();
             Parameters = Parameters?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            MacroName.InspectNode(inspector);
+            Parameters?.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new TransformFunctionExpression {
@@ -605,6 +677,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ReferenceName.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new ReferenceFunctionExpression {

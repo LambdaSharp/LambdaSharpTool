@@ -59,6 +59,11 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ReferenceName.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new ConditionExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration
@@ -99,6 +104,12 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            LeftValue.InspectNode(inspector);
+            RightValue.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new EqualsConditionExpression {
             LeftValue = LeftValue.Clone(),
             RightValue = RightValue.Clone()
@@ -130,6 +141,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             Value = Value.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            Value.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new NotConditionExpression {
@@ -171,6 +187,12 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            LeftValue.InspectNode(inspector);
+            RightValue.InspectNode(inspector);
+        }
+
         public override ASyntaxNode CloneNode() => new AndConditionExpression {
             LeftValue = LeftValue.Clone(),
             RightValue = RightValue.Clone()
@@ -209,6 +231,12 @@ namespace LambdaSharp.Compiler.Syntax {
             LeftValue = LeftValue.Visit(visitor) ?? throw new NullValueException();
             RightValue = RightValue.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            LeftValue.InspectNode(inspector);
+            RightValue.InspectNode(inspector);
         }
 
         public override ASyntaxNode CloneNode() => new OrConditionExpression {

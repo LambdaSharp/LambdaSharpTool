@@ -399,6 +399,29 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Section?.InspectNode(inspector);
+            Label?.InspectNode(inspector);
+            Type?.InspectNode(inspector);
+            Scope?.InspectNode(inspector);
+            NoEcho?.InspectNode(inspector);
+            Default?.InspectNode(inspector);
+            ConstraintDescription?.InspectNode(inspector);
+            AllowedPattern?.InspectNode(inspector);
+            AllowedValues.InspectNode(inspector);
+            MaxLength?.InspectNode(inspector);
+            MaxValue?.InspectNode(inspector);
+            MinLength?.InspectNode(inspector);
+            MinValue?.InspectNode(inspector);
+            Allow?.InspectNode(inspector);
+            Properties?.InspectNode(inspector);
+            EncryptionContext?.InspectNode(inspector);
+            Pragmas.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     /// <summary>
@@ -416,6 +439,9 @@ namespace LambdaSharp.Compiler.Syntax {
                 return this;
             }
             return visitor.VisitEnd(this);
+        }
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
         }
     }
 
@@ -482,6 +508,16 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Type?.InspectNode(inspector);
+            Scope.InspectNode(inspector);
+            Allow?.InspectNode(inspector);
+            Module?.InspectNode(inspector);
+            EncryptionContext?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Variable")]
@@ -539,6 +575,15 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Type?.InspectNode(inspector);
+            Scope.InspectNode(inspector);
+            Value?.InspectNode(inspector);
+            EncryptionContext?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Group")]
@@ -563,6 +608,11 @@ namespace LambdaSharp.Compiler.Syntax {
             AssertIsSame(ItemName, ItemName.Visit(visitor));
             Declarations = Declarations?.Visit(visitor) ?? throw new NullValueException();
             return visitor.VisitEnd(this);
+        }
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
         }
     }
 
@@ -592,6 +642,12 @@ namespace LambdaSharp.Compiler.Syntax {
             Value = Value?.Visit(visitor);
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Value?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
         }
     }
 
@@ -697,6 +753,21 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            If?.InspectNode(inspector);
+            Type?.InspectNode(inspector);
+            Scope.InspectNode(inspector);
+            Allow?.InspectNode(inspector);
+            Value?.InspectNode(inspector);
+            DependsOn.InspectNode(inspector);
+            Properties.InspectNode(inspector);
+            DefaultAttribute?.InspectNode(inspector);
+            Pragmas.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Nested")]
@@ -746,6 +817,15 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Module?.InspectNode(inspector);
+            DependsOn.InspectNode(inspector);
+            Parameters?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Package")]
@@ -790,6 +870,14 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Scope.InspectNode(inspector);
+            Files?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Function")]
@@ -824,6 +912,12 @@ namespace LambdaSharp.Compiler.Syntax {
                 SecurityGroupIds = SecurityGroupIds?.Visit(visitor);
                 SubnetIds = SubnetIds?.Visit(visitor);
                 return visitor.VisitEnd(this);
+            }
+
+            public override void InspectNode(Action<ASyntaxNode> inspector) {
+                inspector(this);
+                SecurityGroupIds?.InspectNode(inspector);
+                SubnetIds?.InspectNode(inspector);
             }
         }
 
@@ -966,6 +1060,25 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Scope.InspectNode(inspector);
+            If?.InspectNode(inspector);
+            Memory?.InspectNode(inspector);
+            Timeout?.InspectNode(inspector);
+            Project?.InspectNode(inspector);
+            Runtime?.InspectNode(inspector);
+            Language?.InspectNode(inspector);
+            Handler?.InspectNode(inspector);
+            Vpc?.InspectNode(inspector);
+            Environment.InspectNode(inspector);
+            Properties.InspectNode(inspector);
+            Sources.InspectNode(inspector);
+            Pragmas.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Mapping")]
@@ -994,6 +1107,13 @@ namespace LambdaSharp.Compiler.Syntax {
             Value = Value?.Visit(visitor);
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Value?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
         }
     }
 
@@ -1045,6 +1165,13 @@ namespace LambdaSharp.Compiler.Syntax {
                 Required = Required?.Visit(visitor);
                 return visitor.VisitEnd(this);
             }
+
+            public override void InspectNode(Action<ASyntaxNode> inspector) {
+                inspector(this);
+                Name.InspectNode(inspector);
+                Type?.InspectNode(inspector);
+                Required?.InspectNode(inspector);
+            }
         }
 
         public class AttributeTypeExpression : ASyntaxNode {
@@ -1082,6 +1209,12 @@ namespace LambdaSharp.Compiler.Syntax {
                 Name = Name.Visit(visitor) ?? throw new NullValueException();
                 Type = Type?.Visit(visitor);
                 return visitor.VisitEnd(this);
+            }
+
+            public override void InspectNode(Action<ASyntaxNode> inspector) {
+                inspector(this);
+                Name.InspectNode(inspector);
+                Type?.InspectNode(inspector);
             }
         }
 
@@ -1128,6 +1261,14 @@ namespace LambdaSharp.Compiler.Syntax {
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Properties.InspectNode(inspector);
+            Attributes.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Macro")]
@@ -1158,6 +1299,13 @@ namespace LambdaSharp.Compiler.Syntax {
             Handler = Handler?.Visit(visitor);
             Declarations = Declarations.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ItemName.InspectNode(inspector);
+            Handler?.InspectNode(inspector);
+            Declarations.InspectNode(inspector);
         }
     }
 }

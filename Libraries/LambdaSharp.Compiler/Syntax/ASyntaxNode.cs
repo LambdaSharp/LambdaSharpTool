@@ -76,6 +76,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Abstract Methods ---
         public abstract ASyntaxNode? VisitNode(ISyntaxVisitor visitor);
+        public abstract void InspectNode(Action<ASyntaxNode> inspector);
 
         //--- Methods ---
         [return: NotNullIfNotNull("node") ]
@@ -167,6 +168,12 @@ namespace LambdaSharp.Compiler.Syntax {
                 start = count;
             } while(start < _nodes.Count);
             return this;
+        }
+
+        public void InspectNode(Action<ASyntaxNode> inspector) {
+            foreach(var node in _nodes) {
+                inspector(node);
+            }
         }
 
         public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));

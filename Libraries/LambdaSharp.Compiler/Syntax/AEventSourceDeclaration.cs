@@ -108,6 +108,18 @@ namespace LambdaSharp.Compiler.Syntax {
             Invoke = Invoke?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            Integration?.InspectNode(inspector);
+            OperationName?.InspectNode(inspector);
+            ApiKeyRequired?.InspectNode(inspector);
+            AuthorizationType?.InspectNode(inspector);
+            AuthorizationScopes?.InspectNode(inspector);
+            AuthorizerId?.InspectNode(inspector);
+            Invoke?.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Schedule", typeof(AExpression))]
@@ -137,6 +149,12 @@ namespace LambdaSharp.Compiler.Syntax {
             AssertIsSame(EventSource, EventSource.Visit(visitor));
             Name = Name?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            Name?.InspectNode(inspector);
         }
     }
 
@@ -184,6 +202,14 @@ namespace LambdaSharp.Compiler.Syntax {
             Suffix = Suffix?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            Events?.InspectNode(inspector);
+            Prefix?.InspectNode(inspector);
+            Suffix?.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("SlackCommand")]
@@ -203,6 +229,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
         }
     }
 
@@ -233,6 +264,12 @@ namespace LambdaSharp.Compiler.Syntax {
             AssertIsSame(EventSource, EventSource.Visit(visitor));
             Filters = Filters?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            Filters?.InspectNode(inspector);
         }
     }
 
@@ -265,6 +302,12 @@ namespace LambdaSharp.Compiler.Syntax {
             BatchSize = BatchSize?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            BatchSize?.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Alexa", typeof(AExpression))]
@@ -282,6 +325,11 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
         }
     }
 
@@ -328,6 +376,13 @@ namespace LambdaSharp.Compiler.Syntax {
             StartingPosition = StartingPosition?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            BatchSize?.InspectNode(inspector);
+            StartingPosition?.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Kinesis", typeof(AExpression))]
@@ -372,6 +427,13 @@ namespace LambdaSharp.Compiler.Syntax {
             BatchSize = BatchSize?.Visit(visitor);
             StartingPosition = StartingPosition?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            BatchSize?.InspectNode(inspector);
+            StartingPosition?.InspectNode(inspector);
         }
     }
 
@@ -442,6 +504,17 @@ namespace LambdaSharp.Compiler.Syntax {
             AuthorizerId = AuthorizerId?.Visit(visitor);
             Invoke = Invoke?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            EventSource.InspectNode(inspector);
+            OperationName?.InspectNode(inspector);
+            ApiKeyRequired?.InspectNode(inspector);
+            AuthorizationType?.InspectNode(inspector);
+            AuthorizationScopes?.InspectNode(inspector);
+            AuthorizerId?.InspectNode(inspector);
+            Invoke?.InspectNode(inspector);
         }
     }
 }

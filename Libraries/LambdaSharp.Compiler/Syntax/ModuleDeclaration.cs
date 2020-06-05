@@ -57,6 +57,12 @@ namespace LambdaSharp.Compiler.Syntax {
                 Region = Region?.Visit(visitor);
                 return visitor.VisitEnd(this);
             }
+
+            public override void InspectNode(Action<ASyntaxNode> inspector) {
+                inspector(this);
+                Version?.InspectNode(inspector);
+                Region?.InspectNode(inspector);
+            }
         }
 
         //--- Fields ---
@@ -66,6 +72,8 @@ namespace LambdaSharp.Compiler.Syntax {
         private SyntaxNodeCollection<LiteralExpression> _secrets;
         private SyntaxNodeCollection<UsingModuleDeclaration> _using;
         private SyntaxNodeCollection<AItemDeclaration> _items;
+
+        // TODO: capture in release notes that modules can now require a minimum CloudFormation specification version
         private CloudFormationSpecExpression? _cloudformation;
 
         //--- Constructors ---
@@ -142,6 +150,17 @@ namespace LambdaSharp.Compiler.Syntax {
             CloudFormation = CloudFormation?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ModuleName.InspectNode(inspector);
+            Version.InspectNode(inspector);
+            Description?.InspectNode(inspector);
+            Secrets.InspectNode(inspector);
+            Using.InspectNode(inspector);
+            Items.InspectNode(inspector);
+            CloudFormation?.InspectNode(inspector);
+        }
     }
 
     [SyntaxDeclarationKeyword("Module")]
@@ -172,6 +191,12 @@ namespace LambdaSharp.Compiler.Syntax {
             AssertIsSame(ModuleName, ModuleName.Visit(visitor));
             Description = Description?.Visit(visitor);
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            ModuleName.InspectNode(inspector);
+            Description?.InspectNode(inspector);
         }
     }
 }

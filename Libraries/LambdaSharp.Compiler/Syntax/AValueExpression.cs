@@ -117,6 +117,14 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            foreach(var pair in _pairs) {
+                pair.Key.InspectNode(inspector);
+                pair.Value.InspectNode(inspector);
+            }
+        }
+
         public T? GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {
             if(error == null) {
                 throw new ArgumentNullException(nameof(error));
@@ -177,6 +185,13 @@ namespace LambdaSharp.Compiler.Syntax {
             return visitor.VisitEnd(this);
         }
 
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
+            foreach(var item in _items) {
+                item.InspectNode(inspector);
+            }
+        }
+
         public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));
 
         public void Add(AExpression expression) => _items.Add(SetParent(expression));
@@ -221,6 +236,10 @@ namespace LambdaSharp.Compiler.Syntax {
                 return this;
             }
             return visitor.VisitEnd(this);
+        }
+
+        public override void InspectNode(Action<ASyntaxNode> inspector) {
+            inspector(this);
         }
 
         public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;
