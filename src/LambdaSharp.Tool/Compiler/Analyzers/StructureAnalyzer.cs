@@ -27,6 +27,8 @@ using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Tool.Internal;
 using LambdaSharp.Tool.Model;
 

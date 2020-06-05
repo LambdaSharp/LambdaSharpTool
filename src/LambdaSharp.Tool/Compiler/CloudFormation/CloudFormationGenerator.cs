@@ -23,6 +23,8 @@ using LambdaSharp.CloudFormation;
 using LambdaSharp.CloudFormation.ModuleManifest;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using Microsoft.CSharp.RuntimeBinder;
 
 namespace LambdaSharp.Tool.Compiler.CloudFormation {

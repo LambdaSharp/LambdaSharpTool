@@ -24,6 +24,8 @@ using System.Text.RegularExpressions;
 using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 

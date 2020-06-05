@@ -25,6 +25,8 @@ using System.Linq;
 using System.Xml.Linq;
 using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Tool.Compiler.Analyzers {
 
