@@ -18,5 +18,9 @@
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public abstract class AConditionExpression : AExpression { }
+    public abstract class AExpression : ASyntaxNode {
+
+        //--- Methods ---
+        public abstract ASyntaxNode CloneNode();
+    }
 }

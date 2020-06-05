@@ -16,7 +16,16 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.Syntax.Expressions {
+namespace LambdaSharp.Compiler.Syntax.Declarations {
 
-    public abstract class AConditionExpression : AExpression { }
+    /// <summary>
+    /// The <see cref="IResourceDeclaration"/> interface indicates a CloudFormation resource that
+    /// is created by the template.
+    /// </summary>
+    public interface IResourceDeclaration {
+
+        //--- Properties ---
+        string FullName { get; }
+        string? CloudFormationType { get; }
+    }
 }
