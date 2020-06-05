@@ -162,41 +162,4 @@ namespace LambdaSharp.Compiler.Syntax {
             CloudFormation?.InspectNode(inspector);
         }
     }
-
-    [SyntaxDeclarationKeyword("Module")]
-    public class UsingModuleDeclaration : ADeclaration {
-
-        //--- Fields ---
-        private LiteralExpression? _description;
-
-        //--- Constructors ---
-        public UsingModuleDeclaration(LiteralExpression moduleName)
-            => ModuleName = SetParent(moduleName ?? throw new ArgumentNullException(nameof(moduleName)));
-
-        //--- Properties ---
-
-        [SyntaxOptional]
-        public LiteralExpression? Description {
-            get => _description;
-            set => _description = SetParent(value);
-        }
-
-        public LiteralExpression ModuleName { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ModuleName, ModuleName.Visit(visitor));
-            Description = Description?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ModuleName.InspectNode(inspector);
-            Description?.InspectNode(inspector);
-        }
-    }
 }
