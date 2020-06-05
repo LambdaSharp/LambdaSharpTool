@@ -16,12 +16,7 @@
  * limitations under the License.
  */
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using LambdaSharp.Compiler.Syntax;
-
-namespace LambdaSharp.Tool.Compiler {
+namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class ASyntaxAnalyzer : ISyntaxVisitor {
 
