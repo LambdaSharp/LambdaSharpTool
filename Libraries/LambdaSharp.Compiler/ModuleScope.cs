@@ -25,10 +25,11 @@ using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
+using LambdaSharp.Compiler.Validators;
 
 namespace LambdaSharp.Compiler {
 
-    public class ModuleScope {
+    public class ModuleScope : IModuleValidatorDependencyProvider {
 
         //--- Class Fields ---
         private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -36,11 +37,11 @@ namespace LambdaSharp.Compiler {
         //--- Fields ---
         private readonly ModuleDeclaration _moduleDeclaration;
 
-        public ModuleScope(ModuleDeclaration moduleDeclaration) {
-            _moduleDeclaration = moduleDeclaration ?? throw new System.ArgumentNullException(nameof(moduleDeclaration));
-        }
-
         //--- Constructors ---
+        public ModuleScope(ModuleDeclaration moduleDeclaration, ILogger logger) {
+            _moduleDeclaration = moduleDeclaration ?? throw new System.ArgumentNullException(nameof(moduleDeclaration));
+            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
 
         //--- Properties ---
         private ILogger Logger { get; }
@@ -62,7 +63,11 @@ namespace LambdaSharp.Compiler {
             // normalize AST for analysis
             Normalize();
 
-            // TODO: register local resource types
+            // validate declarations
+            new ParameterDeclarationValidator(this).Validate(_moduleDeclaration);
+
+            // register local resource types
+            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(_moduleDeclaration);
 
             // TODO: ensure that all references can be resolved
             // TODO: detect circular references
@@ -282,5 +287,16 @@ namespace LambdaSharp.Compiler {
             // TODO: inline !Ref/!GetAtt expressions in !Sub whenever possible
             // TODO: remove any unused resources that can be garbage collected
         }
-    }
+
+        //--- IModuleValidatorDependencyProvider Members ---
+        ILogger IModuleValidatorDependencyProvider.Logger => Logger;
+
+        bool IModuleValidatorDependencyProvider.IsValidResourceType(string type) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        bool IModuleValidatorDependencyProvider.IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
+   }
 }

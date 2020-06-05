@@ -25,5 +25,6 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         bool IsValidResourceType(string type);
+        bool IsValidCloudFormationName(string name);
     }
 }
