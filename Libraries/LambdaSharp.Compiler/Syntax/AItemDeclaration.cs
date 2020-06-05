@@ -73,6 +73,8 @@ namespace LambdaSharp.Compiler.Syntax {
         private readonly List<DependencyRecord> _reverseDependencies = new List<DependencyRecord>();
         private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
         private SyntaxNodeCollection<AItemDeclaration> _declarations;
+        private string? _fullName;
+        private string? _logicaId;
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
@@ -89,11 +91,25 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         public LiteralExpression ItemName { get; }
-        public string FullName => (ParentItemDeclaration != null) ? $"{ParentItemDeclaration.FullName}::{ItemName.Value}" : ItemName.Value;
+        public string FullName {
+            get {
+                if(_fullName == null) {
+                    var parentItemDeclaration = ParentItemDeclaration;
+                    _fullName = (parentItemDeclaration != null)
+                        ? $"{parentItemDeclaration.FullName}::{ItemName.Value}"
+                        : ItemName.Value;
+                }
+                return _fullName;
+            }
+        }
 
         public string LogicalId {
-            get => _logicalId ?? throw new InvalidOperationException("value not set");
-            set => _logicalId = value ?? throw new NullValueException(nameof(value));
+            get {
+                if(_logicaId == null) {
+                    _logicaId = FullName.Replace("::", "");
+                }
+                return _logicaId;
+            }
         }
 
         public bool DiscardIfNotReachable { get; set; }
@@ -189,6 +205,14 @@ namespace LambdaSharp.Compiler.Syntax {
                     .RemoveAll(reverseDependency => reverseDependency.ReferencedDeclaration == this);
             }
             _dependencies.Clear();
+        }
+
+        protected override void ParentChanged() {
+            base.ParentChanged();
+
+            // reset computed fullname and logical ID
+            _fullName = null;
+            _logicaId = null;
         }
     }
 

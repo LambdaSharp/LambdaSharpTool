@@ -18,6 +18,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using LambdaSharp.Compiler.Syntax;
 
 namespace LambdaSharp.Compiler {
 
@@ -36,6 +38,25 @@ namespace LambdaSharp.Compiler {
         public static void LogInfoVerbose(this ILogger logger, string message) => logger.LogInfoVerbose(message, sourceLocation: null, exact: true);
         public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached, SourceLocation? sourceLocation, bool exact) => logger.Log(new Timing(message, duration, cached), sourceLocation, exact);
         public static void LogInfoPerformance(this ILogger logger, string message, TimeSpan duration, bool? cached) => logger.LogInfoPerformance(message, duration, cached, sourceLocation: null, exact: true);
+    }
+
+    public static class ILoggerSyntaxNodeEx {
+
+        //--- Extension Methods ---
+        public static void Log(this ILogger logger, IBuildReportEntry entry, ASyntaxNode node) {
+            if(node == null) {
+                logger.Log(entry);
+            } else if(node.SourceLocation != null) {
+                logger.Log(entry, node.SourceLocation, exact: true);
+            } else {
+                var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
+                if(nearestNode != null) {
+                    logger.Log(entry, nearestNode.SourceLocation, exact: false);
+                } else {
+                    logger.Log(entry);
+                }
+            }
+        }
     }
 
     public enum BuildReportEntrySeverity {

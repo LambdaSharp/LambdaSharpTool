@@ -59,25 +59,6 @@ namespace LambdaSharp.Tool.Compiler {
         Task<CloudFormationSpec> ReadCloudFormationSpecAsync(RegionEndpoint region, VersionInfo version);
     }
 
-    public static class ILoggerSyntaxNodeEx {
-
-        //--- Extension Methods ---
-        public static void Log(this ILogger logger, IBuildReportEntry entry, ASyntaxNode node) {
-            if(node == null) {
-                logger.Log(entry);
-            } else if(node.SourceLocation != null) {
-                logger.Log(entry, node.SourceLocation, exact: true);
-            } else {
-                var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
-                if(nearestNode != null) {
-                    logger.Log(entry, nearestNode.SourceLocation, exact: false);
-                } else {
-                    logger.Log(entry);
-                }
-            }
-        }
-    }
-
     public enum XRayTracingLevel {
         Disabled,
         RootModule,
@@ -174,12 +155,9 @@ namespace LambdaSharp.Tool.Compiler {
             }
 
             // generate logical ID and check that it is unambiguous
-            string fullName = declaration.FullName;
-            var logicalId = fullName.Replace("::", "");
-            if(!_logicalIds.Add(logicalId)) {
-                _provider.Log(Error.AmbiguousLogicalId(fullName));
+            if(!_logicalIds.Add(declaration.LogicalId)) {
+                _provider.Log(Error.AmbiguousLogicalId(declaration.FullName));
             }
-            declaration.LogicalId = logicalId;
         }
 
         public void RemoveItemDeclaraion(AItemDeclaration itemDeclaration) {

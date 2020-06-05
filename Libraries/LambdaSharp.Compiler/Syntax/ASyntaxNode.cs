@@ -37,11 +37,18 @@ namespace LambdaSharp.Compiler.Syntax {
                     throw new ApplicationException("declarations must have another declaration as parent");
                 }
 
-                // check if node needs to be cloned
-                if((node is AExpression expression) && (node.Parent != null) && !object.ReferenceEquals(node.Parent, parent)) {
-                    node = expression.Clone();
+                // check if parent has changed
+                if(!object.ReferenceEquals(node.Parent, parent)) {
+
+                    // check if node needs to be cloned
+                    if((node is AExpression expression) && (node.Parent != null)) {
+                        node = expression.Clone();
+                    }
+
+                    // update parent and invalidate any related information
+                    node.Parent = parent;
+                    node.ParentChanged();
                 }
-                node.Parent = parent;
             }
             return node;
         }
@@ -103,6 +110,8 @@ namespace LambdaSharp.Compiler.Syntax {
                 throw new ApplicationException("attempt to change immutable value");
             }
         }
+
+        protected virtual void ParentChanged() { }
     }
 
     public static class ASyntaxNodeEx {
