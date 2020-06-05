@@ -436,6 +436,8 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
 
         public override ASyntaxNode VisitEnd(ModuleDeclaration node) {
 
+            // TODO: only needed if function has a VPC configuration
+
             // permissions needed for lambda functions to exist in a VPC
             if(_builder.ItemDeclarations.OfType<FunctionDeclaration>().Any()) {
                 AddGrant(

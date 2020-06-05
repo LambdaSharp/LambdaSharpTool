@@ -372,10 +372,13 @@ namespace LambdaSharp.Compiler.Parser {
                 SkipThisAndNestedEvents();
                 return null;
             }
+            var location = Location();
             MoveNext();
 
             // parse declaration items in sequence
-            var result = new SyntaxNodeCollection<T>();
+            var result = new SyntaxNodeCollection<T> {
+                SourceLocation = location
+            };
             while(!IsEvent<SequenceEnd>(out var _, out var _)) {
                 if(TryParse(typeof(T), out var item)) {
                     try {
@@ -1196,8 +1199,11 @@ namespace LambdaSharp.Compiler.Parser {
         }
 
         public SyntaxNodeCollection<LiteralExpression>? ParseListOfLiteralExpressions() {
+            var location = Location();
             var expression = ParseExpression();
-            var result = new SyntaxNodeCollection<LiteralExpression>();
+            var result = new SyntaxNodeCollection<LiteralExpression> {
+                SourceLocation = location
+            };
             switch(expression) {
             case null:
 

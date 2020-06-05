@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
@@ -40,10 +41,10 @@ namespace LambdaSharp.Compiler.Validators {
         // Structure
         private static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
 
-        // Properties: Type
+        // Property: Type
         private static readonly ErrorFunc UnknownType = parameter => new Error(0, $"unknown paremeter type '{parameter}'");
 
-        // Properties: MinLength, MaxLength
+        // Property: MinLength, MaxLength
         private static readonly Error MinLengthAttributeRequiresStringType = new Error(0, "'MinLength' attribute can only be used with 'String' type");
         private static readonly Error MinLengthMustBeAnInteger = new Error(0, "'MinLength' must be an integer");
         private static readonly Error MinLengthMustBeNonNegative = new Error(0, $"'MinLength' must be greater or equal than 0");
@@ -54,28 +55,30 @@ namespace LambdaSharp.Compiler.Validators {
         private static readonly Error MaxLengthMustBePositive = new Error(0, "'MaxLength' must be greater than 0");
         private static readonly Error MaxLengthTooLarge = new Error(0, $"'MaxLength' cannot exceed' {MAX_PARAMETER_VALUE_LENGTH:N0}");
 
-        // Properties: MinValue, MaxValue
+        // Property: MinValue, MaxValue
         private static readonly Error MinValueAttributeRequiresNumberType = new Error(0, "'MinValue' attribute can only be used with 'Number' type");
         private static readonly Error MinValueMustBeAnInteger = new Error(0, "'MinValue' must be an integer");
         private static readonly Error MaxValueAttributeRequiresNumberType = new Error(0, "'MaxValue' attribute can only be used with 'Number' type");
         private static readonly Error MinMaxValueInvalidRange = new Error(0, "'MinValue' must be less or equal to 'MaxValue'");
         private static readonly Error MaxValueMustBeAnInteger = new Error(0, "'MaxValue' must be an integer");
 
-        // Properties: AllowedPattern, ConstraintDescription
+        // Property: AllowedPattern, ConstraintDescription
         private static readonly Error AllowedPatternAttributeRequiresStringType = new Error(0, "'AllowedPattern' attribute can only be used with 'String' type");
         private static readonly Error AllowedPatternAttributeInvalid = new Error(0, "'AllowedPattern' attribute must be a regular expression");
         private static readonly Error ConstraintDescriptionAttributeRequiresStringType = new Error(0, "'ConstraintDescription' attribute can only be used with 'String' type");
         private static readonly Error ConstraintDescriptionAttributeRequiresAllowedPatternAttribute = new Error(0, "'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set");
 
-        // Properties: Description
+        // Property: Description
         private static readonly Error DescriptionAttributeExceedsSizeLimit = new Error(0, $"'Description' attribute cannot exceed {MAX_PARAMETER_DESCRIPTION_LENGTH:N0} characters");
 
-        // Properties: EncryptionContext
+        // Property: EncryptionContext
         private static readonly Error EncryptionContextAttributeRequiresSecretType = new Error(0, "'EncryptionContext' attribute can only be used with 'Secret' type");
         private static readonly Error EncryptionContextExpectedLiteralStringExpression = new Error(0, "'EncryptionContext' expected literal string expression");
 
-        // Properties: Allow
-        public static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
+        // Property: Allow, Import, Properties
+        private static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
+        private static readonly Error ParameterAttributeImportExpectedLiteral = new Error(0, "'Import' attribute can only be used with a value parameter type");
+        private static readonly Error PropertiesAttributeRequiresCloudFormationType = new Error(0, "'Properties' attribute can only be used with a CloudFormation type");
         #endregion
 
         private static readonly HashSet<string> _cloudFormationParameterTypes = new HashSet<string> {
@@ -171,7 +174,7 @@ namespace LambdaSharp.Compiler.Validators {
         private void ValidateParameterStructure(ParameterDeclaration node) {
 
             // ensure parameter declaration is a child of the module declaration (nesting is not allowed)
-            if(!(node.Parents.OfType<ADeclaration>().FirstOrDefault() is ModuleDeclaration)) {
+            if(!(node.GetParents().OfType<ADeclaration>().FirstOrDefault() is ModuleDeclaration)) {
                 Logger.Log(ParameterDeclarationCannotBeNested, node);
             }
         }
@@ -310,27 +313,34 @@ namespace LambdaSharp.Compiler.Validators {
                     Logger.Log(EncryptionContextAttributeRequiresSecretType, node.EncryptionContext);
                 }
             }
+
+            // only CloudFormation resource types can have 'Properties' or 'Allow' attributes
+            if(Provider.IsValidResourceType(node.Type.Value)) {
+
+                // only value parameters can have 'Import' attribute
+                if(node.Import != null) {
+                    Logger.Log(ParameterAttributeImportExpectedLiteral, node.Import);
+                }
+            } else {
+
+                // ensure CloudFormation resource type parameter options are not used
+                if(node.Properties != null) {
+                    Logger.Log(PropertiesAttributeRequiresCloudFormationType, node.Properties);
+                }
+                if(node.Allow != null) {
+                    Logger.Log(AllowAttributeRequiresCloudFormationType, node.Allow);
+                }
+            }
         }
 
         private void ValidateParameterAllow(ParameterDeclaration node) {
 
             // TODO: generalize this to IAllowDeclaration
 
-            if(node.Allow == null) {
-
-                // nothing to validate
-                return;
-            }
-            if(node.Type == null) {
-                Logger.Log(Error.AllowAttributeRequiresTypeAttribute, node);
-            } else if(node.Type.Value == "AWS") {
-
-                // nothing to do; any 'Allow' expression is legal with 'AWS' type
-            } else if(!Provider.IsValidResourceType(node.Type.Value)) {
-                Logger.Log(AllowAttributeRequiresCloudFormationType, node);
-            } else {
+            if(node.Allow != null) {
 
                 // TODO: check if the allowed operations are valid for the specified type
+                // TODO: special type 'AWS' allows any valid permission (i.e. permissions can be mixed)
             }
         }
     }

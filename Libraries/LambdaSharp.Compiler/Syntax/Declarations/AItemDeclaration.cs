@@ -163,7 +163,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             IEnumerable<ConditionBranch> FindConditions(ASyntaxNode node) {
                 var conditions = new List<ConditionBranch>();
                 ASyntaxNode? child = node;
-                foreach(var parent in node.Parents) {
+                foreach(var parent in node.GetParents()) {
 
                     // check if parent is an !If expression
                     if(parent is IfFunctionExpression ifParent) {

@@ -43,13 +43,15 @@ namespace LambdaSharp.Compiler {
     public static class ILoggerSyntaxNodeEx {
 
         //--- Extension Methods ---
-        public static void Log(this ILogger logger, IBuildReportEntry entry, ASyntaxNode node) {
+        public static void Log(this ILogger logger, IBuildReportEntry entry, ISyntaxNode node) {
             if(node == null) {
                 logger.Log(entry);
             } else if(node.SourceLocation != null) {
                 logger.Log(entry, node.SourceLocation, exact: true);
             } else {
-                var nearestNode = node.Parents.FirstOrDefault(parent => parent.SourceLocation != null);
+
+                // TODO: this will never run, because SourceLocation already queries its parent for the location!
+                var nearestNode = node.GetParents().FirstOrDefault(parent => parent.SourceLocation != null);
                 if(nearestNode != null) {
                     logger.Log(entry, nearestNode.SourceLocation, exact: false);
                 } else {

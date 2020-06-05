@@ -84,7 +84,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             _scope = SetParent(new SyntaxNodeCollection<LiteralExpression>());
             _environment = SetParent(new ObjectExpression());
             _properties = SetParent(new ObjectExpression());
-            _sources = _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
+            _sources = new SyntaxNodeCollection<AEventSourceDeclaration>();
             _pragmas = SetParent(new ListExpression());
         }
 

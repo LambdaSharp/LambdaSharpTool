@@ -203,7 +203,7 @@ namespace LambdaSharp.Tool.Compiler.Analyzers {
             });
 
             // check if function is a Finalizer
-            var isFinalizer = (node.Parents.OfType<ADeclaration>() is ModuleDeclaration) && (node.FullName == "Finalizer");
+            var isFinalizer = (node.GetParents().OfType<ADeclaration>() is ModuleDeclaration) && (node.FullName == "Finalizer");
             if(isFinalizer) {
 
                 // finalizer doesn't need a dead-letter queue or registration b/c it gets deleted anyway on failure or teardown

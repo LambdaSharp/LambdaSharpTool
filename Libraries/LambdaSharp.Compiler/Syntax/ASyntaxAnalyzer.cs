@@ -23,9 +23,6 @@ namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class ASyntaxAnalyzer : ISyntaxVisitor {
 
-        //--- Class Methods ---
-
-
         //--- Methods ---
         public virtual bool VisitStart(ModuleDeclaration node) => true;
         public virtual ASyntaxNode? VisitEnd(ModuleDeclaration node) => node;

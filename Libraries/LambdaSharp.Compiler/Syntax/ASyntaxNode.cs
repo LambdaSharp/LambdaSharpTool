@@ -17,17 +17,22 @@
  */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax {
 
-    public abstract class ASyntaxNode {
+    public interface ISyntaxNode {
+
+        //--- Properties ---
+        SourceLocation? SourceLocation { get; }
+        ASyntaxNode? Parent { get; }
+    }
+
+    public abstract class ASyntaxNode : ISyntaxNode {
 
         //--- Class Methods ---
         [return: NotNullIfNotNull("node")]
@@ -70,18 +75,8 @@ namespace LambdaSharp.Compiler.Syntax {
             set => _sourceLocation = value;
         }
 
-        public IEnumerable<ASyntaxNode> Parents {
-            get {
-                var node = this;
-                while(node.Parent != null) {
-                    yield return node.Parent;
-                    node = node.Parent;
-                }
-            }
-        }
-
-        public AItemDeclaration? ParentItemDeclaration => Parents.OfType<AItemDeclaration>().FirstOrDefault();
-        public ModuleDeclaration ParentModuleDeclaration => Parents.OfType<ModuleDeclaration>().First();
+        public AItemDeclaration? ParentItemDeclaration => this.GetParents().OfType<AItemDeclaration>().FirstOrDefault();
+        public ModuleDeclaration ParentModuleDeclaration => this.GetParents().OfType<ModuleDeclaration>().First();
 
         //--- Abstract Methods ---
         public abstract ASyntaxNode? VisitNode(ISyntaxVisitor visitor);
@@ -133,81 +128,12 @@ namespace LambdaSharp.Compiler.Syntax {
             result.SourceLocation = node.SourceLocation;
             return result;
         }
-    }
 
-    public sealed class SyntaxNodeCollection<T> : IEnumerable, IEnumerable<T> where T : ASyntaxNode {
-
-        //--- Fields ---
-        private ASyntaxNode? _parent;
-        private List<T> _nodes;
-
-        //--- Constructors ---
-        public SyntaxNodeCollection() => _nodes = new List<T>();
-
-        public SyntaxNodeCollection(IEnumerable<T> nodes) {
-            if(nodes is null) {
-                throw new ArgumentNullException(nameof(nodes));
-            }
-            _nodes = nodes.Select(node => SetItemParent(node)).ToList();
-        }
-
-        //--- Properties ---
-        public int Count => _nodes.Count;
-
-        public ASyntaxNode Parent {
-            get => _parent ?? throw new ArgumentNullException(nameof(Parent));
-            set {
-                _parent = value ?? throw new ArgumentNullException(nameof(Parent));
-                _nodes = _nodes.Select(node => SetItemParent(node)).ToList();
+        public static IEnumerable<ASyntaxNode> GetParents(this ISyntaxNode node) {
+            while(node.Parent != null) {
+                yield return node.Parent;
+                node = node.Parent;
             }
         }
-
-        //--- Operators ---
-        public T this[int index] {
-            get => _nodes[index];
-            set => _nodes[index] = SetItemParent(value ?? throw new ArgumentNullException(nameof(value)));
-        }
-
-        //--- Methods ---
-        public SyntaxNodeCollection<T> Visit(ISyntaxVisitor visitor) {
-            var start = 0;
-            do {
-                var count = _nodes.Count;
-                for(var i = start; i < count; ++i) {
-                    _nodes[i] = _nodes[i].Visit(visitor) ?? throw new NullValueException();
-                }
-                start = count;
-            } while(start < _nodes.Count);
-            return this;
-        }
-
-        public void InspectNode(Action<ASyntaxNode> inspector) {
-            foreach(var node in _nodes) {
-                inspector(node);
-            }
-        }
-
-        public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));
-
-        [return: NotNullIfNotNull("node")]
-        private T? SetItemParent(T? node) {
-            if((node != null) && (_parent != null)) {
-                return (T)ASyntaxNode.SetParent(node, _parent);
-            }
-            return node;
-        }
-
-        //--- IEnumerable Members ---
-        IEnumerator IEnumerable.GetEnumerator() => _nodes.GetEnumerator();
-
-        //--- IEnumerable<TS> Members ---
-        IEnumerator<T> IEnumerable<T>.GetEnumerator() => _nodes.GetEnumerator();
-    }
-
-    public static class SyntaxNodeCollectionEx {
-
-        //--- Extension Methods ---
-        public static SyntaxNodeCollection<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode
-            => new SyntaxNodeCollection<T>(enumerable);
     }
 }
