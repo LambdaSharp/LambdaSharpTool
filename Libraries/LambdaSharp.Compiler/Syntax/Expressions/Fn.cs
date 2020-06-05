@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace LambdaSharp.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax.Expressions {
 
     public static class Fn {
 

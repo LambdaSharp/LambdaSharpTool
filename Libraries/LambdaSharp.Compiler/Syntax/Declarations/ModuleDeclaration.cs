@@ -19,8 +19,9 @@
 using System;
 using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     public abstract class ADeclaration : ASyntaxNode { }
 

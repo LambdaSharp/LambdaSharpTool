@@ -23,7 +23,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
 
-namespace LambdaSharp.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax.Expressions {
 
     public abstract class AExpression : ASyntaxNode {
 

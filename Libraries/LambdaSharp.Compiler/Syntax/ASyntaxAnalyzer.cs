@@ -16,6 +16,9 @@
  * limitations under the License.
  */
 
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
+
 namespace LambdaSharp.Compiler.Syntax {
 
     public abstract class ASyntaxAnalyzer : ISyntaxVisitor {

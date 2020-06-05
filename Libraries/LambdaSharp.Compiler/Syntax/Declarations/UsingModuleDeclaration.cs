@@ -17,8 +17,9 @@
  */
 
 using System;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     [SyntaxDeclarationKeyword("Module")]
     public class UsingModuleDeclaration : ADeclaration {

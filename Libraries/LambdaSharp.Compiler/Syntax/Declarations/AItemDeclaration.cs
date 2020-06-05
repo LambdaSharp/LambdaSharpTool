@@ -20,8 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax {
+namespace LambdaSharp.Compiler.Syntax.Declarations {
 
     public abstract class AItemDeclaration : ADeclaration {
 
@@ -66,7 +67,6 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         //--- Fields ---
-        private string? _logicalId;
         private LiteralExpression? _description;
         private AExpression? _referenceExpression;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
@@ -74,7 +74,7 @@ namespace LambdaSharp.Compiler.Syntax {
         private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
         private SyntaxNodeCollection<AItemDeclaration> _declarations;
         private string? _fullName;
-        private string? _logicaId;
+        private string? _logicalId;
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
@@ -91,6 +91,7 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         public LiteralExpression ItemName { get; }
+
         public string FullName {
             get {
                 if(_fullName == null) {
@@ -105,10 +106,10 @@ namespace LambdaSharp.Compiler.Syntax {
 
         public string LogicalId {
             get {
-                if(_logicaId == null) {
-                    _logicaId = FullName.Replace("::", "");
+                if(_logicalId == null) {
+                    _logicalId = FullName.Replace("::", "");
                 }
-                return _logicaId;
+                return _logicalId;
             }
         }
 
@@ -212,7 +213,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
             // reset computed fullname and logical ID
             _fullName = null;
-            _logicaId = null;
+            _logicalId = null;
         }
     }
 
