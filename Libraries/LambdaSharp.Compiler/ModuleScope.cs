@@ -17,7 +17,6 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -62,6 +61,8 @@ namespace LambdaSharp.Compiler {
 
             // validate declarations
             new ParameterDeclarationValidator(this).Validate(_moduleDeclaration);
+            new ResourceDeclarationValidator(this).Validate(_moduleDeclaration);
+            new AllowValidator(this).Validate(_moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(_moduleDeclaration);
@@ -70,6 +71,7 @@ namespace LambdaSharp.Compiler {
             var declarations = new ItemDeclarationValidator(this).FindDeclarations(_moduleDeclaration);
             new ReferenceValidator(this).Validate(_moduleDeclaration, declarations);
 
+            // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
@@ -196,5 +198,12 @@ namespace LambdaSharp.Compiler {
             // TODO:
             throw new NotImplementedException();
         }
+
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
    }
 }

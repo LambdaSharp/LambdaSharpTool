@@ -37,38 +37,12 @@ namespace LambdaSharp.Compiler.Validators {
             var logicalIds = new HashSet<string>();
             moduleDeclaration.InspectNode(node => {
                 switch(node) {
-                case ParameterDeclaration parameterDeclaration:
-                    ValidateItemDeclaration(parameterDeclaration);
+                case ResourceTypeDeclaration _:
+
+                    // resource types cannot be referenced with !Ref/!GetAtt
                     break;
-                case ResourceDeclaration resourceDeclaration:
-                    ValidateItemDeclaration(resourceDeclaration);
-                    break;
-                case FunctionDeclaration functionDeclaration:
-                    ValidateItemDeclaration(functionDeclaration);
-                    break;
-                case VariableDeclaration variableDeclaration:
-                    ValidateItemDeclaration(variableDeclaration);
-                    break;
-                case NestedModuleDeclaration nestedModuleDeclaration:
-                    ValidateItemDeclaration(nestedModuleDeclaration);
-                    break;
-                case ConditionDeclaration conditionDeclaration:
-                    ValidateItemDeclaration(conditionDeclaration);
-                    break;
-                case ImportDeclaration importDeclaration:
-                    ValidateItemDeclaration(importDeclaration);
-                    break;
-                case GroupDeclaration groupDeclaration:
-                    ValidateItemDeclaration(groupDeclaration);
-                    break;
-                case PackageDeclaration packageDeclaration:
-                    ValidateItemDeclaration(packageDeclaration);
-                    break;
-                case MappingDeclaration mappingDeclaration:
-                    ValidateItemDeclaration(mappingDeclaration);
-                    break;
-                case MacroDeclaration macroDeclaration:
-                    ValidateItemDeclaration(macroDeclaration);
+                case AItemDeclaration itemDeclaration:
+                    ValidateItemDeclaration(itemDeclaration);
                     break;
                 }
             });

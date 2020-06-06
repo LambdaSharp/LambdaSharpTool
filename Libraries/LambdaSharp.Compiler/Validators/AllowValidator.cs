@@ -16,15 +16,27 @@
  * limitations under the License.
  */
 
+using System;
+using LambdaSharp.Compiler.Syntax.Declarations;
+
 namespace LambdaSharp.Compiler.Validators {
 
-    public interface IModuleValidatorDependencyProvider {
+    internal sealed class AllowValidator : AValidator {
 
-        //--- Properties ---
-        ILogger Logger { get; }
+        //--- Constructors ---
+        public AllowValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        bool IsValidResourceType(string type);
-        bool TryGetResourceType(string typeName, out ResourceType resourceType);
+        public void Validate(ModuleDeclaration moduleDeclaration) {
+
+            // TODO: validate allow statements
+            // TODO: add allow statements to IAM role
+            //  - resource dynamic
+            //  - resource fixed
+            //  - list of fixed resources
+            //  - parameter
+
+            throw new NotImplementedException();
+        }
     }
 }
