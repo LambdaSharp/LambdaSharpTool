@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
@@ -30,6 +32,8 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
+
+            // check for referential integrity
             moduleDeclaration.InspectNode(node => {
                 switch(node) {
                 case GetAttFunctionExpression getAttFunctionExpression:
@@ -46,6 +50,10 @@ namespace LambdaSharp.Compiler.Validators {
                     break;
                 }
             });
+
+            // check for circular dependencies
+            DetectCircularDependencies(declarations.Values);
+            return;
 
             // local functions
             void ValidateGetAttFunctionExpression(GetAttFunctionExpression node) {
@@ -163,6 +171,47 @@ namespace LambdaSharp.Compiler.Validators {
                     Logger.Log(Error.ReferenceDoesNotExist(referenceName.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(referenceName.Value, node);
                 }
+            }
+        }
+
+        private void DetectCircularDependencies(IEnumerable<AItemDeclaration> declarations) {
+            var visited = new HashSet<AItemDeclaration>();
+            var found = new List<AItemDeclaration>();
+
+            // build list of discovered declarations in reverse discovery order
+            foreach(var declaration in declarations) {
+                Visit(declaration, current => current.Dependencies, visited, found);
+            }
+
+            // revisit discovered delcarations in reverse order to determine circular dependencies
+            visited.Clear();
+            foreach(var declaration in Enumerable.Reverse(found)) {
+                var circularDependencies = new List<AItemDeclaration>();
+                Visit(declaration, current => declaration.ReverseDependencies, visited, circularDependencies);
+                if(circularDependencies.Count > 1) {
+                    var circularPath = string.Join(" -> ", circularDependencies.Select(dependency => dependency.FullName));
+                    Logger.Log(Error.CircularDependencyDetected(circularPath), circularDependencies.First());
+                }
+            }
+
+            // local functions
+            void Visit(
+                AItemDeclaration declaration,
+                Func<AItemDeclaration, IEnumerable<AItemDeclaration.DependencyRecord>> getDependencies,
+                HashSet<AItemDeclaration> visited,
+                List<AItemDeclaration> finished
+            ) {
+
+                // check if declaration has already been visited
+                if(!visited.Add(declaration)) {
+                    return;
+                }
+
+                // recurse over all declarations this declaration is dependent on
+                foreach(var dependency in getDependencies(declaration)) {
+                    Visit(dependency.ReferencedDeclaration, getDependencies, visited, finished);
+                }
+                finished.Add(declaration);
             }
         }
     }

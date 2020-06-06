@@ -21,8 +21,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using LambdaSharp.Compiler.Model;
-using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.Validators;
@@ -72,10 +70,8 @@ namespace LambdaSharp.Compiler {
             var declarations = new DeclarationValidator(this).FindDeclarations(_moduleDeclaration);
             new ReferenceValidator(this).Validate(_moduleDeclaration, declarations);
 
-            // TODO: detect circular references
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
-
 
             // optimize AST
             Optimize();
