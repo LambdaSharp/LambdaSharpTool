@@ -16,7 +16,9 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+using LambdaSharp.Compiler.Syntax.Declarations;
+
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
     public abstract class AEventSourceDeclaration : ADeclaration { }
 }

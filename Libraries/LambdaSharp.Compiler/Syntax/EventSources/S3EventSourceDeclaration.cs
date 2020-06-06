@@ -19,23 +19,37 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("Topic", typeof(AExpression))]
-    public sealed class TopicEventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("S3", typeof(AExpression))]
+    public sealed class S3EventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private ObjectExpression? _filters;
+        private SyntaxNodeCollection<LiteralExpression>? _events;
+        private LiteralExpression? _prefix;
+        private LiteralExpression? _suffix;
 
         //--- Constructors ---
-        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public ObjectExpression? Filters {
-            get => _filters;
-            set => _filters = SetParent(value);
+        public SyntaxNodeCollection<LiteralExpression>? Events {
+            get => _events;
+            set => _events = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public LiteralExpression? Prefix {
+            get => _prefix;
+            set => _prefix = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public LiteralExpression? Suffix {
+            get => _suffix;
+            set => _suffix = SetParent(value);
         }
 
         public AExpression EventSource { get; }
@@ -46,14 +60,18 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
-            Filters = Filters?.Visit(visitor);
+            Events = Events?.Visit(visitor);
+            Prefix = Prefix?.Visit(visitor);
+            Suffix = Suffix?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
-            Filters?.InspectNode(inspector);
+            Events?.InspectNode(inspector);
+            Prefix?.InspectNode(inspector);
+            Suffix?.InspectNode(inspector);
         }
     }
 }

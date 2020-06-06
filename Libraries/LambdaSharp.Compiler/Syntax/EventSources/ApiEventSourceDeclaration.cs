@@ -19,12 +19,13 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("WebSocket")]
-    public sealed class WebSocketEventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("Api")]
+    public sealed class ApiEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
+        private LiteralExpression? _integration;
         private LiteralExpression? _operationName;
         private LiteralExpression? _apiKeyRequired;
         private LiteralExpression? _authorizationType;
@@ -32,10 +33,23 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private AExpression? _authorizerId;
         private LiteralExpression? _invoke;
 
+        //--- Types ---
+        public enum IntegrationType {
+            Unsupported,
+            RequestResponse,
+            SlackCommand
+        }
+
         //--- Constructors ---
-        public WebSocketEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public ApiEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
+
+        [SyntaxOptional]
+        public LiteralExpression? Integration {
+            get => _integration;
+            set => _integration = SetParent(value);
+        }
 
         [SyntaxOptional]
         public LiteralExpression? OperationName {
@@ -74,6 +88,9 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public LiteralExpression EventSource { get; }
+        public string? ApiMethod { get; set; }
+        public string[]? ApiPath { get; set; }
+        public IntegrationType ApiIntegrationType { get; set; }
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
@@ -81,6 +98,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
+            Integration = Integration?.Visit(visitor);
             OperationName = OperationName?.Visit(visitor);
             ApiKeyRequired = ApiKeyRequired?.Visit(visitor);
             AuthorizationType = AuthorizationType?.Visit(visitor);
@@ -93,6 +111,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
+            Integration?.InspectNode(inspector);
             OperationName?.InspectNode(inspector);
             ApiKeyRequired?.InspectNode(inspector);
             AuthorizationType?.InspectNode(inspector);

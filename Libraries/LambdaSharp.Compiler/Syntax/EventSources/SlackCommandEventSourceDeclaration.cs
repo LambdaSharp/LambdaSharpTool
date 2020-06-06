@@ -19,27 +19,17 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("Sqs", typeof(AExpression))]
-    public sealed class SqsEventSourceDeclaration : AEventSourceDeclaration {
-
-        //--- Fields ---
-        private AExpression? _batchSize;
+    [SyntaxDeclarationKeyword("SlackCommand")]
+    public sealed class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Constructors ---
-        public SqsEventSourceDeclaration(AExpression eventSource)
-            => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
-
-        [SyntaxOptional]
-        public AExpression? BatchSize {
-            get => _batchSize;
-            set => _batchSize = SetParent(value);
-        }
-
-        public AExpression EventSource { get; }
+        public string[]? SlackPath { get; set; }
+        public LiteralExpression EventSource { get; }
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
@@ -47,14 +37,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
-            BatchSize = BatchSize?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
-            BatchSize?.InspectNode(inspector);
         }
     }
 }

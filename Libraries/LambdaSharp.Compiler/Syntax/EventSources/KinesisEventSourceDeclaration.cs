@@ -19,7 +19,7 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
     [SyntaxDeclarationKeyword("Kinesis", typeof(AExpression))]
     public sealed class KinesisEventSourceDeclaration : AEventSourceDeclaration {

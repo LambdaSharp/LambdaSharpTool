@@ -19,7 +19,7 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
     [SyntaxDeclarationKeyword("Alexa", typeof(AExpression))]
     public sealed class AlexaEventSourceDeclaration : AEventSourceDeclaration {

@@ -19,37 +19,23 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("DynamoDB", typeof(AExpression))]
-    public sealed class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("Schedule", typeof(AExpression))]
+    public sealed class SchedulEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private AExpression? _batchSize;
-        private AExpression? _startingPosition;
-        private AExpression? _maximumBatchingWindowInSeconds;
+        private LiteralExpression? _name;
 
         //--- Constructors ---
-        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public AExpression? BatchSize {
-            get => _batchSize;
-            set => _batchSize = SetParent(value);
-        }
-
-        [SyntaxOptional]
-        public AExpression? StartingPosition {
-            get => _startingPosition;
-            set => _startingPosition = SetParent(value);
-        }
-
-        [SyntaxOptional]
-        public AExpression? MaximumBatchingWindowInSeconds {
-            get => _maximumBatchingWindowInSeconds;
-            set => _maximumBatchingWindowInSeconds = SetParent(value);
+        public LiteralExpression? Name {
+            get => _name;
+            set => _name = SetParent(value);
         }
 
         public AExpression EventSource { get; }
@@ -60,16 +46,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
-            BatchSize = BatchSize?.Visit(visitor);
-            StartingPosition = StartingPosition?.Visit(visitor);
+            Name = Name?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
-            BatchSize?.InspectNode(inspector);
-            StartingPosition?.InspectNode(inspector);
+            Name?.InspectNode(inspector);
         }
     }
 }

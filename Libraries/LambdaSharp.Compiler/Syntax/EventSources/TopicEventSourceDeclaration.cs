@@ -19,17 +19,26 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("SlackCommand")]
-    public sealed class SlackCommandEventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("Topic", typeof(AExpression))]
+    public sealed class TopicEventSourceDeclaration : AEventSourceDeclaration {
+
+        //--- Fields ---
+        private ObjectExpression? _filters;
 
         //--- Constructors ---
-        public SlackCommandEventSourceDeclaration(LiteralExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public TopicEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
-        public string[]? SlackPath { get; set; }
-        public LiteralExpression EventSource { get; }
+
+        [SyntaxOptional]
+        public ObjectExpression? Filters {
+            get => _filters;
+            set => _filters = SetParent(value);
+        }
+
+        public AExpression EventSource { get; }
 
         //--- Methods ---
         public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
@@ -37,12 +46,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
+            Filters = Filters?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
+            Filters?.InspectNode(inspector);
         }
     }
 }

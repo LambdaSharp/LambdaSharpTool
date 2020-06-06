@@ -19,23 +19,24 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("Schedule", typeof(AExpression))]
-    public sealed class SchedulEventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("Sqs", typeof(AExpression))]
+    public sealed class SqsEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private LiteralExpression? _name;
+        private AExpression? _batchSize;
 
         //--- Constructors ---
-        public SchedulEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public SqsEventSourceDeclaration(AExpression eventSource)
+            => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public LiteralExpression? Name {
-            get => _name;
-            set => _name = SetParent(value);
+        public AExpression? BatchSize {
+            get => _batchSize;
+            set => _batchSize = SetParent(value);
         }
 
         public AExpression EventSource { get; }
@@ -46,14 +47,14 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
-            Name = Name?.Visit(visitor);
+            BatchSize = BatchSize?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
-            Name?.InspectNode(inspector);
+            BatchSize?.InspectNode(inspector);
         }
     }
 }

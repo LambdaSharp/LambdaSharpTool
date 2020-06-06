@@ -19,37 +19,37 @@
 using System;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace LambdaSharp.Compiler.Syntax.Declarations {
+namespace LambdaSharp.Compiler.Syntax.EventSources {
 
-    [SyntaxDeclarationKeyword("S3", typeof(AExpression))]
-    public sealed class S3EventSourceDeclaration : AEventSourceDeclaration {
+    [SyntaxDeclarationKeyword("DynamoDB", typeof(AExpression))]
+    public sealed class DynamoDBEventSourceDeclaration : AEventSourceDeclaration {
 
         //--- Fields ---
-        private SyntaxNodeCollection<LiteralExpression>? _events;
-        private LiteralExpression? _prefix;
-        private LiteralExpression? _suffix;
+        private AExpression? _batchSize;
+        private AExpression? _startingPosition;
+        private AExpression? _maximumBatchingWindowInSeconds;
 
         //--- Constructors ---
-        public S3EventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
+        public DynamoDBEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         //--- Properties ---
 
         [SyntaxOptional]
-        public SyntaxNodeCollection<LiteralExpression>? Events {
-            get => _events;
-            set => _events = SetParent(value);
+        public AExpression? BatchSize {
+            get => _batchSize;
+            set => _batchSize = SetParent(value);
         }
 
         [SyntaxOptional]
-        public LiteralExpression? Prefix {
-            get => _prefix;
-            set => _prefix = SetParent(value);
+        public AExpression? StartingPosition {
+            get => _startingPosition;
+            set => _startingPosition = SetParent(value);
         }
 
         [SyntaxOptional]
-        public LiteralExpression? Suffix {
-            get => _suffix;
-            set => _suffix = SetParent(value);
+        public AExpression? MaximumBatchingWindowInSeconds {
+            get => _maximumBatchingWindowInSeconds;
+            set => _maximumBatchingWindowInSeconds = SetParent(value);
         }
 
         public AExpression EventSource { get; }
@@ -60,18 +60,16 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 return this;
             }
             AssertIsSame(EventSource, EventSource.Visit(visitor));
-            Events = Events?.Visit(visitor);
-            Prefix = Prefix?.Visit(visitor);
-            Suffix = Suffix?.Visit(visitor);
+            BatchSize = BatchSize?.Visit(visitor);
+            StartingPosition = StartingPosition?.Visit(visitor);
             return visitor.VisitEnd(this);
         }
 
         public override void InspectNode(Action<ASyntaxNode> inspector) {
             inspector(this);
             EventSource.InspectNode(inspector);
-            Events?.InspectNode(inspector);
-            Prefix?.InspectNode(inspector);
-            Suffix?.InspectNode(inspector);
+            BatchSize?.InspectNode(inspector);
+            StartingPosition?.InspectNode(inspector);
         }
     }
 }
