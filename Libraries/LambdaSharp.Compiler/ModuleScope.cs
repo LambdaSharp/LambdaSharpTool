@@ -73,6 +73,10 @@ namespace LambdaSharp.Compiler {
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
+            // ensure that handler references are valid
+            new ResourceTypeHandlerValidator(this).Validate(_moduleDeclaration, declarations);
+            new MacroHandlerValidator(this).Validate(_moduleDeclaration, declarations);
+
             // validate resource scopes
             new ScopeValidator(this).Validate(_moduleDeclaration, declarations);
 

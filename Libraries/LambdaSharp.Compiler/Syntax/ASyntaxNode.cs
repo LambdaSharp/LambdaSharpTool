@@ -75,6 +75,7 @@ namespace LambdaSharp.Compiler.Syntax {
             set => _sourceLocation = value;
         }
 
+        // TODO: can we make this non-nullable?
         public AItemDeclaration? ParentItemDeclaration => this.GetParents().OfType<AItemDeclaration>().FirstOrDefault();
         public ModuleDeclaration ParentModuleDeclaration => this.GetParents().OfType<ModuleDeclaration>().First();
 

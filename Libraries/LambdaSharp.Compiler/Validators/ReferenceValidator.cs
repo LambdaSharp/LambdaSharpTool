@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
@@ -71,6 +72,7 @@ namespace LambdaSharp.Compiler.Validators {
                             Logger.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                         } else {
                             node.ReferencedDeclaration = referencedDeclaration;
+                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                         }
                     } else {
                         Logger.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
@@ -106,6 +108,7 @@ namespace LambdaSharp.Compiler.Validators {
                         case ParameterDeclaration _:
                         case PseudoParameterDeclaration _:
                             node.ReferencedDeclaration = referencedDeclaration;
+                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                             break;
                         default:
                             throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
@@ -130,6 +133,7 @@ namespace LambdaSharp.Compiler.Validators {
                         case ResourceDeclaration _:
                         case ImportDeclaration _:
                             node.ReferencedDeclaration = referencedDeclaration;
+                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                             break;
                         default:
                             throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
@@ -148,6 +152,7 @@ namespace LambdaSharp.Compiler.Validators {
                 if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is ConditionDeclaration conditionDeclaration) {
                         node.ReferencedDeclaration = conditionDeclaration;
+                        ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                     } else {
                         Logger.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
                     }
@@ -164,6 +169,7 @@ namespace LambdaSharp.Compiler.Validators {
                 if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is MappingDeclaration mappingDeclaration) {
                         node.ReferencedDeclaration = mappingDeclaration;
+                        ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                     } else {
                         Logger.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
                     }
@@ -212,6 +218,24 @@ namespace LambdaSharp.Compiler.Validators {
                     Visit(dependency.ReferencedDeclaration, getDependencies, visited, finished);
                 }
                 finished.Add(declaration);
+            }
+        }
+
+        // TODO: make AItemDeclaration? non-nullable once ParentItemDeclaration is fixed
+        private void ValidateConditionalReferences(AItemDeclaration? referrerDeclaration, AItemDeclaration? refereeDeclaration) {
+
+            // check if referee always exist; if so, there is nothing to check
+            var refereeCondition = (refereeDeclaration as IConditionalResourceDeclaration)?.If;
+            if(refereeCondition == null) {
+
+                // nothing to check
+                return;
+            }
+
+            // check if referrer can have a condition
+            if(referrerDeclaration is IConditionalResourceDeclaration conditionalResourceDeclaration) {
+
+                // TODO: check if referrer has as non-weaker condition
             }
         }
     }

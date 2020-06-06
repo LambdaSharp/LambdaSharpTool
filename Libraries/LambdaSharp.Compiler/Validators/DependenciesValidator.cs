@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
 using LambdaSharp.Compiler.Model;
 using LambdaSharp.Compiler.Syntax;
