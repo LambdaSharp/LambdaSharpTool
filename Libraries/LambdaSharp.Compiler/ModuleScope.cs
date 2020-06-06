@@ -67,7 +67,7 @@ namespace LambdaSharp.Compiler {
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(_moduleDeclaration);
 
             // ensure that all references can be resolved
-            var declarations = new DeclarationValidator(this).FindDeclarations(_moduleDeclaration);
+            var declarations = new ItemDeclarationValidator(this).FindDeclarations(_moduleDeclaration);
             new ReferenceValidator(this).Validate(_moduleDeclaration, declarations);
 
             // TODO: ensure that constructed resources have all required properties

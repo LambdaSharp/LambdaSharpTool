@@ -52,6 +52,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             }
         }
 
+        // TODO: remove this
         public bool Resolved { get; set; }
 
         //--- Methods ---

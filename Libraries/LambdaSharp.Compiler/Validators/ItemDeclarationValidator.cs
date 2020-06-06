@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -23,13 +23,13 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 namespace LambdaSharp.Compiler.Validators {
     using ErrorFunc = Func<string, Error>;
 
-    internal sealed class DeclarationValidator : AValidator {
+    internal sealed class ItemDeclarationValidator : AValidator {
 
         //--- Class Fields ---
         private static readonly ErrorFunc ReservedName = parameter => new Error(0, $"'{parameter}' is a reserved name");
 
         //--- Constructors ---
-        public DeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
+        public ItemDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public Dictionary<string, AItemDeclaration> FindDeclarations(ModuleDeclaration moduleDeclaration) {

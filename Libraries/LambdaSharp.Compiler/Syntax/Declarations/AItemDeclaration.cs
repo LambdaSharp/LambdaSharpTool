@@ -119,6 +119,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _declarations = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        // TODO: remove this
         /// <summary>
         /// CloudFormation expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
         /// </summary>
