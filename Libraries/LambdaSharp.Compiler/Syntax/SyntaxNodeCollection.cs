@@ -88,6 +88,14 @@ namespace LambdaSharp.Compiler.Syntax {
             }
         }
 
+        public void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+            for(var i = 0; i < _nodes.Count; ++i) {
+                _nodes[i].Substitute(inspector);
+                var newValue = inspector(_nodes[i]) ?? throw new NullValueException();
+                _nodes[i] = (T)newValue;
+            }
+        }
+
         public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));
 
         [return: NotNullIfNotNull("node")]
@@ -103,12 +111,5 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- IEnumerable<TS> Members ---
         IEnumerator<T> IEnumerable<T>.GetEnumerator() => _nodes.GetEnumerator();
-    }
-
-    public static class SyntaxNodeCollectionEx {
-
-        //--- Extension Methods ---
-        public static SyntaxNodeCollection<T> ToSyntaxNodes<T>(this IEnumerable<T> enumerable) where T : ASyntaxNode
-            => new SyntaxNodeCollection<T>(enumerable);
     }
 }

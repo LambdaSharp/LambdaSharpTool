@@ -20,17 +20,12 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
+using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax {
-
-    public interface ISyntaxNode {
-
-        //--- Properties ---
-        SourceLocation? SourceLocation { get; }
-        ASyntaxNode? Parent { get; }
-    }
 
     public abstract class ASyntaxNode : ISyntaxNode {
 
@@ -84,6 +79,30 @@ namespace LambdaSharp.Compiler.Syntax {
         public abstract void InspectNode(Action<ASyntaxNode> inspector);
 
         //--- Methods ---
+        public void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+            foreach(var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
+
+                // only visit properties of type ISyntaxNode
+                if(!typeof(ISyntaxNode).IsAssignableFrom(property.PropertyType)) {
+                    continue;
+                }
+
+                // skip null values
+                var value = (ASyntaxNode?)property.GetValue(this);
+                if(value == null) {
+                    continue;
+                }
+
+                // recurse into data structure
+                value.Substitute(inspector);
+
+                // check if this property is writeable
+                if(property.SetMethod != null) {
+                    property.SetValue(this, inspector(value) ?? throw new NullValueException());
+                }
+            }
+        }
+
         [return: NotNullIfNotNull("node") ]
         protected T? SetParent<T>(T? node) where T : ASyntaxNode => (T?)SetParent(node, this);
 
@@ -110,31 +129,5 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         protected virtual void ParentChanged() { }
-    }
-
-    public static class ASyntaxNodeEx {
-
-        //--- Extension Methods ---
-        public static T? Visit<T>(this T node, ISyntaxVisitor visitor) where T : ASyntaxNode {
-            var result = (T?)node.VisitNode(visitor);
-            if(result != null) {
-                result.SourceLocation = node.SourceLocation;
-            }
-            return result;
-        }
-
-        // TODO: generalize to ASyntaxNode
-        public static T Clone<T>(this T node) where T : AExpression {
-            var result = (T)node.CloneNode();
-            result.SourceLocation = node.SourceLocation;
-            return result;
-        }
-
-        public static IEnumerable<ASyntaxNode> GetParents(this ISyntaxNode node) {
-            while(node.Parent != null) {
-                yield return node.Parent;
-                node = node.Parent;
-            }
-        }
     }
 }
