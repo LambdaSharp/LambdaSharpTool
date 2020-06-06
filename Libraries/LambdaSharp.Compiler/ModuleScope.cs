@@ -68,12 +68,14 @@ namespace LambdaSharp.Compiler {
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(_moduleDeclaration);
 
-            // TODO: ensure that all references can be resolved
+            // ensure that all references can be resolved
+            var declarations = new DeclarationValidator(this).FindDeclarations(_moduleDeclaration);
+            new ReferenceValidator(this).Validate(_moduleDeclaration, declarations);
+
             // TODO: detect circular references
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
-            var declarations = new DeclarationValidator(this).FindDeclarations(_moduleDeclaration);
 
             // optimize AST
             Optimize();
