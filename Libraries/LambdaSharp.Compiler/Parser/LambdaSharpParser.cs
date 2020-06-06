@@ -26,6 +26,7 @@ using System.Reflection;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.EventSources;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using YamlDotNet.Core;
 using YamlDotNet.Core.Events;
