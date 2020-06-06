@@ -73,6 +73,9 @@ namespace LambdaSharp.Compiler {
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
+            // validate resource scopes
+            new ScopeValidator(this).Validate(_moduleDeclaration, declarations);
+
             // optimize AST
             Optimize();
 
