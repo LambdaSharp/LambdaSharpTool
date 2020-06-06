@@ -32,7 +32,6 @@ namespace LambdaSharp.Compiler {
     public class ModuleScope : IModuleValidatorDependencyProvider {
 
         //--- Class Fields ---
-        private static Regex ValidResourceNameRegex = new Regex("[a-zA-Z][a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         //--- Fields ---
         private readonly ModuleDeclaration _moduleDeclaration;
@@ -55,7 +54,7 @@ namespace LambdaSharp.Compiler {
             // TODO: validate module name
 
             // find all module dependencies
-            var dependencies = FindDependencies();
+            var dependencies = new DependenciesValidator(this).FindDependencies(_moduleDeclaration);
             var cloudformationSpec = _moduleDeclaration.CloudFormation;
 
             // TODO: download external dependencies
@@ -74,116 +73,12 @@ namespace LambdaSharp.Compiler {
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
-            FindReferencableDeclarations();
+            var declarations = new DeclarationValidator(this).FindDeclarations(_moduleDeclaration);
 
             // optimize AST
             Optimize();
 
             throw new NotImplementedException();
-        }
-
-        public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies() {
-            var result = new List<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)>();
-            _moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case ModuleDeclaration moduleDeclaration:
-
-                    // module have an implicit dependency on LambdaSharp.Core@lambdasharp unless explicitly disabled
-                    if(moduleDeclaration.HasModuleRegistration) {
-                        result.Add((node, ModuleManifestDependencyType.Shared, "LambdaSharp.Core@lambdasharp"));
-                    }
-                    break;
-                case UsingModuleDeclaration usingModuleDeclaration:
-
-                    // check if module reference is valid
-                    if(!ModuleInfo.TryParse(usingModuleDeclaration.ModuleName.Value, out var usingModuleInfo)) {
-                        Logger.Log(Error.ModuleAttributeInvalid, usingModuleDeclaration.ModuleName);
-                    } else {
-
-                        // default to deployment bucket as origin when missing
-                        if(usingModuleInfo.Origin == null) {
-                            usingModuleInfo = usingModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                        }
-
-                        // add module reference as a shared dependency
-                        result.Add((usingModuleDeclaration, ModuleManifestDependencyType.Shared, usingModuleInfo.ToString()));
-                    }
-                    break;
-                case NestedModuleDeclaration nestedModuleDeclaration:
-
-                    // check if module reference is valid
-                    if(!ModuleInfo.TryParse(nestedModuleDeclaration.Module?.Value, out var nestedModuleInfo)) {
-                        Logger.Log(Error.ModuleAttributeInvalid, (ISyntaxNode?)nestedModuleDeclaration.Module ?? (ISyntaxNode)nestedModuleDeclaration);
-                    } else {
-
-                        // default to deployment bucket as origin when missing
-                        if(nestedModuleInfo.Origin == null) {
-                            nestedModuleInfo = nestedModuleInfo.WithOrigin(ModuleInfo.MODULE_ORIGIN_PLACEHOLDER);
-                        }
-
-                        // add module reference as a nested dependency
-                        result.Add((node, ModuleManifestDependencyType.Nested, nestedModuleInfo.ToString()));
-                    }
-                    break;
-                }
-            });
-            return result;
-        }
-
-        public Dictionary<string, ADeclaration> FindReferencableDeclarations() {
-            var logicalIds = new HashSet<string>();
-            var result = new Dictionary<string, ADeclaration>();
-            _moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case ParameterDeclaration parameterDeclaration:
-                    ValidateItemDeclaration(parameterDeclaration);
-                    break;
-                case ResourceDeclaration resourceDeclaration:
-                    ValidateItemDeclaration(resourceDeclaration);
-                    break;
-                case FunctionDeclaration functionDeclaration:
-                    ValidateItemDeclaration(functionDeclaration);
-                    break;
-                case VariableDeclaration variableDeclaration:
-                    ValidateItemDeclaration(variableDeclaration);
-                    break;
-                case NestedModuleDeclaration nestedModuleDeclaration:
-                    ValidateItemDeclaration(nestedModuleDeclaration);
-                    break;
-                case ConditionDeclaration conditionDeclaration:
-                    ValidateItemDeclaration(conditionDeclaration);
-                    break;
-                case ImportDeclaration importDeclaration:
-                    ValidateItemDeclaration(importDeclaration);
-                    break;
-                case GroupDeclaration groupDeclaration:
-                    ValidateItemDeclaration(groupDeclaration);
-                    break;
-                case PackageDeclaration packageDeclaration:
-                    ValidateItemDeclaration(packageDeclaration);
-                    break;
-                case MappingDeclaration mappingDeclaration:
-                    ValidateItemDeclaration(mappingDeclaration);
-                    break;
-                case MacroDeclaration macroDeclaration:
-                    ValidateItemDeclaration(macroDeclaration);
-                    break;
-                }
-            });
-            return result;
-
-            // local functions
-            void ValidateItemDeclaration(AItemDeclaration itemDeclaration) {
-
-                // check for reserved names
-                if(!ValidResourceNameRegex.IsMatch(itemDeclaration.ItemName.Value)) {
-                    Logger.Log(Error.NameMustBeAlphanumeric, itemDeclaration);
-                } else if(!result!.TryAdd(itemDeclaration.FullName, itemDeclaration)) {
-                    Logger.Log(Error.DuplicateName(itemDeclaration.FullName), itemDeclaration);
-                } else if(!logicalIds!.Add(itemDeclaration.LogicalId)) {
-                    Logger.Log(Error.AmbiguousLogicalId(itemDeclaration.LogicalId), itemDeclaration.ItemName);
-                }
-            }
         }
 
         void Normalize() {
@@ -296,7 +191,5 @@ namespace LambdaSharp.Compiler {
             // TODO:
             throw new NotImplementedException();
         }
-
-        bool IModuleValidatorDependencyProvider.IsValidCloudFormationName(string name) => ValidResourceNameRegex.IsMatch(name);
    }
 }

@@ -25,7 +25,7 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Validators {
 
-    internal sealed class ResourceTypeDeclarationValidator {
+    internal sealed class ResourceTypeDeclarationValidator : AValidator {
 
         //--- Class Fields ---
         private static readonly HashSet<string> _reservedResourceTypePrefixes = new HashSet<string> {
@@ -60,12 +60,7 @@ namespace LambdaSharp.Compiler.Validators {
         }
 
         //--- Constructors ---
-        public ResourceTypeDeclarationValidator(IModuleValidatorDependencyProvider provider)
-            => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
-
-        //--- Properties ---
-        private IModuleValidatorDependencyProvider Provider { get; }
-        private ILogger Logger => Provider.Logger;
+        public ResourceTypeDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {
@@ -99,7 +94,7 @@ namespace LambdaSharp.Compiler.Validators {
             var properties = new List<ModuleManifestResourceProperty>();
             if(node.Properties.Any()) {
                 foreach(var property in node.Properties) {
-                    if(!Provider.IsValidCloudFormationName(property.Name.Value)) {
+                    if(!CloudFormationValidationRules.IsValidCloudFormationName(property.Name.Value)) {
                         Logger.Log(Error.ResourceTypePropertyNameMustBeAlphanumeric, property);
                     }
                     if(property.Type == null) {
@@ -132,7 +127,7 @@ namespace LambdaSharp.Compiler.Validators {
             var attributes = new List<ModuleManifestResourceAttribute>();
             if(node.Attributes.Any()) {
                 foreach(var attribute in node.Attributes) {
-                    if(!Provider.IsValidCloudFormationName(attribute.Name.Value)) {
+                    if(!CloudFormationValidationRules.IsValidCloudFormationName(attribute.Name.Value)) {
                         Logger.Log(Error.ResourceTypeAttributeNameMustBeAlphanumeric, attribute);
                     }
                     if(attribute.Type == null) {

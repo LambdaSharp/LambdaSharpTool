@@ -18,12 +18,14 @@
 
 namespace LambdaSharp.Compiler.Validators {
 
-    public interface IModuleValidatorDependencyProvider {
+    internal abstract class AValidator {
+
+        //--- Constructors ---
+        public AValidator(IModuleValidatorDependencyProvider provider)
+            => Provider = provider ?? throw new System.ArgumentNullException(nameof(provider));
 
         //--- Properties ---
-        ILogger Logger { get; }
-
-        //--- Methods ---
-        bool IsValidResourceType(string type);
+        protected IModuleValidatorDependencyProvider Provider { get; }
+        protected ILogger Logger => Provider.Logger;
     }
 }
