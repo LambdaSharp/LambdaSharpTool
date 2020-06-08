@@ -138,6 +138,15 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 ### Fixes
 * Fixed an issue with processing the Lambda report lines in the CloudWatch logs.
 
+## WIP
+
+### (v0.8.1.0) - TBD
+
+#### Features
+
+* LambdaSharp Syntax
+  * Added `Module::Description` and `Module::Info` declarations.
+  * Added `!Exists` compile-time function
 
 ## Releases
 

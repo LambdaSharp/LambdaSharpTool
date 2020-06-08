@@ -1,0 +1,18 @@
+Module: LambdaSharp
+Items:
+
+  - Group: LambdaSharp
+    Description: LambdaSharp Core Imports
+    Items:
+
+      - Import: DeadLetterQueue
+        Module: LambdaSharp.Core
+        Type: String # NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
+
+      - Import: LoggingStream
+        Module: LambdaSharp.Core
+        Type: String # NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take
+
+      - Import: LoggingStreamRole
+        Module: LambdaSharp.Core
+        Type: String # NOTE (2018-12-11, bjorg): we use type 'String' to be more flexible with the type of values we're willing to take

@@ -1,0 +1,221 @@
+Module: Standard
+Items:
+
+  - Parameter: XRayTracing
+    Pragmas:
+      - discard-if-not-used
+    Section: LambdaSharp Module Options
+    Label: Enable AWS X-Ray tracing mode for module resources
+    Description: AWS X-Ray Tracing
+    Default: Disabled
+    AllowedValues:
+      - Disabled
+      - RootModule
+      - AllModules
+
+  - Condition: XRayIsEnabled
+    Description: "TODO:"
+    Value: !Not [ !Equals [ !Ref XRayTracing, Disabled ] ]
+
+  - Condition: XRayNestedIsEnabled
+    Description: "TODO:"
+    Value: !Equals [ !Ref XRayTracing, AllModules ]
+
+  - Parameter: LambdaSharpCoreServices
+    Pragmas:
+      - discard-if-not-used
+    Section: LambdaSharp Module Options
+    Label: Integrate with LambdaSharp.Core services
+    Description: Use LambdaSharp.Core Services
+    Default: Disabled
+    AllowedValues:
+      - Disabled
+      - Enabled
+
+  - Condition: UseCoreServices
+    # TODO: `!Exists` is used at compile time to determine if a declaration exists
+    Value: !And [ !Exists LambdaSharp, !Equals [ !Ref LambdaSharpCoreServices, Enabled ]]
+
+  - Group: Module
+    Description: Module Variables
+    Items:
+
+      - Variable: Id
+        Description: Module ID
+        Value: !Ref AWS::StackName
+
+      - Variable: Namespace
+        Description: Module Namespace
+        Value: "<%MODULE_NAMESPACE_PLACEHOLDER%>"
+
+      - Variable: Name
+        Description: Module Name
+        Value: "<%MODULE_NAME_PLACEHOLDER%>"
+
+      - Variable: FullName
+        Description: Module Full Name
+        Value: "<%MODULE_FULL_NAME_PLACEHOLDER%>"
+
+      - Variable: Version
+        Description: Module Namespace
+        Value: "<%MODULE_VERSION_PLACEHOLDER%>"
+
+      - Variable: Origin
+        Description: Module Origin
+        Value: "<%MODULE_ORIGIN_PLACEHOLDER%>"
+
+      - Variable: Info
+        Description: Module Info
+        Value: "<%MODULE_INFO_PLACEHOLDER%>"
+
+      - Variable: Description
+        Description: Module Description
+        Value: "<%MODULE_DESCRIPTION_PLACEHOLDER%>"
+
+      - Condition: IsNested
+        Description: Module is nested
+        Value: !Not [ !Equals [ !Ref DeploymentRoot, "" ]]
+
+      - Variable: RootId
+        Description: Root Module ID
+        Value: !If [ IsNested, !Ref DeploymentRoot, !Ref Module::Id ]
+
+      - Resource: Role
+        Pragmas:
+          - discard-if-not-used
+        Description: "TODO:"
+        Type: AWS::IAM::Role
+        Properties:
+          AssumeRolePolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ModuleLambdaPrincipal
+                Effect: Allow
+                Principal:
+                  Service: lambda.amazonaws.com
+                Action: sts:AssumeRole
+          Policies:
+            PolicyName: !Sub "${AWS::StackName}ModulePolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement: [ ]
+
+      - Variable: LogRetentionInDays
+        Description: Number days log entries are retained for (used by AWS::Logs::LogGroup)
+        Type: Number
+        Value: 30
+
+      # TODO: LambdaSharp dependent resources
+      - Resource: DeadLetterQueue
+        Description: Module Dead Letter Queue (ARN)
+        Condition: UseCoreServices
+        Value: !Ref LambdaSharp::DeadLetterQueue # TODO: become -> !If [ UseCoreServices, !Ref LambdaSharp::DeadLetterQueue, !Ref AWS::NoValue ]
+        Allow: sqs:SendMessage
+
+      - Resource: LoggingStream
+        Description: Module Logging Stream (ARN)
+        Condition: UseCoreServices
+        Value: !Ref LambdaSharp::LoggingStream
+
+      - Resource: LoggingStreamRole
+        Description: Module Logging Stream Role (ARN)
+        Condition: UseCoreServices
+        Value: !Ref LambdaSharp::LoggingStreamRole
+
+  # TODO: add 'Deployment::*' Variables
+  - Group: Deployment
+    Description: "TODO:"
+    Items: [ ]
+
+  - Function: DecryptSecretFunction
+    Pragmas:
+      - no-function-registration
+      - no-dead-letter-queue
+      - no-wildcard-scoped-variables
+      - discard-if-not-used
+    Description: Module secret decryption function
+    Environment:
+      MODULE_ROLE_SECRETS_POLICY: !If [ Module::Role::SecretsPolicy::Condition, !Ref Module::Role::SecretsPolicy, !Ref AWS::NoValue ]
+    Timeout: 30
+    Memory: 128
+    Runtime: nodejs12.x
+    Handler: index.handler
+    Language: javascript
+    Properties:
+      Code:
+        ZipFile: !Include DecryptSecretFunction.js
+
+  - Parameter: DeploymentBucketName
+    Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
+    Label: Deployment S3 bucket name
+    Description: Deployment S3 Bucket Name
+
+  - ParameteR: DeploymentPrefix
+    Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
+    Label: Deployment tier prefix
+    Description: Deployment Tier Prefix
+
+  - Parameter: DeploymentPrefixLowercase
+    Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
+    Label: Deployment tier prefix (lowercase)
+    Description: Deployment Tier Prefix (lowercase)
+
+  - Parameter: DeploymentRoot
+    Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
+    Label: Root stack name for nested deployments, blank otherwise
+    Description: Root Stack Name
+    Default: ""
+
+  - Parameter: DeploymentChecksum
+    Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
+    Label: CloudFormation template MD5 checksum
+    Description: Deployment Checksum
+    Default: ""
+
+  - Resource: ModuleSecretsPolicy
+    Description: Grant usage permissions to KMS keys provided in Module definition
+    Condition: !Exists Module::Secrets
+    Value: !Ref Module::Secrets
+    Allow:
+      - kms:Decrypt
+      - kms:Encrypt
+
+  - Parameter: Secrets
+    Section: LambdaSharp Module Options
+    Label: Comma-separated list of additional KMS secret keys
+    Description: Secret Keys (ARNs)
+    Default: ""
+
+  - Resource: SecretsPolicy
+    Description: Grant usage permissions to KMS keys provided in Secrets parameter
+    Condition: !Not [ !Equals [ !Ref Secrets, "" ]]
+    Value: !Ref Secrets
+    Allow:
+      - kms:Decrypt
+      - kms:Encrypt
+
+  - Resource: LogStreamPolicy
+    Value: arn:aws:logs:*:*:*
+    Allow:
+      - logs:CreateLogStream
+      - logs:PutLogEvents
+
+  - Resource: CloudFormationPolicy
+    Value: !Ref AWS::StackId
+    Allow: cloudformation:DescribeStacks
+
+  - Resource: AWS-XRayPolicy
+    Value: "*"
+    Allow:
+      - xray:PutTraceSegments
+      - xray:PutTelemetryRecords
+      - xray:GetSamplingRules
+      - xray:GetSamplingTargets
+      - xray:GetSamplingStatisticSummaries
+
+  - Resource: Registration
+    Type: LambdaSharp::Registration::Module
+    Condition: UseCoreServices
+    Properties:
+      Module: !Ref Module::Info
+      ModuleId: !Ref AWS::StackName
