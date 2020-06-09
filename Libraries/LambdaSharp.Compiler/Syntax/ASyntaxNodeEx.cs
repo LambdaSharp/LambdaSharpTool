@@ -20,17 +20,10 @@ using System.Collections.Generic;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax {
-    
+
     public static class ASyntaxNodeEx {
 
         //--- Extension Methods ---
-        public static T? Visit<T>(this T node, ISyntaxVisitor visitor) where T : ASyntaxNode {
-            var result = (T?)node.VisitNode(visitor);
-            if(result != null) {
-                result.SourceLocation = node.SourceLocation;
-            }
-            return result;
-        }
 
         // TODO: generalize to ASyntaxNode
         public static T Clone<T>(this T node) where T : AExpression {
@@ -40,9 +33,8 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         public static IEnumerable<ASyntaxNode> GetParents(this ISyntaxNode node) {
-            while(node.Parent != null) {
-                yield return node.Parent;
-                node = node.Parent;
+            for(var parent = node.Parent; parent != null; parent = parent.Parent) {
+                yield return parent;
             }
         }
     }

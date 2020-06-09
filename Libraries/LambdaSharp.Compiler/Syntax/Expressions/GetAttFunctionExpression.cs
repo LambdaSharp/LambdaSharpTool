@@ -60,21 +60,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
-            AttributeName = AttributeName.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ReferenceName.InspectNode(inspector);
-            AttributeName.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new GetAttFunctionExpression {
             ReferenceName = ReferenceName.Clone(),
             AttributeName = AttributeName.Clone(),

@@ -152,17 +152,11 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectNode(node => {
-                if(node is ParameterDeclaration parameterDeclaration) {
-                    ValidateParameter(parameterDeclaration);
-                }
+            moduleDeclaration.InspectType<ParameterDeclaration>(node => {
+                ValidateParameterStructure(node);
+                ValidateParemeterType(node);
+                ValidateParameterAllow(node);
             });
-        }
-
-        private void ValidateParameter(ParameterDeclaration node) {
-            ValidateParameterStructure(node);
-            ValidateParemeterType(node);
-            ValidateParameterAllow(node);
         }
 
         private void ValidateParameterStructure(ParameterDeclaration node) {

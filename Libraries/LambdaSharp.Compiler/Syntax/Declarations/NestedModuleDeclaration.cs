@@ -55,27 +55,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public string CloudFormationType => "AWS::CloudFormation::Stack";
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Module = Module?.Visit(visitor);
-            DependsOn = DependsOn.Visit(visitor);
-            Parameters = Parameters?.Visit(visitor);
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Module?.InspectNode(inspector);
-            DependsOn.InspectNode(inspector);
-            Parameters?.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

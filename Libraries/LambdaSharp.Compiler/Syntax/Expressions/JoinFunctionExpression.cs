@@ -56,21 +56,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            Delimiter = Delimiter.Visit(visitor) ?? throw new NullValueException();
-            Values = Values.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            Delimiter.InspectNode(inspector);
-            Values.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new JoinFunctionExpression {
             Delimiter = Delimiter.Clone(),
             Values = Values.Clone()

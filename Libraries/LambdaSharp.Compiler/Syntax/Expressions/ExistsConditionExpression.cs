@@ -49,17 +49,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-
-            // TODO: remove when ISyntaxVisitor is gone
-            throw new NotImplementedException();
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ReferenceName.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new ExistsConditionExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration

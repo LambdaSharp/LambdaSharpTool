@@ -91,33 +91,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         public string? ApiMethod { get; set; }
         public string[]? ApiPath { get; set; }
         public IntegrationType ApiIntegrationType { get; set; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            Integration = Integration?.Visit(visitor);
-            OperationName = OperationName?.Visit(visitor);
-            ApiKeyRequired = ApiKeyRequired?.Visit(visitor);
-            AuthorizationType = AuthorizationType?.Visit(visitor);
-            AuthorizationScopes = AuthorizationScopes?.Visit(visitor);
-            AuthorizerId = AuthorizerId?.Visit(visitor);
-            Invoke = Invoke?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-            Integration?.InspectNode(inspector);
-            OperationName?.InspectNode(inspector);
-            ApiKeyRequired?.InspectNode(inspector);
-            AuthorizationType?.InspectNode(inspector);
-            AuthorizationScopes?.InspectNode(inspector);
-            AuthorizerId?.InspectNode(inspector);
-            Invoke?.InspectNode(inspector);
-        }
     }
 }

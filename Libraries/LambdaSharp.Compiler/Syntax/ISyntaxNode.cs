@@ -27,6 +27,7 @@ namespace LambdaSharp.Compiler.Syntax {
         ASyntaxNode? Parent { get; }
 
         //--- Methods ---
+        void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector);
         void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector);
     }
 }

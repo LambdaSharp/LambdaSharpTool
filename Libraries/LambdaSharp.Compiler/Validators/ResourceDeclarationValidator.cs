@@ -31,16 +31,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case ResourceDeclaration resourceDeclaration:
-                    ValidateResourceDeclaration(resourceDeclaration);
-                    break;
-                }
-            });
-
-            // local functions
-            void ValidateResourceDeclaration(ResourceDeclaration node) {
+            moduleDeclaration.InspectType<ResourceDeclaration>(node => {
 
                 // check if declaration is a resource reference
                 if(node.Value != null) {
@@ -97,18 +88,18 @@ namespace LambdaSharp.Compiler.Validators {
                     // CloudFormation resource must have a type
                     Logger.Log(Error.TypeAttributeMissing, node);
                 }
+            });
 
-                // local functions
-                void ValidateARN(AExpression arn) {
-                    if(
-                        !(arn is LiteralExpression literalExpression)
-                        || (
-                            !literalExpression.Value.StartsWith("arn:", StringComparison.Ordinal)
-                            && (literalExpression.Value != "*")
-                        )
-                    ) {
-                        Logger.Log(Error.ResourceValueAttributeInvalid, arn);
-                    }
+            // local functions
+            void ValidateARN(AExpression arn) {
+                if(
+                    !(arn is LiteralExpression literalExpression)
+                    || (
+                        !literalExpression.Value.StartsWith("arn:", StringComparison.Ordinal)
+                        && (literalExpression.Value != "*")
+                    )
+                ) {
+                    Logger.Log(Error.ResourceValueAttributeInvalid, arn);
                 }
             }
         }

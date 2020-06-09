@@ -48,17 +48,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         public bool IsNull => Type == LiteralType.Null;
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-        }
-
         public bool? AsBool() => (Type == LiteralType.Bool) ? bool.Parse(Value) : (bool?)null;
         public int? AsInt() => (Type == LiteralType.Integer) ? int.Parse(Value) : (int?)null;
         public override ASyntaxNode CloneNode() => new LiteralExpression(Value, Type);

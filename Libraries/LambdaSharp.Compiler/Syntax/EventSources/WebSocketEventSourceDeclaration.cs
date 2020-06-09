@@ -74,31 +74,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         }
 
         public LiteralExpression EventSource { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            OperationName = OperationName?.Visit(visitor);
-            ApiKeyRequired = ApiKeyRequired?.Visit(visitor);
-            AuthorizationType = AuthorizationType?.Visit(visitor);
-            AuthorizationScopes = AuthorizationScopes?.Visit(visitor);
-            AuthorizerId = AuthorizerId?.Visit(visitor);
-            Invoke = Invoke?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-            OperationName?.InspectNode(inspector);
-            ApiKeyRequired?.InspectNode(inspector);
-            AuthorizationType?.InspectNode(inspector);
-            AuthorizationScopes?.InspectNode(inspector);
-            AuthorizerId?.InspectNode(inspector);
-            Invoke?.InspectNode(inspector);
-        }
     }
 }

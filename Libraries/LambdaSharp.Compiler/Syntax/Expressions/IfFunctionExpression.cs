@@ -57,23 +57,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            Condition = Condition.Visit(visitor) ?? throw new NullValueException();
-            IfTrue = IfTrue.Visit(visitor) ?? throw new NullValueException();
-            IfFalse = IfFalse.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            Condition.InspectNode(inspector);
-            IfTrue.InspectNode(inspector);
-            IfFalse.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new IfFunctionExpression {
             Condition = Condition.Clone(),
             IfTrue = IfTrue.Clone(),

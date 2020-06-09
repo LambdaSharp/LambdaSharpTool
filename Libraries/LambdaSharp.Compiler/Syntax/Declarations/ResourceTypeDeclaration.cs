@@ -59,24 +59,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 get => _required;
                 set => _required = SetParent(value);
             }
-
-            //--- Methods ---
-            public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-                if(!visitor.VisitStart(this)) {
-                return this;
-            }
-                Name = Name.Visit(visitor) ?? throw new NullValueException();
-                Type = Type?.Visit(visitor);
-                Required = Required?.Visit(visitor);
-                return visitor.VisitEnd(this);
-            }
-
-            public override void InspectNode(Action<ASyntaxNode> inspector) {
-                inspector(this);
-                Name.InspectNode(inspector);
-                Type?.InspectNode(inspector);
-                Required?.InspectNode(inspector);
-            }
         }
 
         public class AttributeTypeExpression : ASyntaxNode {
@@ -104,22 +86,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             public LiteralExpression? Type {
                 get => _type;
                 set => _type = SetParent(value);
-            }
-
-            //--- Methods ---
-            public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-                if(!visitor.VisitStart(this)) {
-                return this;
-            }
-                Name = Name.Visit(visitor) ?? throw new NullValueException();
-                Type = Type?.Visit(visitor);
-                return visitor.VisitEnd(this);
-            }
-
-            public override void InspectNode(Action<ASyntaxNode> inspector) {
-                inspector(this);
-                Name.InspectNode(inspector);
-                Type?.InspectNode(inspector);
             }
         }
 
@@ -152,27 +118,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public SyntaxNodeCollection<AttributeTypeExpression> Attributes {
             get => _attributes;
             set => _attributes = value;
-        }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Handler = Handler?.Visit(visitor);
-            Properties = Properties.Visit(visitor) ?? throw new NullValueException();
-            Attributes = Attributes.Visit(visitor) ?? throw new NullValueException();
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Properties.InspectNode(inspector);
-            Attributes.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
         }
     }
 }

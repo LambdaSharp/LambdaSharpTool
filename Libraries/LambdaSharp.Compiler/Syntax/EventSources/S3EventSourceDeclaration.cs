@@ -53,25 +53,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         }
 
         public AExpression EventSource { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            Events = Events?.Visit(visitor);
-            Prefix = Prefix?.Visit(visitor);
-            Suffix = Suffix?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-            Events?.InspectNode(inspector);
-            Prefix?.InspectNode(inspector);
-            Suffix?.InspectNode(inspector);
-        }
     }
 }

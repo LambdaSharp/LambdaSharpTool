@@ -37,22 +37,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             get => _value;
             set => _value = SetParent(value);
         }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Value = Value?.Visit(visitor);
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Value?.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

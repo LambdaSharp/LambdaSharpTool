@@ -55,21 +55,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            Delimiter = Delimiter.Visit(visitor) ?? throw new NullValueException();
-            SourceString = SourceString.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            Delimiter.InspectNode(inspector);
-            SourceString.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new SplitFunctionExpression {
             Delimiter = Delimiter.Clone(),
             SourceString = SourceString.Clone()

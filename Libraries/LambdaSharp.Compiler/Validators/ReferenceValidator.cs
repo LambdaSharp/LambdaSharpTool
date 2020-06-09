@@ -34,7 +34,7 @@ namespace LambdaSharp.Compiler.Validators {
         public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
 
             // check for referential integrity
-            moduleDeclaration.InspectNode(node => {
+            moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case GetAttFunctionExpression getAttFunctionExpression:
                     ValidateGetAttFunctionExpression(getAttFunctionExpression);

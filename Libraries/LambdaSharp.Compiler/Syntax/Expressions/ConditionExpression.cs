@@ -50,19 +50,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            ReferenceName = ReferenceName.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ReferenceName.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new ConditionExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration

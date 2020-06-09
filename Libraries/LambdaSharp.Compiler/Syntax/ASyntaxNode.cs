@@ -31,7 +31,7 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Class Methods ---
         [return: NotNullIfNotNull("node")]
-        public static ASyntaxNode? SetParent(ASyntaxNode? node, ASyntaxNode parent) {
+        public static ASyntaxNode? SetParent(ASyntaxNode? node, ASyntaxNode? parent) {
             if(node != null) {
 
                 // declaration nodes must have another declaration node as their parent
@@ -39,11 +39,11 @@ namespace LambdaSharp.Compiler.Syntax {
                     throw new ApplicationException("declarations must have another declaration as parent");
                 }
 
-                // check if parent has changed
+                // check if parent is changing
                 if(!object.ReferenceEquals(node.Parent, parent)) {
 
                     // check if node needs to be cloned
-                    if((node is AExpression expression) && (node.Parent != null)) {
+                    if((parent != null) && (node is AExpression expression) && (node.Parent != null)) {
                         node = expression.Clone();
                     }
 
@@ -54,6 +54,9 @@ namespace LambdaSharp.Compiler.Syntax {
             }
             return node;
         }
+
+        [return: NotNullIfNotNull("node")]
+        public static ASyntaxNode? UnsetParent(ASyntaxNode? node) => SetParent(node, null);
 
         //--- Fields ---
         private SourceLocation? _sourceLocation;
@@ -74,12 +77,44 @@ namespace LambdaSharp.Compiler.Syntax {
         public AItemDeclaration? ParentItemDeclaration => this.GetParents().OfType<AItemDeclaration>().FirstOrDefault();
         public ModuleDeclaration ParentModuleDeclaration => this.GetParents().OfType<ModuleDeclaration>().First();
 
-        //--- Abstract Methods ---
-        public abstract ASyntaxNode? VisitNode(ISyntaxVisitor visitor);
-        public abstract void InspectNode(Action<ASyntaxNode> inspector);
-
         //--- Methods ---
-        public void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+        public virtual void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector) {
+            var node = this as ASyntaxNode;
+            if(node != null) {
+                entryInspector?.Invoke(node);
+            }
+            foreach(var property in GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
+                .Where(property =>
+                    (property.GetCustomAttribute<ASyntaxAttribute>() != null)
+                    && typeof(ISyntaxNode).IsAssignableFrom(property.PropertyType)
+                )
+            ) {
+
+                // skip null values
+                var value = (ISyntaxNode?)property.GetValue(this);
+                if(value == null) {
+                    continue;
+                }
+
+                // recurse into property value
+                value.Inspect(entryInspector, exitInspector);
+            }
+            if(node != null) {
+                exitInspector?.Invoke(node);
+            }
+        }
+
+        public void Inspect(Action<ASyntaxNode> inspector) => Inspect(inspector, exitInspector: null);
+
+        public void InspectType<T>(Action<T> inspector)
+            => Inspect(node => {
+                if(node is T inspectableNode) {
+                    inspector(inspectableNode);
+                }
+            });
+
+        public virtual void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
             foreach(var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
 
                 // only visit properties of type ISyntaxNode
@@ -88,7 +123,7 @@ namespace LambdaSharp.Compiler.Syntax {
                 }
 
                 // skip null values
-                var value = (ASyntaxNode?)property.GetValue(this);
+                var value = (ISyntaxNode?)property.GetValue(this);
                 if(value == null) {
                     continue;
                 }
@@ -97,8 +132,8 @@ namespace LambdaSharp.Compiler.Syntax {
                 value.Substitute(inspector);
 
                 // check if this property is writeable
-                if(property.SetMethod != null) {
-                    property.SetValue(this, inspector(value) ?? throw new NullValueException());
+                if((property.SetMethod != null) && (value is ASyntaxNode node)) {
+                    property.SetValue(this, inspector(node) ?? throw new NullValueException());
                 }
             }
         }

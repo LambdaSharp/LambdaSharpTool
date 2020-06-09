@@ -30,19 +30,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         //--- Properties ---
         public string[]? SlackPath { get; set; }
         public LiteralExpression EventSource { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-        }
     }
 }

@@ -35,7 +35,7 @@ namespace LambdaSharp.Compiler.Validators {
         public Dictionary<string, AItemDeclaration> FindDeclarations(ModuleDeclaration moduleDeclaration) {
             var result = new Dictionary<string, AItemDeclaration>();
             var logicalIds = new HashSet<string>();
-            moduleDeclaration.InspectNode(node => {
+            moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ResourceTypeDeclaration _:
 

@@ -47,22 +47,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 get => _subnetIds;
                 set => _subnetIds = SetParent(value);
             }
-
-            //--- Methods ---
-            public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-                if(!visitor.VisitStart(this)) {
-                return this;
-            }
-                SecurityGroupIds = SecurityGroupIds?.Visit(visitor);
-                SubnetIds = SubnetIds?.Visit(visitor);
-                return visitor.VisitEnd(this);
-            }
-
-            public override void InspectNode(Action<ASyntaxNode> inspector) {
-                inspector(this);
-                SecurityGroupIds?.InspectNode(inspector);
-                SubnetIds?.InspectNode(inspector);
-            }
         }
 
         //--- Fields ---
@@ -181,47 +165,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasSecretType => false;
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
         public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Scope = Scope.Visit(visitor);
-            If = If?.Visit(visitor);
-            Memory = Memory?.Visit(visitor);
-            Timeout = Timeout?.Visit(visitor);
-            Project = Project?.Visit(visitor);
-            Runtime = Runtime?.Visit(visitor);
-            Language = Language?.Visit(visitor);
-            Handler = Handler?.Visit(visitor);
-            Vpc = Vpc?.Visit(visitor);
-            Environment = Environment.Visit(visitor) ?? throw new NullValueException();
-            Properties = Properties.Visit(visitor) ?? throw new NullValueException();
-            Sources = Sources.Visit(visitor);
-            Pragmas = Pragmas.Visit(visitor) ?? throw new NullValueException();
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Scope.InspectNode(inspector);
-            If?.InspectNode(inspector);
-            Memory?.InspectNode(inspector);
-            Timeout?.InspectNode(inspector);
-            Project?.InspectNode(inspector);
-            Runtime?.InspectNode(inspector);
-            Language?.InspectNode(inspector);
-            Handler?.InspectNode(inspector);
-            Vpc?.InspectNode(inspector);
-            Environment.InspectNode(inspector);
-            Properties.InspectNode(inspector);
-            Sources.InspectNode(inspector);
-            Pragmas.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

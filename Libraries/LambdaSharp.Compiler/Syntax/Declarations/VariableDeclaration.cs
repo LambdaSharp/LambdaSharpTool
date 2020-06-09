@@ -62,28 +62,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool HasSecretType => Type!.Value == "Secret";
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Type = Type?.Visit(visitor);
-            Scope = Scope.Visit(visitor);
-            Value = Value?.Visit(visitor);
-            EncryptionContext = EncryptionContext?.Visit(visitor);
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Type?.InspectNode(inspector);
-            Scope.InspectNode(inspector);
-            Value?.InspectNode(inspector);
-            EncryptionContext?.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

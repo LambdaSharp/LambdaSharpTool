@@ -35,7 +35,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         SyntaxNodeCollection<LiteralExpression>? Scope { get; }
         IEnumerable<string>? ScopeValues => Scope?.Select(item => item.Value).ToList();
         bool HasSecretType { get; }
-        AExpression? ReferenceExpression { get; }
         bool IsPublic => Scope?.Any(item => item.Value == "public") ?? false;
     }
 }

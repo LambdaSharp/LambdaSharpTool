@@ -38,7 +38,11 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
             //--- Properties ---
             public LiteralExpression Key { get; }
-            public AExpression Value { get; set; }
+            public AExpression Value { get; private set; }
+
+            //--- Methods ---
+            public void SetValue(AExpression value)
+                => Value = value ?? throw new ArgumentNullException(nameof(value));
         }
 
         //--- Fields ---
@@ -61,7 +65,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
                 if(key == null) {
                     throw new ArgumentNullException(nameof(key));
                 }
-                return _pairs.First(item => item.Key.Value == key.Value).Value;
+                return _pairs.First(pair => pair.Key.Value == key.Value).Value;
             }
             set {
                 if(key == null) {
@@ -71,8 +75,18 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
                     throw new ArgumentNullException(nameof(value));
 
                 }
-                Remove(key.Value);
-                _pairs.Add(new KeyValuePair(SetParent(key), SetParent(value)));
+
+                // replace value in existing key-value pair
+                var index = _pairs.TakeWhile(pair => pair.Key.Value != key.Value).Count();
+                if(index < _pairs.Count) {
+                    var pair = _pairs[index];
+                    if(!object.ReferenceEquals(pair.Value, value)) {
+                        UnsetParent(pair.Value);
+                        pair.SetValue(SetParent(value));
+                    }
+                } else {
+                    _pairs.Add(new KeyValuePair(SetParent(key), SetParent(value)));
+                }
             }
         }
 
@@ -81,7 +95,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         //--- Methods ---
         public bool TryGetValue(string key, [NotNullWhen(true)] out AExpression? value) {
-            var found = _pairs.FirstOrDefault(item => item.Key.Value == key);
+            var found = _pairs.FirstOrDefault(pair => pair.Key.Value == key);
             value = found?.Value;
             return value != null;
         }
@@ -90,30 +104,23 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             if(key == null) {
                 throw new ArgumentNullException(nameof(key));
             }
-            return _pairs.RemoveAll(kv => kv.Key.Value == key) > 0;
+            return _pairs.RemoveAll(pair => pair.Key.Value == key) > 0;
         }
 
-        public bool ContainsKey(string key) => _pairs.Any(item => item.Key.Value == key);
+        public bool ContainsKey(string key) => _pairs.Any(pair => pair.Key.Value == key);
 
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            for(var i = 0; i < _pairs.Count; ++i) {
-                var kv = _pairs[i];
-                _pairs[i] = new KeyValuePair(
-                    kv.Key.Visit(visitor) ?? throw new NullValueException(),
-                    kv.Value.Visit(visitor) ?? throw new NullValueException()
-                );
-            }
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
+        public override void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector) {
+            entryInspector?.Invoke(this);
             foreach(var pair in _pairs) {
-                pair.Key.InspectNode(inspector);
-                pair.Value.InspectNode(inspector);
+                pair.Key.Inspect(entryInspector, exitInspector);
+                pair.Value.Inspect(entryInspector, exitInspector);
+            }
+            exitInspector?.Invoke(this);
+        }
+
+        public override void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+            foreach(var pair in new List<KeyValuePair>(_pairs)) {
+                this[pair.Key] = (AExpression)(inspector(pair.Value) ?? throw new NullValueException());
             }
         }
 
@@ -137,7 +144,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             }
         }
 
-        public override ASyntaxNode CloneNode() => new ObjectExpression(_pairs.Select(item => new KeyValuePair(item.Key.Clone(), item.Value.Clone())));
+        public override ASyntaxNode CloneNode() => new ObjectExpression(_pairs.Select(pair => new KeyValuePair(pair.Key.Clone(), pair.Value.Clone())));
 
         //--- IEnumerable Members ---
         IEnumerator IEnumerable.GetEnumerator() => _pairs.GetEnumerator();

@@ -23,9 +23,14 @@ namespace LambdaSharp.Compiler.Syntax {
     [AttributeUsage(AttributeTargets.Property)]
     public abstract class ASyntaxAttribute : Attribute { }
 
+    [AttributeUsage(AttributeTargets.Property)]
     public sealed class SyntaxRequiredAttribute : ASyntaxAttribute { }
 
+    [AttributeUsage(AttributeTargets.Property)]
     public sealed class SyntaxOptionalAttribute : ASyntaxAttribute { }
+
+    [AttributeUsage(AttributeTargets.Property)]
+    public sealed class SyntaxHiddenAttribute : ASyntaxAttribute { }
 
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SyntaxDeclarationKeywordAttribute : Attribute {

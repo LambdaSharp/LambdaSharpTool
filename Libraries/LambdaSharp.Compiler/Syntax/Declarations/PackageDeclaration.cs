@@ -52,25 +52,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public List<KeyValuePair<string, string>> ResolvedFiles { get; set; } = new List<KeyValuePair<string, string>>();
         public bool HasSecretType => false;
         public LiteralExpression? Type => Fn.Literal("String");
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Scope = Scope.Visit(visitor);
-            Files = Files?.Visit(visitor);
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Scope.InspectNode(inspector);
-            Files?.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

@@ -35,20 +35,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             get => Declarations;
             set => Declarations = value ?? throw new ArgumentNullException();
         }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Declarations = Declarations?.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

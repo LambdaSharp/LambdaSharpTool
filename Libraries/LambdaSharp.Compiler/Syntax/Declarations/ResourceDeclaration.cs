@@ -106,39 +106,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasSecretType => Type!.Value == "Secret";
         public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
         public bool HasTypeValidation => !HasPragma("no-type-validation");
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            If = If?.Visit(visitor);
-            Type = Type?.Visit(visitor);
-            Scope = Scope.Visit(visitor);
-            Allow = Allow?.Visit(visitor);
-            Value = Value?.Visit(visitor);
-            DependsOn = DependsOn.Visit(visitor);
-            Properties = Properties.Visit(visitor) ?? throw new NullValueException();
-            DefaultAttribute = DefaultAttribute?.Visit(visitor);
-            Pragmas = Pragmas.Visit(visitor) ?? throw new NullValueException();
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            If?.InspectNode(inspector);
-            Type?.InspectNode(inspector);
-            Scope.InspectNode(inspector);
-            Allow?.InspectNode(inspector);
-            Value?.InspectNode(inspector);
-            DependsOn.InspectNode(inspector);
-            Properties.InspectNode(inspector);
-            DefaultAttribute?.InspectNode(inspector);
-            Pragmas.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

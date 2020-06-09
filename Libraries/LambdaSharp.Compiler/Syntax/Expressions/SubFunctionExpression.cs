@@ -60,21 +60,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            FormatString = FormatString.Visit(visitor) ?? throw new NullValueException();
-            Parameters = Parameters.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            FormatString.InspectNode(inspector);
-            Parameters.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new SubFunctionExpression {
             FormatString = FormatString.Clone(),
             Parameters = Parameters.Clone()

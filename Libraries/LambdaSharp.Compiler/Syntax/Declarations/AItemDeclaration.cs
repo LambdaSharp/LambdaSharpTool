@@ -89,6 +89,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _description = SetParent(value);
         }
 
+        [SyntaxHidden]
         public LiteralExpression ItemName { get; }
 
         public string FullName {
@@ -117,15 +118,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public SyntaxNodeCollection<AItemDeclaration> Declarations {
             get => _declarations ?? throw new InvalidOperationException();
             set => _declarations = SetParent(value ?? throw new ArgumentNullException());
-        }
-
-        // TODO: remove this
-        /// <summary>
-        /// CloudFormation expression to use when referencing the declaration. It could be a simple reference, a conditional, or an attribute, etc.
-        /// </summary>
-        public AExpression ReferenceExpression {
-            get => _referenceExpression ?? throw new InvalidOperationException();
-            set => _referenceExpression = SetParent(value ?? throw new ArgumentNullException());
         }
 
         /// <summary>

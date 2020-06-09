@@ -28,16 +28,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
-            moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case ResourceTypeDeclaration resourceTypeDeclaration:
-                    ValidateResourceType(resourceTypeDeclaration);
-                    break;
-                }
-            });
-
-            // local functions
-            void ValidateResourceType(ResourceTypeDeclaration node) {
+            moduleDeclaration.InspectType<ResourceTypeDeclaration>(node => {
                 if(node.Handler == null) {
 
                     // TODO: error
@@ -55,7 +46,7 @@ namespace LambdaSharp.Compiler.Validators {
                     Logger.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.Handler.Value, node);
                 }
-            }
+            });
         }
     }
 }

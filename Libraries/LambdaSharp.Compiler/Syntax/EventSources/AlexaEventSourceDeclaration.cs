@@ -28,19 +28,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         public AlexaEventSourceDeclaration(AExpression eventSource) => EventSource = SetParent(eventSource ?? throw new ArgumentNullException(nameof(eventSource)));
 
         public AExpression EventSource { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-        }
     }
 }

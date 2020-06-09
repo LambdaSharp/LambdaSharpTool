@@ -70,21 +70,9 @@ namespace LambdaSharp.Compiler.Syntax {
         }
 
         //--- Methods ---
-        public SyntaxNodeCollection<T> Visit(ISyntaxVisitor visitor) {
-            var start = 0;
-            do {
-                var count = _nodes.Count;
-                for(var i = start; i < count; ++i) {
-                    _nodes[i] = _nodes[i].Visit(visitor) ?? throw new NullValueException();
-                }
-                start = count;
-            } while(start < _nodes.Count);
-            return this;
-        }
-
-        public void InspectNode(Action<ASyntaxNode> inspector) {
+        public void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector) {
             foreach(var node in _nodes) {
-                inspector(node);
+                node.Inspect(entryInspector, exitInspector);
             }
         }
 

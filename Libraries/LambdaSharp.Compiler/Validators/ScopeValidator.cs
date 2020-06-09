@@ -31,16 +31,12 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
-            moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case IScopedDeclaration scopedDeclaration:
-                    if(!(scopedDeclaration is AItemDeclaration itemDeclaration)) {
-                        throw new ShouldNeverHappenException($"unexpected type {scopedDeclaration.GetType().FullName}");
-                    }
-                    foreach(var scope in scopedDeclaration.Scope ?? Enumerable.Empty<LiteralExpression>()) {
-                        ValidateScope(itemDeclaration, scope);
-                    }
-                    break;
+            moduleDeclaration.InspectType<IScopedDeclaration>(node => {
+                if(!(node is AItemDeclaration itemDeclaration)) {
+                    throw new ShouldNeverHappenException($"unexpected type {node.GetType().FullName}");
+                }
+                foreach(var scope in node.Scope ?? Enumerable.Empty<LiteralExpression>()) {
+                    ValidateScope(itemDeclaration, scope);
                 }
             });
 

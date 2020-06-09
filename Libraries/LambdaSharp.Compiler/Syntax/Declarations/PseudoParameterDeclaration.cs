@@ -21,6 +21,8 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
+    // TODO: this class can probably be removed
+
     /// <summary>
     /// The <see cref="PseudoParameterDeclaration"/> class is used to declare CloudFormation pseudo-parameters.
     /// This declaration type is only used internally and never parsed.
@@ -29,16 +31,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Constructors ---
         public PseudoParameterDeclaration(LiteralExpression itemName) : base(itemName) { }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            return visitor.VisitEnd(this);
-        }
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-        }
     }
 }

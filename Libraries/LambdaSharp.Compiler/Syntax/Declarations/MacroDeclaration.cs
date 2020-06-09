@@ -39,23 +39,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public string CloudFormationType => "AWS::CloudFormation::Macro";
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Handler = Handler?.Visit(visitor);
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Handler?.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

@@ -44,21 +44,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            MacroName = MacroName.Visit(visitor) ?? throw new NullValueException();
-            Parameters = Parameters?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            MacroName.InspectNode(inspector);
-            Parameters?.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new TransformFunctionExpression {
             MacroName = MacroName.Clone(),
             Parameters = Parameters?.Clone()

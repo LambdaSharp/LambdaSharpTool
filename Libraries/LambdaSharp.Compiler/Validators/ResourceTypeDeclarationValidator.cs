@@ -65,12 +65,8 @@ namespace LambdaSharp.Compiler.Validators {
         //--- Methods ---
         public IEnumerable<ModuleManifestResourceType> FindResourceTypes(ModuleDeclaration moduleDeclaration) {
             var result = new List<ModuleManifestResourceType>();
-            moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case ResourceTypeDeclaration resourceTypeDeclaration:
-                    result.Add(ValidateResourceTypeDeclaration(resourceTypeDeclaration));
-                    break;
-                }
+            moduleDeclaration.InspectType<ResourceTypeDeclaration>(node => {
+                result.Add(ValidateResourceTypeDeclaration(node));
             });
             return result;
         }

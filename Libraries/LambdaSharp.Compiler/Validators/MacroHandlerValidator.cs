@@ -28,16 +28,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
-            moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case MacroDeclaration macroDeclaration:
-                    ValidateMacroDeclaration(macroDeclaration);
-                    break;
-                }
-            });
-
-            // local functions
-            void ValidateMacroDeclaration(MacroDeclaration node) {
+            moduleDeclaration.InspectType<MacroDeclaration>(node => {
                 if(node.Handler == null) {
 
                     // TODO: error
@@ -49,7 +40,7 @@ namespace LambdaSharp.Compiler.Validators {
                     Logger.Log(Error.ReferenceDoesNotExist(node.Handler.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.Handler.Value, node);
                 }
-            }
+            });
         }
     }
 }

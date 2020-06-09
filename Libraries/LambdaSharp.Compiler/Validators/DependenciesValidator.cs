@@ -31,7 +31,7 @@ namespace LambdaSharp.Compiler.Validators {
         //--- Methods ---
         public IEnumerable<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)> FindDependencies(ModuleDeclaration moduleDeclaration) {
             var result = new List<(ASyntaxNode node, ModuleManifestDependencyType type, string moduleInfo)>();
-            moduleDeclaration.InspectNode(node => {
+            moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ModuleDeclaration moduleDeclaration:
 

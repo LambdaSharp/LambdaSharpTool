@@ -67,23 +67,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            MapName = MapName.Visit(visitor) ?? throw new NullValueException();
-            TopLevelKey = TopLevelKey.Visit(visitor) ?? throw new NullValueException();
-            SecondLevelKey = SecondLevelKey.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            MapName.InspectNode(inspector);
-            TopLevelKey.InspectNode(inspector);
-            SecondLevelKey.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new FindInMapFunctionExpression {
             MapName = MapName.Clone(),
             TopLevelKey = TopLevelKey.Clone(),

@@ -40,21 +40,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public LiteralExpression ModuleName { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ModuleName, ModuleName.Visit(visitor));
-            Description = Description?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ModuleName.InspectNode(inspector);
-            Description?.InspectNode(inspector);
-        }
     }
 }

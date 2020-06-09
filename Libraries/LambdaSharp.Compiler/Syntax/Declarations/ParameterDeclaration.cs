@@ -157,6 +157,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _pragmas = SetParent(value);
         }
 
+        [SyntaxHidden]
         public LiteralExpression? Import {
             get => _import;
             set => _import = SetParent(value);
@@ -164,55 +165,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ItemName, ItemName.Visit(visitor));
-            Section = Section?.Visit(visitor);
-            Label = Label?.Visit(visitor);
-            Type = Type?.Visit(visitor);
-            Scope = Scope.Visit(visitor);
-            NoEcho = NoEcho?.Visit(visitor);
-            Default = Default?.Visit(visitor);
-            ConstraintDescription = ConstraintDescription?.Visit(visitor);
-            AllowedPattern = AllowedPattern?.Visit(visitor);
-            AllowedValues = AllowedValues.Visit(visitor);
-            MaxLength = MaxLength?.Visit(visitor);
-            MaxValue = MaxValue?.Visit(visitor);
-            MinLength = MinLength?.Visit(visitor);
-            MinValue = MinValue?.Visit(visitor);
-            Allow = Allow?.Visit(visitor);
-            Properties = Properties?.Visit(visitor);
-            EncryptionContext = EncryptionContext?.Visit(visitor);
-            Pragmas = Pragmas.Visit(visitor) ?? throw new NullValueException();
-            Declarations = Declarations.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ItemName.InspectNode(inspector);
-            Section?.InspectNode(inspector);
-            Label?.InspectNode(inspector);
-            Type?.InspectNode(inspector);
-            Scope?.InspectNode(inspector);
-            NoEcho?.InspectNode(inspector);
-            Default?.InspectNode(inspector);
-            ConstraintDescription?.InspectNode(inspector);
-            AllowedPattern?.InspectNode(inspector);
-            AllowedValues.InspectNode(inspector);
-            MaxLength?.InspectNode(inspector);
-            MaxValue?.InspectNode(inspector);
-            MinLength?.InspectNode(inspector);
-            MinValue?.InspectNode(inspector);
-            Allow?.InspectNode(inspector);
-            Properties?.InspectNode(inspector);
-            EncryptionContext?.InspectNode(inspector);
-            Pragmas.InspectNode(inspector);
-            Declarations.InspectNode(inspector);
-        }
     }
 }

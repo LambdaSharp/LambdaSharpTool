@@ -31,7 +31,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Normalize(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectNode(node => {
+            moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case SubFunctionExpression subFunctionExpression:
                     NormalizeSubFunctionExpression(subFunctionExpression);

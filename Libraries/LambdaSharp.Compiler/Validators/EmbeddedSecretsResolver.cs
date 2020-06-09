@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public async Task ResolveAsync(ModuleDeclaration moduleDeclaration) {
-            moduleDeclaration.InspectNode(node => {
+            moduleDeclaration.Inspect(node => {
                 switch(node) {
                 case ModuleDeclaration innerModuleDeclaration:
 

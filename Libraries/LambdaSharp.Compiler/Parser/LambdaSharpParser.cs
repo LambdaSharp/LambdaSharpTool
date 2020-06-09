@@ -62,7 +62,7 @@ namespace LambdaSharp.Compiler.Parser {
                         Syntax = property.GetCustomAttribute<ASyntaxAttribute>(),
                         Property = property
                     })
-                    .Where(tuple => tuple.Syntax != null)
+                    .Where(tuple => (tuple.Syntax is SyntaxRequiredAttribute) || (tuple.Syntax is SyntaxOptionalAttribute))
                     .ToList();
                 DeclarationType = declarationType;
                 Keys = syntaxProperties.ToDictionary(tuple => tuple.Property.Name, Tuple => Tuple.Property);

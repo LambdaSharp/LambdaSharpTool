@@ -16,8 +16,9 @@
  * limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using FluentAssertions;
-using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using Xunit;
 using Xunit.Abstractions;
@@ -25,6 +26,7 @@ using Xunit.Abstractions;
 namespace Tests.LambdaSharp.Compiler.Parser {
 
     // TODO: add CloudWatch event source
+    // TODO: add package Build test
     // TODO: add tests to recover from badly formed YAML
 
     public class ParseSyntaxOfTests : _Init {
@@ -231,7 +233,25 @@ Items:
             // assert
             ExpectNoMessages();
             module.Should().NotBeNull();
-            module!.Visit(new SyntaxHierarchyValidationAnalyzer());
+
+            // AST has no cycles
+            var found = new HashSet<object>();
+            module!.Inspect(node => {
+                if(!found.Add(node)) {
+                    throw new Exception("found cycle");
+                }
+            }, node => found.Remove(node));
+
+            // all nodes entered were also exited
+            found.Count.Should().Be(0);
+
+            // everything has a parent except the top-level module
+            module!.Inspect(node => {
+                if(!object.ReferenceEquals(node, module)) {
+                    node.Parent.Should().NotBeNull();
+                }
+                node.SourceLocation.Should().NotBeNull();
+            });
         }
 
 

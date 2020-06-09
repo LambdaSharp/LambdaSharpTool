@@ -48,22 +48,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                 get => _region;
                 set => _region = SetParent(value);
             }
-
-            //--- Methods ---
-            public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-                if(!visitor.VisitStart(this)) {
-                return this;
-            }
-                Version = Version?.Visit(visitor);
-                Region = Region?.Visit(visitor);
-                return visitor.VisitEnd(this);
-            }
-
-            public override void InspectNode(Action<ASyntaxNode> inspector) {
-                inspector(this);
-                Version?.InspectNode(inspector);
-                Region?.InspectNode(inspector);
-            }
         }
 
         //--- Fields ---
@@ -136,31 +120,5 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasLambdaSharpDependencies => !HasPragma("no-lambdasharp-dependencies");
         public bool HasModuleRegistration => !HasPragma("no-module-registration");
         public bool HasSamTransform => HasPragma("sam-transform");
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(ModuleName, ModuleName.Visit(visitor));
-            Version = Version.Visit(visitor) ?? throw new NullValueException();
-            Description = Description?.Visit(visitor);
-            Secrets = Secrets.Visit(visitor);
-            Using = Using.Visit(visitor);
-            Items = Items.Visit(visitor);
-            CloudFormation = CloudFormation?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            ModuleName.InspectNode(inspector);
-            Version.InspectNode(inspector);
-            Description?.InspectNode(inspector);
-            Secrets.InspectNode(inspector);
-            Using.InspectNode(inspector);
-            Items.InspectNode(inspector);
-            CloudFormation?.InspectNode(inspector);
-        }
     }
 }

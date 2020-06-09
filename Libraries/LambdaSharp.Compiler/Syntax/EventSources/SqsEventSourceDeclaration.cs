@@ -40,21 +40,5 @@ namespace LambdaSharp.Compiler.Syntax.EventSources {
         }
 
         public AExpression EventSource { get; }
-
-        //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            AssertIsSame(EventSource, EventSource.Visit(visitor));
-            BatchSize = BatchSize?.Visit(visitor);
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            EventSource.InspectNode(inspector);
-            BatchSize?.InspectNode(inspector);
-        }
     }
 }

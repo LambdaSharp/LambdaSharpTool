@@ -50,23 +50,6 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
-            }
-            IpBlock = IpBlock.Visit(visitor) ?? throw new NullValueException();
-            Count = Count.Visit(visitor) ?? throw new NullValueException();
-            CidrBits = CidrBits.Visit(visitor) ?? throw new NullValueException();
-            return visitor.VisitEnd(this);
-        }
-
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            IpBlock.InspectNode(inspector);
-            Count.InspectNode(inspector);
-            CidrBits.InspectNode(inspector);
-        }
-
         public override ASyntaxNode CloneNode() => new CidrFunctionExpression {
             IpBlock = IpBlock.Clone(),
             Count = Count.Clone(),

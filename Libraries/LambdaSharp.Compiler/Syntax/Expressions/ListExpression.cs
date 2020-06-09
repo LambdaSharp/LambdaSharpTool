@@ -41,24 +41,30 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         //--- Operators ---
         public AExpression this[int index] {
             get => _items[index];
-            set => _items[index] = SetParent(value ?? throw new ArgumentNullException(nameof(value)));
+            set {
+                if(!object.ReferenceEquals(_items[index], value)) {
+                    UnsetParent(_items[index]);
+                    _items[index]  = SetParent(value ?? throw new ArgumentNullException(nameof(value)));
+                }
+            }
         }
 
         //--- Methods ---
-        public override ASyntaxNode? VisitNode(ISyntaxVisitor visitor) {
-            if(!visitor.VisitStart(this)) {
-                return this;
+        public override void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector) {
+            entryInspector?.Invoke(this);
+            foreach(var item in _items) {
+                item.Inspect(entryInspector, exitInspector);
             }
-            for(var i = 0; i < _items.Count; ++i) {
-                _items[i] = _items[i].Visit(visitor) ?? throw new NullValueException();
-            }
-            return visitor.VisitEnd(this);
+            exitInspector?.Invoke(this);
         }
 
-        public override void InspectNode(Action<ASyntaxNode> inspector) {
-            inspector(this);
-            foreach(var item in _items) {
-                item.InspectNode(inspector);
+        public override void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+            for(var i = 0; i < Count; ++i) {
+                var value = this[i];
+                var newValue = inspector(value) ?? throw new NullValueException();
+                if(!object.ReferenceEquals(value, newValue)) {
+                    this[i] = (AExpression)newValue;
+                }
             }
         }
 
