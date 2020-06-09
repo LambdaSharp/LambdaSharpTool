@@ -19,11 +19,11 @@
 #nullable disable
 
 using FluentAssertions;
-using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Tool.Compiler.Parser {
+namespace Tests.LambdaSharp.Compiler.Parser {
 
     public class ParseListOfLiteralExpressionsTests : _Init {
 

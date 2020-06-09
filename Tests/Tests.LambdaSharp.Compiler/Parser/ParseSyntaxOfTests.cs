@@ -18,10 +18,14 @@
 
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Tool.Compiler.Parser {
+namespace Tests.LambdaSharp.Compiler.Parser {
+
+    // TODO: add CloudWatch event source
 
     public class ParseSyntaxOfTests : _Init {
 
@@ -222,11 +226,57 @@ Items:
 ");
 
             // act
-            var module = parser.ParseSyntaxOfType<ModuleDeclaration>();
+            var module = parser.ParseModule();
 
             // assert
             ExpectNoMessages();
+            module.Should().NotBeNull();
             module!.Visit(new SyntaxHierarchyValidationAnalyzer());
+        }
+
+
+        [Fact]
+        public void ParseDecryptSecretFunction() {
+
+            // arrange
+            var parser = NewParser("LambdaSharp.Compiler.dll", "DecryptSecretFunction.js");
+
+            // act
+            var expression = parser.ParseExpression();
+
+            // assert
+            ExpectNoMessages();
+            expression.Should().NotBeNull();
+            expression.Should().BeOfType<LiteralExpression>()
+              .Which.Value.Should().StartWith("const AWS = require('aws-sdk');");
+        }
+
+        [Fact]
+        public void ParseStandardModule() {
+
+            // arrange
+            var parser = NewParser("LambdaSharp.Compiler.dll", "Standard-Module.yml");
+
+            // act
+            var module = parser.ParseModule();
+
+            // assert
+            ExpectNoMessages();
+            module.Should().NotBeNull();
+        }
+
+        [Fact]
+        public void ParseLambdaSharpModule() {
+
+            // arrange
+            var parser = NewParser("LambdaSharp.Compiler.dll", "LambdaSharp-Module.yml");
+
+            // act
+            var module = parser.ParseModule();
+
+            // assert
+            ExpectNoMessages();
+            module.Should().NotBeNull();
         }
     }
 }

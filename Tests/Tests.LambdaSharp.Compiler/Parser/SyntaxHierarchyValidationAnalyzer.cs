@@ -20,9 +20,11 @@
 
 using FluentAssertions;
 using LambdaSharp.Compiler.Syntax;
-using LambdaSharp.Tool.Compiler;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.EventSources;
+using LambdaSharp.Compiler.Syntax.Expressions;
 
-namespace Tests.LambdaSharp.Tool.Compiler.Parser {
+namespace Tests.LambdaSharp.Compiler.Parser {
 
     public class SyntaxHierarchyValidationAnalyzer : ISyntaxVisitor {
 
