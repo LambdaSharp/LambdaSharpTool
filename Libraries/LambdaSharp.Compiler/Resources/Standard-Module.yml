@@ -33,7 +33,6 @@ Items:
       - Enabled
 
   - Condition: UseCoreServices
-    # TODO: `!Exists` is used at compile time to determine if a declaration exists
     Value: !And [ !Exists LambdaSharp, !Equals [ !Ref LambdaSharpCoreServices, Enabled ]]
 
   - Group: Module
@@ -46,31 +45,31 @@ Items:
 
       - Variable: Namespace
         Description: Module Namespace
-        Value: "<%MODULE_NAMESPACE_PLACEHOLDER%>"
+        Value: "<%MODULE_NAMESPACE%>"
 
       - Variable: Name
         Description: Module Name
-        Value: "<%MODULE_NAME_PLACEHOLDER%>"
+        Value: "<%MODULE_NAME%>"
 
       - Variable: FullName
         Description: Module Full Name
-        Value: "<%MODULE_FULL_NAME_PLACEHOLDER%>"
+        Value: "<%MODULE_FULL_NAME%>"
 
       - Variable: Version
         Description: Module Namespace
-        Value: "<%MODULE_VERSION_PLACEHOLDER%>"
+        Value: "<%MODULE_VERSION%>"
 
       - Variable: Origin
         Description: Module Origin
-        Value: "<%MODULE_ORIGIN_PLACEHOLDER%>"
+        Value: "<%MODULE_ORIGIN%>"
 
       - Variable: Info
         Description: Module Info
-        Value: "<%MODULE_INFO_PLACEHOLDER%>"
+        Value: "<%MODULE_INFO%>"
 
       - Variable: Description
         Description: Module Description
-        Value: "<%MODULE_DESCRIPTION_PLACEHOLDER%>"
+        Value: "<%MODULE_DESCRIPTION%>"
 
       - Condition: IsNested
         Description: Module is nested
@@ -219,3 +218,19 @@ Items:
     Properties:
       Module: !Ref Module::Info
       ModuleId: !Ref AWS::StackName
+
+  - Group: Deployment
+    Description: Deployment Variables
+    Items:
+
+      - Variable: BucketName
+        Description: S3 Bucket name from which the module is being deployed from
+        Value: !Ref DeploymentBucketName
+
+      - Variable: Tier
+        Description: Deployment tier name. Empty string for default deployment tier
+        Value: !Ref DeploymentPrefix
+
+      - Variable: TierLowercase
+        Description: Deployment tier name in lowercase characters. Empty string for default deployment tier
+        Value: !Ref DeploymentPrefixLowercase
