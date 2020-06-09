@@ -108,18 +108,18 @@ Items:
       # TODO: LambdaSharp dependent resources
       - Resource: DeadLetterQueue
         Description: Module Dead Letter Queue (ARN)
-        Condition: UseCoreServices
+        If: UseCoreServices
         Value: !Ref LambdaSharp::DeadLetterQueue # TODO: become -> !If [ UseCoreServices, !Ref LambdaSharp::DeadLetterQueue, !Ref AWS::NoValue ]
         Allow: sqs:SendMessage
 
       - Resource: LoggingStream
         Description: Module Logging Stream (ARN)
-        Condition: UseCoreServices
+        If: UseCoreServices
         Value: !Ref LambdaSharp::LoggingStream
 
       - Resource: LoggingStreamRole
         Description: Module Logging Stream Role (ARN)
-        Condition: UseCoreServices
+        If: UseCoreServices
         Value: !Ref LambdaSharp::LoggingStreamRole
 
   # TODO: add 'Deployment::*' Variables
@@ -150,7 +150,7 @@ Items:
     Label: Deployment S3 bucket name
     Description: Deployment S3 Bucket Name
 
-  - ParameteR: DeploymentPrefix
+  - Parameter: DeploymentPrefix
     Section: LambdaSharp Deployment Settings (DO NOT MODIFY)
     Label: Deployment tier prefix
     Description: Deployment Tier Prefix
@@ -174,7 +174,7 @@ Items:
 
   - Resource: ModuleSecretsPolicy
     Description: Grant usage permissions to KMS keys provided in Module definition
-    Condition: !Exists Module::Secrets
+    If: !Exists Module::Secrets
     Value: !Ref Module::Secrets
     Allow:
       - kms:Decrypt
@@ -188,7 +188,7 @@ Items:
 
   - Resource: SecretsPolicy
     Description: Grant usage permissions to KMS keys provided in Secrets parameter
-    Condition: !Not [ !Equals [ !Ref Secrets, "" ]]
+    If: !Not [ !Equals [ !Ref Secrets, "" ]]
     Value: !Ref Secrets
     Allow:
       - kms:Decrypt
@@ -215,7 +215,7 @@ Items:
 
   - Resource: Registration
     Type: LambdaSharp::Registration::Module
-    Condition: UseCoreServices
+    If: UseCoreServices
     Properties:
       Module: !Ref Module::Info
       ModuleId: !Ref AWS::StackName

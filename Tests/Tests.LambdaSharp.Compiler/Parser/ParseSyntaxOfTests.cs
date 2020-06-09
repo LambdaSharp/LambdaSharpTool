@@ -26,6 +26,7 @@ using Xunit.Abstractions;
 namespace Tests.LambdaSharp.Compiler.Parser {
 
     // TODO: add CloudWatch event source
+    // TODO: add tests to recover from badly formed YAML
 
     public class ParseSyntaxOfTests : _Init {
 

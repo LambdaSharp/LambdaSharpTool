@@ -289,8 +289,8 @@ namespace LambdaSharp.Compiler.Parser {
                 // check if next event is an !Include statement
                 if((currentParsingEvent is Scalar scalar) && (scalar.Tag == "!Include")) {
 
-                    // consume !Include event
-                    MoveNext();
+                    // NOTE (2020-06-07, bjorg): no need to call 'MoveNext()` as it will be called
+                    //  automatically when the nested events have been processed.
 
                     // parse specified file
                     var directory = Path.GetDirectoryName(peek.FilePath) ?? throw new ShouldNeverHappenException();
@@ -1431,6 +1431,7 @@ namespace LambdaSharp.Compiler.Parser {
                     // read value
                     SkipThisAndNestedEvents();
                 }
+                MoveNext();
                 break;
             case SequenceStart _:
                 while(!IsEvent<SequenceEnd>(out var _, out var _)) {
@@ -1438,6 +1439,7 @@ namespace LambdaSharp.Compiler.Parser {
                     // read value
                     SkipThisAndNestedEvents();
                 }
+                MoveNext();
                 break;
             default:
                 throw new LambdaSharpParserException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}", Location());
