@@ -302,209 +302,7 @@ namespace LambdaSharp.Compiler.Parser {
         }
 
         //--- Methods ---
-        public void ParseYaml(string filePath, string source) {
-            var parsingEvents = new List<ParsingEvent>();
-            using(var reader = new StringReader(source)) {
-                var parser = new YamlDotNet.Core.Parser(reader);
-
-                // read prologue parsing events
-                parser.Expect<StreamStart>();
-                parser.Expect<DocumentStart>();
-
-                // keep reading until the end of the document is reached
-                while(!(parser.Current is DocumentEnd)) {
-                    parsingEvents.Add(parser.Current);
-                    parser.MoveNext();
-                }
-
-                // read epilogue parsing events
-                parser.Expect<DocumentEnd>();
-                parser.Expect<StreamEnd>();
-            }
-            var enumerator = parsingEvents.GetEnumerator();
-            if(enumerator.MoveNext()) {
-                _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
-            }
-        }
-
-        public void ParseText(string filePath, string source) {
-
-            // parse non-YAML file as a plaint text file
-            var lines = source.Count(c => c.Equals('\n')) + 1;
-            var lastLineOffset = source.LastIndexOf('\n');
-            var lastLineColumnsCount = (lastLineOffset < 0)
-                ? source.Length
-                : source.Length - lastLineOffset;
-
-            // push enumerator with single scalar event onto stack
-            var enumerator = new List<ParsingEvent> {
-                new Scalar(
-                    anchor: null,
-                    tag: null,
-                    value: source,
-                    style: ScalarStyle.Plain,
-                    isPlainImplicit: true,
-                    isQuotedImplicit: true,
-                    start: new Mark(index: 0, line: 1, column: 1),
-                    end: new Mark(source.Length, lines, lastLineColumnsCount)
-                )
-            }.GetEnumerator();
-            enumerator.MoveNext();
-            _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
-        }
-
-        public SyntaxNodeCollection<T>? ParseList<T>() where T : ASyntaxNode {
-            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
-                Log(Error.ExpectedListExpression, Location());
-                SkipCurrent();
-                return null;
-            }
-            var location = Location();
-            MoveNext();
-
-            // parse declaration items in sequence
-            var result = new SyntaxNodeCollection<T> {
-                SourceLocation = location
-            };
-            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
-                if(TryParse(typeof(T), out var item)) {
-                    try {
-                        result.Add((T)item);
-                    } catch(InvalidCastException) {
-                        throw new ShouldNeverHappenException($"expected type {typeof(T).FullName}, but found {item.GetType().FullName} instead");
-                    }
-                }
-            }
-            MoveNext();
-            return result;
-        }
-
         public ModuleDeclaration? ParseModule() => ParseSyntaxOfType<ModuleDeclaration>();
-
-        public T? ParseSyntaxOfType<T>() where T : ASyntaxNode {
-
-            // fetch all possible syntax options for specified type
-            var syntaxes = GetSyntaxes(typeof(T));
-
-            // ensure first event is the beginning of a map
-            if(!IsEvent<MappingStart>(out var mappingStart, out var filePath) || (mappingStart.Tag != null)) {
-                Log(Error.ExpectedMapExpression, Location());
-                SkipCurrent();
-                return null;
-            }
-            MoveNext();
-            T? result = null;
-
-            // parse mappings
-            var foundKeys = new HashSet<string>();
-            HashSet<string>? mandatoryKeys = null;
-            SyntaxInfo? syntax = null;
-            while(!IsEvent<MappingEnd>(out var _, out var _)) {
-
-                // parse key
-                var keyScalar = Expect<Scalar>();
-                var key = keyScalar.ParsingEvent.Value;
-
-                // check if this is the first key being parsed
-                if(syntax == null) {
-                    if((syntaxes.Count == 1) && syntaxes.TryGetValue("", out syntax)) {
-
-                        // parse using the default syntax
-                        var instance = Activator.CreateInstance(syntax.DeclarationType);
-                        if(instance == null) {
-                            throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
-                        }
-                        result = (T)instance;
-                        result.SourceLocation = Location(keyScalar);
-                        mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
-                    } else if(syntaxes.TryGetValue(key, out syntax)) {
-
-                        // parse using the syntax matching the first key (akin to a keyword)
-                        if(TryParse(syntax.KeywordType ?? throw new ShouldNeverHappenException($"Keyword: {syntax.KeywordType}"), out var keywordValue)) {
-                            var instance = Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
-                            if(instance == null) {
-                                throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
-                            }
-                            result = (T)instance;
-                        } else {
-
-                            // skip the value of the key
-                            SkipCurrent();
-
-                            // skip all remaining key-value pairs
-                            SkipMapRemainingEvents();
-                            return null;
-                        }
-                        result.SourceLocation = Location(keyScalar);
-                        mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
-
-                        // continue to next key-value pair since we already parsed the keyword value
-                        continue;
-                    } else {
-                        Log(Error.UnrecognizedModuleItem(key), Location(keyScalar));
-
-                        // skip the value the key
-                        SkipCurrent();
-
-                        // skip all remaining key-value pairs
-                        SkipMapRemainingEvents();
-                        return null;
-                    }
-                }
-
-                // map read key to syntax property
-                if(syntax.Keys.TryGetValue(key, out var keyProperty)) {
-
-                    // check if key is a duplicate
-                    if(!foundKeys.Add(key)) {
-                        Log(Error.DuplicateKey(key), Location(keyScalar));
-
-                        // skip the value of the value
-                        SkipCurrent();
-                        continue;
-                    }
-
-                    // remove key from mandatory keys
-                    if(mandatoryKeys == null) {
-                        throw new ShouldNeverHappenException();
-                    }
-                    mandatoryKeys.Remove(key);
-
-                    // find type appropriate parser and set target property with the parser outcome
-                    if(TryParse(keyProperty.PropertyType, out var value)) {
-                        keyProperty.SetValue(result, value);
-                    }
-                } else {
-                    Log(Error.UnexpectedKey(key), Location(keyScalar));
-
-                    // no need to parse an invalid key
-                    SkipCurrent();
-                }
-            }
-
-            // check for missing mandatory keys
-            if(mandatoryKeys?.Any() ?? false) {
-                Log(Error.RequiredKeysMissing(mandatoryKeys), Location(filePath, mappingStart));
-            }
-            if(result != null) {
-                result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
-            }
-            MoveNext();
-            return result;
-        }
-
-        public T? ParseExpressionOfType<T>(Error error) where T : AExpression {
-            var result = ParseExpression();
-            if(!(result is T expression)) {
-
-                // NOTE (2020-02-15, bjorg): only log if result is not null, otherwise an error was already emitted
-                if(result != null) {
-                    Log(error, result.SourceLocation);
-                }
-                return null;
-            }
-            return expression;
-        }
 
         public AExpression? ParseExpression() {
             switch(Current.ParsingEvent) {
@@ -1321,6 +1119,208 @@ namespace LambdaSharp.Compiler.Parser {
                 ParseText(filePath, contents);
                 break;
             }
+        }
+
+        private void ParseYaml(string filePath, string source) {
+            var parsingEvents = new List<ParsingEvent>();
+            using(var reader = new StringReader(source)) {
+                var parser = new YamlDotNet.Core.Parser(reader);
+
+                // read prologue parsing events
+                parser.Expect<StreamStart>();
+                parser.Expect<DocumentStart>();
+
+                // keep reading until the end of the document is reached
+                while(!(parser.Current is DocumentEnd)) {
+                    parsingEvents.Add(parser.Current);
+                    parser.MoveNext();
+                }
+
+                // read epilogue parsing events
+                parser.Expect<DocumentEnd>();
+                parser.Expect<StreamEnd>();
+            }
+            var enumerator = parsingEvents.GetEnumerator();
+            if(enumerator.MoveNext()) {
+                _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
+            }
+        }
+
+        private void ParseText(string filePath, string source) {
+
+            // parse non-YAML file as a plaint text file
+            var lines = source.Count(c => c.Equals('\n')) + 1;
+            var lastLineOffset = source.LastIndexOf('\n');
+            var lastLineColumnsCount = (lastLineOffset < 0)
+                ? source.Length
+                : source.Length - lastLineOffset;
+
+            // push enumerator with single scalar event onto stack
+            var enumerator = new List<ParsingEvent> {
+                new Scalar(
+                    anchor: null,
+                    tag: null,
+                    value: source,
+                    style: ScalarStyle.Plain,
+                    isPlainImplicit: true,
+                    isQuotedImplicit: true,
+                    start: new Mark(index: 0, line: 1, column: 1),
+                    end: new Mark(source.Length, lines, lastLineColumnsCount)
+                )
+            }.GetEnumerator();
+            enumerator.MoveNext();
+            _parsingEvents.Push((FilePath: filePath, ParsingEnumerator: enumerator));
+        }
+
+        private T? ParseExpressionOfType<T>(Error error) where T : AExpression {
+            var result = ParseExpression();
+            if(!(result is T expression)) {
+
+                // NOTE (2020-02-15, bjorg): only log if result is not null, otherwise an error was already emitted
+                if(result != null) {
+                    Log(error, result.SourceLocation);
+                }
+                return null;
+            }
+            return expression;
+        }
+
+        private SyntaxNodeCollection<T>? ParseList<T>() where T : ASyntaxNode {
+            if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
+                Log(Error.ExpectedListExpression, Location());
+                SkipCurrent();
+                return null;
+            }
+            var location = Location();
+            MoveNext();
+
+            // parse declaration items in sequence
+            var result = new SyntaxNodeCollection<T> {
+                SourceLocation = location
+            };
+            while(!IsEvent<SequenceEnd>(out var _, out var _)) {
+                if(TryParse(typeof(T), out var item)) {
+                    try {
+                        result.Add((T)item);
+                    } catch(InvalidCastException) {
+                        throw new ShouldNeverHappenException($"expected type {typeof(T).FullName}, but found {item.GetType().FullName} instead");
+                    }
+                }
+            }
+            MoveNext();
+            return result;
+        }
+
+        private T? ParseSyntaxOfType<T>() where T : ASyntaxNode {
+
+            // fetch all possible syntax options for specified type
+            var syntaxes = GetSyntaxes(typeof(T));
+
+            // ensure first event is the beginning of a map
+            if(!IsEvent<MappingStart>(out var mappingStart, out var filePath) || (mappingStart.Tag != null)) {
+                Log(Error.ExpectedMapExpression, Location());
+                SkipCurrent();
+                return null;
+            }
+            MoveNext();
+            T? result = null;
+
+            // parse mappings
+            var foundKeys = new HashSet<string>();
+            HashSet<string>? mandatoryKeys = null;
+            SyntaxInfo? syntax = null;
+            while(!IsEvent<MappingEnd>(out var _, out var _)) {
+
+                // parse key
+                var keyScalar = Expect<Scalar>();
+                var key = keyScalar.ParsingEvent.Value;
+
+                // check if this is the first key being parsed
+                if(syntax == null) {
+                    if((syntaxes.Count == 1) && syntaxes.TryGetValue("", out syntax)) {
+
+                        // parse using the default syntax
+                        var instance = Activator.CreateInstance(syntax.DeclarationType);
+                        if(instance == null) {
+                            throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
+                        }
+                        result = (T)instance;
+                        result.SourceLocation = Location(keyScalar);
+                        mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
+                    } else if(syntaxes.TryGetValue(key, out syntax)) {
+
+                        // parse using the syntax matching the first key (akin to a keyword)
+                        if(TryParse(syntax.KeywordType ?? throw new ShouldNeverHappenException($"Keyword: {syntax.KeywordType}"), out var keywordValue)) {
+                            var instance = Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
+                            if(instance == null) {
+                                throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
+                            }
+                            result = (T)instance;
+                        } else {
+
+                            // skip the value of the key
+                            SkipCurrent();
+
+                            // skip all remaining key-value pairs
+                            SkipMapRemainingEvents();
+                            return null;
+                        }
+                        result.SourceLocation = Location(keyScalar);
+                        mandatoryKeys = new HashSet<string>(syntax.MandatoryKeys);
+
+                        // continue to next key-value pair since we already parsed the keyword value
+                        continue;
+                    } else {
+                        Log(Error.UnrecognizedModuleItem(key), Location(keyScalar));
+
+                        // skip the value the key
+                        SkipCurrent();
+
+                        // skip all remaining key-value pairs
+                        SkipMapRemainingEvents();
+                        return null;
+                    }
+                }
+
+                // map read key to syntax property
+                if(syntax.Keys.TryGetValue(key, out var keyProperty)) {
+
+                    // check if key is a duplicate
+                    if(!foundKeys.Add(key)) {
+                        Log(Error.DuplicateKey(key), Location(keyScalar));
+
+                        // skip the value of the value
+                        SkipCurrent();
+                        continue;
+                    }
+
+                    // remove key from mandatory keys
+                    if(mandatoryKeys == null) {
+                        throw new ShouldNeverHappenException();
+                    }
+                    mandatoryKeys.Remove(key);
+
+                    // find type appropriate parser and set target property with the parser outcome
+                    if(TryParse(keyProperty.PropertyType, out var value)) {
+                        keyProperty.SetValue(result, value);
+                    }
+                } else {
+                    Log(Error.UnexpectedKey(key), Location(keyScalar));
+
+                    // no need to parse an invalid key
+                    SkipCurrent();
+                }
+            }
+
+            // check for missing mandatory keys
+            if(mandatoryKeys?.Any() ?? false) {
+                Log(Error.RequiredKeysMissing(mandatoryKeys), Location(filePath, mappingStart));
+            }
+            if(result != null) {
+                result.SourceLocation = Location(filePath, mappingStart, Current.ParsingEvent);
+            }
+            MoveNext();
+            return result;
         }
 
         private void Log(Error error, SourceLocation? location) => _provider.Log(error, location);
