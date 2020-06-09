@@ -356,7 +356,7 @@ namespace LambdaSharp.Compiler.Parser {
         public SyntaxNodeCollection<T>? ParseList<T>() where T : ASyntaxNode {
             if(!IsEvent<SequenceStart>(out var sequenceStart, out var _) || (sequenceStart.Tag != null)) {
                 Log(Error.ExpectedListExpression, Location());
-                SkipThisAndNestedEvents();
+                SkipCurrent();
                 return null;
             }
             var location = Location();
@@ -389,7 +389,7 @@ namespace LambdaSharp.Compiler.Parser {
             // ensure first event is the beginning of a map
             if(!IsEvent<MappingStart>(out var mappingStart, out var filePath) || (mappingStart.Tag != null)) {
                 Log(Error.ExpectedMapExpression, Location());
-                SkipThisAndNestedEvents();
+                SkipCurrent();
                 return null;
             }
             MoveNext();
@@ -429,7 +429,7 @@ namespace LambdaSharp.Compiler.Parser {
                         } else {
 
                             // skip the value of the key
-                            SkipThisAndNestedEvents();
+                            SkipCurrent();
 
                             // skip all remaining key-value pairs
                             SkipMapRemainingEvents();
@@ -443,8 +443,8 @@ namespace LambdaSharp.Compiler.Parser {
                     } else {
                         Log(Error.UnrecognizedModuleItem(key), Location(keyScalar));
 
-                        // skip the value of the key
-                        SkipThisAndNestedEvents();
+                        // skip the value the key
+                        SkipCurrent();
 
                         // skip all remaining key-value pairs
                         SkipMapRemainingEvents();
@@ -459,8 +459,8 @@ namespace LambdaSharp.Compiler.Parser {
                     if(!foundKeys.Add(key)) {
                         Log(Error.DuplicateKey(key), Location(keyScalar));
 
-                        // no need to parse the value for the duplicate key
-                        SkipThisAndNestedEvents();
+                        // skip the value of the value
+                        SkipCurrent();
                         continue;
                     }
 
@@ -478,7 +478,7 @@ namespace LambdaSharp.Compiler.Parser {
                     Log(Error.UnexpectedKey(key), Location(keyScalar));
 
                     // no need to parse an invalid key
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                 }
             }
 
@@ -516,7 +516,7 @@ namespace LambdaSharp.Compiler.Parser {
                 return ConvertFunction(scalar.Tag, ParseLiteralExpression());
             default:
                 Log(Error.ExpectedExpression, Location());
-                SkipThisAndNestedEvents();
+                SkipCurrent();
                 return null;
             }
 
@@ -524,7 +524,7 @@ namespace LambdaSharp.Compiler.Parser {
             AExpression? ParseObjectExpression() {
                 if(!IsEvent<MappingStart>(out var mappingStart, out var filePath)) {
                     Log(Error.ExpectedMapExpression, Location());
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                     return null;
                 }
                 MoveNext();
@@ -537,7 +537,7 @@ namespace LambdaSharp.Compiler.Parser {
                     var keyScalar = Expect<Scalar>();
                     if(result.ContainsKey(keyScalar.ParsingEvent.Value)) {
                         Log(Error.DuplicateKey(keyScalar.ParsingEvent.Value), Location(keyScalar));
-                        SkipThisAndNestedEvents();
+                        SkipCurrent();
                         continue;
                     }
 
@@ -562,7 +562,7 @@ namespace LambdaSharp.Compiler.Parser {
             AExpression? ParseListExpression() {
                 if(!IsEvent<SequenceStart>(out var sequenceStart, out var filePath)) {
                     Log(Error.ExpectedListExpression, Location());
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                     return null;
                 }
                 MoveNext();
@@ -583,7 +583,7 @@ namespace LambdaSharp.Compiler.Parser {
             AExpression? ParseLiteralExpression() {
                 if(!IsEvent<Scalar>(out var scalar, out var filePath)) {
                     Log(Error.ExpectedLiteralValue, Location());
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                     return null;
                 }
                 MoveNext();
@@ -1386,7 +1386,7 @@ namespace LambdaSharp.Compiler.Parser {
             }
             Log(Error.MissingParserDefinition(type.Name), Location());
             result = null;
-            SkipThisAndNestedEvents();
+            SkipCurrent();
             return false;
         }
 
@@ -1414,7 +1414,7 @@ namespace LambdaSharp.Compiler.Parser {
             return false;
         }
 
-        private void SkipThisAndNestedEvents() {
+        private void SkipCurrent() {
             var current = Current.ParsingEvent;
             MoveNext();
             switch(current) {
@@ -1426,10 +1426,10 @@ namespace LambdaSharp.Compiler.Parser {
                 while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                     // read key
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
 
                     // read value
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                 }
                 MoveNext();
                 break;
@@ -1437,7 +1437,7 @@ namespace LambdaSharp.Compiler.Parser {
                 while(!IsEvent<SequenceEnd>(out var _, out var _)) {
 
                     // read value
-                    SkipThisAndNestedEvents();
+                    SkipCurrent();
                 }
                 MoveNext();
                 break;
@@ -1448,8 +1448,9 @@ namespace LambdaSharp.Compiler.Parser {
 
         private void SkipMapRemainingEvents() {
             while(!IsEvent<MappingEnd>(out var _, out var _)) {
-                SkipThisAndNestedEvents();
+                SkipCurrent();
             }
+            MoveNext();
         }
 
         private ParsingEventWithFilePath<T> Expect<T>() where T : ParsingEvent {
