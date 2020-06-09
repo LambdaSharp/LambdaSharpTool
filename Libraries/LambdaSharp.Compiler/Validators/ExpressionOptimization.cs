@@ -16,14 +16,22 @@
  * limitations under the License.
  */
 
-namespace LambdaSharp.Compiler.Parser {
+using System;
+using LambdaSharp.Compiler.Syntax.Declarations;
 
-    public interface ILambdaSharpParserDependencyProvider {
+namespace LambdaSharp.Compiler.Validators {
 
-        //--- Properties ---
-        ILogger Logger { get; }
+    internal sealed class ExpressionOptimization : AValidator {
+
+        //--- Constructors ---
+        public ExpressionOptimization(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        string ReadFile(string filePath);
+        public void Optimize(ModuleDeclaration moduleDeclaration) {
+
+            // TODO: inline !Ref/!GetAtt expressions in !Sub whenever possible
+            // TODO: remove any unused resources that can be garbage collected
+            throw new NotImplementedException();
+        }
     }
 }

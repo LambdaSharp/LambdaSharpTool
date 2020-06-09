@@ -17,178 +17,112 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using LambdaSharp.CloudFormation;
+using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Parser;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.Validators;
 
 namespace LambdaSharp.Compiler {
 
-    public class ModuleScope : IModuleValidatorDependencyProvider {
-
-        //--- Class Fields ---
-
-        //--- Fields ---
-        private readonly ModuleDeclaration _moduleDeclaration;
-
-        //--- Constructors ---
-        public ModuleScope(ModuleDeclaration moduleDeclaration, ILogger logger) {
-            _moduleDeclaration = moduleDeclaration ?? throw new System.ArgumentNullException(nameof(moduleDeclaration));
-            Logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
+    public interface IModuleScopeDependencyProvider {
 
         //--- Properties ---
-        private ILogger Logger { get; }
+        ILogger Logger { get; }
 
         //--- Methods ---
-        public async Task ConvertToCloudFormationAsync(ILogger logger) {
-            if(logger == null) {
-                throw new ArgumentNullException(nameof(logger));
+        string ReadFile(string filePath);
+
+    }
+
+    public class ModuleScope : IModuleValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
+
+        //--- Constructors ---
+        public ModuleScope(IModuleScopeDependencyProvider provider)
+            => Provider = provider ?? throw new ArgumentNullException(nameof(provider));
+
+        //--- Properties ---
+        private IModuleScopeDependencyProvider Provider { get; }
+        private ILogger Logger => Provider.Logger;
+
+        //--- Methods ---
+        public async Task<CloudFormationTemplate?> ComileAsync(string filePath) {
+            var module = Load(filePath);
+            if(module == null) {
+                return null;
             }
 
             // TODO: validate module name
 
-            // find all module dependencies
-            var dependencies = new DependenciesValidator(this).FindDependencies(_moduleDeclaration);
-            var cloudformationSpec = _moduleDeclaration.CloudFormation;
+            // find module dependencies
+            var dependencies = new DependenciesValidator(this).FindDependencies(module);
+            var cloudformationSpec = module.CloudFormation;
 
             // TODO: download external dependencies
 
             // normalize AST for analysis
-            Normalize();
+            new ExpressionNormalization(this).Normalize(module);
 
             // validate declarations
-            new ParameterDeclarationValidator(this).Validate(_moduleDeclaration);
-            new ResourceDeclarationValidator(this).Validate(_moduleDeclaration);
-            new AllowValidator(this).Validate(_moduleDeclaration);
+            new ParameterDeclarationValidator(this).Validate(module);
+            new ResourceDeclarationValidator(this).Validate(module);
+            new AllowValidator(this).Validate(module);
 
             // register local resource types
-            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(_moduleDeclaration);
+            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(module);
 
             // ensure that all references can be resolved
-            var declarations = new ItemDeclarationValidator(this).FindDeclarations(_moduleDeclaration);
-            new ReferenceValidator(this).Validate(_moduleDeclaration, declarations);
+            var declarations = new ItemDeclarationValidator(this).FindDeclarations(module);
+            new ReferenceValidator(this).Validate(module, declarations);
 
             // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
             // ensure that handler references are valid
-            new ResourceTypeHandlerValidator(this).Validate(_moduleDeclaration, declarations);
-            new MacroHandlerValidator(this).Validate(_moduleDeclaration, declarations);
+            new ResourceTypeHandlerValidator(this).Validate(module, declarations);
+            new MacroHandlerValidator(this).Validate(module, declarations);
 
             // validate resource scopes
-            new ScopeValidator(this).Validate(_moduleDeclaration, declarations);
+            new ScopeValidator(this).Validate(module, declarations);
 
             // optimize AST
-            Optimize();
+            new ExpressionOptimization(this).Optimize(module);
 
             throw new NotImplementedException();
         }
 
-        void Normalize() {
-            _moduleDeclaration.InspectNode(node => {
-                switch(node) {
-                case SubFunctionExpression subFunctionExpression:
-                    NormalizeSubFunctionExpression(subFunctionExpression);
-                    break;
+        private ModuleDeclaration? Load(string filePath) {
+
+            // load specified module
+            var result = new LambdaSharpParser(this, filePath).ParseModule();
+            if(result == null) {
+                return null;
+            }
+
+            // load LambdaSharp declarations if required
+            if(result.HasLambdaSharpDependencies) {
+                var lambdasharp = new LambdaSharpParser(this, "LambdaSharp.Compiler.dll", "LambdaSharp-Module.yml").ParseModule();
+                if(lambdasharp == null) {
+                    throw new ShouldNeverHappenException("unable to parse LambdaSharp.Compiler.dll/LambdaSharp-Module.yml");
                 }
-            });
-
-            // local function
-            void NormalizeSubFunctionExpression(SubFunctionExpression node) {
-
-                // NOTE (2019-12-07, bjorg): convert all nested !Ref and !GetAtt expressions into
-                //  explit expressions using local !Sub parameters; this allows us track these
-                //  references as dependencies, as well as allowing us later to analyze
-                //  and resolve these references without having to parse the !Sub format string anymore;
-                //  during the optimization phase, the !Ref and !GetAtt expressions are inlined again
-                //  where possible.
-
-                // replace as many ${VAR} occurrences as possible in the format string
-                var replaceFormatString =  ReplaceSubPattern(
-                    node.FormatString.Value,
-                    (reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) => {
-
-                        // compute source location based on line/column offsets
-                        var sourceLocation = new SourceLocation(
-                            node.FormatString.SourceLocation.FilePath,
-                            node.FormatString.SourceLocation.LineNumberStart + startLineOffset,
-                            node.FormatString.SourceLocation.LineNumberStart + endLineOffset,
-                            node.FormatString.SourceLocation.ColumnNumberStart + startColumnOffset,
-                            node.FormatString.SourceLocation.ColumnNumberStart + endColumnOffset
-                        );
-
-                        // check if reference is to a local !Sub parameter
-                        if(node.Parameters.ContainsKey(reference)) {
-
-                            // local references cannot have an attribute suffix
-                            if(attribute != null) {
-                                Logger.Log(Error.SubFunctionParametersCannotUseAttributeNotation(reference), sourceLocation);
-                            }
-                        }
-
-                        // check if embedded expression is a !Ref or !GetAtt expression
-                        AExpression argExpression;
-                        if(attribute == null) {
-
-                            // create explicit !Ref expression
-                            argExpression = new ReferenceFunctionExpression {
-                                SourceLocation = sourceLocation,
-                                ReferenceName = Fn.Literal(reference)
-                            };
-                        } else {
-
-                            // create explicit !GetAtt expression
-                            argExpression = new GetAttFunctionExpression {
-                                SourceLocation = sourceLocation,
-                                ReferenceName = Fn.Literal(reference),
-                                AttributeName = Fn.Literal(attribute)
-                            };
-                        }
-
-                        // move the resolved expression into !Sub parameters
-                        var argName = $"P{node.Parameters.Count}";
-                        node.Parameters[argName] = argExpression;
-
-                        // substitute found value as new argument
-                        return "${" + argName + "}";
-                    }
-                );
-                node.FormatString = Fn.Literal(replaceFormatString, node.FormatString.SourceLocation);
+                result.Items.AddRange(lambdasharp.Items);
             }
 
-            string ReplaceSubPattern(string subPattern, Func<string, string?, int, int, int, int, string> replace) {
-                return Regex.Replace(subPattern, @"\$\{(?!\!)[^\}]+\}", match => {
-
-                    // parse matche expression into Reference.Attribute
-                    var matchText = match.ToString();
-                    var namePair = matchText
-                        .Substring(2, matchText.Length - 3)
-                        .Trim()
-                        .Split('.', 2);
-                    var reference = namePair[0].Trim();
-                    var attribute = (namePair.Length == 2) ? namePair[1].Trim() : null;
-
-                    // compute matched expression position
-                    var startLineOffset = subPattern.Take(match.Index).Count(c => c == '\n');
-                    var endLineOffset = subPattern.Take(match.Index + matchText.Length).Count(c => c == '\n');
-                    var startColumnOffset = subPattern.Take(match.Index).Reverse().TakeWhile(c => c != '\n').Count();
-                    var endColumnOffset = subPattern.Take(match.Index + matchText.Length).Reverse().TakeWhile(c => c != '\n').Count();
-
-                    // invoke callback
-                    return replace(reference, attribute, startLineOffset, endLineOffset, startColumnOffset, endColumnOffset) ?? matchText;
-                });
+            // load standard declarations
+            var standard = new LambdaSharpParser(this, "LambdaSharp.Compiler.dll", "Standard-Module.yml").ParseModule();
+            if(standard == null) {
+                throw new ShouldNeverHappenException("unable to parse LambdaSharp.Compiler.dll/Standard-Module.yml");
             }
-        }
-
-        private void Optimize() {
-
-            // TODO: inline !Ref/!GetAtt expressions in !Sub whenever possible
-            // TODO: remove any unused resources that can be garbage collected
-        }
+            result.Items.AddRange(result.Items);
+            return result;
+       }
 
         //--- IModuleValidatorDependencyProvider Members ---
         ILogger IModuleValidatorDependencyProvider.Logger => Logger;
@@ -196,7 +130,7 @@ namespace LambdaSharp.Compiler {
         bool IModuleValidatorDependencyProvider.IsValidResourceType(string type) {
 
             // TODO:
-            throw new NotImplementedException();
+            return true;
         }
 
         bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) {
@@ -205,5 +139,9 @@ namespace LambdaSharp.Compiler {
             throw new NotImplementedException();
         }
 
-   }
+        //--- ILambdaSharpParserDependencyProvider Members ---
+        ILogger ILambdaSharpParserDependencyProvider.Logger => Logger;
+
+        string ILambdaSharpParserDependencyProvider.ReadFile(string filePath) => Provider.ReadFile(filePath);
+    }
 }

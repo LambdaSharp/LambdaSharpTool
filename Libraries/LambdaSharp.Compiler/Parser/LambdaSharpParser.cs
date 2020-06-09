@@ -1323,7 +1323,7 @@ namespace LambdaSharp.Compiler.Parser {
             return result;
         }
 
-        private void Log(Error error, SourceLocation? location) => _provider.Log(error, location);
+        private void Log(Error error, SourceLocation? location) => _provider.Logger.Log(error, location ?? SourceLocation.Empty);
 
         private SourceLocation Location() {
             var current = Current;

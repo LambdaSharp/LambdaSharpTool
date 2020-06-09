@@ -98,6 +98,12 @@ namespace LambdaSharp.Compiler.Syntax {
 
         public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));
 
+        public void AddRange(IEnumerable<T> items) {
+            foreach(var item in items) {
+                Add(item);
+            }
+        }
+
         [return: NotNullIfNotNull("node")]
         private T? SetItemParent(T? node) {
             if((node != null) && (_parent != null)) {

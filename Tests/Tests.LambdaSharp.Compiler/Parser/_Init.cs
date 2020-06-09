@@ -36,22 +36,37 @@ namespace Tests.LambdaSharp.Compiler.Parser {
     public abstract class _Init {
 
         //--- Types ---
-        public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
+        public class InMemroyLogger : ILogger {
 
             //--- Fields ---
             private readonly List<string> _messages;
 
             //--- Constructors ---
-            public ParserDependencyProvider(List<string> messages) => _messages = messages ?? throw new ArgumentNullException(nameof(messages));
+            public InMemroyLogger(List<string> messages) => _messages = messages ?? throw new ArgumentNullException(nameof(messages));
 
             //--- Properties ---
             public IEnumerable<string> Messages => _messages;
-            public Dictionary<string, string> Files { get; } = new Dictionary<string, string>();
 
             //--- Methods ---
-            public void Log(Error error, SourceLocation sourceLocation)
-                => _messages.Add($"ERROR{error.Code}: {error.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
+            public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
+                _messages.Add($"{entry.Severity.ToString().ToUpperInvariant()}{entry.Code}: {entry.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
+            }
+        }
 
+        public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
+
+            //--- Fields ---
+            private readonly InMemroyLogger _logger;
+
+            //--- Constructors ---
+            public ParserDependencyProvider(List<string> messages) => _logger = new InMemroyLogger(messages ?? throw new ArgumentNullException(nameof(messages)));
+
+            //--- Properties ---
+            public IEnumerable<string> Messages => _logger.Messages;
+            public Dictionary<string, string> Files { get; } = new Dictionary<string, string>();
+            public ILogger Logger => _logger;
+
+            //--- Methods ---
             public string ReadFile(string filePath) => Files[filePath];
         }
 
