@@ -34,10 +34,24 @@ namespace LambdaSharp.Compiler {
 
         //--- Methods ---
         string ReadFile(string filePath);
-
     }
 
     public class ModuleScope : IModuleValidatorDependencyProvider, ILambdaSharpParserDependencyProvider {
+
+        //--- Class Methods ---
+        public static bool TryParseModuleFullName(string compositeModuleFullName, out string moduleNamespace, out string moduleName) {
+            moduleNamespace = "<BAD>";
+            moduleName = "<BAD>";
+            if(!ModuleInfo.TryParse(compositeModuleFullName, out var moduleInfo)) {
+                return false;
+            }
+            if((moduleInfo.Version != null) || (moduleInfo.Origin != null)) {
+                return false;
+            }
+            moduleNamespace = moduleInfo.Namespace;
+            moduleName = moduleInfo.Name;
+            return true;
+        }
 
         //--- Constructors ---
         public ModuleScope(IModuleScopeDependencyProvider provider)
@@ -46,6 +60,9 @@ namespace LambdaSharp.Compiler {
         //--- Properties ---
         private IModuleScopeDependencyProvider Provider { get; }
         private ILogger Logger => Provider.Logger;
+        private string? ModuleNamespace { get; set; }
+        private string? ModuleName { get; set; }
+        private VersionInfo? ModuleVersion { get; set; }
 
         //--- Methods ---
         public async Task<CloudFormationTemplate?> ComileAsync(string filePath) {
@@ -55,6 +72,23 @@ namespace LambdaSharp.Compiler {
             }
 
             // TODO: validate module name
+
+            // ensure module version is present and valid
+            if(!VersionInfo.TryParse(module.Version.Value, out var version)) {
+                Logger.Log(Error.VersionAttributeInvalid, module.Version);
+                version = VersionInfo.Parse("0.0");
+            }
+            if(ModuleVersion == null) {
+                ModuleVersion = version;
+            }
+
+            // ensure module has a namespace and name
+            if(TryParseModuleFullName(module.ModuleName.Value, out string moduleNamespace, out var moduleName)) {
+                ModuleNamespace = moduleNamespace;
+                ModuleName = moduleName;
+            } else {
+                Logger.Log(Error.ModuleNameAttributeInvalid, module.ModuleName);
+            }
 
             // find module dependencies
             var dependencies = new DependenciesValidator(this).FindDependencies(module);
@@ -90,6 +124,9 @@ namespace LambdaSharp.Compiler {
 
             // optimize AST
             new ExpressionOptimization(this).Optimize(module);
+
+            // resolve secrets
+            await new EmbeddedSecretsResolver(this).ResolveAsync(module);
 
             throw new NotImplementedException();
         }
@@ -136,6 +173,12 @@ namespace LambdaSharp.Compiler {
         }
 
         bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
 
             // TODO:
             throw new NotImplementedException();

@@ -16,6 +16,8 @@
  * limitations under the License.
  */
 
+using System.Threading.Tasks;
+
 namespace LambdaSharp.Compiler.Validators {
 
     public interface IModuleValidatorDependencyProvider {
@@ -26,5 +28,6 @@ namespace LambdaSharp.Compiler.Validators {
         //--- Methods ---
         bool IsValidResourceType(string type);
         bool TryGetResourceType(string typeName, out ResourceType resourceType);
+        Task<string> ConvertKmsAliasToArn(string alias);
     }
 }
