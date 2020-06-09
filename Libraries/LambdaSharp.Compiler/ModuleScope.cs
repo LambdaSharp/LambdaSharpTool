@@ -17,16 +17,12 @@
  */
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using LambdaSharp.CloudFormation;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
-using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.Validators;
 
 namespace LambdaSharp.Compiler {
@@ -120,7 +116,13 @@ namespace LambdaSharp.Compiler {
             if(standard == null) {
                 throw new ShouldNeverHappenException("unable to parse LambdaSharp.Compiler.dll/Standard-Module.yml");
             }
-            result.Items.AddRange(result.Items);
+            result.Items.AddRange(standard.Items);
+
+            // add secrets as Module::Secrets
+            if(result.Secrets.Any()) {
+
+                // TODO:
+            }
             return result;
        }
 
