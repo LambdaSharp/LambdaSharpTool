@@ -66,72 +66,57 @@ namespace LambdaSharp.Compiler {
 
         //--- Methods ---
         public async Task<CloudFormationTemplate?> ComileAsync(string filePath) {
-            var module = Load(filePath);
-            if(module == null) {
+            var moduleDeclaration = LoadModule(filePath);
+            if(moduleDeclaration == null) {
                 return null;
             }
+            ValidateModuleInformation(moduleDeclaration);
 
-            // TODO: validate module name
-
-            // ensure module version is present and valid
-            if(!VersionInfo.TryParse(module.Version.Value, out var version)) {
-                Logger.Log(Error.VersionAttributeInvalid, module.Version);
-                version = VersionInfo.Parse("0.0");
-            }
-            if(ModuleVersion == null) {
-                ModuleVersion = version;
-            }
-
-            // ensure module has a namespace and name
-            if(TryParseModuleFullName(module.ModuleName.Value, out string moduleNamespace, out var moduleName)) {
-                ModuleNamespace = moduleNamespace;
-                ModuleName = moduleName;
-            } else {
-                Logger.Log(Error.ModuleNameAttributeInvalid, module.ModuleName);
-            }
+            // validate AST integrity
+            new IntegrityValidator(this).Validate(moduleDeclaration);
 
             // find module dependencies
-            var dependencies = new DependenciesValidator(this).FindDependencies(module);
-            var cloudformationSpec = module.CloudFormation;
+            var dependencies = new DependenciesValidator(this).FindDependencies(moduleDeclaration);
+            var cloudformationSpec = moduleDeclaration.CloudFormation;
 
             // TODO: download external dependencies
 
             // normalize AST for analysis
-            new ExpressionNormalization(this).Normalize(module);
+            new ExpressionNormalization(this).Normalize(moduleDeclaration);
 
             // validate declarations
-            new ParameterDeclarationValidator(this).Validate(module);
-            new ResourceDeclarationValidator(this).Validate(module);
-            new AllowValidator(this).Validate(module);
+            new ParameterDeclarationValidator(this).Validate(moduleDeclaration);
+            new ResourceDeclarationValidator(this).Validate(moduleDeclaration);
+            new AllowValidator(this).Validate(moduleDeclaration);
 
             // register local resource types
-            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(module);
+            var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
 
             // ensure that all references can be resolved
-            var declarations = new ItemDeclarationValidator(this).FindDeclarations(module);
-            new ReferenceValidator(this).Validate(module, declarations);
+            var declarations = new ItemDeclarationValidator(this).FindDeclarations(moduleDeclaration);
+            new ReferenceValidator(this).Validate(moduleDeclaration, declarations);
 
             // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
             // ensure that handler references are valid
-            new ResourceTypeHandlerValidator(this).Validate(module, declarations);
-            new MacroHandlerValidator(this).Validate(module, declarations);
+            new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration, declarations);
+            new MacroHandlerValidator(this).Validate(moduleDeclaration, declarations);
 
             // validate resource scopes
-            new ScopeValidator(this).Validate(module, declarations);
+            new ScopeValidator(this).Validate(moduleDeclaration, declarations);
 
             // optimize AST
-            new ExpressionOptimization(this).Optimize(module);
+            new ExpressionOptimization(this).Optimize(moduleDeclaration);
 
             // resolve secrets
-            await new EmbeddedSecretsResolver(this).ResolveAsync(module);
+            await new EmbeddedSecretsResolver(this).ResolveAsync(moduleDeclaration);
 
             throw new NotImplementedException();
         }
 
-        private ModuleDeclaration? Load(string filePath) {
+        private ModuleDeclaration? LoadModule(string filePath) {
 
             // load specified module
             var result = new LambdaSharpParser(this, filePath).ParseModule();
@@ -161,6 +146,26 @@ namespace LambdaSharp.Compiler {
                 // TODO:
             }
             return result;
+       }
+
+       private void ValidateModuleInformation(ModuleDeclaration moduleDeclaration) {
+
+            // ensure module version is present and valid
+            if(!VersionInfo.TryParse(moduleDeclaration.Version.Value, out var version)) {
+                Logger.Log(Error.VersionAttributeInvalid, moduleDeclaration.Version);
+                version = VersionInfo.Parse("0.0");
+            }
+            if(ModuleVersion == null) {
+                ModuleVersion = version;
+            }
+
+            // ensure module has a namespace and name
+            if(TryParseModuleFullName(moduleDeclaration.ModuleName.Value, out string moduleNamespace, out var moduleName)) {
+                ModuleNamespace = moduleNamespace;
+                ModuleName = moduleName;
+            } else {
+                Logger.Log(Error.ModuleNameAttributeInvalid, moduleDeclaration.ModuleName);
+            }
        }
 
         //--- IModuleValidatorDependencyProvider Members ---
