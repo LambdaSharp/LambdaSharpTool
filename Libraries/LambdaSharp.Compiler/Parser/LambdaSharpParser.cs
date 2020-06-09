@@ -23,6 +23,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Text;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
@@ -33,26 +34,10 @@ using YamlDotNet.Core.Events;
 
 namespace LambdaSharp.Compiler.Parser {
 
-    public interface ILambdaSharpParserDependencyProvider {
-
-        //--- Methods ---
-
-        // TODO: does SourceLocation still needs to be nullable?
-        void Log(Error error, SourceLocation? sourceLocation);
-        string ReadFile(string filePath);
-    }
-
-    public sealed class LambdaSharpParserException : ApplicationException {
-
-        //--- Constructors ---
-        public LambdaSharpParserException(string message) : base(message) { }
-    }
-
     public sealed class LambdaSharpParser {
 
-        // TODO:
-        //  - `cloudformation package`, when given a YAML template, converts even explicit strings to integers when the string begins with a 0 and contains nothing but digits · Issue #2934 · aws/aws-cli · GitHub (https://github.com/aws/aws-cli/issues/2934)
-        //  - 'null' literal can also be used where keys are allowed! (e.g. ~: foo)
+        // TODO: `cloudformation package`, when given a YAML template, converts even explicit strings to integers when the string begins with a 0 and contains nothing but digits · Issue #2934 · aws/aws-cli · GitHub (https://github.com/aws/aws-cli/issues/2934)
+        // TODO: 'null' literal can also be used where keys are allowed! (e.g. ~: foo)
 
         //--- Types ---
         private class SyntaxInfo {
@@ -93,6 +78,19 @@ namespace LambdaSharp.Compiler.Parser {
             public Type? KeywordType { get; }
             public Dictionary<string, PropertyInfo> Keys { get; }
             public IEnumerable<string> MandatoryKeys { get; }
+        }
+
+        private readonly struct ParsingEventWithFilePath<T> where T : ParsingEvent {
+
+            //--- Fields ---
+            public readonly string FilePath;
+            public readonly T ParsingEvent;
+
+            //--- Constructors ---
+            public ParsingEventWithFilePath(string filePath, T parsingEvent) {
+                FilePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
+                ParsingEvent = parsingEvent ?? throw new ArgumentNullException(nameof(parsingEvent));
+            }
         }
 
         //--- Class Methods ---
@@ -275,12 +273,14 @@ namespace LambdaSharp.Compiler.Parser {
             };
         }
 
-        public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider, string filePath) : this(provider) {
-            ParseFile(filePath);
+        public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider, string filePath) : this(provider, "", filePath) { }
+
+        public LambdaSharpParser(ILambdaSharpParserDependencyProvider provider, string workingDirectory, string filename) : this(provider) {
+            ParseFileContents(workingDirectory, filename);
         }
 
         //--- Properties ---
-        private (string FilePath, ParsingEvent ParsingEvent) Current {
+        private ParsingEventWithFilePath<ParsingEvent> Current {
             get {
             again:
                 var peek = _parsingEvents.Peek();
@@ -294,28 +294,14 @@ namespace LambdaSharp.Compiler.Parser {
 
                     // parse specified file
                     var directory = Path.GetDirectoryName(peek.FilePath) ?? throw new ShouldNeverHappenException();
-                    ParseFile(Path.Combine(directory, scalar.Value));
+                    ParseFileContents(directory, scalar.Value);
                     goto again;
                 }
-                return (FilePath: peek.FilePath, ParsingEvent: peek.ParsingEnumerator.Current);
+                return new ParsingEventWithFilePath<ParsingEvent>(peek.FilePath, peek.ParsingEnumerator.Current);
             }
         }
 
         //--- Methods ---
-        public void ParseFile(string filePath) {
-            var contents = _provider.ReadFile(filePath);
-
-            // check if a YAML file is being parsed
-            switch(Path.GetExtension(filePath).ToLowerInvariant()) {
-            case ".yml":
-                ParseYaml(filePath, contents);
-                break;
-            default:
-                ParseText(filePath, contents);
-                break;
-            }
-        }
-
         public void ParseYaml(string filePath, string source) {
             var parsingEvents = new List<ParsingEvent>();
             using(var reader = new StringReader(source)) {
@@ -393,6 +379,8 @@ namespace LambdaSharp.Compiler.Parser {
             return result;
         }
 
+        public ModuleDeclaration? ParseModule() => ParseSyntaxOfType<ModuleDeclaration>();
+
         public T? ParseSyntaxOfType<T>() where T : ASyntaxNode {
 
             // fetch all possible syntax options for specified type
@@ -424,7 +412,7 @@ namespace LambdaSharp.Compiler.Parser {
                         // parse using the default syntax
                         var instance = Activator.CreateInstance(syntax.DeclarationType);
                         if(instance == null) {
-                            throw new ApplicationException($"unsupported declaration type: {syntax.DeclarationType.FullName}");
+                            throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
                         }
                         result = (T)instance;
                         result.SourceLocation = Location(keyScalar);
@@ -432,13 +420,16 @@ namespace LambdaSharp.Compiler.Parser {
                     } else if(syntaxes.TryGetValue(key, out syntax)) {
 
                         // parse using the syntax matching the first key (akin to a keyword)
-                        if(TryParse(syntax.KeywordType ?? throw new ShouldNeverHappenException(), out var keywordValue)) {
+                        if(TryParse(syntax.KeywordType ?? throw new ShouldNeverHappenException($"Keyword: {syntax.KeywordType}"), out var keywordValue)) {
                             var instance = Activator.CreateInstance(syntax.DeclarationType, new object[] { keywordValue });
                             if(instance == null) {
-                                throw new ApplicationException($"unsupported declaration type: {syntax.DeclarationType.FullName}");
+                                throw new LambdaSharpParserException($"unsupported declaration type: {syntax.DeclarationType.FullName}", Location());
                             }
                             result = (T)instance;
                         } else {
+
+                            // skip the value of the key
+                            SkipThisAndNestedEvents();
 
                             // skip all remaining key-value pairs
                             SkipMapRemainingEvents();
@@ -760,6 +751,9 @@ namespace LambdaSharp.Compiler.Parser {
                     case "Fn::Or":
                         converted = ConvertToOrConditionExpression(kv.Value);
                         break;
+                    case "Fn::Exists":
+                        converted = ConvertToExistsExpression(kv.Value);
+                        break;
                     case "Condition":
                         converted = ConvertToConditionRefExpression(kv.Value);
                         break;
@@ -822,6 +816,8 @@ namespace LambdaSharp.Compiler.Parser {
                     return ConvertToOrConditionExpression(converted);
                 case "!Condition":
                     return ConvertToConditionRefExpression(converted);
+                case "!Exists":
+                    return ConvertToExistsExpression(converted);
                 default:
                     Log(Error.UnknownFunctionTag(tag), converted.SourceLocation);
                     return null;
@@ -1197,6 +1193,21 @@ namespace LambdaSharp.Compiler.Parser {
                 Log(Error.FunctionInvalidParameter("!Condition"), value.SourceLocation);
                 return null;
             }
+
+            AExpression? ConvertToExistsExpression(AExpression value) {
+
+                // !Exists STRING
+                if(value is LiteralExpression conditionLiteral) {
+                    return new ExistsConditionExpression {
+                        SourceLocation = value.SourceLocation,
+                        ReferenceName = new LiteralExpression(conditionLiteral.Value, LiteralType.String) {
+                            SourceLocation = value.SourceLocation
+                        }
+                    };
+                }
+                Log(Error.FunctionInvalidParameter("!Condition"), value.SourceLocation);
+                return null;
+            }
         }
 
         public SyntaxNodeCollection<LiteralExpression>? ParseListOfLiteralExpressions() {
@@ -1277,6 +1288,41 @@ namespace LambdaSharp.Compiler.Parser {
             return result;
         }
 
+        private void ParseFileContents(string workingDirectory, string filename) {
+            var filePath = Path.Combine(workingDirectory, filename);
+            string contents;
+
+            // check if working directory is current assembly name
+            var assembly = GetType().Assembly;
+            var assemblyName = assembly.GetName().Name;
+            if(workingDirectory == $"{assemblyName}.dll") {
+                var resourceName = $"{assemblyName}.Resources.{filename.Replace(" ", "_").Replace("\\", ".").Replace("/", ".")}";
+                using var resource = assembly.GetManifestResourceStream(resourceName);
+
+                // TODO: don't throw an exception; log an error instead
+                using var reader = new StreamReader(resource ?? throw new LambdaSharpParserException($"unable to locate embedded resource: '{resourceName}' in assembly '{assembly.GetName().Name}'", new SourceLocation(
+                    resourceName,
+                    lineNumberStart: 0,
+                    lineNumberEnd: 0,
+                    columnNumberStart: 0,
+                    columnNumberEnd: 0
+                )), Encoding.UTF8);
+                contents = reader.ReadToEnd().Replace("\r", "");
+            } else {
+                contents = _provider.ReadFile(filePath);
+            }
+
+            // check if a YAML file is being parsed
+            switch(Path.GetExtension(filename).ToLowerInvariant()) {
+            case ".yml":
+                ParseYaml(filePath, contents);
+                break;
+            default:
+                ParseText(filePath, contents);
+                break;
+            }
+        }
+
         private void Log(Error error, SourceLocation? location) => _provider.Log(error, location);
 
         private SourceLocation Location() {
@@ -1284,7 +1330,8 @@ namespace LambdaSharp.Compiler.Parser {
             return Location(current.FilePath, current.ParsingEvent, current.ParsingEvent);
         }
 
-        private SourceLocation Location((string FilePath, ParsingEvent ParsingEvent) current) => Location(current.FilePath, current.ParsingEvent, current.ParsingEvent);
+        private SourceLocation Location<T>(ParsingEventWithFilePath<T> current) where T : ParsingEvent
+            => Location(current.FilePath, current.ParsingEvent, current.ParsingEvent);
 
         private SourceLocation Location(string filePath, ParsingEvent parsingEvent) => Location(filePath, parsingEvent, parsingEvent);
 
@@ -1321,9 +1368,9 @@ namespace LambdaSharp.Compiler.Parser {
                     // validate that we can only have a default syntax if it's the only syntax
                     var keyword = syntax.Keyword ?? "";
                     if((keyword != "") && syntaxes.ContainsKey("")) {
-                        throw new ApplicationException("attempted to add a keyword syntax to a collection containing a default syntax");
+                        throw new ShouldNeverHappenException("attempted to add a keyword syntax to a collection containing a default syntax");
                     } else if((keyword == "") && (syntaxes.Count != 0)) {
-                        throw new ApplicationException("attempted to add a default syntax to a collection with keyword syntaxes");
+                        throw new ShouldNeverHappenException("attempted to add a default syntax to a collection with keyword syntaxes");
                     }
                     syntaxes.Add(keyword, syntax);
                 }
@@ -1379,7 +1426,7 @@ namespace LambdaSharp.Compiler.Parser {
                 while(!IsEvent<MappingEnd>(out var _, out var _)) {
 
                     // read key
-                    Expect<Scalar>();
+                    SkipThisAndNestedEvents();
 
                     // read value
                     SkipThisAndNestedEvents();
@@ -1393,23 +1440,22 @@ namespace LambdaSharp.Compiler.Parser {
                 }
                 break;
             default:
-                throw new LambdaSharpParserException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+                throw new LambdaSharpParserException($"Unexpected parsing event {Current.ParsingEvent.GetType().Name ?? "<null>"}", Location());
             }
         }
 
         private void SkipMapRemainingEvents() {
             while(!IsEvent<MappingEnd>(out var _, out var _)) {
-                Expect<Scalar>();
                 SkipThisAndNestedEvents();
             }
         }
 
-        private (string FilePath, T ParsingEvent) Expect<T>() where T : ParsingEvent {
+        private ParsingEventWithFilePath<T> Expect<T>() where T : ParsingEvent {
             if(!IsEvent<T>(out var parsingEvent, out var filePath)) {
-                throw new LambdaSharpParserException($"Expected parsing event {typeof(T).Name} instead of {Current.ParsingEvent.GetType().Name ?? "<null>"}");
+                throw new LambdaSharpParserException($"Expected parsing event {typeof(T).Name} instead of {Current.ParsingEvent.GetType().Name ?? "<null>"}", Location());
             }
             MoveNext();
-            return (filePath, parsingEvent);
+            return new ParsingEventWithFilePath<T>(filePath, parsingEvent);
         }
     }
 }
