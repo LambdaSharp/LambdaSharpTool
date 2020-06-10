@@ -20,12 +20,26 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using LambdaSharp.Compiler.Exceptions;
+using LambdaSharp.Compiler.Syntax;
 using LambdaSharp.Compiler.Syntax.Declarations;
 using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Validators {
+    using ErrorFunc = Func<string, Error>;
 
     internal sealed class ReferenceValidator : AValidator {
+
+        //--- Class Fields ---
+        #region Errors/Warnings
+        private static readonly ErrorFunc ReferenceMustBeParameter = parameter => new Error(0, $"{parameter} must be a parameter");
+        private static readonly ErrorFunc ReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter}");
+        private static readonly ErrorFunc ReferenceMustBeResourceInstance = parameter => new Error(0, $"{parameter} must be a CloudFormation stack resource");
+        private static readonly Error GetAttCannotBeUsedInAConditionDeclaration = new Error(0, "condition cannot use !GetAtt function");
+        private static readonly ErrorFunc ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
+        private static readonly ErrorFunc IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
+        private static readonly ErrorFunc IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
+        private static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
+        #endregion
 
         //--- Constructors ---
         public ReferenceValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
@@ -48,11 +62,23 @@ namespace LambdaSharp.Compiler.Validators {
                 case FindInMapFunctionExpression findInMapFunctionExpression:
                     ValidateFindInMapFunctionExpression(findInMapFunctionExpression);
                     break;
+                case ResourceDeclaration resourceDeclaration:
+                    ValidateDependsOn(resourceDeclaration, resourceDeclaration.DependsOn);
+                    break;
+                case NestedModuleDeclaration nestedModuleDeclaration:
+                    ValidateDependsOn(nestedModuleDeclaration, nestedModuleDeclaration.DependsOn);
+                    break;
                 }
             });
 
             // check for circular dependencies
             DetectCircularDependencies(declarations.Values);
+
+            // TODO: check reference integrity for conditional resources
+            //  Build a truth table for: RefereeDeclaration implies ReferencedDeclaration [A |- B => !A || B]
+            //  One column per "fact" (i.e. !if condition name/expression)
+            //  Any row with an outcome of 'false' is a situation where the referenced declaration does not exist, but the referee does
+
             return;
 
             // local functions
@@ -62,22 +88,21 @@ namespace LambdaSharp.Compiler.Validators {
                 // validate reference
                 if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
                     if(node.ParentItemDeclaration is ConditionDeclaration) {
-                        Logger.Log(Error.GetAttCannotBeUsedInAConditionDeclaration, node);
+                        Logger.Log(GetAttCannotBeUsedInAConditionDeclaration, node);
                     }
                     if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
 
                         // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
-                        if(resourceDeclaration.CloudFormationType == null) {
-                            Logger.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
-                        } else {
+                        if(resourceDeclaration.HasPhysicalId) {
                             node.ReferencedDeclaration = referencedDeclaration;
-                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
+                        } else {
+                            Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                         }
                     } else {
-                        Logger.Log(Error.ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
+                        Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
                     }
                 } else {
-                    Logger.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
+                    Logger.Log(ReferenceDoesNotExist(node.ReferenceName.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.ReferenceName.Value, node);
                 }
             }
@@ -102,12 +127,11 @@ namespace LambdaSharp.Compiler.Validators {
                         case NestedModuleDeclaration _:
                         case ResourceDeclaration _:
                         case ImportDeclaration _:
-                            Logger.Log(Error.ReferenceMustBeParameter(referenceName.Value), referenceName);
+                            Logger.Log(ReferenceMustBeParameter(referenceName.Value), referenceName);
                             break;
                         case ParameterDeclaration _:
                         case PseudoParameterDeclaration _:
                             node.ReferencedDeclaration = referencedDeclaration;
-                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                             break;
                         default:
                             throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
@@ -120,7 +144,7 @@ namespace LambdaSharp.Compiler.Validators {
                         case MappingDeclaration _:
                         case ResourceTypeDeclaration _:
                         case GroupDeclaration _:
-                            Logger.Log(Error.ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
+                            Logger.Log(ReferenceMustBeResourceOrParameterOrVariable(referenceName.Value), referenceName);
                             break;
                         case ParameterDeclaration _:
                         case PseudoParameterDeclaration _:
@@ -132,14 +156,13 @@ namespace LambdaSharp.Compiler.Validators {
                         case ResourceDeclaration _:
                         case ImportDeclaration _:
                             node.ReferencedDeclaration = referencedDeclaration;
-                            ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                             break;
                         default:
                             throw new ShouldNeverHappenException($"unsupported type: {referencedDeclaration?.GetType().Name ?? "<null>"}");
                         }
                     }
                 } else {
-                    Logger.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
+                    Logger.Log(ReferenceDoesNotExist(node.ReferenceName.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.ReferenceName.Value, node);
                 }
             }
@@ -151,12 +174,11 @@ namespace LambdaSharp.Compiler.Validators {
                 if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is ConditionDeclaration conditionDeclaration) {
                         node.ReferencedDeclaration = conditionDeclaration;
-                        ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                     } else {
-                        Logger.Log(Error.IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
+                        Logger.Log(IdentifierMustReferToAConditionDeclaration(referenceName.Value), referenceName);
                     }
                 } else {
-                    Logger.Log(Error.ReferenceDoesNotExist(node.ReferenceName.Value), node);
+                    Logger.Log(ReferenceDoesNotExist(node.ReferenceName.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(node.ReferenceName.Value, node);
                 }
             }
@@ -168,21 +190,38 @@ namespace LambdaSharp.Compiler.Validators {
                 if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is MappingDeclaration mappingDeclaration) {
                         node.ReferencedDeclaration = mappingDeclaration;
-                        ValidateConditionalReferences(node.ParentItemDeclaration, referencedDeclaration);
                     } else {
-                        Logger.Log(Error.IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
+                        Logger.Log(IdentifierMustReferToAMappingDeclaration(referenceName.Value), referenceName);
                     }
                 } else {
-                    Logger.Log(Error.ReferenceDoesNotExist(referenceName.Value), node);
+                    Logger.Log(ReferenceDoesNotExist(referenceName.Value), node);
                     node.ParentItemDeclaration?.TrackMissingDependency(referenceName.Value, node);
+                }
+            }
+
+            void ValidateDependsOn(AItemDeclaration node, SyntaxNodeCollection<LiteralExpression> dependsOn) {
+                foreach(var referenceName in dependsOn) {
+                    if(declarations.TryGetValue(referenceName.Value, out var referencedDeclaration)) {
+                        if(referencedDeclaration is IResourceDeclaration resourceDeclaration) {
+
+                            // NOTE (2020-01-29, bjorg): we only need this check because 'ResourceDeclaration' can have an explicit resource ARN vs. being an instance of a resource
+                            if(resourceDeclaration.HasPhysicalId) {
+                                node.TrackDependency(referencedDeclaration, referenceName);
+                            } else {
+                                Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
+                            }
+                        } else {
+                            Logger.Log(ReferenceMustBeResourceInstance(referenceName.Value), referenceName);
+                        }
+                    } else {
+                        Logger.Log(ReferenceDoesNotExist(referenceName.Value), node);
+                        node.TrackMissingDependency(referenceName.Value, node);
+                    }
                 }
             }
         }
 
         private void DetectCircularDependencies(IEnumerable<AItemDeclaration> declarations) {
-
-            // TODO: make sure that 'DependsOn' dependencies are tracked as well
-
             var visited = new List<AItemDeclaration>();
             var cycles = new List<IEnumerable<AItemDeclaration>>();
             foreach(var declaration in declarations) {
@@ -199,7 +238,7 @@ namespace LambdaSharp.Compiler.Validators {
                     //  form a unique fingerprint to avoid duplicate reporting duplicate cycles
                     var fingerprint = string.Join(",", path.OrderBy(fullname => fullname));
                     if(fingerprints.Add(fingerprint)) {
-                        Logger.Log(Error.CircularDependencyDetected(string.Join(" -> ", path.Append(path.First()))), cycle.First());
+                        Logger.Log(CircularDependencyDetected(string.Join(" -> ", path.Append(path.First()))), cycle.First());
                     }
                 }
             }
@@ -218,28 +257,10 @@ namespace LambdaSharp.Compiler.Validators {
 
                 // recurse into every dependency, until we exhaust the tree or find a circular dependency
                 visited.Add(declaration);
-                foreach(var dependency in declaration.Dependencies) {
-                    Visit(dependency.ReferencedDeclaration, visited);
+                foreach(var reference in declaration.Dependencies.Select(dependency => dependency.ReferencedDeclaration).Distinct()) {
+                    Visit(reference, visited);
                 }
                 visited.Remove(declaration);
-            }
-        }
-
-        // TODO: make AItemDeclaration? non-nullable once ParentItemDeclaration is fixed
-        private void ValidateConditionalReferences(AItemDeclaration? referrerDeclaration, AItemDeclaration? refereeDeclaration) {
-
-            // check if referee always exist; if so, there is nothing to check
-            var refereeCondition = (refereeDeclaration as IConditionalResourceDeclaration)?.If;
-            if(refereeCondition == null) {
-
-                // nothing to check
-                return;
-            }
-
-            // check if referrer can have a condition
-            if(referrerDeclaration is IConditionalResourceDeclaration conditionalResourceDeclaration) {
-
-                // TODO: check if referrer has as non-weaker condition
             }
         }
     }

@@ -20,6 +20,8 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
+    // TODO: consider changing to `IConditional` so that `Group` declarations can have an inherited condition
+
     /// <summary>
     /// The <see cref="IConditionalResourceDeclaration"/> interface indicates a CloudFormation resource that
     /// can be conditionally created by the template.
@@ -28,6 +30,8 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Properties ---
         AExpression? If { get; }
+
+        // TODO: see if we can get rid of this?
         string? IfConditionName { get; }
     }
 }

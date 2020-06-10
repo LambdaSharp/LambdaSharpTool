@@ -77,6 +77,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
             set => _value = SetParent(value);
         }
 
+        // TODO: allow conditional dependencies
         [SyntaxOptional]
         public SyntaxNodeCollection<LiteralExpression> DependsOn {
             get => _dependsOn;

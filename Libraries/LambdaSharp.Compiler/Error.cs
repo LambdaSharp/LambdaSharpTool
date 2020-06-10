@@ -149,10 +149,6 @@ namespace LambdaSharp.Compiler {
         public static readonly Error TransformFunctionExpectsMapParametersParameter = new Error(0, "!Transform function requires 'Parameters' key to be a map");
         #endregion
 
-        #region *** !GetAtt Validation ***
-        public static readonly Error GetAttCannotBeUsedInAConditionDeclaration = new Error(0, "condition cannot use !GetAtt function");
-        #endregion
-
         #region *** Identifier Validation ***
         public static readonly Error NameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         #endregion
@@ -193,7 +189,6 @@ namespace LambdaSharp.Compiler {
         #region *** Resource Type Declaration Validation ***
         public static readonly Error ResourceTypeNameInvalidFormat = new Error(0, "the expected format for the resource type name is: Prefix::Suffix");
         public static readonly ErrorFunc ResourceTypeNameReservedPrefix = parameter => new Error(0, $"'{parameter}' is a reserved resource type prefix");
-        public static readonly ErrorFunc ResourceTypeDuplicateName = parameter => new Error(0, $"resource type name '{parameter}' is already defined");
         public static readonly Error ResourceTypePropertyNameMustBeAlphanumeric = new Error(0, "name must be alphanumeric");
         public static readonly ErrorFunc ResourceTypePropertyDuplicateName = parameter => new Error(0, $"duplicate property name '{parameter}'");
         public static readonly Error ResourceTypePropertyTypeIsInvalid = new Error(0, "'Type' must be CloudFormation parameter type");
@@ -218,11 +213,6 @@ namespace LambdaSharp.Compiler {
         #region *** Attribute Validation ***
         public static readonly Error AllowAttributeRequiresCloudFormationType = new Error(0, "'Allow' attribute can only be used with a CloudFormation type");
         public static readonly Error AllowAttributeRequiresTypeAttribute = new Error(0, "'Allow' attribute requires 'Type' attribute to be set");
-        public static readonly Error AllowedPatternAttributeInvalid = new Error(0, "'AllowedPattern' attribute must be a regular expression");
-        public static readonly Error AllowedPatternAttributeRequiresStringType = new Error(0, "'AllowedPattern' attribute can only be used with 'String' type");
-        public static readonly Error ConstraintDescriptionAttributeRequiresAllowedPatternAttribute = new Error(0, "'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set");
-        public static readonly Error ConstraintDescriptionAttributeRequiresStringType = new Error(0, "'ConstraintDescription' attribute can only be used with 'String' type");
-        public static readonly Error DescriptionAttributeExceedsSizeLimit = new Error(0, "'Description' attribute cannot exceed 4,000 characters");
         public static readonly Error EncryptionContextAttributeRequiresSecretType = new Error(0, "'EncryptionContext' attribute can only be used with 'Secret' type");
         public static readonly Error FilesAttributeInvalid = new Error(0, "'Files' attribute must refer to an existing file or folder");
         public static readonly Error HandlerAttributeMissing = new Error(0, "'Handler' attribute is required");
@@ -230,11 +220,7 @@ namespace LambdaSharp.Compiler {
         public static readonly Error IfAttributeRequiresCloudFormationType = new Error(0, "'If' attribute can only be used with a CloudFormation type");
         public static readonly Error LanguageAttributeInvalid = new Error(0, "'Language' attribute must be a support project language");
         public static readonly Error LanguageAttributeMissing = new Error(0, "'Language' attribute is required");
-        public static readonly Error MaxLengthAttributeRequiresStringType = new Error(0, "'MaxLength' attribute can only be used with 'String' type");
-        public static readonly Error MaxValueAttributeRequiresNumberType = new Error(0, "'MaxValue' attribute can only be used with 'Number' type");
         public static readonly Error MemoryAttributeInvalid = new Error(0, "'Memory' attribute must have an integer value");
-        public static readonly Error MinLengthAttributeRequiresStringType = new Error(0, "'MinLength' attribute can only be used with 'String' type");
-        public static readonly Error MinValueAttributeRequiresNumberType = new Error(0, "'MinValue' attribute can only be used with 'Number' type");
         public static readonly Error ModuleAttributeInvalid = new Error(0, "'Module' attribute must be a module reference");
         public static readonly Error ModuleNameAttributeInvalid = new Error(0, "'Module' attribute must have format 'Namespace.Name'");
         public static readonly Error ProjectAttributeInvalid = new Error(0, "'Project' attribute project must refer a supported project file or folder");
@@ -247,10 +233,6 @@ namespace LambdaSharp.Compiler {
         #endregion
 
         #region *** Reference Validation ***
-        public static readonly ErrorFunc ReferenceMustBeResourceOrParameterOrVariable = parameter => new Error(0, $"{parameter} must be a resource, parameter, or variable");
-        public static readonly ErrorFunc ReferenceMustBeParameter = parameter => new Error(0, $"{parameter} must be a parameter");
-        public static readonly ErrorFunc ReferenceMustBeResourceInstance = parameter => new Error(0, $"{parameter} must be a CloudFormation stack resource");
-        public static readonly ErrorFunc ReferenceWithCircularDependency = parameter => new Error(0, $"circular dependency on {parameter}");
         public static readonly ErrorFunc ReferenceMustBeFunction = parameter => new Error(0, $"{parameter} must be a function");
         public static readonly ErrorFunc ReferenceDoesNotExist = parameter => new Error(0, $"undefined reference to {parameter}");
         public static readonly ErrorFunc ReferenceCannotBeSelf = parameter => new Error(0, $"self-dependency on {parameter}");
@@ -259,14 +241,9 @@ namespace LambdaSharp.Compiler {
         #region *** Manifest Loader ***
         public static readonly ErrorFunc ManifestLoaderInvalidTemplate = parameter => new Error(0, $"invalid CloudFormation template: {parameter}");
         public static readonly ErrorFunc ManifestLoaderIncompatibleManifestVersion = parameter => new Error(0, $"Incompatible LambdaSharp manifest version (found: {parameter}, expected: {ModuleManifest.CurrentVersion})");
-        public static readonly ErrorFunc ManifestLoaderIncompatibleNameMappingsVersion = parameter => new Error(0, $"Incompatible LambdaSharp name mappings version (found: {parameter}, expected: {ModuleNameMappings.CurrentVersion})");
         public static readonly Error ManifestLoaderMissingNameMappings = new Error(0, "CloudFormation file does not contain LambdaSharp name mappings");
         public static readonly ErrorFunc ManifestLoaderCouldNotLoadTemplate = parameter => new Error(0, $"could not load CloudFormation template for {parameter}");
-        public static readonly ErrorFunc ManifestLoaderCircularDependencyDetected = parameter => new Error(0, $"circular dependency detected: {parameter}");
         public static readonly ErrorFunc ManifestLoaderCouldNotFindModule = parameter => new Error(0, $"could not find module '{parameter}'");
-        public static readonly ErrorFunc2 ManifestLoaderDeployedDependencyNameMismatch = (p1, p2) => new Error(0, $"deployed dependent module name ({p1}) does not match {p2}");
-        public static readonly ErrorFunc3 ManifestLoaderDeployedDependencyVersionMismatch = (p1, p2, p3) => new Error(0, $"deployed dependent module {p1} (v{p2}) is not compatible with v{p3}");
-        public static readonly ErrorFunc5 ManifestLoaderDeployedDependencyConflict = (p1, p2, p3, p4, p5) => new Error(0, $"version conflict for module '{p1}': module '{p2}' requires v{p3}, but {p4} uses v{p5})");
         #endregion
 
         #region *** CloudFormation Specification ***
@@ -317,19 +294,10 @@ namespace LambdaSharp.Compiler {
 
         // TODO: keep reviewing errors
         public static readonly ErrorFunc CircularDependencyDetected = parameter => new Error(0, $"circular dependency {parameter}");
-        public static readonly Error ValueMustBeAnInteger = new Error(0, "value must be an integer");
-        public static readonly Error CannotGrantPermissionToDecryptParameterStore = new Error(0, "cannot grant permission to decrypt with aws/ssm");
-        public static readonly Error SecretKeyMustBeValidARN = new Error(0, "secret key must be a valid ARN");
-        public static readonly Error SecreteKeyMustBeValidAlias = new Error(0, "secret key must be a valid alias");
         public static readonly Error SecretTypeMustBeLiteralOrExpression = new Error(0, "variable with type 'Secret' must be a literal value or expression");
-        public static readonly Error ExpectedLiteralValueOrListOfLiteralValues = new Error(0, "expected literal value or list of literal values");
         public static readonly Error UnsupportedVersionOfDotNetCore = new Error(0, "this version of .NET Core is no longer supported for Lambda functions");
         public static readonly Error UnknownVersionOfDotNetCore = new Error(0, "could not determine runtime from target framework; specify 'Runtime' attribute explicitly");
         public static readonly Error FailedToAutoDetectHandlerInDotNetFunctionProject = new Error(0, "could not auto-determine handler; either add 'Handler' attribute or <RootNamespace> to project file");
-        public static readonly ErrorFunc NameMustBeACloudFormationResource = parameter => new Error(0, $"identifier {parameter} must refer to a CloudFormation resource");
-        public static readonly ErrorFunc IdentifierReferesToInvalidDeclarationType = parameter => new Error(0, $"identifier {parameter} cannot refer to this declaration type");
-        public static readonly ErrorFunc IdentifierMustReferToAConditionDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Condition");
-        public static readonly ErrorFunc IdentifierMustReferToAMappingDeclaration = parameter => new Error(0, $"identifier {parameter} must refer to a Mapping");
         public static readonly Error HandlerMustBeAFunctionOrSnsTopic = new Error(0, "Handler must reference a Function or AWS::SNS::Topic resource declaration");
         public static readonly Error HandlerMustBeAFunction = new Error(0, "Handler must reference a Function declaration");
         public static readonly Error ExpectedConditionExpression = new Error(0, "expected a condition expression");

@@ -130,14 +130,20 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Methods ---
         public void TrackDependency(AItemDeclaration referencedDeclaration, AExpression dependentExpression) {
+
+            // validation
             if(referencedDeclaration is null) {
                 throw new ArgumentNullException(nameof(referencedDeclaration));
             }
             if(dependentExpression is null) {
                 throw new ArgumentNullException(nameof(dependentExpression));
             }
+
+            // find conditions guarding the dependency
             var conditions = FindConditions(dependentExpression);
             _dependencies.Add(new AItemDeclaration.DependencyRecord(referencedDeclaration, conditions, dependentExpression));
+
+            // capture reverse dependency
             referencedDeclaration._reverseDependencies.Add(new AItemDeclaration.DependencyRecord(
                 dependentExpression.ParentItemDeclaration ?? throw new ShouldNeverHappenException(),
                 conditions,
@@ -156,14 +162,29 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
                         // determine if reference came from IfTrue or IfFalse path
                         if(object.ReferenceEquals(child, ifParent.Condition)) {
 
-                            // nothing to do
+                            // TODO: find out if CloudFormation does short-circuit evaluation?
+                            //  that would allow an invalid reference as second-clause in an !And expression
+                            //  for example: !And [ !Equals [ !Ref A, "foo" ], !Equals [ !Ref B, "bar" ]]
+
+                            // reference comes from condition itself, which is always used; nothing to do
                         } else if(object.ReferenceEquals(child, ifParent.IfTrue)) {
+
+                            // reference comes from IfTrue branch
                             conditions.Add(new ConditionBranch(condition: true, ifParent.Condition));
                         } else if(object.ReferenceEquals(child, ifParent.IfFalse)) {
+
+                            // reference comes from IfFalse branch
                             conditions.Add(new ConditionBranch(condition: false, ifParent.Condition));
                         } else {
                             throw new ShouldNeverHappenException();
                         }
+                    } else if(
+                        (parent is IConditionalResourceDeclaration conditionalResource)
+                        && (conditionalResource.If != null)
+                    ) {
+
+                        // reference comes from a resource with a condition
+                        conditions.Add(new ConditionBranch(condition: true, conditionalResource.If));
                     }
                     child = parent;
                 }

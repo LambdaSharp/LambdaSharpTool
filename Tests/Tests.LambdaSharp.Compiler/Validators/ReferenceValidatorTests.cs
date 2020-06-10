@@ -80,7 +80,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void SelfCircularDependency() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/SelfCircularDependency.yml");
+            var parser = NewParser("@Validators/ReferenceValidatorTests/SelfCircularDependencies.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();
@@ -91,6 +91,23 @@ namespace Tests.LambdaSharp.Compiler.Validators {
 
             // assert
             ExpectedMessages("ERROR: circular dependency VariableA -> VariableA in Module.yml: line 4, column 5");
+        }
+
+        [Fact]
+        public void DependsOnCircularDependency() {
+
+            // arrange
+            var parser = NewParser("@Validators/ReferenceValidatorTests/DependsOnCircularDependencies.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ReferenceValidator(this).Validate(module, Declarations);
+
+            // assert
+            ExpectedMessages("ERROR: circular dependency ResourceA -> ResourceB -> ResourceA in Module.yml: line 4, column 5");
         }
     }
 }

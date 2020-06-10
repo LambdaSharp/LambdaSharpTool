@@ -27,5 +27,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         //--- Properties ---
         string FullName { get; }
         string? CloudFormationType { get; }
+        bool HasPhysicalId => CloudFormationType != null;
     }
 }
