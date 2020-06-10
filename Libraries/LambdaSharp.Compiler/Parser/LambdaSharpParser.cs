@@ -739,7 +739,7 @@ namespace LambdaSharp.Compiler.Parser {
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Condition = new ConditionExpression {
+                        Condition = new ConditionReferenceExpression {
                             SourceLocation = conditionNameLiteral.SourceLocation,
                             ReferenceName = new LiteralExpression(conditionNameLiteral.Value, LiteralType.String) {
                                 SourceLocation = conditionNameLiteral.SourceLocation
@@ -914,7 +914,7 @@ namespace LambdaSharp.Compiler.Parser {
                         Log(Error.FunctionExpectsTwoParameters("!Equals"), value.SourceLocation);
                         return null;
                     }
-                    return new EqualsConditionExpression {
+                    return new ConditionEqualsExpression {
                         SourceLocation = value.SourceLocation,
                         LeftValue = parameterList[0],
                         RightValue = parameterList[1]
@@ -932,7 +932,7 @@ namespace LambdaSharp.Compiler.Parser {
                         Log(Error.FunctionExpectsOneParameter("!Not"), value.SourceLocation);
                         return null;
                     }
-                    return new NotConditionExpression {
+                    return new ConditionNotExpression {
                         SourceLocation = value.SourceLocation,
                         Value = parameterList[0]
                     };
@@ -949,7 +949,7 @@ namespace LambdaSharp.Compiler.Parser {
                         Log(Error.FunctionExpectsTwoParameters("!And"), value.SourceLocation);
                         return null;
                     }
-                    return new AndConditionExpression {
+                    return new ConditionAndExpression {
                         SourceLocation = value.SourceLocation,
                         LeftValue = parameterList[0],
                         RightValue = parameterList[1]
@@ -967,7 +967,7 @@ namespace LambdaSharp.Compiler.Parser {
                         Log(Error.FunctionExpectsTwoParameters("!Or"), value.SourceLocation);
                         return null;
                     }
-                    return new OrConditionExpression {
+                    return new ConditionOrExpression {
                         SourceLocation = value.SourceLocation,
                         LeftValue = parameterList[0],
                         RightValue = parameterList[1]
@@ -981,7 +981,7 @@ namespace LambdaSharp.Compiler.Parser {
 
                 // !Condition STRING
                 if(value is LiteralExpression conditionLiteral) {
-                    return new ConditionExpression {
+                    return new ConditionReferenceExpression {
                         SourceLocation = value.SourceLocation,
                         ReferenceName = new LiteralExpression(conditionLiteral.Value, LiteralType.String) {
                             SourceLocation = value.SourceLocation
@@ -996,7 +996,7 @@ namespace LambdaSharp.Compiler.Parser {
 
                 // !Exists STRING
                 if(value is LiteralExpression conditionLiteral) {
-                    return new ExistsConditionExpression {
+                    return new ConditionExistsExpression {
                         SourceLocation = value.SourceLocation,
                         ReferenceName = new LiteralExpression(conditionLiteral.Value, LiteralType.String) {
                             SourceLocation = value.SourceLocation

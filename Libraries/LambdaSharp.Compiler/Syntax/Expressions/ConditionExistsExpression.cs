@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -21,7 +21,7 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class ExistsConditionExpression : AConditionExpression {
+    public sealed class ConditionExistsExpression : AConditionExpression {
 
         // !Exists STRING
 
@@ -49,7 +49,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new ExistsConditionExpression {
+        public override ASyntaxNode CloneNode() => new ConditionExistsExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration
         };

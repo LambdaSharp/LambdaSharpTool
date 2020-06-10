@@ -32,14 +32,16 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
     public sealed class LiteralExpression : AValueExpression {
 
         //--- Constructors ---
-        public LiteralExpression(string value, LiteralType type) {
+        public LiteralExpression(string value, LiteralType type, bool fromExistsExpression = false) {
             Value = value ?? throw new ArgumentNullException(nameof(value));
             Type = type;
+            FromExistsExpression = fromExistsExpression;
         }
 
         //--- Properties ---
         public string Value { get; }
         public LiteralType Type { get; }
+        public bool FromExistsExpression { get; }
         public bool IsString => Type == LiteralType.String;
         public bool IsInteger => Type == LiteralType.Integer;
         public bool IsFloat => Type == LiteralType.Float;

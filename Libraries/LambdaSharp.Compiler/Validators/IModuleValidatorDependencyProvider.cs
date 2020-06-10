@@ -17,6 +17,7 @@
  */
 
 using System.Threading.Tasks;
+using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Validators {
 
@@ -29,5 +30,6 @@ namespace LambdaSharp.Compiler.Validators {
         bool IsValidResourceType(string type);
         bool TryGetResourceType(string typeName, out ResourceType resourceType);
         Task<string> ConvertKmsAliasToArn(string alias);
+        bool TryGetItem(string fullname, out AItemDeclaration itemDeclaration);
     }
 }

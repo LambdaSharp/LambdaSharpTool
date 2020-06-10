@@ -81,18 +81,17 @@ namespace LambdaSharp.Compiler {
 
             // TODO: download external dependencies
 
-            // normalize AST for analysis
-            new ExpressionNormalization(this).Normalize(moduleDeclaration);
-
             // validate declarations
             new ParameterDeclarationValidator(this).Validate(moduleDeclaration);
             new ResourceDeclarationValidator(this).Validate(moduleDeclaration);
-            new AllowValidator(this).Validate(moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
 
-            // ensure that all references can be resolved
+            // evaluate constant expressions
+            new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
+
+            // check if all references can be resolved
             var declarations = new ItemDeclarationValidator(this).FindDeclarations(moduleDeclaration);
             new ReferenceValidator(this).Validate(moduleDeclaration, declarations);
 
@@ -103,6 +102,9 @@ namespace LambdaSharp.Compiler {
             // ensure that handler references are valid
             new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration, declarations);
             new MacroHandlerValidator(this).Validate(moduleDeclaration, declarations);
+
+            // TODO: needs access to IAM permissions
+            new AllowValidator(this).Validate(moduleDeclaration);
 
             // validate resource scopes
             new ScopeValidator(this).Validate(moduleDeclaration, declarations);
@@ -184,6 +186,12 @@ namespace LambdaSharp.Compiler {
         }
 
         Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+
+            // TODO:
+            throw new NotImplementedException();
+        }
+
+        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, out AItemDeclaration itemDeclaration) {
 
             // TODO:
             throw new NotImplementedException();

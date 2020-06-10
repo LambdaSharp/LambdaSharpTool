@@ -163,7 +163,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public bool HasWildcardScopedVariables => !HasPragma("no-wildcard-scoped-variables");
         public bool HasFunctionRegistration => !HasPragma("no-function-registration");
         public bool HasSecretType => false;
-        public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
+        public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
         public LiteralExpression? Type => Fn.Literal("AWS::Lambda::Function");
     }
 }

@@ -104,7 +104,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public string? CloudFormationType => (Value == null) ? Type!.Value : null;
         public bool HasPragma(string pragma) => Pragmas.Any(expression => (expression is LiteralExpression literalExpression) && (literalExpression.Value == pragma));
         public bool HasSecretType => Type!.Value == "Secret";
-        public string? IfConditionName => ((ConditionExpression?)If)?.ReferenceName!.Value;
+        public string? IfConditionName => ((ConditionReferenceExpression?)If)?.ReferenceName!.Value;
         public bool HasTypeValidation => !HasPragma("no-type-validation");
     }
 }

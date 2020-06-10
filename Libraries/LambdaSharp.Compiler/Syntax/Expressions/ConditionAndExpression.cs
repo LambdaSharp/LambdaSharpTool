@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -21,10 +21,10 @@ using LambdaSharp.Compiler.Exceptions;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class EqualsConditionExpression : AConditionExpression {
+    public sealed class ConditionAndExpression : AConditionExpression {
 
-        // !Equals [ EXPR, EXPR ]
-        // NOTE: You can use the following functions in a Fn::Equals function:
+        // !And [ EXPR, EXPR ]
+        // NOTE: You can use the following functions in a Fn::And function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
@@ -46,7 +46,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new EqualsConditionExpression {
+        public override ASyntaxNode CloneNode() => new ConditionAndExpression {
             LeftValue = LeftValue.Clone(),
             RightValue = RightValue.Clone()
         };

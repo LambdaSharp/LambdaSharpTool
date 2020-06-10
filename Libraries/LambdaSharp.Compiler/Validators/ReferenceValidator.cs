@@ -42,7 +42,7 @@ namespace LambdaSharp.Compiler.Validators {
                 case ReferenceFunctionExpression referenceFunctionExpression:
                     ValidateReferenceExpression(referenceFunctionExpression);
                     break;
-                case ConditionExpression conditionExpression:
+                case ConditionReferenceExpression conditionExpression:
                     ValidateConditionExpression(conditionExpression);
                     break;
                 case FindInMapFunctionExpression findInMapFunctionExpression:
@@ -144,7 +144,7 @@ namespace LambdaSharp.Compiler.Validators {
                 }
             }
 
-            void ValidateConditionExpression(ConditionExpression node) {
+            void ValidateConditionExpression(ConditionReferenceExpression node) {
                 var referenceName = node.ReferenceName;
 
                 // validate reference

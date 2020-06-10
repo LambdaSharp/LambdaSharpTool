@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -17,31 +17,37 @@
  */
 
 using System;
-using LambdaSharp.Compiler.Exceptions;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class NotConditionExpression : AConditionExpression {
+    public sealed class ConditionOrExpression : AConditionExpression {
 
-        // parse !Not [ EXPR ]
-        // NOTE: You can use the following functions in a Fn::Not function:
+        // !Or [ EXPR, EXPR ]
+        // NOTE: You can use the following functions in a Fn::Or function:
         //  - Fn::FindInMap
         //  - Ref
         //  - Condition
         //  - Other condition functions
 
         //--- Fields ---
-        private AExpression? _value;
+        private AExpression? _leftValue;
+        private AExpression? _rightValue;
 
         //--- Properties ---
-        public AExpression Value {
-            get => _value ?? throw new InvalidOperationException();
-            set => _value = SetParent(value ?? throw new ArgumentNullException());
+        public AExpression LeftValue {
+            get => _leftValue ?? throw new InvalidOperationException();
+            set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
+        }
+
+        public AExpression RightValue {
+            get => _rightValue ?? throw new InvalidOperationException();
+            set => _rightValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new NotConditionExpression {
-            Value = Value.Clone()
+        public override ASyntaxNode CloneNode() => new ConditionOrExpression {
+            LeftValue = LeftValue.Clone(),
+            RightValue = RightValue.Clone()
         };
     }
 }

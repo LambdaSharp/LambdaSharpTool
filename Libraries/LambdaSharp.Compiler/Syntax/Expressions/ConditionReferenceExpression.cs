@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2019
  * lambdasharp.net
@@ -22,7 +22,7 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class ConditionExpression : AConditionExpression {
+    public sealed class ConditionReferenceExpression : AConditionExpression {
 
         // !Condition STRING
 
@@ -50,7 +50,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new ConditionExpression {
+        public override ASyntaxNode CloneNode() => new ConditionReferenceExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration
         };

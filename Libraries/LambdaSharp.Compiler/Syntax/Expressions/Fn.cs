@@ -92,26 +92,26 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
 
         public static ListExpression LiteralList(params string[] values) => new ListExpression(values.Select(value => Literal(value)));
 
-        public static NotConditionExpression Not(AExpression condition) => new NotConditionExpression {
+        public static ConditionNotExpression Not(AExpression condition) => new ConditionNotExpression {
             Value = condition ?? throw new ArgumentNullException(nameof(condition))
         };
 
-        public static EqualsConditionExpression Equals(AExpression leftValue, AExpression rightValue) => new EqualsConditionExpression {
+        public static ConditionEqualsExpression Equals(AExpression leftValue, AExpression rightValue) => new ConditionEqualsExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        public static AndConditionExpression And(AExpression leftValue, AExpression rightValue) => new AndConditionExpression {
+        public static ConditionAndExpression And(AExpression leftValue, AExpression rightValue) => new ConditionAndExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        public static OrConditionExpression Or(AExpression leftValue, AExpression rightValue) => new OrConditionExpression {
+        public static ConditionOrExpression Or(AExpression leftValue, AExpression rightValue) => new ConditionOrExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
             RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
         };
 
-        public static ConditionExpression Condition(string referenceName) => new ConditionExpression {
+        public static ConditionReferenceExpression Condition(string referenceName) => new ConditionReferenceExpression {
             ReferenceName = Literal(referenceName)
         };
     }
