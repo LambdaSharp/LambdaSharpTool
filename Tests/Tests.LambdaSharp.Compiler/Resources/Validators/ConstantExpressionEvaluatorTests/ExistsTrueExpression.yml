@@ -1,0 +1,8 @@
+Module: My.Module
+Items:
+
+  - Variable: MyIfExpression
+    Value: !If [ !Exists MyVariable, "It's true!", "It's false!" ]
+
+  - Condition: MyVariable
+    Value: hello

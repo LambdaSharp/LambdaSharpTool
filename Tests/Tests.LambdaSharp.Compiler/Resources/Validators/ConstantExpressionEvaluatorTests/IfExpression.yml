@@ -1,7 +1,0 @@
-Module: My.Module
-Items:
-  - Condition: MyCondition
-    Value: true
-
-  - Variable: MyIfExpression
-    Value: !If [ MyCondition, "It's true!", "What?!?!" ]

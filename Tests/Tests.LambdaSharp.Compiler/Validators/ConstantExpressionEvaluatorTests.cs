@@ -35,10 +35,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         //--- Methods ---
 
         [Fact]
-        public void EvaluateIfCondition() {
+        public void EvaluateIfTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IfExpression.yml");
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IfTrueExpression.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();
@@ -48,10 +48,70 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             new ConstantExpressionEvaluator(this).Evaluate(module);
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always True @ test.yml(7,12)");
-            module.Items[1].Should().BeOfType<VariableDeclaration>()
+            ExpectedMessages("WARNING: !If expression is always True @ test.yml(5,12)");
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("It's true!");
+        }
+
+        [Fact]
+        public void EvaluateIfFalseExpression() {
+
+            // arrange
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IfFalseExpression.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ConstantExpressionEvaluator(this).Evaluate(module);
+
+            // assert
+            ExpectedMessages("WARNING: !If expression is always False @ test.yml(5,12)");
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("It's false!");
+        }
+
+        [Fact]
+        public void EvaluateExistsTrueExpression() {
+
+            // arrange
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/ExistsTrueExpression.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ConstantExpressionEvaluator(this).Evaluate(module);
+
+            // assert
+            ExpectedMessages();
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("It's true!");
+        }
+
+        [Fact]
+        public void EvaluateExistsFalseExpression() {
+
+            // arrange
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/ExistsFalseExpression.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ConstantExpressionEvaluator(this).Evaluate(module);
+
+            // assert
+            ExpectedMessages();
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("It's false!");
         }
     }
 }
