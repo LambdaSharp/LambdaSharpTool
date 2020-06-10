@@ -733,18 +733,21 @@ namespace LambdaSharp.Compiler.Parser {
                         Log(Error.FunctionExpectsThreeParameters("!If"), value.SourceLocation);
                         return null;
                     }
-                    if(!(parameterList[0] is LiteralExpression conditionNameLiteral)) {
-                        Log(Error.FunctionExpectsLiteralFirstParameter("!If"), parameterList[0].SourceLocation);
-                        return null;
+                    AExpression conditionExpression;
+                    if(
+                        (parameterList[0] is LiteralExpression conditionNameLiteral)
+                        && !bool.TryParse(conditionNameLiteral.Value, out var conditionBool)
+                    ) {
+                        conditionExpression = new ConditionReferenceExpression {
+                            ReferenceName = conditionNameLiteral,
+                            SourceLocation = conditionNameLiteral.SourceLocation
+                        };
+                    } else {
+                        conditionExpression = parameterList[0];
                     }
                     return new IfFunctionExpression {
                         SourceLocation = value.SourceLocation,
-                        Condition = new ConditionReferenceExpression {
-                            SourceLocation = conditionNameLiteral.SourceLocation,
-                            ReferenceName = new LiteralExpression(conditionNameLiteral.Value, LiteralType.String) {
-                                SourceLocation = conditionNameLiteral.SourceLocation
-                            }
-                        },
+                        Condition = conditionExpression,
                         IfTrue = parameterList[1],
                         IfFalse = parameterList[2]
                     };
