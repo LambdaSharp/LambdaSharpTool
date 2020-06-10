@@ -16,20 +16,14 @@
  * limitations under the License.
  */
 
-#nullable disable
-
-using FluentAssertions;
-using LambdaSharp.Compiler.Syntax.Declarations;
-using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.Validators;
 using Xunit;
 using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Validators {
 
-    // TODO: test that circular dependencies are also detected for 'DependsOn'
 
-    public class ReferenceValidatorTests : _Init {
+    public class ReferenceValidatorTests : _Validator {
 
         //--- Constructors ---
         public ReferenceValidatorTests(ITestOutputHelper output) : base(output) { }
@@ -40,11 +34,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void MultiOverlappingCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/MultiOverlappingCircularDependencies.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ReferenceValidator(this).Validate(module, Declarations);
@@ -60,11 +50,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         public void MultiDistinctCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/MultiDistinctCircularDependencies.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ReferenceValidator(this).Validate(module, Declarations);
@@ -77,14 +63,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         }
 
         [Fact]
-        public void SelfCircularDependency() {
+        public void SelfCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/SelfCircularDependencies.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ReferenceValidator(this).Validate(module, Declarations);
@@ -94,14 +76,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         }
 
         [Fact]
-        public void DependsOnCircularDependency() {
+        public void DependsOnCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/DependsOnCircularDependencies.yml");
-            var module = parser.ParseModule();
-            new ItemDeclarationValidator(this).Validate(module);
-            ExpectedMessages();
-            module.Should().NotBeNull();
+            var module = LoadTestModule();
 
             // act
             new ReferenceValidator(this).Validate(module, Declarations);

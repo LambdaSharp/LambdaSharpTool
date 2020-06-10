@@ -70,7 +70,7 @@ namespace LambdaSharp.Compiler {
         private VersionInfo? ModuleVersion { get; set; }
 
         //--- Methods ---
-        public async Task<CloudFormationTemplate?> ComileAsync(string filePath) {
+        public async Task<CloudFormationTemplate?> CompileAsync(string filePath) {
             var moduleDeclaration = LoadModule(filePath);
             if(moduleDeclaration == null) {
                 return null;
@@ -93,7 +93,7 @@ namespace LambdaSharp.Compiler {
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
 
-            // discover all declarations
+            // register all declarations
             new ItemDeclarationValidator(this).Validate(moduleDeclaration);
 
             // evaluate expressions
@@ -178,7 +178,7 @@ namespace LambdaSharp.Compiler {
         //--- IModuleValidatorDependencyProvider Members ---
         ILogger IModuleValidatorDependencyProvider.Logger => Logger;
 
-        bool IModuleValidatorDependencyProvider.IsValidResourceType(string type) {
+        bool IModuleValidatorDependencyProvider.IsResourceType(string type) {
 
             // TODO:
             return true;

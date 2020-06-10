@@ -42,7 +42,8 @@ namespace LambdaSharp.Compiler.Validators {
         private static readonly Error ParameterDeclarationCannotBeNested = new Error(0, "Parameter declaration cannot be nested in a Group");
 
         // Property: Type
-        private static readonly ErrorFunc UnknownType = parameter => new Error(0, $"unknown paremeter type '{parameter}'");
+        private static readonly ErrorFunc UnknownType = parameter => new Error(0, $"unknown parameter type '{parameter}'");
+        private static readonly Warning AssumingStringType = new Warning(0, "missing 'Type' attribute, assuming type 'String'");
 
         // Property: MinLength, MaxLength
         private static readonly Error MinLengthAttributeRequiresStringType = new Error(0, "'MinLength' attribute can only be used with 'String' type");
@@ -64,7 +65,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         // Property: AllowedPattern, ConstraintDescription
         private static readonly Error AllowedPatternAttributeRequiresStringType = new Error(0, "'AllowedPattern' attribute can only be used with 'String' type");
-        private static readonly Error AllowedPatternAttributeInvalid = new Error(0, "'AllowedPattern' attribute must be a regular expression");
+        private static readonly Error AllowedPatternAttributeInvalid = new Error(0, "'AllowedPattern' attribute must be a valid regular expression");
         private static readonly Error ConstraintDescriptionAttributeRequiresStringType = new Error(0, "'ConstraintDescription' attribute can only be used with 'String' type");
         private static readonly Error ConstraintDescriptionAttributeRequiresAllowedPatternAttribute = new Error(0, "'ConstraintDescription' attribute requires 'AllowedPattern' attribute to be set");
 
@@ -145,7 +146,7 @@ namespace LambdaSharp.Compiler.Validators {
         };
 
         //--- Class Methods ---
-        private static bool IsValidCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
+        private static bool IsCloudFormationParameterType(string type) => _cloudFormationParameterTypes.Contains(type);
 
         //--- Constructors ---
         public ParameterDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
@@ -169,16 +170,10 @@ namespace LambdaSharp.Compiler.Validators {
 
         private void ValidateParemeterType(ParameterDeclaration node) {
 
-            // default 'Type' attribute value is 'String' when omitted
+            // assume 'String' type when 'Type' attribute is omitted
             if(node.Type == null) {
-
-                // TODO: should we really set this, thus modifying the original? or issue a warning
-                node.Type = Fn.Literal("String");
-            } else if(
-                !IsValidCloudFormationParameterType(node.Type.Value)
-                && !Provider.IsValidResourceType(node.Type.Value)
-            ) {
-                Logger.Log(UnknownType(node.Type.Value), node.Type);
+                Logger.Log(AssumingStringType, node);
+                node.Type = Fn.Literal("String", node.SourceLocation);
             }
 
             // default 'Section' attribute value is "Module Settings" when omitted
@@ -201,9 +196,9 @@ namespace LambdaSharp.Compiler.Validators {
                 }
                 if(
                     (node.MinValue != null)
-                    && (node.MaxLength != null)
+                    && (node.MaxValue != null)
                     && int.TryParse(node.MinValue.Value, out var minValueRange)
-                    && int.TryParse(node.MaxLength.Value, out var maxValueRange)
+                    && int.TryParse(node.MaxValue.Value, out var maxValueRange)
                     && (maxValueRange < minValueRange)
                 ) {
                     Logger.Log(MinMaxValueInvalidRange, node.MinValue);
@@ -303,13 +298,7 @@ namespace LambdaSharp.Compiler.Validators {
             }
 
             // only CloudFormation resource types can have 'Properties' or 'Allow' attributes
-            if(Provider.IsValidResourceType(node.Type.Value)) {
-
-                // only value parameters can have 'Import' attribute
-                if(node.Import != null) {
-                    Logger.Log(ParameterAttributeImportExpectedLiteral, node.Import);
-                }
-            } else {
+            if(IsCloudFormationParameterType(node.Type.Value)) {
 
                 // ensure CloudFormation resource type parameter options are not used
                 if(node.Properties != null) {
@@ -318,6 +307,14 @@ namespace LambdaSharp.Compiler.Validators {
                 if(node.Allow != null) {
                     Logger.Log(AllowAttributeRequiresCloudFormationType, node.Allow);
                 }
+            } else if(Provider.IsResourceType(node.Type.Value)) {
+
+                // only value parameters can have 'Import' attribute
+                if(node.Import != null) {
+                    Logger.Log(ParameterAttributeImportExpectedLiteral, node.Import);
+                }
+            } else {
+                Logger.Log(UnknownType(node.Type.Value), node.Type);
             }
         }
 

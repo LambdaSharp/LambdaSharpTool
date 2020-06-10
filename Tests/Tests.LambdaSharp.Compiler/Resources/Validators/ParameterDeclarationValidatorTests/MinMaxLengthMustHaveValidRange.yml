@@ -1,0 +1,7 @@
+Module: My.Module
+Items:
+
+  - Parameter: ParameterA
+    Type: Number
+    MinLength: 100
+    MaxLength: 0
