@@ -17,7 +17,6 @@
  */
 
 using System;
-using LambdaSharp.Compiler.Exceptions;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 

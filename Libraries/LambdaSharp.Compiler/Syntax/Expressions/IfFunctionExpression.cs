@@ -41,6 +41,8 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _ifFalse;
 
         //--- Properties ---
+
+        // TODO: allow AExpression, but then validate that after optimization it is a string literal
         [SyntaxHidden]
         public AExpression Condition {
             get => _condition ?? throw new InvalidOperationException();
