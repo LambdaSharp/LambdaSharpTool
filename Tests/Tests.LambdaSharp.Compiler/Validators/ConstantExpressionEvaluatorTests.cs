@@ -133,5 +133,25 @@ namespace Tests.LambdaSharp.Compiler.Validators {
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("Hello world !");
         }
+
+        [Fact]
+        public void EvaluateSubExpression() {
+
+            // arrange
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/SubExpression.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ConstantExpressionEvaluator(this).Evaluate(module);
+
+            // assert
+            ExpectedMessages();
+            module.Items[0].Should().BeOfType<VariableDeclaration>()
+                .Which.Value.Should().BeOfType<LiteralExpression>()
+                .Which.Value.Should().Be("Hello world!");
+        }
     }
 }

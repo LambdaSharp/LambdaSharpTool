@@ -101,6 +101,9 @@ namespace LambdaSharp.Compiler.Validators {
             case SelectFunctionExpression selectExpression:
                 Substitute(EvaluateExpression(selectExpression));
                 break;
+            case SubFunctionExpression subExpression:
+                Substitute(EvaluateExpression(subExpression));
+                break;
             }
 
             // local functions

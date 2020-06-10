@@ -1,0 +1,11 @@
+Module: My.Module
+Items:
+
+  - Variable: MyJoinExpression
+    Value: !Sub "${VariableA} ${VariableB}!"
+
+  - Variable: VariableA
+    Value: "Hello"
+
+  - Variable: VariableB
+    Value: "world"
