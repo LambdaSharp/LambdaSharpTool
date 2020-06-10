@@ -67,7 +67,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Fields ---
         private LiteralExpression? _description;
-        private AExpression? _referenceExpression;
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
         private readonly List<DependencyRecord> _reverseDependencies = new List<DependencyRecord>();
         private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
