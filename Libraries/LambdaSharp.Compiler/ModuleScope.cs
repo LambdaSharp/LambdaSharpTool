@@ -17,6 +17,8 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using LambdaSharp.CloudFormation;
@@ -53,6 +55,9 @@ namespace LambdaSharp.Compiler {
             return true;
         }
 
+        //--- Fields ---
+        private Dictionary<string, AItemDeclaration> _declarations = new Dictionary<string, AItemDeclaration>();
+
         //--- Constructors ---
         public ModuleScope(IModuleScopeDependencyProvider provider)
             => Provider = provider ?? throw new ArgumentNullException(nameof(provider));
@@ -88,26 +93,26 @@ namespace LambdaSharp.Compiler {
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
 
+            // discover all declarations
+            new ItemDeclarationValidator(this).Validate(moduleDeclaration);
+
             // evaluate constant expressions
             new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
-
-            // check if all references can be resolved
-            var declarations = new ItemDeclarationValidator(this).FindDeclarations(moduleDeclaration);
-            new ReferenceValidator(this).Validate(moduleDeclaration, declarations);
+            new ReferenceValidator(this).Validate(moduleDeclaration, _declarations);
 
             // TODO: annotate expression types
             // TODO: ensure that constructed resources have all required properties
             // TODO: ensure that referenced attributes exist
 
             // ensure that handler references are valid
-            new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration, declarations);
-            new MacroHandlerValidator(this).Validate(moduleDeclaration, declarations);
+            new ResourceTypeHandlerValidator(this).Validate(moduleDeclaration);
+            new MacroHandlerValidator(this).Validate(moduleDeclaration);
 
             // TODO: needs access to IAM permissions
             new AllowValidator(this).Validate(moduleDeclaration);
 
             // validate resource scopes
-            new ScopeValidator(this).Validate(moduleDeclaration, declarations);
+            new ScopeValidator(this).Validate(moduleDeclaration, _declarations);
 
             // optimize AST
             new ExpressionOptimization(this).Optimize(moduleDeclaration);
@@ -168,7 +173,7 @@ namespace LambdaSharp.Compiler {
             } else {
                 Logger.Log(Error.ModuleNameAttributeInvalid, moduleDeclaration.ModuleName);
             }
-       }
+        }
 
         //--- IModuleValidatorDependencyProvider Members ---
         ILogger IModuleValidatorDependencyProvider.Logger => Logger;
@@ -191,11 +196,11 @@ namespace LambdaSharp.Compiler {
             throw new NotImplementedException();
         }
 
-        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, out AItemDeclaration itemDeclaration) {
+        void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+            => _declarations.Add(declaration.FullName, declaration);
 
-            // TODO:
-            throw new NotImplementedException();
-        }
+        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+            => _declarations.TryGetValue(fullname, out itemDeclaration);
 
         //--- ILambdaSharpParserDependencyProvider Members ---
         ILogger ILambdaSharpParserDependencyProvider.Logger => Logger;

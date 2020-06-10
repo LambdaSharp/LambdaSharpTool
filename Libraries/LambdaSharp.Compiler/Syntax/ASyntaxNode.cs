@@ -114,8 +114,14 @@ namespace LambdaSharp.Compiler.Syntax {
                 }
             });
 
-        public virtual void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
-            foreach(var property in GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)) {
+        public virtual ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector) {
+            foreach(var property in GetType()
+                .GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy)
+                .Where(property =>
+                    (property.GetCustomAttribute<ASyntaxAttribute>() != null)
+                    && typeof(ISyntaxNode).IsAssignableFrom(property.PropertyType)
+                )
+            ) {
 
                 // only visit properties of type ISyntaxNode
                 if(!typeof(ISyntaxNode).IsAssignableFrom(property.PropertyType)) {
@@ -128,14 +134,19 @@ namespace LambdaSharp.Compiler.Syntax {
                     continue;
                 }
 
-                // recurse into data structure
-                value.Substitute(inspector);
+                // recurse into property value
+                var newValue = value.Substitute(inspector) ?? throw new NullValueException();
 
-                // check if this property is writeable
-                if((property.SetMethod != null) && (value is ASyntaxNode node)) {
-                    property.SetValue(this, inspector(node) ?? throw new NullValueException());
+                // update property if possible
+                if(property.SetMethod != null) {
+                    property.SetValue(this, newValue);
+                } else if(!object.ReferenceEquals(newValue, value)) {
+
+                    // TODO: better exception
+                    throw new Exception("cannot update modified property");
                 }
             }
+            return inspector(this);
         }
 
         [return: NotNullIfNotNull("node") ]

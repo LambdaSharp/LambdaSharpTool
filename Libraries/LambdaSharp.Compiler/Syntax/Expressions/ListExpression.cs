@@ -58,14 +58,15 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             exitInspector?.Invoke(this);
         }
 
-        public override void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+        public override ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector) {
             for(var i = 0; i < Count; ++i) {
                 var value = this[i];
-                var newValue = inspector(value) ?? throw new NullValueException();
+                var newValue = value.Substitute(inspector) ?? throw new NullValueException();
                 if(!object.ReferenceEquals(value, newValue)) {
                     this[i] = (AExpression)newValue;
                 }
             }
+            return inspector(this);
         }
 
         public override ASyntaxNode CloneNode() => new ListExpression(_items.Select(item => item.Clone()));

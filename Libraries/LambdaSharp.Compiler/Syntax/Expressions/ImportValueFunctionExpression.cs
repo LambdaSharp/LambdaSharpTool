@@ -38,6 +38,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _sharedValueToImport;
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression SharedValueToImport {
             get => _sharedValueToImport ?? throw new InvalidOperationException();
             set => _sharedValueToImport = SetParent(value ?? throw new ArgumentNullException());

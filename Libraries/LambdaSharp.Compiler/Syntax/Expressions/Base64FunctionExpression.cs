@@ -30,6 +30,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         // NOTE: You can use any function that returns a string inside the Fn::Base64 function.
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression Value {
             get => _value ?? throw new InvalidOperationException();
             set => _value = SetParent(value ?? throw new ArgumentNullException());

@@ -27,12 +27,12 @@ namespace LambdaSharp.Compiler.Validators {
         public ResourceTypeHandlerValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public void Validate(ModuleDeclaration moduleDeclaration, Dictionary<string, AItemDeclaration> declarations) {
+        public void Validate(ModuleDeclaration moduleDeclaration) {
             moduleDeclaration.InspectType<ResourceTypeDeclaration>(node => {
                 if(node.Handler == null) {
 
                     // TODO: error
-                } else if(declarations.TryGetValue(node.Handler.Value, out var referencedDeclaration)) {
+                } else if(Provider.TryGetItem(node.Handler.Value, out var referencedDeclaration)) {
                     if(referencedDeclaration is FunctionDeclaration) {
 
                         // nothing to do

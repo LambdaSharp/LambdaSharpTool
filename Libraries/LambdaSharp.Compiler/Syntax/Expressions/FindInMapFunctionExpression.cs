@@ -38,16 +38,19 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
+        [SyntaxHidden]
         public LiteralExpression MapName {
             get => _mapName ?? throw new InvalidOperationException();
             set => _mapName = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression TopLevelKey {
             get => _topLevelKey ?? throw new InvalidOperationException();
             set => _topLevelKey = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression SecondLevelKey {
             get => _secondLevelKey ?? throw new InvalidOperationException();
             set => _secondLevelKey = SetParent(value ?? throw new ArgumentNullException());

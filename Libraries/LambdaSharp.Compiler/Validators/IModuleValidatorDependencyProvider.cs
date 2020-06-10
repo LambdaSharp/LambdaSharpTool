@@ -16,6 +16,7 @@
  * limitations under the License.
  */
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using LambdaSharp.Compiler.Syntax.Declarations;
 
@@ -30,6 +31,7 @@ namespace LambdaSharp.Compiler.Validators {
         bool IsValidResourceType(string type);
         bool TryGetResourceType(string typeName, out ResourceType resourceType);
         Task<string> ConvertKmsAliasToArn(string alias);
-        bool TryGetItem(string fullname, out AItemDeclaration itemDeclaration);
+        void DeclareItem(AItemDeclaration itemDeclaration);
+        bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);
     }
 }

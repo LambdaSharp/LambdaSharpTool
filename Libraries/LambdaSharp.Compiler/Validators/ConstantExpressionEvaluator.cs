@@ -32,8 +32,8 @@ namespace LambdaSharp.Compiler.Validators {
         private static readonly Regex SubFormatStringRegex = new Regex(@"\$\{(?!\!)[^\}]+\}", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
         #region Errors/Warnings
-        private static readonly Error IfExpressionAlwaysTrue = new Error(0, "!If expression is always True");
-        private static readonly Error IfExpressionAlwaysFalse = new Error(0, "!If expression is always False");
+        private static readonly Warning IfExpressionAlwaysTrue = new Warning(0, "!If expression is always True");
+        private static readonly Warning IfExpressionAlwaysFalse = new Warning(0, "!If expression is always False");
         #endregion
 
         //--- Constructors ---
@@ -41,7 +41,7 @@ namespace LambdaSharp.Compiler.Validators {
 
         //--- Methods ---
         public void Evaluate(ModuleDeclaration moduleDeclaration) {
-            var substitutions = new Dictionary<ASyntaxNode, ASyntaxNode>();
+            var substitutions = new Dictionary<ISyntaxNode, ISyntaxNode>();
             while(true) {
                 substitutions.Clear();
 
@@ -63,17 +63,16 @@ namespace LambdaSharp.Compiler.Validators {
             }
         }
 
-        private void Evaluate(AExpression expression, Dictionary<ASyntaxNode, ASyntaxNode> substitutions) {
+        private void Evaluate(AExpression expression, Dictionary<ISyntaxNode, ISyntaxNode> substitutions) {
 
             // TODO: add missing expression types
             switch(expression) {
-            case ConditionReferenceExpression conditionReferenceExpression:
-
-                // don't inline referenced conditions
-                break;
-            case LiteralExpression literalExpression:
+            case LiteralExpression _:
 
                 // nothing to do
+                break;
+            case ConditionReferenceExpression conditionReferenceExpression:
+                Substitute(EvaluateExpression(conditionReferenceExpression));
                 break;
             case ReferenceFunctionExpression itemReferenceExpression:
                 Substitute(EvaluateExpression(itemReferenceExpression));
@@ -110,6 +109,18 @@ namespace LambdaSharp.Compiler.Validators {
                     substitutions[expression] = newExpression;
                 }
             }
+        }
+
+        private AExpression EvaluateExpression(ConditionReferenceExpression expression) {
+            if(
+                Provider.TryGetItem(expression.ReferenceName.Value, out var declaration)
+                && (declaration is ConditionDeclaration conditionDeclaration)
+                && (conditionDeclaration.Value is LiteralExpression conditionLiteral)
+                && bool.TryParse(conditionLiteral.Value, out var conditionBool)
+            ) {
+                return BooleanLiteral(expression, conditionBool);
+            }
+            return expression;
         }
 
         private AExpression EvaluateExpression(ReferenceFunctionExpression expression) {

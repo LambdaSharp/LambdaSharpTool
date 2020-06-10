@@ -43,7 +43,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseListOfLiteralExpressions();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(1);
             value[0].Should().BeOfType<LiteralExpression>()
@@ -61,7 +61,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseListOfLiteralExpressions();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(2);
             var firstItem = value[0].Should().BeOfType<LiteralExpression>()
@@ -92,7 +92,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseListOfLiteralExpressions();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             value.Should().NotBeNull();
             value.Count.Should().Be(2);
             value[0].Should().BeOfType<LiteralExpression>()

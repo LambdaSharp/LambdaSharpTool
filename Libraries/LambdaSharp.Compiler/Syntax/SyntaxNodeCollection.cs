@@ -76,12 +76,12 @@ namespace LambdaSharp.Compiler.Syntax {
             }
         }
 
-        public void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+        public ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector) {
             for(var i = 0; i < _nodes.Count; ++i) {
-                _nodes[i].Substitute(inspector);
-                var newValue = inspector(_nodes[i]) ?? throw new NullValueException();
+                var newValue =_nodes[i].Substitute(inspector) ?? throw new NullValueException();
                 _nodes[i] = (T)newValue;
             }
+            return this;
         }
 
         public void Add(T expression) => _nodes.Add(SetItemParent(expression ??  throw new ArgumentNullException(nameof(expression))));

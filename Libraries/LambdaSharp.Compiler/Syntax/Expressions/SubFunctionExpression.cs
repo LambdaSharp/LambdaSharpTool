@@ -49,11 +49,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
+        [SyntaxHidden]
         public LiteralExpression FormatString {
             get => _formatString ?? throw new InvalidOperationException();
             set => _formatString = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public ObjectExpression Parameters {
             get => _parameters ?? throw new InvalidOperationException();
             set => _parameters = SetParent(value ?? throw new ArgumentNullException());

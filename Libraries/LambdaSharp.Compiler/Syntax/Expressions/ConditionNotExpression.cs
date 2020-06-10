@@ -33,6 +33,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _value;
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression Value {
             get => _value ?? throw new InvalidOperationException();
             set => _value = SetParent(value ?? throw new ArgumentNullException());

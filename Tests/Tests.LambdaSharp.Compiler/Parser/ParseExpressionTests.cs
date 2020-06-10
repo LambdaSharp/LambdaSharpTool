@@ -45,7 +45,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("text");
         }
@@ -61,7 +61,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             var sub = value.Should().BeOfType<SubFunctionExpression>().Which;
             sub.FormatString.Should().NotBeNull();
             sub.FormatString.Value.Should().Be("text");
@@ -80,7 +80,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             var base64 = value.Should().BeOfType<Base64FunctionExpression>().Which;
             var sub = base64.Value.Should().BeOfType<SubFunctionExpression>().Which;
             sub.FormatString.Should().NotBeNull();
@@ -101,7 +101,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             var base64 = value.Should().BeOfType<Base64FunctionExpression>().Which;
             var sub = base64.Value.Should().BeOfType<SubFunctionExpression>().Which;
             sub.FormatString.Should().NotBeNull();
@@ -122,7 +122,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             value.Should().NotBeNull();
             var literal = value.Should().BeOfType<LiteralExpression>().Which;
             literal.Value.Should().Be("hello world!");
@@ -210,7 +210,7 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             var value = parser.ParseExpression();
 
             // assert
-            ExpectNoMessages();
+            ExpectedMessages();
             var map = value.Should().BeOfType<ObjectExpression>().Which;
             map.Count.Should().Be(1);
             var item = map.First();

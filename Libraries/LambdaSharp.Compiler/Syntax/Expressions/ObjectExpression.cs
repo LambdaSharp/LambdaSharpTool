@@ -118,10 +118,11 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             exitInspector?.Invoke(this);
         }
 
-        public override void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector) {
+        public override ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector) {
             foreach(var pair in new List<KeyValuePair>(_pairs)) {
-                this[pair.Key] = (AExpression)(inspector(pair.Value) ?? throw new NullValueException());
+                this[pair.Key] = (AExpression)(pair.Value.Substitute(inspector) ?? throw new NullValueException());
             }
+            return inspector(this);
         }
 
         public T? GetOrCreate<T>(string key, Action<AExpression> error) where T : AExpression, new() {

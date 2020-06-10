@@ -28,6 +28,6 @@ namespace LambdaSharp.Compiler.Syntax {
 
         //--- Methods ---
         void Inspect(Action<ASyntaxNode>? entryInspector, Action<ASyntaxNode>? exitInspector);
-        void Substitute(Func<ASyntaxNode, ASyntaxNode> inspector);
+        ISyntaxNode Substitute(Func<ISyntaxNode, ISyntaxNode> inspector);
     }
 }

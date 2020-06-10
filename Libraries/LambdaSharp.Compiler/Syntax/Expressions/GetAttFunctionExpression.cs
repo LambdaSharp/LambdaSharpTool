@@ -36,11 +36,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         //--- Properties ---
 
         // TODO: allow AExpression, but then validate that after optimization it is a string literal
+        [SyntaxHidden]
         public LiteralExpression ReferenceName {
             get => _referenceName ?? throw new InvalidOperationException();
             set => _referenceName = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression AttributeName {
             get => _attributeName ?? throw new InvalidOperationException();
             set => _attributeName = SetParent(value ?? throw new ArgumentNullException());

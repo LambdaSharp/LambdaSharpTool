@@ -16,50 +16,49 @@
  * limitations under the License.
  */
 
-#nullable disable
-
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
-using Amazon;
 using FluentAssertions;
 using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Parser;
-using Newtonsoft.Json;
+using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Validators;
 using Xunit.Abstractions;
 
-namespace Tests.LambdaSharp.Compiler.Parser {
+namespace Tests.LambdaSharp.Compiler {
 
-    public abstract class _Init {
+    public abstract class _Init : IModuleValidatorDependencyProvider {
 
         //--- Types ---
-        public class InMemroyLogger : ILogger {
+        public class InMemoryLogger : ILogger {
 
             //--- Fields ---
             private readonly List<string> _messages;
 
             //--- Constructors ---
-            public InMemroyLogger(List<string> messages) => _messages = messages ?? throw new ArgumentNullException(nameof(messages));
+            public InMemoryLogger(List<string> messages) => _messages = messages ?? throw new ArgumentNullException(nameof(messages));
 
             //--- Properties ---
             public IEnumerable<string> Messages => _messages;
 
             //--- Methods ---
-            public void Log(IBuildReportEntry entry, SourceLocation sourceLocation, bool exact) {
-                _messages.Add($"{entry.Severity.ToString().ToUpperInvariant()}{entry.Code}: {entry.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
+            public void Log(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact) {
+                _messages.Add($"{entry.Severity.ToString().ToUpperInvariant()}{((entry.Code != 0) ? entry.Code.ToString() : "")}: {entry.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
             }
         }
 
         public class ParserDependencyProvider : ILambdaSharpParserDependencyProvider {
 
             //--- Fields ---
-            private readonly InMemroyLogger _logger;
+            private readonly InMemoryLogger _logger;
 
             //--- Constructors ---
-            public ParserDependencyProvider(List<string> messages) => _logger = new InMemroyLogger(messages ?? throw new ArgumentNullException(nameof(messages)));
+            public ParserDependencyProvider(List<string> messages) => _logger = new InMemoryLogger(messages ?? throw new ArgumentNullException(nameof(messages)));
 
             //--- Properties ---
             public IEnumerable<string> Messages => _logger.Messages;
@@ -142,21 +141,40 @@ namespace Tests.LambdaSharp.Compiler.Parser {
         //     }
         // }
 
+        //--- Class Methods ---
+        protected static string ReadFromResources(string filename) {
+            var assembly = typeof(_Init).Assembly;
+            var resourceName = $"{assembly.GetName().Name}.Resources.{filename.Replace(" ", "_").Replace("\\", ".").Replace("/", ".")}";
+            using var resource = assembly.GetManifestResourceStream(resourceName);
+
+            // TODO: don't throw an exception; log an error instead
+            using var reader = new StreamReader(resource ?? throw new Exception($"unable to locate embedded resource: '{resourceName}' in assembly '{assembly.GetName().Name}'"), Encoding.UTF8);
+            return reader.ReadToEnd().Replace("\r", "");
+        }
+
         //--- Fields ---
         protected readonly ITestOutputHelper Output;
         protected readonly ParserDependencyProvider Provider;
         protected readonly List<string> Messages = new List<string>();
+        protected readonly Dictionary<string, AItemDeclaration> Declarations = new Dictionary<string, AItemDeclaration>();
 
         //--- Constructors ---
         public _Init(ITestOutputHelper output) {
             Output = output;
             Provider = new ParserDependencyProvider(Messages);
+            Logger = new InMemoryLogger(Messages);
         }
+
+        //--- Properties ---
+        public ILogger Logger { get; }
 
         //--- Methods ---
         protected void AddSource(string filePath, string source) => Provider.Files.Add(filePath, source);
 
         protected LambdaSharpParser NewParser(string source) {
+            if(source.StartsWith("@", StringComparison.Ordinal)) {
+                source = ReadFromResources(source.Substring(1));
+            }
             AddSource("test.yml", source);
             return new LambdaSharpParser(Provider, "test.yml");
         }
@@ -165,11 +183,34 @@ namespace Tests.LambdaSharp.Compiler.Parser {
             return new LambdaSharpParser(Provider, workdingDirectory, filename);
         }
 
-        protected void ExpectNoMessages() {
-            foreach(var message in Provider.Messages) {
+        protected void ExpectedMessages(params string[] expectedMessages) {
+            var expected = new HashSet<string>(expectedMessages);
+            var unexpected = Provider.Messages
+                .Where(message => !expected.Contains(message))
+                .ToList();
+            foreach(var message in unexpected) {
                 Output.WriteLine(message);
             }
-            Provider.Messages.Any().Should().Be(false);
+            unexpected.Any().Should().Be(false);
         }
+
+        //--- IModuleValidatorDependencyProvider Members ---
+        bool IModuleValidatorDependencyProvider.IsValidResourceType(string type) {
+            throw new NotImplementedException();
+        }
+
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) {
+            throw new NotImplementedException();
+        }
+
+        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) {
+            throw new NotImplementedException();
+        }
+
+        void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
+            => Declarations.Add(declaration.FullName, declaration);
+
+        bool IModuleValidatorDependencyProvider.TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration)
+            => Declarations.TryGetValue(fullname, out itemDeclaration);
     }
 }

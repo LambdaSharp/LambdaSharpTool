@@ -34,11 +34,13 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _rightValue;
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression LeftValue {
             get => _leftValue ?? throw new InvalidOperationException();
             set => _leftValue = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression RightValue {
             get => _rightValue ?? throw new InvalidOperationException();
             set => _rightValue = SetParent(value ?? throw new ArgumentNullException());

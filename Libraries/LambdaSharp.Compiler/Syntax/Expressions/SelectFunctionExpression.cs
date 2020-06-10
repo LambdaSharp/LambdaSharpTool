@@ -38,12 +38,14 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _values;
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression Index {
             get => _index ?? throw new InvalidOperationException();
             set => _index = SetParent(value ?? throw new ArgumentNullException());
         }
 
         // TODO: use [DisallowNull] or make non-null?
+        [SyntaxHidden]
         public AExpression Values {
             get => _values ?? throw new InvalidOperationException();
             set => _values = SetParent(value ?? throw new ArgumentNullException());

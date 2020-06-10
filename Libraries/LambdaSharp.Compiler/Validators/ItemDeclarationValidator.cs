@@ -32,8 +32,7 @@ namespace LambdaSharp.Compiler.Validators {
         public ItemDeclarationValidator(IModuleValidatorDependencyProvider provider) : base(provider) { }
 
         //--- Methods ---
-        public Dictionary<string, AItemDeclaration> FindDeclarations(ModuleDeclaration moduleDeclaration) {
-            var result = new Dictionary<string, AItemDeclaration>();
+        public void Validate(ModuleDeclaration moduleDeclaration) {
             var logicalIds = new HashSet<string>();
             moduleDeclaration.Inspect(node => {
                 switch(node) {
@@ -46,27 +45,27 @@ namespace LambdaSharp.Compiler.Validators {
                     break;
                 }
             });
-            return result;
 
             // local functions
             void ValidateItemDeclaration(AItemDeclaration declaration) {
-
-                // check if name is valid
                 if(!CloudFormationValidationRules.IsValidCloudFormationName(declaration.ItemName.Value)) {
+
+                    // declaration name is not valid
                     Logger.Log(Error.NameMustBeAlphanumeric, declaration);
-                }
-                if(CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)) {
+                } else if(CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)) {
+
+                    // declaration uses a reserved name
                     Logger.Log(ReservedName(declaration.FullName), declaration);
-                }
+                } else if(Provider.TryGetItem(declaration.FullName, out var _)) {
 
-                // check if full name is unique
-                if(!result!.TryAdd(declaration.FullName, declaration)) {
+                    // full name is not unique
                     Logger.Log(Error.DuplicateName(declaration.FullName), declaration);
-                }
+                } else if(!logicalIds!.Add(declaration.LogicalId)) {
 
-                // check that logical ID are unambiguous
-                if(!logicalIds!.Add(declaration.LogicalId)) {
+                    // logical ID is ambiguous
                     Logger.Log(Error.AmbiguousLogicalId(declaration.FullName));
+                } else {
+                    Provider.DeclareItem(declaration);
                 }
             }
         }

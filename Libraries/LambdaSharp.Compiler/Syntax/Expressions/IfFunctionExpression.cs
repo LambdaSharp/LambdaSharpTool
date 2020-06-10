@@ -41,16 +41,19 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         private AExpression? _ifFalse;
 
         //--- Properties ---
+        [SyntaxHidden]
         public AExpression Condition {
             get => _condition ?? throw new InvalidOperationException();
             set => _condition = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression IfTrue {
             get => _ifTrue ?? throw new InvalidOperationException();
             set => _ifTrue = SetParent(value ?? throw new ArgumentNullException());
         }
 
+        [SyntaxHidden]
         public AExpression IfFalse {
             get => _ifFalse ?? throw new InvalidOperationException();
             set => _ifFalse = SetParent(value ?? throw new ArgumentNullException());
