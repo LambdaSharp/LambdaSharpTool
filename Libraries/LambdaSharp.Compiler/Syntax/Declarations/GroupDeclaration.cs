@@ -25,15 +25,19 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
     [SyntaxDeclarationKeyword("Group")]
     public sealed class GroupDeclaration : AItemDeclaration {
 
+        //--- Fields ---
+        private SyntaxNodeCollection<AItemDeclaration> _items;
+
         //--- Constructors ---
-        public GroupDeclaration(LiteralExpression itemName) : base(itemName) { }
+        public GroupDeclaration(LiteralExpression itemName) : base(itemName)
+            => _items = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
 
         //--- Properties ---
 
         [SyntaxRequired]
         public SyntaxNodeCollection<AItemDeclaration> Items {
-            get => Declarations;
-            set => Declarations = value ?? throw new ArgumentNullException();
+            get => _items ?? throw new InvalidOperationException();
+            set => _items = SetParent(value ?? throw new ArgumentNullException());
         }
     }
 }

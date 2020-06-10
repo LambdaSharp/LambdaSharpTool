@@ -23,8 +23,6 @@ using LambdaSharp.Compiler.Syntax.Expressions;
 
 namespace LambdaSharp.Compiler.Syntax.Declarations {
 
-    public abstract class ADeclaration : ASyntaxNode { }
-
     [SyntaxDeclarationKeyword("Module")]
     public class ModuleDeclaration : ADeclaration {
 

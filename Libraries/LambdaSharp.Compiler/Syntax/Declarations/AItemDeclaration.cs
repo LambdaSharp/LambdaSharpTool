@@ -70,14 +70,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         private readonly List<DependencyRecord> _dependencies = new List<DependencyRecord>();
         private readonly List<DependencyRecord> _reverseDependencies = new List<DependencyRecord>();
         private readonly List<MissingDependencyRecord> _missingDependencies = new List<MissingDependencyRecord>();
-        private SyntaxNodeCollection<AItemDeclaration> _declarations;
         private string? _fullName;
         private string? _logicalId;
 
         //--- Constructors ---
         protected AItemDeclaration(LiteralExpression itemName) {
             ItemName = SetParent(itemName ?? throw new ArgumentNullException(nameof(itemName)));
-            _declarations = SetParent(new SyntaxNodeCollection<AItemDeclaration>());
         }
 
         //--- Properties ---
@@ -113,11 +111,6 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool DiscardIfNotReachable { get; set; }
-
-        public SyntaxNodeCollection<AItemDeclaration> Declarations {
-            get => _declarations ?? throw new InvalidOperationException();
-            set => _declarations = SetParent(value ?? throw new ArgumentNullException());
-        }
 
         /// <summary>
         /// List of declarations on which this declaration depends on.
