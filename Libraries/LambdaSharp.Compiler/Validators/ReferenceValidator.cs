@@ -180,43 +180,48 @@ namespace LambdaSharp.Compiler.Validators {
         }
 
         private void DetectCircularDependencies(IEnumerable<AItemDeclaration> declarations) {
-            var visited = new HashSet<AItemDeclaration>();
-            var found = new List<AItemDeclaration>();
 
-            // build list of discovered declarations in reverse discovery order
+            // TODO: make sure that 'DependsOn' dependencies are tracked as well
+
+            var visited = new List<AItemDeclaration>();
+            var cycles = new List<IEnumerable<AItemDeclaration>>();
             foreach(var declaration in declarations) {
-                Visit(declaration, current => current.Dependencies, visited, found);
+                Visit(declaration, visited);
             }
 
-            // revisit discovered delcarations in reverse order to determine circular dependencies
-            visited.Clear();
-            foreach(var declaration in Enumerable.Reverse(found)) {
-                var circularDependencies = new List<AItemDeclaration>();
-                Visit(declaration, current => declaration.ReverseDependencies, visited, circularDependencies);
-                if(circularDependencies.Count > 1) {
-                    var circularPath = string.Join(" -> ", circularDependencies.Select(dependency => dependency.FullName));
-                    Logger.Log(Error.CircularDependencyDetected(circularPath), circularDependencies.First());
+            // report all unique cycles found
+            if(cycles.Any()) {
+                var fingerprints = new HashSet<string>();
+                foreach(var cycle in cycles) {
+                    var path = cycle.Select(dependency => dependency.FullName).ToList();
+
+                    // NOTE (2020-06-09, bjorg): cycles are reported for each node in the cycle; however, the nodes in the cycle
+                    //  form a unique fingerprint to avoid duplicate reporting duplicate cycles
+                    var fingerprint = string.Join(",", path.OrderBy(fullname => fullname));
+                    if(fingerprints.Add(fingerprint)) {
+                        Logger.Log(Error.CircularDependencyDetected(string.Join(" -> ", path.Append(path.First()))), cycle.First());
+                    }
                 }
             }
 
             // local functions
-            void Visit(
-                AItemDeclaration declaration,
-                Func<AItemDeclaration, IEnumerable<AItemDeclaration.DependencyRecord>> getDependencies,
-                HashSet<AItemDeclaration> visited,
-                List<AItemDeclaration> finished
-            ) {
+            void Visit(AItemDeclaration declaration, List<AItemDeclaration> visited) {
 
-                // check if declaration has already been visited
-                if(!visited.Add(declaration)) {
+                // check if we detected a cycle
+                var index = visited.IndexOf(declaration);
+                if(index >= 0) {
+
+                    // extract sub-list that represents cycle since cycle may not point back to the first element
+                    cycles.Add(visited.GetRange(index, visited.Count - index));
                     return;
                 }
 
-                // recurse over all declarations this declaration is dependent on
-                foreach(var dependency in getDependencies(declaration)) {
-                    Visit(dependency.ReferencedDeclaration, getDependencies, visited, finished);
+                // recurse into every dependency, until we exhaust the tree or find a circular dependency
+                visited.Add(declaration);
+                foreach(var dependency in declaration.Dependencies) {
+                    Visit(dependency.ReferencedDeclaration, visited);
                 }
-                finished.Add(declaration);
+                visited.Remove(declaration);
             }
         }
 
