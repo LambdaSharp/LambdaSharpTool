@@ -75,10 +75,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         }
 
         [Fact]
-        public void EvaluateExistsTrueExpression() {
+        public void EvaluateIsDefinedTrueExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/ExistsTrueExpression.yml");
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IsDefinedTrueExpression.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();
@@ -95,10 +95,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         }
 
         [Fact]
-        public void EvaluateExistsFalseExpression() {
+        public void EvaluateIsDefinedFalseExpression() {
 
             // arrange
-            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/ExistsFalseExpression.yml");
+            var parser = NewParser("@Validators/ConstantExpressionEvaluatorTests/IsDefinedFalseExpression.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();

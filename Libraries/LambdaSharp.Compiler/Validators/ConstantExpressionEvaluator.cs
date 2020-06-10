@@ -86,7 +86,7 @@ namespace LambdaSharp.Compiler.Validators {
             case ConditionOrExpression orExpression:
                 Substitute(EvaluateExpression(orExpression));
                 break;
-            case ConditionExistsExpression existsExpression:
+            case ConditionIsDefinedExpression existsExpression:
                 Substitute(EvaluateExpression(existsExpression));
                 break;
             case ConditionEqualsExpression equalsExpression:
@@ -145,14 +145,14 @@ namespace LambdaSharp.Compiler.Validators {
             ) {
                 if(ifConditionLiteralExpression.AsBool() ?? false) {
 
-                    // unless the condition literal expression was the result of the !Exists function, warn about it
+                    // unless the condition literal expression was the result of the !IsDefined function, warn about it
                     if(!ifConditionLiteralExpression.FromExistsExpression) {
                         Logger.Log(IfExpressionAlwaysTrue, expression);
                     }
                     return expression.IfTrue;
                 } else {
 
-                    // unless the condition literal expression was the result of the !Exists function, warn about it
+                    // unless the condition literal expression was the result of the !IsDefined function, warn about it
                     if(!ifConditionLiteralExpression.FromExistsExpression) {
                         Logger.Log(IfExpressionAlwaysFalse, expression);
                     }
@@ -196,7 +196,7 @@ namespace LambdaSharp.Compiler.Validators {
             return expression;
         }
 
-        private AExpression EvaluateExpression(ConditionExistsExpression expression) {
+        private AExpression EvaluateExpression(ConditionIsDefinedExpression expression) {
 
             // this expression becomes 'true' when an item declaration exists, otherwise 'false'
             return BooleanLiteral(expression, Provider.TryGetItem(expression.ReferenceName.Value, out var _), fromExistsExpression: true);

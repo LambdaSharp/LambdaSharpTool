@@ -549,8 +549,8 @@ namespace LambdaSharp.Compiler.Parser {
                     case "Fn::Or":
                         converted = ConvertToOrConditionExpression(kv.Value);
                         break;
-                    case "Fn::Exists":
-                        converted = ConvertToExistsExpression(kv.Value);
+                    case "Fn::IsDefined":
+                        converted = ConvertToIsDefinedExpression(kv.Value);
                         break;
                     case "Condition":
                         converted = ConvertToConditionRefExpression(kv.Value);
@@ -614,8 +614,8 @@ namespace LambdaSharp.Compiler.Parser {
                     return ConvertToOrConditionExpression(converted);
                 case "!Condition":
                     return ConvertToConditionRefExpression(converted);
-                case "!Exists":
-                    return ConvertToExistsExpression(converted);
+                case "!IsDefined":
+                    return ConvertToIsDefinedExpression(converted);
                 default:
                     Log(Error.UnknownFunctionTag(tag), converted.SourceLocation);
                     return null;
@@ -995,18 +995,18 @@ namespace LambdaSharp.Compiler.Parser {
                 return null;
             }
 
-            AExpression? ConvertToExistsExpression(AExpression value) {
+            AExpression? ConvertToIsDefinedExpression(AExpression value) {
 
-                // !Exists STRING
+                // !IsDefined STRING
                 if(value is LiteralExpression conditionLiteral) {
-                    return new ConditionExistsExpression {
+                    return new ConditionIsDefinedExpression {
                         SourceLocation = value.SourceLocation,
                         ReferenceName = new LiteralExpression(conditionLiteral.Value, LiteralType.String) {
                             SourceLocation = value.SourceLocation
                         }
                     };
                 }
-                Log(Error.FunctionInvalidParameter("!Condition"), value.SourceLocation);
+                Log(Error.FunctionInvalidParameter("!IsDefined"), value.SourceLocation);
                 return null;
             }
         }

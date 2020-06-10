@@ -42,7 +42,7 @@ Items:
       - Enabled
 
   - Condition: UseCoreServices
-    Value: !And [ !Exists LambdaSharp, !Equals [ !Ref LambdaSharpCoreServices, Enabled ]]
+    Value: !And [ !IsDefined LambdaSharp, !Equals [ !Ref LambdaSharpCoreServices, Enabled ]]
 
   ###
   # LambdaSharp Deployment Settings (DO NOT MODIFY)
@@ -228,7 +228,7 @@ Items:
 
   - Resource: ModuleSecretsPolicy
     Description: Grant usage permissions to KMS keys provided in Module definition
-    If: !Exists Module::Secrets
+    If: !IsDefined Module::Secrets
     Value: !Ref Module::Secrets
     Allow:
       - kms:Decrypt

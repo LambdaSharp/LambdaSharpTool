@@ -21,9 +21,9 @@ using LambdaSharp.Compiler.Syntax.Declarations;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
-    public sealed class ConditionExistsExpression : AConditionExpression {
+    public sealed class ConditionIsDefinedExpression : AConditionExpression {
 
-        // !Exists STRING
+        // !IsDefined STRING
 
         //--- Fields ---
         private LiteralExpression? _referenceName;
@@ -50,7 +50,7 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
         }
 
         //--- Methods ---
-        public override ASyntaxNode CloneNode() => new ConditionExistsExpression {
+        public override ASyntaxNode CloneNode() => new ConditionIsDefinedExpression {
             ReferenceName = ReferenceName.Clone(),
             ReferencedDeclaration = ReferencedDeclaration
         };
