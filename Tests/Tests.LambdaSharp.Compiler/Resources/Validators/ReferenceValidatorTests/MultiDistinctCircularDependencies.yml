@@ -1,0 +1,20 @@
+Module: My.Module
+Items:
+
+  - Variable: VariableA
+    Value: !Ref VariableB
+
+  - Variable: VariableB
+    Value: !Ref VariableC
+
+  - Variable: VariableC
+    Value: !Ref VariableA
+
+  - Variable: VariableD
+    Value: !Ref VariableE
+
+  - Variable: VariableE
+    Value: !Ref VariableF
+
+  - Variable: VariableF
+    Value: !Ref VariableE

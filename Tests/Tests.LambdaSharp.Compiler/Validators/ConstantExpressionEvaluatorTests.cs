@@ -48,7 +48,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             new ConstantExpressionEvaluator(this).Evaluate(module);
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always True @ test.yml(5,12)");
+            ExpectedMessages("WARNING: !If expression is always True in Module.yml: line 5, column 12");
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("It's true!");
@@ -68,7 +68,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             new ConstantExpressionEvaluator(this).Evaluate(module);
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always False @ test.yml(5,12)");
+            ExpectedMessages("WARNING: !If expression is always False in Module.yml: line 5, column 12");
             module.Items[0].Should().BeOfType<VariableDeclaration>()
                 .Which.Value.Should().BeOfType<LiteralExpression>()
                 .Which.Value.Should().Be("It's false!");

@@ -113,10 +113,10 @@ namespace Tests.LambdaSharp.Compiler.Parser {
         public void ParseNestedIncludes() {
 
             // arrange
-            AddSource("test.yml", "!Include include.yml");
+            AddSource("Module.yml", "!Include include.yml");
             AddSource("include.yml", "!Include include.txt");
             AddSource("include.txt", "hello world!");
-            var parser = new LambdaSharpParser(Provider, "test.yml");
+            var parser = new LambdaSharpParser(Provider, "Module.yml");
 
             // act
             var value = parser.ParseExpression();

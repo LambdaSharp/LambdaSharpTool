@@ -48,7 +48,19 @@ namespace Tests.LambdaSharp.Compiler {
 
             //--- Methods ---
             public void Log(IBuildReportEntry entry, SourceLocation? sourceLocation, bool exact) {
-                _messages.Add($"{entry.Severity.ToString().ToUpperInvariant()}{((entry.Code != 0) ? entry.Code.ToString() : "")}: {entry.Message} @ {sourceLocation?.FilePath ?? "<n/a>"}({sourceLocation?.LineNumberStart ?? 0},{sourceLocation?.ColumnNumberStart ?? 0})");
+                var column = ((sourceLocation?.ColumnNumberStart ?? 0) > 0)
+                    ? $", column {sourceLocation?.ColumnNumberStart}"
+                    : "";
+                var line = ((sourceLocation?.LineNumberStart ?? 0) > 0)
+                    ? $": line {sourceLocation?.LineNumberStart}{column}"
+                    : "";
+                var position = (sourceLocation?.FilePath != null)
+                    ? $" in {sourceLocation?.FilePath}{line}"
+                    : "";
+                var code = (entry.Code != 0)
+                    ? entry.Code.ToString()
+                    : "";
+                _messages.Add($"{entry.Severity.ToString().ToUpperInvariant()}{code}: {entry.Message}{position}");
             }
         }
 
@@ -69,6 +81,7 @@ namespace Tests.LambdaSharp.Compiler {
             public string ReadFile(string filePath) => Files[filePath];
         }
 
+        // TODO: reinstate or delete
         // public class BuilderDependencyProvider : IBuilderDependencyProvider {
 
         //     //--- Fields ---
@@ -175,23 +188,25 @@ namespace Tests.LambdaSharp.Compiler {
             if(source.StartsWith("@", StringComparison.Ordinal)) {
                 source = ReadFromResources(source.Substring(1));
             }
-            AddSource("test.yml", source);
-            return new LambdaSharpParser(Provider, "test.yml");
+            AddSource("Module.yml", source);
+            return new LambdaSharpParser(Provider, "Module.yml");
         }
 
         protected LambdaSharpParser NewParser(string workdingDirectory, string filename) {
             return new LambdaSharpParser(Provider, workdingDirectory, filename);
         }
 
-        protected void ExpectedMessages(params string[] expectedMessages) {
-            var expected = new HashSet<string>(expectedMessages);
-            var unexpected = Provider.Messages
-                .Where(message => !expected.Contains(message))
-                .ToList();
+        protected void ExpectedMessages(params string[] expected) {
+            var unexpected = Provider.Messages.Where(message => !expected.Contains(message)).ToList();
+            var missing = expected.Where(message => !Provider.Messages.Contains(message)).ToList();
             foreach(var message in unexpected) {
                 Output.WriteLine(message);
             }
+            foreach(var message in missing) {
+                Output.WriteLine("MISSING MESSAGE: " + message);
+            }
             unexpected.Any().Should().Be(false);
+            missing.Any().Should().Be(false);
         }
 
         //--- IModuleValidatorDependencyProvider Members ---

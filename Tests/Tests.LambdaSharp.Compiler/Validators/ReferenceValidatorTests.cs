@@ -27,6 +27,8 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Validators {
 
+    // TODO: test that circular dependencies are also detected for 'DependsOn'
+
     public class ReferenceValidatorTests : _Init {
 
         //--- Constructors ---
@@ -35,10 +37,10 @@ namespace Tests.LambdaSharp.Compiler.Validators {
         //--- Methods ---
 
         [Fact]
-        public void MultiCircularReferences() {
+        public void MultiOverlappingCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/MultiCircularReferences.yml");
+            var parser = NewParser("@Validators/ReferenceValidatorTests/MultiOverlappingCircularDependencies.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();
@@ -48,30 +50,47 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             new ReferenceValidator(this).Validate(module, Declarations);
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always True @ test.yml(5,12)");
-            module.Items[0].Should().BeOfType<VariableDeclaration>()
-                .Which.Value.Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("It's true!");
+            ExpectedMessages(
+                "ERROR: circular dependency VariableA -> VariableB -> VariableC -> VariableA in Module.yml: line 4, column 5",
+                "ERROR: circular dependency VariableA -> VariableB -> VariableC -> VariableD -> VariableE -> VariableA in Module.yml: line 4, column 5"
+            );
         }
 
         [Fact]
-        public void SelfCircularReferences() {
+        public void MultiDistinctCircularDependencies() {
 
             // arrange
-            var parser = NewParser("@Validators/ReferenceValidatorTests/SelfCircularReferences.yml");
+            var parser = NewParser("@Validators/ReferenceValidatorTests/MultiDistinctCircularDependencies.yml");
             var module = parser.ParseModule();
             new ItemDeclarationValidator(this).Validate(module);
             ExpectedMessages();
             module.Should().NotBeNull();
 
             // act
-            new ConstantExpressionEvaluator(this).Evaluate(module);
+            new ReferenceValidator(this).Validate(module, Declarations);
 
             // assert
-            ExpectedMessages("WARNING: !If expression is always False @ test.yml(5,12)");
-            module.Items[0].Should().BeOfType<VariableDeclaration>()
-                .Which.Value.Should().BeOfType<LiteralExpression>()
-                .Which.Value.Should().Be("It's false!");
+            ExpectedMessages(
+                "ERROR: circular dependency VariableA -> VariableB -> VariableC -> VariableA in Module.yml: line 4, column 5",
+                "ERROR: circular dependency VariableE -> VariableF -> VariableE in Module.yml: line 16, column 5"
+            );
+        }
+
+        [Fact]
+        public void SelfCircularDependency() {
+
+            // arrange
+            var parser = NewParser("@Validators/ReferenceValidatorTests/SelfCircularDependency.yml");
+            var module = parser.ParseModule();
+            new ItemDeclarationValidator(this).Validate(module);
+            ExpectedMessages();
+            module.Should().NotBeNull();
+
+            // act
+            new ReferenceValidator(this).Validate(module, Declarations);
+
+            // assert
+            ExpectedMessages("ERROR: circular dependency VariableA -> VariableA in Module.yml: line 4, column 5");
         }
     }
 }
