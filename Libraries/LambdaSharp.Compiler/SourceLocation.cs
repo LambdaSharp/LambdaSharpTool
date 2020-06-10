@@ -1,6 +1,6 @@
 /*
  * LambdaSharp (λ#)
- * Copyright (C) 2018-2019
+ * Copyright (C) 2018-2020
  * lambdasharp.net
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,6 +17,7 @@
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.Compiler {
 
@@ -33,6 +34,9 @@ namespace LambdaSharp.Compiler {
             ColumnNumberStart = columnNumberStart;
             ColumnNumberEnd = columnNumberEnd;
         }
+
+        public SourceLocation([CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            : this(filePath, lineNumber, lineNumber, 0, 0) { }
 
         //--- Properties ---
         public string FilePath { get; private set; }
