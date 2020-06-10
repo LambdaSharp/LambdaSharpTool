@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace LambdaSharp.Compiler.Syntax.Expressions {
 
@@ -30,89 +31,98 @@ namespace LambdaSharp.Compiler.Syntax.Expressions {
             Resolved = resolved
         };
 
-        public static GetAttFunctionExpression GetAtt(string referenceName, string attributeName) => new GetAttFunctionExpression {
-            ReferenceName = Literal(referenceName),
-            AttributeName = Literal(attributeName)
+        public static GetAttFunctionExpression GetAtt(string referenceName, string attributeName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new GetAttFunctionExpression {
+            ReferenceName = Literal(referenceName, new SourceLocation(filePath, lineNumber)),
+            AttributeName = Literal(attributeName, new SourceLocation(filePath, lineNumber))
         };
 
-        public static GetAttFunctionExpression GetAtt(string referenceName, AExpression attributeName) => new GetAttFunctionExpression {
-            ReferenceName = Literal(referenceName),
-            AttributeName = attributeName ?? throw new ArgumentNullException(nameof(attributeName))
-        };
-
-        public static SubFunctionExpression Sub(string formatString) => new SubFunctionExpression {
-            FormatString = Literal(formatString)
-        };
-
-        public static SubFunctionExpression Sub(string formatString, ObjectExpression parameters) => new SubFunctionExpression {
+        public static SubFunctionExpression Sub(string formatString, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SubFunctionExpression {
             FormatString = Literal(formatString),
-            Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters))
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static JoinFunctionExpression Join(string separator, IEnumerable<AExpression> values) => new JoinFunctionExpression {
+        public static SubFunctionExpression Sub(string formatString, ObjectExpression parameters, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SubFunctionExpression {
+            FormatString = Literal(formatString),
+            Parameters = parameters ?? throw new ArgumentNullException(nameof(parameters)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
+        };
+
+        public static JoinFunctionExpression Join(string separator, IEnumerable<AExpression> values, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new JoinFunctionExpression {
             Delimiter = Literal(separator),
             Values = new ListExpression(values ?? throw new ArgumentNullException(nameof(values))),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static SelectFunctionExpression Select(string index, AExpression values) => new SelectFunctionExpression {
+        public static SelectFunctionExpression Select(string index, AExpression values, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SelectFunctionExpression {
             Index = Literal(index),
-            Values = values ?? throw new ArgumentNullException(nameof(values))
+            Values = values ?? throw new ArgumentNullException(nameof(values)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static SplitFunctionExpression Split(string delimiter, AExpression sourceString) => new SplitFunctionExpression {
+        public static SplitFunctionExpression Split(string delimiter, AExpression sourceString, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new SplitFunctionExpression {
             Delimiter = Literal(delimiter),
-            SourceString = sourceString ?? throw new ArgumentNullException(nameof(sourceString))
+            SourceString = sourceString ?? throw new ArgumentNullException(nameof(sourceString)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static FindInMapFunctionExpression FindInMap(string mapName, AExpression topLevelKey, AExpression secondLevelKey) => new FindInMapFunctionExpression {
-            MapName = Literal(mapName),
-            TopLevelKey = topLevelKey ?? throw new ArgumentNullException(nameof(topLevelKey)),
-            SecondLevelKey = secondLevelKey ?? throw new ArgumentNullException(nameof(secondLevelKey))
+        public static ImportValueFunctionExpression ImportValue(AExpression sharedValueToImport, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ImportValueFunctionExpression {
+            SharedValueToImport = sharedValueToImport ?? throw new ArgumentNullException(nameof(sharedValueToImport)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ImportValueFunctionExpression ImportValue(AExpression sharedValueToImport) => new ImportValueFunctionExpression {
-            SharedValueToImport = sharedValueToImport ?? throw new ArgumentNullException(nameof(sharedValueToImport))
-        };
-
-        public static IfFunctionExpression If(string condition, AExpression ifTrue, AExpression ifFalse) => new IfFunctionExpression {
+        public static IfFunctionExpression If(string condition, AExpression ifTrue, AExpression ifFalse, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new IfFunctionExpression {
             Condition = Condition(condition),
             IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue)),
-            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse))
+            IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static LiteralExpression Literal(string value, SourceLocation? sourceLocation = null)
+        public static LiteralExpression Literal(string value, SourceLocation sourceLocation)
             => new LiteralExpression(value, LiteralType.String) {
                 SourceLocation = sourceLocation
             };
 
-        public static LiteralExpression Literal(int value, SourceLocation? sourceLocation = null)
+        public static LiteralExpression Literal(string value, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            => new LiteralExpression(value, LiteralType.String) {
+                SourceLocation = new SourceLocation(filePath, lineNumber)
+            };
+
+        public static LiteralExpression Literal(int value, SourceLocation sourceLocation)
             => new LiteralExpression(value.ToString(), LiteralType.Integer) {
                 SourceLocation = sourceLocation
             };
 
-        public static ListExpression LiteralList(params string[] values) => new ListExpression(values.Select(value => Literal(value)));
+        public static LiteralExpression Literal(int value, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0)
+            => new LiteralExpression(value.ToString(), LiteralType.Integer) {
+                SourceLocation = new SourceLocation(filePath, lineNumber)
+            };
 
-        public static ConditionNotExpression Not(AExpression condition) => new ConditionNotExpression {
-            Value = condition ?? throw new ArgumentNullException(nameof(condition))
+        public static ConditionNotExpression Not(AExpression condition, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ConditionNotExpression {
+            Value = condition ?? throw new ArgumentNullException(nameof(condition)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ConditionEqualsExpression Equals(AExpression leftValue, AExpression rightValue) => new ConditionEqualsExpression {
+        public static ConditionEqualsExpression Equals(AExpression leftValue, AExpression rightValue, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ConditionEqualsExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ConditionAndExpression And(AExpression leftValue, AExpression rightValue) => new ConditionAndExpression {
+        public static ConditionAndExpression And(AExpression leftValue, AExpression rightValue, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ConditionAndExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ConditionOrExpression Or(AExpression leftValue, AExpression rightValue) => new ConditionOrExpression {
+        public static ConditionOrExpression Or(AExpression leftValue, AExpression rightValue, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ConditionOrExpression {
             LeftValue = leftValue ?? throw new ArgumentNullException(nameof(leftValue)),
-            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue))
+            RightValue = rightValue ?? throw new ArgumentNullException(nameof(rightValue)),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
 
-        public static ConditionReferenceExpression Condition(string referenceName) => new ConditionReferenceExpression {
-            ReferenceName = Literal(referenceName)
+        public static ConditionReferenceExpression Condition(string referenceName, [CallerFilePath] string filePath = "", [CallerLineNumber] int lineNumber = 0) => new ConditionReferenceExpression {
+            ReferenceName = Literal(referenceName),
+            SourceLocation = new SourceLocation(filePath, lineNumber)
         };
     }
 }

@@ -96,7 +96,7 @@ namespace LambdaSharp.Compiler {
             // discover all declarations
             new ItemDeclarationValidator(this).Validate(moduleDeclaration);
 
-            // evaluate constant expressions
+            // evaluate expressions
             new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
             new ReferenceValidator(this).Validate(moduleDeclaration, _declarations);
 
