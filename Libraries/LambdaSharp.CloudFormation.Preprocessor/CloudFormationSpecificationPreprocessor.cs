@@ -99,7 +99,6 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
             ApplyPatches(region);
 
             // strip all "Documentation" fields to reduce document size
-            // json.SelectTokens("$..UpdateType").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.IntrinsicTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
@@ -173,19 +172,5 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
                 regionalExtendedSpecifications.Add(key, PatchDocument.Parse(Encoding.UTF8.GetString(memoryStream.ToArray())));
             }
         }
-
-//             text = json.ToString(Formatting.None);
-//             Console.WriteLine($"Stripped size: {text.Length:N0}");
-//             if(destinationJsonLocation != null) {
-//                 Directory.CreateDirectory(Path.GetDirectoryName(destinationJsonLocation));
-//                 var cloudformationJson = json.ToString(Formatting.Indented);
-//                 if(File.Exists(destinationJsonLocation) && ((await File.ReadAllTextAsync(destinationJsonLocation)).ToMD5Hash() == cloudformationJson.ToMD5Hash())) {
-
-//                     // not changes, nothing else to do
-//                     return;
-//                 }
-//                 await File.WriteAllTextAsync(destinationJsonLocation, cloudformationJson);
-//             }
-
     }
 }

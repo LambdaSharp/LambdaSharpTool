@@ -18,6 +18,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.CloudFormation.Preprocessor {
@@ -35,5 +40,28 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
         public string Region { get; }
         public JObject Document { get; }
         public IEnumerable<string> Warnings { get; }
+
+        //--- Methods ---
+        public async Task SaveAsync(string folder, bool compressed) {
+
+            // write JSON document
+            var text = Document.ToString(compressed ? Formatting.None : Formatting.Indented);
+            await WriteAsync(Path.Combine(folder, $"{Region}.json"), text);
+
+            // write JSON patch log
+            await WriteAsync(Path.Combine(folder, $"{Region}.json.log"), string.Join("\n", Warnings));
+
+            // local functions
+            async Task WriteAsync(string filename, string contents) {
+                if(compressed) {
+                    using var file = File.OpenWrite(filename);
+                    using var compression = new BrotliStream(file, CompressionLevel.Optimal);
+                    var buffer = Encoding.UTF8.GetBytes(contents);
+                    await compression.WriteAsync(buffer, 0, buffer.Length);
+                } else {
+                    await File.WriteAllTextAsync(filename, contents);
+                }
+            }
+        }
     }
 }
