@@ -178,13 +178,7 @@ namespace LambdaSharp.Compiler {
         //--- IModuleValidatorDependencyProvider Members ---
         ILogger IModuleValidatorDependencyProvider.Logger => Logger;
 
-        bool IModuleValidatorDependencyProvider.IsResourceType(string type) {
-
-            // TODO:
-            return true;
-        }
-
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) {
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string resourceTypeName, out ResourceType resourceType) {
 
             // TODO:
             throw new NotImplementedException();

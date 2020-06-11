@@ -136,6 +136,7 @@ namespace LambdaSharp.Compiler {
         // TODO: unroll errors for each function (!Cidr, !Condition, !If, etc.); this makes it easier to track what errors are reported by each function
         public static readonly ErrorFunc FunctionExpectsOneParameter = parameter => new Error(0, $"{parameter} expects 1 parameter");
         public static readonly ErrorFunc FunctionExpectsTwoParameters = parameter => new Error(0, $"{parameter} expects 2 parameters");
+        public static readonly ErrorFunc FunctionExpectsTwoTo10Parameters = parameter => new Error(0, $"{parameter} expects 2 to 10 parameters");
         public static readonly ErrorFunc FunctionExpectsThreeParameters = parameter => new Error(0, $"{parameter} expects 3 parameters");
         public static readonly ErrorFunc SubFunctionParametersCannotUseAttributeNotation = parameter => new Error(0, $"cannot use attribute notation on local parameter '{parameter}'");
 

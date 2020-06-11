@@ -946,10 +946,10 @@ namespace LambdaSharp.Compiler.Parser {
 
             AExpression? ConvertToAndConditionExpression(AExpression value) {
 
-                // !And [ CONDITION, CONDITION ]
+                // !And [ CONDITION, ..., CONDITION ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Count != 2) {
-                        Log(Error.FunctionExpectsTwoParameters("!And"), value.SourceLocation);
+                    if((parameterList.Count < 2) || (parameterList.Count > 10)) {
+                        Log(Error.FunctionExpectsTwoTo10Parameters("!And"), value.SourceLocation);
                         return null;
                     }
                     return new ConditionAndExpression {
@@ -964,10 +964,10 @@ namespace LambdaSharp.Compiler.Parser {
 
             AExpression? ConvertToOrConditionExpression(AExpression value) {
 
-                // !Or [ CONDITION, CONDITION ]
+                // !Or [ CONDITION, ..., CONDITION ]
                 if(value is ListExpression parameterList) {
-                    if(parameterList.Count != 2) {
-                        Log(Error.FunctionExpectsTwoParameters("!Or"), value.SourceLocation);
+                    if((parameterList.Count < 2) || (parameterList.Count > 10)) {
+                        Log(Error.FunctionExpectsTwoTo10Parameters("!And"), value.SourceLocation);
                         return null;
                     }
                     return new ConditionOrExpression {

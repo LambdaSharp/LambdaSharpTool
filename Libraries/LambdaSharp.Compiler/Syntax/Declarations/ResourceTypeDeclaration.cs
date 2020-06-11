@@ -91,6 +91,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
 
         //--- Fields ---
         private LiteralExpression? _handler;
+        private LiteralExpression? _documentation;
         private SyntaxNodeCollection<PropertyTypeExpression> _properties;
         private SyntaxNodeCollection<AttributeTypeExpression> _attributes;
 
@@ -106,6 +107,12 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         public LiteralExpression? Handler {
             get => _handler;
             set => _handler = SetParent(value);
+        }
+
+        [SyntaxOptional]
+        public LiteralExpression? Documentation {
+            get => _documentation;
+            set => _documentation = SetParent(value);
         }
 
         [SyntaxOptional]

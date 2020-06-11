@@ -23,6 +23,7 @@ namespace LambdaSharp.Compiler {
     public sealed class ResourceType {
 
         //--- Properties ---
+        public string? ResourceTypeName { get; set; }
         public string? Documentation { get; set; }
         public Dictionary<string, AttributeType>? Attributes { get; set; }
         public Dictionary<string, PropertyType>? Properties { get; set; }

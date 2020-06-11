@@ -307,7 +307,7 @@ namespace LambdaSharp.Compiler.Validators {
                 if(node.Allow != null) {
                     Logger.Log(AllowAttributeRequiresCloudFormationType, node.Allow);
                 }
-            } else if(Provider.IsResourceType(node.Type.Value)) {
+            } else if(Provider.TryGetResourceType(node.Type.Value, out var _)) {
 
                 // only value parameters can have 'Import' attribute
                 if(node.Import != null) {

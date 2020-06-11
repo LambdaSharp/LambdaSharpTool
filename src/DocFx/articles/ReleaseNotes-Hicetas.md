@@ -146,7 +146,8 @@ Part of this release, _LambdaSharp.Core_ functions were ported to .NET Core 3.1 
 
 * LambdaSharp Syntax
   * Added `Module::Description` and `Module::Info` declarations.
-  * Added `!IsDefined` compile-time function
+  * Added `!IsDefined` compile-time function.
+  * Added 'Documentation' property to `ResourceType` declaration.
 
 ## Releases
 

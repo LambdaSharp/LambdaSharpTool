@@ -22,7 +22,7 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Validators {
 
-    public class ParameterDeclarationValidatorTests : _Validator, IModuleValidatorDependencyProvider {
+    public class ParameterDeclarationValidatorTests : _Validator {
 
         //--- Constructors ---
         public ParameterDeclarationValidatorTests(ITestOutputHelper output) : base(output) { }
