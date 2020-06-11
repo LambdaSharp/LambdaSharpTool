@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <RootNamespace>LambdaSharp.CloudFormation.Preprocessor</RootNamespace>
+    <NoWarn>CS1998</NoWarn>
+    <Nullable>enable</Nullable>
+
+    <PackageId>LambdaSharp.CloudFormation.Preprocessor</PackageId>
+    <VersionPrefix>$(LAMBDASHARP_VERSION_PREFIX)</VersionPrefix>
+    <VersionSuffix>$(LAMBDASHARP_VERSION_SUFFIX)</VersionSuffix>
+    <Title>LambdaSharp (λ#) CloudFormation Preprocessor</Title>
+    <Description>Serverless .NET for AWS - LambdaSharp CloudFormation Preprocessor Library</Description>
+    <Company>LambdaSharp</Company>
+    <Copyright>Copyright (C) 2018-2020</Copyright>
+    <Authors>Bjorg</Authors>
+
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/LambdaSharp/LambdaSharpTool/</PackageProjectUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/LambdaSharp/DigitalAssets/master/LambdaSharp-64x64.png</PackageIconUrl>
+    <PackageTags>AWS;CloudFormation;Lambda;LambdaSharp;Serverless</PackageTags>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="JsonDiffPatch" Version="2.0.49" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LambdaSharp.Compiler\LambdaSharp.Compiler.csproj" />
+  </ItemGroup>
+</Project>
