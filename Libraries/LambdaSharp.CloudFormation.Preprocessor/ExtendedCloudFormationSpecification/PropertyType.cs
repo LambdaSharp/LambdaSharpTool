@@ -21,10 +21,12 @@ using System.Text.Json.Serialization;
 namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public enum UpdateType {
         Unknown,
         Mutable,
-        Immutable
+        Immutable,
+        Conditional
     }
 
     public sealed class PropertyType {
@@ -37,5 +39,12 @@ namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecific
         public bool Required { get; set; }
         public string? Type { get; set; }
         public UpdateType UpdateType { get; set; }
+        public PropertyValueType? Value { get; set; }
+    }
+
+    public sealed class PropertyValueType {
+
+        //--- Properties ---
+        public string? ValueType { get; set; }
     }
 }

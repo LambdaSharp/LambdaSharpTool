@@ -24,10 +24,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
-using JsonDiffPatch;
+using Microsoft.AspNetCore.JsonPatch;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace LambdaSharp.CloudFormation.Preprocessor {
+    using Spec = Preprocessor.ExtendedCloudFormationSpecification.SpecificationType;
 
     public class CloudFormationSpecificationPreprocessor {
 
@@ -68,7 +70,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
         //--- Fields ---
         public HttpClient _httpClient;
-        private Dictionary<string, Dictionary<string, PatchDocument>> _globalExtendedSpecifications = new Dictionary<string, Dictionary<string, PatchDocument>>();
+        private Dictionary<string, Dictionary<string, JsonPatchDocument<Spec>>> _globalExtendedSpecifications = new Dictionary<string, Dictionary<string, JsonPatchDocument<Spec>>>();
 
         //--- Constructors ---
         public CloudFormationSpecificationPreprocessor(HttpClient? httpClient = null) {
@@ -87,18 +89,20 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
             using var decompressedMemoryStream = new MemoryStream();
             await decompressionStream.CopyToAsync(decompressedMemoryStream);
             var text = Encoding.UTF8.GetString(decompressedMemoryStream.ToArray());
-            var json = JObject.Parse(text);
+            var spec = JsonConvert.DeserializeObject<Spec>(text);
 
             // apply all patches to original specification
             if(!_globalExtendedSpecifications.Any()) {
-                await DownloadExtendedCloudFormationSpecificationsAsync();
+                await InitializeExtendedCloudFormationSpecificationsFromGitHubAsync();
             }
             var warnings = new List<string>();
-            var patcher = new JsonPatcher();
             ApplyPatches("all");
             ApplyPatches(region);
 
             // strip all "Documentation" fields to reduce document size
+            var json = JObject.FromObject(spec, new JsonSerializer {
+                NullValueHandling = NullValueHandling.Ignore
+            });
             json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
             json.SelectTokens("$.IntrinsicTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
@@ -115,21 +119,15 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
                 }
                 foreach(var patch in regionalExtendedSpecifications.OrderBy(kv => kv.Key)) {
                     var first = true;
+                    patch.Value.ApplyTo(spec, error => {
 
-                    // apply each patch operation individually
-                    foreach(var patchOperation in patch.Value.Operations) {
-                        try {
-                            json = (JObject)patcher.ApplyOperation(patchOperation, json);
-                        } catch {
-
-                            // check if we need a warning header
-                            if(first) {
-                                warnings.Add($"[{regionKey}/{patch.Key}]");
-                                first = false;
-                            }
-                            warnings.Add($"unable to apply patch operation to '{patchOperation.Path}'");
+                        // check if we need a warning header
+                        if(first) {
+                            warnings.Add($"[{regionKey}/{patch.Key}]");
+                            first = false;
                         }
-                    }
+                        warnings.Add($"{error.ErrorMessage} {JsonConvert.SerializeObject(error.Operation, Formatting.None)}");
+                    });
                 }
             }
 
@@ -145,7 +143,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
             }
         }
 
-        public async Task DownloadExtendedCloudFormationSpecificationsAsync() {
+        public async Task InitializeExtendedCloudFormationSpecificationsFromGitHubAsync() {
             const string PREFIX = "cfn-python-lint-master/src/cfnlint/data/ExtendedSpecs/";
             var response = await _httpClient.GetAsync(CFN_LINT_SOURCE);
             using var zip = new ZipArchive(await response.Content.ReadAsStreamAsync());
@@ -158,7 +156,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
 
                 // create entry for each file
                 if(!_globalExtendedSpecifications.TryGetValue(region, out var regionalExtendedSpecifications)) {
-                    regionalExtendedSpecifications = new Dictionary<string, PatchDocument>();
+                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<Spec>>();
                     _globalExtendedSpecifications[region] = regionalExtendedSpecifications;
                 }
 
@@ -167,9 +165,40 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
                 using var memoryStream = new MemoryStream();
                 await stream.CopyToAsync(memoryStream);
                 memoryStream.Position = 0;
+                var text = Encoding.UTF8.GetString(memoryStream.ToArray());
 
                 // store extended specification document
-                regionalExtendedSpecifications.Add(key, PatchDocument.Parse(Encoding.UTF8.GetString(memoryStream.ToArray())));
+                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<Spec>>(text);
+                regionalExtendedSpecifications.Add(key, patch);
+            }
+        }
+
+        public async Task InitializeExtendedCloudFormationSpecificationsFromFolderAsync(string path) {
+            var pathDelimiter = new[] { '/', '\\' };
+            path = path.TrimEnd(pathDelimiter);
+            foreach(var file in Directory.GetFiles(path, "*.json", SearchOption.AllDirectories)) {
+
+                // convert filepath into region-key pair
+                var segments = file.Substring(path.Length + 1).Split(pathDelimiter, 2);
+                var region = segments[0];
+                var key = segments[1];
+
+                // create entry for each file
+                if(!_globalExtendedSpecifications.TryGetValue(region, out var regionalExtendedSpecifications)) {
+                    regionalExtendedSpecifications = new Dictionary<string, JsonPatchDocument<Spec>>();
+                    _globalExtendedSpecifications[region] = regionalExtendedSpecifications;
+                }
+
+                // unzip entry
+                using var stream = File.OpenRead(file);
+                using var memoryStream = new MemoryStream();
+                await stream.CopyToAsync(memoryStream);
+                memoryStream.Position = 0;
+                var text = Encoding.UTF8.GetString(memoryStream.ToArray());
+
+                // store extended specification document
+                var patch = JsonConvert.DeserializeObject<JsonPatchDocument<Spec>>(text);
+                regionalExtendedSpecifications.Add(key, patch);
             }
         }
     }

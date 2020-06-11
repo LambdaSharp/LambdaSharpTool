@@ -20,6 +20,7 @@ using System.Collections.Generic;
 
 namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
 
+    // TODO: better name?
     public sealed class SpecificationType {
 
         // CloudFormation specification: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification-format.html

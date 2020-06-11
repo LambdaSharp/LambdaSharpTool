@@ -22,6 +22,7 @@ using System.Text.Json.Serialization;
 namespace LambdaSharp.CloudFormation.Preprocessor.ExtendedCloudFormationSpecification {
 
     [JsonConverter(typeof(JsonStringEnumConverter))]
+    [Newtonsoft.Json.JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     public enum ReturnType {
         Unknown,
         Singular,
