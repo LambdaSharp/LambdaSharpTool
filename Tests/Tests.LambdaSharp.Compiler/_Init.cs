@@ -19,14 +19,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using FluentAssertions;
 using LambdaSharp.Compiler;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.Validators;
 using Xunit.Abstractions;
 
@@ -154,17 +153,6 @@ namespace Tests.LambdaSharp.Compiler {
         //     }
         // }
 
-        //--- Class Methods ---
-        protected static string ReadFromResources(string filename) {
-            var assembly = typeof(_Init).Assembly;
-            var resourceName = $"{assembly.GetName().Name}.Resources.{filename.Replace(" ", "_").Replace("\\", ".").Replace("/", ".")}";
-            using var resource = assembly.GetManifestResourceStream(resourceName);
-
-            // TODO: don't throw an exception; log an error instead
-            using var reader = new StreamReader(resource ?? throw new Exception($"unable to locate embedded resource: '{resourceName}' in assembly '{assembly.GetName().Name}'"), Encoding.UTF8);
-            return reader.ReadToEnd().Replace("\r", "");
-        }
-
         //--- Fields ---
         protected readonly ITestOutputHelper Output;
         protected readonly ParserDependencyProvider Provider;
@@ -186,7 +174,7 @@ namespace Tests.LambdaSharp.Compiler {
 
         protected LambdaSharpParser NewParser(string source) {
             if(source.StartsWith("@", StringComparison.Ordinal)) {
-                source = ReadFromResources(source.Substring(1));
+                source = ResourceReader.ReadText(source.Substring(1));
             }
             AddSource("Module.yml", source);
             return new LambdaSharpParser(Provider, "Module.yml");
@@ -210,7 +198,7 @@ namespace Tests.LambdaSharp.Compiler {
         }
 
         //--- IModuleValidatorDependencyProvider Members ---
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out ResourceType resourceType) => throw new NotImplementedException();
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out IResourceType resourceType) => throw new NotImplementedException();
         Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) => throw new NotImplementedException();
 
         void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)

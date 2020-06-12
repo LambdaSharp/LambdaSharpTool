@@ -1,4 +1,4 @@
-/*
+﻿/*
  * LambdaSharp (λ#)
  * Copyright (C) 2018-2020
  * lambdasharp.net
@@ -16,11 +16,15 @@
  * limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace LambdaSharp.Compiler.TypeSystem {
 
-    public interface ITypeDirectory {
+    public interface ITypeSystem {
+
+        //--- Properties ---
+        IEnumerable<IResourceType> ResourceTypes { get; }
 
         //--- Methods ---
         bool TryGetResourceType(string resourceTypeName, [NotNullWhen(true)] out IResourceType? resourceType);
