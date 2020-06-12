@@ -37,6 +37,7 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             ExpectedMessages();
 
             // register declarations
+            new PseudoParameterValidator(this).Validate(result);
             new ItemDeclarationValidator(this).Validate(result);
             ExpectedMessages();
             return result;

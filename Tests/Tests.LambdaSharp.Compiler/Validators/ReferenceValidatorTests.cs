@@ -86,5 +86,18 @@ namespace Tests.LambdaSharp.Compiler.Validators {
             // assert
             ExpectedMessages("ERROR: circular dependency ResourceA -> ResourceB -> ResourceA in Module.yml: line 4, column 5");
         }
+
+        [Fact]
+        public void PseudoParamereter() {
+
+            // arrange
+            var module = LoadTestModule();
+
+            // act
+            new ReferenceValidator(this).Validate(module);
+
+            // assert
+            ExpectedMessages();
+        }
     }
 }

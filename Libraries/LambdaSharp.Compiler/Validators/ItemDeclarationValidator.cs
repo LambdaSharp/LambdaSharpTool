@@ -52,7 +52,10 @@ namespace LambdaSharp.Compiler.Validators {
 
                     // declaration name is not valid
                     Logger.Log(Error.NameMustBeAlphanumeric, declaration);
-                } else if(CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)) {
+                } else if(
+                    !declaration.AllowReservedName
+                    && CloudFormationValidationRules.IsReservedCloudFormationName(declaration.FullName)
+                ) {
 
                     // declaration uses a reserved name
                     Logger.Log(ReservedName(declaration.FullName), declaration);

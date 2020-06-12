@@ -111,6 +111,7 @@ namespace LambdaSharp.Compiler.Syntax.Declarations {
         }
 
         public bool DiscardIfNotReachable { get; set; }
+        public bool AllowReservedName { get; set; }
 
         /// <summary>
         /// List of declarations on which this declaration depends on.

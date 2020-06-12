@@ -25,6 +25,7 @@ using LambdaSharp.CloudFormation.Template;
 using LambdaSharp.Compiler.Exceptions;
 using LambdaSharp.Compiler.Parser;
 using LambdaSharp.Compiler.Syntax.Declarations;
+using LambdaSharp.Compiler.Syntax.Expressions;
 using LambdaSharp.Compiler.TypeSystem;
 using LambdaSharp.Compiler.Validators;
 
@@ -80,7 +81,7 @@ namespace LambdaSharp.Compiler {
         private string? ModuleNamespace { get; set; }
         private string? ModuleName { get; set; }
         private VersionInfo? ModuleVersion { get; set; }
-        private ITypeSystem CloudFormationSpec { get; set; }
+        private ITypeSystem CloudFormationSpec { get; set; } = new EmptyTypeSystem();
 
         //--- Methods ---
         public async Task<CloudFormationTemplate?> CompileAsync(string filePath) {
@@ -104,15 +105,16 @@ namespace LambdaSharp.Compiler {
                 moduleDeclaration.CloudFormation?.Version?.Value ?? "15.0.0"
             );
 
+            // register all declarations
+            new PseudoParameterValidator(this).Validate(moduleDeclaration);
+            new ItemDeclarationValidator(this).Validate(moduleDeclaration);
+
             // validate declarations
             new ParameterDeclarationValidator(this).Validate(moduleDeclaration);
             new ResourceDeclarationValidator(this).Validate(moduleDeclaration);
 
             // register local resource types
             var localResourceTypes = new ResourceTypeDeclarationValidator(this).FindResourceTypes(moduleDeclaration);
-
-            // register all declarations
-            new ItemDeclarationValidator(this).Validate(moduleDeclaration);
 
             // evaluate expressions
             new ConstantExpressionEvaluator(this).Evaluate(moduleDeclaration);
