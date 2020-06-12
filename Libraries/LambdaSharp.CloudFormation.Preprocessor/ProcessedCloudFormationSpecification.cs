@@ -54,7 +54,7 @@ namespace LambdaSharp.CloudFormation.Preprocessor {
             // local functions
             async Task WriteAsync(string filename, string contents) {
                 if(compressed) {
-                    using var file = File.OpenWrite(filename);
+                    using var file = File.OpenWrite(filename + ".br");
                     using var compression = new BrotliStream(file, CompressionLevel.Optimal);
                     var buffer = Encoding.UTF8.GetBytes(contents);
                     await compression.WriteAsync(buffer, 0, buffer.Length);
