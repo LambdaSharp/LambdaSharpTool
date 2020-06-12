@@ -29,7 +29,11 @@ namespace LambdaSharp.Compiler {
     using WarningFunc = Func<string, Warning>;
     using WarningFunc2 = Func<string, string, Warning>;
 
-    public readonly struct Debug : IBuildReportEntry {
+    public readonly struct Debug : IBuildReportEntry, IEquatable<Debug> {
+
+        //--- Operators ---
+        public static bool operator == (Debug left, Debug right) => left.Equals(right);
+        public static bool operator != (Debug left, Debug right) => !left.Equals(right);
 
         //--- Constructors ---
         public Debug(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
@@ -38,9 +42,23 @@ namespace LambdaSharp.Compiler {
         public int Code => 0;
         public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Debug;
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Debug other) && Equals(other);
+
+        public override int GetHashCode()
+            => Message.GetHashCode() ^ Severity.GetHashCode();
+
+        public bool Equals(Debug other)
+            => Message == other.Message;
     }
 
-    public readonly struct Timing : IBuildReportEntry {
+    public readonly struct Timing : IBuildReportEntry, IEquatable<Timing> {
+
+        //--- Operators ---
+        public static bool operator == (Timing left, Timing right) => left.Equals(right);
+        public static bool operator != (Timing left, Timing right) => !left.Equals(right);
 
         //--- Constructors ---
         public Timing(string description, TimeSpan duration, bool? cached)
@@ -53,9 +71,26 @@ namespace LambdaSharp.Compiler {
         public string Description { get; }
         public TimeSpan Duration { get; }
         public bool? Cached { get; }
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Timing other) && Equals(other);
+
+        public override int GetHashCode()
+            => Message.GetHashCode() ^ Severity.GetHashCode() ^ Description.GetHashCode() ^ Duration.GetHashCode() ^ Cached.GetHashCode();
+
+        public bool Equals(Timing other)
+            => (Message == other.Message)
+                && (Description == other.Description)
+                && (Duration == other.Duration)
+                && (Cached == other.Cached);
     }
 
-    public readonly struct Verbose : IBuildReportEntry {
+    public readonly struct Verbose : IBuildReportEntry, IEquatable<Verbose> {
+
+        //--- Operators ---
+        public static bool operator == (Verbose left, Verbose right) => left.Equals(right);
+        public static bool operator != (Verbose left, Verbose right) => !left.Equals(right);
 
         //--- Constructors ---
         public Verbose(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
@@ -64,9 +99,23 @@ namespace LambdaSharp.Compiler {
         public int Code => 0;
         public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Verbose;
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Verbose other) && Equals(other);
+
+        public override int GetHashCode()
+            => Message.GetHashCode() ^ Severity.GetHashCode();
+
+        public bool Equals(Verbose other)
+            => Message == other.Message;
     }
 
-    public readonly struct Info : IBuildReportEntry {
+    public readonly struct Info : IBuildReportEntry, IEquatable<Info> {
+
+        //--- Operators ---
+        public static bool operator == (Info left, Info right) => left.Equals(right);
+        public static bool operator != (Info left, Info right) => !left.Equals(right);
 
         //--- Constructors ---
         public Info(string message) => Message = message ?? throw new ArgumentNullException(nameof(message));
@@ -75,9 +124,19 @@ namespace LambdaSharp.Compiler {
         public int Code => 0;
         public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Info;
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Info other) && Equals(other);
+
+        public override int GetHashCode()
+            => Code.GetHashCode() ^ Message.GetHashCode() ^ Severity.GetHashCode();
+
+        public bool Equals(Info other)
+            => Message == other.Message;
     }
 
-    public readonly struct Warning : IBuildReportEntry {
+    public readonly struct Warning : IBuildReportEntry, IEquatable<Warning> {
 
         //--- Constants ---
         #region *** Reference Validation ***
@@ -97,6 +156,10 @@ namespace LambdaSharp.Compiler {
         // TODO: keep reviewing warnings
         public static readonly Warning UnableToValidateDependency = new Warning(0, "unable to validate dependency");
 
+        //--- Operators ---
+        public static bool operator == (Warning left, Warning right) => left.Equals(right);
+        public static bool operator != (Warning left, Warning right) => !left.Equals(right);
+
         //--- Constructors ---
         public Warning(int code, string message) {
             Code = code;
@@ -107,9 +170,19 @@ namespace LambdaSharp.Compiler {
         public int Code { get; }
         public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Warning;
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Warning other) && Equals(other);
+
+        public override int GetHashCode()
+            => Code.GetHashCode() ^ Message.GetHashCode() ^ Severity.GetHashCode();
+
+        public bool Equals(Warning other)
+            => (Code == other.Code) && (Message == other.Message);
     }
 
-    public readonly struct Error : IBuildReportEntry {
+    public readonly struct Error : IBuildReportEntry, IEquatable<Error> {
 
         // TODO: consider having a string as error ID (e.g. "CS1001")
 
@@ -296,6 +369,10 @@ namespace LambdaSharp.Compiler {
         public static readonly Error FunctionPropertiesEnvironmentVariablesMustBeMap = new Error(0, "Properties.Environment.Variables must be a map");
         public static readonly ErrorFunc UnsupportedDependencyType = parameter => new Error(0, $"unsupported depency type '{parameter}'");
 
+        //--- Operators ---
+        public static bool operator == (Error left, Error right) => left.Equals(right);
+        public static bool operator != (Error left, Error right) => !left.Equals(right);
+
         //--- Constructors ---
         public Error(int code, string message) {
             Code = code;
@@ -306,5 +383,15 @@ namespace LambdaSharp.Compiler {
         public int Code { get; }
         public string Message { get; }
         public BuildReportEntrySeverity Severity => BuildReportEntrySeverity.Error;
+
+        //--- Methods ---
+        public override bool Equals(object? obj)
+            => (obj is Error other) && Equals(other);
+
+        public override int GetHashCode()
+            => Code.GetHashCode() ^ Message.GetHashCode() ^ Severity.GetHashCode();
+
+        public bool Equals(Error other)
+            => (Code == other.Code) && (Message == other.Message);
     }
 }
