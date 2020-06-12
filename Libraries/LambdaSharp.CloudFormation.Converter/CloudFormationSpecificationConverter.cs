@@ -107,9 +107,8 @@ namespace LambdaSharp.CloudFormation.Converter {
                     new StringEnumConverter()
                 }
             });
-            json.SelectTokens("$.ResourceTypes.*.*..Documentation").ToList().ForEach(property => property.Parent?.Remove());
-            json.SelectTokens("$.PropertyTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
-            json.SelectTokens("$.IntrinsicTypes..Documentation").ToList().ForEach(property => property.Parent?.Remove());
+
+            // normalize order of fields
             json = OrderFields(json);
 
             // return final specification and warnings
