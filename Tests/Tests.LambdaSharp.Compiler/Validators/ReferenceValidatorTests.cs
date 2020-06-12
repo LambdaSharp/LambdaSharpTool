@@ -22,7 +22,6 @@ using Xunit.Abstractions;
 
 namespace Tests.LambdaSharp.Compiler.Validators {
 
-
     public class ReferenceValidatorTests : _Validator {
 
         //--- Constructors ---
