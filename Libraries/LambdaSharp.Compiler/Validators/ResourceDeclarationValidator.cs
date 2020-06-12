@@ -37,7 +37,7 @@ namespace LambdaSharp.Compiler.Validators {
         private static readonly ErrorFunc ResourceUnknownType = parameter => new Error(0, $"unknown resource type '{parameter}'");
         private static readonly Error TypeAttributeMissing = new Error(0, "'Type' attribute is required");
         private static readonly Error ResourceValueAttributeInvalid = new Error(0, "'Value' attribute must be a valid ARN or wildcard");
-        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}");
+        private static readonly ErrorFunc ResourceMissingProperty = parameter => new Error(0, $"missing property '{parameter}'");
         private static readonly ErrorFunc ResourcePropertyExpectedMap = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a map");
         private static readonly ErrorFunc ResourcePropertyExpectedList = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a list");
         private static readonly ErrorFunc ResourcePropertyExpectedLiteral = parameter => new Error(0, $"property type mismatch for '{parameter}', expected a literal");

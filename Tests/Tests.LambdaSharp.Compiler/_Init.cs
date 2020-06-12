@@ -207,8 +207,11 @@ namespace Tests.LambdaSharp.Compiler {
         }
 
         //--- IModuleValidatorDependencyProvider Members ---
-        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, out IResourceType resourceType) => throw new NotImplementedException();
-        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias) => throw new NotImplementedException();
+        bool IModuleValidatorDependencyProvider.TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType)
+            => throw new NotImplementedException();
+
+        Task<string> IModuleValidatorDependencyProvider.ConvertKmsAliasToArn(string alias)
+            => throw new NotImplementedException();
 
         void IModuleValidatorDependencyProvider.DeclareItem(AItemDeclaration declaration)
             => Declarations.Add(declaration.FullName, declaration);

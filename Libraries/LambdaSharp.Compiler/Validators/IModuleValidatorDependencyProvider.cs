@@ -29,7 +29,7 @@ namespace LambdaSharp.Compiler.Validators {
         ILogger Logger { get; }
 
         //--- Methods ---
-        bool TryGetResourceType(string typeName, out IResourceType resourceType);
+        bool TryGetResourceType(string typeName, [NotNullWhen(true)] out IResourceType? resourceType);
         Task<string> ConvertKmsAliasToArn(string alias);
         void DeclareItem(AItemDeclaration itemDeclaration);
         bool TryGetItem(string fullname, [NotNullWhen(true)] out AItemDeclaration? itemDeclaration);

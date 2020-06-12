@@ -36,6 +36,7 @@ namespace LambdaSharp.Compiler.TypeSystem {
         Any
     }
 
+    // TODO: rename to IResourceProperty
     public interface IProperty {
 
         //--- Properties ---
